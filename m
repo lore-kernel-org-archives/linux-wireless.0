@@ -1,237 +1,1303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41940 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295Ab1CEDpZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 22:45:25 -0500
+Received: from mms1.broadcom.com ([216.31.210.17]:4018 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754384Ab1CUUQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 16:16:52 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: george@znau.edu.ua
+cc: zajec5@gmail.com, mb@bu3sch.de, linville@tuxdriver.com,
+	arend@broadcom.com, linux-wireless@vger.kernel.org
+Subject: [RFC] drivers: brcmaxi: provide amba axi functionality in
+ separate module
+Date: Mon, 21 Mar 2011 21:16:26 +0100
+Message-ID: <1300738586-7157-2-git-send-email-arend@broadcom.com>
+In-Reply-To: <1300738586-7157-1-git-send-email-arend@broadcom.com>
+References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	<20110304134648.GB9866@tuxdriver.com>
-	<1299251879.24333.3.camel@wwguy-ubuntu>
-	<AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-Date: Sat, 5 Mar 2011 03:45:22 +0000
-Message-ID: <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-Subject: Re: 2.6.38-rc7, iwlagn crash
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2011 22:23, Mathias Burén <mathias.buren@gmail.com> wrote:
-> On 4 March 2011 15:17, wwguy <wey-yi.w.guy@intel.com> wrote:
->> On Fri, 2011-03-04 at 05:46 -0800, John W. Linville wrote:
->>> Cc'ing Wey-yi and linux-wireless...anyone else having problems with
->>> iwlagn and IBSS?
->>>
->>> On Fri, Mar 04, 2011 at 03:27:22AM +0000, Mathias Burén wrote:
->>> > Hi,
->>> >
->>> > (please cc as not subscribed)
->>> >
->>> >
->>> >
->>> > I think the crash happens when the phone attempts to get an IP, at
->>> > least that's what the phone says right after/at the crash. Any ideas?
->>> >
->>> >
->> forwarding to my team to work on it, any additional information you can
->> provide?
->>
->> It is in IBSS mode, do you have any information can shared with us on
->> your phone's model, setup, and ...
->> if you can load the module with debug=0x43fff and provide the dmesg log,
->> it will be very helpful
->>
->> Thanks
->> Wey
->>
->>
->>
->
-> Hi,
->
-> The phone is a Samsung Galaxy S (with "modded" wpa_supplicant to see
-> adhoc networks). I created a new adhoc network in Ubuntu using the
-> NetworkManager applet, with SSID "UbuntuAdhoc", band "automatic",
-> BSSID (blank) and no security. Under IPV4 settings I set it to "Shared
-> to other computers". Unfortunately I get this when trying to load the
-> module with debug:
->
-> $ sudo modprobe -v iwlagn debug=0x43fff
-> insmod /lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
-> 11n_disable=1 debug=0x43fff
-> FATAL: Error inserting iwlagn
-> (/lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko):
-> Unknown symbol in module, or unknown parameter (see dmesg)
-> [  447.551540] iwlagn: Unknown parameter `debug'
->
-> $ sudo modprobe -v iwlagn
-> insmod /lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
-> 11n_disable=1
->
->
-> [  501.570685] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
-> Linux, in-tree:
-> [  501.570688] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-> [  501.570760] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [  501.570772] iwlagn 0000:03:00.0: setting latency timer to 64
-> [  501.570809] iwlagn 0000:03:00.0: Detected Intel(R) Centrino(R)
-> Advanced-N 6200 AGN, REV=0x74
-> [  501.580698] iwlagn 0000:03:00.0: device EEPROM VER=0x436, CALIB=0x6
-> [  501.580703] iwlagn 0000:03:00.0: Device SKU: 0Xb
-> [  501.580739] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24
-> 802.11a channels
-> [  501.580836] iwlagn 0000:03:00.0: irq 44 for MSI/MSI-X
-> [  501.583936] iwlagn 0000:03:00.0: loaded firmware version 9.221.4.1
-> build 25532
-> [  501.584236] cfg80211: Ignoring regulatory request Set by core since
-> the driver uses its own custom regulatory domain
-> [  501.584392] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
->
-> Here I create the adhoc network in network manager:
->
-> [  536.509700] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [  536.858139] cfg80211: Found new beacon on frequency: 2472 MHz (Ch 13) on phy0
-> [  536.947735] cfg80211: Found new beacon on frequency: 5180 MHz (Ch 36) on phy0
-> [  537.041220] cfg80211: Found new beacon on frequency: 5200 MHz (Ch 40) on phy0
-> [  537.079114] cfg80211: Found new beacon on frequency: 5220 MHz (Ch 44) on phy0
-> [  537.175392] cfg80211: Found new beacon on frequency: 5240 MHz (Ch 48) on phy0
-> [  538.973811] cfg80211: Found new beacon on frequency: 5745 MHz (Ch
-> 149) on phy0
-> [  539.203969] cfg80211: Found new beacon on frequency: 5785 MHz (Ch
-> 157) on phy0
-> [  539.289182] cfg80211: Found new beacon on frequency: 5805 MHz (Ch
-> 161) on phy0
-> [  571.156548] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [  599.156798] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [  599.161234] wlan0: Trigger new scan to find an IBSS to join
-> [  604.131831] wlan0: Trigger new scan to find an IBSS to join
-> [  607.103522] wlan0: Creating new IBSS network, BSSID 42:dd:e6:af:fb:19
-> [  607.104488] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  607.105407] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  608.501173] wlan0: Trigger new scan to find an IBSS to join
-> [  609.190883] wlan0: no IPv6 routers present
-> [  613.397068] wlan0: Trigger new scan to find an IBSS to join
-> [  616.303044] wlan0: Creating new IBSS network, BSSID ae:eb:cb:59:18:ec
-> [  616.313716] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  616.314529] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  617.681034] wlan0: Trigger new scan to find an IBSS to join
-> [  622.736806] wlan0: Trigger new scan to find an IBSS to join
-> [  625.708399] wlan0: Creating new IBSS network, BSSID 46:b6:a0:1b:c4:7f
-> [  625.761157] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  625.762035] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-> [  627.438640] iwlagn 0000:03:00.0: Error sending REPLY_RXON_TIMING:
-> time out after 500ms.
-> [  627.438648] iwlagn 0000:03:00.0: Failed to send timing (-110)!
-> [  627.438651] ------------[ cut here ]------------
-> [  627.438668] WARNING: at
-> /home/kernel-ppa/COD/linux/drivers/net/wireless/iwlwifi/iwl-core.c:1898
-> iwl_mac_change_interface+0x12e/0x130 [iwlcore]()
-> [  627.438672] Hardware name: 4384BB3
-> [  627.438674] Modules linked in: nf_nat_h323 nf_conntrack_h323
-> nf_nat_pptp nf_conntrack_pptp nf_conntrack_proto_gre nf_nat_proto_gre
-> nf_nat_tftp nf_conntrack_tftp nf_nat_sip nf_conntrack_sip nf_nat_irc
-> nf_nat_ftp iwlagn iwlcore mac80211 cfg80211 xt_limit xt_tcpudp ipt_LOG
-> ipt_MASQUERADE xt_DSCP ipt_REJECT nf_conntrack_irc nf_conntrack_ftp
-> xt_state binfmt_misc vboxnetadp vboxnetflt vboxdrv microcode
-> parport_pc ppdev iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack
-> nf_defrag_ipv4 iptable_mangle iptable_filter ip_tables x_tables
-> snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_intel snd_hda_codec
-> snd_hwdep snd_pcm snd_seq_midi joydev snd_rawmidi hdaps thinkpad_ec
-> snd_seq_midi_event arc4 snd_seq snd_timer uvcvideo videodev
-> snd_seq_device psmouse v4l2_compat_ioctl32 thinkpad_acpi tpm_tis tpm
-> tpm_bios nvram lp serio_raw parport snd soundcore intel_ips
-> snd_page_alloc sha256_generic aesni_intel cryptd aes_x86_64
-> aes_generic dm_crypt usbhid hid i915 firewire_ohci ahci drm_kms_helper
-> e1000e libahci drm sdhci_pci firewire_core sdhci crc_itu_t
-> i2c_algo_bit video [last unloaded: cfg80211]
-> [  627.438764] Pid: 1203, comm: NetworkManager Not tainted
-> 2.6.38-020638rc7-generic #201103020909
-> [  627.438767] Call Trace:
-> [  627.438778]  [<ffffffffa0294c7e>] ?
-> iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-> [  627.438787]  [<ffffffffa0294c7e>] ?
-> iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-> [  627.438796]  [<ffffffff81065430>] ? warn_slowpath_common+0x90/0xc0
-> [  627.438801]  [<ffffffff8106547a>] ? warn_slowpath_null+0x1a/0x20
-> [  627.438809]  [<ffffffffa0294c7e>] ?
-> iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-> [  627.438827]  [<ffffffffa02589ec>] ?
-> ieee80211_runtime_change_iftype+0xdc/0x180 [mac80211]
-> [  627.438840]  [<ffffffffa0258b85>] ?
-> ieee80211_if_change_type+0xf5/0x120 [mac80211]
-> [  627.438854]  [<ffffffffa025b95b>] ?
-> ieee80211_change_iface+0x3b/0x130 [mac80211]
-> [  627.438865]  [<ffffffffa020a898>] ?
-> cfg80211_change_iface+0xe8/0x1c0 [cfg80211]
-> [  627.438877]  [<ffffffffa02228f6>] ? cfg80211_wext_siwmode+0xa6/0xf0
-> [cfg80211]
-> [  627.438884]  [<ffffffff8158a4cb>] ? ioctl_standard_call+0x6b/0xf0
-> [  627.438889]  [<ffffffff8158a460>] ? ioctl_standard_call+0x0/0xf0
-> [  627.438893]  [<ffffffff81589882>] ? wireless_process_ioctl+0x102/0x130
-> [  627.438898]  [<ffffffff8158afe0>] ? ioctl_private_call+0x0/0xa0
-> [  627.438902]  [<ffffffff8158afe0>] ? ioctl_private_call+0x0/0xa0
-> [  627.438907]  [<ffffffff8158a460>] ? ioctl_standard_call+0x0/0xf0
-> [  627.438911]  [<ffffffff8158991c>] ? wext_ioctl_dispatch+0x6c/0x90
-> [  627.438916]  [<ffffffff81589b66>] ? wext_handle_ioctl+0x46/0x90
-> [  627.438922]  [<ffffffff814c687b>] ? dev_ioctl+0x28b/0x2a0
-> [  627.438927]  [<ffffffff814ad25f>] ? sock_ioctl+0xbf/0x280
-> [  627.438933]  [<ffffffff811704bd>] ? vfs_ioctl+0x1d/0x50
-> [  627.438937]  [<ffffffff81170f79>] ? do_vfs_ioctl+0x69/0x1d0
-> [  627.438940]  [<ffffffff81171174>] ? sys_ioctl+0x94/0xa0
-> [  627.438945]  [<ffffffff8100c002>] ? system_call_fastpath+0x16/0x1b
-> [  627.438949] ---[ end trace c7a5b9f525294bcc ]---
-> [  627.552179] wlan0: Trigger new scan to find an IBSS to join
->
-> Hm, not much I can do without recompiling the module with debug
-> support? Is there a way I can do this without recompiling the kernel?
->
-> Kind regards,
-> // Mathias
->
+The open-source community is looking for a library which will detect
+cores in a chip using axi backplane. This is an initial delivery of
+what it could look like. Tested it with the brcm80211 driver.
+---
+ drivers/Kconfig          |    2 +
+ drivers/Makefile         |    1 +
+ drivers/brcmaxi/Makefile |   23 ++
+ drivers/brcmaxi/axi.c    |  859 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/brcmaxi/axi.h    |  340 ++++++++++++++++++
+ 5 files changed, 1225 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/brcmaxi/Makefile
+ create mode 100644 drivers/brcmaxi/axi.c
+ create mode 100644 include/brcmaxi/axi.h
 
-I've tried to recompile just the kernel module, but I get various
-errors when I try to do so;
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 9bfb71f..2fee176 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -68,6 +68,8 @@ source "drivers/watchdog/Kconfig"
+ 
+ source "drivers/ssb/Kconfig"
+ 
++source "drivers/brcmaxi/Kconfig"
++
+ source "drivers/mfd/Kconfig"
+ 
+ source "drivers/regulator/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+index b423bb1..34bd6a6 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -110,6 +110,7 @@ obj-$(CONFIG_HID)		+= hid/
+ obj-$(CONFIG_PPC_PS3)		+= ps3/
+ obj-$(CONFIG_OF)		+= of/
+ obj-$(CONFIG_SSB)		+= ssb/
++obj-$(CONFIG_BRCMAXI)		+= brcmaxi/
+ obj-$(CONFIG_VHOST_NET)		+= vhost/
+ obj-$(CONFIG_VLYNQ)		+= vlynq/
+ obj-$(CONFIG_STAGING)		+= staging/
+diff --git a/drivers/brcmaxi/Makefile b/drivers/brcmaxi/Makefile
+new file mode 100644
+index 0000000..0b1502c
+--- /dev/null
++++ b/drivers/brcmaxi/Makefile
+@@ -0,0 +1,23 @@
++#
++# Makefile for Broadcom AMBA AXI utility module
++#
++# Copyright (c) 2011 Broadcom Corporation
++#
++# Permission to use, copy, modify, and/or distribute this software for any
++# purpose with or without fee is hereby granted, provided that the above
++# copyright notice and this permission notice appear in all copies.
++#
++# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++# SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++# OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++
++MODULEPFX := brcmaxi
++
++ccflags-$(CONFIG_DEBUG_KERNEL) += -DDEBUG
++
++obj-m	+= $(MODULEPFX).o
++$(MODULEPFX)-objs	= axi.o
+diff --git a/drivers/brcmaxi/axi.c b/drivers/brcmaxi/axi.c
+new file mode 100644
+index 0000000..359e72d
+--- /dev/null
++++ b/drivers/brcmaxi/axi.c
+@@ -0,0 +1,859 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#define pr_fmt(fmt)	KBUILD_MODNAME ": " fmt
++
++#include <linux/kernel.h>
++#include <linux/types.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <asm/byteorder.h>
++
++#include "axi.h"
++
++#define AXI_DESCRIPTION "Broadcom AXI utility library"
++
++MODULE_DESCRIPTION(AXI_DESCRIPTION);
++MODULE_AUTHOR("Broadcom Corporation");
++MODULE_LICENSE("Dual BSD/GPL");
++
++/* Enumeration ROM registers */
++#define	ER_EROMENTRY		0x000
++#define	ER_REMAPCONTROL		0xe00
++#define	ER_REMAPSELECT		0xe04
++#define	ER_MASTERSELECT		0xe10
++#define	ER_ITCR			0xf00
++#define	ER_ITIP			0xf04
++
++/* Enumeration ROM entries */
++#define	ER_TAG			0xe
++#define	ER_TAG1			0x6
++#define	ER_VALID		1
++#define	ER_CI			0
++#define	ER_MP			2
++#define	ER_ADD			4
++#define	ER_END			0xe
++#define	ER_BAD			0xffffffff
++
++/* EROM CompIdentA */
++#define	CIA_MFG_MASK		0xfff00000
++#define	CIA_MFG_SHIFT		20
++#define	CIA_CID_MASK		0x000fff00
++#define	CIA_CID_SHIFT		8
++#define	CIA_CCL_MASK		0x000000f0
++#define	CIA_CCL_SHIFT		4
++
++/* EROM CompIdentB */
++#define	CIB_REV_MASK		0xff000000
++#define	CIB_REV_SHIFT		24
++#define	CIB_NSW_MASK		0x00f80000
++#define	CIB_NSW_SHIFT		19
++#define	CIB_NMW_MASK		0x0007c000
++#define	CIB_NMW_SHIFT		14
++#define	CIB_NSP_MASK		0x00003e00
++#define	CIB_NSP_SHIFT		9
++#define	CIB_NMP_MASK		0x000001f0
++#define	CIB_NMP_SHIFT		4
++
++/* EROM MasterPortDesc */
++#define	MPD_MUI_MASK		0x0000ff00
++#define	MPD_MUI_SHIFT		8
++#define	MPD_MP_MASK		0x000000f0
++#define	MPD_MP_SHIFT		4
++
++/* EROM AddrDesc */
++#define	AD_ADDR_MASK		0xfffff000
++#define	AD_SP_MASK		0x00000f00
++#define	AD_SP_SHIFT		8
++#define	AD_ST_MASK		0x000000c0
++#define	AD_ST_SHIFT		6
++#define	AD_ST_SLAVE		0x00000000
++#define	AD_ST_BRIDGE		0x00000040
++#define	AD_ST_SWRAP		0x00000080
++#define	AD_ST_MWRAP		0x000000c0
++#define	AD_SZ_MASK		0x00000030
++#define	AD_SZ_SHIFT		4
++#define	AD_SZ_4K		0x00000000
++#define	AD_SZ_8K		0x00000010
++#define	AD_SZ_16K		0x00000020
++#define	AD_SZ_SZD		0x00000030
++#define	AD_AG32			0x00000008
++#define	AD_ADDR_ALIGN		0x00000fff
++#define	AD_SZ_BASE		0x00001000	/* 4KB */
++
++/* EROM SizeDesc */
++#define	SD_SZ_MASK		0xfffff000
++#define	SD_SG32			0x00000008
++#define	SD_SZ_ALIGN		0x00000fff
++
++/* resetctrl */
++#define	AIRC_RESET		1
++
++/* backplane address space accessed by BAR0 */
++#define	PCI_BAR0_WIN		0x80
++/* backplane address space accessed by second 4KB of BAR0 */
++#define	PCI_BAR0_WIN2		0xac
++
++/* definition for specifying padding fields */
++#define	_PADLINE(line)	pad ## line
++#define	_XSTR(line)	_PADLINE(line)
++#define	PAD		_XSTR(__LINE__)
++
++/**
++ * struct axi_local - internal instance data
++ *
++ * @pub: @struct axi_instance pointer to public instance data.
++ * @curcore: @struct axi_core pointer to active core.
++ * @bustype: @enum axi_bus referring to type of bus between axi and caller.
++ * @enum_rom_ptr: pointer to system discovery enumeration rom.
++ */
++struct axi_local {
++	struct axi_instance pub;
++	struct axi_core *curcore;
++	enum axi_bus bustype;
++	u32 *enum_rom_ptr;
++};
++
++/**
++ * struct aidmp - device management plugin "wrapper" registers.
++ */
++volatile struct aidmp {
++	u32 oobselina30;	/* 0x000 */
++	u32 oobselina74;	/* 0x004 */
++	u32 PAD[6];
++	u32 oobselinb30;	/* 0x020 */
++	u32 oobselinb74;	/* 0x024 */
++	u32 PAD[6];
++	u32 oobselinc30;	/* 0x040 */
++	u32 oobselinc74;	/* 0x044 */
++	u32 PAD[6];
++	u32 oobselind30;	/* 0x060 */
++	u32 oobselind74;	/* 0x064 */
++	u32 PAD[38];
++	u32 oobselouta30;	/* 0x100 */
++	u32 oobselouta74;	/* 0x104 */
++	u32 PAD[6];
++	u32 oobseloutb30;	/* 0x120 */
++	u32 oobseloutb74;	/* 0x124 */
++	u32 PAD[6];
++	u32 oobseloutc30;	/* 0x140 */
++	u32 oobseloutc74;	/* 0x144 */
++	u32 PAD[6];
++	u32 oobseloutd30;	/* 0x160 */
++	u32 oobseloutd74;	/* 0x164 */
++	u32 PAD[38];
++	u32 oobsynca;	/* 0x200 */
++	u32 oobseloutaen;	/* 0x204 */
++	u32 PAD[6];
++	u32 oobsyncb;	/* 0x220 */
++	u32 oobseloutben;	/* 0x224 */
++	u32 PAD[6];
++	u32 oobsyncc;	/* 0x240 */
++	u32 oobseloutcen;	/* 0x244 */
++	u32 PAD[6];
++	u32 oobsyncd;	/* 0x260 */
++	u32 oobseloutden;	/* 0x264 */
++	u32 PAD[38];
++	u32 oobaextwidth;	/* 0x300 */
++	u32 oobainwidth;	/* 0x304 */
++	u32 oobaoutwidth;	/* 0x308 */
++	u32 PAD[5];
++	u32 oobbextwidth;	/* 0x320 */
++	u32 oobbinwidth;	/* 0x324 */
++	u32 oobboutwidth;	/* 0x328 */
++	u32 PAD[5];
++	u32 oobcextwidth;	/* 0x340 */
++	u32 oobcinwidth;	/* 0x344 */
++	u32 oobcoutwidth;	/* 0x348 */
++	u32 PAD[5];
++	u32 oobdextwidth;	/* 0x360 */
++	u32 oobdinwidth;	/* 0x364 */
++	u32 oobdoutwidth;	/* 0x368 */
++	u32 PAD[37];
++	u32 ioctrlset;	/* 0x400 */
++	u32 ioctrlclear;	/* 0x404 */
++	u32 ioctrl;		/* 0x408 */
++	u32 PAD[61];
++	u32 iostatus;	/* 0x500 */
++	u32 PAD[127];
++	u32 ioctrlwidth;	/* 0x700 */
++	u32 iostatuswidth;	/* 0x704 */
++	u32 PAD[62];
++	u32 resetctrl;	/* 0x800 */
++	u32 resetstatus;	/* 0x804 */
++	u32 resetreadid;	/* 0x808 */
++	u32 resetwriteid;	/* 0x80c */
++	u32 PAD[60];
++	u32 errlogctrl;	/* 0x900 */
++	u32 errlogdone;	/* 0x904 */
++	u32 errlogstatus;	/* 0x908 */
++	u32 errlogaddrlo;	/* 0x90c */
++	u32 errlogaddrhi;	/* 0x910 */
++	u32 errlogid;	/* 0x914 */
++	u32 errloguser;	/* 0x918 */
++	u32 errlogflags;	/* 0x91c */
++	u32 PAD[56];
++	u32 intstatus;	/* 0xa00 */
++	u32 PAD[127];
++	u32 config;		/* 0xe00 */
++	u32 PAD[63];
++	u32 itcr;		/* 0xf00 */
++	u32 PAD[3];
++	u32 itipooba;	/* 0xf10 */
++	u32 itipoobb;	/* 0xf14 */
++	u32 itipoobc;	/* 0xf18 */
++	u32 itipoobd;	/* 0xf1c */
++	u32 PAD[4];
++	u32 itipoobaout;	/* 0xf30 */
++	u32 itipoobbout;	/* 0xf34 */
++	u32 itipoobcout;	/* 0xf38 */
++	u32 itipoobdout;	/* 0xf3c */
++	u32 PAD[4];
++	u32 itopooba;	/* 0xf50 */
++	u32 itopoobb;	/* 0xf54 */
++	u32 itopoobc;	/* 0xf58 */
++	u32 itopoobd;	/* 0xf5c */
++	u32 PAD[4];
++	u32 itopoobain;	/* 0xf70 */
++	u32 itopoobbin;	/* 0xf74 */
++	u32 itopoobcin;	/* 0xf78 */
++	u32 itopoobdin;	/* 0xf7c */
++	u32 PAD[4];
++	u32 itopreset;	/* 0xf90 */
++	u32 PAD[15];
++	u32 peripherialid4;	/* 0xfd0 */
++	u32 peripherialid5;	/* 0xfd4 */
++	u32 peripherialid6;	/* 0xfd8 */
++	u32 peripherialid7;	/* 0xfdc */
++	u32 peripherialid0;	/* 0xfe0 */
++	u32 peripherialid1;	/* 0xfe4 */
++	u32 peripherialid2;	/* 0xfe8 */
++	u32 peripherialid3;	/* 0xfec */
++	u32 componentid0;	/* 0xff0 */
++	u32 componentid1;	/* 0xff4 */
++	u32 componentid2;	/* 0xff8 */
++	u32 componentid3;	/* 0xffc */
++} aidmp_t;
++
++/* register access macros */
++#ifdef __LITTLE_ENDIAN
++#ifndef __mips__
++#define R_REG(r) \
++	(sizeof(*(r)) == sizeof(u8) ? \
++		readb((volatile u8*)(r)) : \
++	sizeof(*(r)) == sizeof(u16) ? \
++		readw((volatile u16*)(r)) : \
++	readl((volatile u32*)(r)))
++
++#else	/* __mips__ */
++#define R_REG(r) \
++	({ \
++		__typeof(*(r)) __reg_val; \
++		__asm__ __volatile__("sync"); \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8): \
++			__reg_val = readb((volatile u8*)(r)); \
++			break; \
++		case sizeof(u16): \
++			__reg_val = readw((volatile u16*)(r)); \
++			break; \
++		case sizeof(u32): \
++			__reg_val = readl((volatile u32*)(r)); \
++			break; \
++		} \
++		__asm__ __volatile__("sync"); \
++		__reg_val; \
++	})
++#endif	/* __mips__ */
++#define W_REG(r, v) \
++	do { \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8): \
++			writeb((u8)(v), (volatile u8*)(r)); break; \
++		case sizeof(u16): \
++			writew((u16)(v), (volatile u16*)(r)); break; \
++		case sizeof(u32): \
++			writel((u32)(v), (volatile u32*)(r)); break; \
++		} \
++	} while (0)
++#else	/* __LITTLE_ENDIAN */
++#define R_REG(r) \
++	({ \
++		__typeof(*(r)) __reg_val; \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8): \
++			__reg_val = readb((volatile u8*)((r)^3)); \
++			break; \
++		case sizeof(u16): \
++			__reg_val = readw((volatile u16*)((r)^2)); \
++			break; \
++		case sizeof(u32): \
++			__reg_val = readl((volatile u32*)(r)); \
++			break; \
++		} \
++		__reg_val; \
++	})
++#define W_REG(r, v) \
++	do { \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8):	\
++			writeb((u8)(v), \
++			(volatile u8*)((r)^3)); break; \
++		case sizeof(u16):	\
++			writew((u16)(v), \
++			(volatile u16*)((r)^2)); break; \
++		case sizeof(u32):	\
++			writel((u32)(v), \
++			(volatile u32*)(r)); break; \
++		} \
++	} while (0)
++#endif	/* __LITTLE_ENDIAN */
++
++static void *find_core_handler(struct axi_instance *aih,
++			       u32 mfg_id, u32 core_id)
++{
++	const struct axi_core_handler *handler = aih->handler_list;
++	int i;
++
++	for (i = 0; i < aih->num_handler; i++, handler++) {
++		if ((handler->mfg_id != AXI_ANY_ID) &&
++		    (handler->mfg_id != mfg_id))
++			continue;
++		if ((handler->core_id != AXI_ANY_ID) &&
++		    (handler->mfg_id != mfg_id) &&
++		    (handler->core_id != core_id))
++			continue;
++
++		return handler->handler;
++	}
++
++	return NULL;
++}
++
++/**
++ * get_erom_ent - axi enumeration rom parsing
++ *
++ * @returns enumeration rom entry
++ */
++static u32
++get_erom_ent(u32 **eromptr, u32 mask, u32 match)
++{
++	u32 ent;
++	uint inv = 0, nom = 0;
++
++	while (true) {
++		ent = R_REG(*eromptr);
++		(*eromptr)++;
++
++		if (mask == 0)
++			break;
++
++		if ((ent & ER_VALID) == 0) {
++			inv++;
++			continue;
++		}
++
++		if (ent == (ER_END | ER_VALID))
++			break;
++
++		if ((ent & mask) == match)
++			break;
++
++		nom++;
++	}
++
++	if (inv + nom) {
++		pr_debug("%d invalid and %d non-matching entries\n",
++		       inv, nom);
++	}
++	pr_debug("%s: Returning ent 0x%08x\n", __func__, ent);
++	return ent;
++}
++
++static u32
++get_asd(u32 **eromptr, uint sp, uint ad, uint st,
++	u32 *addrl, u32 *addrh, u32 *sizel, u32 *sizeh)
++{
++	u32 asd, sz, szd;
++
++	asd = get_erom_ent(eromptr, ER_VALID, ER_VALID);
++	if (((asd & ER_TAG1) != ER_ADD) ||
++	    (((asd & AD_SP_MASK) >> AD_SP_SHIFT) != sp) ||
++	    ((asd & AD_ST_MASK) != st)) {
++		/* This is not what we want, "push" it back */
++		(*eromptr)--;
++		return 0;
++	}
++	*addrl = asd & AD_ADDR_MASK;
++	if (asd & AD_AG32)
++		*addrh = get_erom_ent(eromptr, 0, 0);
++	else
++		*addrh = 0;
++	*sizeh = 0;
++	sz = asd & AD_SZ_MASK;
++	if (sz == AD_SZ_SZD) {
++		szd = get_erom_ent(eromptr, 0, 0);
++		*sizel = szd & SD_SZ_MASK;
++		if (szd & SD_SG32)
++			*sizeh = get_erom_ent(eromptr, 0, 0);
++	} else
++		*sizel = AD_SZ_BASE << (sz >> AD_SZ_SHIFT);
++
++	pr_debug("  SP %d, ad %d: st = %d, 0x%08x_0x%08x @ 0x%08x_0x%08x\n",
++	       sp, ad, st, *sizeh, *sizel, *addrh, *addrl);
++
++	return asd;
++}
++
++struct axi_instance *axi_open(enum axi_bus bus_type, void *pbus,
++			      void *regs, u32 erombase, u32 priv_len)
++{
++	struct axi_local *inst;
++	int size = ALIGN(sizeof(*inst), 4) + priv_len;
++
++	inst = kzalloc(size, GFP_ATOMIC);
++
++	/* fill public fields */
++	inst->pub.pbus = pbus;
++	inst->pub.regs = regs;
++	inst->pub.priv = (char *)inst + ALIGN(sizeof(*inst), 4);
++
++	inst->bustype = bus_type;
++	switch (bus_type) {
++	case AXI_PCI_BUS:
++		/* Now point the window at the erom */
++		pci_write_config_dword(inst->pub.pbus, PCI_BAR0_WIN, erombase);
++		inst->enum_rom_ptr = regs;
++		break;
++
++	case AXI_AMBA_BUS:
++		inst->enum_rom_ptr = ioremap_nocache((unsigned long)erombase,
++						     AXI_CORE_SIZE);
++		break;
++
++	case AXI_SPI_BUS:
++	case AXI_SDIO_BUS:
++		inst->enum_rom_ptr = (u32 *)(unsigned long)erombase;
++		break;
++
++	default:
++		pr_err("Don't know how to do AXI "
++		       "enumertion on bus %d\n", bus_type);
++		WARN_ON(0);
++		return 0;
++	}
++
++
++	try_module_get(THIS_MODULE);
++
++	return &inst->pub;
++}
++EXPORT_SYMBOL(axi_open);
++
++void axi_close(struct axi_instance *aih)
++{
++	kfree(aih);
++	module_put(THIS_MODULE);
++}
++EXPORT_SYMBOL(axi_close);
++
++/* parse the enumeration rom to identify all cores */
++int axi_scan(struct axi_instance *aih)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct axi_core *core = NULL;
++	u32 *eromlim, *eromptr = ail->enum_rom_ptr;
++	int numcores = 0;
++
++	eromlim = eromptr + (ER_REMAPCONTROL / sizeof(u32));
++
++	pr_debug("axi_scan: erom: ptr = 0x%p, limit = 0x%p\n",
++		 eromptr, eromlim);
++
++	while (eromptr < eromlim) {
++		bool (*handler)(struct axi_instance *ai, struct axi_core *core);
++		u32 cia, cib, cid, mfg, crev;
++		u32 n_master_wrap, n_slave_wrap, n_master_port, n_slave_port;
++		u32 mst_port_desc, addr_space_desc, addrl, addrh, sizel, sizeh;
++		u32 *base;
++		uint i, j;
++		bool br;
++
++		br = false;
++		core = NULL;
++
++		/* Grok a component */
++		cia = get_erom_ent(&eromptr, ER_TAG, ER_CI);
++		if (cia == (ER_END | ER_VALID)) {
++			pr_debug("Found END of erom after %d cores\n",
++				 numcores);
++			return numcores;
++		}
++		base = eromptr - 1;
++		cib = get_erom_ent(&eromptr, 0, 0);
++
++		if ((cib & ER_TAG) != ER_CI) {
++			pr_err("CIA not followed by CIB\n");
++			return 0;
++		}
++
++		cid = (cia & CIA_CID_MASK) >> CIA_CID_SHIFT;
++		mfg = (cia & CIA_MFG_MASK) >> CIA_MFG_SHIFT;
++		crev = (cib & CIB_REV_MASK) >> CIB_REV_SHIFT;
++		n_master_wrap = (cib & CIB_NMW_MASK) >> CIB_NMW_SHIFT;
++		n_slave_wrap = (cib & CIB_NSW_MASK) >> CIB_NSW_SHIFT;
++		n_master_port = (cib & CIB_NMP_MASK) >> CIB_NMP_SHIFT;
++		n_slave_port = (cib & CIB_NSP_MASK) >> CIB_NSP_SHIFT;
++
++		pr_debug("Found component 0x%04x/0x%04x rev %d at "
++		       "erom addr 0x%p, with nmw = %d, nsw = %d, nmp = %d & "
++		       "nsp = %d\n", mfg, cid, crev, base, n_master_wrap,
++		       n_slave_wrap, n_master_port, n_slave_port);
++
++		/* ??ignore processor core?? */
++		if (((mfg == MFGID_ARM) && (cid == DEF_AI_COMP)) ||
++		    (n_slave_port == 0))
++			continue;
++
++		/* alloc space to store core information */
++		core = kzalloc(sizeof(struct axi_core), GFP_ATOMIC);
++		if (!core)
++			return 0;
++
++		core->id = cid;
++		core->mfg = mfg;
++		core->rev = crev;
++
++		if ((n_master_wrap + n_slave_wrap) == 0) {
++			/* A component which is not a core */
++			if (cid == OOB_ROUTER_CORE_ID) {
++				addr_space_desc = get_asd(&eromptr, 0, 0,
++					AD_ST_SLAVE, &addrl, &addrh,
++					&sizel, &sizeh);
++				if (addr_space_desc != 0) {
++					core->phys_address = addrl;
++					handler = find_core_handler(aih,
++								     mfg, cid);
++					if (!handler ||
++					    handler(aih, core) == true) {
++						kfree(core);
++					}
++				} else {
++					kfree(core);
++				}
++			}
++			continue;
++		}
++
++		for (i = 0; i < n_master_port; i++) {
++			mst_port_desc =
++				get_erom_ent(&eromptr, ER_VALID, ER_VALID);
++			if ((mst_port_desc & ER_TAG) != ER_MP) {
++				pr_err("Not enough MP entries for "
++				       "component 0x%x\n", cid);
++				goto error;
++			}
++			pr_debug("  Master port %d, mp: %d id: %d\n", i,
++				 (mst_port_desc & MPD_MP_MASK) >> MPD_MP_SHIFT,
++				 (mst_port_desc & MPD_MUI_MASK) >> MPD_MUI_SHIFT
++			);
++		}
++
++		/* First Slave Address Descriptor should be port 0:
++		 * the main register space for the core
++		 */
++		addr_space_desc =
++		    get_asd(&eromptr, 0, 0, AD_ST_SLAVE, &addrl, &addrh,
++			    &sizel, &sizeh);
++		if (addr_space_desc == 0) {
++			/* Try again to see if it is a bridge */
++			addr_space_desc =
++			    get_asd(&eromptr, 0, 0, AD_ST_BRIDGE, &addrl,
++				    &addrh, &sizel, &sizeh);
++			if (addr_space_desc != 0)
++				br = true;
++			else if ((addrh != 0) || (sizeh != 0)
++				 || (sizel != AXI_CORE_SIZE)) {
++				pr_err("First Slave ASD for core "
++				       "0x%04x malformed (0x%08x)\n",
++				       cid, addr_space_desc);
++				goto error;
++			}
++		}
++
++		core->phys_address = addrl;
++		core->phys_space = sizel;
++
++		/* Get any more ASDs in port 0 */
++		j = 1;
++		do {
++			addr_space_desc =
++			    get_asd(&eromptr, 0, j, AD_ST_SLAVE, &addrl,
++				    &addrh, &sizel, &sizeh);
++			if ((addr_space_desc != 0) && (j == 1) &&
++			    (sizel == AXI_CORE_SIZE)) {
++				core->sec_phys_address = addrl;
++				core->sec_phys_space = sizel;
++			}
++			j++;
++		} while (addr_space_desc != 0);
++
++		/* Go through the ASDs for other slave ports */
++		for (i = 1; i < n_slave_port; i++) {
++			j = 0;
++			do {
++				addr_space_desc =
++				    get_asd(&eromptr, i, j++, AD_ST_SLAVE,
++					    &addrl, &addrh, &sizel, &sizeh);
++			} while (addr_space_desc != 0);
++			if (j == 0) {
++				pr_err("SP %d has no address "
++				       "descriptors\n", i);
++				goto error;
++			}
++		}
++
++		/* Now get master wrappers */
++		for (i = 0; i < n_master_wrap; i++) {
++			addr_space_desc =
++			    get_asd(&eromptr, i, 0, AD_ST_MWRAP, &addrl,
++				    &addrh, &sizel, &sizeh);
++			if (addr_space_desc == 0) {
++				pr_err("Missing descriptor for MW %d\n"
++				       , i);
++				goto error;
++			}
++			if ((sizeh != 0) || (sizel != AXI_CORE_SIZE)) {
++				pr_err("Master wrapper %d is not 4KB\n"
++				       , i);
++				goto error;
++			}
++			if (i == 0)
++				core->wrap_phys_address = addrl;
++		}
++
++		/* And finally slave wrappers */
++		for (i = 0; i < n_slave_wrap; i++) {
++			uint fwp = (n_slave_port == 1) ? 0 : 1;
++			addr_space_desc =
++			    get_asd(&eromptr, fwp + i, 0, AD_ST_SWRAP,
++				    &addrl, &addrh, &sizel, &sizeh);
++			if (addr_space_desc == 0) {
++				pr_err("Missing descriptor for SW %d\n", i);
++				goto error;
++			}
++			if ((sizeh != 0) || (sizel != AXI_CORE_SIZE)) {
++				pr_err("Slave wrapper %d is not 4KB\n", i);
++				goto error;
++			}
++			if ((n_master_wrap == 0) && (i == 0))
++				core->wrap_phys_address = addrl;
++		}
++
++		/* Don't record bridges */
++		if (br)
++			continue;
++
++		/* Done with core */
++		handler = find_core_handler(aih, mfg, cid);
++		if (handler && handler(aih, core) == false)
++			numcores++;
++		else
++			kfree(core);
++	}
++
++	pr_err("Reached end of erom without finding END");
++
++error:
++	kfree(core);
++	return 0;
++}
++EXPORT_SYMBOL(axi_scan);
++
++void *axi_set_active_core(struct axi_instance *aih, struct axi_core *ach)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++
++	u32 addr = ach->phys_address;
++	u32 wrap = ach->sec_phys_address;
++
++	switch (ail->bustype) {
++	case AXI_AMBA_BUS:
++		/* map new one */
++		if (!ach->regs)
++			ach->regs = ioremap_nocache(addr, AXI_CORE_SIZE);
++		if (!ach->wrap)
++			ach->wrap = ioremap_nocache(wrap, AXI_CORE_SIZE);
++		break;
++
++	case AXI_PCI_BUS:
++		/* point bar0 window */
++		pci_write_config_dword(aih->pbus, PCI_BAR0_WIN, addr);
++		ach->regs = ail->curcore->regs;
++		/* point bar0 2nd 4KB window */
++		pci_write_config_dword(aih->pbus, PCI_BAR0_WIN2, wrap);
++		ach->wrap = ail->curcore->wrap;
++		break;
++
++	case AXI_SPI_BUS:
++	case AXI_SDIO_BUS:
++		ach->regs = (void *)(unsigned long)addr;
++		ach->wrap = (void *)(unsigned long)wrap;
++		break;
++
++	default:
++		WARN_ON(0);
++		return NULL;
++		break;
++	}
++
++	ail->curcore = ach;
++
++	return ach->regs;
++}
++EXPORT_SYMBOL(axi_set_active_core);
++
++bool axi_iscoreup(struct axi_instance *aih)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct aidmp *ai;
++
++	ai = ail->curcore->wrap;
++
++	return (((R_REG(&ai->ioctrl) & (SICF_FGC | SICF_CLOCK_EN)) ==
++		 SICF_CLOCK_EN)
++		&& ((R_REG(&ai->resetctrl) & AIRC_RESET) == 0));
++}
++EXPORT_SYMBOL(axi_iscoreup);
++
++void axi_core_disable(struct axi_instance *aih, u32 bits)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	volatile u32 dummy;
++	struct aidmp *ai;
++
++	ai = ail->curcore->wrap;
++
++	/* if core is already in reset, just return */
++	if (R_REG(&ai->resetctrl) & AIRC_RESET)
++		return;
++
++	W_REG(&ai->ioctrl, bits);
++	dummy = R_REG(&ai->ioctrl);
++	udelay(10);
++
++	W_REG(&ai->resetctrl, AIRC_RESET);
++	udelay(1);
++}
++EXPORT_SYMBOL(axi_core_disable);
++
++/* reset and re-enable a core
++ * inputs:
++ * bits - core specific bits that are set during and after reset sequence
++ * resetbits - core specific bits that are set only during reset sequence
++ */
++void axi_core_reset(struct axi_instance *aih, u32 bits, u32 resetbits)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct aidmp *ai;
++	volatile u32 dummy;
++
++	ai = ail->curcore->wrap;
++
++	/*
++	 * Must do the disable sequence first to work for
++	 * arbitrary current core state.
++	 */
++	axi_core_disable(aih, (bits | resetbits));
++
++	/*
++	 * Now do the initialization sequence.
++	 */
++	W_REG(&ai->ioctrl, (bits | SICF_FGC | SICF_CLOCK_EN));
++	dummy = R_REG(&ai->ioctrl);
++	W_REG(&ai->resetctrl, 0);
++	udelay(1);
++
++	W_REG(&ai->ioctrl, (bits | SICF_CLOCK_EN));
++	dummy = R_REG(&ai->ioctrl);
++	udelay(1);
++}
++EXPORT_SYMBOL(axi_core_reset);
++
++uint axi_flag(struct axi_instance *aih)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct aidmp *ai;
++
++	/* TODO: what is with BCM47162 DMP */
++	ai = ail->curcore->wrap;
++
++	return R_REG(&ai->oobselouta30) & 0x1f;
++}
++EXPORT_SYMBOL(axi_flag);
++
++u32 axi_core_cflags(struct axi_instance *aih, u32 mask, u32 val)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct aidmp *ai;
++	u32 w;
++
++	/* TODO: what is with BCM47162 DMP */
++	ai = ail->curcore->wrap;
++
++	WARN_ON((val & ~mask) == 0);
++
++	if (mask || val) {
++		w = ((R_REG(&ai->ioctrl) & ~mask) | val);
++		W_REG(&ai->ioctrl, w);
++	}
++
++	return R_REG(&ai->ioctrl);
++}
++EXPORT_SYMBOL(axi_core_cflags);
++
++u32 axi_core_sflags(struct axi_instance *aih, u32 mask, u32 val)
++{
++	struct axi_local *ail = (struct axi_local *)aih;
++	struct aidmp *ai;
++	u32 w;
++
++	/* TODO: what is with BCM47162 DMP */
++	ai = ail->curcore->wrap;
++
++	WARN_ON((val & ~mask) == 0);
++	WARN_ON((mask & ~SISF_CORE_BITS) == 0);
++
++	if (mask || val) {
++		w = ((R_REG(&ai->iostatus) & ~mask) | val);
++		W_REG(&ai->iostatus, w);
++	}
++
++	return R_REG(&ai->iostatus);
++}
++EXPORT_SYMBOL(axi_core_sflags);
++
++static int __init axi_init(void)
++{
++	pr_info(AXI_DESCRIPTION "\n");
++	return 0;
++}
++
++static void __exit axi_exit(void)
++{
++}
++
++module_init(axi_init);
++module_exit(axi_exit);
+diff --git a/include/brcmaxi/axi.h b/include/brcmaxi/axi.h
+new file mode 100644
+index 0000000..0988939
+--- /dev/null
++++ b/include/brcmaxi/axi.h
+@@ -0,0 +1,340 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++
++#ifndef AXI_H_
++#define AXI_H_
++
++#include <linux/kernel.h>
++#include <linux/types.h>
++
++/**
++ * DOC: Introduction
++ *
++ * brcmaxi provides detection of chip cores in chipsets using the AMBA AXI
++ * on-chip interconnect. It also provides basic functions to operate these
++ * cores and obtain/modify common core control and status flags.
++ */
++/**
++ * DOC: Chip System Discovery
++ *
++ * The discovery of cores in the chip is done parsing through an enumeration
++ * rom located on the chip. After using the @axi_open function by which the
++ * calling code provides the type of bus present between calling code and the
++ * enumeration rom, physical base address of the enumeration rom and virtual
++ * address of currently mapped memory, the calling code needs to provide a
++ * table of handlers using the macro @AXI_SET_HANDLERS. The argument should
++ * be declared using the macro @AXI_CORE_HANDLER_TABLE. The actual scan is
++ * initiated by calling @axi_scan.
++ *
++ * The user-provided handlers are called for each core that matches.
++ *
++ * NOTE: currently matching is only based on manufacturer and/or core ID.
++ */
++/**
++ * DOC: Core Utility Functions
++ *
++ * The core function provided are operating on an active core, which is selected
++ * by using @axi_set_active_core. Before calling this function the calling code
++ * must assure that interrupts from the currently active core are disabled.
++ *
++ * This active core approach is mainly in place for PCI bus where the registers
++ * for a core and wrapper are accessed by moving the BAR windows.
++ */
++/**
++ * Manufacturer Ids
++ */
++#define	MFGID_ARM			0x43b
++#define	MFGID_BRCM			0x4bf
++#define	MFGID_MIPS			0x4a7
++
++/**
++ * Component Classes
++ *
++ * This is used to have a more specific core identification.
++ */
++#define	CC_SIM				0
++#define	CC_EROM				1
++#define	CC_CORESIGHT			9
++#define	CC_VERIF			0xb
++#define	CC_OPTIMO			0xd
++#define	CC_GEN				0xe
++#define	CC_PRIMECELL			0xf
++
++/* Core Codes */
++#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
++#define	CC_CORE_ID		0x800	/* chipcommon core */
++#define	ILINE20_CORE_ID		0x801	/* iline20 core */
++#define	SRAM_CORE_ID		0x802	/* sram core */
++#define	SDRAM_CORE_ID		0x803	/* sdram core */
++#define	PCI_CORE_ID		0x804	/* pci core */
++#define	MIPS_CORE_ID		0x805	/* mips core */
++#define	ENET_CORE_ID		0x806	/* enet mac core */
++#define	CODEC_CORE_ID		0x807	/* v90 codec core */
++#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
++#define	ADSL_CORE_ID		0x809	/* ADSL core */
++#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
++#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
++#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
++#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
++#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
++#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
++#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
++#define	EXTIF_CORE_ID		0x811	/* external interface core */
++#define	D11_CORE_ID		0x812	/* 802.11 MAC core */
++#define	APHY_CORE_ID		0x813	/* 802.11a phy core */
++#define	BPHY_CORE_ID		0x814	/* 802.11b phy core */
++#define	GPHY_CORE_ID		0x815	/* 802.11g phy core */
++#define	MIPS33_CORE_ID		0x816	/* mips3302 core */
++#define	USB11H_CORE_ID		0x817	/* usb 1.1 host core */
++#define	USB11D_CORE_ID		0x818	/* usb 1.1 device core */
++#define	USB20H_CORE_ID		0x819	/* usb 2.0 host core */
++#define	USB20D_CORE_ID		0x81a	/* usb 2.0 device core */
++#define	SDIOH_CORE_ID		0x81b	/* sdio host core */
++#define	ROBO_CORE_ID		0x81c	/* roboswitch core */
++#define	ATA100_CORE_ID		0x81d	/* parallel ATA core */
++#define	SATAXOR_CORE_ID		0x81e	/* serial ATA & XOR DMA core */
++#define	GIGETH_CORE_ID		0x81f	/* gigabit ethernet core */
++#define	PCIE_CORE_ID		0x820	/* pci express core */
++#define	NPHY_CORE_ID		0x821	/* 802.11n 2x2 phy core */
++#define	SRAMC_CORE_ID		0x822	/* SRAM controller core */
++#define	MINIMAC_CORE_ID		0x823	/* MINI MAC/phy core */
++#define	ARM11_CORE_ID		0x824	/* ARM 1176 core */
++#define	ARM7S_CORE_ID		0x825	/* ARM7tdmi-s core */
++#define	LPPHY_CORE_ID		0x826	/* 802.11a/b/g phy core */
++#define	PMU_CORE_ID		0x827	/* PMU core */
++#define	SSNPHY_CORE_ID		0x828	/* 802.11n single-stream phy core */
++#define	SDIOD_CORE_ID		0x829	/* SDIO device core */
++#define	ARMCM3_CORE_ID		0x82a	/* ARM Cortex M3 core */
++#define	HTPHY_CORE_ID		0x82b	/* 802.11n 4x4 phy core */
++#define	MIPS74K_CORE_ID		0x82c	/* mips 74k core */
++#define	GMAC_CORE_ID		0x82d	/* Gigabit MAC core */
++#define	DMEMC_CORE_ID		0x82e	/* DDR1/2 memory controller core */
++#define	PCIERC_CORE_ID		0x82f	/* PCIE Root Complex core */
++#define	OCP_CORE_ID		0x830	/* OCP2OCP bridge core */
++#define	SC_CORE_ID		0x831	/* shared common core */
++#define	AHB_CORE_ID		0x832	/* OCP2AHB bridge core */
++#define	SPIH_CORE_ID		0x833	/* SPI host core */
++#define	I2S_CORE_ID		0x834	/* I2S core */
++#define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
++#define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
++#define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
++#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
++					 * maps all unused address ranges
++					 */
++
++#define AXI_CORE_SIZE		0x1000	/* each core has 4Kbytes registers */
++
++/* match for all values */
++#define AXI_ANY_ID		(~0)
++
++/**
++ * Common core control flags
++ *
++ * used in @axi_core_cflags.
++ */
++#define	SICF_BIST_EN		0x8000
++#define	SICF_PME_EN		0x4000
++#define	SICF_CORE_BITS		0x3ffc
++#define	SICF_FGC		0x0002
++#define	SICF_CLOCK_EN		0x0001
++
++/*
++ * Common core status flags
++ *
++ * used in @axi_core_sflags.
++ */
++#define	SISF_BIST_DONE		0x8000
++#define	SISF_BIST_ERROR		0x4000
++#define	SISF_GATED_CLK		0x2000
++#define	SISF_DMA64		0x1000
++#define	SISF_CORE_BITS		0x0fff
++
++/**
++ * enum axi_bus - bus by which AXI erom is accessed
++ */
++enum axi_bus {
++	AXI_AMBA_BUS,
++	AXI_PCI_BUS,
++	AXI_SDIO_BUS,
++	AXI_JTAG_BUS,
++	AXI_USB_BUS,
++	AXI_SPI_BUS,
++	AXI_RPC_BUS,
++};
++
++/**
++ * struct axi_core - core information
++ *
++ * @id: component identifier
++ * @ident_a: raw component identification data (part a)
++ * @ident_b: raw component identification data (part b)
++ * @phys_address: physical backplane address
++ * @sec_phys_address: physical backplane address of 2nd register set
++ * @wrap_phys_address: physical backplane address of controlling wrapper
++ *
++ */
++struct axi_core {
++	u32	mfg;
++	u32	id;
++	u32	rev;
++	u32	phys_address;
++	u32	phys_space;
++	u32	sec_phys_address;
++	u32	sec_phys_space;
++	u32	wrap_phys_address;
++
++	void	*regs;
++	void	*wrap;
++};
++
++/**
++ * forward declaration for handler in axi_core_handler structure.
++ */
++struct axi_instance;
++
++struct axi_core_handler {
++	bool (*handler)(struct axi_instance *ai, struct axi_core *core);
++	u32 mfg_id;
++	u32 core_id;
++	u32 class;
++};
++
++#define AXI_CORE_HANDLER_TABLE(_table) \
++	static const struct axi_core_handler _table[]
++
++#define AXI_CORE(mfg, core, _handler) \
++	.handler = (_handler), .core_id = (core), \
++	.mfg_id = (mfg), .class = AXI_ANY_ID
++
++#define AXI_CORE_CLASS(mfg, core, _class, _handler) \
++	.handler = (_handler), .core_id = (core) \
++	.mfg_id = (mfg), .class = (_class)
++
++#define AXI_SET_HANDLERS(aih, _table) \
++	axi_set_handlers((aih), ARRAY_SIZE(_table), _table)
++
++/**
++ * struct axi_instance - instance data
++ *
++ * @bustype: indicates how to get hold on enumeration rom
++ * @pbus: bus access object
++ * @handler_list: list of handler for detected cores
++ */
++struct axi_instance {
++	void *pbus;
++	void *regs;
++
++	const struct axi_core_handler *handler_list;
++	size_t num_handler;
++
++	void *priv;
++};
++
++static inline void axi_set_handlers(struct axi_instance *aih, size_t n_handler,
++				    const struct axi_core_handler *list)
++{
++	aih->num_handler = n_handler;
++	aih->handler_list = list;
++}
++
++/**
++ * axi_open - create instance.
++ * @bus_type: &enum axi_bus specifies type of bus to access chipset.
++ * @pbus: pointer to bus device structure.
++ * @erom_base: physical address where enumeration srom is located.
++ * @priv_size: additional memory appended to instance for caller to use.
++ *
++ * Creates the instance filling in the provided details.
++ */
++struct axi_instance *axi_open(enum axi_bus bus_type, void *pbus,
++			      void *regs, u32 erom_base, u32 priv_size);
++/**
++ * axi_close - release the instance.
++ * @aih: &struct axi_instance pointer to the instance.
++ */
++void axi_close(struct axi_instance *aih);
++/**
++ * axi_scan - scan the chipset for cores.
++ * @aih: &struct axi_instance pointer to the instance.
++ */
++int axi_scan(struct axi_instance *aih);
++/**
++ * axi_set_active_core - activate given core.
++ * @aih: &struct axi_instance pointer to the instance.
++ * @ach: pointer to core to be activated.
++ *
++ * Activating a core will have the other operations
++ * be acted upon the core activated here.
++ */
++void *axi_set_active_core(struct axi_instance *aih, struct axi_core *ach);
++/**
++ * axi_iscoreup - indicates core is reset and enabled.
++ * @aih: &struct axi_instance pointer to the instance.
++ *
++ * Indicates whether the active core has reset and is enabled.
++ * Active core is set using @axi_set_active_core.
++ */
++bool axi_iscoreup(struct axi_instance *aih);
++/**
++ * axi_core_disable - disable the core.
++ * @aih: &struct axi_instance pointer to the instance.
++ *
++ * Disables the active core. Active core is set using @axi_set_active_core.
++ */
++void axi_core_disable(struct axi_instance *aih, u32 bits);
++/**
++ * axi_core_reset - reset and enable the core.
++ * @aih: &struct axi_instance pointer to the instance.
++ *
++ * Resets and enables the active core. Active core is set
++ * using @axi_set_active_core.
++ */
++void axi_core_reset(struct axi_instance *aih, u32 bits, u32 resetbits);
++/**
++ * axi_flag - get axi flag.
++ * @aih: &struct axi_instance pointer to the instance.
++ *
++ * Retrieves the axi flag for the active core. Active core is set
++ * using @axi_set_active_core.
++ */
++uint axi_flag(struct axi_instance *aih);
++/**
++ * axi_core_cflags - set core control flags.
++ * @aih: &struct axi_instance pointer to the instance.
++ * @mask: mask indicating the bits to clear.
++ * @val: value with bits to set. bits must be within mask.
++ *
++ * Set I/O control flags for the active core. Active core is set
++ * using @axi_set_active_core. The function returns the resulting
++ * value of the control flags. When called with with mask and val
++ * parameters being 0 the current control flags are returned.
++ */
++u32 axi_core_cflags(struct axi_instance *aih, u32 mask, u32 val);
++/**
++ * axi_core_sflags - set core status flags.
++ * @aih: &struct axi_instance pointer to the instance.
++ * @mask: mask indicating the bits to clear.
++ * @val: value with bits to set. bits must be within mask.
++ *
++ * Set I/O status flags for the active core. Active core is set
++ * using @axi_set_active_core. The function returns the resulting
++ * value of the status flags. When called with with mask and val
++ * parameters being 0 the current status flags are returned.
++ */
++u32 axi_core_sflags(struct axi_instance *aih, u32 mask, u32 val);
++
++#endif /* AXI_H_ */
+-- 
+1.7.1
 
 
-root@host:/usr/src/linux-headers-2.6.38-020638rc7# make mrproper && cp
-/boot/config-2.6.38-020638rc7-generic .config && yes "" | make
-oldconfig && make prepare && make scripts && make menuconfig
-  CLEAN   .tmp_versions
-  CLEAN   scripts/basic
-  CLEAN   scripts/kconfig
-  CLEAN   include/config include/generated
-  CLEAN   .config .config.old include/linux/version.h
-  HOSTCC  scripts/basic/fixdep
-  HOSTCC  scripts/basic/docproc
-  HOSTCC  scripts/kconfig/conf.o
-  HOSTCC  scripts/kconfig/kxgettext.o
-  SHIPPED scripts/kconfig/zconf.tab.c
-  SHIPPED scripts/kconfig/lex.zconf.c
-  SHIPPED scripts/kconfig/zconf.hash.c
-  HOSTCC  scripts/kconfig/zconf.tab.o
-  HOSTLD  scripts/kconfig/conf
-scripts/kconfig/conf --oldconfig Kconfig
-#
-# configuration written to .config
-#
-scripts/kconfig/conf --silentoldconfig Kconfig
-  CHK     include/linux/version.h
-  UPD     include/linux/version.h
-  CHK     include/generated/utsrelease.h
-  UPD     include/generated/utsrelease.h
-make[1]: *** No rule to make target `kernel/bounds.c', needed by
-`kernel/bounds.s'.  Stop.
-make: *** [prepare0] Error 2
-
-I suppose I need the kernel source, but it's nowhere to be found here
-( http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.38-rc7-natty )
-so I'm not sure what to do next.
-
-// Mathias
