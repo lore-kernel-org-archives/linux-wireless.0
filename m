@@ -1,72 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55919 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758288Ab1COSrw (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:26959 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657Ab1CUQ0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 14:47:52 -0400
-Received: by iwn34 with SMTP id 34so857586iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 11:47:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300214486.4139.6.camel@jlt3.sipsolutions.net>
-References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
- <1299831238.5082.185.camel@wwguy-huron> <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
- <1300063647.24333.7.camel@wwguy-ubuntu> <AANLkTin_=k=7Y0XmEtZc952pm=wuCawJAXgq6fKFWZM+@mail.gmail.com>
- <1300189917.5596.10.camel@jlt3.sipsolutions.net> <1300193550.5596.16.camel@jlt3.sipsolutions.net>
- <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com> <1300214486.4139.6.camel@jlt3.sipsolutions.net>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Tue, 15 Mar 2011 11:47:32 -0700
-Message-ID: <AANLkTikieuk6CoRPzQGSMMggMc=wPEXHY5B5H2N_CB5a@mail.gmail.com>
-Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
+	Mon, 21 Mar 2011 12:26:50 -0400
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000029385.msg
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 18:25:46 +0200
+Subject: Re: new utility kernel module for detecting cores in newer chipsets
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTimaRXjzbYP53uHYfJaiX6Z1iy5Qm14g+w_OiJEs@mail.gmail.com>
+References: <20110319214234.GA5152@kroah.com>
+	 <1300573336.11949.25.camel@maggie> <20110319234524.GA7493@kroah.com>
+	 <op.vsmyhmei3ri7v4@arend-laptop> <20110320145421.GA13962@kroah.com>
+	 <op.vsnd1a1i3ri7v4@arend-laptop> <20110320162200.GA17030@kroah.com>
+	 <op.vsng7q1j3ri7v4@arend-laptop> <20110320185216.GD19375@kroah.com>
+	 <AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
+	 <20110321140505.GA7321@kroah.com>
+	 <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+	 <op.vso77ddp3ri7v4@arend-laptop>
+	 <AANLkTimaRXjzbYP53uHYfJaiX6Z1iy5Qm14g+w_OiJEs@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 21 Mar 2011 18:25:36 +0200
+Message-Id: <1300724736.3866.33.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 15, 2011 at 11:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-03-15 at 11:16 -0700, Daniel Halperin wrote:
->
->> There's still something off about the window size: unlike with ath9k,
->> the receiver does continually print out warnings about advancing its
->> window. There's something very fishy here: for any given aggregation
->> session, the part of the sequence number space this happens is always
->> the same! Really weird. Here's a log from 3 agg sessions in a row,
->> just running simple TCP iperf:
->>
->> [341221.679710] New seq exceeds buffering window: 283, 250
->
-> Ok thanks for the patch, I'll still reply here though.
->
->
->> [341398.950019] iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra =
->> 00:16:ea:c3:b3:8e tid = 0
->> [341401.790964] New seq exceeds buffering window: 2335, 2304
->
-> So the delta is always 31, it seems? Is iwlwifi consistently sending
-> batches of 32 instead of the advertised 31?
+> 2011/3/21 Arend van Spriel <arend@broadcom.com>:
+> > On Mon, 21 Mar 2011 15:27:49 +0100, Rafał Miłecki <zajec5@gmail.com> wrote:
+> >
+> >> The case is, we discussed ssb/ai driver layout few days ago. George
+> >> shared idea of layout I agree with, nobody shared any objections. If
+> >> everything goes fine, we should have nicely modularized driver/project
+> >> supporting Broadcom's buses.
+> >
+> > Hi Rafał,
+> >
+> > Does this give us one module supporting both buses or does it provide two
+> > kernel modules (my preference)? I did ask you and George this question
+> > earlier but I seem to have missed the response from you or George.
+> 
+> I'm still waiting for George to respond and share his code.
+> 
+> 
+> >> In this situation I'm not really interested is simple ai driver
+> >> stripped from brcm80211. According to me, it would led to harder
+> >> maintenance and harder implementation of support for such a driver in
+> >> b43.
+> >
+> > I can imagine from b43 perspective the only good implementation would be to
+> > stick with the current b43<->ssb interface. So what will you do when another
+> > type of SoC interconnect is introduced. Forcing that in the same API as
+> > well? If you and George propose a new carefully considered API covering the
+> > functional capabilities of the current (and possibly future) interconnect
+> > buses I am all for that.
+> >
+> > To summarize this, my main issue (and Michael's, I think) is with the
+> > dependency being imposed between ai and ssb. Having two completely
+> > independent modules really makes more sense.
+> 
+> This really depends on new interconnect. If it will be totally
+> different, I'll vote for totally different driver. In case of SSB and
+> AI, driver layout is similar, it seems George managed to write sth
+> nice.
+> 
+> George?
+Hi there. Much surprised with such a resonance on the topic. Sorry for
+being so late with participating with discussion - work background
+requires me sometimes to move around alot - this week is the time for
+trips.
+If you extremely hurry with that I will make my testings sources
+available lately this evening as soon as get to my workpad. But just to
+warn you its not that I planned for final "release" just glue I used to
+work edge things out. As for final code I plan to finish with it next
+weekends - yet again I will move al lot this week and will have much
+time to think on the subject but not actually work on it.
 
-I don't think that's the case, in fact I've never seen the hardware
-send a larger batch than frame limit.  I think it's from a missed
-frame early in one batch being pushed out by a late frame in the next
-batch. I know how to get the logs to find out. I have a bunch of
-meetings soon, but I'll dig into this more later.
+Yet again sorry for making you wait.
 
-> Also -- don't get confused, the tx_agg_start is on its own TX agg
-> session, but the new seq stuff is on its RX agg session.
+Now back to subject. I curious about sertain things I see here which
+make the most contradictary ones. That ones regarding why AI and SB
+should be separate modules etc.
+Would be much appreciated if you hear my mind on that (under hear I mean
+not just read). Some time ago here in earlier AI rfcs' threads I already
+tried to cover the reason why am I sure they should not just share
+single code base but also be coupled together.
+AI and SB interconnects are really totally diffeent hardware base. But
+they stick to the single architecture model. Very much the same as PCI
+and PCIE are (see what I'm trying to do here?). This model is not AI or
+SB exclusive and in short looks like following (here I'm sorry for
+making you read the things you know already, but I do it just because I
+see that ones of you see on subject through Broadcom SDK while others do
+the same through linux/ssb):
+Bus devices coupled under the entity we tend to call cores. The cores
+managed from the system bus side with means of the host. The cores
+managed from the backplane side with means of agents. The core devices
+exposed to system and managed with same drivers regardless the
+backplane. The agents system dont supposted to know about and doing the
+same enable/disable/reset but in somewhat different way. The fact is (as
+at least I see it) that here we want to keep things apart just because
+one set of agents is called SB (or e. g. PCI) while the other is called
+AXI (or lets say PCIE).
+Yes, linux/ssb model design can't cover this. The linux/bcmb (or hnd as
+I finally named it - grrr really dont like these 3 letters -.-) might do
+better as it is designed to do that. Btw in way which is completely
+different from ssb and Broadcom SDK one.
 
-You're absolutely true; but both sides pretty much start and stop
-aggregation in sync, they both have the same timeouts and I'm only
-using tcp traffic which is bidirectional.  They're running the same
-software on the same hardware, modulo one being an AP and one a
-client.
+Here much sorry need to get back to work. Will be back late in evening.
 
-[Yes, I know that AP mode is broken on the iwl5300 but I disable power
-save, etc., and it seems to work well enough ...  Actually, does AP
-(not P2P) mode work properly on the P2P-supporting 6300?  I could
-switch to using those.]
+Have nice day,
+George
 
-Dan
+
