@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41221
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758703Ab1COVDp (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:59482 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752300Ab1CUOBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 17:03:45 -0400
-Date: Tue, 15 Mar 2011 14:04:22 -0700 (PDT)
-Message-Id: <20110315.140422.59684684.davem@davemloft.net>
-To: laijs@cn.fujitsu.com
-Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
-	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
-	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
-	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
-	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
-	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
-	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
-	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
-	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
-	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
-	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
-	linux-decnet-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH 15/17] net,rcu: convert call_rcu(ha_rcu_free) to
- kfree_rcu()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4D7F3ABA.7020709@cn.fujitsu.com>
-References: <4D7F3610.6000809@cn.fujitsu.com>
-	<4D7F3ABA.7020709@cn.fujitsu.com>
+	Mon, 21 Mar 2011 10:01:30 -0400
+Received: by wwj40 with SMTP id 40so5094859wwj.34
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 07:01:06 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Clamp byte mode transfers for 128x chips
+From: Luciano Coelho <coelho@ti.com>
+To: Ido Yariv <ido@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>
+In-Reply-To: <1300452597-13281-1-git-send-email-arik@wizery.com>
+References: <1300452597-13281-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Mar 2011 16:00:29 +0200
+Message-ID: <1300716029.2593.211.camel@cumari>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lai Jiangshan <laijs@cn.fujitsu.com>
-Date: Tue, 15 Mar 2011 18:08:58 +0800
+On Fri, 2011-03-18 at 14:49 +0200, Arik Nemtsov wrote:
+> On wl128x based devices, when TX packets are aggregated, each packet
+> size must be aligned to the SDIO block size, and sent using block mode
+> transfers.
+> 
+> The block size is set to 256 bytes, which is less than the maximum
+> possible byte transfer. Thus, if two small packets (< 256 bytes) are
+> aggregated, the aggregation buffer size would be 512, and will be sent
+> using byte mode transfers. This can have undesired side effects.
+> 
+> Fix this by setting the MMC_QUIRK_BLKSZ_FOR_BYTE_MODE mmc card quirk.
+> For 127x chips this has no effect, as the block size is set to 512
+> bytes.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> Signed-off-by: Ido Yariv <ido@wizery.com>
+> ---
 
-> 
-> 
-> The rcu callback ha_rcu_free() just calls a kfree(),
-> so we use kfree_rcu() instead of the call_rcu(ha_rcu_free).
-> 
-> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+Thanks! Applied and fixed Arik's email address, which was corrupted (or
+rather Ido-ized :P)
 
-Acked-by: David S. Miller <davem@davemloft.net>
+-- 
+Cheers,
+Luca.
+
