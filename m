@@ -1,150 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29991 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755390Ab1CKC4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:49 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 19/20] ath6kl: remove-typedef COMMON_CREDIT_STATE_INFO
-Date: Thu, 10 Mar 2011 18:55:46 -0800
-Message-ID: <1299812147-12069-20-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:53123 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753496Ab1CUPaQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 11:30:16 -0400
+Received: by qyg14 with SMTP id 14so5113790qyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 08:30:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <op.vso77ddp3ri7v4@arend-laptop>
+References: <20110319214234.GA5152@kroah.com>
+	<1300573336.11949.25.camel@maggie>
+	<20110319234524.GA7493@kroah.com>
+	<op.vsmyhmei3ri7v4@arend-laptop>
+	<20110320145421.GA13962@kroah.com>
+	<op.vsnd1a1i3ri7v4@arend-laptop>
+	<20110320162200.GA17030@kroah.com>
+	<op.vsng7q1j3ri7v4@arend-laptop>
+	<20110320185216.GD19375@kroah.com>
+	<AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
+	<20110321140505.GA7321@kroah.com>
+	<AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+	<op.vso77ddp3ri7v4@arend-laptop>
+Date: Mon, 21 Mar 2011 16:30:15 +0100
+Message-ID: <AANLkTimaRXjzbYP53uHYfJaiX6Z1iy5Qm14g+w_OiJEs@mail.gmail.com>
+Subject: Re: new utility kernel module for detecting cores in newer chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s COMMON_CREDIT_STATE_INFO \
-	"struct common_credit_state_info" drivers/staging/ath6kl/
+2011/3/21 Arend van Spriel <arend@broadcom.com>:
+> On Mon, 21 Mar 2011 15:27:49 +0100, Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> The case is, we discussed ssb/ai driver layout few days ago. George
+>> shared idea of layout I agree with, nobody shared any objections. If
+>> everything goes fine, we should have nicely modularized driver/project
+>> supporting Broadcom's buses.
+>
+> Hi Rafał,
+>
+> Does this give us one module supporting both buses or does it provide two
+> kernel modules (my preference)? I did ask you and George this question
+> earlier but I seem to have missed the response from you or George.
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/include/common_drv.h        |    6 +++---
- drivers/staging/ath6kl/miscdrv/credit_dist.c       |   18 +++++++++---------
- .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    2 +-
- 3 files changed, 13 insertions(+), 13 deletions(-)
+I'm still waiting for George to respond and share his code.
 
-diff --git a/drivers/staging/ath6kl/include/common_drv.h b/drivers/staging/ath6kl/include/common_drv.h
-index 6ed4901..f5bc9c3 100644
---- a/drivers/staging/ath6kl/include/common_drv.h
-+++ b/drivers/staging/ath6kl/include/common_drv.h
-@@ -29,12 +29,12 @@
- /* structure that is the state information for the default credit distribution callback
-  * drivers should instantiate (zero-init as well) this structure in their driver instance
-  * and pass it as a context to the HTC credit distribution functions */
--typedef struct _COMMON_CREDIT_STATE_INFO {
-+struct common_credit_state_info {
-     int TotalAvailableCredits;      /* total credits in the system at startup */
-     int CurrentFreeCredits;         /* credits available in the pool that have not been
-                                        given out to endpoints */
-     HTC_ENDPOINT_CREDIT_DIST *pLowestPriEpDist;  /* pointer to the lowest priority endpoint dist struct */
--} COMMON_CREDIT_STATE_INFO;
-+};
- 
- typedef struct {
-     s32 (*setupTransport)(void *ar);
-@@ -64,7 +64,7 @@ extern "C" {
- #endif
- 
- /* OS-independent APIs */
--int ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, COMMON_CREDIT_STATE_INFO *pCredInfo);
-+int ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, struct common_credit_state_info *pCredInfo);
- 
- int ar6000_ReadRegDiag(HIF_DEVICE *hifDevice, u32 *address, u32 *data);
- 
-diff --git a/drivers/staging/ath6kl/miscdrv/credit_dist.c b/drivers/staging/ath6kl/miscdrv/credit_dist.c
-index 68b1ed6..8c418d2 100644
---- a/drivers/staging/ath6kl/miscdrv/credit_dist.c
-+++ b/drivers/staging/ath6kl/miscdrv/credit_dist.c
-@@ -41,14 +41,14 @@
- #define DATA_SVCS_USED 4
- #endif
- 
--static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-+static void RedistributeCredits(struct common_credit_state_info *pCredInfo,
-                                 HTC_ENDPOINT_CREDIT_DIST *pEPDistList);
- 
--static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-+static void SeekCredits(struct common_credit_state_info *pCredInfo,
-                         HTC_ENDPOINT_CREDIT_DIST *pEPDistList);
- 
- /* reduce an ep's credits back to a set limit */
--static INLINE void ReduceCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-+static INLINE void ReduceCredits(struct common_credit_state_info *pCredInfo,
-                                 HTC_ENDPOINT_CREDIT_DIST  *pEpDist,
-                                 int                       Limit)
- {
-@@ -86,7 +86,7 @@ static void ar6000_credit_init(void                     *Context,
- {
-     HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
-     int                      count;
--    COMMON_CREDIT_STATE_INFO *pCredInfo = (COMMON_CREDIT_STATE_INFO *)Context;
-+    struct common_credit_state_info *pCredInfo = (struct common_credit_state_info *)Context;
- 
-     pCredInfo->CurrentFreeCredits = TotalCredits;
-     pCredInfo->TotalAvailableCredits = TotalCredits;
-@@ -179,7 +179,7 @@ static void ar6000_credit_distribute(void                     *Context,
-                                      HTC_CREDIT_DIST_REASON   Reason)
- {
-     HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
--    COMMON_CREDIT_STATE_INFO *pCredInfo = (COMMON_CREDIT_STATE_INFO *)Context;
-+    struct common_credit_state_info *pCredInfo = (struct common_credit_state_info *)Context;
- 
-     switch (Reason) {
-         case HTC_CREDIT_DIST_SEND_COMPLETE :
-@@ -243,7 +243,7 @@ static void ar6000_credit_distribute(void                     *Context,
- }
- 
- /* redistribute credits based on activity change */
--static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-+static void RedistributeCredits(struct common_credit_state_info *pCredInfo,
-                                 HTC_ENDPOINT_CREDIT_DIST *pEPDistList)
- {
-     HTC_ENDPOINT_CREDIT_DIST *pCurEpDist = pEPDistList;
-@@ -283,7 +283,7 @@ static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
- }
- 
- /* HTC has an endpoint that needs credits, pEPDist is the endpoint in question */
--static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-+static void SeekCredits(struct common_credit_state_info *pCredInfo,
-                         HTC_ENDPOINT_CREDIT_DIST *pEPDist)
- {
-     HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
-@@ -393,11 +393,11 @@ static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
- }
- 
- /* initialize and setup credit distribution */
--int ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, COMMON_CREDIT_STATE_INFO *pCredInfo)
-+int ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, struct common_credit_state_info *pCredInfo)
- {
-     HTC_SERVICE_ID servicepriority[5];
- 
--    A_MEMZERO(pCredInfo,sizeof(COMMON_CREDIT_STATE_INFO));
-+    A_MEMZERO(pCredInfo,sizeof(struct common_credit_state_info));
- 
-     servicepriority[0] = WMI_CONTROL_SVC;  /* highest */
-     servicepriority[1] = WMI_DATA_VO_SVC;
-diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-index 2c6f873..2373ed5 100644
---- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-+++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-@@ -550,7 +550,7 @@ typedef struct ar6_softc {
-     bool                  arNetQueueStopped;
-     bool                  arRawIfInit;
-     int                     arDeviceIndex;
--    COMMON_CREDIT_STATE_INFO arCreditStateInfo;
-+    struct common_credit_state_info arCreditStateInfo;
-     bool                  arWMIControlEpFull;
-     bool                  dbgLogFetchInProgress;
-     u8                 log_buffer[DBGLOG_HOST_LOG_BUFFER_SIZE];
+
+>> In this situation I'm not really interested is simple ai driver
+>> stripped from brcm80211. According to me, it would led to harder
+>> maintenance and harder implementation of support for such a driver in
+>> b43.
+>
+> I can imagine from b43 perspective the only good implementation would be to
+> stick with the current b43<->ssb interface. So what will you do when another
+> type of SoC interconnect is introduced. Forcing that in the same API as
+> well? If you and George propose a new carefully considered API covering the
+> functional capabilities of the current (and possibly future) interconnect
+> buses I am all for that.
+>
+> To summarize this, my main issue (and Michael's, I think) is with the
+> dependency being imposed between ai and ssb. Having two completely
+> independent modules really makes more sense.
+
+This really depends on new interconnect. If it will be totally
+different, I'll vote for totally different driver. In case of SSB and
+AI, driver layout is similar, it seems George managed to write sth
+nice.
+
+George?
+
 -- 
-1.7.4.15.g7811d
-
+Rafał
