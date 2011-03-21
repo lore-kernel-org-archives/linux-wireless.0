@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab1C2N0X (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:35131 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751573Ab1CUNeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 09:26:23 -0400
-Subject: Re: [PATCH] iwlegacy: fix bugs in change_interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110329132231.GA6919@redhat.com>
-References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
-	 <20110329132231.GA6919@redhat.com>
+	Mon, 21 Mar 2011 09:34:13 -0400
+Received: by mail-wy0-f182.google.com with SMTP id 23so6530801wyf.41
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 06:34:12 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add support for 11n Rx STBC one spatial stream
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1300008280-6904-1-git-send-email-shahar_levi@ti.com>
+References: <1300008280-6904-1-git-send-email-shahar_levi@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Mar 2011 15:26:15 +0200
-Message-ID: <1301405175.3834.15.camel@jlt3.sipsolutions.net>
+Date: Mon, 21 Mar 2011 15:33:34 +0200
+Message-ID: <1300714414.2593.204.camel@cumari>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-29 at 15:22 +0200, Stanislaw Gruszka wrote:
-> On Tue, Mar 29, 2011 at 02:05:59PM +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > If change_interface gets invoked during a firmware
-> > restart, it may crash; prevent that from happening
-> > by checking if ctx->vif is assigned.
-> > 
-> > Additionally, in my initial commit I forgot to set
-> > the vif->p2p variable correctly, so fix that too,
-> > even if it doesn't matter since P2P isn't supported.
+On Sun, 2011-03-13 at 11:24 +0200, Shahar Levi wrote:
+> wl12xx support Rx STBC one spatial stream
 > 
-> ACK
-> 
-> Does we also need iwl_{legacy,}is_ready_rf check?
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-Good question, I guess it wouldn't hurt.
+Applied with a small modification in the commit message.
 
-FWIW, I'm submitting the iwlagn version (which looks just the same) to
-our own testing first.
+Thanks!
 
-johannes
+-- 
+Cheers,
+Luca.
 
