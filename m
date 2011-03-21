@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43720 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab1CPOMx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348Ab1CUS4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 10:12:53 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1544936bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 07:12:52 -0700 (PDT)
-From: Peter Lemenkov <lemenkov@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@redhat.com>,
-	rt2x00-dev <users@rt2x00.serialmonkey.com>,
-	Peter Lemenkov <lemenkov@gmail.com>
-Subject: [PATCH 4/4] rt2x00: Add unknown Toshiba device, mentioned in rt3572sta sources, under CONFIG_RT2800USB_UNKNOWN
-Date: Wed, 16 Mar 2011 17:12:18 +0300
-Message-Id: <1300284739-7797-5-git-send-email-lemenkov@gmail.com>
-In-Reply-To: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
-References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
+	Mon, 21 Mar 2011 14:56:41 -0400
+Subject: Re: Logs spammed by brcm80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <op.vspg80mq3ri7v4@arend-laptop>
+References: <4D878FBC.5010204@lwfinger.net> <op.vspg80mq3ri7v4@arend-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Mar 2011 19:56:34 +0100
+Message-ID: <1300733794.3804.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Mon, 2011-03-21 at 19:51 +0100, Arend van Spriel wrote:
+> On Mon, 21 Mar 2011 18:49:48 +0100, Larry Finger  
+> <Larry.Finger@lwfinger.net> wrote:
+> 
+> > With both BCM4313 and BCM943224 cards, brcm80211 spams my logs with  
+> > messages:
+> >
+> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 159/256 dur  
+> > 1778/1504
+> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 137/256 dur  
+> > 1602/1504
+> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 382/256 dur  
+> > 3562/1504
+> 
+> This actually means that mac80211 is giving us transmit packets which  
+> violate the txop duration. I am not sure whether this is actually true or  
+> we did not honour the conf_tx callback. I think we should put this one on  
+> our todo list.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 3aa32fd..438e64f 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -975,6 +975,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Sweex */
- 	{ USB_DEVICE(0x177f, 0x0153), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x177f, 0x0313), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Toshiba */
-+	{ USB_DEVICE(0x0930, 0x0a07), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Zyxel */
- 	{ USB_DEVICE(0x0586, 0x341a), USB_DEVICE_DATA(&rt2800usb_ops) },
- #endif
--- 
-1.7.4
+Are you saying you expect mac80211 to fragment packets that don't fit
+into a txop? That's not done for sure.
+
+johannes
 
