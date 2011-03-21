@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38591
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751116Ab1COXAq (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:48939 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752933Ab1CUR2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 19:00:46 -0400
-Date: Tue, 15 Mar 2011 16:01:24 -0700 (PDT)
-Message-Id: <20110315.160124.104058374.davem@davemloft.net>
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	eric.dumazet@vger.kernel.org, jpirko@redhat.com,
-	linville@tuxdriver.com, kaber@trash.net
-Subject: net-next-2.6 status...
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 21 Mar 2011 13:28:21 -0400
+Received: by mail-ey0-f172.google.com with SMTP id 13so1529664eye.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 10:28:18 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: fix a couple of sparse warning about undeclared functions
+Date: Mon, 21 Mar 2011 19:27:31 +0200
+Message-Id: <1300728451-14491-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix the following sparse warnings:
 
-Please do not submit feature patches until the merge window is over and
-Linus releases 2.6.39-rc1, thank you.
+drivers/net/wireless/wl12xx/main.c:1129:5: warning: symbol '__wl1271_plt_stop' was not declared. Should it be static?
+drivers/net/wireless/wl12xx/main.c:2988:5: warning: symbol 'wl1271_op_ampdu_action' was not declared. Should it be static?
 
-Bug fixes are, of course, still ok.
+Both functions should be static.
 
-I have merged all of the stragglers from net-2.6 that didn't make it
-into 2.6.38 into net-next-2.6, and also just about everything that
-is relevant from patchwork.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-Jiri, I know there is your patch set there, but I think you and Changli
-still need to go back and forth one more time wrt. orig_dev semantics.
-Since you have been posting this patch set for some time I'm still
-willing to apply it for this merge window, but please make haste and
-work out the remaining discussion.  Thank you.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 916ebd1..85cb4da 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1126,7 +1126,7 @@ out:
+ 	return ret;
+ }
+ 
+-int __wl1271_plt_stop(struct wl1271 *wl)
++static int __wl1271_plt_stop(struct wl1271 *wl)
+ {
+ 	int ret = 0;
+ 
+@@ -2985,10 +2985,11 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			   enum ieee80211_ampdu_mlme_action action,
+-			   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+-			   u8 buf_size)
++static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  enum ieee80211_ampdu_mlme_action action,
++				  struct ieee80211_sta *sta, u16 tid, u16 *ssn,
++				  u8 buf_size)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	int ret;
+-- 
+1.7.1
 
-Eric, I'd like to have the ECN one-liner in the tree soon.
-
-John and Patrick, I assume that after today's pulls I am completely
-up to date with everything, feature wise, that will go into the merge
-window for wireless and netfilter.
-
-Thanks.
