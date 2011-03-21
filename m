@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web161615.mail.bf1.yahoo.com ([98.139.211.137]:47076 "HELO
-	web161615.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750985Ab1CSXce convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 19:32:34 -0400
-Message-ID: <625424.27965.qm@web161615.mail.bf1.yahoo.com>
-Date: Sat, 19 Mar 2011 16:32:32 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Bug#618930: High network latency with ralink usb wireless device
-To: Richard Kettlewell <rjk@greenend.org.uk>,
-	Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org, 618930@bugs.debian.org,
-	Ivo Van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20110319223159.GA19576@sig21.net>
+Received: from purkki.adurom.net ([80.68.90.206]:52387 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752890Ab1CULX1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 07:23:27 -0400
+To: Sean Robinson <seankrobinson@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: terminology questions
+References: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 21 Mar 2011 13:23:22 +0200
+In-Reply-To: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com> (Sean Robinson's message of "Sat\, 19 Mar 2011 09\:18\:07 -0700")
+Message-ID: <87aagovhsl.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sean Robinson <seankrobinson@gmail.com> writes:
 
-> 
-> I sent a patch to disable power save by default, but then
-> work started
-> to fix it instead, but then stalled.  Seems like
-> 2.6.38 shipped with
-> broken power save enabled by default.  Plese read the
-> discussion
-> following my RFC patch:
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/thread.html#3017
-> 
-> You can test if power saving causes your issue by
-> disabling
-> it with "iwconfig wlan0 power off".
-> 
+> What is a station?
 
-Hi Johannes
+You got an answer already. But in principle all devices supporting
+IEEE 802.11 are stations (or STAs) in the standard.
 
-Does this patch touches on lost and duplicate packets with rt3070 USB as well?
+> How does a station relate to an AP?
 
-Walter
+AP is a station as are all clients.
 
+>  What are the delineations between mac80211/cfg80211/nl80211?
 
-      
+mac80211 is an IEEE 802.11 stack for softmac devices.
+
+cfg80211 is a new (relatively speaking) component for managing
+configuration of IEEE 802.11 devices (used by both mac80211 and
+fullmac device drivers).
+
+nl80211 is a new (again relatively speaking) netlink based user space
+interface (protocol?) for managing IEEE 802.11 devices. cfg80211
+implements the kernel side of this interface. From user space at least
+wpasupplicant and iw use this interface, but in principle any
+application can use it.
+
+-- 
+Kalle Valo
