@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46834 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756823Ab1CCIVU (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34066 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab1CUPd2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 03:21:20 -0500
-Received: by iyb26 with SMTP id 26so707096iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 00:21:20 -0800 (PST)
+	Mon, 21 Mar 2011 11:33:28 -0400
+Received: by qwk3 with SMTP id 3so4222550qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 08:33:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <loom.20110303T091059-822@post.gmane.org>
-References: <AANLkTinzfBmpJ6-O=o-zi+oh9miLRo-UZUM=MhcnQmk=@mail.gmail.com> <loom.20110303T091059-822@post.gmane.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Mar 2011 00:21:00 -0800
-Message-ID: <AANLkTinO8mVVFuZRJVSROr=7fGAj1G2x07KSS1c+bnNx@mail.gmail.com>
-Subject: Re: Regulatory database improvements
-To: jpo234 <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110321151643.GA29871@kroah.com>
+References: <20110320145421.GA13962@kroah.com>
+	<op.vsnd1a1i3ri7v4@arend-laptop>
+	<20110320162200.GA17030@kroah.com>
+	<op.vsng7q1j3ri7v4@arend-laptop>
+	<20110320185216.GD19375@kroah.com>
+	<AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
+	<20110321140505.GA7321@kroah.com>
+	<AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+	<20110321144603.GA7645@kroah.com>
+	<AANLkTi=f_Gn7+4ahnZFwOw9qWUV05+WpjaRkajaYGxky@mail.gmail.com>
+	<20110321151643.GA29871@kroah.com>
+Date: Mon, 21 Mar 2011 16:33:27 +0100
+Message-ID: <AANLkTimGGMb-UdjdGFcjYCna-sirQz76nog4OCe-CnNE@mail.gmail.com>
+Subject: Re: new utility kernel module for detecting cores in newer chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 3, 2011 at 12:14 AM, jpo234 <pommnitz@yahoo.com> wrote:
-> Luis R. Rodriguez <mcgrof@...> writes:
+2011/3/21 Greg KH <greg@kroah.com>:
+> On Mon, Mar 21, 2011 at 03:52:56PM +0100, Rafał Miłecki wrote:
+>> 2011/3/21 Greg KH <greg@kroah.com>:
+>> > I have no objections to what you want at all, why do you think I do?
+>> > I'm just handling getting the stuff in drivers/staging/ out of there,
+>> > that's it.  I trust the rest of you all to handle the design decisions
+>> > properly.
+>> >
+>> > And as there is no code here yet to complain about, I fail to see any
+>> > problem yet :)
+>>
+>> It was not directly to you, I believe you already many things to worry
+>> about, and are not really interested in getting into another driver
+>> layout :)
 >
->> If anyone has any input on this definition or would like some please
->> start thinking about it and we can start talking about it. For details
->> as to *why* we are doing this you can lok at the wiki page above or
->> also the thread:
+> Then why was I the only one on the "To:" line?  Please be more careful
+> in the future.
+
+Just because I hit "Reply" in your e-mail's view. All other were put in CC.
+
+
+>> I expected Michael and Arend to talk with us (mostly me and George)
+>> about current situation.
 >
-> Luis,
-> we have an amplifier attached to one card and not on the other in our system.
-> The amplified card requires different regulatory constraints from the "normal"
-> one. So, what I'd like to see are per wiphy regulatory settings, not global ones.
+> For some reason, there was a seprate thread without the mailing list on
+> it about this topic where Michael did discuss this.  Maybe he will
+> summarize that here for everyone else now.
 
-How does an amplifier change regulatory rules? The rules are static,
-likely what you want is not per wiphy rules but per wiphy
-modifications to help you comply by the additions you are making. No?
+It was on linux-wireless which mostly matches AI usage.
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/66590
 
-  Luis
+-- 
+Rafał
