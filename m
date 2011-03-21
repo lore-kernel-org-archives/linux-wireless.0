@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39602 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756763Ab1CROBD (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:45040 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751492Ab1CUPn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 10:01:03 -0400
-Date: Fri, 18 Mar 2011 09:50:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org, vmehta@atheros.com,
-	naveen.singh@atheros.com, stable@kernel.org,
-	Naveen Singh <nsingh@atheros.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Re: [RTF] iwmc3200wifi: fix device registration ordering for cfg80211
-Message-ID: <20110318135058.GE5103@tuxdriver.com>
-References: <1300417820-19029-1-git-send-email-lrodriguez@atheros.com>
- <AANLkTi=58JJNoYG7232ykiOnAK2TX18ROxrfYQir3Wwe@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=58JJNoYG7232ykiOnAK2TX18ROxrfYQir3Wwe@mail.gmail.com>
+	Mon, 21 Mar 2011 11:43:56 -0400
+Received: by mail-ww0-f54.google.com with SMTP id 20so8425382wwd.35
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 08:43:54 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add mutex protection for interface list
+From: Luciano Coelho <coelho@ti.com>
+To: juuso.oikarinen@nokia.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1300697016-1652-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1300697016-1652-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Mar 2011 17:43:16 +0200
+Message-ID: <1300722196.2593.239.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 17, 2011 at 08:11:17PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Mar 17, 2011 at 8:10 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > Without this you can get a race against udev and userspace daemons
-> > which will try to poke the device even before netdev ops and friends
-> > are available. Device initialization will fail without this.
-> >
-> > Cc: stable@kernel.org
-> > Cc: Naveen Singh <nsingh@atheros.com>
-> > Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Cc: Intel Linux Wireless <ilw@linux.intel.com>
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
+On Mon, 2011-03-21 at 10:43 +0200, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 > 
-> Oops sorry, this was supposed to go to Linville.
+> The interface list maintained in main.c is not mutex protected. This could
+> cause issues, as the list is accessed from notifier chains.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-And probably "[RFT]" instead of "[RTF]" too. :-)
+Reviewed-by: Luciano Coelho <coelho@ti.com>
 
-Does anyone even have this hardware?
+...and applied.  Thanks!
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers,
+Luca.
+
