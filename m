@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49758 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272Ab1CPXHY convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:37744 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752935Ab1CUQAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 19:07:24 -0400
-From: Mihai =?utf-8?q?Don=C8=9Bu?= <mihai.dontu@gmail.com>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [b43] usb device disconnects automatically after 1s
-Date: Thu, 17 Mar 2011 01:06:58 +0200
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <201103170018.32061.mihai.dontu@gmail.com> <201103170022.24290.mihai.dontu@gmail.com> <AANLkTi=-B0e4VT_v+F23Q+hG_zn=JnVbmVHnFpETVrZu@mail.gmail.com>
-In-Reply-To: <AANLkTi=-B0e4VT_v+F23Q+hG_zn=JnVbmVHnFpETVrZu@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201103170106.58746.mihai.dontu@gmail.com>
+	Mon, 21 Mar 2011 12:00:08 -0400
+Received: by eyg5 with SMTP id 5so1350121eyg.38
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 09:00:03 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: fix SG BT load value to reflect its new meaning
+Date: Mon, 21 Mar 2011 17:59:16 +0200
+Message-Id: <1300723156-20978-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 17 March 2011 00:35:02 Rafał Miłecki wrote:
-> 2011/3/16 Mihai Donțu <mihai.dontu@gmail.com>:
-> > Added linux-usb and linux-wireless to CC.
-> > 
-> > On Thursday 17 March 2011 00:18:31 Mihai Donțu wrote:
-> >> Hi,
-> >> 
-> >> I have just upgraded to 2.6.38 and discovered that I can't use my
-> >> wireless device (BCM4312 802.11a/b/g). I press Fn + F2, the bluetooth
-> >> led lights and after a second it turns off by itself. In dmesg I'm
-> >> seeing the following:
-> >> 
-> >> [   88.167212] usb 1-2.2: new full speed USB device using ehci_hcd and
-> >> address 5
-> >> [   88.782330] usb 1-2.2: USB disconnect, address 5
-> >> 
-> >> I switched to 2.6.37 until I'll have some time to bisect this. In the
-> >> mean time I have attached the output of lspci, interrupts and dmesg.
-> 
-> I suspect it's WMI related. What is your machine?
+The Soft Gemini BT load ratio value has changed its meaning with FW
+version 6.1.0.0.310.  It now means the passive scan compensation
+percentage during A2DP EDR.  Instead of 50, we need to use 200.
 
-It's a Dell Latitude D520 but I can't find a link with full specs (in 
-English).
+Fix the SG configuration accordingly.
 
-> Please check:
-> https://bugzilla.kernel.org/show_bug.cgi?id=31002
-> http://comments.gmane.org/gmane.linux.acpi.devel/49577
-> 
-> I can't help you more, I just noticed such a issue reported on ACPI
-> ML, you have to dig into this yourself (or someone else may help you).
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks for the links. I'll see if I can get anywhere from there.
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 59e0f79..916ebd1 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -54,7 +54,7 @@ static struct conf_drv_settings default_conf = {
+ 			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
+ 			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
+ 			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
+-			[CONF_SG_BT_LOAD_RATIO]                     = 50,
++			[CONF_SG_BT_LOAD_RATIO]                     = 200,
+ 			[CONF_SG_AUTO_PS_MODE]                      = 1,
+ 			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
+ 			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
 -- 
-Mihai Donțu
+1.7.1
+
