@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ksp.mff.cuni.cz ([195.113.26.206]:41602 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751281Ab1CHG63 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 01:58:29 -0500
-Date: Tue, 8 Mar 2011 07:58:19 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Tianji Li <Tianji.Li@nuim.ie>
-Cc: rick.jones2@hp.com, Dave T?ht <d@taht.net>, sedat.dilek@gmail.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	bloat-devel@lists.bufferbloat.net, linux-kernel@vger.kernel.org
-Subject: Re: ANNOUNCE: debloat-testing kernel git tree
-Message-ID: <20110308065819.GA1357@ucw.cz>
-References: <20110225222210.GA3618@tuxdriver.com>
- <AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
- <87fwr9jxya.fsf@cruithne.co.teklibre.org>
- <AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
- <8739n9ii7z.fsf@cruithne.co.teklibre.org>
- <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
- <87tyfph2az.fsf@cruithne.co.teklibre.org>
- <1299176168.2157.14.camel@tardy>
- <4D6FEFD4.9010608@nuim.ie>
+Received: from mms1.broadcom.com ([216.31.210.17]:3985 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751541Ab1CUSwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 14:52:10 -0400
+To: "Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Logs spammed by brcm80211
+References: <4D878FBC.5010204@lwfinger.net>
+Date: Mon, 21 Mar 2011 19:51:57 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D6FEFD4.9010608@nuim.ie>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vspg80mq3ri7v4@arend-laptop>
+In-Reply-To: <4D878FBC.5010204@lwfinger.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 2011-03-03 13:45:24, Tianji Li wrote:
-> 
-> 
-> On 03/03/2011 12:16 PM, Rick Jones wrote:
-> >>For wireless routers and cable home gateways especially, this research
-> >>shows that the total un-managed buffers in your system should be less
-> >>than 32.
-> >
-> >Would it be a good thing to start describing these queues not so much in
-> >terms of packets but in terms of delay (or bandwidth X delay)?
-> >
-> 
-> The unit of bandwidth is something like Mbps, that of delay can be
-> second, so bandwidth X delay --> Mb, which is the unit of packet
-> size. So both packets and delay should have the same effect for
-> sizing buffers.
+On Mon, 21 Mar 2011 18:49:48 +0100, Larry Finger  
+<Larry.Finger@lwfinger.net> wrote:
 
-Bandwidth varies greatly with time. On cellphone, you can go from
-5KB/sec GPRS to 300KB/sec HSDPA and back...
-								Pavel
+> With both BCM4313 and BCM943224 cards, brcm80211 spams my logs with  
+> messages:
+>
+> wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 159/256 dur  
+> 1778/1504
+> wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 137/256 dur  
+> 1602/1504
+> wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 382/256 dur  
+> 3562/1504
+
+This actually means that mac80211 is giving us transmit packets which  
+violate the txop duration. I am not sure whether this is actually true or  
+we did not honour the conf_tx callback. I think we should put this one on  
+our todo list.
+
+> Thanks,
+>
+> Larry
+>
+
+Thanks
+AvS
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
