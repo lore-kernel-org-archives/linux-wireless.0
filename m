@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41109
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758616Ab1COVBq (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:43398 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754394Ab1CUUmZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 17:01:46 -0400
-Date: Tue, 15 Mar 2011 14:02:22 -0700 (PDT)
-Message-Id: <20110315.140222.71135070.davem@davemloft.net>
-To: laijs@cn.fujitsu.com
-Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
-	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
-	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
-	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
-	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
-	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
-	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
-	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
-	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
-	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
-	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
-	linux-decnet-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH 04/17] net,rcu: convert call_rcu(tcf_common_free_rcu)
- to kfree_rcu()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4D7F37F0.1050801@cn.fujitsu.com>
-References: <4D7F3610.6000809@cn.fujitsu.com>
-	<4D7F37F0.1050801@cn.fujitsu.com>
+	Mon, 21 Mar 2011 16:42:25 -0400
+Date: Mon, 21 Mar 2011 13:42:23 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>, george@znau.edu.ua,
+	zajec5@gmail.com, mb@bu3sch.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] drivers: brcmaxi: provide amba axi functionality in
+ separate module
+Message-Id: <20110321134223.43791d78.rdunlap@xenotime.net>
+In-Reply-To: <1300739892.13397.4.camel@jlt3.sipsolutions.net>
+References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
+	<1300738586-7157-2-git-send-email-arend@broadcom.com>
+	<20110321132848.e4e846a5.rdunlap@xenotime.net>
+	<1300739892.13397.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lai Jiangshan <laijs@cn.fujitsu.com>
-Date: Tue, 15 Mar 2011 17:57:04 +0800
+On Mon, 21 Mar 2011 21:38:12 +0100 Johannes Berg wrote:
 
+> On Mon, 2011-03-21 at 13:28 -0700, Randy Dunlap wrote:
 > 
+> > > +/**
+> > > + * DOC: Core Utility Functions
 > 
-> The rcu callback tcf_common_free_rcu() just calls a kfree(),
-> so we use kfree_rcu() instead of the call_rcu(tcf_common_free_rcu).
+> > This is not kernel-doc notation.  Change /** to /*.
 > 
-> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+> Actually, it is, if you prefix with DOC: you can embed that into the
+> generated DocBook with 
+> !P<file> <heading name>
+> and include the text. I did that in b112e0f7 :-)
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Yes, I'm familiar with that notation.
+
+
+bah.  You omitted a few lines of comments:
+
+> +/**
+
+This is not kernel-doc notation.  Change /** to /*.
+
+> + * Manufacturer Ids
+> + */
+
+
+
+> > > +/**
+> > 
+> > ditto
+> > 
+> > > + * Component Classes
+> 
+> You're right for most of the other ones of course.
+
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
