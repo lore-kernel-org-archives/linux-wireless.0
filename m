@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64158 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659Ab1CQVuZ convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39086 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754705Ab1CUWkm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 17:50:25 -0400
-Received: by qwk3 with SMTP id 3so2420788qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 14:50:24 -0700 (PDT)
+	Mon, 21 Mar 2011 18:40:42 -0400
+Received: by wwa36 with SMTP id 36so8051158wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 15:40:41 -0700 (PDT)
+Message-ID: <4D87D3E0.4080408@gmail.com>
+Date: Mon, 21 Mar 2011 22:40:32 +0000
+From: Dave Kilroy <kilroyd@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1300284739-7797-2-git-send-email-lemenkov@gmail.com>
-References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
-	<1300284739-7797-2-git-send-email-lemenkov@gmail.com>
-Date: Thu, 17 Mar 2011 22:50:22 +0100
-Message-ID: <AANLkTimLnUrot+4eu74pbEBvLdAtsf-JZT==q-hNWh9M@mail.gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 1/4] rt2x00: Add rt2870 device id
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Peter Lemenkov <lemenkov@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@redhat.com>,
-	rt2x00-dev <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: armadefuego@gmail.com
+CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.38-rc8-wl RESEND] orinoco: Clear dangling pointer
+ on hardware busy
+References: <4d870a8a.8735e50a.41c9.134e@mx.google.com>
+In-Reply-To: <4d870a8a.8735e50a.41c9.134e@mx.google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2011 at 3:12 PM, Peter Lemenkov <lemenkov@gmail.com> wrote:
-> Add ID for Asus USB-N11 Wi-FI adapter. Tested by me.
->
-> Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+On 21/03/2011 08:21, armadefuego@gmail.com wrote:
+> On hardware busy the scan request pointer should be cleared, as higher levels will release. This avoids a crash when that pointer is erroneously used later.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I think you need to add line breaks for the git log
 
+> Signed-off-by: Joseph J. Gunn<armadefuego@yahoo.com>
 > ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> When the hardware is busy the error is propagated to higher levels on the stack. Those layers release the buffer. Therefore the copy of the pointer must be erased. Otherwise subsequent events checking this pointer ma crash.
+> ---
+> diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
+> index 09fae2f..2022815 100644
+> --- a/drivers/net/wireless/orinoco/cfg.c
+> +++ b/drivers/net/wireless/orinoco/cfg.c
+> @@ -151,8 +151,17 @@ static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
+>   		return -EBUSY;
 >
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 197a36c..03a5308 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -719,6 +719,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x0b05, 0x1732), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0b05, 0x1742), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* AzureWave */
->        { USB_DEVICE(0x13d3, 0x3247), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -913,7 +914,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0b05, 0x1790), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* AzureWave */
->        { USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
-> --
-> 1.7.4
+>   	priv->scan_request = request;
+> +	DEBUG(3, "orinoco_scan():"
+> +		" scan_request %p wiphy %p, dev %p\n",
+> +		priv->scan_request,
+> +		priv->scan_request->wiphy,
+> +		priv->scan_request->dev
+> +		);
 >
+>   	err = orinoco_hw_trigger_scan(priv, request->ssids);
+> +	/* On EBUSY the hardware is busy. We aren't processing the request */
+> +	if (err == -EBUSY)
+
+We should reset priv->scan_request on all errors, not just -EBUSY. Were 
+you getting this in a particular situation? If so, highlighting it in 
+the commit log is useful.
+
+I notice -EBUSY is returned when we can't get the orinoco_lock - are you 
+having an issue with lock cotention on a particular device?
+
+> +		priv->scan_request = NULL;
 >
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+>   	return err;
+>   }
+> diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+> index e99ca1c..698e9ff 100644
+> --- a/drivers/net/wireless/orinoco/scan.c
+> +++ b/drivers/net/wireless/orinoco/scan.c
+> @@ -230,6 +230,12 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
 >
+>    scan_abort:
+>   	if (priv->scan_request) {
+> +		DEBUG(3, "orinoco_add_hostscan_results():"
+> +			" scan_request %p wiphy %p, dev %p\n",
+> +			priv->scan_request,
+> +			priv->scan_request->wiphy,
+> +			priv->scan_request->dev
+> +			);
+
+I'm not a big fan of scattering DEBUG statements about, but if we're 
+going to, use __FUNCTION__ (or whatever the C99 incarnation is) rather 
+than explicitly naming the functions.
+
+
+Dave.
