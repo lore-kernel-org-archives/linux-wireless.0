@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52131 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752849Ab1CMTCw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Mar 2011 15:02:52 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 07EA3540154
-	for <linux-wireless@vger.kernel.org>; Sun, 13 Mar 2011 15:06:34 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110313190250.47FA840E98@repository3.orbit-lab.org>
-Date: Sun, 13 Mar 2011 15:02:50 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from smtp.nokia.com ([147.243.128.26]:33105 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757Ab1CUIt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 04:49:59 -0400
+Subject: Re: [PATCH] wl12xx: set the actual tid instead of the ac
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1300694381.22224.28.camel@wimaxnb.nmp.nokia.com>
+References: <1300309434-15491-1-git-send-email-eliad@wizery.com>
+	 <1300340306.11073.5784.camel@wimaxnb.nmp.nokia.com>
+	 <AANLkTik8DYUn7SuM_L2ciNnuBCK5TobOEcRBPm+gRnyw@mail.gmail.com>
+	 <1300694381.22224.28.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Mar 2011 10:49:50 +0200
+Message-ID: <1300697390.22224.32.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+On Mon, 2011-03-21 at 09:59 +0200, ext Juuso Oikarinen wrote:
+> On Mon, 2011-03-21 at 09:54 +0200, ext Eliad Peller wrote:
+> > On Thu, Mar 17, 2011 at 7:38 AM, Juuso Oikarinen
+> > <juuso.oikarinen@nokia.com> wrote:
+> > > On Wed, 2011-03-16 at 23:03 +0200, ext Eliad Peller wrote:
+> > >> When passing a tx frame, the driver incorrectly set desc->tid
+> > >> with the ac instead of the actual tid.
+> > >>
+> > >> It has some serious implications when using 802.11n + QoS,
+> > >> as the fw starts a BlockAck with the wrong tid (which finally
+> > >> cause beacon loss and disconnection / some fw crash)
+> > >>
+> > >> Fix it by using the actual tid stored in skb->priority.
+> > >
+> > > How will the firmware handle the TIDs larger than 3, as currently to the
+> > > firmware it appears only TID's 0-3 are configured, and the rest are
+> > > whatever values happen to be there default?
+> > >
+> > that's a good question.
+> > according to the fw guys, the fw auto-maps the tid to the correct ac.
+> > the confusing thing is that ACX_TID_CFG actually gets AC as its input
+> > (in the queue_id param) rather than TID.
+> > thus, only 0-3 (ACs, not TIDs) are configured.
+> > 
+> 
+> Yes, so the TID's are most likely not configured in a way that the
+> firmware will be able to "auto-map". I think the at minimum the
+> ACX_TID_CFG must be revisited before this change can work.
+> 
 
-compat-wireless code metrics
+As discussed on IRC. So there is no dependency between the index of the
+ACX_TID_CFG configurations and the tid passed to the TX descriptor.
+Instead the FW independently maps the tids to corresponding AC's,
+regardless of the tsid's configured in ACX_TID_CFG.
 
-    831956 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1560 - % of code consists of backport work
+My confusion here was that I assumed the indexes given to ACX_TID_CFG
+must match the actual priority values.
+
+Based on this and the IRC chat (which was enlightening):
+
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+
+-Juuso
+
