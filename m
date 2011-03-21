@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41815 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755575Ab1CXNKv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 09:10:51 -0400
-Received: by bwz15 with SMTP id 15so25178bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 06:10:50 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
-Date: Thu, 24 Mar 2011 14:09:03 +0100
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+Received: from kroah.org ([198.145.64.141]:50082 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750786Ab1CUP3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 11:29:47 -0400
+Date: Mon, 21 Mar 2011 08:16:43 -0700
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
 	linux-wireless@vger.kernel.org
-References: <201103232358.29966.helmut.schaa@googlemail.com> <AANLkTi=BLTJhxYf552GLW1zG-AvVdeKj86e2K-vEm_Wy@mail.gmail.com> <201103240836.45753.helmut.schaa@googlemail.com>
-In-Reply-To: <201103240836.45753.helmut.schaa@googlemail.com>
+Subject: Re: new utility kernel module for detecting cores in newer chipsets
+Message-ID: <20110321151643.GA29871@kroah.com>
+References: <20110320145421.GA13962@kroah.com>
+ <op.vsnd1a1i3ri7v4@arend-laptop>
+ <20110320162200.GA17030@kroah.com>
+ <op.vsng7q1j3ri7v4@arend-laptop>
+ <20110320185216.GD19375@kroah.com>
+ <AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
+ <20110321140505.GA7321@kroah.com>
+ <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+ <20110321144603.GA7645@kroah.com>
+ <AANLkTi=f_Gn7+4ahnZFwOw9qWUV05+WpjaRkajaYGxky@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103241409.03170.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTi=f_Gn7+4ahnZFwOw9qWUV05+WpjaRkajaYGxky@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[trimmed CC as this is not rt2x00 specific anymore]
+On Mon, Mar 21, 2011 at 03:52:56PM +0100, Rafał Miłecki wrote:
+> 2011/3/21 Greg KH <greg@kroah.com>:
+> > I have no objections to what you want at all, why do you think I do?
+> > I'm just handling getting the stuff in drivers/staging/ out of there,
+> > that's it.  I trust the rest of you all to handle the design decisions
+> > properly.
+> >
+> > And as there is no code here yet to complain about, I fail to see any
+> > problem yet :)
+> 
+> It was not directly to you, I believe you already many things to worry
+> about, and are not really interested in getting into another driver
+> layout :)
 
-Am Donnerstag, 24. M�rz 2011 schrieb Helmut Schaa:
-> After adding the code to issue BARs when a AMPDU subframe failed, the issue
-> seems to not happen anymore. However, in some rare cases it happened again and
-> the Intel STA wasn't able to "receive" anything anymore (for example it still
-> happenend after running an iperf for ~150 seconds instead of just a few seconds
-> as before).
+Then why was I the only one on the "To:" line?  Please be more careful
+in the future.
 
-Ok, found out some more. The problem now seems to trigger only if the Intel STA
-leaves powersave and mac80211 dropped a frame while the STA was sleeping (either
-due to the size of the STA PS buffer or due to a race between rx/tx processing).
+> I expected Michael and Arend to talk with us (mostly me and George)
+> about current situation.
 
-This can also cause a sequence number hole in the STAs rx reordering buffer but
-we won't send a BAR in that case ending in the same situation that the Intel STA
-BlockAcks AMPDUs to it but doesn't pass them to the user space.
+For some reason, there was a seprate thread without the mailing list on
+it about this topic where Michael did discuss this.  Maybe he will
+summarize that here for everyone else now.
 
-Johannes, does it make sense to always send a BAR when a STA wakes up from
-sleep and we've got an active aggregation session?
+thanks,
 
-Thanks,
-Helmut
+greg k-h
