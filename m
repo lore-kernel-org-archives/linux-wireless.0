@@ -1,99 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:39001 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755775Ab1CRCpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 22:45:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 19:44:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>
-Subject: [PATCH] ath6kl: fix device registration ordering
-Date: Thu, 17 Mar 2011 19:45:12 -0700
-Message-ID: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com>
+Received: from smtp-out.google.com ([74.125.121.67]:47864 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752453Ab1CVOd5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2011 10:33:57 -0400
+Received: from hpaq14.eem.corp.google.com (hpaq14.eem.corp.google.com [172.25.149.14])
+	by smtp-out.google.com with ESMTP id p2MEXuGl020280
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:33:56 -0700
+Received: from gwb17 (gwb17.prod.google.com [10.200.2.17])
+	by hpaq14.eem.corp.google.com with ESMTP id p2MEWwBJ019198
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:33:55 -0700
+Received: by gwb17 with SMTP id 17so4374936gwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:33:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1300800933.3746.5.camel@jlt3.sipsolutions.net>
+References: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
+	<1300800933.3746.5.camel@jlt3.sipsolutions.net>
+Date: Tue, 22 Mar 2011 07:33:54 -0700
+Message-ID: <AANLkTi=4QLfpeAKCiAxDYcL8dGNbWdaxE3OVic7obe_B@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Add station BSS parameters to station
+From: Paul Stewart <pstew@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Defer device registration to cfg80211 until it is ready.
-This fixes a race against udev whereby device events
-(both udev and RTNL) might be emitted with an unregistered
-device specification (wlan%d).
+On Tue, Mar 22, 2011 at 6:35 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-03-21 at 14:32 -0700, Paul Stewart wrote:
+>> This allows user-space monitoring of BSS parameters for the associated
+>> station.  This is useful for debugging and verifying that the paramaters
+>> are as expected.
+>
+> Nice set of patches, but I'm wondering if the station info really is the
+> best place to put this information? It's not really strictly information
+> about the station, but rather about the BSS that it created. OTOH, I'm
+> not sure if we need to distinguish?
 
-This fixes a race on ath6kl on systems where the device
-boots up really quickly to the the point udev and the
-respective userspace daemon tries to start mucking with
-the device prior to the device being initialized properly.
+I think it makes sense in a way.  This is the station's view of the
+BSS once it is associated.  In fact, the primary use intended for this
+is to verify that the station's view of the BSS parameters matches
+that of the AP.  After looking a little closer, it looks more for iw,
+it should show up in the output of "iw link", as part of the output of
+the hidden "iw link get_sta" command, but from the kernel perspective,
+the API would be the same.
 
-This fixes this bug:
-
-http://code.google.com/p/chromium-os/issues/detail?id=13159
-
-Without this loading of ath6kl will fail.
-
-Cc: stable@kernel.org
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    8 ++++++++
- drivers/staging/ath6kl/os/linux/cfg80211.c   |    9 ---------
- 2 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 6ca147f..67e89c4 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1842,11 +1842,19 @@ ar6000_avail_ev(void *context, void *hif_handle)
-                     dev->name, (unsigned long)ar->arHifDevice, (unsigned long)dev, device_index,
-                     (unsigned long)ar));
- 
-+#ifdef ATH6K_CONFIG_CFG80211
-+	init_status = wiphy_register(wdev->wiphy);
-+#endif
-+
- avail_ev_failed :
-     if (init_status) {
-         if (bmienable) { 
-             ar6000_sysfs_bmi_deinit(ar);  
-         }
-+#ifdef ATH6K_CONFIG_CFG80211
-+        ar6k_cfg80211_deinit(ar);
-+#endif
-+
-     }
- 
-     return init_status;
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index 1f799c1..17a572a 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1416,7 +1416,6 @@ cfg80211_ops ar6k_cfg80211_ops = {
- struct wireless_dev *
- ar6k_cfg80211_init(struct device *dev)
- {
--    int ret = 0;
-     struct wireless_dev *wdev;
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
-@@ -1451,14 +1450,6 @@ ar6k_cfg80211_init(struct device *dev)
-     wdev->wiphy->cipher_suites = cipher_suites;
-     wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
--    ret = wiphy_register(wdev->wiphy);
--    if(ret < 0) {
--        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
--                        ("%s: Couldn't register wiphy device\n", __func__));
--        wiphy_free(wdev->wiphy);
--        return ERR_PTR(ret);
--    }
--
-     return wdev;
- }
- 
--- 
-1.7.4.15.g7811d
-
+--
+Paul
