@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64142 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752918Ab1CGSrz convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44747 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754386Ab1CVHlA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 13:47:55 -0500
-Received: by vxi39 with SMTP id 39so3963751vxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 10:47:54 -0800 (PST)
+	Tue, 22 Mar 2011 03:41:00 -0400
+Received: by eyx24 with SMTP id 24so1721946eyx.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 00:40:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1299356769.29845.12.camel@jlt3.sipsolutions.net>
-References: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
- <1299356245-13926-1-git-send-email-javier@cozybit.com> <1299356769.29845.12.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Mon, 7 Mar 2011 10:47:33 -0800
-Message-ID: <AANLkTinFXU+bh=A-qPgQ8oh2GZs7XhPbJe4s3WZMy-0D@mail.gmail.com>
-Subject: Re: [PATCH 1/4 v3] mac80211: Enable mesh security from userspace
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1300742385-15813-1-git-send-email-coelho@ti.com>
+References: <1300742385-15813-1-git-send-email-coelho@ti.com>
+Date: Tue, 22 Mar 2011 09:40:59 +0200
+Message-ID: <AANLkTimLvjiHMFJ7dxhLnKVcAU2co2d5uoEE6R0mi4-G@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: use a bitmask instead of list of booleans in scanned_ch
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 5, 2011 at 12:26 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2011-03-05 at 12:17 -0800, Javier Cardona wrote:
->> Userspace can enable mesh security by providing an RSN IE and setting
->> the MESH_SETUP_ENABLE_SECURITY flag.
->>
->> Also, rename vendor_ie to just ie to reflect that the same attribute may
->> be used to pass other IEs, like for instance RSN.
->>
->> Changes from v2: (from Johannes)
->>  - Fix API backward compatibilty of NL80211_MESH_SETUP_IE
->>  - Remove check for presence of RSN IE
+On Mon, Mar 21, 2011 at 11:19 PM, Luciano Coelho <coelho@ti.com> wrote:
+> We were using an array of booleans to mark the channels we had already scanned.  This was causing a sparse error, because bool is not a type with defined size.  To fix this, use bitmasks instead, which is much cleaner anyway.
 >
-> Should be after --- really :-)
-
-Ah, so it stays out of the git commit message, right?  OK.
-
->> + * @is_secure: or not
+> Thanks Johannes Berg for the idea.
 >
-> Given what we just discussed over in the other thread, should we rename
-> this to "userspace_station_mgmt" or something like that?
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+[...]
+> +       /* make sure all our channels fit in the scanned_ch bitmask */
+> +       BUG_ON(ARRAY_SIZE(wl1271_channels) + ARRAY_SIZE(wl1271_channels_5ghz) >
+> +              WL1271_MAX_CHANNELS);
 
-Are you suggesting to change the name of the flag both in nl80211 and cfg80211?
+maybe use BUILD_BUG_ON here?
 
-Currently ENABLE_SECURITY means "let userspace manage stations", but
-also "ok to accept mesh management frames from secure mesh peers".
-And when the Authenticated Mesh Peering Exchange is implemented, it
-will probably mean "verify mesh peering frames in userspace" and
-"protect mesh peering frames".  You either do all these tasks or none,
-so for nl80211 I would prefer a single flag.
-
-For cfg80211 I have no clear opinion: two flags
-(userspace_station_mgmt and is_secure)? one?.  Let me know what makes
-more sense to you and we'll do it.
-
-> Also, does it make sense to advertise support for this somehow?
-> Otherwise the new tools will have strange failure cases on older
-> kernels;
-
-Ah, I see.  Older kernels would not return an error to userspace if an
-attempt to set a non existing flag was made, right?
-Are you suggesting to define something like an
-NL80211_MESHCONF_CAPABILITIES mask?
-
-> and I can also imagine situations where the mesh APIs are in
-> firmware or so that can't cope with userspace station mgmt.
-
-Ah mesh in firmware... who would want to do that? :)
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Eliad.
