@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44460 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753936Ab1CKU33 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:29:29 -0500
-Message-ID: <4D7A85FC.4090708@candelatech.com>
-Date: Fri, 11 Mar 2011 12:28:44 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:33613 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751863Ab1CVWTw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2011 18:19:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "Popa, Stefan A" <stefan.a.popa@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 22 Mar 2011 15:11:09 -0700
+Subject: RE: Marvell 88w8787 Linux Drivers for Wi-Fi and Bluetooth
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA7913B9@SC-VEXCH1.marvell.com>
+References: <477F20668A386D41ADCC57781B1F704307FA7912D2@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307FA7912D2@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: fix channel type recalculation with HT and
- non-HT interfaces
-References: <1299873939-1171-1-git-send-email-nbd@openwrt.org>	 <4D7A8350.9000406@candelatech.com> <1299875041.4320.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1299875041.4320.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2011 12:24 PM, Johannes Berg wrote:
-> On Fri, 2011-03-11 at 12:17 -0800, Ben Greear wrote:
->> On 03/11/2011 12:05 PM, Felix Fietkau wrote:
->>> When running an AP interface along with the cooked monitor interface created
->>> by hostapd, adding an interface and deleting it again triggers a channel type
->>> recalculation during which the (non-HT) monitor interface takes precedence
->>> over the HT AP interface, thus causing the channel type to be set to non-HT.
->>> Fix this by not overriding HT interfaces with a non-HT channel type.
->
-> The fix seems right.
->
->> After staring at that code a bit more, should that list-for-each-entry
->> loop be entirely different such that it better calculates a proper
->> super-channel for mixed interface types?
->>
->> If seems like a bad case of last-one-wins as currently written.
->>
->> The code probably (mostly?) works right because we limit the
->> bss_conf.channel_type based on existing super-chan when
->> adding new interfaces, but it still seems like brittle code to me.
->
-> But I'm not sure what you mean?
->
-> With the fix, we go through and use the widest possible channel of all
-> interfaces. The only conflict can happen with HT40- and HT40+, but we
-> should never get into that situation since we can't have one interface
-> with HT40- and another with HT40+ at the same time to start with. Am I
-> missing something?
+[CC: linux-wireless and more people]
 
-Maybe I'm missing something, but from what I can tell:
+Hi Stefan,
 
-If we have two interfaces:
+> Hi Bing,
+> 
+> I am a software developer at Intel. Currently I am working with 88w8787 Marvell wireless chip.
+> 
+> I have found your Wi-Fi Linux driver and firmware for 88w8787. Is there a different Linux driver and
+> firmware for 88w8787 Wi-Fi as the one available publicly?
 
-first interface is HT40, second is HT20:
-   -> superchan == HT20
+We do have customized SD8787 driver/firmware for specific customers. But it is advised to use the upstream 'mwifiex' driver because the 'mwifiex' driver has been improved a lot based on the review comments from Johannes, John, and other people. 
 
-first interface is HT20, second is HT40:
-   -> superchan == HT40
+> 
+> I have some concerns about Bluetooth also and how does it work 88w8787 SDIO card on Linux.
+> 
+> Is it needed also for Bluetooth a special Linux driver and firmware as for Wi-Fi? Or this 88w8787
+> SDIO card works directly in Linux with the firmware provided for Wi-Fi and with standard Linux BT
+> SDIO driver?
 
-It seems wrong that the ordering would influence superchan before we go into
-the "switch (superchan)" logic.
+Currently there is a Bluetooth driver called 'btmrvl' that works for SD8688 only. We plan to submit a patch to enable 'btmrvl' to support SD8787 Bluetooth. Both 'mwifiex' and 'btmrvl' drivers will share the same firmware image.
 
-Thanks,
-Ben
+> 
+> Can you help us with these questions?
 
->
-> johannes
+Hope I answered your questions. Feel free to contact me if you have any more questions.
 
+Best Regards,
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Bing
+
+> 
+> Many thanks in advance for your help and support!
+> 
+> Have a nice day!
+> 
+> Best regards,
+> 
+> Stefan A. Popa
+> Open Source Technology Center
+> System Software Division Romania
+> Desk: +40 31 86 04 721
+> iNET: 8 845 1021
 
