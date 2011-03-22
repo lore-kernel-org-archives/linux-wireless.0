@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3741 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753127Ab1CGNyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 08:54:40 -0500
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
-References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
- <op.vryqz6qt3ri7v4@arend-laptop>
- <AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
-Subject: Re: brcm80211: the system freezes if booted with laptop wifi
- switch to OFF
-To: "Francis Moreau" <francis.moro@gmail.com>
-Date: Mon, 7 Mar 2011 14:54:22 +0100
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vry7kwq83ri7v4@arend-laptop>
-In-Reply-To: <AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Received: from he.sipsolutions.net ([78.46.109.217]:54234 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216Ab1CVVmH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2011 17:42:07 -0400
+Subject: Re: [PATCH 5/5 v4] mac80211: New notification to discover mesh
+ peer candidates.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1300479732-25920-6-git-send-email-javier@cozybit.com>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+	 <1300479732-25920-6-git-send-email-javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 22 Mar 2011 22:42:03 +0100
+Message-ID: <1300830123.3746.50.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 07 Mar 2011 12:33:07 +0100, Francis Moreau
-<francis.moro@gmail.com> wrote:
+On Fri, 2011-03-18 at 13:22 -0700, Javier Cardona wrote:
 
->
-> Would it be possible to submit it one more time ?
->
+> @@ -1170,6 +1182,7 @@ enum nl80211_iftype {
+>   * @NL80211_STA_FLAG_WME: station is WME/QoS capable
+>   * @NL80211_STA_FLAG_MFP: station uses management frame protection
+>   * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
+> + * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
+>   * @__NL80211_STA_FLAG_AFTER_LAST: internal use
 
-I don't know what the origin is of your kernel so please provide some  
-details on that. The patch itself can be found in the linuxdriver email  
-archive:
+This looks a little odd, but doesn't really matter.
 
-http://driverdev.linuxdriverproject.org/pipermail/devel/2011-January/011381.html
 
-Not sure whether it applies to whatever you have. I just tried your  
-scenario with my driver and hardware and no freezes during boot.
+> +void cfg80211_notify_new_peer_candidate(struct net_device *dev,
+> +		const u8 *macaddr, const u8* ie, u8 ie_len, gfp_t gfp)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> +	struct cfg80211_event *ev;
+> +	unsigned long flags;
+> +
+> +	ev = kzalloc(sizeof(*ev), gfp);
+> +	if (!ev)
+> +		return;
+> +	ev->type = EVENT_NEW_CANDIDATE;
+> +	memcpy(ev->nc.macaddr, macaddr, ETH_ALEN);
+> +	if (ie_len && ie) {
+> +		ev->nc.ie = kmemdup(ie, ie_len, gfp);
+> +		ev->nc.ie_len = (ev->nc.ie) ? ie_len : 0;
+> +	}
+> +
+> +	spin_lock_irqsave(&wdev->event_lock, flags);
+> +	list_add_tail(&ev->list, &wdev->event_list);
+> +	spin_unlock_irqrestore(&wdev->event_lock, flags);
+> +	queue_work(cfg80211_wq, &rdev->event_work);
 
->
-> Thanks
+Why schedule out here and all the complexity with that? Seems pointless,
+just pass the gfp through to nl80211?
 
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+
+Also, this changes the APIs again. Do you think you could collect the
+API changes into a separate patch and combine them in nl80211/cfg80211?
+
+johannes
 
