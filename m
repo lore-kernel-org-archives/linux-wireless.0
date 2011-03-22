@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49361 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab1CGTaQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 14:30:16 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Mon, 7 Mar 2011 20:30:14 +0100
-Message-ID: <AANLkTik68fcAgBBFYxW_PRuWoF1LS87SPLnihG2ASZN=@mail.gmail.com>
-Subject: Re: linux-next: Tree for March 7 (BROKEN iwlwifi)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:36651 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755219Ab1CVUy0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2011 16:54:26 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k: trigger nfcal only after multiple missed beacons in AP mode
+Date: Tue, 22 Mar 2011 21:54:18 +0100
+Message-Id: <1300827259-42910-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1300827259-42910-1-git-send-email-nbd@openwrt.org>
+References: <1300827259-42910-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-linux-next (next-20110307) has still this build-failure with iwlwifi
-which was already reported and a fix was offered by Stanislaw.
-(JFYI: Build-host is a Debian/sid i386 system.)
+Single missed (i.e. not transmitted) beacons in AP mode are not very rare
+and not necessarily an indicator of strong interference, so only trigger
+noise floor recalibration when multiple consecutive beacons could not
+be transmitted.
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-/home/sd/src/linux-2.6/linux-2.6.38-rc7/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-rx.c:
-In function 'iwl_rx_card_state_notif':
-/home/sd/src/linux-2.6/linux-2.6.38-rc7/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-rx.c:778:3:
-error: 'TASK_INTERRUPTIBLE' undeclared (first use in this function)
-/home/sd/src/linux-2.6/linux-2.6.38-rc7/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-rx.c:778:3:
-note: each undeclared identifier is reported only once for each
-function it appears in
-make[8]: *** [drivers/net/wireless/iwlwifi/iwl-rx.o] Error 1
-make[8]: *** Waiting for unfinished jobs....
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index b5eab2f..6ebeafe 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -368,7 +368,8 @@ void ath_beacon_tasklet(unsigned long data)
+ 				"missed %u consecutive beacons\n",
+ 				sc->beacon.bmisscnt);
+ 			ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+-			ath9k_hw_bstuck_nfcal(ah);
++			if (sc->beacon.bmisscnt > 3)
++				ath9k_hw_bstuck_nfcal(ah);
+ 		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
+ 			ath_dbg(common, ATH_DBG_BSTUCK,
+ 				"beacon is officially stuck\n");
+-- 
+1.7.3.2
 
-- Sedat -
-
-[1] iwlwifi-fix-iwl-rx.c-compilation.patch
-https://patchwork.kernel.org/patch/614961
