@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:47267 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932108Ab1CIRji (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.212.179]:53733 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754216Ab1CVAI0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 12:39:38 -0500
-Received: by mail-iw0-f175.google.com with SMTP id 10so770607iwn.6
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 09:39:37 -0800 (PST)
+	Mon, 21 Mar 2011 20:08:26 -0400
+Received: by pxi2 with SMTP id 2so1270157pxi.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 17:08:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1299681430.1816.101.camel@cumari>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-	<1299421940-26292-11-git-send-email-shahar_levi@ti.com>
-	<1299681430.1816.101.camel@cumari>
-Date: Wed, 9 Mar 2011 19:39:37 +0200
-Message-ID: <AANLkTimJMnjdqYQjKDFV01LTFCrvXoW+kRmn0VxdJ-Ab@mail.gmail.com>
-Subject: Re: [PATCH 10/15] wl12xx: 1281/1283 support - Set WiFi & BT cox
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <87aagovhsl.fsf@purkki.adurom.net>
+References: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
+	<87aagovhsl.fsf@purkki.adurom.net>
+Date: Mon, 21 Mar 2011 17:08:25 -0700
+Message-ID: <AANLkTikyir_RtupUoszFOxPKPfPek2qzyE8bbMEcg-=X@mail.gmail.com>
+Subject: Re: terminology questions
+From: Sean Robinson <seankrobinson@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/9/11, Luciano Coelho <coelho@ti.com> wrote:
-> On Sun, 2011-03-06 at 16:32 +0200, Shahar Levi wrote:
->> Set different Cox setting between wl127x and wl128x.
->>
->> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> ---
->>  drivers/net/wireless/wl12xx/acx.c  |    5 +++++
->>  drivers/net/wireless/wl12xx/main.c |    6 +++++-
->>  2 files changed, 10 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/acx.c
->> b/drivers/net/wireless/wl12xx/acx.c
->> index f0345e6..e970b71 100644
->> --- a/drivers/net/wireless/wl12xx/acx.c
->> +++ b/drivers/net/wireless/wl12xx/acx.c
->> @@ -554,6 +554,11 @@ int wl1271_acx_sg_cfg(struct wl1271 *wl)
->>  		goto out;
->>  	}
->>
->> +	if (wl->chip.id == CHIP_ID_1283_PG20)
->> +		c->params[CONF_SG_BT_LOAD_RATIO] = 50;
->> +	else
->> +		c->params[CONF_SG_BT_LOAD_RATIO] = 200;
->> +
+On Mon, Mar 21, 2011 at 4:23 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> Sean Robinson <seankrobinson@gmail.com> writes:
 >
-> You can't change this value in the global array.  This needs to be
-> changed only in the allocated ACX.  I'll change it before taking it in.
+>> What is a station?
 >
-> Also, I think it's cleaner to keep the correct value for wl127x in the
-> global array (as was before) and only change the value for wl128x here
-> in this function.
+> You got an answer already. But in principle all devices supporting
+> IEEE 802.11 are stations (or STAs) in the standard.
 >
->> diff --git a/drivers/net/wireless/wl12xx/main.c
->> b/drivers/net/wireless/wl12xx/main.c
->> index 32d963d..f8e9e3f 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -54,7 +54,11 @@ static struct conf_drv_settings default_conf = {
->>  			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
->>  			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
->>  			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
->> -			[CONF_SG_BT_LOAD_RATIO]                     = 50,
->> +			/*
->> +			 * CONF_SG_BT_LOAD_RATIO has wl127x or wl128x dependency
->> +			 * (set in wl1271_acx_sg_cfg()
->> +			 */
->> +			[CONF_SG_BT_LOAD_RATIO]                     = 0,
->>  			[CONF_SG_AUTO_PS_MODE]                      = 1,
->>  			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
->>  			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
+>> How does a station relate to an AP?
 >
-> Previously, the value used for wl127x was 50, from the default global
-> settings.  Now you're using 200 for wl127x.  This looks suspicious.  You
-> now use 50 (which was the value for wl127x) for wl128x and 200 for
-> wl127x.
+> AP is a station as are all clients.
 >
-> At least the change for wl127x should be done in a separate patch.
-It was incorrect value for wl127x. That patch fixes that and set
-wl128x value. I can do the fix for wl127x in separate patch.
+>>  What are the delineations between mac80211/cfg80211/nl80211?
+>
+> mac80211 is an IEEE 802.11 stack for softmac devices.
+>
+> cfg80211 is a new (relatively speaking) component for managing
+> configuration of IEEE 802.11 devices (used by both mac80211 and
+> fullmac device drivers).
+>
+> nl80211 is a new (again relatively speaking) netlink based user space
+> interface (protocol?) for managing IEEE 802.11 devices. cfg80211
+> implements the kernel side of this interface. From user space at least
+> wpasupplicant and iw use this interface, but in principle any
+> application can use it.
+>
 
->
-> --
-> Cheers,
-> Luca.
->
->
+  Thank you, Kalle.  I have updated the Glossary page with my
+interpretation of your answers.
+
+  And, thank you, Daniel.  I downloaded the IEEE doc.  While the
+definitions are useful, the chapter 5 overview of how everything is
+related was really helpful.
+
+  And I repeat my intent to curate the Glossary for a while.  So, if
+anyone else has terms to add or that need a fuller explanation, please
+let me know.
+
 -- 
-All the best,
-Shahar
+Sean Robinson
+WiFi Radar - http://wifi-radar.berlios.de
+Python WiFi - http://pythonwifi.wikispot.org
+pymnl - http://pymnl.wikispot.org
