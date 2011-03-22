@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56109 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933056Ab1CYI1Q convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58942 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280Ab1CVOqj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 04:27:16 -0400
-Received: by bwz15 with SMTP id 15so729987bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2011 01:27:15 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
-Date: Fri, 25 Mar 2011 09:25:26 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <201103232358.29966.helmut.schaa@googlemail.com> <1300987930.26265.6.camel@jlt3.sipsolutions.net> <AANLkTi=mFbtLbQwNX6ZnzW9_xn_CYUBvv98z3-ZT9uf0@mail.gmail.com>
-In-Reply-To: <AANLkTi=mFbtLbQwNX6ZnzW9_xn_CYUBvv98z3-ZT9uf0@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103250925.26216.helmut.schaa@googlemail.com>
+	Tue, 22 Mar 2011 10:46:39 -0400
+Subject: Re: [RFC 0/9] add WoW support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 22 Mar 2011 15:46:37 +0100
+Message-ID: <1300805197.3746.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 24. März 2011 schrieb Emmanuel Grumbach:
-> The originator tried to send data and this data didn't get acked. In
-> this case a BAR should be sent regardless the reason why this frame
-> didn't get acked.
-> This is done by reporting IEEE80211_TX_STAT_AMPDU_NO_BACK to mac80211.
-> Can it be that the rt2800 doesn't report properly the xmit failure ?
+Let's back up a bit on this and think about the design some more, since
+this touches a whole bunch of different things.
 
-Good point. During "normal" operation rt2800 correctly sets
-IEEE80211_TX_STAT_AMPDU_NO_BACK on a failure, so it _should_ have done
-this in the above example but I'll add some more debug output and verify
-this again.
+First, I think there at least two WoWLAN models:
 
-Helmut
+1) The "traditional" model:
+
+In this model, the device handles many things, there are different
+wakeup triggers, for example:
+ * magic packet
+ * packet pattern
+ * connection lost
+ * GKT rekeying (although some devices may support this in firmware and
+   then don't wake up), or rekeying failure
+ * rfkill (?)
+ * random other things
+
+These are only available while connected to a (typically exactly one)
+AP. Also, importantly, some of these require explicit configuration.
+
+Additionally, some devices may support "network detection", a form of
+scanning and waking up the host if certain conditions are met.
+
+
+However, with that, we also get closer to
+
+2) The "wake whenever there's something to do" model:
+
+I don't have a good name for this, really, but it's what the TI chip
+does right now -- it just wakes the host when there's something to do
+for it, whatever that might be. It's closer to Android's wake-lock model
+in a way I guess., the "network detection" would also be possible to
+implement with this in the TI chip since it has such functionality
+(which also doesn't depend on going to suspend, unlike ours which
+basically cannot be interleaved with other things).
+
+
+Whichever model is used, however, there will be spurious wakeups. I hope
+there's some way of identifying which device woke up the system and then
+go to sleep again. I think the only reasonable use case for WoWlan is
+with some kind of "suspend manager" that evaluates this information and
+puts the system to sleep again as appropriate.
+
+This manager component might also connect to a network after "network
+detection" while suspended found something, and then suspend the system
+again with new triggers.
+
+johannes
+
+
