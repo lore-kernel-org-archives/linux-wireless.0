@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53010 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753525Ab1CESfm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 13:35:42 -0500
-Subject: [PATCH] iwlagn: fix offchannel TX bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Mar 2011 19:35:39 +0100
-Message-ID: <1299350139.29845.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:38526 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472Ab1CVJpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2011 05:45:46 -0400
+To: Joe Gunn <armadefuego@yahoo.com>
+Cc: armadefuego@gmail.com, Dave Kilroy <kilroyd@googlemail.com>,
+	orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [Orinoco-devel] [PATCH 2.6.38-rc8-wl RESEND] orinoco: Clear dangling pointer on hardware busy
+References: <760599.40938.qm@web57415.mail.re1.yahoo.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 22 Mar 2011 11:45:44 +0200
+In-Reply-To: <760599.40938.qm@web57415.mail.re1.yahoo.com> (Joe Gunn's message of "Mon\, 21 Mar 2011 19\:45\:45 -0700 \(PDT\)")
+Message-ID: <87sjuftrnb.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Joe Gunn <armadefuego@yahoo.com> writes:
 
-In the case where remain-on-channel rather than
-offchannel TX should be used, my offchannel TX
-patch introduced a bug because mac80211 will
-use the now-freed SKB.
+>> I think you need to add line breaks for the git log
+>
+> Sorry i am new to this. logs on git don't have a column length
+> restriction. Is there a "80", or so, column restriction suggested
+> for this?
 
-iwlagn shouldn't free the SKB when it returns 1
-here since then the SKB will still be used.
+I think following an old rule from usenet, max 72 chars per line, is
+still valid. At least replies still look nice.
 
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:32:58.000000000 +0100
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:33:08.000000000 +0100
-@@ -3171,7 +3171,7 @@ static int iwl_mac_offchannel_tx(struct
-  out:
- 	mutex_unlock(&priv->mutex);
-  free:
--	if (ret)
-+	if (ret < 0)
- 		kfree_skb(skb);
- 
- 	return ret;
-
-
+-- 
+Kalle Valo
