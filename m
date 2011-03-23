@@ -1,64 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069Ab1CCStA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54619 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932422Ab1CWNAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:49:00 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:49:00 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/19] rt2x00: Remove now unused crypto.aid field
-Date: Thu, 3 Mar 2011 19:44:53 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103031938.56423.IvDoorn@gmail.com> <201103031944.11965.IvDoorn@gmail.com> <201103031944.33950.IvDoorn@gmail.com>
-In-Reply-To: <201103031944.33950.IvDoorn@gmail.com>
+	Wed, 23 Mar 2011 09:00:13 -0400
+Date: Wed, 23 Mar 2011 08:48:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: no-reply@oracle.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Email attachment rejected by MM
+Message-ID: <20110323124850.GA31185@tuxdriver.com>
+References: <1025405486.1300851623917@ace.smi>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103031944.54527.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1025405486.1300851623917@ace.smi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Wed, Mar 23, 2011 at 03:40:23AM +0000, no-reply@oracle.com wrote:
+> Oracle does not allow messages with executable message attachments. (MM)
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 -
- drivers/net/wireless/rt2x00/rt2x00mac.c |    6 ++----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+Subscribers that are Oracle employees, could you get someone to
+fix this?  Or at least get them to stop sending SPAM to the list?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index e17e348..d5faeb1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -467,7 +467,6 @@ struct rt2x00lib_crypto {
- 	const u8 *address;
- 
- 	u32 bssidx;
--	u32 aid;
- 
- 	u8 key[16];
- 	u8 tx_mic[8];
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 9529d6f..67c99c3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -519,11 +519,9 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	crypto.cmd = cmd;
- 
--	if (sta) {
--		/* some drivers need the AID */
--		crypto.aid = sta->aid;
-+	if (sta)
- 		crypto.address = sta->addr;
--	} else
-+	else
- 		crypto.address = bcast_addr;
- 
- 	if (crypto.cipher == CIPHER_TKIP)
+John
 -- 
-1.7.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
