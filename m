@@ -1,118 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:46843 "EHLO coco.kroah.org"
+Received: from mail.atheros.com ([12.19.149.2]:42881 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754438Ab1CJX5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 18:57:19 -0500
-Message-Id: <20110310235537.042357423@clark.kroah.org>
-Date: Thu, 10 Mar 2011 15:54:16 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org,
-	Greg KH <greg@kroah.com>
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Mohammed Shafi <mshajakhan@atheros.com>,
-	=?ISO-8859-15?q?Thomas=20B=E4chler?= <thomas@archlinux.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>
-Subject: [patch 10/29] ath9k: Fix ath9k prevents CPU to enter C3 states
-In-Reply-To: <20110310235548.GA10103@kroah.com>
+	id S1754893Ab1CWRhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 13:37:39 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 10:37:15 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 2/2] ath9k: Fix TX queue stuck issue.
+Date: Wed, 23 Mar 2011 23:07:22 +0530
+Message-ID: <1300901842-3350-2-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
+References: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.37-stable review patch.  If anyone has any objections, please let us know.
+commit 86271e460a66003dc1f4cbfd845adafb790b7587 introduced a
+regression that caused mac80211 queues in stopped state.
 
-------------------
+ath_drain_all_txq is called in driver flush which would reset
+the stopped flag and the mac80211 queues were never started
+after that. iperf traffic is completely stalled due to this issue.
 
+Restart the mac80211 queues in driver flush only if the txqs were
+drained.
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-
-This is a backport of upstream commit 0f5cd45960173ba5b36727decbb4a241cbd35ef9.
-
-The DMA latency issue is observed only in Intel pinetrail platforms
-but in the driver we had a default PM-QOS value of 55. This caused
-unnecessary power consumption and battery drain in other platforms.
-
-Remove the pm-qos thing in the driver code and address the throughput
-issue in Intel pinetrail platfroms in user space using any one of
-the scripts in below links:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
-http://johannes.sipsolutions.net/files/netlatency.c.txt
-
-More details can be found in the following bugzilla link:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=27532
-
-Signed-off-by: Thomas Bächler <thomas@archlinux.org>
-Acked-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 ---
- drivers/net/wireless/ath/ath9k/init.c  |    4 ----
- drivers/net/wireless/ath/ath9k/main.c  |    4 ----
- 3 files changed, 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -21,7 +21,6 @@
- #include <linux/device.h>
- #include <linux/leds.h>
- #include <linux/completion.h>
--#include <linux/pm_qos_params.h>
- 
- #include "debug.h"
- #include "common.h"
-@@ -647,8 +646,6 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
--
--	struct pm_qos_request_list pm_qos_req;
- };
- 
- struct ath_wiphy {
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -758,9 +758,6 @@ int ath9k_init_device(u16 devid, struct
- 	ath_init_leds(sc);
- 	ath_start_rfkill_poll(sc);
- 
--	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
--			   PM_QOS_DEFAULT_VALUE);
--
- 	return 0;
- 
- error_world:
-@@ -829,7 +826,6 @@ void ath9k_deinit_device(struct ath_soft
- 	}
- 
- 	ieee80211_unregister_hw(hw);
--	pm_qos_remove_request(&sc->pm_qos_req);
- 	ath_rx_cleanup(sc);
- 	ath_tx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 115f162..5248257 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1245,8 +1245,6 @@ static int ath9k_start(struct ieee80211_
- 			ath9k_btcoex_timer_resume(sc);
- 	}
+@@ -2160,6 +2160,8 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	if (!ath_drain_all_txq(sc, false))
+ 		ath_reset(sc, false);
  
--	pm_qos_update_request(&sc->pm_qos_req, 55);
--
- mutex_unlock:
++	ieee80211_wake_queues(hw);
++
+ out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
  	mutex_unlock(&sc->mutex);
- 
-@@ -1425,8 +1423,6 @@ static void ath9k_stop(struct ieee80211_
- 
- 	sc->sc_flags |= SC_OP_INVALID;
- 
--	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
--
- 	mutex_unlock(&sc->mutex);
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Driver halt\n");
-
+-- 
+1.7.3.4
 
