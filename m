@@ -1,112 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45081 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516Ab1CQAeH (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37676 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab1CWJkt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 20:34:07 -0400
-Received: by wya21 with SMTP id 21so2266058wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 17:34:05 -0700 (PDT)
-Message-ID: <4D8156F9.8020609@gmail.com>
-Date: Thu, 17 Mar 2011 00:34:01 +0000
-From: Dave Kilroy <kilroyd@googlemail.com>
+	Wed, 23 Mar 2011 05:40:49 -0400
+Received: by eyx24 with SMTP id 24so2079349eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 02:40:48 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Gunn <armadefuego@yahoo.com>
-CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.38-rc8-wl 1/1] orinoco:  Reduce lock contention by
- reporting static errors before locking
-References: <297417.86150.qm@web57403.mail.re1.yahoo.com>
-In-Reply-To: <297417.86150.qm@web57403.mail.re1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1300806782.3746.41.camel@jlt3.sipsolutions.net>
+References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+	<1300806782.3746.41.camel@jlt3.sipsolutions.net>
+Date: Wed, 23 Mar 2011 11:40:47 +0200
+Message-ID: <AANLkTinzRQHq8Zwvua2Zsnz2OjW4_e9L_YAkMxSwnS5j@mail.gmail.com>
+Subject: Re: [RFC 0/9] add WoW support
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15/03/2011 15:53, Joe Gunn wrote:
-> Check for static error issues before obtaining lock to reduce lock contention
-> Signed-off-by: Joseph J. Gunn<armadefuego@yahoo.com>
-> ---
-> diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-> index e793679..c1fe0b5 100644
-> --- a/drivers/net/wireless/orinoco/wext.c
-> +++ b/drivers/net/wireless/orinoco/wext.c
-> @@ -161,36 +161,17 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
->   	static const u8 off_addr[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
->   	static const u8 any_addr[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+On Tue, Mar 22, 2011 at 5:13 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> In the second email, I'll gather some thoughts about userspace APIs.
 >
-> -	if (orinoco_lock(priv,&flags) != 0)
-> -		return -EBUSY;
-> -
-> -	/* Enable automatic roaming - no sanity checks are needed */
-> -	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
-> -	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
-> -		priv->bssid_fixed = 0;
-> -		memset(priv->desired_bssid, 0, ETH_ALEN);
-> -
-> -		/* "off" means keep existing connection */
-> -		if (ap_addr->sa_data[0] == 0) {
-> -			__orinoco_hw_set_wap(priv);
-> -			err = 0;
-> -		}
-> -		goto out;
-> -	}
-> -
->   	if (priv->firmware_type == FIRMWARE_TYPE_AGERE) {
->   		printk(KERN_WARNING "%s: Lucent/Agere firmware doesn't "
->   		       "support manual roaming\n",
->   		       dev->name);
-> -		err = -EOPNOTSUPP;
-> -		goto out;
-> +		return(-EOPNOTSUPP);
->   	}
+> Regardless of how suspend works, the device may need special
+> configuration (e.g. wakeup patterns [1], rekeying information or
+> similar), in our case it even needs special firmware uploaded. Suspend
+> might also only be possible in certain configurations, like being
+> associated with exactly one AP, and not while operating as an AP, for
+> example.
 >
->   	if (priv->iw_mode != NL80211_IFTYPE_STATION) {
->   		printk(KERN_WARNING "%s: Manual roaming supported only in "
->   		       "managed mode\n", dev->name);
-> -		err = -EOPNOTSUPP;
-> -		goto out;
-> +		return(-EOPNOTSUPP);
->   	}
+as Ohad noted, we do need to be able to suspend while operating as AP
+(which is possible as the beaconing is done in the fw), at least with
+our model.
+i can also think of use cases in which it will be useful to have a
+suspended AP also in standard wowlan - like letting the ap go to sleep
+while there are no clients, and waking it up on a directed probe
+request.
+
+> Back to the unsupported modes though, should those fail suspend as well?
+> Currently, we simply deconfigure everything during suspend. But once we
+> have a model of "the connection stays up during suspend", should we
+> still silently shut down AP mode interfaces and keep the others during
+> suspend? That seems inconsistent.
 >
->   	/* Intersil firmware hangs without Desired ESSID */
-> @@ -198,10 +179,27 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
->   	    strlen(priv->desired_essid) == 0) {
+> Again, the solution might be a suspend agent that will configure the
+> system in a way that suspend is possible. But how can it tell that
+> suspend will be possible? Between the different possible models, there
+> can be a lot of variety. We can expose those, but what will userspace do
+> with the information? Do we require that it configures the device in a
+> way that it can suspend, or do we do that in the drivers?
 
-I avoided changing the locking too much when I was modifying this driver 
-as I wasn't clear on whether the locks needed to protect concurrent wext 
-calls from each other. Since all the wext calls hold the lock over the 
-entirety of the callback, I assumed that is what they were doing.
+maybe we can add each trigger an additional parameter which describes
+whether this
+trigger is optional (when applicable) or mandatory (which will abort
+the suspend if it can't
+be configured)?
 
-In this particular change, the strlen here may give you one result, but 
-it may have been changed by the time you take the lock. Also the test on 
-priv->iw_mode above may have been invalidated as well.
-
-
-Dave.
-
->   		printk(KERN_WARNING "%s: Desired ESSID must be set for "
->   		       "manual roaming\n", dev->name);
-> -		err = -EOPNOTSUPP;
-> +		return(-EOPNOTSUPP);
-> +	}
-> +
-> +	if (orinoco_lock(priv,&flags) != 0)
-> +		return -EBUSY;
-> +
-> +	/* Enable automatic roaming - no sanity checks are needed */
-> +	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
-> +	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
-> +		priv->bssid_fixed = 0;
-> +		memset(priv->desired_bssid, 0, ETH_ALEN);
-> +
-> +		/* "off" means keep existing connection */
-> +		if (ap_addr->sa_data[0] == 0) {
-> +			__orinoco_hw_set_wap(priv);
-> +			err = 0;
-> +		}
->   		goto out;
->   	}
->
-> +
->   	/* Finally, enable manual roaming */
->   	priv->bssid_fixed = 1;
->   	memcpy(priv->desired_bssid,&ap_addr->sa_data, ETH_ALEN);
-
+Eliad.
