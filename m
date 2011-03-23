@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58875 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754936Ab1CaQVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:21:49 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] compat: backport netdev_refcnt_read.
-Date: Thu, 31 Mar 2011 18:21:32 +0200
-Message-Id: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:3163 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751109Ab1CWKbx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 06:31:53 -0400
+Message-ID: <4D89CC09.8060702@broadcom.com>
+Date: Wed, 23 Mar 2011 11:31:37 +0100
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Logs spammed by brcm80211
+References: <4D878FBC.5010204@lwfinger.net>
+ <op.vspg80mq3ri7v4@arend-laptop>
+ <1300733794.3804.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1300733794.3804.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Backport of upstream commit:
-	29b4433d991c88d86ca48a4c1cc33c671475be4b
-	net: percpu net_device refcount
+Hello guys,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.37.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> Are you saying you expect mac80211 to fragment packets that don't fit
+> into a txop? That's not done for sure.
 
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index e993f75..cee23a8 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -108,6 +108,8 @@ extern void compat_led_brightness_set(struct led_classdev *led_cdev,
- 
- #define alloc_ordered_workqueue(name, flags) create_singlethread_workqueue(name)
- 
-+#define netdev_refcnt_read(a) atomic_read(&a->refcnt)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
--- 
-1.7.1
+Likely it is a problem in our driver. I have been victimized to take a 
+look at it, so consider me your point of this contact for this one ;-) 
+I'll keep you guys posted.
+
+Bye, Roland.
 
