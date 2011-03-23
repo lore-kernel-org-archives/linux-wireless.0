@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:49046 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272Ab1CJXDo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 18:03:44 -0500
-Received: by yia27 with SMTP id 27so888632yia.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 15:03:43 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:35539 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752063Ab1CWWNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 18:13:04 -0400
+Message-ID: <4D8A7069.6090208@openwrt.org>
+Date: Wed, 23 Mar 2011 23:12:57 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
-Date: Fri, 11 Mar 2011 00:03:43 +0100
-Message-ID: <AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
-Subject: Re: Status of Broadcom 4353?
-From: "Chen, Xianwen" <xianwen.chen@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Sam Leffler <sleffler@google.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 05/10] ath9k_hw: remove pCap->total_queues
+References: <1300910253-28189-1-git-send-email-nbd@openwrt.org>	<1300910253-28189-2-git-send-email-nbd@openwrt.org>	<1300910253-28189-3-git-send-email-nbd@openwrt.org>	<1300910253-28189-4-git-send-email-nbd@openwrt.org>	<1300910253-28189-5-git-send-email-nbd@openwrt.org> <AANLkTinhxdQqjhBXFh6akhkegzrqSpYSgC5=gPhYsp2-@mail.gmail.com>
+In-Reply-To: <AANLkTinhxdQqjhBXFh6akhkegzrqSpYSgC5=gPhYsp2-@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks a lot guys!
+On 2011-03-23 11:05 PM, Sam Leffler wrote:
+> On Wed, Mar 23, 2011 at 12:57 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> The EEPROM contains a field that can restrict the number of hardware queues,
+>> however this is not only useless (all the known chips contain the same
+>> number of hardware queues), but also potentially dangerous in case of a
+>> misprogrammed EEPROM (could trigger driver crashes), so let's just ignore
+>> it completely.
+> 
+> I can't say if there will ever be h/w w/ different #'s of tx q's but I
+> think you're better off just capping any value read from eeprom to
+> guard against the very unlikely scenario of misprogramming.
+I think when chips with fewer or more tx queues show up, we should make
+that depend on the SREV, not the EEPROM data.
 
-I tried both latest stable kernel (linux-2.6.37) and latest mainline
-kernel (linux-2.6.38-rc8) with
-  CONFIG_BRCM80211=y
-  CONFIG_BRCM80211_PCI=y
-. No wlan0 turns up yet.
-
-Any more hint please?
-
-Xianwen
-
-
-On Thu, Mar 10, 2011 at 8:14 PM, Brett Rudley <brudley@broadcom.com> wrote:
-> Its not intuitive, but 0x4353 is the PCI device ID of the 43224 dual band card which does run under brcm80211.
->
-> Regards
-> Brett
-
-
-On Thu, Mar 10, 2011 at 7:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> There are two ways that Broadcom chips are connected to a PCIe interface -
-> one uses the SSB interconnect, and the other does not. In b43, only chips
-> with SSB are supported. As the 4353 device does not use SSB, b43 does not
-> work with it. Whether it ever will is being discussed.
->
-> You should use either the brcm80211 driver from compat-wireless or kernels
-> 2.6.37, or later. You may also use the wl driver from Broadcom if you are
-> willing to run closed-source software. That driver does not use mac80211.
->
-> Larry
+- Felix
