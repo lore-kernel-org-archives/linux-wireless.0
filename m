@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58903 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758462Ab1CaQV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:21:58 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 3/4] compat: fix build for kernel < 2.6.29
-Date: Thu, 31 Mar 2011 18:21:34 +0200
-Message-Id: <1301588495-16583-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
-References: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:42869 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752653Ab1CWRh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 13:37:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 10:37:05 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 1/2] ath9k: Fix kernel panic caused by invalid rate index access.
+Date: Wed, 23 Mar 2011 23:07:21 +0530
+Message-ID: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get_irq_desc_chip(), get_irq_desc_data(), get_irq_desc_chip_data() and
-get_irq_desc_msi() are not available in kernel < 2.6.29.
+With the recent tx status optimization in mac80211, we bail out as
+and and when invalid rate index is found. So the behavior of resetting
+rate idx to -1 and count to 0 has changed for the rate indexes that
+were not part of the driver's retry series.
 
-Luis please add this into the linux-2.6.39.y branch.
+This has resulted in ath9k using incorrect rate table index which
+caused the system to panic. Ideally ath9k need to loop only for the
+indexes that were part of the retry series and so simply use hw->max_rates
+as the loop counter.
 
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Pasted the stack trace of the panic issue for reference.
+
+[  754.093192] BUG: unable to handle kernel paging request at ffff88046a9025b0
+[  754.093256] IP: [<ffffffffa02eac49>] ath_tx_status+0x209/0x2f0 [ath9k]
+[  754.094888] Call Trace:
+[  754.094903]  <IRQ>
+[  754.094928]  [<ffffffffa051f883>] ieee80211_tx_status+0x203/0x9e0 [mac80211]
+[  754.094975]  [<ffffffffa053e305>] ? __ieee80211_wake_queue+0x125/0x140 [mac80211]
+[  754.095017]  [<ffffffffa02e66c9>] ath_tx_complete_buf+0x1b9/0x370 [ath9k]
+[  754.095054]  [<ffffffffa02e6fcf>] ath_tx_complete_aggr+0x51f/0xb50 [ath9k]
+[  754.095098]  [<ffffffffa05382a3>] ? ieee80211_prepare_and_rx_handle+0x173/0xab0 [mac80211]
+[  754.095148]  [<ffffffff81350e62>] ? _raw_spin_unlock_irqrestore+0x32/0x40
+[  754.095186]  [<ffffffffa02e9735>] ath_tx_tasklet+0x365/0x4b0 [ath9k]
+[  754.095224]  [<ffffffff8107a2a2>] ? clockevents_program_event+0x62/0xa0
+[  754.095261]  [<ffffffffa02e2628>] ath9k_tasklet+0x168/0x1c0 [ath9k]
+[  754.095298]  [<ffffffff8105599b>] tasklet_action+0x6b/0xe0
+[  754.095331]  [<ffffffff81056278>] __do_softirq+0x98/0x120
+[  754.095361]  [<ffffffff8100cd5c>] call_softirq+0x1c/0x30
+[  754.095393]  [<ffffffff8100efb5>] do_softirq+0x65/0xa0
+[  754.095423]  [<ffffffff810563fd>] irq_exit+0x8d/0x90
+[  754.095453]  [<ffffffff8100ebc1>] do_IRQ+0x61/0xe0
+[  754.095482]  [<ffffffff81351413>] ret_from_intr+0x0/0x15
+[  754.095513]  <EOI>
+[  754.095531]  [<ffffffff81014375>] ? native_sched_clock+0x15/0x70
+[  754.096475]  [<ffffffffa02bcfa6>] ? acpi_idle_enter_bm+0x24d/0x285 [processor]
+[  754.096475]  [<ffffffffa02bcf9f>] ? acpi_idle_enter_bm+0x246/0x285 [processor]
+[  754.096475]  [<ffffffff8127fab2>] cpuidle_idle_call+0x82/0x100
+[  754.096475]  [<ffffffff8100a236>] cpu_idle+0xa6/0xf0
+[  754.096475]  [<ffffffff81339bc1>] rest_init+0x91/0xa0
+[  754.096475]  [<ffffffff814efccd>] start_kernel+0x3fd/0x408
+[  754.096475]  [<ffffffff814ef347>] x86_64_start_reservations+0x132/0x136
+[  754.096475]  [<ffffffff814ef451>] x86_64_start_kernel+0x106/0x115
+[  754.096475] RIP  [<ffffffffa02eac49>] ath_tx_status+0x209/0x2f0 [ath9k]
+
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
- include/linux/compat-2.6.39.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-index 2c62d90..104fce0 100644
---- a/include/linux/compat-2.6.39.h
-+++ b/include/linux/compat-2.6.39.h
-@@ -71,6 +71,8 @@ static inline void irq_set_probe(unsigned int irq)
- {
- 	set_irq_probe(irq);
- }
-+
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
- static inline struct irq_chip *irq_desc_get_chip(struct irq_desc *desc)
- {
- 	return get_irq_desc_chip(desc);
-@@ -89,6 +91,7 @@ static inline struct msi_desc *irq_desc_get_msi_desc(struct irq_desc *desc)
- {
- 	return get_irq_desc_msi(desc);
- }
-+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29)) */
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 960d717..a3241cd 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1328,7 +1328,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
  
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
- 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++	for (i = 0; i < sc->hw->max_rates; i++) {
+ 		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
+ 		if (!rate->count)
+ 			break;
 -- 
-1.7.1
+1.7.3.4
 
