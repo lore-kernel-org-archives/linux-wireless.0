@@ -1,118 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:31059 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488Ab1CRXXR (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52739 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933145Ab1CWUZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 19:23:17 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000028952.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 01:22:14 +0200
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <AANLkTimtS9dFMgxzBR0HrXxKs6uRghKi_zaGEP-i5paB@mail.gmail.com>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	 <1300453433.13499.18.camel@dev.znau.edu.ua>
-	 <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	 <AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
-	 <1300463392.13499.110.camel@dev.znau.edu.ua>
-	 <AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
-	 <1300471917.14872.28.camel@dev.znau.edu.ua>
-	 <AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
-	 <1300478510.15393.45.camel@dev.znau.edu.ua>
-	 <AANLkTi=1XOxwS4tMc6eMcNGeHf_ZGaAH5MC97JsP7oWP@mail.gmail.com>
-	 <1300488010.16395.37.camel@dev.znau.edu.ua>
-	 <AANLkTimtS9dFMgxzBR0HrXxKs6uRghKi_zaGEP-i5paB@mail.gmail.com>
-Content-Type: text/plain
-Date: Sat, 19 Mar 2011 01:22:24 +0200
-Message-Id: <1300490544.16395.50.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Wed, 23 Mar 2011 16:25:00 -0400
+Received: by fxm17 with SMTP id 17so7694724fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 13:24:59 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: rearrange some ELP wake_up/sleep calls
+Date: Wed, 23 Mar 2011 22:22:15 +0200
+Message-Id: <1300911735-27655-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ELP (Extremely/Enhanced Low Power, or something like that ;)) refers to
+the powerstate of the 12xx chip, in which very low power is consumed,
+and no commands (from the host) can be issued until the chip is woken up.
 
-> 2011/3/18 George Kashperko <george@znau.edu.ua>:
-> > Well, here you are:
-> > 1. PCI hosts with PCI buscores prior rev. 13 (8Kb window)
-> > offset  size    type    description
-> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
-> > 0x1000  0x0800  fixed   SPROM
-> > 0x1800  0x0400  fixed   PCI core (core registers 0x0000 to 0x03FF range)
-> > 0x1C00  0x0400  fixed   PCI core (agent registers, 0x0C00 to 0x0FFF range)
-> >
-> > 2. PCI hosts with PCI buscores rev. 13 and above and PCIE with
-> > Chipcommon rev. up to 31 (16Kb window)
-> > offset  size    type    description
-> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
-> > 0x1000  0x1000  fixed   SPROM
-> > 0x2000  0x1000  fixed   PCI core
-> > 0x3000  0x1000  fixed   Chipcommon core
-> >
-> > 3. PCIE hosts with Chipcommon rev. 32 and above
-> > offset  size    type    description
-> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
-> > 0x1000  0x1000  sliding controlled with BAR0_WIN2 register
-> > 0x2000  0x1000  fixed   PCI core
-> > 0x3000  0x1000  fixed   Chipcommon core
-> >
-> > As you can see even if PCI_REVISION can't feed us with guaranteed choice
-> > of either of these 3 layouts we can distingiush between them easily like
-> > following:
-> >
-> > if (pci_is_pcie(dev)) {
-> >        u32 chipid = ioread32(bar0_base + 0x3000);
-> >        if (chipid & 0x10000000)
-> >                /* AXI, Chipcommon rev. is 32+ */
-> >                goto win_3_setup;
-> >        else
-> >                /* SB, Chipcommon rev. is <= 31 */
-> >                goto win_2_setup;
-> > } else {
-> >        u32 idhi = ioread32(bar0_base + 0x1C00 + 0x03FC);
-> >        if (((idhi & 0x00008FF0) >> 4) == 0x804)
-> >                /* PCI core id */
-> >                goto win_1_setup;
-> >        else
-> >                /* Some crap from SPROM area */
-> >                goto win_2_setup;
-> > }
-> >
-> > Therefore we can setup PCI(e) host windows for backplane access prior to
-> > scanning.
-> >
-> > As for BAR0_WIN[12] registers, they point to physical base address on
-> > backplane that will be mapped into corresponding 0x1000-size window. And
-> > here again registers don't care what exactly you want to see there. Both
-> > the windows can be controlled independently.
-> >
-> > Finally, you might noticed we don't have SPROM in last 3rd layout. Thats
-> > because it is in Chipcommon registers' space. For layouts #1 & #2 BAR0
-> > range 0x1000 to 0x2000 is either mapped to actual SPROM or to SPROM
-> > shadow in PCI core.
-> 
-> Wohoo, and this is second part of info I really needed, thanks a lot!
-> I think there are mistakes in it, but I just wanted to get the idea of
-> windows. So thanks a lot.
-> 
-> As for mistakes:
-> 1) The split is not 1-31 vs. 32-... I believe it is 1-30 vs. 31-...
-> 2) On chipco >= 31 SSB SPROM seems to be 0x800
-> Maybe sth more...
-> 
-Watch bcmsrom.c for #define SROM_OFFSET
+Wakeup/sleep commands must be protected by a wl->mutex, so it's generally
+a good idea to call wakeup/sleep along with the mutex lock/unlock (where
+needed). However, in some places the wl12xx driver calls wakeup/sleep in
+some "inner" functions. This result in some "nested" wakeup/sleep calls
+which might end up letting the chip go to sleep prematurely (e.g. during
+event handling).
 
-For Chipcommons rev. >31 (the same as >=32) SPROM is in Chipcommon at
-0x0800 offset - 0x3800 offset of BAR0 (if CAP_SPROM capability bit is
-set), otherwise SPROM is unavailable.
-For Chipcommons rev. <=31 (the same as <32) SPROM is mapped to 0x1000
-offset of BAR0.
+Fix it by rearranging the elp calls to come along with mutex_lock/unlock.
 
-Have nice day,
-George
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.c |   11 +++++----
+ drivers/net/wireless/wl12xx/main.c  |   43 +++++++++++++++++------------------
+ drivers/net/wireless/wl12xx/ps.c    |    3 --
+ drivers/net/wireless/wl12xx/tx.c    |   22 +++++++----------
+ 4 files changed, 36 insertions(+), 43 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 1b170c5..d643f1c 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -33,6 +33,7 @@ void wl1271_pspoll_work(struct work_struct *work)
+ {
+ 	struct delayed_work *dwork;
+ 	struct wl1271 *wl;
++	int ret;
+ 
+ 	dwork = container_of(work, struct delayed_work, work);
+ 	wl = container_of(dwork, struct wl1271, pspoll_work);
+@@ -55,8 +56,13 @@ void wl1271_pspoll_work(struct work_struct *work)
+ 	 * delivery failure occurred, and no-one changed state since, so
+ 	 * we should go back to powersave.
+ 	 */
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
+ 	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, wl->basic_rate, true);
+ 
++	wl1271_ps_elp_sleep(wl);
+ out:
+ 	mutex_unlock(&wl->mutex);
+ };
+@@ -129,11 +135,6 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 
+ 		/* enable beacon early termination */
+ 		ret = wl1271_acx_bet_enable(wl, true);
+-		if (ret < 0)
+-			break;
+-
+-		/* go to extremely low power mode */
+-		wl1271_ps_elp_sleep(wl);
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8b3c8d1..11d799c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2650,32 +2650,31 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		conf_tid->ack_policy = CONF_ACK_POLICY_LEGACY;
+ 		conf_tid->apsd_conf[0] = 0;
+ 		conf_tid->apsd_conf[1] = 0;
+-	} else {
+-		ret = wl1271_ps_elp_wakeup(wl);
+-		if (ret < 0)
+-			goto out;
++		goto out;
++	}
+ 
+-		/*
+-		 * the txop is confed in units of 32us by the mac80211,
+-		 * we need us
+-		 */
+-		ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
+-					params->cw_min, params->cw_max,
+-					params->aifs, params->txop << 5);
+-		if (ret < 0)
+-			goto out_sleep;
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
+ 
+-		ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
+-					 CONF_CHANNEL_TYPE_EDCF,
+-					 wl1271_tx_get_queue(queue),
+-					 ps_scheme, CONF_ACK_POLICY_LEGACY,
+-					 0, 0);
+-		if (ret < 0)
+-			goto out_sleep;
++	/*
++	 * the txop is confed in units of 32us by the mac80211,
++	 * we need us
++	 */
++	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
++				params->cw_min, params->cw_max,
++				params->aifs, params->txop << 5);
++	if (ret < 0)
++		goto out_sleep;
++
++	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
++				 CONF_CHANNEL_TYPE_EDCF,
++				 wl1271_tx_get_queue(queue),
++				 ps_scheme, CONF_ACK_POLICY_LEGACY,
++				 0, 0);
+ 
+ out_sleep:
+-		wl1271_ps_elp_sleep(wl);
+-	}
++	wl1271_ps_elp_sleep(wl);
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 971f13e..b8deada 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -149,9 +149,6 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 	case STATION_ACTIVE_MODE:
+ 	default:
+ 		wl1271_debug(DEBUG_PSM, "leaving psm");
+-		ret = wl1271_ps_elp_wakeup(wl);
+-		if (ret < 0)
+-			return ret;
+ 
+ 		/* disable beacon early termination */
+ 		ret = wl1271_acx_bet_enable(wl, false);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 5e9ef7d..20644f0 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -454,22 +454,14 @@ static void wl1271_skb_queue_head(struct wl1271 *wl, struct sk_buff *skb)
+ void wl1271_tx_work_locked(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb;
+-	bool woken_up = false;
+ 	u32 buf_offset = 0;
+ 	bool sent_packets = false;
+ 	int ret;
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+-		goto out;
++		return;
+ 
+ 	while ((skb = wl1271_skb_dequeue(wl))) {
+-		if (!woken_up) {
+-			ret = wl1271_ps_elp_wakeup(wl);
+-			if (ret < 0)
+-				goto out_ack;
+-			woken_up = true;
+-		}
+-
+ 		ret = wl1271_prepare_tx_frame(wl, skb, buf_offset);
+ 		if (ret == -EAGAIN) {
+ 			/*
+@@ -516,18 +508,22 @@ out_ack:
+ 
+ 		wl1271_handle_tx_low_watermark(wl);
+ 	}
+-
+-out:
+-	if (woken_up)
+-		wl1271_ps_elp_sleep(wl);
+ }
+ 
+ void wl1271_tx_work(struct work_struct *work)
+ {
+ 	struct wl1271 *wl = container_of(work, struct wl1271, tx_work);
++	int ret;
+ 
+ 	mutex_lock(&wl->mutex);
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
+ 	wl1271_tx_work_locked(wl);
++
++	wl1271_ps_elp_wakeup(wl);
++out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+-- 
+1.7.0.4
 
