@@ -1,211 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63768 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757762Ab1CORlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 13:41:19 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 10:40:56 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH v2] ath9k_hw: Speedup register ops for HTC driver
-Date: Tue, 15 Mar 2011 23:11:35 +0530
-Message-ID: <1300210895-13182-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:51166 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752501Ab1CWOJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 10:09:46 -0400
+Subject: Re: [RFC] drivers: brcmaxi: provide amba axi functionality in
+ separate module
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	"george@znau.edu.ua" <george@znau.edu.ua>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <op.vsst8mfl3ri7v4@arend-laptop> (sfid-20110323_145439_175877_7D16E3D0)
+References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
+	 <1300738586-7157-2-git-send-email-arend@broadcom.com>
+	 <20110321132848.e4e846a5.rdunlap@xenotime.net>
+	 <op.vsslrqf23ri7v4@arend-laptop> <1300888183.18815.5.camel@Nokia-N900>
+	 <op.vsst8mfl3ri7v4@arend-laptop> (sfid-20110323_145439_175877_7D16E3D0)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Mar 2011 15:09:34 +0100
+Message-ID: <1300889374.20830.1.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fine-tuning register write operation and avoid unnecessay
-delays for ath9k_htc driver, saves hw reset time which
-improves scanning time and also solves one of the following
-scenario.
+On Wed, 2011-03-23 at 14:54 +0100, Arend van Spriel wrote: 
+> On Wed, 23 Mar 2011 14:49:43 +0100, Michael Büsch <mb@bu3sch.de> wrote:
+> 
+> >
+> >> void foobar(void *r, u32 val)
+> >> {
+> >>     volatile u32 dummy;
+> >>
+> >>     WR_REG(r, val);
+> >>     dummy = RD_REG(r);
+> >> }
+> >>
+> >> The register read is necessary to assure the register write is properly
+> >> flushed out in hardware. Could removing the volatile for the dummy
+> >> variable cause removal of the register read due to code optimization.
+> >
+> > It shouldn't optimize the read away as long as the RD_REG uses a  
+> > volatile pointer internally. Which is the case if you use readl/w/b or  
+> > ioread... to implement RD_REG
+> 
+> Well, RD_REG(r) is a macro which translates to readb((volatile u8*)r). Are  
+> you referring to that being a volatile pointer or do you mean that inside  
+> the accessor function readb the 'r' parameter is treated as a volatile  
+> pointer.
 
-Sometimes the ACK is sent by STA for assoc response is not
-seen at AP side. So the AP continues to send retry assoc
-responses. At the STA side, since the assoc response was
-already forwarded to mac80211, it proceeded to channel change
-which in turns does chip reset.
+readb uses volatile internally. That should be enough to ensure that
+the read does actually happen.
 
-In most of the cases the chip reset was completed before
-max retries are reached at AP side. Hence STA can able to ACK
-the retried frames again. But in clear environment these retries
-are completed within shortspan of time.
-
-Since ath9k_htc consumes more time for hw reset, this latency
-is causing dissociation by AP due to max reties are reached.
-This issue was originally reported with Cisco Aironet 1250 AP
-in HT40 mode in noise free environment.
-
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
-v2 - added buffer write support for eeprom_9287
-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c  |    7 +++++--
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    6 ++++++
- drivers/net/wireless/ath/ath9k/eeprom_def.c  |    7 +++++++
- drivers/net/wireless/ath/ath9k/hw.h          |   10 +++++++---
- drivers/net/wireless/ath/ath9k/phy.h         |    2 ++
- 5 files changed, 27 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index ffcf44a..94acce5 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -729,6 +729,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int i, regWrites = 0;
- 	struct ieee80211_channel *channel = chan->chan;
- 	u32 modesIndex, freqIndex;
-@@ -805,7 +806,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 		REG_WRITE(ah, reg, val);
- 
- 		if (reg >= 0x7800 && reg < 0x78a0
--		    && ah->config.analog_shiftreg) {
-+		    && ah->config.analog_shiftreg
-+		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
- 			udelay(100);
- 		}
- 
-@@ -835,7 +837,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 		REG_WRITE(ah, reg, val);
- 
- 		if (reg >= 0x7800 && reg < 0x78a0
--		    && ah->config.analog_shiftreg) {
-+		    && ah->config.analog_shiftreg
-+		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
- 			udelay(100);
- 		}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 8cd8333..2f0712e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -392,6 +392,8 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 							   numXpdGain);
- 			}
- 
-+			ENABLE_REGWRITE_BUFFER(ah);
-+
- 			if (i == 0) {
- 				if (!ath9k_hw_ar9287_get_eeprom(ah,
- 							EEP_OL_PWRCTRL)) {
-@@ -442,6 +444,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 					regOffset += 4;
- 				}
- 			}
-+			REGWRITE_BUFFER_FLUSH(ah);
- 		}
- 	}
- 
-@@ -757,6 +760,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			ratesArray[i] -= AR9287_PWR_TABLE_OFFSET_DB * 2;
- 	}
- 
-+	ENABLE_REGWRITE_BUFFER(ah);
-+
- 	/* OFDM power per rate */
- 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
- 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
-@@ -840,6 +845,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			  | ATH9K_POW_SM(ratesArray[rateDupOfdm], 8)
- 			  | ATH9K_POW_SM(ratesArray[rateDupCck], 0));
- 	}
-+	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
- static void ath9k_hw_ar9287_set_addac(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index fccd87d..995949d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -799,6 +799,8 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 							   pwr_table_offset,
- 							   &diff);
- 
-+			ENABLE_REGWRITE_BUFFER(ah);
-+
- 			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
- 				if (OLC_FOR_AR9280_20_LATER) {
- 					REG_WRITE(ah,
-@@ -847,6 +849,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 
- 				regOffset += 4;
- 			}
-+			REGWRITE_BUFFER_FLUSH(ah);
- 		}
- 	}
- 
-@@ -1205,6 +1208,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 		}
- 	}
- 
-+	ENABLE_REGWRITE_BUFFER(ah);
-+
- 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
- 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
- 		  | ATH9K_POW_SM(ratesArray[rate12mb], 16)
-@@ -1291,6 +1296,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_POWER_TX_SUB,
- 		  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
- 		  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
-+
-+	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
- static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 072406c..c663216 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -105,18 +105,22 @@
- #define REG_CLR_BIT(_a, _r, _f) \
- 	REG_WRITE(_a, _r, REG_READ(_a, _r) & ~(_f))
- 
--#define DO_DELAY(x) do {			\
--		if ((++(x) % 64) == 0)          \
--			udelay(1);		\
-+#define DO_DELAY(x) do {					\
-+		if (((++(x) % 64) == 0) &&			\
-+		    (ath9k_hw_common(ah)->bus_ops->ath_bus_type	\
-+			!= ATH_USB))				\
-+			udelay(1);				\
- 	} while (0)
- 
- #define REG_WRITE_ARRAY(iniarray, column, regWr) do {                   \
- 		int r;							\
-+		ENABLE_REGWRITE_BUFFER(ah);				\
- 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
- 			REG_WRITE(ah, INI_RA((iniarray), (r), 0),	\
- 				  INI_RA((iniarray), r, (column)));	\
- 			DO_DELAY(regWr);				\
- 		}							\
-+		REGWRITE_BUFFER_FLUSH(ah);				\
- 	} while (0)
- 
- #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 5e3d749..e402932 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -40,10 +40,12 @@
- 
- #define REG_WRITE_RF_ARRAY(iniarray, regData, regWr) do {               \
- 		int r;							\
-+		ENABLE_REGWRITE_BUFFER(ah);				\
- 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
- 			REG_WRITE(ah, INI_RA((iniarray), r, 0), (regData)[r]); \
- 			DO_DELAY(regWr);				\
- 		}							\
-+		REGWRITE_BUFFER_FLUSH(ah);				\
- 	} while (0)
- 
- #define ANTSWAP_AB 0x0001
 -- 
-1.7.4.1
+Greetings Michael.
 
