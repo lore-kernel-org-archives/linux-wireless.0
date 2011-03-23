@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:52691 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754035Ab1CCPmy (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59249 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932713Ab1CWUGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 10:42:54 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so1163244wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 07:42:52 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: wakeup chip from ELP during scan
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1298975246-1720-1-git-send-email-arik@wizery.com>
-References: <1298975246-1720-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Mar 2011 17:42:55 +0200
-Message-ID: <1299166975.7039.6.camel@cumari>
-Mime-Version: 1.0
+	Wed, 23 Mar 2011 16:06:08 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 23 Mar 2011 13:05:47 -0700
+Message-ID: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
+Subject: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND and friends
+To: =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>
+Cc: linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Vipin Mehta <vmehta@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-01 at 12:27 +0200, Arik Nemtsov wrote:
-> Commands are sometimes sent to FW on scan completion. Make sure the chip
-> is awake to receive them. Sending commands while the chip is in ELP
-> can cause SDIO read errors and/or crash the FW.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+Arve,
 
-Applied, thanks Arik!
+What ever happened with your series on the Android PM extensions you
+had submitted in 2009 [1] ? I'm working on ath6kl right now and I'm
+going to remove all that early suspend crap as its not upstream and I
+want to get ath6kl into upstream proper. Do you have plans for a
+replacement? Since the thread covers wake locks, have you ironed out
+what you are going to do with that as well?
 
--- 
-Cheers,
-Luca.
+[1] https://lists.linux-foundation.org/pipermail/linux-pm/2009-February/019498.html
 
+  Luis
