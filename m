@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64239 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754961Ab1CQSii (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36657 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932788Ab1CWXAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 14:38:38 -0400
-Received: by iyb26 with SMTP id 26so3106408iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:38:38 -0700 (PDT)
+	Wed, 23 Mar 2011 19:00:17 -0400
+Received: by fxm17 with SMTP id 17so7788686fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 16:00:16 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: users@rt2x00.serialmonkey.com
+Subject: Aggregation problem with rt2800 AP and Intel 5100 STA
+Date: Wed, 23 Mar 2011 23:58:29 +0100
+Cc: Jay Hung <Jay_Hung@ralinktech.com>,
+	Eddy Tsai <Eddy_Tsai@ralinktech.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com>
-References: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com> <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 17 Mar 2011 11:38:18 -0700
-Message-ID: <AANLkTinVaFcD8L9kOjPW-y7pVxR0ReHsLBy6=SG=8OJC@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k_hw: Fix pcie_serdes setting for AR9485 1.1 version.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jack Lee <jack.lee@atheros.com>,
-	Carl Huang <carl.huang@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Nael Atallah <nael.atallah@atheros.com>,
-	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201103232358.29966.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2011 at 5:04 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Feb 25, 2011 at 4:01 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->
-> Was this a stable fix? If not why not?
+Hi,
 
-This certainly smells like a stable fix, this seems similar to this other fix:
+[CC'ing Jay and Eddy as they might be able to answer some questions
+ regarding 11n aggregation on rt2800 devices]
 
-commit 58c5296991d233f2e492aa7a884635bba478cf12
-Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-Date:   Thu Jan 13 18:19:29 2011 -0800
+I'm using rt2800pci as AP. 11n aggregation works just fine when using a
+Intel 5100 client and transferring data in both directions on Linux. Also
+my Intel 4965 works just fine.
 
-    ath9k_hw: ASPM interoperability fix for AR9380/AR9382
+However, using Windows Vita on the same machine (Intel 5100) the Intel
+RX reorder buffer seems to get confused. At least I can see (I can also
+provide a pcap if anyone is interested) that the Intel STA still BlockAcks
+received AMPDUs but the frames never make it out of the driver. It seems
+as if they are stuck in the Intel driver/firmware (Windows).
 
-    There is an interoperability with AR9382/AR9380 in L1 state with a
-    few root complexes which can cause a hang. This is fixed by
-    setting some work around bits on the PCIE PHY. We fix by using
-    a new ini array to modify these bits when the radio is idle.
+I first thought this might be due to an old windows driver but even after
+updating it to the newest version I can still reproduce this issue.
 
-    Cc: stable@kernel.org
-    Cc: Jack Lee <jack.lee@atheros.com>
-    Cc: Carl Huang <carl.huang@atheros.com>
-    Cc: David Quan <david.quan@atheros.com>
-    Cc: Nael Atallah <nael.atallah@atheros.com>
-    Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+After debugging some more I noticed that this issue seems to appear as
+soon as some parts (or maybe all parts) of an AMPDU (rt2800pci -> Intel 5100
+Windows STA) are not BlockAcked and need to be retried. However, as far as I
+can see the whole aggregation stuff including retransmissions on failures
+should be handled entirely in hardware (only the BA session setup/teardown is
+done by the driver/mac80211).
 
-Without this patch I believe we will get AR9485 hanging in L1 state
-with some root complexes. Can someone confirm?
+According to 802.11n-2009 the BA originator could send a BlockAckReq if 
+an AMPDU is not BlockAcked in time. However, I never see the hw sending a
+BlockAckReq.
 
-Vivek, in the future can you please elaborate a little more on the
-commit log entries and if its a "fix" of some sort elaborate on the
-impact of not applying th patch.
+Jay, Eddy, does the hw ever send a BlockAckReq if it doesn't receive a
+BlockAck for an AMPDU?
+
+At least, I hacked rt2x00 to set IEEE80211_TX_STAT_AMPDU_NO_BACK for failed
+aggregated frames such that mac80211 sends a BlockAckReq for this failed MPDU
+and this indeed seems to improve the situation but doesn't fix it completely.
+
+Anything else I could try? Any ideas?
 
 Thanks,
-
-  Luis
+Helmut
