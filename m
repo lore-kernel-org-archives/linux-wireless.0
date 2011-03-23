@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:37641 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754549Ab1CAOGZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 09:06:25 -0500
-Received: by mail-wy0-f170.google.com with SMTP id 19so8349859wyf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 06:06:23 -0800 (PST)
-Subject: Re: [PATCH v2 2/7] wl12xx: Do end-of-transactions transfers only
- if needed
-From: Luciano Coelho <coelho@ti.com>
-To: Ido Yariv <ido@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Ohad Ben-Cohen <ohad@wizery.com>
-In-Reply-To: <1298985284-6048-3-git-send-email-ido@wizery.com>
-References: <1298985284-6048-1-git-send-email-ido@wizery.com>
-	 <1298985284-6048-3-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Mar 2011 16:06:20 +0200
-Message-ID: <1298988380.2104.239.camel@pimenta>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44606 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932749Ab1CWT5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 15:57:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 06/10] ath9k_hw: remove ah->config.ht_enable
+Date: Wed, 23 Mar 2011 20:57:29 +0100
+Message-Id: <1300910253-28189-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1300910253-28189-5-git-send-email-nbd@openwrt.org>
+References: <1300910253-28189-1-git-send-email-nbd@openwrt.org>
+ <1300910253-28189-2-git-send-email-nbd@openwrt.org>
+ <1300910253-28189-3-git-send-email-nbd@openwrt.org>
+ <1300910253-28189-4-git-send-email-nbd@openwrt.org>
+ <1300910253-28189-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nice idea to have this quirks bitmask to isolate the
-hw-revision-specific hacks!
+It is only used in one place, and the device id check that it's based on
+can be moved there as well.
 
-On Tue, 2011-03-01 at 15:14 +0200, Ido Yariv wrote:
-> +/* Quirks */
-> +
-> +/* Each RX/TX transaction requires an end-of-transaction transfer */
-> +#define WL12XX_QUIRK_END_OF_TRANSACTION        BIT(1) 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    7 +------
+ drivers/net/wireless/ath/ath9k/hw.h |    1 -
+ 2 files changed, 1 insertions(+), 7 deletions(-)
 
-Why not start with BIT(0)? ;)
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index de0d218..625ad0b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -378,11 +378,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 		ah->config.spurchans[i][1] = AR_NO_SPUR;
+ 	}
+ 
+-	if (ah->hw_version.devid != AR2427_DEVID_PCIE)
+-		ah->config.ht_enable = 1;
+-	else
+-		ah->config.ht_enable = 0;
+-
+ 	/* PAPRD needs some more work to be enabled */
+ 	ah->config.paprd_disable = 1;
+ 
+@@ -1880,7 +1875,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 	common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM;
+ 
+-	if (ah->config.ht_enable)
++	if (ah->hw_version.devid != AR2427_DEVID_PCIE)
+ 		pCap->hw_caps |= ATH9K_HW_CAP_HT;
+ 	else
+ 		pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 4e62ad8..7bbf701 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -222,7 +222,6 @@ struct ath9k_ops_config {
+ 	u8 pcie_clock_req;
+ 	u32 pcie_waen;
+ 	u8 analog_shiftreg;
+-	u8 ht_enable;
+ 	u8 paprd_disable;
+ 	u32 ofdm_trig_low;
+ 	u32 ofdm_trig_high;
 -- 
-Cheers,
-Luca.
+1.7.3.2
 
