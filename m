@@ -1,50 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42072 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab1CXNhc (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37467
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755045Ab1CWTl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 09:37:32 -0400
-Subject: Re: [PATCH] mac80211: rename RX_FLAG_TSFT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>
-In-Reply-To: <op.vsunv6ae3ri7v4@arend-laptop>
-References: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
-	 <op.vsunv6ae3ri7v4@arend-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Mar 2011 14:37:25 +0100
-Message-ID: <1300973845.26265.4.camel@jlt3.sipsolutions.net>
+	Wed, 23 Mar 2011 15:41:57 -0400
+Date: Wed, 23 Mar 2011 12:42:36 -0700 (PDT)
+Message-Id: <20110323.124236.233718218.davem@davemloft.net>
+To: tony.olech@elandigitalsystems.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: mailing list problem
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1300901496.4413.7.camel@apple-mac>
+References: <1300899473.4413.1.camel@apple-mac>
+	<20110323170728.GC31185@tuxdriver.com>
+	<1300901496.4413.7.camel@apple-mac>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+From: Tony Olech <tony.olech@elandigitalsystems.com>
+Date: Wed, 23 Mar 2011 17:31:36 +0000
 
-> > +#if 0
-> > +	/* Clearly, this is bogus -- reading the TSF now is wrong */
-> >  	wlc_read_tsf(wlc, &tsf_l, &tsf_h);	/* mactime */
-> >  	rx_status->mactime = tsf_h;
-> >  	rx_status->mactime <<= 32;
-> >  	rx_status->mactime |= tsf_l;
-> > -	rx_status->flag |= RX_FLAG_TSFT;
-> > +	rx_status->flag |= RX_FLAG_MACTIME_MPDU; /* clearly wrong */
-> > +#endif
-> 
-> This piece of code has been '#if 0'-ed by you. Could you elaborate why  
-> this is clearly wrong? Because of this the variables tsf_l and tsf_h are  
-> not being used hence the warning.
+> I am not happy, I have to re-subscribe to all the list again.
+> What a pain!
 
-include/net/mac80211.h:
-
- * @mactime: value in microseconds of the 64-bit Time Synchronization Function
- *      (TSF) timer when the first data symbol (MPDU) arrived at the hardware.
-
-
-Not sure what else to say ... reading the TSF when processing the frame
-in software is clearly bogus.
-
-johannes
-
-
+I am not happy, when you ran over quota it flooded my postmaster
+inbox with hundreds of your bounces.
+What a pain!
