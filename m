@@ -1,55 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44143 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364Ab1CUBOo (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50067 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932577Ab1CWTUN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Mar 2011 21:14:44 -0400
-Received: by iwn34 with SMTP id 34so5925523iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 18:14:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4D86A311.2070404@lockie.ca>
-References: <4D866714.80503@lockie.ca> <AANLkTim_YELaSk4X4uRf_nsyAThK7SiMAq3rDD_MZVmb@mail.gmail.com>
- <4D86A311.2070404@lockie.ca>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 21 Mar 2011 12:14:24 +1100
-Message-ID: <AANLkTikFAvu9EHK6g51EEbrMsBoODwXZ4XWgtYUUpqjv@mail.gmail.com>
-Subject: Re: why would IRQ change?
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Mar 2011 15:20:13 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wifi:  Add hwflags to debugfs.
+Date: Wed, 23 Mar 2011 12:20:08 -0700
+Message-Id: <1300908008-17676-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 12:00, James <bjlockie@lockie.ca> wrote:
-> On 03/20/11 19:42, Julian Calaby wrote:
->> On Mon, Mar 21, 2011 at 07:44, James <bjlockie@lockie.ca> wrote:
->>> Is there a tool to list what devices are assigned what IRQ?
->>>
->>> This from an old kernel:
->>> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
->>> mem=0xffffc900017a0000, irq=18
->>>
->>> This is from today:
->>> ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
->>> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
->>> mem=0xffffc90001ba0000, irq=17
->> AFAIK, PCI interrupts numbers are just sequential numbers assigned by
->> Linux - there is no significance to them, they are just a number for
->> tracking which interrupt is assigned to which device - there is no
->> "IRQ17" or "IRQ18" anywhere in any actual hardware.
->>
->> Thanks,
->>
-> I'm thinking maybe the IRQ sharing doesn't work right with this card.
+From: Ben Greear <greearb@candelatech.com>
 
-It's a PCI card. See: http://en.wikipedia.org/wiki/Conventional_PCI#Interrupts
+Aids debugging wifi behaviour.
 
-Thanks,
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 51f0d78... dd0632a... M	net/mac80211/debugfs.c
+ net/mac80211/debugfs.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 73 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 51f0d78..dd0632a 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -291,12 +291,84 @@ static ssize_t channel_type_read(struct file *file, char __user *user_buf,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ }
+ 
++static ssize_t hwflags_read(struct file *file, char __user *user_buf,
++			    size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	int mxln = 500;
++	ssize_t rv;
++	char *buf = kzalloc(mxln, GFP_KERNEL);
++	int sf = 0; /* how many written so far */
++
++	sf += snprintf(buf, mxln - sf, "0x%x", local->hw.flags);
++	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		sf += snprintf(buf + sf, mxln - sf, " HAS_RATE_CONTROL");
++	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
++		sf += snprintf(buf + sf, mxln - sf, " RX_INCLUDES_FCS");
++	if (local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING)
++		sf += snprintf(buf + sf, mxln - sf, " HOST_BCAST_PS_BUFFERING");
++	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE)
++		sf += snprintf(buf + sf, mxln - sf,
++			       " 2GHZ_SHORT_SLOT_INCAPABLE");
++	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE)
++		sf += snprintf(buf + sf, mxln - sf,
++			       " 2GHZ_SHORT_PREAMBLE_INCAPABLE");
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
++		sf += snprintf(buf + sf, mxln - sf, " SIGNAL_UNSPEC");
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
++		sf += snprintf(buf + sf, mxln - sf, " SIGNAL_DBM");
++	if (local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
++		sf += snprintf(buf + sf, mxln - sf, " NEED_DTIM_PERIOD");
++	if (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT)
++		sf += snprintf(buf + sf, mxln - sf, " SPECTRUM_MGMT");
++	if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
++		sf += snprintf(buf + sf, mxln - sf, " AMPDU_AGGREGATION");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_PS");
++	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++		sf += snprintf(buf + sf, mxln - sf, " PS_NULLFUNC_STACK");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_DYNAMIC_PS");
++	if (local->hw.flags & IEEE80211_HW_MFP_CAPABLE)
++		sf += snprintf(buf + sf, mxln - sf, " MFP_CAPABLE");
++	if (local->hw.flags & IEEE80211_HW_BEACON_FILTER)
++		sf += snprintf(buf + sf, mxln - sf, " BEACON_FILTER");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_STATIC_SMPS)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_STATIC_SMPS");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_DYNAMIC_SMPS");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_UAPSD");
++	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
++		sf += snprintf(buf + sf, mxln - sf, " REPORTS_TX_ACK_STATUS");
++	if (local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
++		sf += snprintf(buf + sf, mxln - sf, " CONNECTION_MONITOR");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_CQM_RSSI");
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK)
++		sf += snprintf(buf + sf, mxln - sf, " SUPPORTS_PER_STA_GTK");
++	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
++		sf += snprintf(buf + sf, mxln - sf, " AP_LINK_PS");
++
++	sf += snprintf(buf + sf, mxln - sf, "\n");
++
++	rv = simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
++	kfree(buf);
++	return rv;
++}
++
+ static const struct file_operations channel_type_ops = {
+ 	.read = channel_type_read,
+ 	.open = mac80211_open_file_generic,
+ 	.llseek = default_llseek,
+ };
+ 
++static const struct file_operations hwflags_ops = {
++	.read = hwflags_read,
++	.open = mac80211_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t queues_read(struct file *file, char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+ {
+@@ -395,6 +467,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(uapsd_queues);
+ 	DEBUGFS_ADD(uapsd_max_sp_len);
+ 	DEBUGFS_ADD(channel_type);
++	DEBUGFS_ADD(hwflags);
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
+ 
 -- 
+1.7.3.4
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
