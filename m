@@ -1,66 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:50200 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753751Ab1CGR3s (ORCPT
+Received: from w1.fi ([128.177.27.249]:52366 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753118Ab1CWNrS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 12:29:48 -0500
+	Wed, 23 Mar 2011 09:47:18 -0400
+Date: Wed, 23 Mar 2011 14:52:19 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Support RSN IBSS
+Message-ID: <20110323125219.GA26467@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <op.vry7kwq83ri7v4@arend-laptop>
-References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
-	<op.vryqz6qt3ri7v4@arend-laptop>
-	<AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
-	<op.vry7kwq83ri7v4@arend-laptop>
-Date: Mon, 7 Mar 2011 18:29:47 +0100
-Message-ID: <AANLkTinWOFPUqmv6PbQMy6xnsAptGKUjoAHoxB65LCy9@mail.gmail.com>
-Subject: Re: brcm80211: the system freezes if booted with laptop wifi switch
- to OFF
-From: Francis Moreau <francis.moro@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 7, 2011 at 2:54 PM, Arend van Spriel <arend@broadcom.com> wrote:
->
-> I don't know what the origin is of your kernel so please provide some
-> details on that.
+Add support for using RSN IBSS with ath9k. For now, this uses software
+crypto for group addressed frames in RSN IBSS, but that may be
+optimized in the future by extending the key cache design to support
+per-STA RX GTK.
 
-What kind of information do you need ?
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-As you probably noticed the kernel I'm running is 2.6.38-rc6.
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c |   14 ++++++++++++++
+ 2 files changed, 16 insertions(+)
 
-Revelant part of lscpi:
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/init.c	2011-03-23 14:14:12.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ath9k/init.c	2011-03-23 14:15:04.000000000 +0200
+@@ -690,6 +690,8 @@ void ath9k_set_hw_capab(struct ath_softc
+ 	if (AR_SREV_5416(sc->sc_ah))
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
++	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
++
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2011-03-23 14:12:59.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2011-03-23 14:15:04.000000000 +0200
+@@ -1845,6 +1845,20 @@ static int ath9k_set_key(struct ieee8021
+ 	if (ath9k_modparam_nohwcrypt)
+ 		return -ENOSPC;
+ 
++	if (vif->type == NL80211_IFTYPE_ADHOC &&
++	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
++	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
++	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
++		/*
++		 * For now, disable hw crypto for the RSN IBSS group keys. This
++		 * could be optimized in the future to use a modified key cache
++		 * design to support per-STA RX GTK, but until that gets
++		 * implemented, use of software crypto for group addressed
++		 * frames is a acceptable to allow RSN IBSS to be used.
++		 */
++		return -EOPNOTSUPP;
++	}
++
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+ 	ath_dbg(common, ATH_DBG_CONFIG, "Set HW Key\n");
 
-12:00.0 Network controller: Broadcom Corporation Device 4727 (rev 01)
-	Subsystem: Dell Device 0010
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	Memory at fbb00000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: <access denied>
-	Kernel driver in use: brcm80211
-	Kernel modules: brcm80211
-
-
-> The patch itself can be found in the linuxdriver email
-> archive:
->
-> http://driverdev.linuxdriverproject.org/pipermail/devel/2011-January/011381.html
->
-
-Do you want me to give it a try ?
-
-> Not sure whether it applies to whatever you have. I just tried your scenario
-> with my driver and hardware and no freezes during boot.
-
-My scenario is:
-
-   - set the switch to OFF
-   - insmod the module
-   - bring up/configure the interface
-
-Thanks
 -- 
-Francis
+Jouni Malinen                                            PGP id EFC895FA
