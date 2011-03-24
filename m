@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52794 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893Ab1CHOMv (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33300 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157Ab1CXGux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 09:12:51 -0500
-Subject: Re: [RFC 3/9] mac80211: add WoW param to .start/.stop callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299011804-13899-4-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-	 <1299011804-13899-4-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 15:12:49 +0100
-Message-ID: <1299593569.4676.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 24 Mar 2011 02:50:53 -0400
+Received: by vws1 with SMTP id 1so6253012vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 23:50:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201103232358.29966.helmut.schaa@googlemail.com>
+References: <201103232358.29966.helmut.schaa@googlemail.com>
+Date: Thu, 24 Mar 2011 08:50:52 +0200
+Message-ID: <AANLkTi=BLTJhxYf552GLW1zG-AvVdeKj86e2K-vEm_Wy@mail.gmail.com>
+Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: users@rt2x00.serialmonkey.com, Jay Hung <Jay_Hung@ralinktech.com>,
+	Eddy Tsai <Eddy_Tsai@ralinktech.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-01 at 22:36 +0200, Eliad Peller wrote:
-> Add a param which contains the enabled Wake-On-Wireless triggers,
-> so lower drivers prepare themselves to suspend/resume
-> (e.g. configure triggers to fw, mask irqs, etc.)
+>
+> According to 802.11n-2009 the BA originator could send a BlockAckReq if
+> an AMPDU is not BlockAcked in time. However, I never see the hw sending a
+> BlockAckReq.
+>
 
-I'm not sure I like using the start/stop API for suspend in this way.
-Basically, I think what happens with this is that we're saying to the
-driver "stop(but really don't because of WoW)". That seems a bit strange
-to me, wouldn't you agree?
+Not sending BAR (BlockAckReq) can be quite problematic. The originator
+needs to send BAR to tell the recipient that the frames that are
+pending in the reordering buffer can be released to the upper level
+even if there are holes in the packet sequence. Not sending BAR could
+in theory lead to deadlock. In practice, most implementations of
+reordering buffers release frames out of order after timeout.
 
-I'm inclined to not use the "deconfigure everything" code in mac80211 in
-the case that wow triggers were requested, and instead call suspend() in
-the driver with the WoW triggers. Upon resume, also don't reconfigure,
-but call resume() instead?
+taken from rx.c of mac80211:
+/*
+ * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
+ * the skb was added to the buffer longer than this time ago, the earlier
+ * frames that have not yet been received are assumed to be lost and the skb
+ * can be released for processing. This may also release other skb's from the
+ * reorder buffer if there are no additional gaps between the frames.
+ *
+ * Callers must hold tid_agg_rx->reorder_lock.
+ */
+#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
 
-johannes
+I am quite surprised that you see that frames are "stuck in the
+driver". This would mean that the windows drivers's implementation of
+the reordering buffer doesn't have timer... or I miss something...
 
+> At least, I hacked rt2x00 to set IEEE80211_TX_STAT_AMPDU_NO_BACK for failed
+> aggregated frames such that mac80211 sends a BlockAckReq for this failed MPDU
+> and this indeed seems to improve the situation but doesn't fix it completely.
+
+Can you please be more specific by "improve situation" ? better TPT ?
+lower packet loss ?
+What do you mean by not fixed completely ?
+Do you track packets out of the driver ?
