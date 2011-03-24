@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8501 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2782 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754847Ab1C3TPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 15:15:20 -0400
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2UJFJCd030655
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:15:20 -0400
-Received: from savage.usersys.redhat.com (savage.devel.redhat.com [10.11.231.4])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id p2UJFJY8020413
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:15:19 -0400
-Received: from savage.usersys.redhat.com (localhost.localdomain [127.0.0.1])
-	by savage.usersys.redhat.com (8.13.1/8.13.1) with ESMTP id p2UJFIM3012522
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:15:18 -0400
-Received: (from linville@localhost)
-	by savage.usersys.redhat.com (8.13.1/8.13.1/Submit) id p2UJFI1F012521
-	for linux-wireless@vger.kernel.org; Wed, 30 Mar 2011 15:15:18 -0400
-Date: Wed, 30 Mar 2011 15:15:18 -0400
-From: "John W. Linville" <linville@redhat.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-testing rebased on 2.6.39-rc1
-Message-ID: <20110330191518.GC11368@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1750907Ab1CXQiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 12:38:01 -0400
+Message-ID: <4D8B7361.8050803@broadcom.com>
+Date: Thu, 24 Mar 2011 17:37:53 +0100
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: More log spam from brcm80211
+References: <4D8B6D2D.3090505@lwfinger.net>
+In-Reply-To: <4D8B6D2D.3090505@lwfinger.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wireless-testing has been rebased -- I know the rebasing can be
-painful, but it helps to keep the kruft from getting too deep in a
-tree like wireless-testing.
+Hello Larry,
 
-Please updates your trees accordingly!
+did you already try my preliminary patch (email that I sent you 
+yesterday) for the previous log spam problem ?
 
-John
--- 
-John W. Linville		The truth will set you free, but first it will
-linville@redhat.com			make you miserable. -- James A. Garfield
+Regarding this new problem: I will get back to you shortly.
+
+Bye, Roland.
+
+
+On 03/24/2011 05:11 PM, Larry Finger wrote:
+> Roland,
+>
+> My logs are getting spammed with lots of "Short CCK" messages that come from the
+> following code fragment:
+>
+>                   if (IS_CCK(rspec)) {
+>                           if (rxh->PhyRxStatus_0&  PRXS0_SHORTH)
+>                                   WL_ERROR("Short CCK\n");
+>                           rx_status->flag |= RX_FLAG_SHORTPRE;
+>                   } else if (IS_OFDM(rspec)) {
+>                           rx_status->flag |= RX_FLAG_SHORTPRE;
+>                   } else {
+>                           WL_ERROR("%s: Unknown modulation\n", __func__);
+>                   }
+>
+> Logging this condition for debugging might be appropriate, but I do not think it
+> necessary for general use.
+>
+> Larry
+>
+
+
