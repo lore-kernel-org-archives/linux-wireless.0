@@ -1,111 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20466 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757006Ab1CNR7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:25 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 08/38] ath6kl: remove-typedef HIF_DEVICE_MBOX_INFO
-Date: Mon, 14 Mar 2011 10:58:42 -0700
-Message-ID: <1300125552-24422-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52037 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932109Ab1CXSAN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 14:00:13 -0400
+Date: Thu, 24 Mar 2011 13:46:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2011-03-24
+Message-ID: <20110324174606.GB2503@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HIF_DEVICE_MBOX_INFO \
-	"struct hif_device_mbox_info" drivers/staging/ath6kl/
+Dave,
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+A few more fixes intended for 2.6.39...
+
+This includes an iwlagn fix where we were checking an address insted
+of the value stored there in a wait_event_timeout (oops!), an ath9k
+fix for an invalid memory access, another ath9k fix for a regression
+that could cause a stuck tx queue, and an orinoco fix to zero-out an
+invalid pointer to prevent a resulting invalid pointer dereference.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- .../staging/ath6kl/hif/common/hif_sdio_common.h    |    2 +-
- .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |    4 ++--
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h          |    2 +-
- drivers/staging/ath6kl/include/hif.h               |    6 +++---
- 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/hif/common/hif_sdio_common.h b/drivers/staging/ath6kl/hif/common/hif_sdio_common.h
-index 9939a4a..93a2adc 100644
---- a/drivers/staging/ath6kl/hif/common/hif_sdio_common.h
-+++ b/drivers/staging/ath6kl/hif/common/hif_sdio_common.h
-@@ -58,7 +58,7 @@
- #define HIF_DEFAULT_IO_BLOCK_SIZE          128
+The following changes since commit 8c64b4cc0201cf05b218ea3271a2abb4f86acb7b:
+
+  Merge branch 'sfc-2.6.39' of git://git.kernel.org/pub/scm/linux/kernel/git/bwh/sfc-2.6 (2011-03-23 15:56:02 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Johannes Berg (1):
+      iwlagn: fix error in command waiting
+
+Senthil Balasubramanian (2):
+      ath9k: Fix kernel panic caused by invalid rate index access.
+      ath9k: Fix TX queue stuck issue.
+
+armadefuego@gmail.com (1):
+      orinoco: Clear dangling pointer on hardware busy
+
+ drivers/net/wireless/ath/ath9k/main.c      |    2 ++
+ drivers/net/wireless/ath/ath9k/rc.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
+ drivers/net/wireless/orinoco/cfg.c         |    3 +++
+ 4 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 115f162..5248257 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2160,6 +2160,8 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	if (!ath_drain_all_txq(sc, false))
+ 		ath_reset(sc, false);
  
-     /* set extended MBOX window information for SDIO interconnects */
--static INLINE void SetExtendedMboxWindowInfo(u16 Manfid, HIF_DEVICE_MBOX_INFO *pInfo)
-+static INLINE void SetExtendedMboxWindowInfo(u16 Manfid, struct hif_device_mbox_info *pInfo)
- {
-     switch (Manfid & MANUFACTURER_ID_AR6K_BASE_MASK) {                   
-         case MANUFACTURER_ID_AR6002_BASE :
-diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-index 8a1cedb..9b947b4 100644
---- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-+++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-@@ -710,9 +710,9 @@ HIFConfigureDevice(HIF_DEVICE *device, HIF_DEVICE_CONFIG_OPCODE opcode,
-                 ((u32 *)config)[count] = HIF_MBOX_START_ADDR(count);
-             }
-             
--            if (configLen >= sizeof(HIF_DEVICE_MBOX_INFO)) {    
-+            if (configLen >= sizeof(struct hif_device_mbox_info)) {    
-                 SetExtendedMboxWindowInfo((u16)device->func->device,
--                                          (HIF_DEVICE_MBOX_INFO *)config);
-+                                          (struct hif_device_mbox_info *)config);
-             }
-                         
-             break;
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index e367288..85c5915 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -115,7 +115,7 @@ struct ar6k_device {
-     void                        *HIFDevice;
-     u32 BlockSize;
-     u32 BlockMask;
--    HIF_DEVICE_MBOX_INFO        MailBoxInfo;
-+    struct hif_device_mbox_info        MailBoxInfo;
-     HIF_PENDING_EVENTS_FUNC     GetPendingEventsFunc;
-     void                        *HTCContext;
-     HTC_PACKET_QUEUE            RegisterIOList;
-diff --git a/drivers/staging/ath6kl/include/hif.h b/drivers/staging/ath6kl/include/hif.h
-index 044af7e..8df01b3 100644
---- a/drivers/staging/ath6kl/include/hif.h
-+++ b/drivers/staging/ath6kl/include/hif.h
-@@ -153,7 +153,7 @@ typedef enum {
-  *
-  *   HIF_DEVICE_GET_MBOX_ADDR
-  *   input : none
-- *   output : HIF_DEVICE_MBOX_INFO
-+ *   output : struct hif_device_mbox_info
-  *   notes: 
-  *
-  *   HIF_DEVICE_GET_PENDING_EVENTS_FUNC
-@@ -235,7 +235,7 @@ typedef enum _MBOX_BUF_IF_TYPE {
-     MBOX_BUS_IF_SPI = 1,    
- } MBOX_BUF_IF_TYPE;
++	ieee80211_wake_queues(hw);
++
+ out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+ 	mutex_unlock(&sc->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 960d717..a3241cd 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1328,7 +1328,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
  
--typedef struct {
-+struct hif_device_mbox_info {
-     u32 MboxAddresses[4];  /* must be first element for legacy HIFs that return the address in
-                                    and ARRAY of 32-bit words */
-     
-@@ -247,7 +247,7 @@ typedef struct {
-     u32 GMboxSize;
-     u32 Flags;             /* flags to describe mbox behavior or usage */
-     MBOX_BUF_IF_TYPE MboxBusIFType;   /* mailbox bus interface type */
--} HIF_DEVICE_MBOX_INFO;
-+};
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++	for (i = 0; i < sc->hw->max_rates; i++) {
+ 		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
+ 		if (!rate->count)
+ 			break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 2003c1d..08ccb94 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2265,7 +2265,7 @@ signed long iwlagn_wait_notification(struct iwl_priv *priv,
+ 	int ret;
  
- typedef enum {
-     HIF_DEVICE_IRQ_SYNC_ONLY,   /* for HIF implementations that require the DSR to process all
+ 	ret = wait_event_timeout(priv->_agn.notif_waitq,
+-				 &wait_entry->triggered,
++				 wait_entry->triggered,
+ 				 timeout);
+ 
+ 	spin_lock_bh(&priv->_agn.notif_wait_lock);
+diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
+index 09fae2f..736bbb9 100644
+--- a/drivers/net/wireless/orinoco/cfg.c
++++ b/drivers/net/wireless/orinoco/cfg.c
+@@ -153,6 +153,9 @@ static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
+ 	priv->scan_request = request;
+ 
+ 	err = orinoco_hw_trigger_scan(priv, request->ssids);
++	/* On error the we aren't processing the request */
++	if (err)
++		priv->scan_request = NULL;
+ 
+ 	return err;
+ }
 -- 
-1.7.4.15.g7811d
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
