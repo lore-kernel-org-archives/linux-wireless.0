@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44342 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752196Ab1CFO2I (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187Ab1CXRcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:08 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p26ES79I026257
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Mar 2011 08:28:08 -0600
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 00/15] wl12xx: 1281/1283 support
-Date: Sun,  6 Mar 2011 16:32:05 +0200
-Message-Id: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	Thu, 24 Mar 2011 13:32:11 -0400
+Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201103241457.46343.helmut.schaa@googlemail.com>
+References: <201103232358.29966.helmut.schaa@googlemail.com>
+	 <201103241409.03170.helmut.schaa@googlemail.com>
+	 <1300972793.26265.2.camel@jlt3.sipsolutions.net>
+	 <201103241457.46343.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Mar 2011 18:32:10 +0100
+Message-ID: <1300987930.26265.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding support to 1281/1283 WLAN TI chip (Quattro).
-That support required changes in boot sequence, Tx&Rx path, ISR
-polarity, SDIO block size padding, dynamic TX mem blocks, Dummy
-packet event support, interrupt pacing and more.
-Auto detection support between wl127x and wl128x that add the ability to operate
-in each of them automatically.
+On Thu, 2011-03-24 at 14:57 +0100, Helmut Schaa wrote:
 
-Note:
-That patch doesn't add support for wl128x with SPI bus.
+> I guess so, yes (as I wrote before this is an Intel 5100 client running Windows
+> Vista and the latest Intel driver). It sends a nullfunc going to sleep and returns
+> a few hundret ms later. And in the meantime I can see my rt2800 AP sending an
+> AMPDU to the sleeping STA which of course times out and therefore ends up as
+> filtered frame.
 
-Arik Nemtsov (2):
-  wl12xx: 1281/1283 support - Use different FW file for AP mode
-    wl127x/wl128x chips
-  wl12xx: 1281/1283 support - disable TX aggregation for AP mode in
-    wl128x
+Ok so it gets reported to mac80211.
 
-Shahar Levi (13):
-  wl12xx: 1281/1283 support - move IRQ polarity
-  wl12xx: 1281/1283 support - Add Definitions
-  wl12xx: 1281/1283 support - Add acx commands
-  wl12xx: 1281/1283 support - New radio struc & func
-  wl12xx: 1281/1283 support - Loading FW & NVS
-  wl12xx: 1281/1283 support - New boot sequence
-  wl12xx: 1281/1283 support - Set mem conf & dynamic mem
-  wl12xx: 1281/1283 support - Improve Tx & Rx path
-  wl12xx: 1281/1283 support - Add dummy packet support
-  wl12xx: 1281/1283 support - Set WiFi & BT cox
-  wl12xx: 1281/1283 support - Add chip interrupt pacing
-  wl12xx: 1281/1283 support - Use 1 spare blocks for 128x STA, and 2
-    for the rest
-  wl12xx: 1281/1283 support - enable chip support
+> > Maybe the PS buffer should be larger then?
+> 
+> 128 frames per STA is already large, no? And also it's nothing unusual
+> that some frames get dropped if the STA stays in powersave for a long time.
+> 
+> > I don't see how we can lose a
+> > frame due to rx/tx processing races either, how does that happen? I
+> > thought we had the ability to avoid all those races now.
+> 
+> Good point. Maybe this only happens with rt2x00. The frame exchange looks
+> basically like (if you want to see the pcap just ask ;) ):
+> 
+> STA -> AP  nullfunc PM=1
+> AP -> STA  AMPDU (seqnr 3106 - 3112)
+> AP -> STA  AMPDU (seqnr 3106 - 3112), retry
+> AP -> STA  AMPDU (seqnr 3106 - 3112), retry
+> AP -> STA  AMPDU (seqnr 3106 - 3112), retry
+> AP -> STA  AMPDU (seqnr 3106 - 3112), retry
+> AP -> STA  AMPDU (seqnr 3106 - 3112), retry
+> ...
+> STA -> AP nullfunc PM=0
+> ...
+> AP -> STA  AMPDU (seqnr 3108)
+> STA -> AP  BlockAck
+> AP -> STA  AMPDU (seqnr 3109 - 3114)
+> STA -> AP  BlockAck
+> ...
+> 
+> As you can see 3106 and 3107 somehow got lost and thus leave a hole in
+> the STAs reorder buffer leading to the strange behavior I described before.
 
- drivers/net/wireless/wl12xx/Kconfig     |    2 +-
- drivers/net/wireless/wl12xx/acx.c       |   71 ++++++--
- drivers/net/wireless/wl12xx/acx.h       |   11 +
- drivers/net/wireless/wl12xx/boot.c      |  307 ++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/boot.h      |   59 ++++++
- drivers/net/wireless/wl12xx/cmd.c       |   97 +++++++++-
- drivers/net/wireless/wl12xx/cmd.h       |   34 ++++
- drivers/net/wireless/wl12xx/conf.h      |   17 ++-
- drivers/net/wireless/wl12xx/event.c     |    6 +
- drivers/net/wireless/wl12xx/event.h     |    5 +-
- drivers/net/wireless/wl12xx/ini.h       |   96 ++++++++++-
- drivers/net/wireless/wl12xx/init.c      |   37 ++++-
- drivers/net/wireless/wl12xx/io.c        |    5 +
- drivers/net/wireless/wl12xx/io.h        |    2 +
- drivers/net/wireless/wl12xx/main.c      |  154 ++++++++++++++--
- drivers/net/wireless/wl12xx/reg.h       |   15 +--
- drivers/net/wireless/wl12xx/rx.c        |   34 ++--
- drivers/net/wireless/wl12xx/sdio.c      |   20 ++-
- drivers/net/wireless/wl12xx/sdio_test.c |   17 ++-
- drivers/net/wireless/wl12xx/spi.c       |   16 ++-
- drivers/net/wireless/wl12xx/testmode.c  |   22 ++-
- drivers/net/wireless/wl12xx/tx.c        |  172 ++++++++++++++----
- drivers/net/wireless/wl12xx/tx.h        |   53 +++++-
- drivers/net/wireless/wl12xx/wl12xx.h    |   24 ++-
- include/linux/wl12xx.h                  |    1 +
- 25 files changed, 1092 insertions(+), 185 deletions(-)
+but if they are reported to mac80211 they should be put on the queue
+again? Are they maybe not reported back quite in the right way?
+
+> > I don't know, you tell me, does it? :)
+> 
+> Ha Ha ;)
+> 
+> Sending a BAR at this point would at least ensure that the Intel STAs RX
+> reorder buffer gets flushed (in case we dropped any frames while the STA was
+> sleeping, which happened in this case).
+
+Right, but so far this looks like it's more like a bug in the powersave
+code rather than something we desperately need to recover from with a
+BAR.
+
+johannes
 
