@@ -1,214 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30040 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758526Ab1CDO07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 09:26:59 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 06:26:36 -0800
-Message-ID: <4D70F6AD.7050700@atheros.com>
-Date: Fri, 4 Mar 2011 19:56:53 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:41024 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933467Ab1CXAt7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2011 20:49:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Ramesh Radhakrishnan <rramesh@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 23 Mar 2011 17:47:44 -0700
+Subject: RE: [PATCH v3] wireless: mwifiex: initial commit for Marvell
+ mwifiex driver
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA79180F@SC-VEXCH1.marvell.com>
+References: <1300755650-21740-1-git-send-email-bzhao@marvell.com>
+	 <1300884446.3790.38.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FA7916C7@SC-VEXCH1.marvell.com>
+ <1300907864.3790.43.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1300907864.3790.43.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-References: <1297785572-27955-1-git-send-email-mshajakhan@atheros.com> <20110215161222.GD2557@tuxdriver.com> <4D5B5B02.4020101@atheros.com> <4D70816D.80304@atheros.com> <20110304133722.GA9866@tuxdriver.com>
-In-Reply-To: <20110304133722.GA9866@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 04 March 2011 07:07 PM, John W. Linville wrote:
-> On Fri, Mar 04, 2011 at 11:36:37AM +0530, Mohammed Shafi wrote:
->    
->> On Wednesday 16 February 2011 10:35 AM, Mohammed Shafi wrote:
->>      
->>> On Tuesday 15 February 2011 09:42 PM, John W. Linville wrote:
->>>        
->>>> Despite the [RFC], I am applying this.  I should have reverted all
->>>> of this three weeks ago...
->>>>          
->> John can you please push this to stable kernel ?
->>      
-> Stable folks, this is the commit in Linus's tree;
->    
-Thanks a lot John.
-> commit 0f5cd45960173ba5b36727decbb4a241cbd35ef9
-> Author: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> Date:   Tue Feb 15 21:29:32 2011 +0530
->
->      ath9k: Fix ath9k prevents CPU to enter C3 states
->
->      The DMA latency issue is observed only in Intel pinetrail platforms
->      but in the driver we had a default PM-QOS value of 55. This caused
->      unnecessary power consumption and battery drain in other platforms.
->
->      Remove the pm-qos thing in the driver code and address the throughput
->      issue in Intel pinetrail platfroms in user space using any one of
->      the scripts in below links:
->
->      http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->      http://johannes.sipsolutions.net/files/netlatency.c.txt
->
->      More details can be found in the following bugzilla link:
->
->      https://bugzilla.kernel.org/show_bug.cgi?id=27532
->
->      This reverts the following commits:
->
->          98c316e348bedffa730e6f1e4baeb8a3c3e0f28b
->          4dc3530df7c0428b41c00399a7ee8c929406d181
->          10598c124ecabbbfd7522f74de19b8f7d52a1bee
->
->      Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->      Signed-off-by: John W. Linville<linville@tuxdriver.com>
->
->    
->>> Thanks John.
->>>        
->>>> John
->>>>
->>>> On Tue, Feb 15, 2011 at 09:29:32PM +0530, Mohammed Shafi
->>>> Shajakhan wrote:
->>>>          
->>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>>
->>>>> The DMA latency issue is observed only in Intel pinetrail platforms but
->>>>> in the driver we had a default PM-QOS value of 55. This caused
->>>>> unnecessary power consumption and battery drain in other platforms.
->>>>>     Remove the pm-qos thing in the driver code and address the
->>>>> throughput issue in
->>>>> Intel pinetrail platfroms in user space using any one of the
->>>>> scripts in below links:
->>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->>>>>
->>>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
->>>>> More details can be found in the following bugzilla link:
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->>>>>
->>>>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>> ---
->>>>>   drivers/net/wireless/ath/ath9k/ath9k.h |    5 -----
->>>>>   drivers/net/wireless/ath/ath9k/init.c  |    7 -------
->>>>>   drivers/net/wireless/ath/ath9k/main.c  |    8 --------
->>>>>   3 files changed, 0 insertions(+), 20 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
->>>>> b/drivers/net/wireless/ath/ath9k/ath9k.h
->>>>> index ba436cd..0052f64 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->>>>> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->>>>> @@ -21,7 +21,6 @@
->>>>>   #include<linux/device.h>
->>>>>   #include<linux/leds.h>
->>>>>   #include<linux/completion.h>
->>>>> -#include<linux/pm_qos_params.h>
->>>>>
->>>>>   #include "debug.h"
->>>>>   #include "common.h"
->>>>> @@ -57,8 +56,6 @@ struct ath_node;
->>>>>
->>>>>   #define A_MAX(a, b) ((a)>   (b) ? (a) : (b))
->>>>>
->>>>> -#define ATH9K_PM_QOS_DEFAULT_VALUE    55
->>>>> -
->>>>>   #define TSF_TO_TU(_h,_l) \
->>>>>       ((((u32)(_h))<<   22) | (((u32)(_l))>>   10))
->>>>>
->>>>> @@ -650,7 +647,6 @@ struct ath_softc {
->>>>>
->>>>>       struct ath_ant_comb ant_comb;
->>>>>
->>>>> -    struct pm_qos_request_list pm_qos_req;
->>>>>   };
->>>>>
->>>>>   void ath9k_tasklet(unsigned long data);
->>>>> @@ -665,7 +661,6 @@ static inline void
->>>>> ath_read_cachesize(struct ath_common *common, int *csz)
->>>>>   extern struct ieee80211_ops ath9k_ops;
->>>>>   extern int ath9k_modparam_nohwcrypt;
->>>>>   extern int led_blink;
->>>>> -extern int ath9k_pm_qos_value;
->>>>>   extern bool is_ath9k_unloaded;
->>>>>
->>>>>   irqreturn_t ath_isr(int irq, void *dev);
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/init.c
->>>>> b/drivers/net/wireless/ath/ath9k/init.c
->>>>> index e5c1eea..8fed4e4 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/init.c
->>>>> +++ b/drivers/net/wireless/ath/ath9k/init.c
->>>>> @@ -41,9 +41,6 @@ static int ath9k_btcoex_enable;
->>>>>   module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
->>>>>   MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
->>>>>
->>>>> -int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
->>>>> -module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR |
->>>>> S_IRGRP | S_IROTH);
->>>>> -MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
->>>>>
->>>>>   bool is_ath9k_unloaded;
->>>>>   /* We use the hw_value as an index into our private channel
->>>>> structure */
->>>>> @@ -760,9 +757,6 @@ int ath9k_init_device(u16 devid, struct
->>>>> ath_softc *sc, u16 subsysid,
->>>>>       ath_init_leds(sc);
->>>>>       ath_start_rfkill_poll(sc);
->>>>>
->>>>> -    pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
->>>>> -               PM_QOS_DEFAULT_VALUE);
->>>>> -
->>>>>       return 0;
->>>>>
->>>>>   error_world:
->>>>> @@ -819,7 +813,6 @@ void ath9k_deinit_device(struct ath_softc *sc)
->>>>>       ath9k_ps_restore(sc);
->>>>>
->>>>>       ieee80211_unregister_hw(hw);
->>>>> -    pm_qos_remove_request(&sc->pm_qos_req);
->>>>>       ath_rx_cleanup(sc);
->>>>>       ath_tx_cleanup(sc);
->>>>>       ath9k_deinit_softc(sc);
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c
->>>>> b/drivers/net/wireless/ath/ath9k/main.c
->>>>> index 4f568b8..1d2c7c3 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>> @@ -1117,12 +1117,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
->>>>>               ath9k_btcoex_timer_resume(sc);
->>>>>       }
->>>>>
->>>>> -    /* User has the option to provide pm-qos value as a module
->>>>> -     * parameter rather than using the default value of
->>>>> -     * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
->>>>> -     */
->>>>> -    pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
->>>>> -
->>>>>       if (ah->caps.pcie_lcr_extsync_en&&
->>>>> common->bus_ops->extn_synch_en)
->>>>>           common->bus_ops->extn_synch_en(common);
->>>>>
->>>>> @@ -1267,8 +1261,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
->>>>>
->>>>>       sc->sc_flags |= SC_OP_INVALID;
->>>>>
->>>>> -    pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
->>>>> -
->>>>>       mutex_unlock(&sc->mutex);
->>>>>
->>>>>       ath_dbg(common, ATH_DBG_CONFIG, "Driver halt\n");
->>>>> -- 
->>>>> 1.7.0.4
->>>>>
->>>>>
->>>>>            
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>      
->    
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBXZWRuZXNkYXksIE1hcmNoIDIzLCAyMDExIDEyOjE4IFBNDQo+IFRvOiBCaW5nIFpoYW8N
+Cj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9obiBXLiBMaW52aWxsZTsg
+TmlzaGFudCBTYXJtdWthZGFtOyBBbWl0a3VtYXIgS2Fyd2FyOyBLaXJhbg0KPiBEaXZla2FyOyBZ
+b2dlc2ggUG93YXI7IE1hcmMgWWFuZzsgUmFtZXNoIFJhZGhha3Jpc2huYW47IEZyYW5rIEh1YW5n
+DQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggdjNdIHdpcmVsZXNzOiBtd2lmaWV4OiBpbml0aWFsIGNv
+bW1pdCBmb3IgTWFydmVsbCBtd2lmaWV4IGRyaXZlcg0KPiANCj4gSGV5LA0KPiANCj4gPiA+IElu
+IGl3bHdpZmksIHdlIGp1c3QgaGF2ZSBpd2xfc2VuZF9jbWRfc3luYygpLCB3aGljaCBkb2VzIGFs
+bCB0aGUgd2FpdC4NCj4gPiA+IFRoYXQgYWxzbyBoYXMgdGhlIGFkZGVkIGJlbmVmaXQgdGhhdCB0
+aGUgd2FpdCBxdWV1ZSBkb2Vzbid0IG5lZWQgdG8gYmUNCj4gPiA+IGR5bmFtaWNhbGx5IGFsbG9j
+YXRlZCwgaXQgY2FuIGp1c3QgYmUgb24gdGhlIHN0YWNrLiBBbHNvLCB5b3VyIGR5bmFtaWMNCj4g
+PiA+IGFsbG9jYXRpb25zIGZvciB0aGF0IGRvbid0IHJlYWxseSBzZWVtIHRvIHJlcXVpcmUgR0ZQ
+X0FUT01JQyBpbiBtb3N0DQo+ID4gPiBwbGFjZXMsIGJ1dCB0aGF0J3MgcHJvYmFibHkgdGhlIGxl
+YXN0IG9mIHRoZSB3b3JyaWVzIGhlcmUuDQo+ID4NCj4gPiBJIHdpbGwgc3R1ZHkgdGhlIGl3bF9z
+ZW5kX2NtZF9zeW5jKCkgaW1wbGVtZW50YXRpb24uIEFuZCBoYXZlIG13aWZpZXgNCj4gPiB1c2Ug
+dGhlIHNhbWUgd2F5IHRvIHNlbmQgY29tbWFuZHMgYXMgaXdsd2lmaSBkcml2ZXIgZG9lcy4NCj4g
+DQo+IEknbSBub3Qgc2F5aW5nIHRoYXQgeW91IG5lZWQgdG8gZG8gdGhhdCBleGFjdGx5IGluIHRo
+ZSBzYW1lIHdheS4gSXQncw0KPiBqdXN0IHRoYXQgYWxsb2NhdGluZyB0aGUgd2FpdCBxdWV1ZSBk
+eW5hbWljYWxseSBhbmQgdGhlbiBwYXNzaW5nIGl0DQo+IGFjcm9zcyBhIGZldyBmdW5jdGlvbnMg
+c2VlbXMgdG8gYmxvYXQgdGhlIGNvZGUgYW5kIEkgYWxzbyB0aGluayBpdCdzDQo+IG1vcmUgZXJy
+b3IgcHJvbmUuDQoNClRoYW5rIHlvdSBmb3IgdGhlIGNsYXJpZmljYXRpb24uDQoNCj4gDQo+IEFy
+ZSB0aGVyZSBhbnkgYXN5bmNocm9ub3VzIGNvbW1hbmRzIGF0IGFsbCBhbnl3YXk/DQoNClllcy4g
+VGhlcmUgYXJlIGEgY291cGxlIHN5bmNocm9ub3VzIGNvbW1hbmRzLg0KSSB0aGluayBJIGNhbiBp
+bXBsZW1lbnQgdHdvIGZ1bmN0aW9ucyBmb3Igc2VuZGluZyB0aGUgY29tbWFuZHMuDQpPbmUgZm9y
+IHN5bmNocm9ub3VzIGNvbW1hbmRzIGFuZCB0aGUgb3RoZXIgZm9yIGFzeW5jaHJvbm91cyBjb21t
+YW5kcw0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
