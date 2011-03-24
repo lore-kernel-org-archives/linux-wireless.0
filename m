@@ -1,206 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37235 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34347 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911Ab1CDNpn (ORCPT
+	with ESMTP id S1751634Ab1CXOaQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 08:45:43 -0500
-Date: Fri, 4 Mar 2011 08:37:23 -0500
+	Thu, 24 Mar 2011 10:30:16 -0400
+Date: Thu, 24 Mar 2011 10:05:36 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>, stable@kernel.org
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-Message-ID: <20110304133722.GA9866@tuxdriver.com>
-References: <1297785572-27955-1-git-send-email-mshajakhan@atheros.com>
- <20110215161222.GD2557@tuxdriver.com>
- <4D5B5B02.4020101@atheros.com>
- <4D70816D.80304@atheros.com>
+To: George Nychis <gnychis@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Sergey Lapin <slapin@ossfans.org>,
+	Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Subject: Re: widely supported ZigBee USB hardware?
+Message-ID: <20110324140535.GA2503@tuxdriver.com>
+References: <AANLkTimi3OYP+MEJDxS+3GQMqVBZvt8hKzPK4T-XbRre@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D70816D.80304@atheros.com>
+In-Reply-To: <AANLkTimi3OYP+MEJDxS+3GQMqVBZvt8hKzPK4T-XbRre@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 04, 2011 at 11:36:37AM +0530, Mohammed Shafi wrote:
-> On Wednesday 16 February 2011 10:35 AM, Mohammed Shafi wrote:
-> >On Tuesday 15 February 2011 09:42 PM, John W. Linville wrote:
-> >>Despite the [RFC], I am applying this.  I should have reverted all
-> >>of this three weeks ago...
-> John can you please push this to stable kernel ?
+On Wed, Mar 23, 2011 at 07:49:13PM -0400, George Nychis wrote:
 
-Stable folks, this is the commit in Linus's tree;
-
-commit 0f5cd45960173ba5b36727decbb4a241cbd35ef9
-Author: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Date:   Tue Feb 15 21:29:32 2011 +0530
-
-    ath9k: Fix ath9k prevents CPU to enter C3 states
-    
-    The DMA latency issue is observed only in Intel pinetrail platforms
-    but in the driver we had a default PM-QOS value of 55. This caused
-    unnecessary power consumption and battery drain in other platforms.
-    
-    Remove the pm-qos thing in the driver code and address the throughput
-    issue in Intel pinetrail platfroms in user space using any one of
-    the scripts in below links:
-    
-    http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
-    http://johannes.sipsolutions.net/files/netlatency.c.txt
-    
-    More details can be found in the following bugzilla link:
-    
-    https://bugzilla.kernel.org/show_bug.cgi?id=27532
-    
-    This reverts the following commits:
-    
-        98c316e348bedffa730e6f1e4baeb8a3c3e0f28b
-        4dc3530df7c0428b41c00399a7ee8c929406d181
-        10598c124ecabbbfd7522f74de19b8f7d52a1bee
-    
-    Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-> >Thanks John.
-> >>John
-> >>
-> >>On Tue, Feb 15, 2011 at 09:29:32PM +0530, Mohammed Shafi
-> >>Shajakhan wrote:
-> >>>From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>>
-> >>>The DMA latency issue is observed only in Intel pinetrail platforms but
-> >>>in the driver we had a default PM-QOS value of 55. This caused
-> >>>unnecessary power consumption and battery drain in other platforms.
-> >>>    Remove the pm-qos thing in the driver code and address the
-> >>>throughput issue in
-> >>>Intel pinetrail platfroms in user space using any one of the
-> >>>scripts in below links:
-> >>>http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
-> >>>
-> >>>http://johannes.sipsolutions.net/files/netlatency.c.txt
-> >>>More details can be found in the following bugzilla link:
-> >>>https://bugzilla.kernel.org/show_bug.cgi?id=27532
-> >>>
-> >>>Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>>---
-> >>>  drivers/net/wireless/ath/ath9k/ath9k.h |    5 -----
-> >>>  drivers/net/wireless/ath/ath9k/init.c  |    7 -------
-> >>>  drivers/net/wireless/ath/ath9k/main.c  |    8 --------
-> >>>  3 files changed, 0 insertions(+), 20 deletions(-)
-> >>>
-> >>>diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
-> >>>b/drivers/net/wireless/ath/ath9k/ath9k.h
-> >>>index ba436cd..0052f64 100644
-> >>>--- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> >>>+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> >>>@@ -21,7 +21,6 @@
-> >>>  #include<linux/device.h>
-> >>>  #include<linux/leds.h>
-> >>>  #include<linux/completion.h>
-> >>>-#include<linux/pm_qos_params.h>
-> >>>
-> >>>  #include "debug.h"
-> >>>  #include "common.h"
-> >>>@@ -57,8 +56,6 @@ struct ath_node;
-> >>>
-> >>>  #define A_MAX(a, b) ((a)>  (b) ? (a) : (b))
-> >>>
-> >>>-#define ATH9K_PM_QOS_DEFAULT_VALUE    55
-> >>>-
-> >>>  #define TSF_TO_TU(_h,_l) \
-> >>>      ((((u32)(_h))<<  22) | (((u32)(_l))>>  10))
-> >>>
-> >>>@@ -650,7 +647,6 @@ struct ath_softc {
-> >>>
-> >>>      struct ath_ant_comb ant_comb;
-> >>>
-> >>>-    struct pm_qos_request_list pm_qos_req;
-> >>>  };
-> >>>
-> >>>  void ath9k_tasklet(unsigned long data);
-> >>>@@ -665,7 +661,6 @@ static inline void
-> >>>ath_read_cachesize(struct ath_common *common, int *csz)
-> >>>  extern struct ieee80211_ops ath9k_ops;
-> >>>  extern int ath9k_modparam_nohwcrypt;
-> >>>  extern int led_blink;
-> >>>-extern int ath9k_pm_qos_value;
-> >>>  extern bool is_ath9k_unloaded;
-> >>>
-> >>>  irqreturn_t ath_isr(int irq, void *dev);
-> >>>diff --git a/drivers/net/wireless/ath/ath9k/init.c
-> >>>b/drivers/net/wireless/ath/ath9k/init.c
-> >>>index e5c1eea..8fed4e4 100644
-> >>>--- a/drivers/net/wireless/ath/ath9k/init.c
-> >>>+++ b/drivers/net/wireless/ath/ath9k/init.c
-> >>>@@ -41,9 +41,6 @@ static int ath9k_btcoex_enable;
-> >>>  module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
-> >>>  MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-> >>>
-> >>>-int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
-> >>>-module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR |
-> >>>S_IRGRP | S_IROTH);
-> >>>-MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
-> >>>
-> >>>  bool is_ath9k_unloaded;
-> >>>  /* We use the hw_value as an index into our private channel
-> >>>structure */
-> >>>@@ -760,9 +757,6 @@ int ath9k_init_device(u16 devid, struct
-> >>>ath_softc *sc, u16 subsysid,
-> >>>      ath_init_leds(sc);
-> >>>      ath_start_rfkill_poll(sc);
-> >>>
-> >>>-    pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
-> >>>-               PM_QOS_DEFAULT_VALUE);
-> >>>-
-> >>>      return 0;
-> >>>
-> >>>  error_world:
-> >>>@@ -819,7 +813,6 @@ void ath9k_deinit_device(struct ath_softc *sc)
-> >>>      ath9k_ps_restore(sc);
-> >>>
-> >>>      ieee80211_unregister_hw(hw);
-> >>>-    pm_qos_remove_request(&sc->pm_qos_req);
-> >>>      ath_rx_cleanup(sc);
-> >>>      ath_tx_cleanup(sc);
-> >>>      ath9k_deinit_softc(sc);
-> >>>diff --git a/drivers/net/wireless/ath/ath9k/main.c
-> >>>b/drivers/net/wireless/ath/ath9k/main.c
-> >>>index 4f568b8..1d2c7c3 100644
-> >>>--- a/drivers/net/wireless/ath/ath9k/main.c
-> >>>+++ b/drivers/net/wireless/ath/ath9k/main.c
-> >>>@@ -1117,12 +1117,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
-> >>>              ath9k_btcoex_timer_resume(sc);
-> >>>      }
-> >>>
-> >>>-    /* User has the option to provide pm-qos value as a module
-> >>>-     * parameter rather than using the default value of
-> >>>-     * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
-> >>>-     */
-> >>>-    pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
-> >>>-
-> >>>      if (ah->caps.pcie_lcr_extsync_en&&
-> >>>common->bus_ops->extn_synch_en)
-> >>>          common->bus_ops->extn_synch_en(common);
-> >>>
-> >>>@@ -1267,8 +1261,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
-> >>>
-> >>>      sc->sc_flags |= SC_OP_INVALID;
-> >>>
-> >>>-    pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
-> >>>-
-> >>>      mutex_unlock(&sc->mutex);
-> >>>
-> >>>      ath_dbg(common, ATH_DBG_CONFIG, "Driver halt\n");
-> >>>-- 
-> >>>1.7.0.4
-> >>>
-> >>>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I am trying to find a widely supported (and available) ZigBee USB
+> device with Linux. I understand there are some GPL related issues with
+> ZigBee, but there seems to be a couple related drivers available. In
+> particular, this device:
+> http://www.adaptivem2m.com/zigbee-technology/zigbee-usb-dongle.htm
 > 
+> I could get this, but I wanted to get some general feedback first to
+> see if there is something different that is more well updated. It
+> seems like the last driver I could find for this was from 2007.
+> 
+> Has anyone had any personal experience with ZigBee and Linux and have
+> any advice?
 
+I'm not sure anyone on this list has experience with ZigBee.  I know
+there is some ieee802.15.4 support in the kernel, but I'm not sure
+where that is discussed (other than netdev).  Hopefully someone on
+the Cc list is aware?
+
+John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
