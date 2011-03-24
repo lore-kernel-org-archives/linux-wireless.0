@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:54317 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756Ab1CGJUN convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35182 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933426Ab1CXAr3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 04:20:13 -0500
-Subject: Re: Undefined TASK_INTERRUPTIBLE (Was: Re: [PATCH 1/3] iwlwifi:
- move rx handlers code to iwl-rx.c)
-From: Peter Zijlstra <peterz@infradead.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	Ingo Molnar <mingo@elte.hu>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20110307081241.GA2216@redhat.com>
-References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
-	 <1299447258.5082.164.camel@wwguy-huron>
-	 <AANLkTimNjxguAFcRr-mJr-pPMkf6zTxzm4k7oV+6zngG@mail.gmail.com>
-	 <20110307081241.GA2216@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Mar 2011 10:20:02 +0100
-Message-ID: <1299489602.2308.1.camel@twins>
-Mime-Version: 1.0
+	Wed, 23 Mar 2011 20:47:29 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
+References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
+Date: Wed, 23 Mar 2011 17:47:27 -0700
+Message-ID: <AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
+Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND and friends
+From: =?ISO-8859-1?Q?Arve_Hj=F8nnev=E5g?= <arve@android.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Vipin Mehta <vmehta@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-07 at 09:12 +0100, Stanislaw Gruszka wrote:
-> 
-> But perhaps we need a more generic fix in wait.h for the future. Maybe
-> we should decouple definitions of TASK_INTERRUPTIBLE and friends from
-> sched.h into separate header and include that header in wait.h as
-> well?
+2011/3/23 Luis R. Rodriguez <mcgrof@gmail.com>:
+> Arve,
+>
+> What ever happened with your series on the Android PM extensions you
+> had submitted in 2009 [1] ? I'm working on ath6kl right now and I'm
+> going to remove all that early suspend crap as its not upstream and I
+> want to get ath6kl into upstream proper. Do you have plans for a
+> replacement?
 
-No! That only makes the mess worse, the only sane option is to fix
-things so that wait.h can include sched.h and that is non-trivial.
+There is no planned replacement for early suspend, and it will
+probably be dropped form the android kernel at some point. The wifi
+driver use it to enter a lower operating state when the screen is off.
+If you driver does have any other way to put the driver in this state
+you need to add an interface that lets user-space select that state
+directly.
+
+> Since the thread covers wake locks, have you ironed out
+> what you are going to do with that as well?
+>
+
+The wakelock code did not get merged. Instead there is a new interface
+that should provide the same functionality to drivers, but this has
+not integrated with android yet (and you cannot use it directly as it
+does not provide the same user-space interface). In theory, you should
+be able to replace all the wakelocks in your driver with calls to the
+mainline api. Even if you cannot test the result this is better than
+just deleting the wakelocks.
+
+-- 
+Arve Hjønnevåg
