@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28345 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:11421 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754501Ab1CQPft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 11:35:49 -0400
-Date: Thu, 17 Mar 2011 16:34:34 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Subject: Re: Problem with BCM943224
-Message-ID: <20110317153433.GA4326@redhat.com>
-References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
- <4D77A06E.3050902@lwfinger.net>
- <AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
- <4D77AD18.60804@lwfinger.net>
- <AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
- <4D77B4B6.8030603@lwfinger.net>
- <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
- <20110310092753.GA2323@redhat.com>
+	id S1752680Ab1CXKKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 06:10:45 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 03:10:21 -0700
+Message-ID: <4D8B189F.3080200@atheros.com>
+Date: Thu, 24 Mar 2011 15:40:39 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20110310092753.GA2323@redhat.com>
+To: Sujith <m.sujith@gmail.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: cleanup few redundant macros
+References: <1300957576-2734-1-git-send-email-mshajakhan@atheros.com>	<19851.4373.967588.536327@gargle.gargle.HOWL>	<4D8B130E.6090307@atheros.com> <19851.5836.555228.325971@gargle.gargle.HOWL>
+In-Reply-To: <19851.5836.555228.325971@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 10, 2011 at 10:27:53AM +0100, Stanislaw Gruszka wrote:
-> > Stanisław: I remember you telling that you have such a adapter. Do you
-> > maybe have access to some BCM943224/BCM94313 card? Could you test that
-> > combo for me, please?
-> 
-> I have new laptop at home with some bcm device, don't know exacly what
-> version, but most likely is somehting that you listed or similar. I'll
-> test and let you now next week. I planned to replace wireless adapter
-> on that laptop anyway.
-
-BCM943224HMS works here with hwtools.net PCI-E Adapter Ver 2.03.
-
-Stanislaw
+On Thursday 24 March 2011 03:32 PM, Sujith wrote:
+> Mohammed Shafi wrote:
+>    
+>>> There's a reason for this: 8813262ea79acf9daa0e03901bdfe93db4dc4ca5
+>>> If channel handling has been cleaned up since then, this can be removed.
+>>>
+>>>        
+>> Oh Ok thanks, I will resend the patch without that change.
+>> but anyway CHANNEL_G is defined as (CHANNEL_2GHZ|CHANNEL_OFDM).
+>>      
+> Commit 8813262ea79acf9daa0e03901bdfe93db4dc4ca5 doesn't make much sense.
+> Your change looks correct.
+>    
+Ok Sujith, thanks for the review.
+> Sujith
+> .
+>
+>    
