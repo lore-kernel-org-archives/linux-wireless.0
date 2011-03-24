@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:40546 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757150Ab1CRU0G convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 16:26:06 -0400
-Received: by qyk7 with SMTP id 7so1123807qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 13:26:05 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:4442 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755755Ab1CXNdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 09:33:11 -0400
+To: "John Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Greg KH" <greg@kroah.com>
+Subject: Re: [PATCH] mac80211: rename RX_FLAG_TSFT
+References: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Mar 2011 14:32:20 +0100
 MIME-Version: 1.0
-In-Reply-To: <1300460342.13499.60.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<1300460342.13499.60.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 21:26:05 +0100
-Message-ID: <AANLkTimboGmJNdHHbzWdSGf14jenn+yag944A8GBEXtc@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vsunv6ae3ri7v4@arend-laptop>
+In-Reply-To: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
-> The clean solution I see here is to have host code apart from
-> backplane-specific processing. The way to accomplish this is obvious as
-> actual host device responsibility is not to switch cores but rather
-> provide mappings into physical address space of the backplane regardless
-> of the target request being made to core, sprom/otp, agent or whatever.
-> This makes much cleaner model than that provided by ssb.
+On Wed, 23 Feb 2011 15:06:08 +0100, Johannes Berg  
+<johannes@sipsolutions.net> wrote:
 
-How do you think, what interface would fit for that?
+>  drivers/staging/brcm80211/sys/wlc_mac80211.c  |    5 ++++-
 
-Something like:
-struct host_ops {
-        bool (*init)(struct device *dev);
-        bool (*exit)(struct device *dev);
-        bool (*set_agent_addr)(struct device *dev, u16 addr);
-        bool (*set_core_addr)(struct device *dev, u16 addr);
-};
-?
+Hi Johannes,
 
+2.6.38 has landed in staging-2.6 repository and I built our driver. It  
+gives build warning on above mentioned file.
+
+>
+> --- wireless-testing.orig/include/net/mac80211.h	2011-02-23  
+> -	RX_FLAG_TSFT		= 1<<7,
+> +	RX_FLAG_MACTIME_MPDU	= 1<<7,
+
+> wireless-testing.orig/drivers/staging/brcm80211/sys/wlc_mac80211.c	2011-02-23  
+> 15:03:58.000000000 +0100
+> +++  
+> wireless-testing/drivers/staging/brcm80211/sys/wlc_mac80211.c	2011-02-23  
+> 15:04:48.000000000 +0100
+> @@ -6818,11 +6818,14 @@ prep_mac80211_status(struct wlc_info *wl
+>  	ratespec_t rspec;
+>  	unsigned char *plcp;
+> +#if 0
+> +	/* Clearly, this is bogus -- reading the TSF now is wrong */
+>  	wlc_read_tsf(wlc, &tsf_l, &tsf_h);	/* mactime */
+>  	rx_status->mactime = tsf_h;
+>  	rx_status->mactime <<= 32;
+>  	rx_status->mactime |= tsf_l;
+> -	rx_status->flag |= RX_FLAG_TSFT;
+> +	rx_status->flag |= RX_FLAG_MACTIME_MPDU; /* clearly wrong */
+> +#endif
+
+This piece of code has been '#if 0'-ed by you. Could you elaborate why  
+this is clearly wrong? Because of this the variables tsf_l and tsf_h are  
+not being used hence the warning.
+
+Gr. AvS
 -- 
-Rafał
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
