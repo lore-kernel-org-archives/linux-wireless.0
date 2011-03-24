@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41251
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751200Ab1CPR7a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 13:59:30 -0400
-Date: Wed, 16 Mar 2011 11:00:08 -0700 (PDT)
-Message-Id: <20110316.110008.183049273.davem@davemloft.net>
-To: jpirko@redhat.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, eric.dumazet@gmail.com,
-	linville@tuxdriver.com, kaber@trash.net
-Subject: Re: net-next-2.6 status...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110316175642.GB2867@psychotron.redhat.com>
-References: <20110316073803.GB2780@psychotron.redhat.com>
-	<20110316.103857.226773145.davem@davemloft.net>
-	<20110316175642.GB2867@psychotron.redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms1.broadcom.com ([216.31.210.17]:1794 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754946Ab1CXOWo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 10:22:44 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Greg KH" <greg@kroah.com>
+Subject: Re: [PATCH] mac80211: rename RX_FLAG_TSFT
+References: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
+ <op.vsunv6ae3ri7v4@arend-laptop>
+ <1300973845.26265.4.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Mar 2011 15:22:33 +0100
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vsup7vcc3ri7v4@arend-laptop>
+In-Reply-To: <1300973845.26265.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Wed, 16 Mar 2011 18:56:44 +0100
+On Thu, 24 Mar 2011 14:37:25 +0100, Johannes Berg  
+<johannes@sipsolutions.net> wrote:
 
-> So would you leave out if.h hunk out or should I repost?
+> include/net/mac80211.h:
+>
+>  * @mactime: value in microseconds of the 64-bit Time Synchronization  
+> Function
+>  *      (TSF) timer when the first data symbol (MPDU) arrived at the  
+> hardware.
+>
+>
+> Not sure what else to say ... reading the TSF when processing the frame
+> in software is clearly bogus.
 
-What makes you think it's a good idea for me to have to do more work?
+You are right. Have to look what the hardware is providing us. Probably we  
+do get some timestamp.
 
-I have the entire merge window and thousands of other patches to worry
-about...
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
