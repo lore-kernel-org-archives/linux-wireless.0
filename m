@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:38674 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751262Ab1CUNYg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198Ab1CXJFM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 09:24:36 -0400
-Received: by wwc33 with SMTP id 33so7754973wwc.29
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 06:24:34 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Fix potential incorrect band in rx-status
-From: Luciano Coelho <coelho@ti.com>
-To: juuso.oikarinen@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299744103-11077-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1299744103-11077-1-git-send-email-juuso.oikarinen@nokia.com>
+	Thu, 24 Mar 2011 05:05:12 -0400
+Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND
+ and friends
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Vipin Mehta <vmehta@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
+References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
+	 <AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 15:23:43 +0200
-Message-ID: <1300713823.2593.203.camel@cumari>
+Date: Thu, 24 Mar 2011 10:04:55 +0100
+Message-ID: <1300957495.3807.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-10 at 10:01 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> The rx-status passed to mac80211 along with each received frame
-> contains the
-> band on which the frame was received. Under certain circumstances,
-> this band
-> information may be incorrect, causing in worst case a WARNING from
-> mac80211,
-> and causes the received frame to be dropped.
-> 
-> This scenario mainly occurs when performing connected-mode scans, when
-> the
-> received scan results are from the other band than the one currentl
-> associated to.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com> 
+On Wed, 2011-03-23 at 17:47 -0700, Arve Hjønnevåg wrote:
 
-Looks good, thanks!
+> There is no planned replacement for early suspend, and it will
+> probably be dropped form the android kernel at some point. The wifi
+> driver use it to enter a lower operating state when the screen is off.
+> If you driver does have any other way to put the driver in this state
+> you need to add an interface that lets user-space select that state
+> directly.
 
-Reviewed-by: Luciano Coelho <coelho@ti.com>
+The interface is called "ip link set wlan0 down".
 
-Applied to wl12xx/master with a small s/currentl/currently/ ;)
-
--- 
-Cheers,
-Luca.
+johannes
 
