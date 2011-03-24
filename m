@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:60888 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822Ab1CQFif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 01:38:35 -0400
-Subject: Re: [PATCH] wl12xx: set the actual tid instead of the ac
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1300309434-15491-1-git-send-email-eliad@wizery.com>
-References: <1300309434-15491-1-git-send-email-eliad@wizery.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34121 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755575Ab1CXNTz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 09:19:55 -0400
+Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201103241409.03170.helmut.schaa@googlemail.com>
+References: <201103232358.29966.helmut.schaa@googlemail.com>
+	 <AANLkTi=BLTJhxYf552GLW1zG-AvVdeKj86e2K-vEm_Wy@mail.gmail.com>
+	 <201103240836.45753.helmut.schaa@googlemail.com>
+	 <201103241409.03170.helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Mar 2011 07:38:26 +0200
-Message-ID: <1300340306.11073.5784.camel@wimaxnb.nmp.nokia.com>
+Date: Thu, 24 Mar 2011 14:19:53 +0100
+Message-ID: <1300972793.26265.2.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 23:03 +0200, ext Eliad Peller wrote:
-> When passing a tx frame, the driver incorrectly set desc->tid
-> with the ac instead of the actual tid.
+On Thu, 2011-03-24 at 14:09 +0100, Helmut Schaa wrote:
+
+> Ok, found out some more. The problem now seems to trigger only if the Intel STA
+> leaves powersave and mac80211 dropped a frame while the STA was sleeping (either
+> due to the size of the STA PS buffer or due to a race between rx/tx processing).
+
+Why do we even have aggregation sessions active while the station goes
+to sleep? Is it scanning?
+
+Maybe the PS buffer should be larger then? I don't see how we can lose a
+frame due to rx/tx processing races either, how does that happen? I
+thought we had the ability to avoid all those races now.
+
+> This can also cause a sequence number hole in the STAs rx reordering buffer but
+> we won't send a BAR in that case ending in the same situation that the Intel STA
+> BlockAcks AMPDUs to it but doesn't pass them to the user space.
 > 
-> It has some serious implications when using 802.11n + QoS,
-> as the fw starts a BlockAck with the wrong tid (which finally
-> cause beacon loss and disconnection / some fw crash)
-> 
-> Fix it by using the actual tid stored in skb->priority.
+> Johannes, does it make sense to always send a BAR when a STA wakes up from
+> sleep and we've got an active aggregation session?
 
-How will the firmware handle the TIDs larger than 3, as currently to the
-firmware it appears only TID's 0-3 are configured, and the rest are
-whatever values happen to be there default?
+I don't know, you tell me, does it? :)
 
--Juuso
-
-
+joahnnes
 
