@@ -1,133 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46312 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910Ab1CQSJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 14:09:05 -0400
-Received: by vxi39 with SMTP id 39so2860560vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:09:04 -0700 (PDT)
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix memset argument order
-Date: Thu, 17 Mar 2011 14:08:57 -0400
-Message-Id: <1300385337-27760-1-git-send-email-imirkin@alum.mit.edu>
+Received: from mail.atheros.com ([12.19.149.2]:65482 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751198Ab1CXJG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2011 05:06:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 02:06:03 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: cleanup few redundant macros
+Date: Thu, 24 Mar 2011 14:36:16 +0530
+Message-ID: <1300957576-2734-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These were found using the following semantic match:
-// <smpl>
-@@expression E1; type T;@@
-* memset(E1, ... * sizeof(T) * ..., ...);
-// </smpl>
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Also take this opportunity to remove the unnecessary void* casts.
-
-Signed-off-by: Ilia Mirkin <imirkin@alum.mit.edu>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    4 ----
+ drivers/net/wireless/ath/ath9k/common.c |    2 +-
+ drivers/net/wireless/ath/ath9k/mac.c    |    2 --
+ 3 files changed, 1 insertions(+), 7 deletions(-)
 
-I do not have the hardware for this, but reading the code, it makes
-sense that the length of the memsets is currently the second argument
-instead of the third.
-
- drivers/net/wireless/rtlwifi/efuse.c |   31 +++++++++++++++----------------
- 1 files changed, 15 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-index 4f92cba..f74a870 100644
---- a/drivers/net/wireless/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/rtlwifi/efuse.c
-@@ -410,8 +410,8 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 099bd41..24b747c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -120,13 +120,11 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ /* RX / TX */
+ /***********/
  
- 	if (!efuse_shadow_update_chk(hw)) {
- 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
--		memcpy((void *)&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
--		       (void *)&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
-+		memcpy(&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
-+		       &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
- 		       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
+-#define ATH_MAX_ANTENNA         3
+ #define ATH_RXBUF               512
+ #define ATH_TXBUF               512
+ #define ATH_TXBUF_RESERVE       5
+ #define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
+ #define ATH_TXMAXTRY            13
+-#define ATH_MGT_TXMAXTRY        4
  
- 		RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
-@@ -446,9 +446,9 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ #define TID_TO_WME_AC(_tid)				\
+ 	((((_tid) == 0) || ((_tid) == 3)) ? WME_AC_BE :	\
+@@ -688,8 +686,6 @@ void ath9k_ps_restore(struct ath_softc *sc);
  
- 		if (word_en != 0x0F) {
- 			u8 tmpdata[8];
--			memcpy((void *)tmpdata,
--			       (void *)(&rtlefuse->
--					efuse_map[EFUSE_MODIFY_MAP][base]), 8);
-+			memcpy(tmpdata,
-+			       &rtlefuse->efuse_map[EFUSE_MODIFY_MAP][base],
-+			       8);
- 			RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD,
- 				      ("U-efuse\n"), tmpdata, 8);
+ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate);
  
-@@ -465,8 +465,8 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
- 	efuse_power_switch(hw, true, false);
- 	efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
+-void ath9k_set_bssid_mask(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+-
+ void ath_start_rfkill_poll(struct ath_softc *sc);
+ extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 615e682..16ba8c6 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -116,7 +116,7 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
  
--	memcpy((void *)&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
--	       (void *)&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
-+	memcpy(&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
-+	       &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
- 	       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
+ 	if (chan->band == IEEE80211_BAND_2GHZ) {
+ 		ichan->chanmode = CHANNEL_G;
+-		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM | CHANNEL_G;
++		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
+ 	} else {
+ 		ichan->chanmode = CHANNEL_A;
+ 		ichan->channelFlags = CHANNEL_5GHZ | CHANNEL_OFDM;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 562257a..ffefaf1 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -754,7 +754,6 @@ EXPORT_SYMBOL(ath9k_hw_abortpcurecv);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
+ {
+ #define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
+-#define AH_RX_TIME_QUANTUM     100     /* usec */
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int i;
  
- 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, ("<---\n"));
-@@ -479,13 +479,12 @@ void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw)
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+@@ -778,7 +777,6 @@ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
+ 		return true;
+ 	}
  
- 	if (rtlefuse->autoload_failflag == true) {
--		memset((void *)(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]), 128,
--		       0xFF);
-+		memset(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0], 0xFF, 128);
- 	} else
- 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
- 
--	memcpy((void *)&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
--	       (void *)&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
-+	memcpy(&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
-+	       &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
- 	       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
- 
+-#undef AH_RX_TIME_QUANTUM
+ #undef AH_RX_STOP_DMA_TIMEOUT
  }
-@@ -694,8 +693,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
- 	if (offset > 15)
- 		return false;
- 
--	memset((void *)data, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
--	memset((void *)tmpdata, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
-+	memset(data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
-+	memset(tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
- 
- 	while (bcontinual && (efuse_addr < EFUSE_MAX_SIZE)) {
- 		if (readstate & PG_STATE_HEADER) {
-@@ -862,7 +861,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
- 
- 		tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
- 
--		memset((void *)originaldata, 8 * sizeof(u8), 0xff);
-+		memset(originaldata, 0xff, 8 * sizeof(u8));
- 
- 		if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
- 			badworden = efuse_word_enable_data_write(hw,
-@@ -917,7 +916,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
- 	target_pkt.offset = offset;
- 	target_pkt.word_en = word_en;
- 
--	memset((void *)target_pkt.data, 8 * sizeof(u8), 0xFF);
-+	memset(target_pkt.data, 0xFF, 8 * sizeof(u8));
- 
- 	efuse_word_enable_data_read(word_en, data, target_pkt.data);
- 	target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
-@@ -1022,7 +1021,7 @@ static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
- 	u8 badworden = 0x0F;
- 	u8 tmpdata[8];
- 
--	memset((void *)tmpdata, PGPKT_DATA_SIZE, 0xff);
-+	memset(tmpdata, 0xff, PGPKT_DATA_SIZE);
- 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
- 		 ("word_en = %x efuse_addr=%x\n", word_en, efuse_addr));
- 
+ EXPORT_SYMBOL(ath9k_hw_stopdmarecv);
 -- 
-1.7.3.4
+1.7.0.4
 
