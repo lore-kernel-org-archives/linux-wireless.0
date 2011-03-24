@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:42273 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758648Ab1CaQWw (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63377 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754108Ab1CXJju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:22:52 -0400
+	Thu, 24 Mar 2011 05:39:50 -0400
+Received: by iwn34 with SMTP id 34so9480277iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 02:39:50 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110328154046.GB2333@herton-IdeaPad-Y430>
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-	<4D8E5BA3.1090909@users.sourceforge.net>
-	<AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
-	<4D8E8B1E.3030709@users.sourceforge.net>
-	<4D8FBE88.3050907@lwfinger.net>
-	<20110328154046.GB2333@herton-IdeaPad-Y430>
-Date: Fri, 1 Apr 2011 00:22:51 +0800
-Message-ID: <AANLkTinwG5BR5=S14XYcwZ39c3k0xc9+2VsQFS+JHB0f@mail.gmail.com>
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-From: wu zhangjin <wuzhangjin@gmail.com>
-To: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Roman Mamedov <rm@romanrm.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19851.4373.967588.536327@gargle.gargle.HOWL>
+Date: Thu, 24 Mar 2011 15:08:29 +0530
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: cleanup few redundant macros
+In-Reply-To: <1300957576-2734-1-git-send-email-mshajakhan@atheros.com>
+References: <1300957576-2734-1-git-send-email-mshajakhan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 28, 2011 at 11:40 PM, Herton Ronaldo Krzesinski
-<herton.krzesinski@canonical.com> wrote:
-[...]
->>
->> My rtl8187 devices are both external USB sticks, thus they have no
->> interaction with a radio-kill switch. I will test your patch to make
->> sure it does no harm to my system.
->>
->> I think the commit message should be revised. A simple statement
->> like "the LED does not turn off when the rfkill switch is off"
->> should be sufficient.
->
-> The patch should work, but I wonder if we should be fiddling with priv->vif
-> for this, perhaps we should not assume vif to be valid after
-> rtl8187_remove_interface (I don't see problems with current
-> rtl8187/mac80211 code on a quick look, but...)
->
+Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h  |    4 ----
+>  drivers/net/wireless/ath/ath9k/common.c |    2 +-
+>  drivers/net/wireless/ath/ath9k/mac.c    |    2 --
+>  3 files changed, 1 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 099bd41..24b747c 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -120,13 +120,11 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+>  /* RX / TX */
+>  /***********/
+>  
+> -#define ATH_MAX_ANTENNA         3
+>  #define ATH_RXBUF               512
+>  #define ATH_TXBUF               512
+>  #define ATH_TXBUF_RESERVE       5
+>  #define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
+>  #define ATH_TXMAXTRY            13
+> -#define ATH_MGT_TXMAXTRY        4
+>  
+>  #define TID_TO_WME_AC(_tid)				\
+>  	((((_tid) == 0) || ((_tid) == 3)) ? WME_AC_BE :	\
+> @@ -688,8 +686,6 @@ void ath9k_ps_restore(struct ath_softc *sc);
+>  
+>  u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate);
+>  
+> -void ath9k_set_bssid_mask(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+> -
+>  void ath_start_rfkill_poll(struct ath_softc *sc);
+>  extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+>  void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+> index 615e682..16ba8c6 100644
+> --- a/drivers/net/wireless/ath/ath9k/common.c
+> +++ b/drivers/net/wireless/ath/ath9k/common.c
+> @@ -116,7 +116,7 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
+>  
+>  	if (chan->band == IEEE80211_BAND_2GHZ) {
+>  		ichan->chanmode = CHANNEL_G;
+> -		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM | CHANNEL_G;
+> +		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
 
-Yes, but seems only two places have touched the vif pointer.
+There's a reason for this: 8813262ea79acf9daa0e03901bdfe93db4dc4ca5
+If channel handling has been cleaned up since then, this can be removed.
 
-$ grep "vif =" -ur drivers/net/wireless/rtl818x/rtl8187/
-drivers/net/wireless/rtl818x/rtl8187/dev.c:	priv->vif = NULL;
-drivers/net/wireless/rtl818x/rtl8187/dev.c:	priv->vif = vif;
-
-> I cleaner solution may be to use a priv->mode like p54.
-
-Yep, then, we may need to add a 'mode' member to rtl8187_priv and
-update it properly like p54.
-
-So, What do you prefer? I will prepare a new patch asap.
-
-Best Regards,
-Wu Zhangjin
-
->
->>
->> Larry
->>
->
-> --
-> []'s
-> Herton
->
+Sujith
