@@ -1,113 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:53547 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336Ab1CTCo1 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35001 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751717Ab1CXQvz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 22:44:27 -0400
-Received: by wya21 with SMTP id 21so4910788wya.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 19:44:26 -0700 (PDT)
-Message-ID: <4D8569F1.40900@gmail.com>
-Date: Sun, 20 Mar 2011 02:44:01 +0000
-From: =?ISO-8859-1?Q?Carlos_Guimar=E3es?= <asc2.cemg@gmail.com>
+	Thu, 24 Mar 2011 12:51:55 -0400
+Received: by qyk7 with SMTP id 7so5443489qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 09:51:54 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Sending L2 frames
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <4D86B222.4070708@lockie.ca>
+References: <4D866BD1.9060904@lockie.ca>
+	<4D86B222.4070708@lockie.ca>
+Date: Thu, 24 Mar 2011 17:51:54 +0100
+Message-ID: <AANLkTik+AjhMBwRy9ESaidnuW+1YCSZiEzeWdFnmZnqS@mail.gmail.com>
+Subject: Re: kernel-2.6.36.2 works, later doesn't
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: James <bjlockie@lockie.ca>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hi,
+On Mon, Mar 21, 2011 at 3:04 AM, James <bjlockie@lockie.ca> wrote:
+> On 03/20/11 17:04, James wrote:
+>> $ dmesg | grep phy
+>> BIOS-provided physical RAM map:
+>> modified physical RAM map:
+>> phy0: Selected rate control algorithm 'ath9k_rate_control'
+>> Registered led device: ath9k-phy0::radio
+>> Registered led device: ath9k-phy0::assoc
+>> Registered led device: ath9k-phy0::tx
+>> Registered led device: ath9k-phy0::rx
+>> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+>> mem=0xffffc90001900000, irq=17
+>>
+>> This is kernel-2.6.36.2.
+>> The wireless doesn't work on any later kernel that I have tried.
+>> It is very interesting the IRQ is 17 on this kernel but 18 on 2.6.37.3.
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at Â http://vger.kernel.org/majordomo-info.html
+>>
+> I tried
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/compat-wireless-2.6.36-4.tar.bz2
+> but it doesn't work in the 2.6.36.2 kernel or the 2.6.38 kernel.
+>
+> Where can I get the compat-wireless that is the exact code that is in
+> the 2.6.36.2 kernel and then I can try it in the 2.6.38 kernel?
+>
 
-I'm trying to send a 802.11 MGMT Action Frame using nl80211. However, it 
-always give me the error: *ERROR: -107 : Transport endpoint is not 
-connected*. Everything seems right to me and I have no more ideas of 
-what could be happening.
+The idea of compat-wireless is to make new wifi drivers & features
+accessible for older host-kernel, not the other way around.
+It also makes no sense to have same versions of host kernel and c-w
+version (both 2.6.36 for example, it is the same codebase).
 
-Another strange thing is that after the error I can not connect again 
-with the nl80211 until I restart the program.
+Did you try one of the bleeding-edge compat-wireless [1] tarball (it
+is updated daily, but can be broken)?
+Furthermore, [2] has informations about stable releases and detailed
+build instructions.
 
-Thanks,
-Carlos Guimarães
+Please provide full dmesg and lspci/lsusb output - not truncated one.
+Which user-space do you use? Network-Manager, wpasupplicant, etc.?
 
-Next is the code I'm using to send the frame:
+- Sedat -
 
-int send_action_frame(const char *interface, unsigned int freq,
-                  const uint8 *dst, const uint8 *src,
-                  const uint8 *bssid,
-                  const uint8 *data, size_t data_len)
-{
-     struct nl_sock *nl_handle = NULL;
-     struct nl_cache *nl_cache = NULL;
-     struct genl_family *nl80211 = NULL;
-     struct nl_msg *msg;
-     int ret = -1;
-     uint8 *buf;
-     struct ieee80211_hdr *hdr;
-     uint64 cookie;
-
-     log(1, "nl80211: Send Action frame (ifindex=", interface,")");
-
-     buf = (uint8 *)calloc(24 + data_len, sizeof(uint8));
-     if (buf == NULL)
-         return ret;
-     memcpy(buf + 24, data, data_len);
-     hdr = (struct ieee80211_hdr *) buf;
-     hdr->frame_control = (0 << 2) | (13 << 4);
-     uint8* addr = (uint8 *)calloc(6, sizeof(uint8));
-     void *addr_bg = addr;
-     memset(addr, 0, 1); addr++;
-     memset(addr, 20, 1); addr++;
-     memset(addr, 108, 1); addr++;
-     memset(addr, 76, 1); addr++;
-     memset(addr, 192, 1); addr++;
-     memset(addr, 196, 1); addr++;
-
-
-     memcpy(hdr->addr1, addr_bg, 6);
-     memcpy(hdr->addr2, addr_bg, 6);
-//    memcpy(hdr->addr2, "\x00\x24\x17\xa1\x38\x2a", 6);
-     memcpy(hdr->addr3, addr_bg, 6);
-
-     if (connect(interface,
-                          (void **) &nl_handle,
-                          (void **) &nl_cache,
-                          (void **) &nl80211) < 0) {
-         return -1;
-     }
-log(1, "nl80211: connect");
-     msg = nlmsg_alloc();
-     if (!msg) {
-         disconnect(nl_handle);
-         free(buf);
-         return -1;
-     }
-
-     genlmsg_put(msg, 0, 0, genl_family_get_id(nl80211), 0, 0,
-             NL80211_CMD_ACTION, 0);
-
-     NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, if_nametoindex(interface));
-     NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-     NLA_PUT(msg, NL80211_ATTR_FRAME, 24 + data_len, buf);
-log(1, "nl80211: message a enviar");
-     cookie = 0;
-     ret = send_and_receive(nl_handle, msg, cookie_handler, &cookie);
-     log(1, "nl80211: enviada");
-//    ret = send_and_receive(nl_handle, msg, NULL, NULL);
-     msg = NULL;
-     if (ret) {
-         log(1, "nl80211: Action command failed: ret=%d "
-                "(%s)", ret, strerror(-ret));
-         goto nla_put_failure;
-     }
-     log(1, "nl80211: Action TX command accepted; "
-            "cookie 0x%llx", (long long unsigned int) cookie);
-
-     ret = 0;
-
-nla_put_failure:
-             log(1, "failure: ", ret);
-     free(buf);
-     buf = NULL;
-     disconnect(nl_handle);
-     return ret;
-}
+[1] http://wireless.kernel.org/en/users/Download/#Where_to_download_bleeding_edge
+[2] http://wireless.kernel.org/en/users/Download/stable/
