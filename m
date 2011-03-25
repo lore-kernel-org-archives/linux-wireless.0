@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:52236 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435Ab1CBBVZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43924 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680Ab1CYLV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 20:21:25 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [RFC v3 2/2] printk: add hexdump_debug macro
-Date: Tue,  1 Mar 2011 17:24:10 -0800
-Message-Id: <1299029050-32242-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1299029050-32242-1-git-send-email-bzhao@marvell.com>
-References: <1299029050-32242-1-git-send-email-bzhao@marvell.com>
+	Fri, 25 Mar 2011 07:21:56 -0400
+Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201103251208.22473.helmut.schaa@googlemail.com>
+References: <201103232358.29966.helmut.schaa@googlemail.com>
+	 <1300987930.26265.6.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=mFbtLbQwNX6ZnzW9_xn_CYUBvv98z3-ZT9uf0@mail.gmail.com>
+	 <201103251208.22473.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Mar 2011 12:23:44 +0100
+Message-ID: <1301052224.3827.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hexdump_debug(str, buf, len)
+On Fri, 2011-03-25 at 12:08 +0100, Helmut Schaa wrote:
 
-str: "prefix string"
-buf: buffer pointer
-len: length of the buffer being printed
+> mac80211 isn't sending a BAR in the case above because of this code
+> in ieee80211_tx_status (status.c):
+> 
+> 218                 acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
+> 219                 if (!acked && test_sta_flags(sta, WLAN_STA_PS_STA)) {
+> 220                         /*
+> 221                          * The STA is in power save mode, so assume
+> 222                          * that this TX packet failed because of that.
+> 223                          */
+> 224                         ieee80211_handle_filtered_frame(local, sta, skb);
+> 225                         rcu_read_unlock();
+> 226                         return;
+> 227                 }
+> ...
+> 233                 if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+> 234                     (ieee80211_is_data_qos(fc))) {
+> 235                         u16 tid, ssn;
+> 236                         u8 *qc;
+> 237 
+> 238                         qc = ieee80211_get_qos_ctl(hdr);
+> 239                         tid = qc[0] & 0xf;
+> 240                         ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
+> 241                                                 & IEEE80211_SCTL_SEQ);
+> 242                         ieee80211_send_bar(sta->sdata, hdr->addr1,
+> 243                                            tid, ssn);
+> 244                 }
+> 
+> So, if a frame failed because the STA entered PS state it will be added
+> to the filtered frames queue and no BAR will get generated.
 
-usage:
-hexdump_debug("mwifiex data_d: tx_buf: ", tx_buf, 32);
+Right. Of course, if the device could help and the driver would set
+IEEE80211_TX_STAT_TX_FILTERED this would be better since then the frames
+wouldn't even be on the air...
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v3: use "str" as prefix string (Joe Perches)
-v2: rebase against linux-next.git tree and split into 2 patches
+FWIW, since Intel hw uses special queues for aggregation the ucode just
+stops those queues when the station goes to sleep. Caused me some grey
+hair in fact since I had naively expected it to reject those frames too.
 
- include/linux/printk.h |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+> However, if this was the case mac80211 should send out all filtered frames
+> after the STA wakes up again, which does not happen in the situation
+> above (3106 and 3107 got lost) :(
 
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index ee048e7..041ef6d 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -299,4 +299,15 @@ static inline void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
- 
- #endif
- 
-+#if defined(DEBUG)
-+#define hexdump_debug(str, buf, len) \
-+	print_hex_dump_bytes(str, DUMP_PREFIX_OFFSET, buf, len);
-+#elif defined(CONFIG_DYNAMIC_DEBUG)
-+#define hexdump_debug(str, buf, len) \
-+	dynamic_hexdump_debug(str, buf, len)
-+#else
-+#define hexdump_debug(str, buf, len) \
-+	no_printk(KERN_DEBUG str)
-+#endif
-+
- #endif
--- 
-1.6.2.5
+Yeah, that's in fact strange. Unless they timed out?
+
+> Generating the BAR also for filtered frames might improve the situation but
+> looks more like a workaround to me.
+
+Agree.
+
+> Still debugging the rt2800 tx status reporting.
+
+Maybe it's not reporting the right status for all frames?
+
+johannes
 
