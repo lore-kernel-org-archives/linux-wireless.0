@@ -1,88 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36094 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:10700 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753510Ab1COUvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 16:51:23 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 13:51:00 -0700
-Date: Tue, 15 Mar 2011 13:51:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
-Subject: Re: [PATCH 2.6.38] ath9k: remove support for the
- FIF_PROMISC_IN_BSS filter flag
-Message-ID: <20110315205122.GI11878@tux>
-References: <1299631692-69094-1-git-send-email-nbd@openwrt.org>
- <4D76D2C3.2000909@candelatech.com>
- <4D76D4BD.7070509@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D76D4BD.7070509@openwrt.org>
+	id S1753459Ab1CYObh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2011 10:31:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/12] iwlagn: clean up TX aggregation code
+Date: Fri, 25 Mar 2011 07:14:07 -0700
+Message-Id: <1301062456-17249-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 08, 2011 at 05:15:41PM -0800, Felix Fietkau wrote:
-> On 2011-03-09 2:07 AM, Ben Greear wrote:
-> > On 03/08/2011 04:48 PM, Felix Fietkau wrote:
-> >> The hardware rx filter flag triggered by FIF_PROMISC_IN_BSS is overly broad
-> >> and covers even frames with PHY errors. When this flag is enabled, this message
-> >> shows up frequently during scanning or hardware resets:
-> >>
-> >> ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
-> >>
-> >> Since promiscuous mode is usually not particularly useful, yet enabled by
-> >> default by bridging (either used normally in 4-addr mode, or with hacks
-> >> for various virtualization software), we should sacrifice it for better
-> >> reliability during normal operation.
-> >>
-> >> This patch leaves it enabled if there are active monitor mode interfaces, since
-> >> it's very useful for debugging.
-> >>
-> >> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> >> Cc: stable@kernel.org
-> >> ---
-> >>   drivers/net/wireless/ath/ath9k/recv.c |    4 +---
-> >>   1 files changed, 1 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> >> index cb559e3..a9c3f46 100644
-> >> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> >> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
-> >>   	 * mode interface or when in monitor mode. AP mode does not need this
-> >>   	 * since it receives all in-BSS frames anyway.
-> >>   	 */
-> >> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
-> >> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
-> >> -	    (sc->sc_ah->is_monitoring))
-> >> +	if (sc->sc_ah->is_monitoring)
-> >>   		rfilt |= ATH9K_RX_FILTER_PROM;
-> >>
-> >>   	if (sc->rx.rxfilter&  FIF_CONTROL)
-> > 
-> > Should we enable this flag if we have multiple STA
-> > interfaces?  I had to add something to ath5k recently
-> > to put it into promisc to properly handle multiple STAs
-> > associated with different APs, for instance.
-> No, multiple interfaces is handled by the BSSID mask.
-> 
-> > Do you have any idea *why* enabling this flag causes the DMA error
-> > messages?
-> I don't know why exactly it happens, but it probably cannot be explained
-> without going to the details of the inner workings of the MAC/baseband
-> interaction. But as I mentioned in the description, this flag is overly
-> broad and doesn't just bypass the address match, but lets all kinds of
-> other crap through as well - in many situations where even 'normal'
-> promiscuous behavior would be completely useless.
-> I think because of that, disabling it for non-monitor operation is the
-> right thing to do.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Nice find, thanks for looking at this. Are we cured now from all of
-these rants? Or has anyone seem more?
+Since the driver split, there's no need for
+function pointers any more for aggregation
+queue setup and teardown as all devices now
+share the same code. Simplify this.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c   |    2 --
+ drivers/net/wireless/iwlwifi/iwl-2000.c   |    2 --
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   17 +++++++----------
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    5 -----
+ 7 files changed, 7 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index e8e1c2d..9631d8f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -179,8 +179,6 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index b1dbe93..55274a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -259,8 +259,6 @@ static struct iwl_lib_ops iwl2000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 90e727b..4064490 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -348,8 +348,6 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+@@ -416,8 +414,6 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 40e0226..7ecfbbc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -288,8 +288,6 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+@@ -357,8 +355,6 @@ static struct iwl_lib_ops iwl6030_lib = {
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-	.txq_agg_enable = iwlagn_txq_agg_enable,
+-	.txq_agg_disable = iwlagn_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
+ 	.txq_init = iwl_hw_tx_queue_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a709d05..23e5667 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -222,8 +222,8 @@ void iwlagn_tx_queue_set_status(struct iwl_priv *priv,
+ 		       scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
+ }
+ 
+-int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
+-			  int tx_fifo, int sta_id, int tid, u16 ssn_idx)
++static int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
++				 int tx_fifo, int sta_id, int tid, u16 ssn_idx)
+ {
+ 	unsigned long flags;
+ 	u16 ra_tid;
+@@ -288,8 +288,8 @@ int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
+ 	return 0;
+ }
+ 
+-int iwlagn_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+-			   u16 ssn_idx, u8 tx_fifo)
++static int iwlagn_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
++				  u16 ssn_idx, u8 tx_fifo)
+ {
+ 	if ((IWLAGN_FIRST_AMPDU_QUEUE > txq_id) ||
+ 	    (IWLAGN_FIRST_AMPDU_QUEUE +
+@@ -1037,8 +1037,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	iwl_set_swq_id(&priv->txq[txq_id], get_ac_from_tid(tid), txq_id);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+-	ret = priv->cfg->ops->lib->txq_agg_enable(priv, txq_id, tx_fifo,
+-						  sta_id, tid, *ssn);
++	ret = iwlagn_txq_agg_enable(priv, txq_id, tx_fifo, sta_id, tid, *ssn);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1125,8 +1124,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	 * to deactivate the uCode queue, just return "success" to allow
+ 	 *  mac80211 to clean up it own data.
+ 	 */
+-	priv->cfg->ops->lib->txq_agg_disable(priv, txq_id, ssn,
+-						   tx_fifo_id);
++	iwlagn_txq_agg_disable(priv, txq_id, ssn, tx_fifo_id);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+@@ -1155,8 +1153,7 @@ int iwlagn_txq_check_empty(struct iwl_priv *priv,
+ 			u16 ssn = SEQ_TO_SN(tid_data->seq_number);
+ 			int tx_fifo = get_fifo_from_tid(ctx, tid);
+ 			IWL_DEBUG_HT(priv, "HW queue empty: continue DELBA flow\n");
+-			priv->cfg->ops->lib->txq_agg_disable(priv, txq_id,
+-							     ssn, tx_fifo);
++			iwlagn_txq_agg_disable(priv, txq_id, ssn, tx_fifo);
+ 			tid_data->agg.state = IWL_AGG_OFF;
+ 			ieee80211_stop_tx_ba_cb_irqsafe(ctx->vif, addr, tid);
+ 		}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 20f8e41..8d918ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -133,10 +133,6 @@ void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+ 				    u16 byte_cnt);
+ void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
+ 				   struct iwl_tx_queue *txq);
+-int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
+-			  int tx_fifo, int sta_id, int tid, u16 ssn_idx);
+-int iwlagn_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+-			   u16 ssn_idx, u8 tx_fifo);
+ void iwlagn_txq_set_sched(struct iwl_priv *priv, u32 mask);
+ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+ 			    int sta_id, int tid, int freed);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b316d83..1f4f6dd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -171,11 +171,6 @@ struct iwl_lib_ops {
+ 			     struct iwl_tx_queue *txq);
+ 	int (*txq_init)(struct iwl_priv *priv,
+ 			struct iwl_tx_queue *txq);
+-	/* aggregations */
+-	int (*txq_agg_enable)(struct iwl_priv *priv, int txq_id, int tx_fifo,
+-			      int sta_id, int tid, u16 ssn_idx);
+-	int (*txq_agg_disable)(struct iwl_priv *priv, u16 txq_id, u16 ssn_idx,
+-			       u8 tx_fifo);
+ 	/* setup Rx handler */
+ 	void (*rx_handler_setup)(struct iwl_priv *priv);
+ 	/* setup deferred work */
+-- 
+1.7.0.4
+
