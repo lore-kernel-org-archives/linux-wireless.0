@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:34425 "EHLO arroyo.ext.ti.com"
+Received: from mga11.intel.com ([192.55.52.93]:41899 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753807Ab1CFO23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:29 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p26ESSWq005869
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Mar 2011 08:28:28 -0600
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 15/15] wl12xx: 1281/1283 support - enable chip support
-Date: Sun,  6 Mar 2011 16:32:20 +0200
-Message-Id: <1299421940-26292-16-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	id S1753459Ab1CYObg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2011 10:31:36 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/12]  update for 2.6.40
+Date: Fri, 25 Mar 2011 07:14:04 -0700
+Message-Id: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to wl128x chip via chip id
+We do more clean up works in iwlagn for driver split
+We also make new rate scale changes to improve HT performance
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- drivers/net/wireless/wl12xx/Kconfig     |    2 +-
- drivers/net/wireless/wl12xx/main.c      |    9 +++++++++
- drivers/net/wireless/wl12xx/sdio_test.c |    5 +++++
- 3 files changed, 15 insertions(+), 1 deletions(-)
+Daniel Halperin (4):
+  iwlwifi: limit number of attempts for highest HT rate
+  iwlwifi: cleanup and bugfix tx aggregation code
+  iwlwifi: add RATE_MCS_RATE_MSK
+  iwlwifi: set default aggregation frame limit to 63
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 692ebff..35ce7b0 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -3,7 +3,7 @@ menuconfig WL12XX_MENU
- 	depends on MAC80211 && EXPERIMENTAL
- 	---help---
- 	  This will enable TI wl12xx driver support for the following chips:
--	  wl1271 and wl1273.
-+	  wl1271, wl1273, wl1281 and wl1283.
- 	  The drivers make use of the mac80211 stack.
- 
- config WL12XX
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8ac3936..af4739d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1023,6 +1023,15 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		if (ret < 0)
- 			goto out;
- 		break;
-+	case CHIP_ID_1283_PG20:
-+		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1283 PG20)",
-+			     wl->chip.id);
-+
-+		ret = wl1271_setup(wl);
-+		if (ret < 0)
-+			goto out;
-+		break;
-+	case CHIP_ID_1283_PG10:
- 	default:
- 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
- 		ret = -ENODEV;
-diff --git a/drivers/net/wireless/wl12xx/sdio_test.c b/drivers/net/wireless/wl12xx/sdio_test.c
-index c02c870..968249a 100644
---- a/drivers/net/wireless/wl12xx/sdio_test.c
-+++ b/drivers/net/wireless/wl12xx/sdio_test.c
-@@ -293,6 +293,11 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		wl1271_notice("chip id 0x%x (1271 PG20)",
- 				wl->chip.id);
- 		break;
-+	case CHIP_ID_1283_PG20:
-+		wl1271_notice("chip id 0x%x (1283 PG20)",
-+				wl->chip.id);
-+		break;
-+	case CHIP_ID_1283_PG10:
- 	default:
- 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
- 		return -ENODEV;
--- 
-1.7.0.4
+Johannes Berg (2):
+  iwlagn: clean up TX aggregation code
+  iwlagn: fix aggregation queue scheduler setup
+
+Wey-Yi Guy (6):
+  iwlegacy: MAINTAINERS
+  iwlagn: use 6030 configuration for 6035 series
+  iwlwifi: remove legacy isr tasklet
+  iwlagn: remove 3945 only station code
+  iwlagn: remove reference to 3945 and 4965
+  iwlagn: remove deprecated module parameters
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ MAINTAINERS                                 |   10 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    2 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c     |   33 ----
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    4 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |   20 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-ict.c  |    2 -
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |  140 ++++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  266 ++------------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   10 -
+ drivers/net/wireless/iwlwifi/iwl-csr.h      |   39 +---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    2 -
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    6 -
+ 17 files changed, 136 insertions(+), 433 deletions(-)
 
