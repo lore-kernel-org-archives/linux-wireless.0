@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:35697 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755196Ab1CVQtQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 12:49:16 -0400
-Received: by qyk7 with SMTP id 7so3720814qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 09:49:15 -0700 (PDT)
-Message-ID: <4d88d30b.cf4ee50a.763f.5820@mx.google.com>
-Date: Tue, 22 Mar 2011 09:49:15 -0700 (PDT)
-From: armadefuego@gmail.com
-Subject: [PATCH 2.6.38-rc8-wl 1/1] orinoco: Clear dangling pointer on hardware busy
-To: orinoco-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org
+Received: from mga11.intel.com ([192.55.52.93]:41899 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753544Ab1CYObg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2011 10:31:36 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/12] iwlegacy: MAINTAINERS
+Date: Fri, 25 Mar 2011 07:14:05 -0700
+Message-Id: <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On hardware busy the scan request pointer should be cleared, as higher
-levels will release. This avoids a crash when that pointer is
-erroneously used later.
+Add iwlegacy driver to MAINTAINERS file and mark as 'Orphan'
 
-Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-When the hardware is busy the error is propagated to higher levels on
-the stack. Those layers release the buffer. Therefore the copy of the
-pointer must be erased. Otherwise subsequent events checking this pointer
-may crash.
----
-diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
-index 09fae2f..736bbb9 100644
---- a/drivers/net/wireless/orinoco/cfg.c
-+++ b/drivers/net/wireless/orinoco/cfg.c
-@@ -153,6 +153,9 @@ static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
- 	priv->scan_request = request;
+ MAINTAINERS |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 95482e9..12698b3 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3322,6 +3322,16 @@ F:	Documentation/wimax/README.i2400m
+ F:	drivers/net/wimax/i2400m/
+ F:	include/linux/wimax/i2400m.h
  
- 	err = orinoco_hw_trigger_scan(priv, request->ssids);
-+	/* On error the we aren't processing the request */
-+	if (err)
-+		priv->scan_request = NULL;
- 
- 	return err;
- }
++INTEL PRO/WIRELESS 3945ABG/BG NETWORK CONNECTION SUPPORT
++L:	linux-wireless@vger.kernel.org
++S:	Orphan
++F:	drivers/net/wireless/iwlegacy/
++
++INTEL WIRELESS WIFI 4965AGN NETWORK CONNECTION SUPPORT
++L:	linux-wireless@vger.kernel.org
++S:	Orphan
++F:	drivers/net/wireless/iwlegacy/
++
+ INTEL WIRELESS WIFI LINK (iwlwifi)
+ M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+-- 
+1.7.0.4
+
