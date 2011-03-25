@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42089 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801Ab1CTJzF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Mar 2011 05:55:05 -0400
-Received: by qyk7 with SMTP id 7so1827176qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 02:55:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <op.vslaxakc3ri7v4@arend-laptop>
-References: <op.vslagcb13ri7v4@arend-laptop>
-	<op.vslaxakc3ri7v4@arend-laptop>
-Date: Sun, 20 Mar 2011 10:55:03 +0100
-Message-ID: <AANLkTim8SHdE8b9_gFLwbeEJM-uDegBDxU+AUJEb_rfc@mail.gmail.com>
-Subject: Re: new utility kernel module for detecting cores in newer chipsets
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Greg KH <greg@kroah.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	George Kashperko <george@znau.edu.ua>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:59293 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753766Ab1CYPrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2011 11:47:08 -0400
+Subject: Re: 2.6.38 iwlwifi 11n_disable=1
+From: wwguy <wey-yi.w.guy@intel.com>
+To: "tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D8CB794.9040102@canonical.com>
+References: <4D8CB794.9040102@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Mar 2011 08:44:34 -0700
+Message-ID: <1301067874.9139.7.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/19 Arend van Spriel <arend@broadcom.com>:
-> + mailing lists
->
-> Hi Greg,
->
-> There has been several discussion in the community (mainly by b43 and ssb
-> developers, I believe) to add support for chip core interconnect used in
-> newer Broadcom chips.  Our brcm80211 drivers already have this support and
-> we have isolated that functionality in a separate kernel module called
-> brcmaxi to provide it to other drivers. Currently, I have it located under
-> drivers/staging/brcm80211 as I am not sure whether or not its purpose
-> justifies a separate folder (under staging or not).
->
-> What are your thoughts about this? I would like to know before submitting
-> a patch for this.
+Hi Tim,
 
-Well, I've this AI support rewritten and isolated here too. It's not
-about having the code but designing it well.
+On Fri, 2011-03-25 at 08:41 -0700, Tim Gardner wrote:
+> Wey-Yi,
+> 
+> The Ubuntu Maverick release (2.6.35) has been carrying a user space 
+> patch in module-init-tools that disables 802.11n support by default 
+> using the 11n_disable module parameter. With the split in 2.6.38 into 
+> iwl3945 and iwlagn is it possible that we could now remove the module 
+> option for iwlagn? Will the 4965 adapters function correctly with 802.11n?
+> 
 
-George Kashperko shared idea of really nice design layout for buses.
-He pointed problems with ssb driver, explained how everything works.
-With his layout it should be easy to support SSB and AI with very
-minimal, if any, additional hacks. Nobody pointed any problems with
-his layout.
+with both the driver split and new 5000 uCode available at
+(http://www.intellinuxwireless.org/?n=Downloads)
 
-I don't want to have support for AI in 10 places, even if this is
-about staging area.
+I believe we are in very good shape to have 11n support for both legacy
+and agn devices. (yes 4965 will have 11n support)
 
--- 
-Rafał
+Please remove the module option to disable 11n support.
+
+Thank you very much for the help.
+
+Wey
+
+
