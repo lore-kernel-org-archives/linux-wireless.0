@@ -1,93 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52775 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861Ab1CAK1d (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:57972 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212Ab1CYCwU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 05:27:33 -0500
-Received: by wyg36 with SMTP id 36so4507990wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 02:27:32 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] wl12xx: wakeup chip from ELP during scan
-Date: Tue,  1 Mar 2011 12:27:26 +0200
-Message-Id: <1298975246-1720-1-git-send-email-arik@wizery.com>
+	Thu, 24 Mar 2011 22:52:20 -0400
+Received: by pvg12 with SMTP id 12so84420pvg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 19:52:20 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19852.783.629604.122760@gargle.gargle.HOWL>
+Date: Fri, 25 Mar 2011 08:20:55 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, Jouni.Malinen@atheros.com
+Subject: [PATCH 1/3] ath9k: fix beacon timer handling issues
+In-Reply-To: <1300827259-42910-1-git-send-email-nbd@openwrt.org>
+References: <1300827259-42910-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commands are sometimes sent to FW on scan completion. Make sure the chip
-is awake to receive them. Sending commands while the chip is in ELP
-can cause SDIO read errors and/or crash the FW.
+Felix Fietkau wrote:
+> AP mode beacon timers in ath9k are configured in milliseconds, which breaks
+> when increasing ATH_BCBUF to 8 instead of 4 (due to rounding errors).
+> Since the hardware timers are actually configured in microseconds, it's
+> better to let the driver use that unit directly.
+> 
+> To be able to do that, the beacon interval parameter abuse for passing
+> certain flags needs to be removed. This is easy to do, because those flags
+> are completely unnecessary anyway. ATH9K_BEACON_ENA is ignored,
+> ATH9K_BEACON_RESET_TSF can be replaced with calling ath9k_hw_reset_tsf
+> from the driver directly.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c  |    1 +
- drivers/net/wireless/wl12xx/scan.c |   20 ++++++++++++++------
- 2 files changed, 15 insertions(+), 6 deletions(-)
+I know this has been merged, but this changes the behaviour.
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 97ffd7a..f0aa7ab 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -63,6 +63,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
- 	cmd->status = 0;
- 
- 	WARN_ON(len % 4 != 0);
-+	WARN_ON(test_bit(WL1271_FLAG_IN_ELP, &wl->flags));
- 
- 	wl1271_write(wl, wl->cmd_box_addr, buf, len, false);
- 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index 6f897b9..4c26977 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -27,6 +27,7 @@
- #include "cmd.h"
- #include "scan.h"
- #include "acx.h"
-+#include "ps.h"
- 
- void wl1271_scan_complete_work(struct work_struct *work)
- {
-@@ -40,10 +41,11 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (wl->scan.state == WL1271_SCAN_STATE_IDLE) {
--		mutex_unlock(&wl->mutex);
--		return;
--	}
-+	if (wl->state == WL1271_STATE_OFF)
-+		goto out;
-+
-+	if (wl->scan.state == WL1271_SCAN_STATE_IDLE)
-+		goto out;
- 
- 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
- 	kfree(wl->scan.scanned_ch);
-@@ -52,13 +54,19 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 	ieee80211_scan_completed(wl->hw, false);
- 
- 	/* restore hardware connection monitoring template */
--	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
--		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
-+	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
-+		if (wl1271_ps_elp_wakeup(wl, false) == 0) {
-+			wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
-+			wl1271_ps_elp_sleep(wl);
-+		}
-+	}
- 
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
- 	}
-+
-+out:
- 	mutex_unlock(&wl->mutex);
- 
- }
--- 
-1.7.1
+Earlier, the HW TSF would be reset _after_ the beacon timers have been
+configured, but now this isn't so. Wouldn't this alter the timers ?
 
+Sujith
