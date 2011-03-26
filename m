@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45965 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752470Ab1CGLpB (ORCPT
+Received: from nm12.bullet.mail.ukl.yahoo.com ([217.146.183.186]:43382 "HELO
+	nm12.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751035Ab1CZVjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 06:45:01 -0500
-Subject: Re: WARN_ON in ieee80211_scan_completed_finish triggered
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Ben Greear <greearb@candelatech.com>
-In-Reply-To: <1299498147.5665.3.camel@marge>
-References: <1299443142.1292.6.camel@marge>
-	 <1299491485.3790.2.camel@jlt3.sipsolutions.net>
-	 (sfid-20110307_105130_457515_FFFFFFFF997C7B78)  <1299498147.5665.3.camel@marge>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Mar 2011 12:44:57 +0100
-Message-ID: <1299498297.3790.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 26 Mar 2011 17:39:07 -0400
+Message-ID: <4D8E5BA3.1090909@users.sourceforge.net>
+Date: Sat, 26 Mar 2011 21:33:23 +0000
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+MIME-Version: 1.0
+To: Wu Zhangjin <wuzhangjin@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
+References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
+In-Reply-To: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-07 at 12:42 +0100, Michael Buesch wrote:
-> On Mon, 2011-03-07 at 10:51 +0100, Johannes Berg wrote:
-> > On Sun, 2011-03-06 at 21:25 +0100, Michael Buesch wrote:
-> > > I just noticed the following warning on my p54spi device
-> > > with compat-wireless-2011-02-25 (OpenWrt):
-> > > 
-> > 
-> > > [ 1182.826599] WARNING: at net/mac80211/scan.c:310 ieee80211_rx_bss_free+0x20c/0x4b8 [mac80211]()
-> > 
-> > Unfortunately the backtrace gives no hint at all, is it possible that
-> > there was an ifdown that canceled the scan?
+Wu Zhangjin wrote:
+> led can not be turned off normally when rfkill is blocked, the cause is
+> the led_turn_off() function exit as not expected:
+
+Hmm. While this sounds more sensible, is it needed? And what does the windows 
+driver do?
+
+I think there are two kind of LEDs - one that comes on and off with the rfkill 
+switch; Larry or Herton makes the 2nd one, if there is one, blink while there is 
+traffic (and stay steady on otherwise).
+
 > 
-> I don't think there was an ifdown.
-
-Ok
-
-> It seems that it happened right after a regulatory
-> update. See printk timestamps in the full kernel log:
-
-> [ 1182.269927] cfg80211: Calling CRDA for country: DE
-> [ 1182.369659] cfg80211: Regulatory domain changed to country: DE
-> [ 1182.376586] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> [ 1182.386138] cfg80211:     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> [ 1182.395385] cfg80211:     (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> [ 1182.404449] cfg80211:     (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> [ 1182.413146] cfg80211:     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
-> [ 1182.821472] ------------[ cut here ]------------
-> [ 1182.826599] WARNING: at /home/mb/develop/svn/openwrt_n810/trunk/build_dir/linux-omap24xx/compat-wireless-2011-02-25/net/mac80211/scan.c:310 ieee80211_rx_bss_free+0x20c/0x4b8 [mac80211]()
-
-It's still almost half a second, and the regulatory update was because
-you connected to an AP that had a country IE. It could be related, but I
-doubt it.
-
-johannes
-
+> drivers/net/wireless/rtl818x/rtl8187/leds.c:
+> 
+> static void led_turn_off(struct work_struct *work)
+> {
+> 	[...]
+> 	/* Don't change the LED, when the device is down. */
+> 	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_UNSPECIFIED)
+> 		return ;
+> 	[...]
+> 
+> When rfkill is blocked, the function calling order looks like this:
+> 
+> net/mac80211/iface.c:
+> 
+> ieee80211_do_stop
+> 	-> drv_remove_interface = rtl8187_remove_interface
+> 	-> ieee80211_stop_device
+> 		-> led_set_brightness
+> 			-> led_turn_off
+> 	-> drv_stop = rtl8187_stop
+> 
+> rtl8187_remove_interface() set priv->vif to NULL, so, led_turn_off()
+> will return and will not be able to turn off the led. delay the setting
+> of priv->vif to rtl8187_stop() can solve it.
+> 
+> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187/dev.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> index 2bb5297..1fea0cd 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+> @@ -1007,6 +1007,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
+>  	u32 reg;
+>  
+>  	mutex_lock(&priv->conf_mutex);
+> +
+> +	priv->vif = NULL;
+> +
+>  	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
+>  
+>  	reg = rtl818x_ioread8(priv, &priv->map->CMD);
+> @@ -1067,10 +1070,7 @@ exit:
+>  static void rtl8187_remove_interface(struct ieee80211_hw *dev,
+>  				     struct ieee80211_vif *vif)
+>  {
+> -	struct rtl8187_priv *priv = dev->priv;
+> -	mutex_lock(&priv->conf_mutex);
+> -	priv->vif = NULL;
+> -	mutex_unlock(&priv->conf_mutex);
+> +	/* Nothing to do */
+>  }
+>  
+>  static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
