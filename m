@@ -1,210 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47196 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755125Ab1C3A5u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:57:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 30/34] ath6kl: cleanup and move the ath6kl pm ops to be assigned statically
-Date: Tue, 29 Mar 2011 17:56:27 -0700
-Message-ID: <1301446591-15236-31-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63472 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219Ab1CZWZP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2011 18:25:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4D8E5BA3.1090909@users.sourceforge.net>
+References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
+	<4D8E5BA3.1090909@users.sourceforge.net>
+Date: Sun, 27 Mar 2011 06:25:14 +0800
+Message-ID: <AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
+Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
+From: wu zhangjin <wuzhangjin@gmail.com>
+To: Hin-Tak Leung <htl10@users.sourceforge.net>
+Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Roman Mamedov <rm@romanrm.ru>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There should be no need to assign the pm ops dynamically, so
-assign them statically and make them const. While we are
-doing this just do some simple code style cleanup on the
-routines and move them above prior to their assignment
-into the driver ops.
+On Sun, Mar 27, 2011 at 5:33 AM, Hin-Tak Leung
+<htl10@users.sourceforge.net> wrote:
+> Wu Zhangjin wrote:
+>>
+>> led can not be turned off normally when rfkill is blocked, the cause is
+>> the led_turn_off() function exit as not expected:
+>
+> Hmm. While this sounds more sensible, is it needed? And what does the
+> windows driver do?
+>
+> I think there are two kind of LEDs - one that comes on and off with the
+> rfkill switch; Larry or Herton makes the 2nd one, if there is one, blink
+> while there is traffic (and stay steady on otherwise).
 
-This has no functional change other than assigning the
-pm ops statically.
+I have used this driver on the YeeLoong netbook(only support Linux),
+there is only one LED for rtl8187, when there is traffic, it blinks
+perfectly, but If press the hotkey to turn off the rf, the network
+interface is down, but the LED is still light, then, the users may
+mistakenly think the hotkey or rfkill support doesn't work or simply
+think the interface is still on. So, that's why we may need to fix it.
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |  130 ++++++++++----------
- 1 files changed, 64 insertions(+), 66 deletions(-)
+Regards,
+Wu Zhangjin
 
-diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-index 9420c40..359261b 100644
---- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-+++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-@@ -53,8 +53,6 @@
- #if defined(CONFIG_PM)
- #define dev_to_sdio_func(d)	container_of(d, struct sdio_func, dev)
- #define to_sdio_driver(d)      container_of(d, struct sdio_driver, drv)
--static int hifDeviceSuspend(struct device *dev);
--static int hifDeviceResume(struct device *dev);
- #endif /* CONFIG_PM */
- static void delHifDevice(struct hif_device * device);
- static int Func0_CMD52WriteByte(struct mmc_card *card, unsigned int address, unsigned char byte);
-@@ -165,23 +163,77 @@ static void ath6kl_hifdev_remove(struct sdio_func *func)
- 	AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -hifDeviceRemoved\n"));
- }
- 
-+#if defined(CONFIG_PM)
-+static int hifDeviceSuspend(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	int status = 0;
-+	struct hif_device *device;
-+
-+	device = ath6kl_get_hifdev(func);
-+	AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceSuspend\n"));
-+
-+	if (device && device->claimedContext &&
-+	    osdrvCallbacks.deviceSuspendHandler) {
-+		/* set true first for PowerStateChangeNotify(..) */
-+		device->is_suspend = true;
-+		status = osdrvCallbacks.
-+			deviceSuspendHandler(device->claimedContext);
-+		if (status)
-+			device->is_suspend = false;
-+	}
-+
-+	CleanupHIFScatterResources(device);
-+	AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -hifDeviceSuspend\n"));
-+
-+	switch (status) {
-+	case 0:
-+		return 0;
-+	case A_EBUSY:
-+		/* Hack for kernel in order to support deep sleep and wow */
-+		return -EBUSY;
-+	default:
-+		return -1;
-+	}
-+}
-+
-+static int hifDeviceResume(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	int status = 0;
-+	struct hif_device *device;
-+
-+	device = ath6kl_get_hifdev(func);
-+	AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceResume\n"));
-+	if (device && device->claimedContext &&
-+	    osdrvCallbacks.deviceSuspendHandler) {
-+		status = osdrvCallbacks.
-+			deviceResumeHandler(device->claimedContext);
-+		if (status == 0)
-+			device->is_suspend = false;
-+	}
-+	AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -hifDeviceResume\n"));
-+
-+	return status;
-+}
-+
-+static const struct dev_pm_ops ar6k_device_pm_ops = {
-+	.suspend = hifDeviceSuspend,
-+	.resume = hifDeviceResume,
-+};
-+#endif /* CONFIG_PM */
-+
- static struct sdio_driver ath6kl_hifdev_driver = {
- 	.name = "ath6kl_hifdev",
- 	.id_table = ath6kl_hifdev_ids,
- 	.probe = ath6kl_hifdev_probe,
- 	.remove = ath6kl_hifdev_remove,
--};
--
- #if defined(CONFIG_PM)
--/* New suspend/resume based on linux-2.6.32
-- * Need to patch linux-2.6.32 with mmc2.6.32_suspend.patch
-- * Need to patch with msmsdcc2.6.29_suspend.patch for msm_sdcc host
--     */
--static struct dev_pm_ops ar6k_device_pm_ops = {
--	.suspend = hifDeviceSuspend,
--	.resume = hifDeviceResume,
-+	.drv = {
-+		.pm = &ar6k_device_pm_ops,
-+	},
-+#endif
- };
--#endif /* CONFIG_PM */
- 
- /* make sure we only unregister when registered. */
- static int registered = 0;
-@@ -218,11 +270,6 @@ int HIFInit(OSDRV_CALLBACKS *callbacks)
- 	/* Register with bus driver core */
- 	registered = 1;
- 
--#if defined(CONFIG_PM)
--	if (callbacks->deviceSuspendHandler && callbacks->deviceResumeHandler)
--		ath6kl_hifdev_driver.drv.pm = &ar6k_device_pm_ops;
--#endif /* CONFIG_PM */
--
- 	r = sdio_register_driver(&ath6kl_hifdev_driver);
- 	if (r < 0)
- 		return r;
-@@ -1112,55 +1159,6 @@ static int hifEnableFunc(struct hif_device *device, struct sdio_func *func)
-     return ret;
- }
- 
--#if defined(CONFIG_PM)
--static int hifDeviceSuspend(struct device *dev)
--{
--    struct sdio_func *func=dev_to_sdio_func(dev);
--    int status = 0;
--    struct hif_device *device;   
--
--    device = ath6kl_get_hifdev(func);
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceSuspend\n"));
--    if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
--        device->is_suspend = true; /* set true first for PowerStateChangeNotify(..) */
--        status = osdrvCallbacks.deviceSuspendHandler(device->claimedContext);
--        if (status) {
--            device->is_suspend = false;
--        }
--    }
--    CleanupHIFScatterResources(device);
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -hifDeviceSuspend\n"));
--
--    switch (status) {
--    case 0:
--        return 0;
--    case A_EBUSY:
--        return -EBUSY; /* Hack for kernel in order to support deep sleep and wow */
--    default:
--        return -1;
--    }
--}
--
--static int hifDeviceResume(struct device *dev)
--{
--    struct sdio_func *func=dev_to_sdio_func(dev);
--    int status = 0;
--    struct hif_device *device;   
--
--    device = ath6kl_get_hifdev(func);
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceResume\n"));
--    if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
--        status = osdrvCallbacks.deviceResumeHandler(device->claimedContext);
--        if (status == 0) {
--            device->is_suspend = false;
--        }
--    }
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -hifDeviceResume\n"));
--
--    return status;
--}
--#endif /* CONFIG_PM */
--
- /*
-  * This should be moved to AR6K HTC layer.
-  */
--- 
-1.7.0.4
-
+>
+>>
+>> drivers/net/wireless/rtl818x/rtl8187/leds.c:
+>>
+>> static void led_turn_off(struct work_struct *work)
+>> {
+>>        [...]
+>>        /* Don't change the LED, when the device is down. */
+>>        if (!priv->vif || priv->vif->type == NL80211_IFTYPE_UNSPECIFIED)
+>>                return ;
+>>        [...]
+>>
+>> When rfkill is blocked, the function calling order looks like this:
+>>
+>> net/mac80211/iface.c:
+>>
+>> ieee80211_do_stop
+>>        -> drv_remove_interface = rtl8187_remove_interface
+>>        -> ieee80211_stop_device
+>>                -> led_set_brightness
+>>                        -> led_turn_off
+>>        -> drv_stop = rtl8187_stop
+>>
+>> rtl8187_remove_interface() set priv->vif to NULL, so, led_turn_off()
+>> will return and will not be able to turn off the led. delay the setting
+>> of priv->vif to rtl8187_stop() can solve it.
+>>
+>> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+>> ---
+>>  drivers/net/wireless/rtl818x/rtl8187/dev.c |    8 ++++----
+>>  1 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> index 2bb5297..1fea0cd 100644
+>> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+>> @@ -1007,6 +1007,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
+>>        u32 reg;
+>>        mutex_lock(&priv->conf_mutex);
+>> +
+>> +       priv->vif = NULL;
+>> +
+>>        rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
+>>        reg = rtl818x_ioread8(priv, &priv->map->CMD);
+>> @@ -1067,10 +1070,7 @@ exit:
+>>  static void rtl8187_remove_interface(struct ieee80211_hw *dev,
+>>                                     struct ieee80211_vif *vif)
+>>  {
+>> -       struct rtl8187_priv *priv = dev->priv;
+>> -       mutex_lock(&priv->conf_mutex);
+>> -       priv->vif = NULL;
+>> -       mutex_unlock(&priv->conf_mutex);
+>> +       /* Nothing to do */
+>>  }
+>>  static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
+>
