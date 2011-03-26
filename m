@@ -1,52 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33101 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752049Ab1C3GEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 02:04:15 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arve =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Vipin Mehta <vmehta@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND and friends
-References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
-	<AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
-	<1300957495.3807.7.camel@jlt3.sipsolutions.net>
-	<1300957590.3807.8.camel@jlt3.sipsolutions.net>
-	<87k4fouamf.fsf@purkki.adurom.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 30 Mar 2011 09:03:54 +0300
-In-Reply-To: <87k4fouamf.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu\, 24 Mar 2011 11\:32\:40 +0200")
-Message-ID: <87vcz1rvp1.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mailout-de.gmx.net ([213.165.64.22]:51814 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751282Ab1CZLuy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2011 07:50:54 -0400
+Subject: Re: Question about code in rc80211_pid_algo.c
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Mark (The Wirie)" <mark@thewirie.com>
+In-Reply-To: <4D8D5FEF.6010009@lwfinger.net>
+References: <4D8D5FEF.6010009@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Qr92sfvyFOK6WUC5Ya7u"
+Date: Sat, 26 Mar 2011 12:50:50 +0100
+Message-ID: <1301140250.3807.5.camel@kea>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@adurom.com> writes:
 
-> In maemo, to save power, we decreased the dynamic power save timeout
-> whenever display was turned off. This was all done from user space and
-> wifi driver in the kernel was completely unaware of the display state.
+--=-Qr92sfvyFOK6WUC5Ya7u
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[...]
+Hi Larry,
 
-> And before someone suggests adding dynamic timeout variable to
-> nl80211: I think it's very much implementation specific parameter. Not
-> all drivers support it and it might be that even in future mac80211
-> uses something else. So having the timeout variable in nl80211 is not
-> a long term solution.
+comments inline.
 
-I totally forgot that Juuso added QoS requirements support to
-mac80211. And that's the proper wayq to do this, user space sets QoS
-requirements based on display state, and whatever else it thinks is
-important, and mac80211 adapts the power save parameters accordingly.
-In this method we are not revealing any implemention details to user
-space, and that's always a good thing.
+On Fri, 2011-03-25 at 22:39 -0500, Larry Finger wrote:
+> Hi,
+>=20
+> I'm writing to you as the listed authors of the PID code in the mainline =
+kernel.
+>=20
+> I am helping adapt the PID algorithm for an appliance that will use the R=
+ealtek=20
+> vendor driver and the ALFA AWUS036H device. The vendor driver's rate-cont=
+rol=20
+> mechanism is not very effective. As the target kernel for the appliance i=
+s=20
+> 2.6.21, we are not backporting mac80211 and the rtl8187 driver.
+>=20
+> The package is working quite well, but Mark, the project manager, brought=
+ one=20
+> section to my attention and I am forwarding it.
+>=20
+> In routine rate_control_pid_sample(), the percentage failure is calculate=
+d, then=20
+> if the rate has been changed, the code goes on to "update the rate behavi=
+our=20
+> info". At that point, the calculation is
+>=20
+>           tmp =3D (pf - spinfo->last_pf);
+>           tmp =3D RC_PID_DO_ARITH_RIGHT_SHIFT(tmp, RC_PID_ARITH_SHIFT);
+>=20
+>  From our analysis of the code, both pf and last_pf must be in the range =
+0-100,=20
+> and the first statement results in tmp between -100 and 100. After the se=
+cond=20
+> line does an arithmetic right shift of 8, the resulting value will always=
+ be=20
+> zero. Did we miss something, or is this really a convoluted way to set "t=
+mp" to=20
+> zero?
 
--- 
-Kalle Valo
+I agree with your analysis, the code will effectively set tmp to zero. I
+would consider this a bug :) The whole differences computation business
+is Stefano's invention though. IIRC, his idea was that we should not
+have a static ordering of rates, but rather learn the order of rates in
+terms of achievable TX rate. I guess you really want to check with him
+in order to find out what to do :)
+
+Mattias
+
+
+--=-Qr92sfvyFOK6WUC5Ya7u
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEABECAAYFAk2N0xoACgkQwJO1cHm4WqZHYgCfUKyTXkzAxP2gTmuyI7hWmEhD
+tuAAni0cfkt9eiyNvOTwrJmvhkgDetNr
+=UYzY
+-----END PGP SIGNATURE-----
+
+--=-Qr92sfvyFOK6WUC5Ya7u--
+
