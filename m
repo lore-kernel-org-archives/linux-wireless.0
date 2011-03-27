@@ -1,314 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758699Ab1CCStI (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:54193 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab1C0Wrl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:49:08 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:49:08 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/19] rt2x00: Revise irqmask locking for PCI devices
-Date: Thu, 3 Mar 2011 19:45:16 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103031938.56423.IvDoorn@gmail.com> <201103031944.33950.IvDoorn@gmail.com> <201103031944.54527.IvDoorn@gmail.com>
-In-Reply-To: <201103031944.54527.IvDoorn@gmail.com>
+	Sun, 27 Mar 2011 18:47:41 -0400
+Message-ID: <4D8FBE88.3050907@lwfinger.net>
+Date: Sun, 27 Mar 2011 17:47:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103031945.17614.IvDoorn@gmail.com>
+To: Hin-Tak Leung <htl10@users.sourceforge.net>
+CC: wu zhangjin <wuzhangjin@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Roman Mamedov <rm@romanrm.ru>
+Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
+References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>	<4D8E5BA3.1090909@users.sourceforge.net> <AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com> <4D8E8B1E.3030709@users.sourceforge.net>
+In-Reply-To: <4D8E8B1E.3030709@users.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On 03/26/2011 07:55 PM, Hin-Tak Leung wrote:
+> wu zhangjin wrote:
+>> On Sun, Mar 27, 2011 at 5:33 AM, Hin-Tak Leung
+>> <htl10@users.sourceforge.net> wrote:
+>>> Wu Zhangjin wrote:
+>>>> led can not be turned off normally when rfkill is blocked, the cause is
+>>>> the led_turn_off() function exit as not expected:
+>>> Hmm. While this sounds more sensible, is it needed? And what does the
+>>> windows driver do?
+>>>
+>>> I think there are two kind of LEDs - one that comes on and off with the
+>>> rfkill switch; Larry or Herton makes the 2nd one, if there is one, blink
+>>> while there is traffic (and stay steady on otherwise).
+>>
+>> I have used this driver on the YeeLoong netbook(only support Linux),
+>> there is only one LED for rtl8187, when there is traffic, it blinks
+>> perfectly, but If press the hotkey to turn off the rf, the network
+>> interface is down, but the LED is still light, then, the users may
+>> mistakenly think the hotkey or rfkill support doesn't work or simply
+>> think the interface is still on. So, that's why we may need to fix it.
+>
+> My laptop (a Toshiba one) has the other kind of LED - the LED only comes on and
+> off in relation to the rfkill switch, and does not blink with traffic. I think
+> Herton or Larry has some devices with both types.
+>
+> Hmm, I seem to have the impression that there is code somewhere for switching a
+> singular LED's behavior of the driver between one or the other, by echo'ing into
+> sysfs or some other trickery? Or would that be a desired approach if that's not
+> done at the moment?
 
-The PCI device irqmask is locked by a spin_lock. Currently
-spin_lock_irqsave is used everywhere. To reduce the locking overhead
-replace spin_lock_irqsave in hard irq context with spin_lock and in
-soft irq context with spin_lock_irq.
+My rtl8187 devices are both external USB sticks, thus they have no interaction 
+with a radio-kill switch. I will test your patch to make sure it does no harm to 
+my system.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   15 ++++++---------
- drivers/net/wireless/rt2x00/rt2500pci.c |   15 ++++++---------
- drivers/net/wireless/rt2x00/rt2800pci.c |   10 ++++------
- drivers/net/wireless/rt2x00/rt61pci.c   |   15 ++++++---------
- 4 files changed, 22 insertions(+), 33 deletions(-)
+I think the commit message should be revised. A simple statement like "the LED 
+does not turn off when the rfkill switch is off" should be sufficient.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 9016c00..80f4988 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1317,27 +1317,25 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev,
- static void rt2400pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
- 				       struct rt2x00_field32 irq_field)
- {
--	unsigned long flags;
- 	u32 reg;
- 
- 	/*
- 	 * Enable a single interrupt. The interrupt mask register
- 	 * access needs locking.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt2400pci_txstatus_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	u32 reg;
--	unsigned long flags;
- 
- 	/*
- 	 * Handle all tx queues.
-@@ -1349,7 +1347,7 @@ static void rt2400pci_txstatus_tasklet(unsigned long data)
- 	/*
- 	 * Enable all TXDONE interrupts again.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
-@@ -1357,7 +1355,7 @@ static void rt2400pci_txstatus_tasklet(unsigned long data)
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt2400pci_tbtt_tasklet(unsigned long data)
-@@ -1378,7 +1376,6 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
- 	u32 reg, mask;
--	unsigned long flags;
- 
- 	/*
- 	 * Get the interrupt sources & saved to local variable.
-@@ -1420,13 +1417,13 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
- 	 * Disable all interrupts for which a tasklet was scheduled right now,
- 	 * the tasklet will reenable the appropriate interrupts.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	reg |= mask;
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock(&rt2x00dev->irqmask_lock);
- 
- 
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 0fbc18c..635f804 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1449,27 +1449,25 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev,
- static void rt2500pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
- 				       struct rt2x00_field32 irq_field)
- {
--	unsigned long flags;
- 	u32 reg;
- 
- 	/*
- 	 * Enable a single interrupt. The interrupt mask register
- 	 * access needs locking.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt2500pci_txstatus_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	u32 reg;
--	unsigned long flags;
- 
- 	/*
- 	 * Handle all tx queues.
-@@ -1481,7 +1479,7 @@ static void rt2500pci_txstatus_tasklet(unsigned long data)
- 	/*
- 	 * Enable all TXDONE interrupts again.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
-@@ -1489,7 +1487,7 @@ static void rt2500pci_txstatus_tasklet(unsigned long data)
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt2500pci_tbtt_tasklet(unsigned long data)
-@@ -1510,7 +1508,6 @@ static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
- 	u32 reg, mask;
--	unsigned long flags;
- 
- 	/*
- 	 * Get the interrupt sources & saved to local variable.
-@@ -1552,13 +1549,13 @@ static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
- 	 * Disable all interrupts for which a tasklet was scheduled right now,
- 	 * the tasklet will reenable the appropriate interrupts.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	reg |= mask;
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock(&rt2x00dev->irqmask_lock);
- 
- 	return IRQ_HANDLED;
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 1b5753b..7e610f6 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -765,18 +765,17 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- static void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
- 				       struct rt2x00_field32 irq_field)
- {
--	unsigned long flags;
- 	u32 reg;
- 
- 	/*
- 	 * Enable a single interrupt. The interrupt mask register
- 	 * access needs locking.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 1);
- 	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt2800pci_txstatus_tasklet(unsigned long data)
-@@ -862,7 +861,6 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
- 	u32 reg, mask;
--	unsigned long flags;
- 
- 	/* Read status and ACK all interrupts */
- 	rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
-@@ -905,11 +903,11 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	 * Disable all interrupts for which a tasklet was scheduled right now,
- 	 * the tasklet will reenable the appropriate interrupts.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock(&rt2x00dev->irqmask_lock);
- 	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	reg &= mask;
- 	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock(&rt2x00dev->irqmask_lock);
- 
- 	return IRQ_HANDLED;
- }
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 1eb59ee..86eba7f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2255,39 +2255,37 @@ static void rt61pci_wakeup(struct rt2x00_dev *rt2x00dev)
- static void rt61pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
- 				     struct rt2x00_field32 irq_field)
- {
--	unsigned long flags;
- 	u32 reg;
- 
- 	/*
- 	 * Enable a single interrupt. The interrupt mask register
- 	 * access needs locking.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 0);
- 	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt61pci_enable_mcu_interrupt(struct rt2x00_dev *rt2x00dev,
- 					 struct rt2x00_field32 irq_field)
- {
--	unsigned long flags;
- 	u32 reg;
- 
- 	/*
- 	 * Enable a single MCU interrupt. The interrupt mask register
- 	 * access needs locking.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, MCU_INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 0);
- 	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
- 
- static void rt61pci_txstatus_tasklet(unsigned long data)
-@@ -2325,7 +2323,6 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
- 	u32 reg_mcu, mask_mcu;
- 	u32 reg, mask;
--	unsigned long flags;
- 
- 	/*
- 	 * Get the interrupt sources & saved to local variable.
-@@ -2370,7 +2367,7 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	 * Disable all interrupts for which a tasklet was scheduled right now,
- 	 * the tasklet will reenable the appropriate interrupts.
- 	 */
--	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+	spin_lock(&rt2x00dev->irqmask_lock);
- 
- 	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	reg |= mask;
-@@ -2380,7 +2377,7 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	reg |= mask_mcu;
- 	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
- 
--	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+	spin_unlock(&rt2x00dev->irqmask_lock);
- 
- 	return IRQ_HANDLED;
- }
--- 
-1.7.2.3
+Larry
 
