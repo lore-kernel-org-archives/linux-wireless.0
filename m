@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55892 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405Ab1CKUYC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:24:02 -0500
-Subject: Re: [PATCH] mac80211: fix channel type recalculation with HT and
- non-HT interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <4D7A8350.9000406@candelatech.com>
-References: <1299873939-1171-1-git-send-email-nbd@openwrt.org>
-	 <4D7A8350.9000406@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Mar 2011 21:24:01 +0100
-Message-ID: <1299875041.4320.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mout7.freenet.de ([195.4.92.97]:55741 "EHLO mout7.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753572Ab1C0OoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Mar 2011 10:44:22 -0400
+Message-ID: <4D8F4D8B.5020603@justmail.de>
+Date: Sun, 27 Mar 2011 16:45:31 +0200
+From: =?ISO-8859-1?Q?Klaus_M=FCller?= <kmueller@justmail.de>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: broken ath9k-driver - problems with creating new TCP-connections.
+ Bad performance
+References: <4D8F28C1.4060402@justmail.de> <4D8F3176.3030409@t-online.de>
+In-Reply-To: <4D8F3176.3030409@t-online.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-03-11 at 12:17 -0800, Ben Greear wrote:
-> On 03/11/2011 12:05 PM, Felix Fietkau wrote:
-> > When running an AP interface along with the cooked monitor interface created
-> > by hostapd, adding an interface and deleting it again triggers a channel type
-> > recalculation during which the (non-HT) monitor interface takes precedence
-> > over the HT AP interface, thus causing the channel type to be set to non-HT.
-> > Fix this by not overriding HT interfaces with a non-HT channel type.
-
-The fix seems right.
-
-> After staring at that code a bit more, should that list-for-each-entry
-> loop be entirely different such that it better calculates a proper
-> super-channel for mixed interface types?
+Richard Schütz wrote:
+>> Hello,
+>>
+>> I'm running kernel 2.6.38.1 (from the OpenSuSE buildservice on OpenSuSE
+>> 11.4) and compat-wireless-2011-03-26 (the performance / functionality of
+>> the driver delivered with 2.6.38.1 is unusable).
 > 
-> If seems like a bad case of last-one-wins as currently written.
-> 
-> The code probably (mostly?) works right because we limit the
-> bss_conf.channel_type based on existing super-chan when
-> adding new interfaces, but it still seems like brittle code to me.
+> https://bugzilla.kernel.org/show_bug.cgi?id=31452
 
-But I'm not sure what you mean?
+According the bug, the problem doesn't exist in 2.6.37.4. I can't
+acknowledge this. 2.6.37 is as bad as 2.6.38.
 
-With the fix, we go through and use the widest possible channel of all
-interfaces. The only conflict can happen with HT40- and HT40+, but we
-should never get into that situation since we can't have one interface
-with HT40- and another with HT40+ at the same time to start with. Am I
-missing something?
 
-johannes
-
+Klaus.
