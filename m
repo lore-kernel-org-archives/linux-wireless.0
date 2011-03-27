@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45031 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756064Ab1C3TEh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 15:04:37 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 356E4540473
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:08:54 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-30 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110330190436.4E25140EAF@repository3.orbit-lab.org>
-Date: Wed, 30 Mar 2011 15:04:36 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mout4.freenet.de ([195.4.92.94]:32964 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753579Ab1C0Op0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Mar 2011 10:45:26 -0400
+Received: from [195.4.92.14] (helo=4.mx.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #3)
+	id 1Q3r4c-00051Y-19
+	for linux-wireless@vger.kernel.org; Sun, 27 Mar 2011 16:36:10 +0200
+Received: from p54a1939c.dip0.t-ipconnect.de ([84.161.147.156]:36458 helo=mail.maya.org)
+	by 4.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1Q3r4b-00051N-Ka
+	for linux-wireless@vger.kernel.org; Sun, 27 Mar 2011 16:36:09 +0200
+Message-ID: <4D8F4B9F.9010809@justmail.de>
+Date: Sun, 27 Mar 2011 16:37:19 +0200
+From: =?ISO-8859-1?Q?Klaus_M=FCller?= <kmueller@justmail.de>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: broken ath9k-driver - problems with creating new TCP-connections.
+ Bad performance
+References: <4D8F28C1.4060402@justmail.de> <4D8F2F3E.9030802@openwrt.org>
+In-Reply-To: <4D8F2F3E.9030802@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new branch]      linux-2.6.39.y -> origin/linux-2.6.39.y
-   f7606f5..c6e514a  master     -> origin/master
- * [new tag]         compat-wireless-2011-03-30 -> compat-wireless-2011-03-30
- * [new tag]         compat-wireless-v2.6.39-rc1-2 -> compat-wireless-v2.6.39-rc1-2
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-v2.6.39-rc1-1 -> compat-wireless-v2.6.39-rc1-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
- * [new branch]      linux-2.6.39.y -> origin/linux-2.6.39.y
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 55370d9...0812ceb akpm-end   -> origin/akpm-end  (forced update)
-   036a982..0ce790e  akpm-start -> origin/akpm-start
-   48aa660..2661ba7  history    -> origin/history
- + 74bdbee...ce247ee master     -> origin/master  (forced update)
-   036a982..0ce790e  stable     -> origin/stable
- * [new tag]         next-20110330 -> next-20110330
- * [new tag]         v2.6.39-rc1 -> v2.6.39-rc1
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+Felix Fietkau wrote:
+> On 2011-03-27 2:08 PM, Klaus Müller wrote:
+>> Hello,
+>>
+>> I'm running kernel 2.6.38.1 (from the OpenSuSE buildservice on OpenSuSE
+>> 11.4) and compat-wireless-2011-03-26 (the performance / functionality of
+>> the driver delivered with 2.6.38.1 is unusable).
+>> [...]
+>> iwconfig wlan0
+>>
+>> wlan0     IEEE 802.11bgn  ESSID:"ssid"
+>>            Mode:Managed  Frequency:2.412 GHz  Access Point:
+>> 00:25:33:22:11:00
+>>            Bit Rate=150 Mb/s   Tx-Power=17 dBm
+>>            Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>            Encryption key:off
+>>            Power Management:on
+>>            Link Quality=14/70  Signal level=-63 dBm
+>>            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>            Tx excessive retries:4  Invalid misc:1423   Missed beacon:0
+>>
+>>
+>> I run iwconfig 3 times in 7 seconds. The link quality alternated between
+>> 47 and 14.
+>>
+> Have you tried switching your AP to HT20 instead of HT40 to see if that
+> improves stability?
 
-compat-wireless code metrics
+If the AP is set to HT20, this driver doesn't use IEEE 802.11n any more,
+or, to say it more specific: the selected bit rate is max. 64 Mb/s and
+the performance is even worse.
 
-    833105 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1544 - % of code consists of backport work
-      1148 - Crap changes not yet posted
-      1114 - Crap additions not yet posted
-        34 - Crap deletions not yet posted
-    0.1378 - % of crap code
+I'm wondering at all, why the ath9k driver doesn't switch to 300 Mb/s:
+the rt3572sta-driver doesn't have any problem with both settings.
 
-Base tree: linux-next.git
-Base tree version: next-20110330
-compat-wireless release: compat-wireless-2011-03-30-pc
+
+Klaus.
