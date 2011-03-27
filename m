@@ -1,212 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52332 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755223Ab1CGCPE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47277 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330Ab1C0Ld4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:15:04 -0500
-Received: by gyh20 with SMTP id 20so1494682gyh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:15:04 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16287.414555.471688@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:44:55 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC 21/34] ath9k_htc: Increase URB count for REG_IN pipe
+	Sun, 27 Mar 2011 07:33:56 -0400
+Subject: Re: [PATCH v2] mac80211: fix NULL pointer dereference in
+ ieee80211_key_alloc()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301225486-23597-1-git-send-email-ynezz@true.cz>
+References: <1301217408.3826.2.camel@jlt3.sipsolutions.net>
+	 <1301225486-23597-1-git-send-email-ynezz@true.cz>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 27 Mar 2011 13:33:53 +0200
+Message-ID: <1301225633.3826.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Sun, 2011-03-27 at 13:31 +0200, Petr Štetiar wrote:
+> The ieee80211_key struct can be kfree()d several times in the function, for
+> example if some of the key setup functions fails beforehand, but there's no
+> check if the struct is still valid before we call memcpy() and INIT_LIST_HEAD()
+> on it.  In some cases (like it was in my case), if there's missing aes-generic
+> module it could lead to the following kernel OOPS:
+> 
+> 	Unable to handle kernel NULL pointer dereference at virtual address 0000018c
+> 	....
+> 	PC is at memcpy+0x80/0x29c
+> 	...
+> 	Backtrace:
+> 	[<bf11c5e4>] (ieee80211_key_alloc+0x0/0x234 [mac80211]) from [<bf1148b4>] (ieee80211_add_key+0x70/0x12c [mac80211])
+> 	[<bf114844>] (ieee80211_add_key+0x0/0x12c [mac80211]) from [<bf070cc0>] (__cfg80211_set_encryption+0x2a8/0x464 [cfg80211])
+> 
+> Signed-off-by: Petr Štetiar <ynezz@true.cz>
+> CC: Johannes Berg <johannes@sipsolutions.net>
 
-Using a single URB for receiving WMI events is
-insufficient, increase it to 64 to not lose
-WMI events in high throughput situations.
+Thanks!
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   99 ++++++++++++++++++------------
- drivers/net/wireless/ath/ath9k/hif_usb.h |    4 +-
- 2 files changed, 61 insertions(+), 42 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index d56a10c..a8134f8 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -568,6 +568,9 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 	case -ESHUTDOWN:
- 		goto free;
- 	default:
-+		skb_reset_tail_pointer(skb);
-+		skb_trim(skb, 0);
-+
- 		goto resubmit;
- 	}
- 
-@@ -592,23 +595,15 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 						 USB_REG_IN_PIPE),
- 				 nskb->data, MAX_REG_IN_BUF_SIZE,
- 				 ath9k_hif_usb_reg_in_cb, nskb);
--
--		ret = usb_submit_urb(urb, GFP_ATOMIC);
--		if (ret) {
--			kfree_skb(nskb);
--			urb->context = NULL;
--		}
--
--		return;
- 	}
- 
- resubmit:
--	skb_reset_tail_pointer(skb);
--	skb_trim(skb, 0);
--
-+	usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
- 	ret = usb_submit_urb(urb, GFP_ATOMIC);
--	if (ret)
-+	if (ret) {
-+		usb_unanchor_urb(urb);
- 		goto free;
-+	}
- 
- 	return;
- free:
-@@ -749,43 +744,67 @@ err_urb:
- 	return ret;
- }
- 
--static void ath9k_hif_usb_dealloc_reg_in_urb(struct hif_device_usb *hif_dev)
-+static void ath9k_hif_usb_dealloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- {
--	if (hif_dev->reg_in_urb) {
--		usb_kill_urb(hif_dev->reg_in_urb);
--		if (hif_dev->reg_in_urb->context)
--			kfree_skb((void *)hif_dev->reg_in_urb->context);
--		usb_free_urb(hif_dev->reg_in_urb);
--		hif_dev->reg_in_urb = NULL;
--	}
-+	usb_kill_anchored_urbs(&hif_dev->reg_in_submitted);
- }
- 
--static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
-+static int ath9k_hif_usb_alloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- {
--	struct sk_buff *skb;
-+	struct urb *urb = NULL;
-+	struct sk_buff *skb = NULL;
-+	int i, ret;
- 
--	hif_dev->reg_in_urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (hif_dev->reg_in_urb == NULL)
--		return -ENOMEM;
-+	init_usb_anchor(&hif_dev->reg_in_submitted);
- 
--	skb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_KERNEL);
--	if (!skb)
--		goto err;
-+	for (i = 0; i < MAX_REG_IN_URB_NUM; i++) {
- 
--	usb_fill_bulk_urb(hif_dev->reg_in_urb, hif_dev->udev,
--			 usb_rcvbulkpipe(hif_dev->udev,
--					 USB_REG_IN_PIPE),
--			 skb->data, MAX_REG_IN_BUF_SIZE,
--			 ath9k_hif_usb_reg_in_cb, skb);
-+		/* Allocate URB */
-+		urb = usb_alloc_urb(0, GFP_KERNEL);
-+		if (urb == NULL) {
-+			ret = -ENOMEM;
-+			goto err_urb;
-+		}
- 
--	if (usb_submit_urb(hif_dev->reg_in_urb, GFP_KERNEL) != 0)
--		goto err;
-+		/* Allocate buffer */
-+		skb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_KERNEL);
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto err_skb;
-+		}
-+
-+		usb_fill_bulk_urb(urb, hif_dev->udev,
-+				  usb_rcvbulkpipe(hif_dev->udev,
-+						  USB_REG_IN_PIPE),
-+				  skb->data, MAX_REG_IN_BUF_SIZE,
-+				  ath9k_hif_usb_reg_in_cb, skb);
-+
-+		/* Anchor URB */
-+		usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
-+
-+		/* Submit URB */
-+		ret = usb_submit_urb(urb, GFP_KERNEL);
-+		if (ret) {
-+			usb_unanchor_urb(urb);
-+			goto err_submit;
-+		}
-+
-+		/*
-+		 * Drop reference count.
-+		 * This ensures that the URB is freed when killing them.
-+		 */
-+		usb_free_urb(urb);
-+	}
- 
- 	return 0;
- 
--err:
--	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
--	return -ENOMEM;
-+err_submit:
-+	kfree_skb(skb);
-+err_skb:
-+	usb_free_urb(urb);
-+err_urb:
-+	ath9k_hif_usb_dealloc_reg_in_urbs(hif_dev);
-+	return ret;
- }
- 
- static int ath9k_hif_usb_alloc_urbs(struct hif_device_usb *hif_dev)
-@@ -802,7 +821,7 @@ static int ath9k_hif_usb_alloc_urbs(struct hif_device_usb *hif_dev)
- 		goto err_rx;
- 
- 	/* Register Read */
--	if (ath9k_hif_usb_alloc_reg_in_urb(hif_dev) < 0)
-+	if (ath9k_hif_usb_alloc_reg_in_urbs(hif_dev) < 0)
- 		goto err_reg;
- 
- 	return 0;
-@@ -817,7 +836,7 @@ err:
- static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
- {
- 	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
--	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
-+	ath9k_hif_usb_dealloc_reg_in_urbs(hif_dev);
- 	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
- 	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index f82b32b..8b98d64 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -40,7 +40,7 @@
- #define MAX_PKT_NUM_IN_TRANSFER 10
- 
- #define MAX_REG_OUT_URB_NUM  1
--#define MAX_REG_OUT_BUF_NUM  8
-+#define MAX_REG_IN_URB_NUM   64
- 
- #define MAX_REG_IN_BUF_SIZE 64
- 
-@@ -90,9 +90,9 @@ struct hif_device_usb {
- 	const struct firmware *firmware;
- 	struct htc_target *htc_handle;
- 	struct hif_usb_tx tx;
--	struct urb *reg_in_urb;
- 	struct usb_anchor regout_submitted;
- 	struct usb_anchor rx_submitted;
-+	struct usb_anchor reg_in_submitted;
- 	struct sk_buff *remain_skb;
- 	const char *fw_name;
- 	int rx_remain_len;
--- 
-1.7.4.1
+> ---
+>  net/mac80211/key.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index 8c02469..09cf1f2 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -342,7 +342,7 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+>  		if (IS_ERR(key->u.ccmp.tfm)) {
+>  			err = PTR_ERR(key->u.ccmp.tfm);
+>  			kfree(key);
+> -			key = ERR_PTR(err);
+> +			return ERR_PTR(err);
+>  		}
+>  		break;
+>  	case WLAN_CIPHER_SUITE_AES_CMAC:
+> @@ -360,7 +360,7 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+>  		if (IS_ERR(key->u.aes_cmac.tfm)) {
+>  			err = PTR_ERR(key->u.aes_cmac.tfm);
+>  			kfree(key);
+> -			key = ERR_PTR(err);
+> +			return ERR_PTR(err);
+>  		}
+>  		break;
+>  	}
+
 
