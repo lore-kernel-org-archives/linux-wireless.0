@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37815 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767Ab1CIPow (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 10:44:52 -0500
-Received: by vws12 with SMTP id 12so565481vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 07:44:51 -0800 (PST)
-Message-ID: <4D77A06E.3050902@lwfinger.net>
-Date: Wed, 09 Mar 2011 09:44:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:26323 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753135Ab1C1U5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:19 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:56:55 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/9] ath9k/ath9k_htc: pending stable patches for 2.6.37.y
+Date: Mon, 28 Mar 2011 13:57:06 -0700
+Message-ID: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problem with BCM943224
-References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
-In-Reply-To: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/09/2011 04:59 AM, Rafał Miłecki wrote:
-> I've 14e4:4353 labeled as BCM943224HMS / DW1520
->
-> [  199.009268] brcm80211: module is from the staging directory, the
-> quality is unknown, you have been warned.
-> [  199.022493] brcm80211 0000:03:00.0: enabling device (0000 ->  0002)
-> [  199.022529] brcm80211 0000:03:00.0: PCI INT A ->  GSI 28 (level,
-> low) ->  IRQ 28
-> [  199.022543] brcm80211 0000:03:00.0: setting latency timer to 64
-> [  199.050090] cfg80211: World regulatory domain updated:
-> [  199.050096] cfg80211:     (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [  199.050101] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [  199.050105] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [  199.050109] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [  199.050113] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [  199.050117] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [  199.297803] Found chip of unknown type (0xffffffff)
-> [  199.297808] wl0: wlc_bmac_attach: si_attach failed
-> [  199.297813] wl0: wlc_bmac_attach: failed with err 11
-> [  199.297818] wl0: wlc_attach: failed with err 11
-> [  199.297856] brcm80211: wlc_attach() failed with code 11
-> [  199.297882] brcm80211: wl_pci_probe: wl_attach failed!
->
-> [  343.223842] wl: module license 'unspecified' taints kernel.
-> [  343.223849] Disabling lock debugging due to kernel taint
-> [  343.256069] wl 0000:03:00.0: setting latency timer to 64
-> [  343.258760] eth%d: 5.100.82.38 driver failed with code 11
->
-> It seems all reads are 1 (0xffffffff). Can this be some bug in driver?
-> Can this be because I use adapter mini PCIe to PCIe x1? I remember
-> such a situation when I connected adapter to PCIe x16 and used N-PHY
-> card SSB based.
+Greg,
 
-A read of all 1's is a symptom of reading a non-existent register. I would 
-certainly suspect the adapter.
+here are a few stable patches were required backport and also
+a few which are marked as stable but which have not yet been
+propagated to the older stable trees. I've been carrying these
+on the compat-wireless-2.6.37 release for a while now so they
+have gotten some consumption and only now just got a chance to
+send them over to you.
 
-I have a PCI Express extender for my HP laptop. Although it avoids the problem 
-of the white-listed WLAN modules in the BIOS, not all cards work with it. 
-Perhaps there is a critical timing issue.
+Felix Fietkau (2):
+  ath9k_hw: fix potential spurious tx error bit interpretation
+  ath9k: add missing ps wakeup/restore calls
 
-I just tested again. My BCM4322 (14e4:432b) works with both b43 and wl in the 
-extender. For the record, the upload speeds are 8 Mbps with b43 and 15 Mbps with 
-wl in the 2.4 GHz band (router max 54 Mbps). In the 5 GHz band, the router is 
-set for 270 Mbps max and wl gets 80 Mbps. Of course, the 5 GHz band in b43 is 
-inactive.
+Luis R. Rodriguez (5):
+  ath9k: simplify hw reset locking
+  ath9k: move the PCU lock to the sc structure
+  ath9k: content DMA start / stop through the PCU lock
+  ath9k: Fix power save count imbalance on ath_radio_enable()
+  ath9k_hw: ASPM interoperability fix for AR9380/AR9382
 
-Larry
+Mohammed Shafi Shajakhan (1):
+  ath9k: Fix memory leak due to failed PAPRD frames
+
+Stanislaw Gruszka (1):
+  ath9k_htc: fix race conditions when stop device
+
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c        |   21 +++--
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    3 -
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   19 +++-
+ drivers/net/wireless/ath/ath9k/init.c              |    1 -
+ drivers/net/wireless/ath/ath9k/main.c              |   85 +++++++++----------
+ drivers/net/wireless/ath/ath9k/recv.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |    2 -
+ 10 files changed, 71 insertions(+), 71 deletions(-)
+
+-- 
+1.7.4.15.g7811d
+
