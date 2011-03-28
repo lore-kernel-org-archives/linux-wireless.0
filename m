@@ -1,50 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40075 "EHLO mx2.suse.de"
+Received: from mail.atheros.com ([12.19.149.2]:26430 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753576Ab1C2NUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 09:20:41 -0400
-Date: Tue, 29 Mar 2011 06:14:53 -0700
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	rmk+kernel@arm.linux.org.uk, linux-wireless@vger.kernel.org,
-	devel@linuxdriverproject.org
-Subject: Re: [PATCH 0/1] new module for amba axi on-chip interconnect
-Message-ID: <20110329131453.GA17302@suse.de>
-References: <1301391619-4499-1-git-send-email-arend@broadcom.com>
+	id S1754786Ab1C1U5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:33 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>, <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/9] ath9k: content DMA start / stop through the PCU lock
+Date: Mon, 28 Mar 2011 13:57:09 -0700
+Message-ID: <1301345835-11401-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301391619-4499-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2011 at 11:40:18AM +0200, Arend van Spriel wrote:
-> GUIDANCE NEEDED:
-> This patch puts the module at proposed location. Please provide your
-> guidance if there is a better location within the linux tree for this
-> module.
-> 
-> This module has been isolated from the brcm80211 driver currently
-> located in staging and provided to other drivers for chipsets using
-> the AMBA AXI on-chip interconnect with ARM Device Management Plugin
-> (DMP) silicon IP, which provides system discovery (chip being the
-> system) and basic core function (disable, reset, etc.).
-> 
-> The module has previously been posted on the linux-wireless list and
-> comments by Randy Dunlap have been taken in. Also the SubmitChecklist
-> has been followed.
-> 
-> Arend van Spriel (1):
->   drivers: brcmaxi: provide amba axi functionality in separate module
-> 
->  drivers/Kconfig            |    2 +
->  drivers/Makefile           |    1 +
->  drivers/brcmaxi/Kconfig    |   23 ++
+commit 6a6733f256f18cbcf4875e13f59eedb593b755a8 upstream
 
-I thought this was going under drivers/staging/  What changed your mind?
-What other drivers are going to use this, I thought the current broadcom
-drivers in drivers/net/wireless were not going to need this.
+This helps align resets / RX enable & disable / TX stop / start.
+Locking around the PCU is important to ensure the hardware doesn't
+get stale data when working with DMA'able data.
 
-thanks,
+This is part of a series of patches which fix stopping
+TX DMA completley when requested on the driver.
+For more details about this issue refer to this thread:
 
-greg k-h
+http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+
+Tested-by:  Ben Greear <greearb@candelatech.com>
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   52 ++++++++++++++++----------------
+ 1 files changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5e3e979..5a5f59f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -234,6 +234,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	/*
+ 	 * This is only performed if the channel settings have
+ 	 * actually changed.
+@@ -246,8 +248,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	stopped = ath_drain_all_txq(sc, false);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+ 	if (!ath_stoprecv(sc))
+ 		stopped = false;
+ 
+@@ -273,7 +273,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 			  "Unable to reset channel (%u MHz), "
+ 			  "reset status %d\n",
+ 			  channel->center_freq, r);
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto ps_restore;
+ 	}
+ 
+@@ -281,12 +280,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to restart recv logic\n");
+ 		r = -EIO;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto ps_restore;
+ 	}
+ 
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 
+@@ -298,6 +294,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	}
+ 
+  ps_restore:
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_ps_restore(sc);
+ 	return r;
+ }
+@@ -612,6 +610,8 @@ void ath9k_tasklet(unsigned long data)
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	if (!ath9k_hw_check_alive(ah))
+ 		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+ 
+@@ -622,15 +622,12 @@ void ath9k_tasklet(unsigned long data)
+ 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+ 
+ 	if (status & rxmask) {
+-		spin_lock_bh(&sc->sc_pcu_lock);
+-
+ 		/* Check for high priority Rx first */
+ 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
+ 		    (status & ATH9K_INT_RXHP))
+ 			ath_rx_tasklet(sc, 0, true);
+ 
+ 		ath_rx_tasklet(sc, 0, false);
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+ 	}
+ 
+ 	if (status & ATH9K_INT_TX) {
+@@ -656,6 +653,8 @@ void ath9k_tasklet(unsigned long data)
+ 
+ 	/* re-enable hardware interrupt */
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
++
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+ }
+ 
+@@ -880,12 +879,13 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_hw_configpcipowersave(ah, 0, 0);
+ 
+ 	if (!ah->curchan)
+ 		ah->curchan = ath_get_curchannel(sc, sc->hw);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+@@ -901,8 +901,6 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		return;
+ 	}
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	if (sc->sc_flags & SC_OP_BEACONS)
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+ 
+@@ -915,6 +913,8 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+ 
+ 	ieee80211_wake_queues(hw);
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_ps_restore(sc);
+ }
+ 
+@@ -925,6 +925,8 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	ieee80211_stop_queues(hw);
+ 
+ 	/*
+@@ -941,8 +943,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+ 	ath_stoprecv(sc);		/* turn off frame recv */
+ 	ath_flushrecv(sc);		/* flush recv queue */
+ 
+@@ -959,10 +959,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	ath9k_hw_phy_disable(ah);
+ 
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	ath9k_hw_configpcipowersave(ah, 1, 1);
++
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
++
+ 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
+ }
+ 
+@@ -976,13 +977,13 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	/* Stop ANI */
+ 	del_timer_sync(&common->ani.timer);
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	ieee80211_stop_queues(hw);
+ 
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	ath_drain_all_txq(sc, retry_tx);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+ 	ath_stoprecv(sc);
+ 	ath_flushrecv(sc);
+ 
+@@ -995,8 +996,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to start recv logic\n");
+ 
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	/*
+ 	 * We may be doing a reset in response to a request
+ 	 * that changes the channel so update any state that
+@@ -1021,6 +1020,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	}
+ 
+ 	ieee80211_wake_queues(hw);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	/* Start ANI */
+ 	ath_start_ani(common);
+@@ -1386,25 +1386,25 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 			ath9k_btcoex_timer_pause(sc);
+ 	}
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	/* make sure h/w will not generate any interrupt
+ 	 * before setting the invalid flag. */
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 
+ 	if (!(sc->sc_flags & SC_OP_INVALID)) {
+ 		ath_drain_all_txq(sc, false);
+-		spin_lock_bh(&sc->sc_pcu_lock);
+ 		ath_stoprecv(sc);
+ 		ath9k_hw_phy_disable(ah);
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-	} else {
+-		spin_lock_bh(&sc->sc_pcu_lock);
++	} else
+ 		sc->rx.rxlink = NULL;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-	}
+ 
+ 	/* disable HAL and put h/w to sleep */
+ 	ath9k_hw_disable(ah);
+ 	ath9k_hw_configpcipowersave(ah, 1, 1);
++
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_ps_restore(sc);
+ 
+ 	sc->ps_idle = true;
+-- 
+1.7.4.15.g7811d
+
