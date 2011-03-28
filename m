@@ -1,130 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47020 "EHLO bear.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57795 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753015Ab1CFO2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:19 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p26ESIiB015830
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Mar 2011 08:28:18 -0600
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 08/15] wl12xx: 1281/1283 support - Improve Tx & Rx path
-Date: Sun,  6 Mar 2011 16:32:13 +0200
-Message-Id: <1299421940-26292-9-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	id S1752923Ab1C1NBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 09:01:53 -0400
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2SD1rxu020534
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 09:01:53 -0400
+Date: Mon, 28 Mar 2011 15:01:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945: microcode SW error log decode?
+Message-ID: <20110328130134.GA4037@redhat.com>
+References: <1300083494.6654.1.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1300083494.6654.1.camel@dcbw.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduced bus transactions in Tx & Rx path
+On Mon, Mar 14, 2011 at 01:18:13AM -0500, Dan Williams wrote:
+> https://bugzilla.gnome.org/show_bug.cgi?id=644551
+> 
+> that has this error log in it.  Is that enough to figure out where
+> things have gone wrong in the firmware?
+> 
+> [ 1286.750258] iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+> [ 1286.750268] iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
+> [ 1286.750304] iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+> [ 1286.750309] iwl3945 0000:03:00.0: Status: 0x0002A2E4, count: 1
+> [ 1286.750314] iwl3945 0000:03:00.0: Desc       Time       asrtPC  blink2 ilink1  nmiPC   Line
+> [ 1286.750543] iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0001680217 0x008B6 0x13756 0x00320 0x00000 764
+> [ 1286.750547] 
+> [ 1286.750677] iwl3945 0000:03:00.0: Start IWL Event Log Dump: display last 20 count
+> [ 1286.750720] iwl3945 0000:03:00.0: 0001679867 0x00000001      1106
+> [ 1286.750746] iwl3945 0000:03:00.0: 0001679867 0x0000000f      1106
+> [ 1286.750771] iwl3945 0000:03:00.0: 0001679869 0x00000428      1105
+> [ 1286.750796] iwl3945 0000:03:00.0: 0001679873 0x00000483      1115
+> [ 1286.750821] iwl3945 0000:03:00.0: 0001679876 0x00000006      0463
+> [ 1286.750846] iwl3945 0000:03:00.0: 0001679877 0x00000006      0462
+> [ 1286.750871] iwl3945 0000:03:00.0: 0001680003 0x04130097      0401
+> [ 1286.750896] iwl3945 0000:03:00.0: 0001680005 0x00000006      0451
+> [ 1286.750921] iwl3945 0000:03:00.0: 0001680025 0x00000000      0451
+> [ 1286.750947] iwl3945 0000:03:00.0: 0001680157 0x44140080      0401
+> [ 1286.750972] iwl3945 0000:03:00.0: 0001680172 0x00000017      0452
+> [ 1286.750997] iwl3945 0000:03:00.0: 0001680177 0x00113b6e      0450
+> [ 1286.751023] iwl3945 0000:03:00.0: 0001680182 0x00113b6e      0450
+> [ 1286.751048] iwl3945 0000:03:00.0: 0001680187 0x00113b6e      0450
+> [ 1286.751073] iwl3945 0000:03:00.0: 0001680192 0x00113b6e      0450
+> [ 1286.751098] iwl3945 0000:03:00.0: 0001680197 0x00113b6e      0450
+> [ 1286.751123] iwl3945 0000:03:00.0: 0001680202 0x00123b6e      0450
+> [ 1286.751148] iwl3945 0000:03:00.0: 0001680207 0x00123b6e      0450
+> [ 1286.751173] iwl3945 0000:03:00.0: 0001680213 0x00123b6e      0450
+> [ 1286.751198] iwl3945 0000:03:00.0: 0001680218 0x00000100      0125
+> [ 1286.751212] iwl3945 0000:03:00.0: Error Reply type 0x000002FC cmd REPLY_SCAN_CMD (0x80) seq 0x4414 ser 0x00340000
+> [ 1286.755637] iwl3945 0000:03:00.0: Can't stop Rx DMA.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- drivers/net/wireless/wl12xx/rx.c |   34 +++++++++++++++++++++-------------
- drivers/net/wireless/wl12xx/tx.c |   22 ++++++++++++++++++----
- 2 files changed, 39 insertions(+), 17 deletions(-)
+We have information that disable_hw_scan=1 workaround that problem.
+That would be second reason to use software scanning by default,
+first was very bad performance on some configurations. I'm going
+to post a patch, which change that option on iwl3945.
 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 919b59f..c95ae19 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -163,18 +163,25 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_common_status *status)
- 			break;
- 		}
- 
--		/*
--		 * Choose the block we want to read
--		 * For aggregated packets, only the first memory block should
--		 * be retrieved. The FW takes care of the rest.
--		 */
--		mem_block = wl1271_rx_get_mem_block(status, drv_rx_counter);
--		wl->rx_mem_pool_addr.addr = (mem_block << 8) +
--			le32_to_cpu(wl_mem_map->packet_memory_pool_start);
--		wl->rx_mem_pool_addr.addr_extra =
--			wl->rx_mem_pool_addr.addr + 4;
--		wl1271_write(wl, WL1271_SLV_REG_DATA, &wl->rx_mem_pool_addr,
--				sizeof(wl->rx_mem_pool_addr), false);
-+		if (wl->chip.id != CHIP_ID_1283_PG20) {
-+			/*
-+			 * Choose the block we want to read
-+			 * For aggregated packets, only the first memory block
-+			 * should be retrieved. The FW takes care of the rest.
-+			 */
-+			mem_block = wl1271_rx_get_mem_block(status,
-+							    drv_rx_counter);
-+
-+			wl->rx_mem_pool_addr.addr = (mem_block << 8) +
-+			   le32_to_cpu(wl_mem_map->packet_memory_pool_start);
-+
-+			wl->rx_mem_pool_addr.addr_extra =
-+				wl->rx_mem_pool_addr.addr + 4;
-+
-+			wl1271_write(wl, WL1271_SLV_REG_DATA,
-+				     &wl->rx_mem_pool_addr,
-+				     sizeof(wl->rx_mem_pool_addr), false);
-+		}
- 
- 		/* Read all available packets at once */
- 		wl1271_read(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
-@@ -204,7 +211,8 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_common_status *status)
- 	 * Write the driver's packet counter to the FW. This is only required
- 	 * for older hardware revisions
- 	 */
--	if (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION)
-+	if ((wl->chip.id != CHIP_ID_1283_PG20) &&
-+	    (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION))
- 		wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 542b785..a7cec1c 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -159,8 +159,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 		desc = (struct wl1271_tx_hw_descr *)skb_push(
- 			skb, total_len - skb->len);
- 
--		desc->wl127x_mem.extra_blocks = TX_HW_BLOCK_SPARE;
--		desc->wl127x_mem.total_mem_blocks = total_blocks;
-+		/* HW descriptor fields change between wl127x and wl128x */
-+		if (wl->chip.id == CHIP_ID_1283_PG20) {
-+			desc->wl128x_mem.total_mem_blocks = total_blocks;
-+		} else {
-+			desc->wl127x_mem.extra_blocks = TX_HW_BLOCK_SPARE;
-+			desc->wl127x_mem.total_mem_blocks = total_blocks;
-+		}
-+
- 		desc->id = id;
- 
- 		wl->tx_blocks_available -= total_blocks;
-@@ -265,7 +271,14 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 
- 	desc->tx_attr = cpu_to_le16(tx_attr);
- 
--	wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d hlid: %d "
-+	if (wl->chip.id == CHIP_ID_1283_PG20)
-+		wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d hlid: %d "
-+		"tx_attr: 0x%x len: %d life: %d mem: %d", pad, desc->hlid,
-+		le16_to_cpu(desc->tx_attr), le16_to_cpu(desc->length),
-+		le16_to_cpu(desc->life_time),
-+		desc->wl128x_mem.total_mem_blocks);
-+	else
-+		wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d hlid: %d "
- 		"tx_attr: 0x%x len: %d life: %d mem: %d", pad, desc->hlid,
- 		le16_to_cpu(desc->tx_attr), le16_to_cpu(desc->length),
- 		le16_to_cpu(desc->life_time),
-@@ -537,7 +550,8 @@ out_ack:
- 		 * Interrupt the firmware with the new packets. This is only
- 		 * required for older hardware revisions
- 		 */
--		if (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION)
-+		if ((wl->chip.id != CHIP_ID_1283_PG20) &&
-+		    (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION))
- 			wl1271_write32(wl, WL1271_HOST_WR_ACCESS,
- 				       wl->tx_packets_count);
- 
--- 
-1.7.0.4
-
+Stanislaw
