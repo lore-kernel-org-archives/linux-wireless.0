@@ -1,148 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:49166 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932872Ab1CWNaD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 09:30:03 -0400
-Date: Wed, 23 Mar 2011 15:29:52 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] cfg80211: Add nl80211 event for deletion of a station
- entry
-Message-ID: <20110323132952.GA9679@jm.kir.nu>
-References: <20110323125513.GB26467@jm.kir.nu>
- <1300885229.3790.39.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:26413 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754786Ab1C1U5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:30 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:06 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>, <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/9] ath9k: move the PCU lock to the sc structure
+Date: Mon, 28 Mar 2011 13:57:08 -0700
+Message-ID: <1301345835-11401-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1300885229.3790.39.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate an NL80211_CMD_DEL_STATION event when a station entry in
-mac80211 is deleted to match with the NL80211_CMD_NEW_STATION event
-that is used when the entry was added. This is needed, e.g., to allow
-user space to remove a peer from RSN IBSS Authenticator state machine
-to avoid re-authentication and re-keying delays when the peer is not
-reachable anymore.
+commit 4bdd1e978ede034c1211957eb17eaf50de00d234 upstream
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+The PCU lock should be used to contend TX DMA as well,
+this will be done next.
 
+This is part of a series of patches which fix stopping
+TX DMA completley when requested on the driver.
+For more details about this issue refer to this thread:
+
+http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+
+Tested-by:  Ben Greear <greearb@candelatech.com>
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- include/net/cfg80211.h  |    9 +++++++++
- net/mac80211/sta_info.c |    2 ++
- net/wireless/mlme.c     |    9 +++++++++
- net/wireless/nl80211.c  |   34 ++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    3 +++
- 5 files changed, 57 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c  |   42 ++++++++++++++++----------------
+ drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+ 3 files changed, 23 insertions(+), 23 deletions(-)
 
-v2: Fix msg leak noticed by Johannes
-
-
---- wireless-testing.orig/include/net/cfg80211.h	2011-03-23 14:21:41.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2011-03-23 14:22:48.000000000 +0200
-@@ -2667,6 +2667,15 @@ void cfg80211_new_sta(struct net_device
- 		      struct station_info *sinfo, gfp_t gfp);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index aaaa100..02d1cf5 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -310,7 +310,6 @@ struct ath_rx {
+ 	u8 rxotherant;
+ 	u32 *rxlink;
+ 	unsigned int rxfilter;
+-	spinlock_t pcu_lock;
+ 	spinlock_t rxbuflock;
+ 	struct list_head rxbuf;
+ 	struct ath_descdma rxdma;
+@@ -602,6 +601,7 @@ struct ath_softc {
+ 	int irq;
+ 	spinlock_t sc_serial_rw;
+ 	spinlock_t sc_pm_lock;
++	spinlock_t sc_pcu_lock;
+ 	struct mutex mutex;
+ 	struct work_struct paprd_work;
+ 	struct work_struct hw_check_work;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e946ac3..5e3e979 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -246,7 +246,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	stopped = ath_drain_all_txq(sc, false);
  
- /**
-+ * cfg80211_del_sta - notify userspace about deletion of a station
-+ *
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-+
-+/**
-  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
-  * @dev: network device
-  * @freq: Frequency on which the frame was received in MHz
---- wireless-testing.orig/net/mac80211/sta_info.c	2011-03-23 14:17:47.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2011-03-23 14:19:50.000000000 +0200
-@@ -698,6 +698,8 @@ static int __must_check __sta_info_destr
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 	cancel_work_sync(&sta->drv_unblock_wk);
+-	spin_lock_bh(&sc->rx.pcu_lock);
++	spin_lock_bh(&sc->sc_pcu_lock);
  
-+	cfg80211_del_sta(sdata->dev, sta->sta.addr, GFP_KERNEL);
-+
- 	rate_control_remove_sta_debugfs(sta);
- 	ieee80211_sta_debugfs_remove(sta);
+ 	if (!ath_stoprecv(sc))
+ 		stopped = false;
+@@ -273,7 +273,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 			  "Unable to reset channel (%u MHz), "
+ 			  "reset status %d\n",
+ 			  channel->center_freq, r);
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto ps_restore;
+ 	}
  
---- wireless-testing.orig/net/wireless/mlme.c	2011-03-23 14:17:51.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2011-03-23 14:31:42.000000000 +0200
-@@ -770,6 +770,15 @@ void cfg80211_new_sta(struct net_device
- }
- EXPORT_SYMBOL(cfg80211_new_sta);
+@@ -281,11 +281,11 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to restart recv logic\n");
+ 		r = -EIO;
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto ps_restore;
+ 	}
  
-+void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_sta_del_event(rdev, dev, mac_addr, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_del_sta);
-+
- struct cfg80211_mgmt_registration {
- 	struct list_head list;
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++	spin_unlock_bh(&sc->sc_pcu_lock);
  
---- wireless-testing.orig/net/wireless/nl80211.c	2011-03-23 14:17:54.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2011-03-23 15:08:31.000000000 +0200
-@@ -5966,6 +5966,40 @@ void nl80211_send_sta_event(struct cfg80
- 				nl80211_mlme_mcgrp.id, gfp);
- }
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+@@ -622,7 +622,7 @@ void ath9k_tasklet(unsigned long data)
+ 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
  
-+void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev, const u8 *mac_addr,
-+				gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct net_device *netdev, u32 nlpid,
- 		      int freq, const u8 *buf, size_t len, gfp_t gfp)
---- wireless-testing.orig/net/wireless/nl80211.h	2011-03-23 14:23:31.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.h	2011-03-23 14:23:48.000000000 +0200
-@@ -79,6 +79,9 @@ void nl80211_send_remain_on_channel_canc
- void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 			    struct net_device *dev, const u8 *mac_addr,
- 			    struct station_info *sinfo, gfp_t gfp);
-+void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev, const u8 *mac_addr,
-+				gfp_t gfp);
+ 	if (status & rxmask) {
+-		spin_lock_bh(&sc->rx.pcu_lock);
++		spin_lock_bh(&sc->sc_pcu_lock);
  
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct net_device *netdev, u32 nlpid, int freq,
-
+ 		/* Check for high priority Rx first */
+ 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
+@@ -630,7 +630,7 @@ void ath9k_tasklet(unsigned long data)
+ 			ath_rx_tasklet(sc, 0, true);
+ 
+ 		ath_rx_tasklet(sc, 0, false);
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 	}
+ 
+ 	if (status & ATH9K_INT_TX) {
+@@ -885,7 +885,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (!ah->curchan)
+ 		ah->curchan = ath_get_curchannel(sc, sc->hw);
+ 
+-	spin_lock_bh(&sc->rx.pcu_lock);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+@@ -898,10 +898,10 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to restart recv logic\n");
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		return;
+ 	}
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	if (sc->sc_flags & SC_OP_BEACONS)
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+@@ -941,7 +941,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
+ 
+-	spin_lock_bh(&sc->rx.pcu_lock);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath_stoprecv(sc);		/* turn off frame recv */
+ 	ath_flushrecv(sc);		/* flush recv queue */
+@@ -959,7 +959,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	ath9k_hw_phy_disable(ah);
+ 
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_hw_configpcipowersave(ah, 1, 1);
+ 	ath9k_ps_restore(sc);
+@@ -981,7 +981,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	ath9k_hw_set_interrupts(ah, 0);
+ 	ath_drain_all_txq(sc, retry_tx);
+ 
+-	spin_lock_bh(&sc->rx.pcu_lock);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath_stoprecv(sc);
+ 	ath_flushrecv(sc);
+@@ -995,7 +995,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to start recv logic\n");
+ 
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	/*
+ 	 * We may be doing a reset in response to a request
+@@ -1159,14 +1159,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * be followed by initialization of the appropriate bits
+ 	 * and then setup of the interrupt mask.
+ 	 */
+-	spin_lock_bh(&sc->rx.pcu_lock);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d "
+ 			  "(freq %u MHz)\n", r,
+ 			  curchan->center_freq);
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto mutex_unlock;
+ 	}
+ 
+@@ -1187,10 +1187,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to start recv logic\n");
+ 		r = -EIO;
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		goto mutex_unlock;
+ 	}
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	/* Setup our intr mask. */
+ 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
+@@ -1392,14 +1392,14 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	if (!(sc->sc_flags & SC_OP_INVALID)) {
+ 		ath_drain_all_txq(sc, false);
+-		spin_lock_bh(&sc->rx.pcu_lock);
++		spin_lock_bh(&sc->sc_pcu_lock);
+ 		ath_stoprecv(sc);
+ 		ath9k_hw_phy_disable(ah);
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 	} else {
+-		spin_lock_bh(&sc->rx.pcu_lock);
++		spin_lock_bh(&sc->sc_pcu_lock);
+ 		sc->rx.rxlink = NULL;
+-		spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 	}
+ 
+ 	/* disable HAL and put h/w to sleep */
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d6bbb57..71b4092 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -317,7 +317,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 	struct ath_buf *bf;
+ 	int error = 0;
+ 
+-	spin_lock_init(&sc->rx.pcu_lock);
++	spin_lock_init(&sc->sc_pcu_lock);
+ 	sc->sc_flags &= ~SC_OP_RXFLUSH;
+ 	spin_lock_init(&sc->rx.rxbuflock);
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.4.15.g7811d
+
