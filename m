@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45938 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755446Ab1CAUGo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 15:06:44 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 90242540186
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Mar 2011 15:10:02 -0500 (EST)
-Subject: Compat-wireless release for 2011-03-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110301200642.E10B34652C@repository3.orbit-lab.org>
-Date: Tue,  1 Mar 2011 15:06:42 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.19.149.2]:26451 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753947Ab1C1U5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:42 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
+	Jack Lee <jack.lee@atheros.com>,
+	Carl Huang <carl.huang@atheros.com>,
+	David Quan <david.quan@atheros.com>,
+	Nael Atallah <nael.atallah@atheros.com>,
+	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 6/9] ath9k_hw: ASPM interoperability fix for AR9380/AR9382
+Date: Mon, 28 Mar 2011 13:57:12 -0700
+Message-ID: <1301345835-11401-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   212223d..f77cb6c  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 3f8c23b...a4ed5b8 akpm-end   -> origin/akpm-end  (forced update)
-   db46904..2ddedf9  history    -> origin/history
- + 5cfae13...c9f8564 master     -> origin/master  (forced update)
- * [new tag]         next-20110301 -> next-20110301
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+commit 58c5296991d233f2e492aa7a884635bba478cf12 upstream
 
-compat-wireless code metrics
+There is an interoperability with AR9382/AR9380 in L1 state with a
+few root complexes which can cause a hang. This is fixed by
+setting some work around bits on the PCIE PHY. We fix by using
+a new ini array to modify these bits when the radio is idle.
 
-    831390 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1567 - % of code consists of backport work
+Cc: stable@kernel.org
+Cc: Jack Lee <jack.lee@atheros.com>
+Cc: Carl Huang <carl.huang@atheros.com>
+Cc: David Quan <david.quan@atheros.com>
+Cc: Nael Atallah <nael.atallah@atheros.com>
+Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index a14a5e4..c655cd2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -1842,7 +1842,7 @@ static const u32 ar9300_2p2_soc_preamble[][2] = {
+ 
+ static const u32 ar9300PciePhy_pll_on_clkreq_disable_L1_2p2[][2] = {
+ 	/* Addr      allmodes  */
+-	{0x00004040, 0x08212e5e},
++	{0x00004040, 0x0821265e},
+ 	{0x00004040, 0x0008003b},
+ 	{0x00004044, 0x00000000},
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index c2a0571..cd8e0bd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -95,8 +95,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 	/* Sleep Setting */
+ 
+ 	INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-		       ar9300PciePhy_clkreq_enable_L1_2p2,
+-		       ARRAY_SIZE(ar9300PciePhy_clkreq_enable_L1_2p2),
++		       ar9300PciePhy_pll_on_clkreq_disable_L1_2p2,
++		       ARRAY_SIZE(ar9300PciePhy_pll_on_clkreq_disable_L1_2p2),
+ 		       2);
+ 
+ 	/* Fast clock modal settings */
+-- 
+1.7.4.15.g7811d
+
