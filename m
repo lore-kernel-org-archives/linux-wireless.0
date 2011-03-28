@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43298 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655Ab1CJVzW convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41176 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753392Ab1C1LhN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 16:55:22 -0500
-Received: by fxm17 with SMTP id 17so438347fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 13:55:21 -0800 (PST)
+	Mon, 28 Mar 2011 07:37:13 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 21so2745055wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 04:37:13 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/13] rt2x00: Add an error message when trying to send on a full queue
+Date: Mon, 28 Mar 2011 13:35:51 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103281329.45470.IvDoorn@gmail.com> <201103281334.52023.IvDoorn@gmail.com> <201103281335.23166.IvDoorn@gmail.com>
+In-Reply-To: <201103281335.23166.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1299764499-76251-3-git-send-email-nbd@openwrt.org>
-References: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
-	<1299764499-76251-2-git-send-email-nbd@openwrt.org>
-	<1299764499-76251-3-git-send-email-nbd@openwrt.org>
-Date: Thu, 10 Mar 2011 16:55:21 -0500
-Message-ID: <AANLkTim69R72cvpd=ACxfP8+xGNZoXRJa43=RAPzxiBv@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] ath9k: fix the .flush driver op implementation
-From: Mark Mentovai <mark@moxienet.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, vasanth@atheros.com
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103281335.53224.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-[...]
->  static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
->  {
->        struct ath_softc *sc = hw->priv;
-> +       int timeout = 200; /* ms */
-> +       int i, j;
->
-> +       ath9k_ps_wakeup(sc);
->        mutex_lock(&sc->mutex);
->
->        cancel_delayed_work_sync(&sc->tx_complete_work);
->
-> +       if (drop)
-> +               timeout = 1;
->
-> +       for (j = 0; j < timeout; j++) {
-> +               int npend = 0;
-> +               for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
-> +                       if (!ATH_TXQ_SETUP(sc, i))
-> +                               continue;
->
-> +                       npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
->                }
-> +
-> +               if (!npend)
-> +                   goto out;
-> +
-> +               usleep_range(1000, 2000);
->        }
->
-> +       if (!ath_drain_all_txq(sc, false))
->                ath_reset(sc, false);
->
-> +out:
->        ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
->        mutex_unlock(&sc->mutex);
-> +       ath9k_ps_restore(sc);
->  }
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-My only comment here is that you still hit the sleep even on the last
-pass through the loop when it isn’t strictly necessary. Practically,
-the only place this would be realized is the case where |drop| is set.
-In this scenario, the code formerly didn’t sleep at all, but now can
-sleep for 1-2ms. I couldn’t find any calls to drv_flush with |drop|
-set, though, so it might just be an academic concern.
+We already tell mac80211 to stop the queue when we hit a certain
+threshold. Hence, it shouldn't happen at all that a frame gets queued
+for tx on a full queue. Add an error message for this case.
 
-The delay loops in v2 patches 2/4 and 4/4 also share this
-characteristic (although with shorter timeouts, and delays instead of
-sleeps). Have you considered restructuring these loops to avoid the
-final waits?
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-This is admittedly a pretty minor thing.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 5d89259..9fc4a1e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -482,8 +482,11 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 	struct skb_frame_desc *skbdesc;
+ 	u8 rate_idx, rate_flags;
+ 
+-	if (unlikely(rt2x00queue_full(queue)))
++	if (unlikely(rt2x00queue_full(queue))) {
++		ERROR(queue->rt2x00dev,
++		      "Dropping frame due to full tx queue %d.\n", queue->qid);
+ 		return -ENOBUFS;
++	}
+ 
+ 	if (unlikely(test_and_set_bit(ENTRY_OWNER_DEVICE_DATA,
+ 				      &entry->flags))) {
+-- 
+1.7.2.3
+
