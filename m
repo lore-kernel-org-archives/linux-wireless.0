@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32241 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:26445 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752118Ab1CPS45 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 14:56:57 -0400
-Date: Wed, 16 Mar 2011 18:56:44 +0100
-From: Jiri Pirko <jpirko@redhat.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, eric.dumazet@gmail.com,
-	linville@tuxdriver.com, kaber@trash.net
-Subject: Re: net-next-2.6 status...
-Message-ID: <20110316175642.GB2867@psychotron.redhat.com>
-References: <20110316065008.GA2780@psychotron.redhat.com>
- <20110316.000251.189704695.davem@davemloft.net>
- <20110316073803.GB2780@psychotron.redhat.com>
- <20110316.103857.226773145.davem@davemloft.net>
+	id S1753947Ab1C1U5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:39 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:15 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
+	<stable@kernel.org>, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/9] ath9k_hw: fix potential spurious tx error bit interpretation
+Date: Mon, 28 Mar 2011 13:57:11 -0700
+Message-ID: <1301345835-11401-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110316.103857.226773145.davem@davemloft.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Mar 16, 2011 at 06:38:57PM CET, davem@davemloft.net wrote:
->From: Jiri Pirko <jpirko@redhat.com>
->Date: Wed, 16 Mar 2011 08:38:03 +0100
->
->> Wed, Mar 16, 2011 at 08:02:51AM CET, davem@davemloft.net wrote:
->>>From: Jiri Pirko <jpirko@redhat.com>
->>>Date: Wed, 16 Mar 2011 07:50:09 +0100
->>>
->>>>>Jiri, I know there is your patch set there, but I think you and Changli
->>>>>still need to go back and forth one more time wrt. orig_dev semantics.
->>>>>Since you have been posting this patch set for some time I'm still
->>>>>willing to apply it for this merge window, but please make haste and
->>>>>work out the remaining discussion.  Thank you.
->>>> 
->>>> Dave, you can apply the rest of the series and leave only the first
->>>> patch (af_packet) out. There's no dependency. We will figure out things
->>>> around origdev later.
->>>
->>>I was about to do that but I've found other problems.
->>>
->>>You cannot make the modifications you make to linux/if.h, those
->>>interface flags are visible to userspace.
->> 
->> What do you suggest? To remove unused flags and leave gaps there or to
->> not to remove the flags at all?
->
->You can't remove them, otherwise if it happened to be reference in the
->sources to some app out there, it will start to fail to compile.
->
->This is pretty obvious stuff, I hope :-)
+From: Felix Fietkau <nbd@openwrt.org>
 
-Ok :( So would you leave out if.h hunk out or should I repost?
+commit ff32d9cd2c4107224a28f39d3c72eec66d566e09 upstream
+
+According to documentation, AR_ExcessiveRetries, AR_Filtered and
+AR_FIFOUnderrun are only valid if AR_FrmXmitOK is clear.
+
+Not checking this might result in suboptimal FIFO settings, unnecessary
+retransmissions, or other connectivity issues.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |   21 ++++++++++++---------
+ 1 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 50dda39..cebb97b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -227,18 +227,21 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->ts_status = 0;
+ 	ts->ts_flags = 0;
+ 
++	if (ads->ds_txstatus9 & AR_TxOpExceeded)
++		ts->ts_status |= ATH9K_TXERR_XTXOP;
++
+ 	if (ads->ds_txstatus1 & AR_FrmXmitOK)
+ 		ts->ts_status |= ATH9K_TX_ACKED;
+-	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
+-		ts->ts_status |= ATH9K_TXERR_XRETRY;
+-	if (ads->ds_txstatus1 & AR_Filtered)
+-		ts->ts_status |= ATH9K_TXERR_FILT;
+-	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
+-		ts->ts_status |= ATH9K_TXERR_FIFO;
+-		ath9k_hw_updatetxtriglevel(ah, true);
++	else {
++		if (ads->ds_txstatus1 & AR_ExcessiveRetries)
++			ts->ts_status |= ATH9K_TXERR_XRETRY;
++		if (ads->ds_txstatus1 & AR_Filtered)
++			ts->ts_status |= ATH9K_TXERR_FILT;
++		if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
++			ts->ts_status |= ATH9K_TXERR_FIFO;
++			ath9k_hw_updatetxtriglevel(ah, true);
++		}
+ 	}
+-	if (ads->ds_txstatus9 & AR_TxOpExceeded)
+-		ts->ts_status |= ATH9K_TXERR_XTXOP;
+ 	if (ads->ds_txstatus1 & AR_TxTimerExpired)
+ 		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
+ 
+-- 
+1.7.4.15.g7811d
 
