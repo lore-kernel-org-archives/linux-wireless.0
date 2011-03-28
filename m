@@ -1,137 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36990 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab1CANPg (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63099 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802Ab1C1LhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 08:15:36 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 22so4420741wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:15:36 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH v2 6/7] wl12xx: Avoid redundant TX work
-Date: Tue,  1 Mar 2011 15:14:43 +0200
-Message-Id: <1298985284-6048-7-git-send-email-ido@wizery.com>
-In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
-References: <1298985284-6048-1-git-send-email-ido@wizery.com>
+	Mon, 28 Mar 2011 07:37:12 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 21so2744896wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 04:37:11 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/13] rt2x00: Fix tx aggregation problems with some clients
+Date: Mon, 28 Mar 2011 13:35:21 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103281329.45470.IvDoorn@gmail.com> <201103281334.16711.IvDoorn@gmail.com> <201103281334.52023.IvDoorn@gmail.com>
+In-Reply-To: <201103281334.52023.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103281335.23166.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX might be handled in the threaded IRQ handler, in which case, TX work
-might be scheduled just to discover it has nothing to do.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Save a few context switches by cancelling redundant TX work in case TX
-is about to be handled in the threaded IRQ handler. Also, avoid
-scheduling TX work from wl1271_op_tx if not needed.
+Some clients seem to rely upon the reception of BlockAckReqs to flush
+their rx reorder buffer. In order to fix aggregation for these clients
+rt2x00 should send a BlockAckReq if the transmission of an AMPDU
+subframe fails.
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
+Introduce a new flag TXDONE_AMPDU to indicate that this is an AMPDU
+subframe and pass IEEE80211_TX_STAT_AMPDU_NO_BACK to mac80211 if an
+AMPDU subframe failed during transmission.
+
+This fixes aggregation problems with Intel 5100 Windows STAs (and maybe
+others as well).
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   32 +++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 2 files changed, 28 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    3 +++
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    1 +
+ 3 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 1a44f79..4e4aa42 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -668,6 +668,11 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 	struct wl1271 *wl = (struct wl1271 *)cookie;
- 	bool done = false;
- 	unsigned int defer_count;
-+	unsigned long flags;
-+
-+	/* TX might be handled here, avoid redundant work */
-+	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-+	cancel_work_sync(&wl->tx_work);
- 
- 	mutex_lock(&wl->mutex);
- 
-@@ -712,13 +717,17 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 			wl1271_rx(wl, &wl->fw_status->common);
- 
- 			/* Check if any tx blocks were freed */
-+			spin_lock_irqsave(&wl->wl_lock, flags);
- 			if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
- 			    wl->tx_queue_count) {
-+				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 				/*
- 				 * In order to avoid starvation of the TX path,
- 				 * call the work function directly.
- 				 */
- 				wl1271_tx_work_locked(wl);
-+			} else {
-+				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 			}
- 
- 			/* check for tx results */
-@@ -754,6 +763,14 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	/* In case TX was not handled here, queue TX work */
-+	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-+	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-+	    wl->tx_queue_count)
-+		ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
- 	mutex_unlock(&wl->mutex);
- 
- 	return IRQ_HANDLED;
-@@ -1068,7 +1085,13 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	int q;
- 	u8 hlid = 0;
- 
-+	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
-+
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		hlid = wl1271_tx_get_hlid(skb);
-+
- 	spin_lock_irqsave(&wl->wl_lock, flags);
-+
- 	wl->tx_queue_count++;
- 
- 	/*
-@@ -1081,12 +1104,8 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 59302fa..769c05c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -687,6 +687,9 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
+ 		mcs = real_mcs;
  	}
  
--	spin_unlock_irqrestore(&wl->wl_lock, flags);
--
- 	/* queue the packet */
--	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
--		hlid = wl1271_tx_get_hlid(skb);
- 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
- 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
- 	} else {
-@@ -1098,9 +1117,12 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
--	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
-+	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-+	    !test_bit(WL1271_FLAG_TX_PENDING, &wl->flags))
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
++	if (aggr == 1 || ampdu == 1)
++		__set_bit(TXDONE_AMPDU, &txdesc.flags);
 +
- 	return NETDEV_TX_OK;
- }
+ 	/*
+ 	 * Ralink has a retry mechanism using a global fallback
+ 	 * table. We setup this fallback table to try the immediate
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index a98c434..83252d94 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -353,10 +353,14 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	 * which would allow the rc algorithm to better decide on
+ 	 * which rates are suitable.
+ 	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
++	if (test_bit(TXDONE_AMPDU, &txdesc->flags) ||
++	    tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 		tx_info->status.ampdu_len = 1;
+ 		tx_info->status.ampdu_ack_len = success ? 1 : 0;
++
++		if (!success)
++			tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 	}
  
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 752dd93..b49f59d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -317,6 +317,7 @@ enum wl12xx_flags {
- 	WL1271_FLAG_JOINED,
- 	WL1271_FLAG_GPIO_POWER,
- 	WL1271_FLAG_TX_QUEUE_STOPPED,
-+	WL1271_FLAG_TX_PENDING,
- 	WL1271_FLAG_IN_ELP,
- 	WL1271_FLAG_PSM,
- 	WL1271_FLAG_PSM_REQUESTED,
+ 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 0c8b0c6..6ae8200 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -217,6 +217,7 @@ enum txdone_entry_desc_flags {
+ 	TXDONE_FALLBACK,
+ 	TXDONE_FAILURE,
+ 	TXDONE_EXCESSIVE_RETRY,
++	TXDONE_AMPDU,
+ };
+ 
+ /**
 -- 
-1.7.1
+1.7.2.3
 
