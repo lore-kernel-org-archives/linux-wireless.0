@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26413 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:26380 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754786Ab1C1U5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 16:57:30 -0400
+	id S1753947Ab1C1U5Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 16:57:25 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:06 -0700
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:01 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: <greg@kroah.com>
 CC: <linux-wireless@vger.kernel.org>,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	Kyungwan Nam <kyungwan.nam@atheros.com>, <stable@kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/9] ath9k: move the PCU lock to the sc structure
-Date: Mon, 28 Mar 2011 13:57:08 -0700
-Message-ID: <1301345835-11401-3-git-send-email-lrodriguez@atheros.com>
+Subject: [PATCH 1/9] ath9k: simplify hw reset locking
+Date: Mon, 28 Mar 2011 13:57:07 -0700
+Message-ID: <1301345835-11401-2-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
@@ -22,10 +22,10 @@ Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 4bdd1e978ede034c1211957eb17eaf50de00d234 upstream
+commit 9d94674ab754be0e275120a183670ead435f9c0d upstream
 
-The PCU lock should be used to contend TX DMA as well,
-this will be done next.
+The new PCU lock is better placed so we can just contend
+against that when trying to reset hardware.
 
 This is part of a series of patches which fix stopping
 TX DMA completley when requested on the driver.
@@ -39,205 +39,144 @@ Cc: stable@kernel.org
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |   42 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 3 files changed, 23 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/init.c  |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |   22 ++++++----------------
+ 3 files changed, 6 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index aaaa100..02d1cf5 100644
+index 94bd9bc..aaaa100 100644
 --- a/drivers/net/wireless/ath/ath9k/ath9k.h
 +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -310,7 +310,6 @@ struct ath_rx {
- 	u8 rxotherant;
- 	u32 *rxlink;
- 	unsigned int rxfilter;
--	spinlock_t pcu_lock;
- 	spinlock_t rxbuflock;
- 	struct list_head rxbuf;
- 	struct ath_descdma rxdma;
-@@ -602,6 +601,7 @@ struct ath_softc {
+@@ -600,7 +600,6 @@ struct ath_softc {
+ 	struct ath_hw *sc_ah;
+ 	void __iomem *mem;
  	int irq;
+-	spinlock_t sc_resetlock;
  	spinlock_t sc_serial_rw;
  	spinlock_t sc_pm_lock;
-+	spinlock_t sc_pcu_lock;
  	struct mutex mutex;
- 	struct work_struct paprd_work;
- 	struct work_struct hw_check_work;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 91d9b2a..79a0659 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -580,7 +580,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	spin_lock_init(&common->cc_lock);
+ 
+ 	spin_lock_init(&sc->wiphy_lock);
+-	spin_lock_init(&sc->sc_resetlock);
+ 	spin_lock_init(&sc->sc_serial_rw);
+ 	spin_lock_init(&sc->sc_pm_lock);
+ 	mutex_init(&sc->mutex);
 diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e946ac3..5e3e979 100644
+index cb0b2b9..e946ac3 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -246,7 +246,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, 0);
- 	stopped = ath_drain_all_txq(sc, false);
+@@ -267,19 +267,15 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		  channel->center_freq, conf_is_ht40(conf),
+ 		  fastcc);
  
--	spin_lock_bh(&sc->rx.pcu_lock);
-+	spin_lock_bh(&sc->sc_pcu_lock);
- 
- 	if (!ath_stoprecv(sc))
- 		stopped = false;
-@@ -273,7 +273,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+-	spin_lock_bh(&sc->sc_resetlock);
+-
+ 	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
  			  "Unable to reset channel (%u MHz), "
  			  "reset status %d\n",
  			  channel->center_freq, r);
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
+-		spin_unlock_bh(&sc->sc_resetlock);
+ 		spin_unlock_bh(&sc->rx.pcu_lock);
  		goto ps_restore;
  	}
+-	spin_unlock_bh(&sc->sc_resetlock);
  
-@@ -281,11 +281,11 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (ath_startrecv(sc) != 0) {
  		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to restart recv logic\n");
- 		r = -EIO;
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto ps_restore;
- 	}
- 
--	spin_unlock_bh(&sc->rx.pcu_lock);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath_update_txpow(sc);
- 	ath9k_hw_set_interrupts(ah, ah->imask);
-@@ -622,7 +622,7 @@ void ath9k_tasklet(unsigned long data)
- 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
- 
- 	if (status & rxmask) {
--		spin_lock_bh(&sc->rx.pcu_lock);
-+		spin_lock_bh(&sc->sc_pcu_lock);
- 
- 		/* Check for high priority Rx first */
- 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-@@ -630,7 +630,7 @@ void ath9k_tasklet(unsigned long data)
- 			ath_rx_tasklet(sc, 0, true);
- 
- 		ath_rx_tasklet(sc, 0, false);
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
- 
- 	if (status & ATH9K_INT_TX) {
-@@ -885,7 +885,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (!ah->curchan)
+@@ -890,7 +886,6 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
  		ah->curchan = ath_get_curchannel(sc, sc->hw);
  
--	spin_lock_bh(&sc->rx.pcu_lock);
-+	spin_lock_bh(&sc->sc_pcu_lock);
+ 	spin_lock_bh(&sc->rx.pcu_lock);
+-	spin_lock_bh(&sc->sc_resetlock);
  	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
  	if (r) {
  		ath_print(common, ATH_DBG_FATAL,
-@@ -898,10 +898,10 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (ath_startrecv(sc) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to restart recv logic\n");
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 		return;
+@@ -898,7 +893,6 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			  "reset status %d\n",
+ 			  channel->center_freq, r);
  	}
--	spin_unlock_bh(&sc->rx.pcu_lock);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
+-	spin_unlock_bh(&sc->sc_resetlock);
  
- 	if (sc->sc_flags & SC_OP_BEACONS)
- 		ath_beacon_config(sc, NULL);	/* restart beacons */
-@@ -941,7 +941,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath_update_txpow(sc);
+ 	if (ath_startrecv(sc) != 0) {
+@@ -955,7 +949,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (!ah->curchan)
+ 		ah->curchan = ath_get_curchannel(sc, hw);
  
- 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
- 
--	spin_lock_bh(&sc->rx.pcu_lock);
-+	spin_lock_bh(&sc->sc_pcu_lock);
- 
- 	ath_stoprecv(sc);		/* turn off frame recv */
- 	ath_flushrecv(sc);		/* flush recv queue */
-@@ -959,7 +959,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+-	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+@@ -963,7 +956,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			  "reset status %d\n",
+ 			  channel->center_freq, r);
+ 	}
+-	spin_unlock_bh(&sc->sc_resetlock);
  
  	ath9k_hw_phy_disable(ah);
  
--	spin_unlock_bh(&sc->rx.pcu_lock);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
- 	ath9k_ps_restore(sc);
-@@ -981,7 +981,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, retry_tx);
- 
--	spin_lock_bh(&sc->rx.pcu_lock);
-+	spin_lock_bh(&sc->sc_pcu_lock);
- 
+@@ -994,12 +986,10 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
  	ath_stoprecv(sc);
  	ath_flushrecv(sc);
-@@ -995,7 +995,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 
+-	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+ 	if (r)
  		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to start recv logic\n");
+ 			  "Unable to reset hardware; reset status %d\n", r);
+-	spin_unlock_bh(&sc->sc_resetlock);
  
--	spin_unlock_bh(&sc->rx.pcu_lock);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	/*
- 	 * We may be doing a reset in response to a request
-@@ -1159,14 +1159,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	 * be followed by initialization of the appropriate bits
+ 	if (ath_startrecv(sc) != 0)
+ 		ath_print(common, ATH_DBG_FATAL,
+@@ -1170,18 +1160,15 @@ static int ath9k_start(struct ieee80211_hw *hw)
  	 * and then setup of the interrupt mask.
  	 */
--	spin_lock_bh(&sc->rx.pcu_lock);
-+	spin_lock_bh(&sc->sc_pcu_lock);
+ 	spin_lock_bh(&sc->rx.pcu_lock);
+-	spin_lock_bh(&sc->sc_resetlock);
  	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
  	if (r) {
  		ath_print(common, ATH_DBG_FATAL,
  			  "Unable to reset hardware; reset status %d "
  			  "(freq %u MHz)\n", r,
  			  curchan->center_freq);
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
+-		spin_unlock_bh(&sc->sc_resetlock);
+ 		spin_unlock_bh(&sc->rx.pcu_lock);
  		goto mutex_unlock;
  	}
+-	spin_unlock_bh(&sc->sc_resetlock);
  
-@@ -1187,10 +1187,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to start recv logic\n");
- 		r = -EIO;
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto mutex_unlock;
- 	}
--	spin_unlock_bh(&sc->rx.pcu_lock);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	/*
+ 	 * This is needed only to setup initial state
+@@ -1403,14 +1390,17 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	 * before setting the invalid flag. */
+ 	ath9k_hw_set_interrupts(ah, 0);
  
- 	/* Setup our intr mask. */
- 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
-@@ -1392,14 +1392,14 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
+-	spin_lock_bh(&sc->rx.pcu_lock);
  	if (!(sc->sc_flags & SC_OP_INVALID)) {
  		ath_drain_all_txq(sc, false);
--		spin_lock_bh(&sc->rx.pcu_lock);
-+		spin_lock_bh(&sc->sc_pcu_lock);
++		spin_lock_bh(&sc->rx.pcu_lock);
  		ath_stoprecv(sc);
  		ath9k_hw_phy_disable(ah);
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 	} else {
--		spin_lock_bh(&sc->rx.pcu_lock);
-+		spin_lock_bh(&sc->sc_pcu_lock);
+-	} else
++		spin_unlock_bh(&sc->rx.pcu_lock);
++	} else {
++		spin_lock_bh(&sc->rx.pcu_lock);
  		sc->rx.rxlink = NULL;
--		spin_unlock_bh(&sc->rx.pcu_lock);
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
+-	spin_unlock_bh(&sc->rx.pcu_lock);
++		spin_unlock_bh(&sc->rx.pcu_lock);
++	}
  
  	/* disable HAL and put h/w to sleep */
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d6bbb57..71b4092 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -317,7 +317,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	struct ath_buf *bf;
- 	int error = 0;
- 
--	spin_lock_init(&sc->rx.pcu_lock);
-+	spin_lock_init(&sc->sc_pcu_lock);
- 	sc->sc_flags &= ~SC_OP_RXFLUSH;
- 	spin_lock_init(&sc->rx.rxbuflock);
- 
+ 	ath9k_hw_disable(ah);
 -- 
 1.7.4.15.g7811d
 
