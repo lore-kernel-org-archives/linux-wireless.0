@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:49997 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759900Ab1CDSsV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 13:48:21 -0500
-Received: by vxi39 with SMTP id 39so2270667vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 10:48:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1299238205.4348.1.camel@jlt3.sipsolutions.net>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
- <1299208307-9428-2-git-send-email-thomas@cozybit.com> <1299238205.4348.1.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 4 Mar 2011 10:48:00 -0800
-Message-ID: <AANLkTikcszGwKe92rr6EmicRNrOF9hjpug0xrbxUgAfv@mail.gmail.com>
-Subject: Re: [PATCH 1/7] mac80211: Support RSN information element on mesh interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arroyo.ext.ti.com ([192.94.94.40]:59390 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776Ab1C1Hca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 03:32:30 -0400
+Received: from dlep36.itg.ti.com ([157.170.170.91])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p2S7WUj2016493
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 02:32:30 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] wl12xx: Set correct REF CLK and TCXO CLK values to the FW
+Date: Mon, 28 Mar 2011 09:34:51 +0200
+Message-Id: <1301297691-27665-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Set the correct values to the FW of REF CLK and TCXO CLK from
+wl12xx_platform_data to ini_general_params.
 
-On Fri, Mar 4, 2011 at 3:30 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
->
->> +++ b/include/net/cfg80211.h
->> @@ -656,6 +656,8 @@ struct mesh_config {
->>   * @path_metric: which metric to use
->>   * @vendor_ie: vendor information elements (optional)
->>   * @vendor_ie_len: length of vendor information elements
->> + * @rsn_ie: robust secure network information elements (for SAE)
->> + * @rsn_ie_len: length of rsn_ie
->
-> Is this really useful over just putting it into the vendor IE we already
-> have? We already have code to split IEs properly (see ieee80211_ie_split
-> etc in mac80211), so maybe there's no reason to add more API?
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Ah, I see.  No need for a new rsn_ie but just remove the "vendor_" prefix.
-We'll do.
-
-Javier
-
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 2468044..beb9f88 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -129,6 +129,9 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
+ 	if (gp->tx_bip_fem_auto_detect)
+ 		answer = true;
+ 
++	/* Set the ref CLK value */
++	gen_parms->general_params.ref_clock = wl->ref_clock;
++
+ 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
+ 	if (ret < 0) {
+ 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
+@@ -168,6 +171,13 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
+ 	if (gp->tx_bip_fem_auto_detect)
+ 		answer = true;
+ 
++	/*
++	 * Set the ref CLK & TCXO values.
++	 * The HW will know which of them is the valid one due to boot setting.
++	 */
++	gen_parms->general_params.ref_clock = wl->ref_clock;
++	gen_parms->general_params.tcxo_ref_clock = wl->tcxo_clock;
++
+ 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
+ 	if (ret < 0) {
+ 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.0.4
+
