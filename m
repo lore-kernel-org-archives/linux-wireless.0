@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bounce-out.neti.ee ([194.126.101.104]:60314 "EHLO
-	bounce-out.neti.ee" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754103Ab1CNTHo (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33857 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753156Ab1C1N37 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 15:07:44 -0400
-Received: from smtp-out.neti.ee (vm-relay8.estpak.ee [88.196.174.139])
-	by Bounce1.estpak.ee (Postfix) with ESMTP id BEF893B936D
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 20:58:22 +0200 (EET)
-Subject: Re: [PATCH] zd1211rw: TrendNet TEW-509UB id added
-From: =?ISO-8859-1?Q?T=F5nu?= Samuel <tonu@jes.ee>
-To: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 28 Mar 2011 09:29:59 -0400
+Received: by bwz15 with SMTP id 15so2393287bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 06:29:58 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Maciej Sujkowski <maciej.sujkowski@gmail.com>
+Subject: Re: potential error in p54usb driver?
+Date: Mon, 28 Mar 2011 15:29:37 +0200
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110314185021.GB2525@tuxdriver.com>
-References: <1299922165.3044.1.camel@hp>
-	 <20110314185021.GB2525@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Mar 2011 20:57:36 +0200
-Message-ID: <1300129056.15792.10.camel@hp>
-Mime-Version: 1.0
+References: <AANLkTinf20Ss3XAZpyP8PrnVkt9ahL4iqRYrWgEafywA@mail.gmail.com>
+In-Reply-To: <AANLkTinf20Ss3XAZpyP8PrnVkt9ahL4iqRYrWgEafywA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103281529.38289.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-14 at 14:50 -0400, John W. Linville wrote:
+On Monday 28 March 2011 14:44:50 Maciej Sujkowski wrote:
+> Can you please take a look at the below error report?
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/736490
+>
+> I have also tried to connect to the AP without network-manager using
+> only iwconfig commands (WEP network) and had the same issue.
+iwconfig (in fact all wext tools in general) are obsolete.
+Use "iw" instead.
+<http://wireless.kernel.org/en/users/Documentation/iw>
 
-> Missing a Signed-off-by line here...
-> 
-> 	http://linux.yyz.us/patch-format.html
-> 
+> The last kernel where it worked fine for me was the one included in
+> ubuntu 10.10 (2.6.35).
+try compat-wireless stack+drivers:
 
-Fixed :)
+<http://wireless.kernel.org/en/users/Download>
+<http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu>
 
-> > --- ./drivers/net/wireless/zd1211rw/zd_usb.c	2011-03-08 01:05:50.000000000 +0200
-> > +++ /usr/src/linux-2.6.37.3/drivers/net/wireless/zd1211rw/zd_usb.c	2011-03-12 10:21:48.261473001 +0200
-> > @@ -59,6 +59,7 @@
-> >  	{ USB_DEVICE(0x157e, 0x300a), .driver_info = DEVICE_ZD1211 },
-> >  	{ USB_DEVICE(0x157e, 0x300b), .driver_info = DEVICE_ZD1211 },
-> >  	{ USB_DEVICE(0x157e, 0x3204), .driver_info = DEVICE_ZD1211 },
-> > +	{ USB_DEVICE(0x157e, 0x3207), .driver_info = DEVICE_ZD1211 },
-> >  	{ USB_DEVICE(0x1740, 0x2000), .driver_info = DEVICE_ZD1211 },
-> >  	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
-> >  	/* ZD1211B */
-> 
-> 
+Also, the first gen p54usb devices [yours is one] share the same firmware
+identifier with the miniPCI firmwares. [Obviously, USB devices don't work
+with pci firmwares and vice versa.]
 
+Also, you have to install crda. It's even highlighted in the bugreport as a
+crucial missing component. "CRDA: Error: [Errno 2] No such file or directory".
 
-Signed-off-by: Tõnu Samuel <tonu@jes.ee>
-
+Regards,
+	Chr
