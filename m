@@ -1,174 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53091 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753857Ab1CIQaw (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58041 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab1C1LhB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 11:30:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: bloat-devel@lists.bufferbloat.net, me@bobcopeland.com,
-	mickflemm@gmail.com, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] mac80211: implement support for cfg80211_ops->{get,set}_ringparam
-Date: Wed,  9 Mar 2011 11:21:23 -0500
-Message-Id: <1299687684-19638-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
-References: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
+	Mon, 28 Mar 2011 07:37:01 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so3686803wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 04:37:01 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/13] rt2x00: Remove obsolete rt2x00queue_align_payload
+Date: Mon, 28 Mar 2011 13:33:04 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103281329.45470.IvDoorn@gmail.com> <201103281332.01948.IvDoorn@gmail.com> <201103281332.34565.IvDoorn@gmail.com>
+In-Reply-To: <201103281332.34565.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103281333.05671.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/mac80211.h      |    3 ++
- net/mac80211/cfg.c          |   17 ++++++++++++++
- net/mac80211/driver-ops.h   |   26 +++++++++++++++++++++
- net/mac80211/driver-trace.h |   52 +++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 98 insertions(+), 0 deletions(-)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2b072fa..b602c66 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1888,6 +1888,9 @@ struct ieee80211_ops {
- 			     enum nl80211_channel_type channel_type,
- 			     unsigned int wait);
- 	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
-+	int (*set_ringparam)(struct ieee80211_hw *hw, u32 tx, u32 rx);
-+	void (*get_ringparam)(struct ieee80211_hw *hw,
-+			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
- };
+Since commit d1c3a37ceeb1a5ea02991a0476355f1a1d3b3e83 ("mac80211:
+clarify alignment docs, fix up alignment") removed the requirement
+for a 4-byte aligned payload rt2x00queue_align_payload is obsolete
+as mac80211 will align the payload when it passes the frame to the
+net stack.
+
+As a result we can remove the call to rt2x00queue_align_payload in the
+rx path and since that's the last user we can remove
+rt2x00queue_align_payload altogether.
+
+One advantage is that we save some alignment operations for frames
+that don't need to be aligned (for example beause they are not passed
+to the net stack).
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    2 --
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |   10 ----------
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   13 -------------
+ 3 files changed, 0 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index d63b582..55c1d03 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -512,8 +512,6 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
+ 		 (rxdesc.size > header_length) &&
+ 		 (rxdesc.dev_flags & RXDONE_L2PAD))
+ 		rt2x00queue_remove_l2pad(entry->skb, header_length);
+-	else
+-		rt2x00queue_align_payload(entry->skb, header_length);
+ 
+ 	/* Trim buffer to correct size */
+ 	skb_trim(entry->skb, rxdesc.size);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 2d94cba..63c40d4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -119,16 +119,6 @@ void rt2x00queue_free_skb(struct queue_entry *entry);
+ void rt2x00queue_align_frame(struct sk_buff *skb);
  
  /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7b701dc..bd1791c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2008,6 +2008,21 @@ static int ieee80211_get_antenna(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant)
- 	return drv_get_antenna(local, tx_ant, rx_ant);
+- * rt2x00queue_align_payload - Align 802.11 payload to 4-byte boundary
+- * @skb: The skb to align
+- * @header_length: Length of 802.11 header
+- *
+- * Align the 802.11 payload to a 4-byte boundary, this could
+- * mean the header is not aligned properly though.
+- */
+-void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length);
+-
+-/**
+  * rt2x00queue_insert_l2pad - Align 802.11 header & payload to 4-byte boundary
+  * @skb: The skb to align
+  * @header_length: Length of 802.11 header
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 4b3c70e..5d89259 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -148,19 +148,6 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
+ 	skb_trim(skb, frame_length);
  }
  
-+static int ieee80211_set_ringparam(struct wiphy *wiphy, u32 tx, u32 rx)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return drv_set_ringparam(local, tx, rx);
-+}
-+
-+static void ieee80211_get_ringparam(struct wiphy *wiphy,
-+				    u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	drv_get_ringparam(local, tx, tx_max, rx, rx_max);
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -2065,4 +2080,6 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
- 	.set_antenna = ieee80211_set_antenna,
- 	.get_antenna = ieee80211_get_antenna,
-+	.set_ringparam = ieee80211_set_ringparam,
-+	.get_ringparam = ieee80211_get_ringparam,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 3729296..9c0d62b 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -526,4 +526,30 @@ static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
- 	return ret;
- }
- 
-+static inline int drv_set_ringparam(struct ieee80211_local *local,
-+				    u32 tx, u32 rx)
-+{
-+	int ret = -ENOTSUPP;
-+
-+	might_sleep();
-+
-+	trace_drv_set_ringparam(local, tx, rx);
-+	if (local->ops->set_ringparam)
-+		ret = local->ops->set_ringparam(&local->hw, tx, rx);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
-+static inline void drv_get_ringparam(struct ieee80211_local *local,
-+				     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max)
-+{
-+	might_sleep();
-+
-+	trace_drv_get_ringparam(local, tx, tx_max, rx, rx_max);
-+	if (local->ops->get_ringparam)
-+		local->ops->get_ringparam(&local->hw, tx, tx_max, rx, rx_max);
-+	trace_drv_return_void(local);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 520fe24..f50ae2c 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -912,6 +912,58 @@ TRACE_EVENT(drv_offchannel_tx,
- 	)
- );
- 
-+TRACE_EVENT(drv_set_ringparam,
-+	TP_PROTO(struct ieee80211_local *local, u32 tx, u32 rx),
-+
-+	TP_ARGS(local, tx, rx),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u32, tx)
-+		__field(u32, rx)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->tx = tx;
-+		__entry->rx = rx;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " tx:%d rx %d",
-+		LOCAL_PR_ARG, __entry->tx, __entry->rx,
-+	)
-+);
-+
-+TRACE_EVENT(drv_get_ringparam,
-+	TP_PROTO(struct ieee80211_local *local, u32 *tx, u32 *tx_max,
-+		 u32 *rx, u32 *rx_max),
-+
-+	TP_ARGS(local, tx, tx_max, rx, rx_max),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u32, tx)
-+		__field(u32, tx_max)
-+		__field(u32, rx)
-+		__field(u32, rx_max)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->tx = *tx;
-+		__entry->tx_max = *tx_max;
-+		__entry->rx = *rx;
-+		__entry->rx_max = *rx_max;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " tx:%d tx_max %d rx %d rx_max %d",
-+		LOCAL_PR_ARG,
-+		__entry->tx, __entry->tx_max, __entry->rx, __entry->rx_max,
-+	)
-+);
-+
- DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
- 	TP_PROTO(struct ieee80211_local *local),
- 	TP_ARGS(local)
+-void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
+-{
+-	unsigned int frame_length = skb->len;
+-	unsigned int align = ALIGN_SIZE(skb, header_length);
+-
+-	if (!align)
+-		return;
+-
+-	skb_push(skb, align);
+-	memmove(skb->data, skb->data + align, frame_length);
+-	skb_trim(skb, frame_length);
+-}
+-
+ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
+ {
+ 	unsigned int payload_length = skb->len - header_length;
 -- 
-1.7.4
+1.7.2.3
 
