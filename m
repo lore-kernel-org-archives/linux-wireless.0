@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53276 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927Ab1CGMba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 07:31:30 -0500
-Subject: [PATCH] p54spi: Update kconfig help text
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Mar 2011 13:31:24 +0100
-Message-ID: <1299501084.5665.13.camel@marge>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:52314 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590Ab1C2O2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 10:28:50 -0400
+Date: Tue, 29 Mar 2011 16:28:25 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] iwlegacy: fix bugs in change_interface
+Message-ID: <20110329142824.GA7320@redhat.com>
+References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
+ <20110329132231.GA6919@redhat.com>
+ <1301405175.3834.15.camel@jlt3.sipsolutions.net>
+ <1301405291.3834.16.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1301405291.3834.16.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This updates the p54spi Kconfig help text.
-The driver works well on n8x0, so remove the words "experimental" and "untested".
+On Tue, Mar 29, 2011 at 03:28:11PM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> If change_interface gets invoked during a firmware
+> restart, it may crash; prevent that from happening
+> by checking if ctx->vif is assigned.
+> 
+> Additionally, in my initial commit I forgot to set
+> the vif->p2p variable correctly, so fix that too.
+> 
+> Cc: stable@kernel.org [2.6.38+]
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
----
-
-Index: wireless-testing/drivers/net/wireless/p54/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/Kconfig	2011-03-07 13:24:24.874403593 +0100
-+++ wireless-testing/drivers/net/wireless/p54/Kconfig	2011-03-07 13:25:00.601089969 +0100
-@@ -43,9 +43,8 @@ config P54_SPI
- 	tristate "Prism54 SPI (stlc45xx) support"
- 	depends on P54_COMMON && SPI_MASTER && GENERIC_HARDIRQS
- 	---help---
--	  This driver is for stlc4550 or stlc4560 based wireless chips.
--	  This driver is experimental, untested and will probably only work on
--	  Nokia's N800/N810 Portable Internet Tablet.
-+	  This driver is for stlc4550 or stlc4560 based wireless chips
-+	  such as Nokia's N800/N810 Portable Internet Tablet.
- 
- 	  If you choose to build a module, it'll be called p54spi.
- 
-
--- 
-Greetings, Michael.
-
+ACK
