@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36247 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797Ab1CHOKT (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:46139 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750942Ab1C2TFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 09:10:19 -0500
-Subject: Re: [RFC 2/9] mac80211: add WoW param to suspend/resume functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299011804-13899-3-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-	 <1299011804-13899-3-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 15:10:17 +0100
-Message-ID: <1299593417.4676.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 29 Mar 2011 15:05:32 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 220095401D1
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 15:09:47 -0400 (EDT)
+Subject: Compat-wireless release for 2011-03-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110329190531.41C7140EAB@repository3.orbit-lab.org>
+Date: Tue, 29 Mar 2011 15:05:31 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-01 at 22:36 +0200, Eliad Peller wrote:
-> Upon suspend/resume cfg80211 passes additional WoW param,
-> which contains the enabled Wake-On-Wireless triggers.
-> 
-> Add this param to the related functions (ieee80211_suspend,
-> ieee80211_resume, ieee80211_reconfig, ieee80211_stop_driver),
-> and pass NULL when calling these functions by ourselves
-> (e.g. on restart work)
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 2c348fb...55370d9 akpm-end   -> origin/akpm-end  (forced update)
+   16c29da..036a982  akpm-start -> origin/akpm-start
+   e5ca460..48aa660  history    -> origin/history
+ + 285d731...74bdbee master     -> origin/master  (forced update)
+   16c29da..036a982  stable     -> origin/stable
+ * [new tag]         next-20110329 -> next-20110329
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Same comment/question here for passing to suspend and passing NULL --
-but it's just pass-through from cfg80211.
+compat-wireless code metrics
 
-johannes
-
+    832907 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1546 - % of code consists of backport work
