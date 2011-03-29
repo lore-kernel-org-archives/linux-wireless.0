@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:39692 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab1CKR1k convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 12:27:40 -0500
-Received: by qyk7 with SMTP id 7so6086758qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 09:27:39 -0800 (PST)
+Received: from mail.tpi.com ([70.99.223.143]:2250 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752185Ab1C2PMn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 11:12:43 -0400
+Message-ID: <4D91F6DA.50808@canonical.com>
+Date: Tue, 29 Mar 2011 09:12:26 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0572276D@RockMX01.rock.corp>
-References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
-	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
-	<4D798863.2060303@lwfinger.net>
-	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
-	<4D7A3EAD.10306@lwfinger.net>
-	<AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
-	<AANLkTi=wGhWvzqRxEj2eeXm0X0ZfefN-ifNe_cpm6tA+@mail.gmail.com>
-	<BD54DDEB2546894FAB0731EA7B0EDF8D05722753@RockMX01.rock.corp>
-	<AANLkTimoOd-A8_sy97hGDLyb4C6MUp1Lo24UdhwAiC0L@mail.gmail.com>
-	<BD54DDEB2546894FAB0731EA7B0EDF8D0572276D@RockMX01.rock.corp>
-Date: Fri, 11 Mar 2011 18:27:38 +0100
-Message-ID: <AANLkTik+bJ=bAygSZyqSmqXbFTx5F9SfqcMVKRp+xEPY@mail.gmail.com>
-Subject: Re: Status of Broadcom 4353?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chaoxing Lin <CLin@3eti.com>
-Cc: "Chen, Xianwen" <xianwen.chen@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+To: wwguy <wey-yi.w.guy@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 2.6.38 iwlwifi 11n_disable=1
+References: <4D8CB794.9040102@canonical.com> <1301067874.9139.7.camel@wwguy-ubuntu>
+In-Reply-To: <1301067874.9139.7.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 marca 2011 18:21 użytkownik Chaoxing Lin <CLin@3eti.com> napisał:
-> Well, just throw some ideas. Not mean to mess.
-> Older Broadcom driver did put firmware in /lib/firmware/ e.g. BCM2033-FW.bin
+On 03/25/2011 09:44 AM, wwguy wrote:
+> Hi Tim,
+>
+> On Fri, 2011-03-25 at 08:41 -0700, Tim Gardner wrote:
+>> Wey-Yi,
+>>
+>> The Ubuntu Maverick release (2.6.35) has been carrying a user space
+>> patch in module-init-tools that disables 802.11n support by default
+>> using the 11n_disable module parameter. With the split in 2.6.38 into
+>> iwl3945 and iwlagn is it possible that we could now remove the module
+>> option for iwlagn? Will the 4965 adapters function correctly with 802.11n?
+>>
+>
+> with both the driver split and new 5000 uCode available at
+> (http://www.intellinuxwireless.org/?n=Downloads)
+>
+> I believe we are in very good shape to have 11n support for both legacy
+> and agn devices. (yes 4965 will have 11n support)
+>
+> Please remove the module option to disable 11n support.
+>
+> Thank you very much for the help.
+>
+> Wey
+>
+>
 
-I had no idea about that, sorry. Newest driver looks in brcm subdir,
-I'm sure of that.
+It seems that not everyone's experience has been superior: 
+https://bugs.launchpad.net/ubuntu/+source/linux-firmware/+bug/630748/comments/70
 
+I'm enabling 802.11n support for non-legacy iwlwifi devices in natty for 
+now. We'll see how it works out.
+
+rtg
 -- 
-Rafał
+Tim Gardner tim.gardner@canonical.com
