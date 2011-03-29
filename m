@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:51435 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355Ab1CGHZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 02:25:02 -0500
-Message-ID: <4D7486B3.3090507@cn.fujitsu.com>
-Date: Mon, 07 Mar 2011 15:18:11 +0800
-From: Shan Wei <shanwei@cn.fujitsu.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40588 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140Ab1C2Ixu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 04:53:50 -0400
+Received: by wya21 with SMTP id 21so3548058wya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 01:53:49 -0700 (PDT)
 MIME-Version: 1.0
-To: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	me@bobcopeland.com, "John W. Linville" <linville@tuxdriver.com>,
-	jmalinen@atheros.com, vasanth@atheros.com,
-	senthilkumar@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH ] wireless:ath: use resource_size() help function
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4D9144AC.7040705@lockie.ca>
+References: <4D8E96B5.7090707@lockie.ca>
+	<AANLkTimNtNruB5Maoa5EOkK_zJ35oEsP35-f8jvS88hm@mail.gmail.com>
+	<4D9144AC.7040705@lockie.ca>
+Date: Tue, 29 Mar 2011 14:23:49 +0530
+Message-ID: <AANLkTinqRL6a7SNj+DgKVyerR5ShGyjUzwpnBDkv-Z-r@mail.gmail.com>
+Subject: Re: what does this mean
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: James <bjlockie@lockie.ca>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 29, 2011 at 8:02 AM, James <bjlockie@lockie.ca> wrote:
+> On 03/27/11 07:53, Mohammed Shafi wrote:
+>> On Sun, Mar 27, 2011 at 7:15 AM, James <bjlockie@lockie.ca> wrote:
+>>> I tried the 2011 03 26 compat-wireless and it gives this error when I
+>>> try a scan (it finds some networks but I know there are more).
+>>>
+>>> sudo iw dev wlan0 scan | grep -i ssid
+>>>
+>>> ath: timeout (100000 us) on reg 0x9c20: 0x00000000 & 0x00000001 !=
+>>> 0x00000001
+>>> ath: Could not kill baseband RX
+>> James, this is a fatal error.
+> Is there anyway to increase the timeout or reset the hardware without
+> rebooting?
 
+this is the default timeout in hw.h
+#define AH_WAIT_TIMEOUT             100000 /* (us) */
 
-Signed-off-by: Shan Wei <shanwei@cn.fujitsu.com>
----
- drivers/net/wireless/ath/ath5k/ahb.c |    2 +-
- drivers/net/wireless/ath/ath9k/ahb.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+may be you can try increasing the timeout specifically for this
 
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-index ae84b86..82324e9 100644
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -93,7 +93,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		goto err_out;
- 	}
- 
--	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-+	mem = ioremap_nocache(res->start, resource_size(res));
- 	if (mem == NULL) {
- 		dev_err(&pdev->dev, "ioremap failed\n");
- 		ret = -ENOMEM;
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9936721..9cb0efa 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -75,7 +75,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		goto err_out;
- 	}
- 
--	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-+	mem = ioremap_nocache(res->start, resource_size(res));
- 	if (mem == NULL) {
- 		dev_err(&pdev->dev, "ioremap failed\n");
- 		ret = -ENOMEM;
--- 
-1.6.3.3
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 4361704..6d528ba 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -976,7 +976,7 @@ static bool ar5008_hw_rfbus_req(struct ath_hw *ah)
+ {
+        REG_WRITE(ah, AR_PHY_RFBUS_REQ, AR_PHY_RFBUS_REQ_EN);
+        return ath9k_hw_wait(ah, AR_PHY_RFBUS_GRANT, AR_PHY_RFBUS_GRANT_EN,
+-                          AR_PHY_RFBUS_GRANT_EN, AH_WAIT_TIMEOUT);
++                          AR_PHY_RFBUS_GRANT_EN, 1000000);
+ }
+
+and this is also there in ar9003_phy.c
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
