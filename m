@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:63050 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752358Ab1CUInl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 04:43:41 -0400
-From: juuso.oikarinen@nokia.com
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Add mutex protection for interface list
-Date: Mon, 21 Mar 2011 10:43:36 +0200
-Message-Id: <1300697016-1652-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:38915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301Ab1C2N2P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 09:28:15 -0400
+Subject: [PATCH v2] iwlegacy: fix bugs in change_interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1301405175.3834.15.camel@jlt3.sipsolutions.net>
+References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
+	 <20110329132231.GA6919@redhat.com>
+	 <1301405175.3834.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Mar 2011 15:28:11 +0200
+Message-ID: <1301405291.3834.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The interface list maintained in main.c is not mutex protected. This could
-cause issues, as the list is accessed from notifier chains.
+If change_interface gets invoked during a firmware
+restart, it may crash; prevent that from happening
+by checking if ctx->vif is assigned.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Additionally, in my initial commit I forgot to set
+the vif->p2p variable correctly, so fix that too.
+
+Cc: stable@kernel.org [2.6.38+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-core.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index db7ab85..1c09bfe 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -339,6 +339,7 @@ static struct platform_device wl1271_device = {
- 	},
- };
+--- a/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 14:04:06.000000000 +0200
++++ b/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 15:27:21.000000000 +0200
+@@ -1805,6 +1805,15 @@ iwl_legacy_mac_change_interface(struct i
  
-+static DEFINE_MUTEX(wl_list_mutex);
- static LIST_HEAD(wl_list);
+ 	mutex_lock(&priv->mutex);
  
- static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
-@@ -369,10 +370,12 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
- 		return NOTIFY_DONE;
++	if (!ctx->vif || !iwl_legacy_is_ready_rf(priv)) {
++		/*
++		 * Huh? But wait ... this can maybe happen when
++		 * we're in the middle of a firmware restart!
++		 */
++		err = -EBUSY;
++		goto out;
++	}
++
+ 	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
  
- 	wl_temp = hw->priv;
-+	mutex_lock(&wl_list_mutex);
- 	list_for_each_entry(wl, &wl_list, list) {
- 		if (wl == wl_temp)
- 			break;
- 	}
-+	mutex_unlock(&wl_list_mutex);
- 	if (wl != wl_temp)
- 		return NOTIFY_DONE;
- 
-@@ -1390,8 +1393,10 @@ power_off:
- out:
- 	mutex_unlock(&wl->mutex);
- 
-+	mutex_lock(&wl_list_mutex);
- 	if (!ret)
- 		list_add(&wl->list, &wl_list);
-+	mutex_unlock(&wl_list_mutex);
- 
- 	return ret;
- }
-@@ -1404,7 +1409,9 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 
- 	wl1271_info("down");
- 
-+	mutex_lock(&wl_list_mutex);
- 	list_del(&wl->list);
-+	mutex_unlock(&wl_list_mutex);
- 
- 	WARN_ON(wl->state != WL1271_STATE_ON);
- 
--- 
-1.7.1
+ 	if (!(interface_modes & BIT(newtype))) {
+@@ -1832,6 +1841,7 @@ iwl_legacy_mac_change_interface(struct i
+ 	/* success */
+ 	iwl_legacy_teardown_interface(priv, vif, true);
+ 	vif->type = newtype;
++	vif->p2p = newp2p;
+ 	err = iwl_legacy_setup_interface(priv, ctx);
+ 	WARN_ON(err);
+ 	/*
+
 
