@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:40642 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753314Ab1C0Lb3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Mar 2011 07:31:29 -0400
-From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2] mac80211: fix NULL pointer dereference in ieee80211_key_alloc()
-Date: Sun, 27 Mar 2011 13:31:26 +0200
-Message-Id: <1301225486-23597-1-git-send-email-ynezz@true.cz>
-In-Reply-To: <1301217408.3826.2.camel@jlt3.sipsolutions.net>
-References: <1301217408.3826.2.camel@jlt3.sipsolutions.net>
+Received: from smtp.nexicom.net ([216.168.96.13]:57612 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536Ab1C2CcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2011 22:32:17 -0400
+Received: from mail.lockie.ca (dyn-dsl-lh-98-124-36-5.nexicom.net [98.124.36.5])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p2T2W90v021346
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 22:32:10 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 0C41B1E067F
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 22:32:08 -0400 (EDT)
+Message-ID: <4D9144AC.7040705@lockie.ca>
+Date: Mon, 28 Mar 2011 22:32:12 -0400
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: what does this mean
+References: <4D8E96B5.7090707@lockie.ca> <AANLkTimNtNruB5Maoa5EOkK_zJ35oEsP35-f8jvS88hm@mail.gmail.com>
+In-Reply-To: <AANLkTimNtNruB5Maoa5EOkK_zJ35oEsP35-f8jvS88hm@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_key struct can be kfree()d several times in the function, for
-example if some of the key setup functions fails beforehand, but there's no
-check if the struct is still valid before we call memcpy() and INIT_LIST_HEAD()
-on it.  In some cases (like it was in my case), if there's missing aes-generic
-module it could lead to the following kernel OOPS:
-
-	Unable to handle kernel NULL pointer dereference at virtual address 0000018c
-	....
-	PC is at memcpy+0x80/0x29c
-	...
-	Backtrace:
-	[<bf11c5e4>] (ieee80211_key_alloc+0x0/0x234 [mac80211]) from [<bf1148b4>] (ieee80211_add_key+0x70/0x12c [mac80211])
-	[<bf114844>] (ieee80211_add_key+0x0/0x12c [mac80211]) from [<bf070cc0>] (__cfg80211_set_encryption+0x2a8/0x464 [cfg80211])
-
-Signed-off-by: Petr Štetiar <ynezz@true.cz>
-CC: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/key.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 8c02469..09cf1f2 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -342,7 +342,7 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 		if (IS_ERR(key->u.ccmp.tfm)) {
- 			err = PTR_ERR(key->u.ccmp.tfm);
- 			kfree(key);
--			key = ERR_PTR(err);
-+			return ERR_PTR(err);
- 		}
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
-@@ -360,7 +360,7 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 		if (IS_ERR(key->u.aes_cmac.tfm)) {
- 			err = PTR_ERR(key->u.aes_cmac.tfm);
- 			kfree(key);
--			key = ERR_PTR(err);
-+			return ERR_PTR(err);
- 		}
- 		break;
- 	}
--- 
-1.7.1
-
+On 03/27/11 07:53, Mohammed Shafi wrote:
+> On Sun, Mar 27, 2011 at 7:15 AM, James <bjlockie@lockie.ca> wrote:
+>> I tried the 2011 03 26 compat-wireless and it gives this error when I
+>> try a scan (it finds some networks but I know there are more).
+>>
+>> sudo iw dev wlan0 scan | grep -i ssid
+>>
+>> ath: timeout (100000 us) on reg 0x9c20: 0x00000000 & 0x00000001 !=
+>> 0x00000001
+>> ath: Could not kill baseband RX
+> James, this is a fatal error.
+Is there anyway to increase the timeout or reset the hardware without
+rebooting?
