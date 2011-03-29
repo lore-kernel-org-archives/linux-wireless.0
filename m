@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38108 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982Ab1CEOJM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 09:09:12 -0500
-Subject: Re: 2.6.38-rc7, iwlagn crash
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	 <20110304134648.GB9866@tuxdriver.com>
-	 <1299251879.24333.3.camel@wwguy-ubuntu>
-	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Mar 2011 15:09:04 +0100
-Message-ID: <1299334144.3826.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:16628 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751729Ab1C2HmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 03:42:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 00:41:52 -0700
+Message-ID: <4D918D48.9040809@atheros.com>
+Date: Tue, 29 Mar 2011 13:12:00 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 9/9] ath9k: Fix memory leak due to failed PAPRD frames
+References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com> <1301345835-11401-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301345835-11401-10-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-03-05 at 09:45 +0000, Mathias Burén wrote:
-
-> I compiled my own kernel (downloaded 2.6.37-rc8 source, applied the
-> apparmor patch required for Ubuntu, copied over the config, make
-> oldconfig, enabled iwlwifi debug in menuconfig then compiled it),
-> booted it and loaded iwlagn with debug=0x43fff. Then I attempted the
-> same thing (Ubuntu Adhoc, no wireless security, trying to connect with
-> the phone).
-> 
-> The entire dmesg can be found here:
-> http://www.privatepaste.com/download/49e6ead6c7
-
-So the warning is gone now?
-
-johannes
-
+On Tuesday 29 March 2011 02:27 AM, Luis Rodriguez wrote:
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>
+> commit 479600777bb588724d044815415f7d708d06644b upstream
+>
+> free the skb's when the Tx of PAPRD frames fails and also add a debug
+> message indicating that.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> Cc: stable@kernel.org
+> Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c |    5 ++++-
+>   1 files changed, 4 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 1049313..16b8e36 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -384,8 +384,11 @@ void ath_paprd_calibrate(struct work_struct *work)
+>   		init_completion(&sc->paprd_complete);
+>   		ar9003_paprd_setup_gain_table(ah, chain);
+>   		txctl.paprd = BIT(chain);
+> -		if (ath_tx_start(hw, skb,&txctl) != 0)
+> +		if (ath_tx_start(hw, skb,&txctl) != 0) {
+> +			ath_print(common, ATH_DBG_XMIT, "PAPRD TX failed\n");
+> +			dev_kfree_skb_any(skb);
+>   			break;
+> +		}
+>
+>   		time_left = wait_for_completion_timeout(&sc->paprd_complete,
+>   				msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
+>    
+Luis, thanks!
