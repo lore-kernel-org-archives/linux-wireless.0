@@ -1,59 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752445Ab1CPJiL (ORCPT
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:49155 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751630Ab1C2PMK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 05:38:11 -0400
-Subject: [PATCH] mac80211: fix comment regarding aggregation buf_size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Tue, 29 Mar 2011 11:12:10 -0400
+Message-ID: <20110329180323.211160fwqua2l4ow@naisho.dyndns.info>
+Date: Tue, 29 Mar 2011 18:03:23 +0300
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Mar 2011 10:39:50 +0100
-Message-ID: <1300268390.3761.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: [PATCH 2/4] zd1211rw: use async urb for write command
+References: <795206.47027.qm@web161610.mail.bf1.yahoo.com>
+In-Reply-To: <795206.47027.qm@web161610.mail.bf1.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Quoting Walter Goldens <goldenstranger@yahoo.com>:
 
-The description for buf_size was misleading and
-just said you couldn't TX larger aggregates, but
-of course you can't TX aggregates in a way that
-would exceed the window either, which is possible
-even if the aggregates are shorter than that.
+> Hi Jussi,
+>
+> After your latest work to enable AP onzd1211rw and generally  
+> optimize the code some warnings appear during zd1211rw compilation:
+>
+>
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_mac.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_mac.c:31:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_al2230.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_al2230.c:25:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_rf2959.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c:25:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_al7230b.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c:25:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_uw2453.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c:26:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_mac.h:27,
+>                 from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_rf.c:26:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+> include/asm-generic/termbits.h:94: note: this is the location of the  
+> previous definition
+>  CC [M]   
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_usb.o
+> In file included from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_mac.h:27,
+>                 from  
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_usb.c:35:
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:64:  
+> warning: "CR0" redefined
+> include/asm-generic/termbits.h:91: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:65:  
+> warning: "CR1" redefined
+> include/asm-generic/termbits.h:92: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:66:  
+> warning: "CR2" redefined
+> include/asm-generic/termbits.h:93: note: this is the location of the  
+> previous definition
+> /root/compat-wireless-2011-03-28/drivers/net/wireless/zd1211rw/zd_chip.h:67:  
+> warning: "CR3" redefined
+>
 
-Expand the description, thanks to Emmanuel for
-explaining this to me.
+Hm.. Seems like some other change in 2.6.38-git* has exposed this  
+problem (as compiling AP-mode zd1211rw on 2.6.38 doesn't cause these  
+warnings).
 
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+I'll send patches to rename all zd1211rw CR* to ZD_CR* later.
 
---- a/include/net/mac80211.h	2011-03-16 10:30:26.000000000 +0100
-+++ b/include/net/mac80211.h	2011-03-16 10:37:49.000000000 +0100
-@@ -1753,8 +1753,17 @@ enum ieee80211_ampdu_mlme_action {
-  * 	that TX/RX_STOP can pass NULL for this parameter.
-  *	The @buf_size parameter is only valid when the action is set to
-  *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
-- *	buffer size (number of subframes) for this session -- aggregates
-- *	containing more subframes than this may not be transmitted to the peer.
-+ *	buffer size (number of subframes) for this session -- the driver
-+ *	may neither send aggregates containing more subframes than this
-+ *	nor send aggregates in a way that lost frames would exceed the
-+ *	buffer size. If just limiting the aggregate size, this would be
-+ *	possible with a buf_size of 8:
-+ *	 - TX: 1......8
-+ *	 - RX:  2.....8 (lost frame #1)
-+ *	 - TX:         9...1...
-+ *	which is invalid since #1 was now re-transmitted well past the
-+ *	buffer size of 8. The correct way to retransmit #1 would be:
-+ *	 - TX:         19......
-  *	Returns a negative error code on failure.
-  *	The callback can sleep.
-  *
+-Jussi
+
+>
+>
+> Walter
+>
+>
+>
+>
+>
+
+
 
 
