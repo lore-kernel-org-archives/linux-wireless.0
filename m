@@ -1,90 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29994 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44843 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755390Ab1CKC4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:53 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 20/20] ath6kl: remove-typedef DEV_SCATTER_DMA_VIRTUAL_INFO
-Date: Thu, 10 Mar 2011 18:55:47 -0800
-Message-ID: <1299812147-12069-21-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+	id S1751158Ab1C2JYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 05:24:44 -0400
+Date: Tue, 29 Mar 2011 11:24:21 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwl3945: disable hw scan by default
+Message-ID: <20110329092421.GA5919@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s DEV_SCATTER_DMA_VIRTUAL_INFO \
-	"struct dev_scatter_dma_virtual_info" drivers/staging/ath6kl/
+After new NetworkManager 0.8.996 changes, hardware scanning is causing
+microcode errors as reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=683571
+and sometimes kernel crashes:
+https://bugzilla.redhat.com/show_bug.cgi?id=688252
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Also with hw scan there are very bad performance on some systems
+as reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=671366 
+
+Since Intel no longer supports 3945, there is no chance to get proper
+firmware fixes, we need workaround problems by disable hardware scanning
+by default.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/staging/ath6kl/htc2/AR6000/ar6k.c |   10 +++++-----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    4 ++--
- 2 files changed, 7 insertions(+), 7 deletions(-)
+This patch should be also applied on .38-stable (on older
+kernels software scan have performance problems), but need
+manual backport due to driver split. I will post to stable
+when it gets mainline.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-index 2797b55..a41ed12 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-@@ -585,7 +585,7 @@ void DevDumpRegisters(struct ar6k_device               *pDev,
- }
+John, please post upstream ASAP, together with commit
+c24057cbcd7480602ece65be3f7e039499499007 "iwl3945: do not deprecate
+software scan"
+
+ drivers/net/wireless/iwlegacy/iwl3945-base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+index b6c5209..28eb3d8 100644
+--- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+@@ -93,6 +93,7 @@ MODULE_LICENSE("GPL");
+ struct iwl_mod_params iwl3945_mod_params = {
+ 	.sw_crypto = 1,
+ 	.restart_fw = 1,
++	.disable_hw_scan = 1,
+ 	/* the rest are 0 by default */
+ };
  
- 
--#define DEV_GET_VIRT_DMA_INFO(p)  ((DEV_SCATTER_DMA_VIRTUAL_INFO *)((p)->HIFPrivate[0]))
-+#define DEV_GET_VIRT_DMA_INFO(p)  ((struct dev_scatter_dma_virtual_info *)((p)->HIFPrivate[0]))
- 
- static HIF_SCATTER_REQ *DevAllocScatterReq(HIF_DEVICE *Context)
- {
-@@ -754,10 +754,10 @@ static int DevSetupVirtualScatterSupport(struct ar6k_device *pDev)
-     int                     status = 0;
-     int                          bufferSize, sgreqSize;
-     int                          i;
--    DEV_SCATTER_DMA_VIRTUAL_INFO *pVirtualInfo;
-+    struct dev_scatter_dma_virtual_info *pVirtualInfo;
-     HIF_SCATTER_REQ              *pReq;
- 
--    bufferSize = sizeof(DEV_SCATTER_DMA_VIRTUAL_INFO) +
-+    bufferSize = sizeof(struct dev_scatter_dma_virtual_info) +
-                 2 * (A_GET_CACHE_LINE_BYTES()) + AR6K_MAX_TRANSFER_SIZE_PER_SCATTER;
- 
-     sgreqSize = sizeof(HIF_SCATTER_REQ) +
-@@ -775,8 +775,8 @@ static int DevSetupVirtualScatterSupport(struct ar6k_device *pDev)
-         A_MEMZERO(pReq, sgreqSize);
- 
-             /* the virtual DMA starts after the scatter request struct */
--        pVirtualInfo = (DEV_SCATTER_DMA_VIRTUAL_INFO *)((u8 *)pReq + sgreqSize);
--        A_MEMZERO(pVirtualInfo, sizeof(DEV_SCATTER_DMA_VIRTUAL_INFO));
-+        pVirtualInfo = (struct dev_scatter_dma_virtual_info *)((u8 *)pReq + sgreqSize);
-+        A_MEMZERO(pVirtualInfo, sizeof(struct dev_scatter_dma_virtual_info));
- 
-         pVirtualInfo->pVirtDmaBuffer = &pVirtualInfo->DataArea[0];
-             /* align buffer to cache line in case host controller can actually DMA this */
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index 247cf56..3e4ece8 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -322,10 +322,10 @@ int DoMboxHWTest(struct ar6k_device *pDev);
- #endif
- 
-     /* completely virtual */
--typedef struct _DEV_SCATTER_DMA_VIRTUAL_INFO {
-+struct dev_scatter_dma_virtual_info {
-     u8 *pVirtDmaBuffer;      /* dma-able buffer - CPU accessible address */
-     u8 DataArea[1];      /* start of data area */
--} DEV_SCATTER_DMA_VIRTUAL_INFO;
-+};
- 
- 
- 
+@@ -4279,7 +4280,7 @@ MODULE_PARM_DESC(swcrypto,
+ 		"using software crypto (default 1 [software])");
+ module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
+ 		int, S_IRUGO);
+-MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
++MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
+ #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
+ module_param_named(debug, iwlegacy_debug_level, uint, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(debug, "debug output mask");
 -- 
-1.7.4.15.g7811d
+1.7.1
 
