@@ -1,65 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301Ab1C2N2P (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50813 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756258Ab1C3XMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 09:28:15 -0400
-Subject: [PATCH v2] iwlegacy: fix bugs in change_interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1301405175.3834.15.camel@jlt3.sipsolutions.net>
-References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
-	 <20110329132231.GA6919@redhat.com>
-	 <1301405175.3834.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Mar 2011 15:28:11 +0200
-Message-ID: <1301405291.3834.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 30 Mar 2011 19:12:13 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 30 Mar 2011 16:11:53 -0700
+Message-ID: <AANLkTi=CmYAYO5awFvdcO07qcj6oiOV8B+NoYSEkddbF@mail.gmail.com>
+Subject: compat-wireless for 2.6.38.2
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+A new stable update has been made so we get the extra stuff sucked in.
+The vanilla release:
 
-If change_interface gets invoked during a firmware
-restart, it may crash; prevent that from happening
-by checking if ctx->vif is assigned.
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38.2-2.tar.bz2
 
-Additionally, in my initial commit I forgot to set
-the vif->p2p variable correctly, so fix that too.
+And then this "-ns" release:
 
-Cc: stable@kernel.org [2.6.38+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlegacy/iwl-core.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38.2-2-ns.tar.bz2
 
---- a/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 14:04:06.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 15:27:21.000000000 +0200
-@@ -1805,6 +1805,15 @@ iwl_legacy_mac_change_interface(struct i
- 
- 	mutex_lock(&priv->mutex);
- 
-+	if (!ctx->vif || !iwl_legacy_is_ready_rf(priv)) {
-+		/*
-+		 * Huh? But wait ... this can maybe happen when
-+		 * we're in the middle of a firmware restart!
-+		 */
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
- 
- 	if (!(interface_modes & BIT(newtype))) {
-@@ -1832,6 +1841,7 @@ iwl_legacy_mac_change_interface(struct i
- 	/* success */
- 	iwl_legacy_teardown_interface(priv, vif, true);
- 	vif->type = newtype;
-+	vif->p2p = newp2p;
- 	err = iwl_legacy_setup_interface(priv, ctx);
- 	WARN_ON(err);
- 	/*
+has these extra patches applied:
 
+mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
+linux-next-cherry-picks/
+0001a-ath9k_hw-Add-a-function-to-read-sqsum_dvc.patch
+0001b-ath9k-Fix-a-PLL-hang-issue-observed-with-AR9485.patch
+0001c-ath9k-Cancel-pll_work-while-disabling-radio.patch
+0002-ath9k-Fix-incorrect-GPIO-LED-pin-for-AR9485.patch
+0003-ath9k_hw-Read-noise-floor-only-for-available-chains-.patch
+0004-ath9k_hw-Improve-idle-power-consumption-for-AR9485.patch
+0005-ath9k_hw-Increase-the-wait-count-for-nf-load.patch
+0006-ath9k_hw-fix-REG_SET_BIT-and-REG_CLR_BIT-for-multipl.patch
+0007-ath9k-fix-stopping-tx-dma-on-reset.patch
+0008-ath9k-disable-beaconing-before-stopping-beacon-queue.patch
+0009-ath9k-improve-reliability-of-beacon-transmission-and.patch
+0010-ath9k-fix-aggregation-related-interoperability-issue.patch
+0011-staging-Fix-some-incorrect-use-of-positive-error-cod.patch
+0012-staging-ath6kl-Fixing-a-NULL-pointer-exception.patch
+0013-staging-ath6kl-Fixing-key-settings-for-WPA-WPA2.patch
+0014-staging-ath6kl-Return-correct-scan-complete-status.patch
+0015-staging-ath6kl-Fixing-target-crash-due-to-mismatch-c.patch
+0016-staging-ath6kl-Fixing-driver-initialization-for-manu.patch
+0017-staging-ath6kl-Consolidating-hardware-configuration.patch
+0018-staging-ath6kl-Adding-support-for-txop-bursting-enab.patch
+0019-staging-ath6kl-Fixing-a-memory-leak.patch
+0020-staging-ath6kl-Fixing-a-memory-leak.patch
+0021-staging-ath6kl-Add-configuration-for-excessive-TX-re.patch
+0022-staging-ath6kl-Fixing-memory-leak.patch
+0023-staging-ath6kl-Fixing-the-cached-copy-of-the-BSS-fil.patch
+0024-staging-ath6kl-Adding-state-in-driver-to-track-the-s.patch
+0025-staging-ath6kl-Fixing-accidental-overwriting-of-prob.patch
+0026-staging-ath6kl-Fixing-disappearing-of-scan-list-due-.patch
+0027-staging-ath6kl-buffer-overflow-in-SEND_FRAME-ioctl.patch
+0028-staging-ath6kl-Eliminate-cfg80211-warnings.patch
+README
+mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
+pending-stable/
+0006-ath9k-Fix-kernel-panic-in-AR2427.patch
+0007-mac80211-initialize-sta-last_rx-in-sta_info_alloc.patch
+0008-mac80211-fix-a-crash-in-minstrel_ht-in-HT-mode-with-.patch
+0009-ath9k-fix-a-chip-wakeup-related-crash-in-ath9k_start.patch
+backports
+README
+mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
+pending-stable/backports/
+0010-iwlegacy-fix-bugs-in-change_interface.patch
 
+  Luis
