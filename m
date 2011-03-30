@@ -1,41 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57920 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754143Ab1CDLcP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 06:32:15 -0500
-Subject: Re: [PATCH 2/7] mac80211: New constant definitions for SAE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1299208307-9428-3-git-send-email-thomas@cozybit.com>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
-	 <1299208307-9428-3-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Mar 2011 12:32:12 +0100
-Message-ID: <1299238332.4348.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:47084 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755276Ab1C3A4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:56:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:19 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 04/34] ath6kl: replace do while loop with function helpers on ar6000_avail_ev()
+Date: Tue, 29 Mar 2011 17:56:01 -0700
+Message-ID: <1301446591-15236-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
+This unwraps the do while loops in favor for function helpers.
 
-> +++ b/include/linux/nl80211.h
-> @@ -1817,6 +1817,7 @@ enum nl80211_bss_status {
->   * @NL80211_AUTHTYPE_SHARED_KEY: Shared Key authentication (WEP only)
->   * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
->   * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
-> + * @NL80211_AUTHTYPE_SAE: Simultaneous Authentication of Equals
->   * @__NL80211_AUTHTYPE_NUM: internal
->   * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
->   * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |   68 ++++++++++++++++++--------
+ 1 files changed, 48 insertions(+), 20 deletions(-)
 
-I think some of the auth code in nl80211 or so needs to catch this.
-Maybe nl80211_valid_auth_type() wouldn't be the right place, but for now
-it doesn't look like we'd be able to support this in managed mode, yet
-it wouldn't get errors and at least in the cfg80211 SME fall back to
-using OPEN, which is no fun.
-
-johannes
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index 846eea7..cbf2cb6 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -1586,6 +1586,52 @@ init_netdev(struct net_device *dev, char *name)
+     return;
+ }
+ 
++static int __ath6kl_init_netdev(struct net_device *dev)
++{
++	int r;
++
++	rtnl_lock();
++	r = ar6000_init(dev);
++	rtnl_unlock();
++
++	if (r) {
++		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_init\n"));
++		return r;
++	}
++
++	return 0;
++}
++
++#ifdef HTC_RAW_INTERFACE
++static int ath6kl_init_netdev_wmi(struct net_device *dev)
++{
++	if (!eppingtest && bypasswmi)
++		return 0;
++
++	return __ath6kl_init_netdev(dev);
++}
++#else
++static int ath6kl_init_netdev_wmi(struct net_device *dev)
++{
++	return __ath6kl_init_netdev(dev);
++}
++#endif
++
++static int ath6kl_init_netdev(struct ar6_softc *ar)
++{
++	int r;
++
++        r = ar6000_sysfs_bmi_get_config(ar, wlaninitmode);
++        if (r) {
++		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
++				("ar6000_avail: "
++				 "ar6000_sysfs_bmi_get_config failed\n"));
++		return r;
++        }
++
++	return ath6kl_init_netdev_wmi(ar->arNetDev);
++}
++
+ /*
+  * HTC Event handlers
+  */
+@@ -1788,26 +1834,8 @@ ar6000_avail_ev(void *context, void *hif_handle)
+     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("BMI enabled: %d\n", wlaninitmode));
+     if ((wlaninitmode == WLAN_INIT_MODE_UDEV) ||
+         (wlaninitmode == WLAN_INIT_MODE_DRV)) {
+-        do {
+-            r = ar6000_sysfs_bmi_get_config(ar, wlaninitmode);
+-            if (r) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_sysfs_bmi_get_config failed\n"));
+-                break;
+-            }
+-#ifdef HTC_RAW_INTERFACE
+-            if (!eppingtest && bypasswmi) {
+-                break; /* Don't call ar6000_init for ART */
+-            }
+-#endif 
+-            rtnl_lock();
+-            r = ar6000_init(dev);
+-            rtnl_unlock();
+-            if (r) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_init\n"));
+-            }
+-        } while (false);
+-
+-        if (r)
++	r = ath6kl_init_netdev(ar);
++	if (r)
+             goto avail_ev_failed;
+     }
+ 
+-- 
+1.7.0.4
 
