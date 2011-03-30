@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60208 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117Ab1CPFJU (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:48754 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756102Ab1C3Rke (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 01:09:20 -0400
-Received: by wya21 with SMTP id 21so1275513wya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 22:09:19 -0700 (PDT)
+	Wed, 30 Mar 2011 13:40:34 -0400
+Date: Wed, 30 Mar 2011 18:40:10 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	gregkh@suse.de, linux-wireless@vger.kernel.org,
+	devel@linuxdriverproject.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/1] new module for amba axi on-chip interconnect
+Message-ID: <20110330174010.GA2939@n2100.arm.linux.org.uk>
+References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <20110329181947.GA18134@flint.arm.linux.org.uk> <201103301509.04899.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <20110315171543.3723e07f@realh.co.uk>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<20110314164812.4c0cfc29@toddler>
-	<AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
-	<20110315131907.6f06a221@toddler>
-	<AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
-	<20110315151746.421c04b3@toddler>
-	<AANLkTinmD3aJphAcge0xunk4sS4pec20u3PSKTE0Og6=@mail.gmail.com>
-	<20110315171543.3723e07f@realh.co.uk>
-Date: Wed, 16 Mar 2011 10:39:19 +0530
-Message-ID: <AANLkTikTX6eRY2znHLOWLoZo=ryVkN9hpgjE0JYf=UTz@mail.gmail.com>
-Subject: Re: Could ath9k and rt2800pci bugs be related?
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Tony Houghton <h@realh.co.uk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201103301509.04899.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 15, 2011 at 10:45 PM, Tony Houghton <h@realh.co.uk> wrote:
-> On Tue, 15 Mar 2011 21:47:14 +0530
-> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->
->> i dont know what to say, may be you can look at
->> vim /drivers/net/wireless/ath/ath9k/pci.c
->> and
->> vim /net/mac80211/pm.c
->> let me also see if i can get the problem reproduced
->
-> When I installed wireless-compat it didn't replace all the modules it
-> provides, only the ones I'd activated with driver-select ath9k. I didn't
-> notice whether mac80211 drivers got replaced too. If I want to alter
-> pm.c do I need to add anything to the driver-select line to make sure my
-> altered version gets installed?
->
-No it won't be necessary. recompilation takes care of it.
+On Wed, Mar 30, 2011 at 03:09:04PM +0200, Arnd Bergmann wrote:
+> I believe the one thing we really want from this driver is the bus
+> scan code, which is not present in the amba bus implementation,
+> as far as I can tell. Today, the amba bus does very little beyond
+> what the platform bus does, in particular you still need to
+> register every single device from board specific code.
+> 
+> When the proposed axi_scan() function gets turned into an
+> amba_bus_register() function, a board file can call that to
+> add all devices on the bus without listing them individually
+> and calling amba_device_register() for each one.
+> 
+> Basically everything else is already there in the amba bus,
+> no need to do it again.
+
+The reason we don't do automatic scanning (which we could on the various
+ARM platforms) is because of the platform data necessary to make some of
+the primecell drivers work.
+
+Unfortunately, these buses are not as simple as PCI, where a device
+typically sits on its own card and is totally self-contained.  With
+primecell stuff, there's normally some interdependencies between the
+various primecells.
+
+That doesn't stop there being an automatic enumeration layer, but such
+a layer would need some way of attaching platform specific data to
+specific amba devices.
