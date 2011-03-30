@@ -1,118 +1,700 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37445 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757182Ab1CRRgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 13:36:43 -0400
-Received: by iwn34 with SMTP id 34so4211926iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 10:36:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTik8iUxgniVHB2UBC359GxrmAxUTLGL-_eZ7Gtom@mail.gmail.com>
-References: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com> <AANLkTik8iUxgniVHB2UBC359GxrmAxUTLGL-_eZ7Gtom@mail.gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:47211 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755366Ab1C3A56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:57:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:34 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 18 Mar 2011 10:36:23 -0700
-Message-ID: <AANLkTin0vHKfdfaTf7ZPHUrGCasezPf8yeKUwdRfUNUQ@mail.gmail.com>
-Subject: Re: [PATCH] ath6kl: fix device registration ordering
-To: gregkh@suse.de
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, vmehta@atheros.com,
-	devel@linuxdriverproject.org, naveen.singh@atheros.com,
-	stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 34/34] ath6kl: remove the HTC raw interface
+Date: Tue, 29 Mar 2011 17:56:31 -0700
+Message-ID: <1301446591-15236-35-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2011 at 10:35 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Mar 17, 2011 at 7:45 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> Defer device registration to cfg80211 until it is ready.
->> This fixes a race against udev whereby device events
->> (both udev and RTNL) might be emitted with an unregistered
->> device specification (wlan%d).
->>
->> This fixes a race on ath6kl on systems where the device
->> boots up really quickly to the the point udev and the
->> respective userspace daemon tries to start mucking with
->> the device prior to the device being initialized properly.
->>
->> This fixes this bug:
->>
->> http://code.google.com/p/chromium-os/issues/detail?id=13159
->>
->> Without this loading of ath6kl will fail.
->>
->> Cc: stable@kernel.org
->> Cc: Naveen Singh <naveen.singh@atheros.com>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> Please disregard this for now, I am testing ath6k right now on x86_64
-> where it has a failure upon load and it oopses, likely due to this
-> patch and what I believe is wiphy_unregister() being called twice.
-> I'll fix the oops first and then resubmit a v2. If you do not hit a
-> failure upon load though then the patch would help your issues with
-> udev, but still we must handle the failure cases better. My failure
-> are because I'm using an x86_64 box to test ath6kl and its buggy
-> there.
+This uses ioctl, if this is required it should be replaced
+with the nl80211 test command interface.
 
-FWIW the oops is:
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/Kconfig                     |    6 -
+ drivers/staging/ath6kl/Makefile                    |    5 -
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   36 --
+ drivers/staging/ath6kl/os/linux/ar6000_raw_if.c    |  455 --------------------
+ .../staging/ath6kl/os/linux/include/ar6000_drv.h   |   20 -
+ .../staging/ath6kl/os/linux/include/athdrv_linux.h |   37 --
+ 6 files changed, 0 insertions(+), 559 deletions(-)
+ delete mode 100644 drivers/staging/ath6kl/os/linux/ar6000_raw_if.c
 
+diff --git a/drivers/staging/ath6kl/Kconfig b/drivers/staging/ath6kl/Kconfig
+index 1f15e1f..3db09ab 100644
+--- a/drivers/staging/ath6kl/Kconfig
++++ b/drivers/staging/ath6kl/Kconfig
+@@ -100,12 +100,6 @@ config AR600x_BT_RESET_PIN
+ 	help
+ 	WLAN GPIO to be used for resetting BT
+ 
+-config ATH6KL_HTC_RAW_INTERFACE
+-	bool "RAW HTC support"
+-	depends on ATH6K_LEGACY
+-	help
+-	Enables raw HTC interface. Allows application to directly talk to the HTC interface via the ioctl interface
+-
+ config ATH6KL_VIRTUAL_SCATTER_GATHER
+ 	bool "Virtual Scatter-Gather support"
+ 	depends on ATH6K_LEGACY
+diff --git a/drivers/staging/ath6kl/Makefile b/drivers/staging/ath6kl/Makefile
+index 1d3f239..dfba8f4 100644
+--- a/drivers/staging/ath6kl/Makefile
++++ b/drivers/staging/ath6kl/Makefile
+@@ -65,10 +65,6 @@ ifeq ($(CONFIG_ATH6KL_CONFIG_GPIO_BT_RESET),y)
+ ccflags-y += -DATH6KL_CONFIG_GPIO_BT_RESET
+ endif
+ 
+-ifeq ($(CONFIG_ATH6KL_HTC_RAW_INTERFACE),y)
+-ccflags-y += -DHTC_RAW_INTERFACE
+-endif
+-
+ ifeq ($(CONFIG_ATH6KL_ENABLE_HOST_DEBUG),y)
+ ccflags-y += -DDEBUG
+ ccflags-y += -DATH_DEBUG_MODULE
+@@ -103,7 +99,6 @@ ath6kl-y += htc2/htc.o
+ ath6kl-y += bmi/src/bmi.o
+ ath6kl-y += os/linux/cfg80211.o
+ ath6kl-y += os/linux/ar6000_drv.o
+-ath6kl-y += os/linux/ar6000_raw_if.o
+ ath6kl-y += os/linux/ar6000_pm.o
+ ath6kl-y += os/linux/netbuf.o
+ ath6kl-y += os/linux/hci_bridge.o
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index 666d5e6..31be5ca 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -1000,19 +1000,6 @@ ar6000_transfer_bin_file(struct ar6_softc *ar, AR6K_BIN_FILE file, u32 address,
+                 compressed = false;
+             }
+ #endif 
+-#ifdef HTC_RAW_INTERFACE
+-            if (!eppingtest && bypasswmi) {
+-                if (ar->arVersion.target_ver == AR6003_REV1_VERSION) {
+-                    filename = AR6003_REV1_ART_FIRMWARE_FILE;
+-                } else if (ar->arVersion.target_ver == AR6003_REV2_VERSION) {
+-                    filename = AR6003_REV2_ART_FIRMWARE_FILE;
+-                } else {
+-                    AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Unknown firmware revision: %d\n", ar->arVersion.target_ver));
+-                    return A_ERROR;
+-                }
+-                compressed = false;
+-            }
+-#endif 
+             break;
+ 
+         case AR6K_PATCH_FILE:
+@@ -1333,13 +1320,6 @@ ar6000_sysfs_bmi_get_config(struct ar6_softc *ar, u32 mode)
+ #endif /* CONFIG_ATH6KL_BT_UART_FC_POLARITY */
+         }
+ 
+-#ifdef HTC_RAW_INTERFACE
+-        if (!eppingtest && bypasswmi) {
+-            /* Don't run BMIDone for ART mode and force resetok=0 */
+-            resetok = 0;
+-            msleep(1000);
+-        }
+-#endif /* HTC_RAW_INTERFACE */
+     }
+ 
+     return 0;
+@@ -1545,20 +1525,10 @@ static int __ath6kl_init_netdev(struct net_device *dev)
+ 	return 0;
+ }
+ 
+-#ifdef HTC_RAW_INTERFACE
+ static int ath6kl_init_netdev_wmi(struct net_device *dev)
+ {
+-	if (!eppingtest && bypasswmi)
+-		return 0;
+-
+ 	return __ath6kl_init_netdev(dev);
+ }
+-#else
+-static int ath6kl_init_netdev_wmi(struct net_device *dev)
+-{
+-	return __ath6kl_init_netdev(dev);
+-}
+-#endif
+ 
+ static int ath6kl_init_netdev(struct ar6_softc *ar)
+ {
+@@ -2034,12 +2004,6 @@ ar6000_destroy(struct net_device *dev, unsigned int unregister)
+     memset(tx_post, 0, sizeof(tx_post));
+     memset(tx_complete, 0, sizeof(tx_complete));
+ 
+-#ifdef HTC_RAW_INTERFACE
+-    if (ar->arRawHtc) {
+-        kfree(ar->arRawHtc);
+-        ar->arRawHtc = NULL;
+-    }
+-#endif 
+     /* Free up the device data structure */
+     if (unregister && is_netdev_registered) {		
+         unregister_netdev(dev);
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_raw_if.c b/drivers/staging/ath6kl/os/linux/ar6000_raw_if.c
+deleted file mode 100644
+index ae7c1dd..0000000
+--- a/drivers/staging/ath6kl/os/linux/ar6000_raw_if.c
++++ /dev/null
+@@ -1,455 +0,0 @@
+-//------------------------------------------------------------------------------
+-// Copyright (c) 2004-2010 Atheros Communications Inc.
+-// All rights reserved.
+-//
+-// 
+-//
+-// Permission to use, copy, modify, and/or distribute this software for any
+-// purpose with or without fee is hereby granted, provided that the above
+-// copyright notice and this permission notice appear in all copies.
+-//
+-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-//
+-//
+-//
+-// Author(s): ="Atheros"
+-//------------------------------------------------------------------------------
+-
+-#include "ar6000_drv.h"
+-
+-#ifdef HTC_RAW_INTERFACE
+-
+-static void
+-ar6000_htc_raw_read_cb(void *Context, struct htc_packet *pPacket)
+-{
+-    struct ar6_softc        *ar = (struct ar6_softc *)Context;
+-    raw_htc_buffer    *busy;
+-    HTC_RAW_STREAM_ID streamID; 
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-
+-    busy = (raw_htc_buffer *)pPacket->pPktContext;
+-    A_ASSERT(busy != NULL);
+-
+-    if (pPacket->Status == A_ECANCELED) {
+-        /*
+-         * HTC provides A_ECANCELED status when it doesn't want to be refilled
+-         * (probably due to a shutdown)
+-         */
+-        return;
+-    }
+-
+-    streamID = arEndpoint2RawStreamID(ar,pPacket->Endpoint);
+-    A_ASSERT(streamID != HTC_RAW_STREAM_NOT_MAPPED);
+-    
+-#ifdef CF
+-   if (down_trylock(&arRaw->raw_htc_read_sem[streamID])) {
+-#else
+-    if (down_interruptible(&arRaw->raw_htc_read_sem[streamID])) {
+-#endif /* CF */
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Unable to down the semaphore\n"));
+-    }
+-
+-    A_ASSERT((pPacket->Status != 0) ||
+-             (pPacket->pBuffer == (busy->data + HTC_HEADER_LEN)));
+-
+-    busy->length = pPacket->ActualLength + HTC_HEADER_LEN;
+-    busy->currPtr = HTC_HEADER_LEN;
+-    arRaw->read_buffer_available[streamID] = true;
+-    //AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("raw read cb:  0x%X 0x%X \n", busy->currPtr,busy->length);
+-    up(&arRaw->raw_htc_read_sem[streamID]);
+-
+-    /* Signal the waiting process */
+-    AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("Waking up the StreamID(%d) read process\n", streamID));
+-    wake_up_interruptible(&arRaw->raw_htc_read_queue[streamID]);
+-}
+-
+-static void
+-ar6000_htc_raw_write_cb(void *Context, struct htc_packet *pPacket)
+-{
+-    struct ar6_softc          *ar = (struct ar6_softc  *)Context;
+-    raw_htc_buffer      *free;
+-    HTC_RAW_STREAM_ID   streamID;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-    
+-    free = (raw_htc_buffer *)pPacket->pPktContext;
+-    A_ASSERT(free != NULL);
+-
+-    if (pPacket->Status == A_ECANCELED) {
+-        /*
+-         * HTC provides A_ECANCELED status when it doesn't want to be refilled
+-         * (probably due to a shutdown)
+-         */
+-        return;
+-    }
+-
+-    streamID = arEndpoint2RawStreamID(ar,pPacket->Endpoint);
+-    A_ASSERT(streamID != HTC_RAW_STREAM_NOT_MAPPED);
+-    
+-#ifdef CF
+-    if (down_trylock(&arRaw->raw_htc_write_sem[streamID])) {
+-#else
+-    if (down_interruptible(&arRaw->raw_htc_write_sem[streamID])) {
+-#endif
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Unable to down the semaphore\n"));
+-    }
+-
+-    A_ASSERT(pPacket->pBuffer == (free->data + HTC_HEADER_LEN));
+-
+-    free->length = 0;
+-    arRaw->write_buffer_available[streamID] = true;
+-    up(&arRaw->raw_htc_write_sem[streamID]);
+-
+-    /* Signal the waiting process */
+-    AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("Waking up the StreamID(%d) write process\n", streamID));
+-    wake_up_interruptible(&arRaw->raw_htc_write_queue[streamID]);
+-}
+-
+-/* connect to a service */
+-static int ar6000_connect_raw_service(struct ar6_softc        *ar,
+-                                           HTC_RAW_STREAM_ID StreamID)
+-{
+-    int                 status;
+-    struct htc_service_connect_resp response;
+-    u8 streamNo;
+-    struct htc_service_connect_req  connect;
+-    
+-    do {      
+-        
+-        A_MEMZERO(&connect,sizeof(connect));
+-            /* pass the stream ID as meta data to the RAW streams service */
+-        streamNo = (u8)StreamID;
+-        connect.pMetaData = &streamNo;
+-        connect.MetaDataLength = sizeof(u8);
+-            /* these fields are the same for all endpoints */
+-        connect.EpCallbacks.pContext = ar;
+-        connect.EpCallbacks.EpTxComplete = ar6000_htc_raw_write_cb;   
+-        connect.EpCallbacks.EpRecv = ar6000_htc_raw_read_cb;   
+-            /* simple interface, we don't need these optional callbacks */      
+-        connect.EpCallbacks.EpRecvRefill = NULL;
+-        connect.EpCallbacks.EpSendFull = NULL;
+-        connect.MaxSendQueueDepth = RAW_HTC_WRITE_BUFFERS_NUM;  
+-        
+-            /* connect to the raw streams service, we may be able to get 1 or more
+-             * connections, depending on WHAT is running on the target */
+-        connect.ServiceID = HTC_RAW_STREAMS_SVC;
+-        
+-        A_MEMZERO(&response,sizeof(response));
+-        
+-            /* try to connect to the raw stream, it is okay if this fails with 
+-             * status HTC_SERVICE_NO_MORE_EP */
+-        status = HTCConnectService(ar->arHtcTarget, 
+-                                   &connect,
+-                                   &response);
+-        
+-        if (status) {
+-            if (response.ConnectRespCode == HTC_SERVICE_NO_MORE_EP) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("HTC RAW , No more streams allowed \n"));
+-                status = 0;
+-            }
+-            break;    
+-        }
+-
+-            /* set endpoint mapping for the RAW HTC streams */
+-        arSetRawStream2EndpointIDMap(ar,StreamID,response.Endpoint);
+-
+-        AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("HTC RAW : stream ID: %d, endpoint: %d\n", 
+-                        StreamID, arRawStream2EndpointID(ar,StreamID)));
+-        
+-    } while (false);
+-    
+-    return status;
+-}
+-
+-int ar6000_htc_raw_open(struct ar6_softc *ar)
+-{
+-    int status;
+-    int streamID, endPt, count2;
+-    raw_htc_buffer *buffer;
+-    HTC_SERVICE_ID servicepriority;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-    if (!arRaw) {
+-        arRaw = ar->arRawHtc = A_MALLOC(sizeof(AR_RAW_HTC_T));
+-        if (arRaw) {
+-            A_MEMZERO(arRaw, sizeof(AR_RAW_HTC_T));
+-        }
+-    }
+-    A_ASSERT(ar->arHtcTarget != NULL);
+-    if (!arRaw) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Faile to allocate memory for HTC RAW interface\n"));
+-        return -ENOMEM;
+-    }
+-    /* wait for target */
+-    status = HTCWaitTarget(ar->arHtcTarget);
+-        
+-    if (status) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("HTCWaitTarget failed (%d)\n", status));
+-        return -ENODEV;  
+-    }
+-    
+-    for (endPt = 0; endPt < ENDPOINT_MAX; endPt++) {
+-        arRaw->arEp2RawMapping[endPt] = HTC_RAW_STREAM_NOT_MAPPED;
+-    }
+-        
+-    for (streamID = HTC_RAW_STREAM_0; streamID < HTC_RAW_STREAM_NUM_MAX; streamID++) {
+-        /* Initialize the data structures */
+-	sema_init(&arRaw->raw_htc_read_sem[streamID], 1);
+-	sema_init(&arRaw->raw_htc_write_sem[streamID], 1);
+-        init_waitqueue_head(&arRaw->raw_htc_read_queue[streamID]);
+-        init_waitqueue_head(&arRaw->raw_htc_write_queue[streamID]);
+-
+-            /* try to connect to the raw service */
+-        status = ar6000_connect_raw_service(ar,streamID);
+-        
+-        if (status) {
+-            break;    
+-        }
+-        
+-        if (arRawStream2EndpointID(ar,streamID) == 0) {
+-            break;    
+-        }
+-        
+-        for (count2 = 0; count2 < RAW_HTC_READ_BUFFERS_NUM; count2 ++) {
+-            /* Initialize the receive buffers */
+-            buffer = &arRaw->raw_htc_write_buffer[streamID][count2];
+-            memset(buffer, 0, sizeof(raw_htc_buffer));
+-            buffer = &arRaw->raw_htc_read_buffer[streamID][count2];
+-            memset(buffer, 0, sizeof(raw_htc_buffer));
+-            
+-            SET_HTC_PACKET_INFO_RX_REFILL(&buffer->HTCPacket,
+-                                          buffer,
+-                                          buffer->data,
+-                                          HTC_RAW_BUFFER_SIZE,
+-                                          arRawStream2EndpointID(ar,streamID));
+-            
+-            /* Queue buffers to HTC for receive */
+-            if ((status = HTCAddReceivePkt(ar->arHtcTarget, &buffer->HTCPacket)) != 0)
+-            {
+-                BMIInit();
+-                return -EIO;
+-            }
+-        }
+-
+-        for (count2 = 0; count2 < RAW_HTC_WRITE_BUFFERS_NUM; count2 ++) {
+-            /* Initialize the receive buffers */
+-            buffer = &arRaw->raw_htc_write_buffer[streamID][count2];
+-            memset(buffer, 0, sizeof(raw_htc_buffer));
+-        }
+-
+-        arRaw->read_buffer_available[streamID] = false;
+-        arRaw->write_buffer_available[streamID] = true;
+-    }
+-    
+-    if (status) {
+-        return -EIO;    
+-    }
+-    
+-    AR_DEBUG_PRINTF(ATH_DEBUG_INFO,("HTC RAW, number of streams the target supports: %d \n", streamID));
+-            
+-    servicepriority = HTC_RAW_STREAMS_SVC;  /* only 1 */
+-    
+-        /* set callbacks and priority list */
+-    HTCSetCreditDistribution(ar->arHtcTarget,
+-                             ar,
+-                             NULL,  /* use default */
+-                             NULL,  /* use default */
+-                             &servicepriority,
+-                             1);
+-
+-    /* Start the HTC component */
+-    if ((status = HTCStart(ar->arHtcTarget)) != 0) {
+-        BMIInit();
+-        return -EIO;
+-    }
+-
+-    (ar)->arRawIfInit = true;
+-    
+-    return 0;
+-}
+-
+-int ar6000_htc_raw_close(struct ar6_softc *ar)
+-{
+-    A_PRINTF("ar6000_htc_raw_close called \n");
+-    HTCStop(ar->arHtcTarget);
+-    
+-        /* reset the device */
+-    ar6000_reset_device(ar->arHifDevice, ar->arTargetType, true, false);
+-    /* Initialize the BMI component */
+-    BMIInit();
+-
+-    return 0;
+-}
+-
+-raw_htc_buffer *
+-get_filled_buffer(struct ar6_softc *ar, HTC_RAW_STREAM_ID StreamID)
+-{
+-    int count;
+-    raw_htc_buffer *busy;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-
+-    /* Check for data */
+-    for (count = 0; count < RAW_HTC_READ_BUFFERS_NUM; count ++) {
+-        busy = &arRaw->raw_htc_read_buffer[StreamID][count];
+-        if (busy->length) {
+-            break;
+-        }
+-    }
+-    if (busy->length) {
+-        arRaw->read_buffer_available[StreamID] = true;
+-    } else {
+-        arRaw->read_buffer_available[StreamID] = false;
+-    }
+-
+-    return busy;
+-}
+-
+-ssize_t ar6000_htc_raw_read(struct ar6_softc *ar, HTC_RAW_STREAM_ID StreamID, 
+-                            char __user *buffer, size_t length)
+-{
+-    int readPtr;
+-    raw_htc_buffer *busy;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-
+-    if (arRawStream2EndpointID(ar,StreamID) == 0) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("StreamID(%d) not connected! \n", StreamID));
+-        return -EFAULT;    
+-    }
+-    
+-    if (down_interruptible(&arRaw->raw_htc_read_sem[StreamID])) {
+-        return -ERESTARTSYS;
+-    }
+-
+-    busy = get_filled_buffer(ar,StreamID);
+-    while (!arRaw->read_buffer_available[StreamID]) {
+-        up(&arRaw->raw_htc_read_sem[StreamID]);
+-
+-        /* Wait for the data */
+-        AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("Sleeping StreamID(%d) read process\n", StreamID));
+-        if (wait_event_interruptible(arRaw->raw_htc_read_queue[StreamID],
+-                                     arRaw->read_buffer_available[StreamID]))
+-        {
+-            return -EINTR;
+-        }
+-        if (down_interruptible(&arRaw->raw_htc_read_sem[StreamID])) {
+-            return -ERESTARTSYS;
+-        }
+-        busy = get_filled_buffer(ar,StreamID);
+-    }
+-
+-    /* Read the data */
+-    readPtr = busy->currPtr;
+-    if (length > busy->length - HTC_HEADER_LEN) {
+-        length = busy->length - HTC_HEADER_LEN;
+-    }
+-    if (copy_to_user(buffer, &busy->data[readPtr], length)) {
+-        up(&arRaw->raw_htc_read_sem[StreamID]);
+-        return -EFAULT;
+-    }
+-
+-    busy->currPtr += length;
+-        
+-    if (busy->currPtr == busy->length)
+-    {    
+-        busy->currPtr = 0;
+-        busy->length = 0;        
+-        HTC_PACKET_RESET_RX(&busy->HTCPacket);                                          
+-        //AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("raw read ioctl:  ep for packet:%d \n", busy->HTCPacket.Endpoint));
+-        HTCAddReceivePkt(ar->arHtcTarget, &busy->HTCPacket);
+-    }
+-    arRaw->read_buffer_available[StreamID] = false;
+-    up(&arRaw->raw_htc_read_sem[StreamID]);
+-
+-    return length;
+-}
+-
+-static raw_htc_buffer *
+-get_free_buffer(struct ar6_softc *ar, HTC_ENDPOINT_ID StreamID)
+-{
+-    int count;
+-    raw_htc_buffer *free;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-
+-    free = NULL;
+-    for (count = 0; count < RAW_HTC_WRITE_BUFFERS_NUM; count ++) {
+-        free = &arRaw->raw_htc_write_buffer[StreamID][count];
+-        if (free->length == 0) {
+-            break;
+-        }
+-    }
+-    if (!free->length) {
+-        arRaw->write_buffer_available[StreamID] = true;
+-    } else {
+-        arRaw->write_buffer_available[StreamID] = false;
+-    }
+-
+-    return free;
+-}
+-
+-ssize_t ar6000_htc_raw_write(struct ar6_softc *ar, HTC_RAW_STREAM_ID StreamID,
+-                     char __user *buffer, size_t length)
+-{
+-    int writePtr;
+-    raw_htc_buffer *free;
+-    AR_RAW_HTC_T *arRaw = ar->arRawHtc;
+-    if (arRawStream2EndpointID(ar,StreamID) == 0) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("StreamID(%d) not connected! \n", StreamID));
+-        return -EFAULT;    
+-    }
+-    
+-    if (down_interruptible(&arRaw->raw_htc_write_sem[StreamID])) {
+-        return -ERESTARTSYS;
+-    }
+-
+-    /* Search for a free buffer */
+-    free = get_free_buffer(ar,StreamID);
+-
+-    /* Check if there is space to write else wait */
+-    while (!arRaw->write_buffer_available[StreamID]) {
+-        up(&arRaw->raw_htc_write_sem[StreamID]);
+-
+-        /* Wait for buffer to become free */
+-        AR_DEBUG_PRINTF(ATH_DEBUG_HTC_RAW,("Sleeping StreamID(%d) write process\n", StreamID));
+-        if (wait_event_interruptible(arRaw->raw_htc_write_queue[StreamID],
+-                                     arRaw->write_buffer_available[StreamID]))
+-        {
+-            return -EINTR;
+-        }
+-        if (down_interruptible(&arRaw->raw_htc_write_sem[StreamID])) {
+-            return -ERESTARTSYS;
+-        }
+-        free = get_free_buffer(ar,StreamID);
+-    }
+-
+-    /* Send the data */
+-    writePtr = HTC_HEADER_LEN;
+-    if (length > (HTC_RAW_BUFFER_SIZE - HTC_HEADER_LEN)) {
+-        length = HTC_RAW_BUFFER_SIZE - HTC_HEADER_LEN;
+-    }
+-
+-    if (copy_from_user(&free->data[writePtr], buffer, length)) {
+-        up(&arRaw->raw_htc_read_sem[StreamID]);
+-        return -EFAULT;
+-    }
+-
+-    free->length = length;
+-        
+-    SET_HTC_PACKET_INFO_TX(&free->HTCPacket,
+-                           free,
+-                           &free->data[writePtr],
+-                           length,
+-                           arRawStream2EndpointID(ar,StreamID),
+-                           AR6K_DATA_PKT_TAG);
+-    
+-    HTCSendPkt(ar->arHtcTarget,&free->HTCPacket);
+-    
+-    arRaw->write_buffer_available[StreamID] = false;
+-    up(&arRaw->raw_htc_write_sem[StreamID]);
+-
+-    return length;
+-}
+-#endif /* HTC_RAW_INTERFACE */
+diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+index e47b078..ae57573 100644
+--- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
++++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+@@ -539,9 +539,6 @@ struct ar6_softc {
+     u8 arHiAcStreamActivePri;
+     u8 arEp2AcMapping[ENDPOINT_MAX];
+     HTC_ENDPOINT_ID         arControlEp;
+-#ifdef HTC_RAW_INTERFACE
+-    AR_RAW_HTC_T            *arRawHtc;
+-#endif
+     bool                  arNetQueueStopped;
+     bool                  arRawIfInit;
+     int                     arDeviceIndex;
+@@ -680,23 +677,6 @@ int ar6000_acl_data_tx(struct sk_buff *skb, struct net_device *dev);
+ void ar6000_restart_endpoint(struct net_device *dev);
+ void ar6000_stop_endpoint(struct net_device *dev, bool keepprofile, bool getdbglogs);
+ 
+-#ifdef HTC_RAW_INTERFACE
+-
+-#ifndef __user
+-#define __user
+-#endif
+-
+-int ar6000_htc_raw_open(struct ar6_softc *ar);
+-int ar6000_htc_raw_close(struct ar6_softc *ar);
+-ssize_t ar6000_htc_raw_read(struct ar6_softc *ar,
+-                            HTC_RAW_STREAM_ID StreamID,
+-                            char __user *buffer, size_t count);
+-ssize_t ar6000_htc_raw_write(struct ar6_softc *ar,
+-                             HTC_RAW_STREAM_ID StreamID,
+-                             char __user *buffer, size_t count);
+-
+-#endif /* HTC_RAW_INTERFACE */
+-
+ /* AP mode */
+ /*TODO: These routines should be moved to a file that is common across OS */
+ sta_t *
+diff --git a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
+index 3d5f01d..f911799 100644
+--- a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
++++ b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
+@@ -309,43 +309,6 @@ extern "C" {
+  */
+ 
+ 
+-#ifdef HTC_RAW_INTERFACE
+-/* HTC Raw Interface Ioctls */
+-#define AR6000_XIOCTL_HTC_RAW_OPEN                              13
+-/*
+- * arguments:
+- *   UINT32 cmd (AR6000_XIOCTL_HTC_RAW_OPEN)
+- */
+-
+-#define AR6000_XIOCTL_HTC_RAW_CLOSE                             14
+-/*
+- * arguments:
+- *   UINT32 cmd (AR6000_XIOCTL_HTC_RAW_CLOSE)
+- */
+-
+-#define AR6000_XIOCTL_HTC_RAW_READ                              15
+-/*
+- * arguments:
+- *   union {
+- *     struct {
+- *       UINT32 cmd (AR6000_XIOCTL_HTC_RAW_READ)
+- *       UINT32 mailboxID
+- *       UINT32 length
+- *     }
+- *     results[length]
+- *   }
+- */
+-
+-#define AR6000_XIOCTL_HTC_RAW_WRITE                             16
+-/*
+- * arguments:
+- *   UINT32 cmd (AR6000_XIOCTL_HTC_RAW_WRITE)
+- *   UINT32 mailboxID
+- *   UINT32 length
+- *   char buffer[length]
+- */
+-#endif /* HTC_RAW_INTERFACE */
+-
+ #define AR6000_XIOCTL_CHECK_TARGET_READY                        17
+ /*
+  * arguments:
+-- 
+1.7.0.4
 
-[    7.100017] ABI Version mismatch: Host(0x1), Target(0x0)
-[    7.100057] ar6000_avail: ar6000_init
-[    7.100096] BUG: unable to handle kernel NULL pointer dereference at 00000004
-[    7.100139] IP: [<c042a9f6>] device_pm_remove+0x26/0x50
-[    7.100176] *pdpt = 0000000032244001 *pde = 0000000000000000
-[    7.100212] Oops: 0002 [#1] SMP
-[    7.100235] last sysfs file: /sys/kernel/uevent_seqnum
-[    7.100265] Modules linked in: snd_hda_codec_hdmi
-snd_hda_codec_analog radeon snd_hda_intel snd_hda_codec snd_hwdep
-ath6kl(C) snd_pcm ttm drm_kms_helper snd_seq_midi drm snd_
-rawmidi snd_seq_midi_event cfg80211 snd_seq snd_timer snd_seq_device
-psmouse snd asus_atk0110 serio_raw joydev k10temp ati_agp soundcore
-snd_page_alloc agpgart i2c_piix4 i2c_alg
-o_bit lp parport usbhid hid usb_storage mmc_block pata_marvell
-firewire_ohci sdhci_pci ahci sdhci sky2 floppy firewire_core crc_itu_t
-libahci pata_atiixp
-[    7.100596]
-[    7.100607] Pid: 718, comm: AR6K startup Tainted: G         C
-2.6.38-rc5+ #8 System manufacturer System Product Name/M3A79-T DELUXE
-[    7.100681] EIP: 0060:[<c042a9f6>] EFLAGS: 00010286 CPU: 2
-[    7.100712] EIP is at device_pm_remove+0x26/0x50
-[    7.100738] EAX: f19856a4 EBX: f1985644 ECX: 00000000 EDX: 00000000
-[    7.100772] ESI: f073004c EDI: f0730164 EBP: f06f7eec ESP: f06f7ee8
-[    7.100806]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-[    7.100836] Process AR6K startup (pid: 718, ti=f06f6000
-task=f214b280 task.ti=f06f6000)
-[    7.100881] Stack:
-[    7.100894]  f1985644 f06f7f00 c0421d2f f1985600 f073004c f07300e0
-f06f7f0c c05e4589
-[    7.100952]  f0730000 f06f7f40 f85073dc f06f7f10 e9bfc120 00000000
-f86e1329 f06f7f40
-[    7.101009]  c027f962 e9bfc120 00000000 f1984600 f07302c0 ffffffff
-f06f7f58 f86a536b
-[    7.101067] Call Trace:
-[    7.101084]  [<c0421d2f>] device_del+0x2f/0x190
-[    7.101111]  [<c05e4589>] rfkill_unregister+0x49/0xa0
-[    7.101145]  [<f85073dc>] wiphy_unregister+0x2c/0x170 [cfg80211]
-[    7.101181]  [<c027f962>] ? sysfs_hash_and_remove+0x72/0x80
-[    7.101217]  [<f86a536b>] ar6k_cfg80211_deinit+0x4b/0x80 [ath6kl]
-[    7.101255]  [<f86b382a>] ? ar6000_sysfs_bmi_deinit+0x2a/0x40 [ath6kl]
-[    7.101296]  [<f86bb395>] ar6000_avail_ev+0x455/0x830 [ath6kl]
-[    7.101330]  [<c014d090>] ? default_wake_function+0x10/0x20
-[    7.101366]  [<f86ba830>] ? ar6000_target_failure+0x0/0x80 [ath6kl]
-[    7.101406]  [<f86d4100>] ? startup_task+0x0/0x60 [ath6kl]
-[    7.101440]  [<f86d4121>] startup_task+0x21/0x60 [ath6kl]
-[    7.101475]  [<f86d4100>] ? startup_task+0x0/0x60 [ath6kl]
-[    7.101506]  [<c0170874>] kthread+0x74/0x80
-[    7.101530]  [<c0170800>] ? kthread+0x0/0x80
-[    7.101555]  [<c010ad7e>] kernel_thread_helper+0x6/0x10
-[    7.101584] Code: 90 8d 74 26 00 55 89 e5 53 3e 8d 74 26 00 89 c3
-83 c0 68 e8 6d 5a d1 ff b8 cc 39 85 c0 e8 03 7d 1d 00 8b 4b 60 8d 43
-60 8b 53 64 <89> 51 04 89 0a 89 43 60 89 43 64 b8 cc 39 85 c0 e8 75 7a
-1d 00
-[    7.101822] EIP: [<c042a9f6>] device_pm_remove+0x26/0x50 SS:ESP 0068:f06f7ee8
-[    7.101866] CR2: 0000000000000004
-[    7.101886] ---[ end trace 769975b16fdd074b ]---
-
-  Luis
