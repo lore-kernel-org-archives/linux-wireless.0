@@ -1,133 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50331 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756604Ab1CRQZv convert rfc822-to-8bit (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:35828 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755452Ab1C3DGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 12:25:51 -0400
-Received: by qyg14 with SMTP id 14so3533449qyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 09:25:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300463392.13499.110.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
-	<1300463392.13499.110.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 17:25:50 +0100
-Message-ID: <AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Mar 2011 23:06:48 -0400
+Received: by gwaa18 with SMTP id a18so357556gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:06:48 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com
+Subject: [PATCH v5 01/10] nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
+Date: Tue, 29 Mar 2011 19:05:58 -0700
+Message-Id: <1301450767-27045-2-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
->> 2011/3/18 Rafał Miłecki <zajec5@gmail.com>:
->> > What for example about pci.c? Which functions from that file won't be
->> > duplicated in totally separated?
->>
->> At first I though we will need to duplicate all pci routines like
->> ssb_pci_switch_coreidx and ssb_pci_xtal. But now I've checked
->> brcm80211 and it seems it reads SPROM even from AI bus-cards.
-> Btw ssb_pci_xtal is for PCI. PCIE hosts don't need this.
+From: Javier Cardona <javier@cozybit.com>
 
-Not even all PCI devices. Just 4306 I believe:
-/* kludge to enable the clock on the 4306 which lacks a slowclock */
-if (bustype == PCI_BUS && !si_ispcie(sii))
-	si_clkctl_xtal(&sii->pub, XTAL | PLL, ON);
+To NL80211_MESH_SETUP_IE. This reflects our ability to insert any ie
+into a mesh beacon, not simply path selection ies.
 
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/nl80211.h    |    9 +++++----
+ include/net/cfg80211.h     |    8 ++++----
+ net/mac80211/cfg.c         |   15 +++++++--------
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/mesh.c        |    6 +++---
+ net/mac80211/mesh_plink.c  |    2 +-
+ net/mac80211/tx.c          |    2 +-
+ net/wireless/mesh.c        |    4 ++--
+ net/wireless/nl80211.c     |   11 ++++++-----
+ 9 files changed, 31 insertions(+), 30 deletions(-)
 
->> Do you really want to duplicate all the SPROM code in *totally
->> separated* driver for AI?!
->>
-> Every sb/ai backplane known to me at the moment are featuring the
-> following hardware design:
-> System backplane with individual devices on it (called cores)
-> communicating with the means of agents. The agents for sb are in the
-> main core registers space, and apart from the core registers for axi.
-> The backplane itself is "mastered" by buscore device. This is mips core
-> for embeddables, pci(e) core for pci(e) hosted backplanes, pcmcia core
-> for backplanes on pcmcia/sdio. Might OCP core is some sort of buscore as
-> well used to bridge two sb backplanes.
-> Buscore is responsible for interrupts management, backplane-to-host-bus
-> operations, agent-to-agent transfers.
->
-> Apart from the buscore, there is another "special" device on the
-> backplane - buscommon. Unlike buscore this one seems to be optional, and
-> not present on some old pcmcia-hosted backplanes. The buscommon is
-> responsible for managing bus clocks, can serve uarts, also is a source
-> of misc. configuration information for the backplane. These buscommons
-> are chipcommon and extif cores.
->
-> Here it would be great to have more technical background on the subject
-> but unfortunately apart from the staging brcm80211 and GPL packages for
-> respective embeddables the only open doc on the subject available to me
-> is www.broadcom.com/collateral/pg/440X-PG02-R.pdf
-
-Well, OK, it's generally well known already. Maybe I just prefer to
-call "buscore" a "hostcore" and "buscommon" a "chipcommon". I believe
-that are the names we hot used to.
-
-
-> So software model I see here looks like following:
-> * Backplane-type handler responsible for
->  ~ initial scanning;
->  ~ agent-specific operations (core enable/disable, irq flags management,
-> etc.);
->
-> * The bus driver itself responsible for initial detection and assignment
-> of backplane handler and also managig driver registration/binding/etc
-> for
->  ~ buscommon;
->  ~ buscore;
->  ~ regular cores;
->
-> * Host driver managing:
->  ~ requests to the physical address space of backplane;
->  ~ host interrupt management;
->  ~ host-specific workarounds (ssb_pci_xtal is one of them);
->
-> This requires generic interfaces for:
-> * host (like those ssb_bus_ops which are actually not bus but host ops -
-> handling not core accesses but physical backplane addresses requests;
-> iterrupt management ops);
-> * backplane (scan, enable, disable, irq_flag etc.);
-> * buscore (backplane irq/errors/etc. management);
-> * buscommon (backplane clocks/etc. management, capabilities queries);
->
-> Buscommon and buscore unlike current ssb model could be separate
-> drivers. This will help to break apart all that mess of versions
-> checking and revision-specific processing. This will provide clean way
-> of obsoleting and removing the support for old hardware and introducing
-> newer one.
-> Regular bus core devices thus are to be registered with linux once
-> buscommon, buscore and host drivers are bound and set up making the bus
-> operational.
-> Buscore and buscommon as separate drivers will require some code to be
-> replicated over close versions but overall I've already tested this
-> approach with chipcommons with pmu r0, r1 and r5 on pcie and mips hosts
-> and final drivers' code is clean and manageable unlike all that mess in
-> hndpmu.c
-> Same stands for mips/pci host cores.
-
-OK, I generally agree. We can try moving to such a layout. The only
-thing I hate in your view is "obsoleting and removing the support for
-old hardware".
-
-Answer me this question, please:
-Why do you think my proposed patch conflicts with layout proposed by you?
-
-You said you want to have "Backplane-type handler". So according to
-this we will need two drivers/handlers: 1 for scanning SSB and 1 for
-scanning AI. That's what I try to implement. I just want to share some
-functions between the one for SSB and the one for AI.
-
-I don't see the point where my patch is in conflict with your idea.
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3002218..82ef17d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -545,6 +545,7 @@ enum nl80211_commands {
+ /* source-level API compatibility */
+ #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
+ #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
++#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -1686,9 +1687,9 @@ enum nl80211_meshconf_params {
+  * vendor specific path metric or disable it to use the default Airtime
+  * metric.
+  *
+- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
+- * element that vendors will use to identify the path selection methods and
+- * metrics in use.
++ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
++ * robust security network ie, or a vendor specific information element that
++ * vendors will use to identify the path selection methods and metrics in use.
+  *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+@@ -1697,7 +1698,7 @@ enum nl80211_mesh_setup_params {
+ 	__NL80211_MESH_SETUP_INVALID,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
+-	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
++	NL80211_MESH_SETUP_IE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 60f7876..1714943 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -654,8 +654,8 @@ struct mesh_config {
+  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
+  * @path_sel_proto: which path selection protocol to use
+  * @path_metric: which metric to use
+- * @vendor_ie: vendor information elements (optional)
+- * @vendor_ie_len: length of vendor information elements
++ * @ie: vendor information elements (optional)
++ * @ie_len: length of vendor information elements
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -664,8 +664,8 @@ struct mesh_setup {
+ 	u8 mesh_id_len;
+ 	u8  path_sel_proto;
+ 	u8  path_metric;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3342135..f2f345a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1023,26 +1023,25 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	u8 *new_ie;
+ 	const u8 *old_ie;
+ 
+-	/* first allocate the new vendor information element */
++	/* allocate information elements */
+ 	new_ie = NULL;
+-	old_ie = ifmsh->vendor_ie;
++	old_ie = ifmsh->ie;
+ 
+-	ifmsh->vendor_ie_len = setup->vendor_ie_len;
+-	if (setup->vendor_ie_len) {
+-		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
++	ifmsh->ie_len = setup->ie_len;
++	if (setup->ie_len) {
++		new_ie = kmemdup(setup->ie, setup->ie_len,
+ 				GFP_KERNEL);
+ 		if (!new_ie)
+ 			return -ENOMEM;
+ 	}
++	ifmsh->ie = new_ie;
++	kfree(old_ie);
+ 
+ 	/* now copy the rest of the setup parameters */
+ 	ifmsh->mesh_id_len = setup->mesh_id_len;
+ 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
+ 	ifmsh->mesh_pp_id = setup->path_sel_proto;
+ 	ifmsh->mesh_pm_id = setup->path_metric;
+-	ifmsh->vendor_ie = new_ie;
+-
+-	kfree(old_ie);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a404017..d0fafde 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -488,8 +488,8 @@ struct ieee80211_if_mesh {
+ 	struct mesh_config mshcfg;
+ 	u32 mesh_seqnum;
+ 	bool accepting_plinks;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
+ };
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 2a57cc0..1c244c0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+ 	*pos++ = 0x00;
+ 
+-	if (sdata->u.mesh.vendor_ie) {
+-		int len = sdata->u.mesh.vendor_ie_len;
+-		const u8 *data = sdata->u.mesh.vendor_ie;
++	if (sdata->u.mesh.ie) {
++		int len = sdata->u.mesh.ie_len;
++		const u8 *data = sdata->u.mesh.ie;
+ 		if (skb_tailroom(skb) > len)
+ 			memcpy(skb_put(skb, len), data, len);
+ 	}
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 44b5393..c705b20 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		__le16 reason) {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+-			sdata->u.mesh.vendor_ie_len);
++			sdata->u.mesh.ie_len);
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
+ 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 081dcaf..38f6c2d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 
+ 		/* headroom, head length, tail length and maximum TIM length */
+ 		skb = dev_alloc_skb(local->tx_headroom + 400 +
+-				sdata->u.mesh.vendor_ie_len);
++				sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 73e39c1..0d4b226 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -53,8 +53,8 @@ const struct mesh_config default_mesh_config = {
+ const struct mesh_setup default_mesh_setup = {
+ 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
+ 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
+-	.vendor_ie = NULL,
+-	.vendor_ie_len = 0,
++	.ie = NULL,
++	.ie_len = 0,
+ };
+ 
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4ebce42..f251089 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2804,7 +2804,7 @@ static const struct nla_policy
+ 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
+-	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
++	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 		.len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+@@ -2906,13 +2906,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 		 IEEE80211_PATH_METRIC_VENDOR :
+ 		 IEEE80211_PATH_METRIC_AIRTIME;
+ 
+-	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
++
++	if (tb[NL80211_MESH_SETUP_IE]) {
+ 		struct nlattr *ieattr =
+-			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
++			tb[NL80211_MESH_SETUP_IE];
+ 		if (!is_valid_ie_attr(ieattr))
+ 			return -EINVAL;
+-		setup->vendor_ie = nla_data(ieattr);
+-		setup->vendor_ie_len = nla_len(ieattr);
++		setup->ie = nla_data(ieattr);
++		setup->ie_len = nla_len(ieattr);
+ 	}
+ 
+ 	return 0;
 -- 
-Rafał
+1.7.4.1
+
