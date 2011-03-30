@@ -1,121 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:51123 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893Ab1CJBsW (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:55203 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754815Ab1C3SbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 20:48:22 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 30 Mar 2011 14:31:18 -0400
+Received: by mail-ey0-f180.google.com with SMTP id 24so645424eyg.39
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 11:31:16 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: remove redundant variable upld_len
-Date: Wed,  9 Mar 2011 17:51:25 -0800
-Message-Id: <1299721885-21709-1-git-send-email-bzhao@marvell.com>
+Subject: [PATCH] wl12xx: fix module author's email address in the spi and sdio modules
+Date: Wed, 30 Mar 2011 21:31:39 +0300
+Message-Id: <1301509899-6444-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The MODULE_AUTHOR() macro in the main module (wl12xx) has been updated
+to reflect one of the author's new email address, but the wl12xx_spi
+and wl12xx_sdio modules haven't been updated.  This patches updates
+them.
 
-adapter->upld_len was used together with mwifiex_buffer
-to track the uploaded packet size. Now mwifiex uses sk_buff
-instead of mwifiex_buffer so adapter->upld_len can be
-removed.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/mwifiex/init.c |    1 -
- drivers/net/wireless/mwifiex/main.h |    1 -
- drivers/net/wireless/mwifiex/sdio.c |   15 ++++++---------
- 3 files changed, 6 insertions(+), 11 deletions(-)
+ drivers/net/wireless/wl12xx/sdio.c |    2 +-
+ drivers/net/wireless/wl12xx/spi.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index f06d69c..c4fe89d 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -303,7 +303,6 @@ mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->fw_release_number = 0;
- 	adapter->fw_cap_info = 0;
- 	memset(&adapter->upld_buf, 0, sizeof(adapter->upld_buf));
--	adapter->upld_len = 0;
- 	adapter->event_cause = 0;
- 	adapter->region_code = 0;
- 	adapter->bcn_miss_time_out = DEFAULT_BCN_MISS_TIMEOUT;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d972512..b74a9e6 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -547,7 +547,6 @@ struct mwifiex_adapter {
- 	u8 int_status;
- 	u32 event_cause;
- 	struct sk_buff *event_skb;
--	u32 upld_len;
- 	u8 upld_buf[MWIFIEX_UPLD_SIZE];
- 	u8 data_sent;
- 	u8 cmd_sent;
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 4ad1dfb..1f32560 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -620,10 +620,11 @@ static int mwifiex_sdio_enable_host_int(struct mwifiex_adapter *adapter)
-  * This function sends a data buffer to the card.
-  */
- static int mwifiex_sdio_card_to_host(struct mwifiex_adapter *adapter,
--				     u32 *type, u32 *nb, u8 *buffer,
-+				     u32 *type, u8 *buffer,
- 				     u32 npayload, u32 ioport)
- {
- 	int ret = 0;
-+	u32 nb;
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 26dcd44..2ade222 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -360,7 +360,7 @@ module_init(wl1271_init);
+ module_exit(wl1271_exit);
  
- 	if (!buffer) {
- 		dev_err(adapter->dev, "%s: buffer is NULL\n", __func__);
-@@ -638,10 +639,10 @@ static int mwifiex_sdio_card_to_host(struct mwifiex_adapter *adapter,
- 		return -1;
- 	}
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
++MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL1271_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 3b862a2..7b82b5f 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -489,7 +489,7 @@ module_init(wl1271_init);
+ module_exit(wl1271_exit);
  
--	*nb = le16_to_cpu(*(__le16 *) (buffer));
--	if (*nb > npayload) {
--		dev_err(adapter->dev, "%s: invalid packet, *nb=%d, npayload=%d\n",
--				__func__, *nb, npayload);
-+	nb = le16_to_cpu(*(__le16 *) (buffer));
-+	if (nb > npayload) {
-+		dev_err(adapter->dev, "%s: invalid packet, nb=%d, npayload=%d\n",
-+				__func__, nb, npayload);
- 		return -1;
- 	}
- 
-@@ -933,8 +934,6 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 			adapter->cmd_resp_received = true;
- 			adapter->curr_cmd->resp_skb = skb;
- 		}
--
--		adapter->upld_len = skb->len;
- 		break;
- 
- 	case MWIFIEX_TYPE_EVENT:
-@@ -1077,7 +1076,6 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
- 
- 				skb_trim(skb_deaggr, pkt_len);
- 
--				adapter->upld_len = pkt_len;
- 				/* Process de-aggr packet */
- 				mwifiex_decode_rx_packet(adapter, skb_deaggr,
- 							 pkt_type);
-@@ -1099,7 +1097,6 @@ rx_curr_single:
- 			port, rx_len);
- 
- 		if (mwifiex_sdio_card_to_host(adapter, &pkt_type,
--					      (u32 *) &adapter->upld_len,
- 					      skb->data, skb->len,
- 					      adapter->ioport + port))
- 			return -1;
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
++MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL1271_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
 -- 
-1.7.0.2
+1.7.1
 
