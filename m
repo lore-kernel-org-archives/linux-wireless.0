@@ -1,84 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46312 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991Ab1CEFTc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 00:19:32 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/4] mwifiex: remove struct ieee_bssco_2040
-Date: Fri,  4 Mar 2011 21:22:22 -0800
-Message-Id: <1299302545-9672-1-git-send-email-bzhao@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:47182 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755351Ab1C3A5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:57:42 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 27/34] ath6kl: cleanup allocation and getting of the hif dev
+Date: Tue, 29 Mar 2011 17:56:24 -0700
+Message-ID: <1301446591-15236-28-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This struct is not necessary.
+Removes verbose debug messages and checks that are just
+not needed, and renames the functions to something more
+sensible. While we clean this up, just move the routines
+above and remove the forward declarations.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/mwifiex/11n.c  |    2 +-
- drivers/net/wireless/mwifiex/fw.h   |    2 +-
- drivers/net/wireless/mwifiex/ieee.h |    6 +-----
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |   65 +++++++++-----------
+ 1 files changed, 28 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 49876e7..ffc005a 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -771,7 +771,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
- 		       sizeof(struct mwifiex_ie_types_2040bssco));
- 		bss_co_2040->header.type = cpu_to_le16(WLAN_EID_BSS_COEX_2040);
- 		bss_co_2040->header.len =
--		       cpu_to_le16(sizeof(struct ieee_bssco_2040));
-+		       cpu_to_le16(sizeof(bss_co_2040->bss_co_2040));
+diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
+index 1752b33..c862a19 100644
+--- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
++++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
+@@ -58,8 +58,6 @@ static int hifDeviceResume(struct device *dev);
+ #endif /* CONFIG_PM */
+ static int hifDeviceInserted(struct sdio_func *func, const struct sdio_device_id *id);
+ static void hifDeviceRemoved(struct sdio_func *func);
+-static struct hif_device *addHifDevice(struct sdio_func *func);
+-static struct hif_device *getHifDevice(struct sdio_func *func);
+ static void delHifDevice(struct hif_device * device);
+ static int Func0_CMD52WriteByte(struct mmc_card *card, unsigned int address, unsigned char byte);
+ static int Func0_CMD52ReadByte(struct mmc_card *card, unsigned int address, unsigned char *byte);
+@@ -69,6 +67,26 @@ module_param(reset_sdio_on_unload, int, 0644);
  
- 		memcpy((u8 *) bss_co_2040 +
- 		       sizeof(struct mwifiex_ie_types_header),
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 50f6df6..038d7d6 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -1167,7 +1167,7 @@ struct mwifiex_ie_types_htinfo {
+ extern u32 nohifscattersupport;
  
- struct mwifiex_ie_types_2040bssco {
- 	struct mwifiex_ie_types_header header;
--	struct ieee_bssco_2040 bss_co_2040;
-+	u8 bss_co_2040;
- } __packed;
++static struct hif_device *ath6kl_alloc_hifdev(struct sdio_func *func)
++{
++	struct hif_device *hifdevice;
++
++	hifdevice = kzalloc(sizeof(struct hif_device), GFP_KERNEL);
++
++#if HIF_USE_DMA_BOUNCE_BUFFER
++	hifdevice->dma_buffer = kmalloc(HIF_DMA_BUFFER_SIZE, GFP_KERNEL);
++#endif
++	hifdevice->func = func;
++	hifdevice->powerConfig = HIF_DEVICE_POWER_UP;
++	sdio_set_drvdata(func, hifdevice);
++
++	return hifdevice;
++}
++
++static struct hif_device *ath6kl_get_hifdev(struct sdio_func *func)
++{
++	return (struct hif_device *) sdio_get_drvdata(func);
++}
  
- struct mwifiex_ie_types_extcap {
-diff --git a/drivers/net/wireless/mwifiex/ieee.h b/drivers/net/wireless/mwifiex/ieee.h
-index c9f0964..877a9f8 100644
---- a/drivers/net/wireless/mwifiex/ieee.h
-+++ b/drivers/net/wireless/mwifiex/ieee.h
-@@ -152,10 +152,6 @@ struct ieee_types_wmm_parameter {
- #define MWIFIEX_MAX_TRIPLET_802_11D		83
- #define COUNTRY_CODE_LEN			3
+ /* ------ Static Variables ------ */
+ static const struct sdio_device_id ar6k_id_table[] = {
+@@ -774,7 +792,7 @@ hifIRQHandler(struct sdio_func *func)
+     struct hif_device *device;
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifIRQHandler\n"));
  
--struct ieee_bssco_2040 {
--	u8 bss_co_2040_value;
--} __packed;
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+     atomic_set(&device->irqHandling, 1);
+     /* release the host during ints so we can pick it back up when we process cmds */
+     sdio_release_host(device->func);
+@@ -829,8 +847,8 @@ static int hifDeviceInserted(struct sdio_func *func, const struct sdio_device_id
+ 		    ("AR6000: hifDeviceInserted, Function: 0x%X, Vendor ID: 0x%X, Device ID: 0x%X, block size: 0x%X/0x%X\n",
+ 		     func->num, func->vendor, func->device, func->max_blksize, func->cur_blksize));
+ 
+-    addHifDevice(func);
+-    device = getHifDevice(func);
++    ath6kl_alloc_hifdev(func);
++    device = ath6kl_get_hifdev(func);
+ 
+     device->id = id;
+     device->is_disabled = true;
+@@ -951,7 +969,7 @@ static int hifDisableFunc(struct hif_device *device, struct sdio_func *func)
+     int status = 0;
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDisableFunc\n"));
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+     if (!IS_ERR(device->async_task)) {
+         init_completion(&device->async_completion);
+         device->async_shutdown = 1;
+@@ -1000,7 +1018,7 @@ static int hifEnableFunc(struct hif_device *device, struct sdio_func *func)
+     int ret = 0;
+     
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifEnableFunc\n"));
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+ 
+     if (device->is_disabled) {
+        /* enable the SDIO function */
+@@ -1079,7 +1097,7 @@ static int hifDeviceSuspend(struct device *dev)
+     int status = 0;
+     struct hif_device *device;   
+ 
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceSuspend\n"));
+     if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
+         device->is_suspend = true; /* set true first for PowerStateChangeNotify(..) */
+@@ -1107,7 +1125,7 @@ static int hifDeviceResume(struct device *dev)
+     int status = 0;
+     struct hif_device *device;   
+ 
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceResume\n"));
+     if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
+         status = osdrvCallbacks.deviceResumeHandler(device->claimedContext);
+@@ -1128,7 +1146,7 @@ static void hifDeviceRemoved(struct sdio_func *func)
+     AR_DEBUG_ASSERT(func != NULL);
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceRemoved\n"));
+-    device = getHifDevice(func);
++    device = ath6kl_get_hifdev(func);
+     if (device->claimedContext != NULL) {
+         status = osdrvCallbacks.deviceRemovedHandler(device->claimedContext, device);
+     }
+@@ -1178,33 +1196,6 @@ int hifWaitForPendingRecv(struct hif_device *device)
+     return 0;
+ }
+     
 -
- struct ieee_obss_scan_param {
- 	u16 obss_scan_passive_dwell;
- 	u16 obss_scan_active_dwell;
-@@ -168,7 +164,7 @@ struct ieee_obss_scan_param {
- 
- struct ieee_types_2040bssco {
- 	struct ieee_types_header ieee_hdr;
--	struct ieee_bssco_2040 bss_co_2040;
-+	u8 bss_co_2040;
- } __packed;
- 
- struct ieee_types_obss_scan_param {
+-static struct hif_device *
+-addHifDevice(struct sdio_func *func)
+-{
+-    struct hif_device *hifdevice;
+-    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: addHifDevice\n"));
+-    AR_DEBUG_ASSERT(func != NULL);
+-    hifdevice = kzalloc(sizeof(struct hif_device), GFP_KERNEL);
+-    AR_DEBUG_ASSERT(hifdevice != NULL);
+-#if HIF_USE_DMA_BOUNCE_BUFFER
+-    hifdevice->dma_buffer = kmalloc(HIF_DMA_BUFFER_SIZE, GFP_KERNEL);
+-    AR_DEBUG_ASSERT(hifdevice->dma_buffer != NULL);
+-#endif
+-    hifdevice->func = func;
+-    hifdevice->powerConfig = HIF_DEVICE_POWER_UP;
+-    sdio_set_drvdata(func, hifdevice);
+-    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: addHifDevice; 0x%p\n", hifdevice));
+-    return hifdevice;
+-}
+-
+-static struct hif_device *
+-getHifDevice(struct sdio_func *func)
+-{
+-    AR_DEBUG_ASSERT(func != NULL);
+-    return (struct hif_device *)sdio_get_drvdata(func);
+-}
+-
+ static void
+ delHifDevice(struct hif_device * device)
+ {
 -- 
-1.7.0.2
+1.7.0.4
 
