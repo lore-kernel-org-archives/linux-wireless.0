@@ -1,168 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42982 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630Ab1CCSsR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:48:17 -0500
-Received: by wwb22 with SMTP id 22so1737707wwb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:15 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 01/19] rt2x00: Optimize calls to rt2x00queue_get_queue
-Date: Thu, 3 Mar 2011 19:38:55 +0100
-Cc: users@rt2x00.serialmonkey.com
+Received: from mail.atheros.com ([12.19.149.2]:47205 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755125Ab1C3A54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:57:56 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:32 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 33/34] ath6kl: remove ar6000_prepare_target() crap
+Date: Tue, 29 Mar 2011 17:56:30 -0700
+Message-ID: <1301446591-15236-34-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201103031938.56423.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+This was empty code, WTF^pi.
 
-In some cases (tx path for example) we don't need to check for non-tx
-queues in rt2x00queue_get_queue. Hence, introduce a new method
-rt2x00queue_get_tx_queue that is only valid for tx queues and use it in
-places where only tx queues are valid.
-
-Furthermore, this new method is quite short and as such can be inlined
-to avoid the function call overhead.
-
-This only converts the txdone functions of drivers that don't use an ATIM
-queue and the generic tx path.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00.h    |   17 +++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00mac.c |    4 ++--
- drivers/net/wireless/rt2x00/rt61pci.c   |    4 ++--
- drivers/net/wireless/rt2x00/rt73usb.c   |    2 +-
- 6 files changed, 25 insertions(+), 8 deletions(-)
+ drivers/staging/ath6kl/include/common_drv.h  |    4 ---
+ drivers/staging/ath6kl/miscdrv/common_drv.c  |   34 --------------------------
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    8 ------
+ 3 files changed, 0 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index af9cef0..7dba354 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -751,7 +751,7 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 		if (pid >= QID_RX)
- 			continue;
+diff --git a/drivers/staging/ath6kl/include/common_drv.h b/drivers/staging/ath6kl/include/common_drv.h
+index b606334..34db299 100644
+--- a/drivers/staging/ath6kl/include/common_drv.h
++++ b/drivers/staging/ath6kl/include/common_drv.h
+@@ -81,10 +81,6 @@ int ar6000_set_htc_params(struct hif_device *hifDevice,
+                                u32 MboxIsrYieldValue,
+                                u8 HtcControlBuffers);
  
--		queue = rt2x00queue_get_queue(rt2x00dev, pid);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, pid);
- 		if (unlikely(!queue))
- 			continue;
+-int ar6000_prepare_target(struct hif_device *hifDevice,
+-                               u32 TargetType,
+-                               u32 TargetVersion);
+-
+ int ar6000_set_hci_bridge_flags(struct hif_device *hifDevice,
+                                      u32 TargetType,
+                                      u32 Flags);
+diff --git a/drivers/staging/ath6kl/miscdrv/common_drv.c b/drivers/staging/ath6kl/miscdrv/common_drv.c
+index a23a524..2be2ea4 100644
+--- a/drivers/staging/ath6kl/miscdrv/common_drv.c
++++ b/drivers/staging/ath6kl/miscdrv/common_drv.c
+@@ -683,40 +683,6 @@ int ar6000_set_htc_params(struct hif_device *hifDevice,
+     return status;
+ }
  
-@@ -3957,7 +3957,7 @@ int rt2800_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	if (queue_idx >= 4)
- 		return 0;
+-
+-static int prepare_ar6002(struct hif_device *hifDevice, u32 TargetVersion)
+-{
+-    int status = 0;
+-
+-    /* placeholder */
+-
+-    return status;
+-}
+-
+-static int prepare_ar6003(struct hif_device *hifDevice, u32 TargetVersion)
+-{
+-    int status = 0;
+-
+-    /* placeholder */
+-
+-    return status;
+-}
+-
+-/* this function assumes the caller has already initialized the BMI APIs */
+-int ar6000_prepare_target(struct hif_device *hifDevice,
+-                               u32 TargetType,
+-                               u32 TargetVersion)
+-{
+-    if (TargetType == TARGET_TYPE_AR6002) {
+-            /* do any preparations for AR6002 devices */
+-        return prepare_ar6002(hifDevice,TargetVersion);
+-    } else if (TargetType == TARGET_TYPE_AR6003) {
+-        return prepare_ar6003(hifDevice,TargetVersion);
+-    }
+-
+-    return 0;
+-}
+-
+ #if defined(CONFIG_AR6002_REV1_FORCE_HOST)
+ /*
+  * Call this function just before the call to BMIInit
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index e3c1f58..666d5e6 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -1698,14 +1698,6 @@ ar6000_avail_ev(void *context, void *hif_handle)
  
--	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
-+	queue = rt2x00queue_get_tx_queue(rt2x00dev, queue_idx);
+         ar->arVersion.target_ver = targ_info.target_ver;
+         ar->arTargetType = targ_info.target_type;
+-
+-        /* do any target-specific preparation that can be done through BMI */
+-        r = ar6000_prepare_target(ar->arHifDevice,
+-                                  targ_info.target_type,
+-                                  targ_info.target_ver);
+-        if (r)
+-            goto avail_ev_failed;
+-
+     }
  
- 	/* Update WMM TXOP register */
- 	offset = WMM_TXOP0_CFG + (sizeof(u32) * (!!(queue_idx & 2)));
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index cc7c90c..a768deb 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -736,7 +736,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 			break;
- 		}
- 
--		queue = rt2x00queue_get_queue(rt2x00dev, qid);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
- 		if (unlikely(queue == NULL)) {
- 			/*
- 			 * The queue is NULL, this shouldn't happen. Stop
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 1df432c..391669b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1063,6 +1063,23 @@ void rt2x00queue_map_txskb(struct queue_entry *entry);
- void rt2x00queue_unmap_skb(struct queue_entry *entry);
- 
- /**
-+ * rt2x00queue_get_tx_queue - Convert tx queue index to queue pointer
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @queue: rt2x00 queue index (see &enum data_queue_qid).
-+ *
-+ * Returns NULL for non tx queues.
-+ */
-+static inline struct data_queue *
-+rt2x00queue_get_tx_queue(struct rt2x00_dev *rt2x00dev,
-+			 const enum data_queue_qid queue)
-+{
-+	if (queue < rt2x00dev->ops->tx_queues && rt2x00dev->tx)
-+		return &rt2x00dev->tx[queue];
-+
-+	return NULL;
-+}
-+
-+/**
-  * rt2x00queue_get_queue - Convert queue index to queue pointer
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  * @queue: rt2x00 queue index (see &enum data_queue_qid).
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 1b3edef..6715b77 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -122,7 +122,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	    test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
- 		queue = rt2x00queue_get_queue(rt2x00dev, QID_ATIM);
- 	else
--		queue = rt2x00queue_get_queue(rt2x00dev, qid);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
- 	if (unlikely(!queue)) {
- 		ERROR(rt2x00dev,
- 		      "Attempt to send packet over invalid queue %d.\n"
-@@ -693,7 +693,7 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct data_queue *queue;
- 
--	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
-+	queue = rt2x00queue_get_tx_queue(rt2x00dev, queue_idx);
- 	if (unlikely(!queue))
- 		return -EINVAL;
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index dd2164d..674239e 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2182,7 +2182,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 		 * queue identication number.
- 		 */
- 		type = rt2x00_get_field32(reg, STA_CSR4_PID_TYPE);
--		queue = rt2x00queue_get_queue(rt2x00dev, type);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, type);
- 		if (unlikely(!queue))
- 			continue;
- 
-@@ -2909,7 +2909,7 @@ static int rt61pci_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	if (queue_idx >= 4)
- 		return 0;
- 
--	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
-+	queue = rt2x00queue_get_tx_queue(rt2x00dev, queue_idx);
- 
- 	/* Update WMM TXOP register */
- 	offset = AC_TXOP_CSR0 + (sizeof(u32) * (!!(queue_idx & 2)));
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 5ff72de..61c964d 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2239,7 +2239,7 @@ static int rt73usb_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	if (queue_idx >= 4)
- 		return 0;
- 
--	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
-+	queue = rt2x00queue_get_tx_queue(rt2x00dev, queue_idx);
- 
- 	/* Update WMM TXOP register */
- 	offset = AC_TXOP_CSR0 + (sizeof(u32) * (!!(queue_idx & 2)));
+     r = ar6000_configure_target(ar);
 -- 
-1.7.2.3
+1.7.0.4
 
