@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59514 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462Ab1CHR13 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 12:27:29 -0500
-Subject: Re: 2.6.38-rc7, iwlagn warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	 <20110304134648.GB9866@tuxdriver.com>
-	 <1299251879.24333.3.camel@wwguy-ubuntu>
-	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
-	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
-	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
-	 <1299602750.3734.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 18:27:25 +0100
-Message-ID: <1299605245.3734.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:47090 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755309Ab1C3A4q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:56:46 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 05/34] ath6kl: remove SET_MODULE_OWNER usage
+Date: Tue, 29 Mar 2011 17:56:02 -0700
+Message-ID: <1301446591-15236-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-08 at 17:13 +0000, Mathias Burén wrote:
+This is not required.
 
-> trace http://www.2shared.com/file/XIqwsRt0/trace.html
-> dmesg http://www.2shared.com/file/vShUfLjr/dmesg-warning-no-connection.html
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-Just to confirm -- these were taken at the same time?
-
-johannes
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index cbf2cb6..bb4dbb5 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -1573,10 +1573,6 @@ init_netdev(struct net_device *dev, char *name)
+         strcpy(dev->name, name);
+     }
+ 
+-#ifdef SET_MODULE_OWNER
+-    SET_MODULE_OWNER(dev);
+-#endif
+-
+ #ifdef CONFIG_CHECKSUM_OFFLOAD
+     if(csumOffload){
+         dev->features |= NETIF_F_IP_CSUM; /*advertise kernel capability to do TCP/UDP CSUM offload for IPV4*/
+-- 
+1.7.0.4
 
