@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:43316 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932268Ab1CUXlJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45603 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925Ab1C3SDf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 19:41:09 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 30 Mar 2011 14:03:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/3] mwifiex: fix adhoc mode NULL pointer issue
-Date: Mon, 21 Mar 2011 16:44:38 -0700
-Message-Id: <1300751079-20535-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1300751079-20535-1-git-send-email-bzhao@marvell.com>
-References: <1300751079-20535-1-git-send-email-bzhao@marvell.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.39-rc1] b43: allocate receive buffers big enough for max frame len + offset
+Date: Wed, 30 Mar 2011 14:02:46 -0400
+Message-Id: <1301508166-7692-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Otherwise, skb_put inside of dma_rx can fail...
 
-mwifiex_cfg80211_assoc() handles both infra and adhoc modes.
-"sme" parameter is from cfg80211 stack and only meaningful
-to infra mode. For adhoc mode, NULL is passed to "sme" as a
-dummy parameter. We should differentiate infra/adhoc modes
-correctly to avoid access sme structure in adhoc mode.
-
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   33 ++++++++++++++++---------------
- 1 files changed, 17 insertions(+), 16 deletions(-)
+ drivers/net/wireless/b43/dma.c |    2 +-
+ drivers/net/wireless/b43/dma.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index f4d240e..80f367f 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1044,27 +1044,28 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
- 				mwifiex_channels_to_cfg80211_channel_type
- 				(priv->adapter->chan_offset));
- 
--	if (!sme && (mode != MWIFIEX_BSS_MODE_IBSS)) {
--		BUG_ON(sme == NULL);
--		return ret;
--	}
--
- 	ret = mwifiex_set_encode(priv, NULL, 0, 0, 1);	/* Disable keys */
- 
--	if (!sme && privacy) {
--		/*
--		 * Keep MWIFIEX_ENCRYPTION_MODE_WEP40 for now so that
--		 * the firmware can find a matching network from the
--		 * scan. cfg80211 doesnt not give us the encryption
--		 * mode at this stage so just setting it to wep here
--		 */
--		auth_type = MWIFIEX_AUTH_MODE_OPEN;
--		wpa_enabled = 0;
--		ret = mwifiex_set_auth(priv, MWIFIEX_ENCRYPTION_MODE_WEP104,
--							auth_type, wpa_enabled);
-+	if (mode == MWIFIEX_BSS_MODE_IBSS) {
-+		/* "privacy" is set only for ad-hoc mode */
-+		if (privacy) {
-+			/*
-+			 * Keep MWIFIEX_ENCRYPTION_MODE_WEP104 for now so that
-+			 * the firmware can find a matching network from the
-+			 * scan. The cfg80211 does not give us the encryption
-+			 * mode at this stage so just setting it to WEP here.
-+			 */
-+			wpa_enabled = 0;
-+			auth_type = MWIFIEX_AUTH_MODE_OPEN;
-+			ret = mwifiex_set_auth(priv,
-+						MWIFIEX_ENCRYPTION_MODE_WEP104,
-+						auth_type, wpa_enabled);
-+		}
-+
- 		goto done;
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 3d5566e..ff0f5ba 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1536,7 +1536,7 @@ static void dma_rx(struct b43_dmaring *ring, int *slot)
+ 		dmaaddr = meta->dmaaddr;
+ 		goto drop_recycle_buffer;
  	}
+-	if (unlikely(len > ring->rx_buffersize)) {
++	if (unlikely(len + ring->frameoffset > ring->rx_buffersize)) {
+ 		/* The data did not fit into one descriptor buffer
+ 		 * and is split over multiple buffers.
+ 		 * This should never happen, as we try to allocate buffers
+diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
+index a01c210..e8a80a1 100644
+--- a/drivers/net/wireless/b43/dma.h
++++ b/drivers/net/wireless/b43/dma.h
+@@ -163,7 +163,7 @@ struct b43_dmadesc_generic {
+ /* DMA engine tuning knobs */
+ #define B43_TXRING_SLOTS		256
+ #define B43_RXRING_SLOTS		64
+-#define B43_DMA0_RX_BUFFERSIZE		IEEE80211_MAX_FRAME_LEN
++#define B43_DMA0_RX_BUFFERSIZE		(B43_DMA0_RX_FRAMEOFFSET + IEEE80211_MAX_FRAME_LEN)
  
-+	/* Now handle infra mode. "sme" is valid for infra mode only */
- 	if (sme->auth_type == NL80211_AUTHTYPE_AUTOMATIC
- 			|| sme->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM)
- 		auth_type = MWIFIEX_AUTH_MODE_OPEN;
+ /* Pointer poison */
+ #define B43_DMA_PTR_POISON		((void *)ERR_PTR(-ENOMEM))
 -- 
-1.7.0.2
+1.7.4
 
