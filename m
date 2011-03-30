@@ -1,167 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63099 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210Ab1C1Lg5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 07:36:57 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 21so2744896wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 04:36:57 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/13] rt2x00: Don't recalculate HT40 compensation for each rate
-Date: Mon, 28 Mar 2011 13:32:01 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103281329.45470.IvDoorn@gmail.com> <201103281331.00838.IvDoorn@gmail.com> <201103281331.31575.IvDoorn@gmail.com>
-In-Reply-To: <201103281331.31575.IvDoorn@gmail.com>
+Received: from smtp.nexicom.net ([216.168.96.13]:46784 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753952Ab1C3CzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 22:55:25 -0400
+Received: from mail.lockie.ca (dyn-dsl-lh-98-124-36-5.nexicom.net [98.124.36.5])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p2U2tHoJ013622
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 22:55:20 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 89EEB1E05FB
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 22:55:16 -0400 (EDT)
+Message-ID: <4D929B98.7050207@lockie.ca>
+Date: Tue, 29 Mar 2011 22:55:20 -0400
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103281332.01948.IvDoorn@gmail.com>
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: regdomain
+References: <4D91697C.2050603@lockie.ca> <AANLkTikUfjM1eDprL_YDFuasVvTdpRoAzKXStJf-5C7e@mail.gmail.com> <4D923FC3.3010309@lockie.ca> <AANLkTimbxYgtSH9t75s9QCSb892QR1yBoOJUPToDCyCV@mail.gmail.com>
+In-Reply-To: <AANLkTimbxYgtSH9t75s9QCSb892QR1yBoOJUPToDCyCV@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On 03/29/11 16:48, Luis R. Rodriguez wrote:
 
-Previously the HT40 tx power compensation value was calculated for each
-rate. However, the calculation is independent of the tx rate and as such
-can be precalculated and just passed in for each rate.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   32 +++++++++++++++++-------------
- 1 files changed, 18 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 2f8af7a..26ac892 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1861,7 +1861,8 @@ static u8 rt2800_compesate_txpower(struct rt2x00_dev *rt2x00dev,
- 				     int is_rate_b,
- 				     enum ieee80211_band band,
- 				     int power_level,
--				     u8 txpower)
-+				     u8 txpower,
-+				     int delta)
- {
- 	u32 reg;
- 	u16 eeprom;
-@@ -1869,13 +1870,10 @@ static u8 rt2800_compesate_txpower(struct rt2x00_dev *rt2x00dev,
- 	u8 eirp_txpower;
- 	u8 eirp_txpower_criterion;
- 	u8 reg_limit;
--	int bw_comp;
- 
- 	if (!((band == IEEE80211_BAND_5GHZ) && is_rate_b))
- 		return txpower;
- 
--	bw_comp = rt2800_get_txpower_bw_comp(rt2x00dev, band);
--
- 	if (test_bit(CONFIG_SUPPORT_POWER_LIMIT, &rt2x00dev->flags)) {
- 		/*
- 		 * Check if eirp txpower exceed txpower_limit.
-@@ -1898,14 +1896,14 @@ static u8 rt2800_compesate_txpower(struct rt2x00_dev *rt2x00dev,
- 						 EEPROM_EIRP_MAX_TX_POWER_5GHZ);
- 
- 		eirp_txpower = eirp_txpower_criterion + (txpower - criterion) +
--				       (is_rate_b ? 4 : 0) + bw_comp;
-+			       (is_rate_b ? 4 : 0) + delta;
- 
- 		reg_limit = (eirp_txpower > power_level) ?
- 					(eirp_txpower - power_level) : 0;
- 	} else
- 		reg_limit = 0;
- 
--	return txpower + bw_comp - reg_limit;
-+	return txpower + delta - reg_limit;
- }
- 
- static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
-@@ -1919,6 +1917,12 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 	u32 offset;
- 	enum ieee80211_band band = conf->channel->band;
- 	int power_level = conf->power_level;
-+	int delta;
-+
-+	/*
-+	 * Calculate HT40 compensation delta
-+	 */
-+	delta = rt2800_get_txpower_bw_comp(rt2x00dev, band);
- 
- 	/*
- 	 * set to normal bbp tx power control mode: +/- 0dBm
-@@ -1948,7 +1952,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE0);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE0, txpower);
- 
- 		/*
-@@ -1959,7 +1963,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE1);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE1, txpower);
- 
- 		/*
-@@ -1970,7 +1974,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE2);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE2, txpower);
- 
- 		/*
-@@ -1981,7 +1985,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE3);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE3, txpower);
- 
- 		/* read the next four txpower values */
-@@ -1997,7 +2001,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE0);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE4, txpower);
- 
- 		/*
-@@ -2008,7 +2012,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE1);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE5, txpower);
- 
- 		/*
-@@ -2019,7 +2023,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE2);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE6, txpower);
- 
- 		/*
-@@ -2030,7 +2034,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 		txpower = rt2x00_get_field16(eeprom,
- 					     EEPROM_TXPOWER_BYRATE_RATE3);
- 		txpower = rt2800_compesate_txpower(rt2x00dev, is_rate_b, band,
--					     power_level, txpower);
-+					     power_level, txpower, delta);
- 		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE7, txpower);
- 
- 		rt2800_register_write(rt2x00dev, offset, reg);
--- 
-1.7.2.3
+>> I am trying to debug this card since it works on kernel-2.6.36.2 but not
+>> any later one.
+> Define "works" and "not works". You can bisect if you know two kernel
+> releases that you can use a bisection points, a good one and a bad
+> one. Please review how to do that.
+>
+>   Luis
+It misses a lot of SSIDs during a scan (different ones each time) and it
+won't associate with an open AP.
+I suspected a hardware problem but it works fine on kernel-2.6.36.2.
+I'lll google how to bisect.
 
