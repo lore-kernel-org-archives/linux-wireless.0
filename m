@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50118 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003Ab1CANQb (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:35828 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754188Ab1C3DHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 08:16:31 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so4637678wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:16:31 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 1/7] wl12xx: Reorder data handling in irq_work
-Date: Tue,  1 Mar 2011 15:14:38 +0200
-Message-Id: <1298985284-6048-2-git-send-email-ido@wizery.com>
-In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
-References: <1298985284-6048-1-git-send-email-ido@wizery.com>
+	Tue, 29 Mar 2011 23:07:03 -0400
+Received: by mail-gw0-f46.google.com with SMTP id a18so357556gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:07:03 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com
+Subject: [PATCH v5 07/10] mac80211: Perform PLINK_ACTION on new station
+Date: Tue, 29 Mar 2011 19:06:04 -0700
+Message-Id: <1301450767-27045-8-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The FW has a limited amount of memory for holding frames. In case it
-runs out of memory reserved for RX frames, it'll have no other choice
-but to drop packets received from the AP. Thus, it is important to
-handle RX data interrupts as soon as possible, before handling anything
-else.
+From: Javier Cardona <javier@cozybit.com>
 
-In addition, since there are enough TX descriptors to go around, it is
-better to first send TX frames, and only then handle TX completions.
+Modify the NEW_STATION command to accept PLINK_ACTIONS, in case
+userspace wants to create stations and initiate a peer link right away
+(for authenticated stations) or create a blocked station (for
+debugging).
 
-Fix this by changing the order of function calls in wl1271_irq_work.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/mesh_plink.c |    2 +-
+ net/wireless/nl80211.c    |    5 +++++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 95aa19a..443f829 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -685,10 +685,7 @@ static void wl1271_irq_work(struct work_struct *work)
- 		if (intr & WL1271_ACX_INTR_DATA) {
- 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 5d0dd92..b327e0e 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (!sta)
+ 		return NULL;
  
--			/* check for tx results */
--			if (wl->fw_status->common.tx_results_counter !=
--			    (wl->tx_results_count & 0xff))
--				wl1271_tx_complete(wl);
-+			wl1271_rx(wl, &wl->fw_status->common);
+-	sta->flags = WLAN_STA_AUTHORIZED;
++	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+ 	rate_control_rate_init(sta);
  
- 			/* Check if any tx blocks were freed */
- 			if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-@@ -700,7 +697,10 @@ static void wl1271_irq_work(struct work_struct *work)
- 				wl1271_tx_work_locked(wl);
- 			}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e76dc79..5854366 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2327,11 +2327,16 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.ht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
  
--			wl1271_rx(wl, &wl->fw_status->common);
-+			/* check for tx results */
-+			if (wl->fw_status->common.tx_results_counter !=
-+			    (wl->tx_results_count & 0xff))
-+				wl1271_tx_complete(wl);
- 		}
++	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
++		params.plink_action =
++		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
++
+ 	if (parse_station_flags(info, &params))
+ 		return -EINVAL;
  
- 		if (intr & WL1271_ACX_INTR_EVENT_A) {
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+ 		return -EINVAL;
+ 
 -- 
-1.7.1
+1.7.4.1
 
