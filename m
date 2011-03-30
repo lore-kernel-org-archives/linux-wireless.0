@@ -1,337 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:55246 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755208Ab1CGCPp (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:47173 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754188Ab1C3DHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:15:45 -0500
-Received: by gxk8 with SMTP id 8so1465423gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:15:44 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16327.934993.631297@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:45:35 +0530
+	Tue, 29 Mar 2011 23:07:09 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 3so354559ywj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:07:09 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC 27/34] ath9k_htc: Drain pending TX frames properly
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com
+Subject: [PATCH v5 09/10] mac80211: send notification on new peer candidate for our secure mesh
+Date: Tue, 29 Mar 2011 19:06:06 -0700
+Message-Id: <1301450767-27045-10-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Javier Cardona <javier@cozybit.com>
 
-When doing a channel set or a reset operation the pending
-frames queued up for transmission have to be flushed and
-sent to mac80211. Fixing this has to be done in two separate
-steps:
-
-  * Flush queued frames and kill the URB TX completion handler.
-  * Complete all the frames that in the TX pending queue.
-
-This patch adds proper support for draining and all the callsites
-namely, channel change/reset/idle/stop are fixed. A separate queue
-is used for handling failed frames.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c       |   55 +++++++++---------------
- drivers/net/wireless/ath/ath9k/htc.h           |    6 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    8 ++--
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   15 ++++---
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   31 +++++++++++++-
- 6 files changed, 69 insertions(+), 49 deletions(-)
+ net/mac80211/mesh.c       |    4 +---
+ net/mac80211/mesh.h       |    3 ++-
+ net/mac80211/mesh_plink.c |   18 +++++++++++++-----
+ 3 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index a8134f8..47fdd19 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -133,7 +133,19 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
- 
- 	while ((skb = __skb_dequeue(list)) != NULL) {
- 		dev_kfree_skb_any(skb);
--		TX_STAT_INC(skb_dropped);
-+	}
-+}
-+
-+static inline void ath9k_skb_queue_complete(struct hif_device_usb *hif_dev,
-+					    struct sk_buff_head *queue,
-+					    bool txok)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = __skb_dequeue(queue)) != NULL) {
-+		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
-+					  skb, txok);
-+		(txok) ? TX_STAT_INC(skb_success) : TX_STAT_INC(skb_failed);
- 	}
- }
- 
-@@ -141,7 +153,7 @@ static void hif_usb_tx_cb(struct urb *urb)
- {
- 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
- 	struct hif_device_usb *hif_dev;
--	struct sk_buff *skb;
-+	bool txok = true;
- 
- 	if (!tx_buf || !tx_buf->hif_dev)
- 		return;
-@@ -155,10 +167,7 @@ static void hif_usb_tx_cb(struct urb *urb)
- 	case -ECONNRESET:
- 	case -ENODEV:
- 	case -ESHUTDOWN:
--		/*
--		 * The URB has been killed, free the SKBs.
--		 */
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
-+		txok = false;
- 
- 		/*
- 		 * If the URBs are being flushed, no need to add this
-@@ -167,41 +176,19 @@ static void hif_usb_tx_cb(struct urb *urb)
- 		spin_lock(&hif_dev->tx.tx_lock);
- 		if (hif_dev->tx.flags & HIF_USB_TX_FLUSH) {
- 			spin_unlock(&hif_dev->tx.tx_lock);
-+			ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
- 			return;
- 		}
- 		spin_unlock(&hif_dev->tx.tx_lock);
- 
--		/*
--		 * In the stop() case, this URB has to be added to
--		 * the free list.
--		 */
--		goto add_free;
-+		break;
- 	default:
-+		txok = false;
- 		break;
- 	}
- 
--	/*
--	 * Check if TX has been stopped, this is needed because
--	 * this CB could have been invoked just after the TX lock
--	 * was released in hif_stop() and kill_urb() hasn't been
--	 * called yet.
--	 */
--	spin_lock(&hif_dev->tx.tx_lock);
--	if (hif_dev->tx.flags & HIF_USB_TX_STOP) {
--		spin_unlock(&hif_dev->tx.tx_lock);
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
--		goto add_free;
--	}
--	spin_unlock(&hif_dev->tx.tx_lock);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 47a26c0..1120797 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -590,9 +590,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (elems.mesh_id && elems.mesh_config &&
+ 	    mesh_matches_local(&elems, sdata)) {
+ 		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
 -
--	/* Complete the queued SKBs. */
--	while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
--		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
--					  skb, 1);
--		TX_STAT_INC(skb_completed);
--	}
-+	ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, txok);
- 
--add_free:
- 	/* Re-initialize the SKB queue */
- 	tx_buf->len = tx_buf->offset = 0;
- 	__skb_queue_head_init(&tx_buf->skb_queue);
-@@ -274,7 +261,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
- 	ret = usb_submit_urb(tx_buf->urb, GFP_ATOMIC);
- 	if (ret) {
- 		tx_buf->len = tx_buf->offset = 0;
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
-+		ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, false);
- 		__skb_queue_head_init(&tx_buf->skb_queue);
- 		list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
- 		hif_dev->tx.tx_buf_cnt++;
-@@ -344,7 +331,7 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
--	ath9k_skb_queue_purge(hif_dev, &hif_dev->tx.tx_skb_queue);
-+	ath9k_skb_queue_complete(hif_dev, &hif_dev->tx.tx_skb_queue, false);
- 	hif_dev->tx.tx_skb_cnt = 0;
- 	hif_dev->tx.flags |= HIF_USB_TX_STOP;
- 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 332175e..fc8730e 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -268,6 +268,7 @@ struct ath9k_htc_tx {
- 	u8 flags;
- 	int queued_cnt;
- 	struct sk_buff_head tx_queue;
-+	struct sk_buff_head tx_failed;
- 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
- 	spinlock_t tx_lock;
- };
-@@ -302,8 +303,8 @@ struct ath_tx_stats {
- 	u32 buf_queued;
- 	u32 buf_completed;
- 	u32 skb_queued;
--	u32 skb_completed;
--	u32 skb_dropped;
-+	u32 skb_success;
-+	u32 skb_failed;
- 	u32 cab_queued;
- 	u32 queue_stats[WME_NUM_AC];
- };
-@@ -538,6 +539,7 @@ void ath9k_htc_check_stop_queues(struct ath9k_htc_priv *priv);
- void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv);
- int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv);
- void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
-+void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
- 
- int ath9k_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 6fc6cb7..91a486c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -88,11 +88,11 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 			"%20s : %10u\n", "SKBs queued",
- 			priv->debug.tx_stats.skb_queued);
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"%20s : %10u\n", "SKBs completed",
--			priv->debug.tx_stats.skb_completed);
-+			"%20s : %10u\n", "SKBs success",
-+			priv->debug.tx_stats.skb_success);
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"%20s : %10u\n", "SKBs dropped",
--			priv->debug.tx_stats.skb_dropped);
-+			"%20s : %10u\n", "SKBs failed",
-+			priv->debug.tx_stats.skb_failed);
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "CAB queued",
- 			priv->debug.tx_stats.cab_queued);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 92e4b31..dc0b33d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -429,9 +429,8 @@ void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
- 
- 	/* Stop TX */
- 	ieee80211_stop_queues(hw);
--	htc_stop(priv->htc);
-+	ath9k_htc_tx_drain(priv);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
--	skb_queue_purge(&priv->tx.tx_queue);
- 
- 	/* Stop RX */
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index c7e056b..fb9ff11 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -193,7 +193,9 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 
- 	ath9k_htc_stop_ani(priv);
- 	ieee80211_stop_queues(priv->hw);
--	htc_stop(priv->htc);
-+
-+	ath9k_htc_tx_drain(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-@@ -248,7 +250,9 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
- 
- 	ath9k_htc_ps_wakeup(priv);
--	htc_stop(priv->htc);
-+
-+	ath9k_htc_tx_drain(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-@@ -263,6 +267,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 
- 	if (!fastcc)
- 		caldata = &priv->caldata;
-+
- 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
- 	if (ret) {
- 		ath_err(common,
-@@ -960,16 +965,14 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+-		mesh_neighbour_update(mgmt->sa, supp_rates, sdata,
+-				      mesh_peer_accepts_plinks(&elems));
++		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
  	}
- 
- 	ath9k_htc_ps_wakeup(priv);
--	htc_stop(priv->htc);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
- 
- 	tasklet_kill(&priv->rx_tasklet);
--	tasklet_kill(&priv->tx_tasklet);
--
--	skb_queue_purge(&priv->tx.tx_queue);
- 
-+	ath9k_htc_tx_drain(priv);
- 	ath9k_wmi_event_drain(priv);
- 
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 944440c..9e0c34b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -423,6 +423,26 @@ send_mac80211:
- 	ieee80211_tx_status(priv->hw, skb);
  }
  
-+void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
-+{
-+	struct sk_buff *skb = NULL;
-+
-+	/*
-+	 * Ensure that all pending TX frames are flushed,
-+	 * and that the TX completion tasklet is killed.
-+	 */
-+	htc_stop(priv->htc);
-+	tasklet_kill(&priv->tx_tasklet);
-+
-+	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
-+
-+	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
-+}
-+
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-@@ -432,6 +452,10 @@ void ath9k_tx_tasklet(unsigned long data)
- 		ath9k_htc_tx_process(priv, skb);
- 	}
- 
-+	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
-+
- 	/* Wake TX queues if needed */
- 	ath9k_htc_check_wake_queues(priv);
- }
-@@ -445,13 +469,18 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 	tx_ctl = HTC_SKB_CB(skb);
- 	tx_ctl->txok = txok;
- 
--	skb_queue_tail(&priv->tx.tx_queue, skb);
-+	if (txok)
-+		skb_queue_tail(&priv->tx.tx_queue, skb);
-+	else
-+		skb_queue_tail(&priv->tx.tx_failed, skb);
-+
- 	tasklet_schedule(&priv->tx_tasklet);
- }
- 
- int ath9k_tx_init(struct ath9k_htc_priv *priv)
- {
- 	skb_queue_head_init(&priv->tx.tx_queue);
-+	skb_queue_head_init(&priv->tx.tx_failed);
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index b99e230..10acf1c 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -226,7 +226,8 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata);
+ /* Mesh plinks */
+ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+-		struct ieee80211_sub_if_data *sdata, bool add);
++		struct ieee80211_sub_if_data *sdata,
++		struct ieee802_11_elems *ie);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index b327e0e..84e5b05 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -237,8 +237,9 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
  	return 0;
  }
  
+-void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data *sdata,
+-			   bool peer_accepting_plinks)
++void mesh_neighbour_update(u8 *hw_addr, u32 rates,
++		struct ieee80211_sub_if_data *sdata,
++		struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+@@ -248,8 +249,14 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
+ 	sta = sta_info_get(sdata, hw_addr);
+ 	if (!sta) {
+ 		rcu_read_unlock();
+-
+-		sta = mesh_plink_alloc(sdata, hw_addr, rates);
++		/* Userspace handles peer allocation when security is enabled
++		 * */
++		if (sdata->u.mesh.is_secure)
++			cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
++					elems->ie_start, elems->total_len,
++					GFP_KERNEL);
++		else
++			sta = mesh_plink_alloc(sdata, hw_addr, rates);
+ 		if (!sta)
+ 			return;
+ 		if (sta_info_insert_rcu(sta)) {
+@@ -260,7 +267,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
+ 
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+-	if (peer_accepting_plinks && sta->plink_state == PLINK_LISTEN &&
++	if (mesh_peer_accepts_plinks(elems) &&
++			sta->plink_state == PLINK_LISTEN &&
+ 			sdata->u.mesh.accepting_plinks &&
+ 			sdata->u.mesh.mshcfg.auto_open_plinks)
+ 		mesh_plink_open(sta);
 -- 
 1.7.4.1
 
