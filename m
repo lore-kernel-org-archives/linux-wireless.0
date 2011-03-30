@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43305 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754676Ab1CCLab convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45031 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756064Ab1C3TEh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 06:30:31 -0500
-Received: by wwb22 with SMTP id 22so1223097wwb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 03:30:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110301160316.GT18043@bicker>
-References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
- <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
- <20110301031151.GA7620@kroah.com> <AANLkTi=zU-F=y2qn6B90F3esbNVkE6_nCOZS-dnTA4en@mail.gmail.com>
- <20110301160316.GT18043@bicker>
-From: Javier Martinez Canillas <martinez.javier@gmail.com>
-Date: Thu, 3 Mar 2011 12:30:15 +0100
-Message-ID: <AANLkTimbskweo7NGGLSj+O3h0kJXbugoptHN6d1DCx59@mail.gmail.com>
-Subject: Re: [PATCH 2/2] staging: brcm80211: Remove unused variables and code
- clean up
-To: Dan Carpenter <error27@gmail.com>
-Cc: Greg KH <greg@kroah.com>, devel@driverdev.osuosl.org,
-	Dowan Kim <dowan@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, arend@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 30 Mar 2011 15:04:37 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 356E4540473
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:08:54 -0400 (EDT)
+Subject: Compat-wireless release for 2011-03-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110330190436.4E25140EAF@repository3.orbit-lab.org>
+Date: Wed, 30 Mar 2011 15:04:36 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> Do you want me to wait a few days to redo and resend it or am I doing
->> something wrong?
->
-> Actually Arend has a different patch for this, that I guess fixes the
-> #if 0 code instead of removing it.  Probably that's prefered.  I've
-> asked him to submit it.
->
-> regards,
-> dan carpenter
->
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new branch]      linux-2.6.39.y -> origin/linux-2.6.39.y
+   f7606f5..c6e514a  master     -> origin/master
+ * [new tag]         compat-wireless-2011-03-30 -> compat-wireless-2011-03-30
+ * [new tag]         compat-wireless-v2.6.39-rc1-2 -> compat-wireless-v2.6.39-rc1-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-v2.6.39-rc1-1 -> compat-wireless-v2.6.39-rc1-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+ * [new branch]      linux-2.6.39.y -> origin/linux-2.6.39.y
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 55370d9...0812ceb akpm-end   -> origin/akpm-end  (forced update)
+   036a982..0ce790e  akpm-start -> origin/akpm-start
+   48aa660..2661ba7  history    -> origin/history
+ + 74bdbee...ce247ee master     -> origin/master  (forced update)
+   036a982..0ce790e  stable     -> origin/stable
+ * [new tag]         next-20110330 -> next-20110330
+ * [new tag]         v2.6.39-rc1 -> v2.6.39-rc1
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Yes, fixing the #ifdef 0 instead of just removing it is far a better solution.
+compat-wireless code metrics
 
-Thanks
+    833105 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1544 - % of code consists of backport work
+      1148 - Crap changes not yet posted
+      1114 - Crap additions not yet posted
+        34 - Crap deletions not yet posted
+    0.1378 - % of crap code
 
--- 
------------------------------------------
-Javier Martínez Canillas
-(+34) 682 39 81 69
-PhD Student in High Performance Computing
-Computer Architecture and Operating System Department (CAOS)
-Universitat Autònoma de Barcelona
-Barcelona, Spain
+Base tree: linux-next.git
+Base tree version: next-20110330
+compat-wireless release: compat-wireless-2011-03-30-pc
