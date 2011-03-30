@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34181 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758631Ab1CCSan (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:30:43 -0500
-Date: Thu, 3 Mar 2011 13:19:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rick Jones <rick.jones2@hp.com>
-Cc: Dave =?iso-8859-1?Q?T=E4ht?= <d@taht.net>, sedat.dilek@gmail.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	bloat-devel@lists.bufferbloat.net, linux-kernel@vger.kernel.org
-Subject: Re: ANNOUNCE: debloat-testing kernel git tree
-Message-ID: <20110303181950.GD8969@tuxdriver.com>
-References: <20110225222210.GA3618@tuxdriver.com>
- <AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
- <87fwr9jxya.fsf@cruithne.co.teklibre.org>
- <AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
- <8739n9ii7z.fsf@cruithne.co.teklibre.org>
- <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
- <87tyfph2az.fsf@cruithne.co.teklibre.org>
- <1299176168.2157.14.camel@tardy>
+Received: from mail.atheros.com ([12.19.149.2]:47098 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755315Ab1C3A4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2011 20:56:48 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:24 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 06/34] ath6kl: move setting netdev for non-cf80211 case
+Date: Tue, 29 Mar 2011 17:56:03 -0700
+Message-ID: <1301446591-15236-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1299176168.2157.14.camel@tardy>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 03, 2011 at 10:16:08AM -0800, Rick Jones wrote:
-> > For wireless routers and cable home gateways especially, this research
-> > shows that the total un-managed buffers in your system should be less
-> > than 32.
-> 
-> Would it be a good thing to start describing these queues not so much in
-> terms of packets but in terms of delay (or bandwidth X delay)?
-> 
-> Constants tend to live longer than they should, no matter how noble in
-> birth.
+The check for SET_NETDEV_DEV is not required given that
+this is upstream. The setting of the SET_NETDEV_DEV with
+the osDevInfo.pOSDevice is redundant for the cfg80211 case
+as this was already being done, so just set the netdev device
+for the non-cfg80211 which was missing.
 
-Yes, it probably would -- that would be more meaningful between
-different technologies and/or for technologies that might have variable
-latencies due to shared media or whatnot.
+Cc: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-Now, the question becomes what patches to propose to make that
-happen... :-)
-
-John
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index bb4dbb5..94b9132 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -1685,6 +1685,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
+     }
+     ether_setup(dev);
+     ar_netif = ar6k_priv(dev);
++    SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
+ #endif /* ATH6K_CONFIG_CFG80211 */
+ 
+     if (ar_netif == NULL) {
+@@ -1715,11 +1716,6 @@ ar6000_avail_ev(void *context, void *hif_handle)
+ 
+     init_netdev(dev, ifname);
+ 
+-#ifdef SET_NETDEV_DEV
+-    if (ar_netif) { 
+-        SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
+-    }
+-#endif 
+ 
+     ar->arNetDev             = dev;
+     ar->arHifDevice          = hif_handle;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
