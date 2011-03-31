@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29962 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755359Ab1CKC4Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:02 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 10/20] ath6kl: remove-typedef AR6K_GMBOX_CTRL_REGISTERS
-Date: Thu, 10 Mar 2011 18:55:37 -0800
-Message-ID: <1299812147-12069-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45904 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861Ab1CaNs1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 09:48:27 -0400
+Message-ID: <4D948624.3040605@suse.cz>
+Date: Thu, 31 Mar 2011 15:48:20 +0200
+From: Jiri Slaby <jslaby@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	rmk+kernel@arm.linux.org.uk, devel@linuxdriverproject.org,
+	gregkh@suse.de, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
+ in separate module
+References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de>
+In-Reply-To: <201103301453.48607.arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s AR6K_GMBOX_CTRL_REGISTERS \
-	"struct ar6k_gmbox_ctrl_registers" drivers/staging/ath6k
+On 03/30/2011 02:53 PM, Arnd Bergmann wrote:
+> On Tuesday 29 March 2011, Jiri Slaby wrote:
+>> On 03/29/2011 11:40 AM, Arend van Spriel wrote:
+>>> --- /dev/null
+>>> +++ b/drivers/brcmaxi/axi.c
+>>> @@ -0,0 +1,786 @@
+>> ...
+>>> +/* resetctrl */
+>>> +#define	AIRC_RESET		1
+>>> +
+>>> +/* definition for specifying padding fields */
+>>> +#define	_PADLINE(line)	pad ## line
+>>> +#define	_XSTR(line)	_PADLINE(line)
+>>> +#define	PAD		_XSTR(__LINE__)
+>>> +
+>>> +/*
+>>> + * struct aidmp - device management plugin "wrapper" registers.
+>>> + */
+>>> +struct aidmp {
+>>
+>> This looks like it should be __packed__.
+> 
+> Why that? Adding the packed attribute would enforce byte access but
+> not change the layout of the structure, so I think that would make
+> it worse not better.
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+How it can? Packed only tells the compiler to have one byte alignment
+steps. And it should not matter here as all the members are 32-bit long.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index ebcc82b..e8b638c 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -65,9 +65,9 @@ typedef PREPACK struct _AR6K_IRQ_ENABLE_REGISTERS {
-     u8 counter_int_status_enable;
- } POSTPACK AR6K_IRQ_ENABLE_REGISTERS;
- 
--typedef PREPACK struct _AR6K_GMBOX_CTRL_REGISTERS {
-+PREPACK struct ar6k_gmbox_ctrl_registers {
-     u8 int_status_enable;
--} POSTPACK AR6K_GMBOX_CTRL_REGISTERS;
-+} POSTPACK;
- 
- #include "athendpack.h"
- 
-@@ -139,7 +139,7 @@ struct ar6k_device {
-     int                             MaxSendBundleSize;
-     AR6K_GMBOX_INFO                 GMboxInfo;
-     bool                          GMboxEnabled;
--    AR6K_GMBOX_CTRL_REGISTERS       GMboxControlRegisters;
-+    struct ar6k_gmbox_ctrl_registers       GMboxControlRegisters;
-     int                             RecheckIRQStatusCnt;
- };
- 
+The structure seems to be something which maps to device registers. So
+for documentation purposes it should be packed. And to avoid later
+mistakes when the u32 are broken down to u8s and u16s.
+
+regards,
 -- 
-1.7.4.15.g7811d
-
+js
+suse labs
