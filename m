@@ -1,146 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42318 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755302Ab1CQS7V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 14:59:21 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3123030iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:59:21 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH 8/9] mwl8k: Check outgoing rate for a station to decide if ampdu can be created
-Date: Thu, 17 Mar 2011 11:58:48 -0700
-Message-Id: <1300388329-15380-8-git-send-email-brian@cozybit.com>
-In-Reply-To: <1300388329-15380-1-git-send-email-brian@cozybit.com>
-References: <1300388329-15380-1-git-send-email-brian@cozybit.com>
+Received: from mga09.intel.com ([134.134.136.24]:25446 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758620Ab1CaQST (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:18:19 -0400
+Subject: Re: [PATCH 2/3] iwlwifi: more priv->mutex serialization
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1301585788-7331-2-git-send-email-sgruszka@redhat.com>
+References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
+	 <1301585788-7331-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 31 Mar 2011 09:15:50 -0700
+Message-ID: <1301588150.22383.9.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nishant Sarmukadam <nishants@marvell.com>
+On Thu, 2011-03-31 at 08:36 -0700, Stanislaw Gruszka wrote:
+> Check status bits with mutex taken, because when we wait for mutex
+> unlock, status can change. Patch should also make remaining sync
+> commands be send with priv->mutex taken. That will prevent execute
+> these commands when we are currently reset firmware, what could
+> possibly cause troubles.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |   34 ++++++++++++++++++-------------
+>  1 files changed, 20 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 7adc60e..0c49d1a 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -483,12 +483,14 @@ static void iwl_bg_bt_full_concurrency(struct work_struct *work)
+>  		container_of(work, struct iwl_priv, bt_full_concurrency);
+>  	struct iwl_rxon_context *ctx;
+>  
+> +	mutex_lock(&priv->mutex);
+> +
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -		return;
+> +		goto out;
+>  
+>  	/* dont send host command if rf-kill is on */
+>  	if (!iwl_is_ready_rf(priv))
+> -		return;
+> +		goto out;
+>  
+>  	IWL_DEBUG_INFO(priv, "BT coex in %s mode\n",
+>  		       priv->bt_full_concurrent ?
+> @@ -498,15 +500,15 @@ static void iwl_bg_bt_full_concurrency(struct work_struct *work)
+>  	 * LQ & RXON updated cmds must be sent before BT Config cmd
+>  	 * to avoid 3-wire collisions
+>  	 */
+> -	mutex_lock(&priv->mutex);
+>  	for_each_context(priv, ctx) {
+>  		if (priv->cfg->ops->hcmd->set_rxon_chain)
+>  			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
+>  		iwlcore_commit_rxon(priv, ctx);
+>  	}
+> -	mutex_unlock(&priv->mutex);
+>  
+>  	priv->cfg->ops->hcmd->send_bt_config(priv);
+> +out:
+> +	mutex_unlock(&priv->mutex);
+>  }
+>  
+>  /**
+> @@ -2814,10 +2816,13 @@ static void iwl_bg_init_alive_start(struct work_struct *data)
+>  	struct iwl_priv *priv =
+>  	    container_of(data, struct iwl_priv, init_alive_start.work);
+>  
+> -	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +	mutex_lock(&priv->mutex);
+> +
+> +	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+> +		mutex_unlock(&priv->mutex);
+>  		return;
+> +	}
+>  
+> -	mutex_lock(&priv->mutex);
+>  	priv->cfg->ops->lib->init_alive_start(priv);
+>  	mutex_unlock(&priv->mutex);
+>  }
+> @@ -2827,15 +2832,16 @@ static void iwl_bg_alive_start(struct work_struct *data)
+>  	struct iwl_priv *priv =
+>  	    container_of(data, struct iwl_priv, alive_start.work);
+>  
+> +	mutex_lock(&priv->mutex);
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -		return;
+> +		goto unlock;
+>  
+>  	/* enable dram interrupt */
+>  	if (priv->cfg->ops->lib->isr_ops.reset)
+>  		priv->cfg->ops->lib->isr_ops.reset(priv);
+>  
+> -	mutex_lock(&priv->mutex);
+>  	iwl_alive_start(priv);
+> +unlock:
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
+> @@ -3457,21 +3463,22 @@ void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+>  
+>  	IWL_DEBUG_MAC80211(priv, "enter\n");
+>  
+> +	mutex_lock(&priv->mutex);
+> +
+>  	if (iwl_is_rfkill(priv))
+> -		goto out_exit;
+> +		goto out;
+>  
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
+>  	    test_bit(STATUS_SCANNING, &priv->status))
+> -		goto out_exit;
+> +		goto out;
+>  
+>  	if (!iwl_is_associated_ctx(ctx))
+> -		goto out_exit;
+> +		goto out;
+>  
+>  	/* channel switch in progress */
+>  	if (priv->switch_rxon.switch_in_progress == true)
+> -		goto out_exit;
+> +		goto out;
+>  
+> -	mutex_lock(&priv->mutex);
+>  	if (priv->cfg->ops->lib->set_channel_switch) {
+>  
+>  		ch = channel->hw_value;
+> @@ -3527,7 +3534,6 @@ void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+>  	}
+>  out:
+>  	mutex_unlock(&priv->mutex);
+> -out_exit:
+>  	if (!priv->switch_rxon.switch_in_progress)
+>  		ieee80211_chswitch_done(ctx->vif, false);
+>  	IWL_DEBUG_MAC80211(priv, "leave\n");
 
-If the outgoing packet rate to a particular HT station is <=6.5
-Mbps, do not attempt to create an ampdu. Also, if the outgoing
-rate is legacy rate, do not create an ampdu.
-
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |   60 +++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 57 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index b90178d..5473f4c 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -291,6 +291,7 @@ struct mwl8k_vif {
- struct mwl8k_sta {
- 	/* Index into station database. Returned by UPDATE_STADB.  */
- 	u8 peer_id;
-+	u8 is_ampdu_allowed;
- };
- #define MWL8K_STA(_sta) ((struct mwl8k_sta *)&((_sta)->drv_priv))
- 
-@@ -1517,6 +1518,27 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- 		     MWL8K_TXD_STATUS_OK_RETRY |		\
- 		     MWL8K_TXD_STATUS_OK_MORE_RETRY))
- 
-+/* The firmware will fill in the rate information
-+ * for each packet that gets queued in the hardware
-+ * in this structure
-+ */
-+
-+struct rateinfo {
-+	__le16  format:1;
-+	__le16  short_gi:1;
-+	__le16  band_width:1;
-+	__le16  rate_id_mcs:6;
-+	__le16  adv_coding:2;
-+	__le16  antenna:2;
-+	__le16  act_sub_chan:2;
-+	__le16  preamble_type:1;
-+	__le16  power_id:4;
-+	__le16  antenna2:1;
-+	__le16  reserved:1;
-+	__le16  tx_bf_frame:1;
-+	__le16  green_field:1;
-+} __packed;
-+
- static int
- mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- {
-@@ -1533,6 +1555,11 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 		struct sk_buff *skb;
- 		struct ieee80211_tx_info *info;
- 		u32 status;
-+		struct ieee80211_sta *sta;
-+		struct mwl8k_sta *sta_info = NULL;
-+		u16 rate_info;
-+		struct rateinfo *rate;
-+		struct ieee80211_hdr *wh;
- 
- 		tx = txq->head;
- 		tx_desc = txq->txd + tx;
-@@ -1561,11 +1588,34 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 
- 		mwl8k_remove_dma_header(skb, tx_desc->qos_control);
- 
-+		wh = (struct ieee80211_hdr *) skb->data;
-+
- 		/* Mark descriptor as unused */
- 		tx_desc->pkt_phys_addr = 0;
- 		tx_desc->pkt_len = 0;
- 
- 		info = IEEE80211_SKB_CB(skb);
-+		if (ieee80211_is_data(wh->frame_control)) {
-+			sta = info->control.sta;
-+			if (sta) {
-+				sta_info = MWL8K_STA(sta);
-+				BUG_ON(sta_info == NULL);
-+				rate_info = le16_to_cpu(tx_desc->rate_info);
-+				rate = (struct rateinfo *)&rate_info;
-+				/* If rate is < 6.5 Mpbs for an ht station
-+				 * do not form an ampdu. If the station is a
-+				 * legacy station (format = 0), do not form an
-+				 * ampdu
-+				 */
-+				if (rate->rate_id_mcs < 1 ||
-+				    rate->format == 0) {
-+					sta_info->is_ampdu_allowed = false;
-+				} else {
-+					sta_info->is_ampdu_allowed = true;
-+				}
-+			}
-+		}
-+
- 		ieee80211_tx_info_clear_status(info);
- 
- 		/* Rate control is happening in the firmware.
-@@ -1784,9 +1834,11 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 			 * prevents sequence number mismatch at the recepient
- 			 * as described above.
- 			 */
--			stream = mwl8k_add_stream(hw, sta, tid);
--			if (stream != NULL)
--				start_ba_session = true;
-+			if (MWL8K_STA(sta)->is_ampdu_allowed) {
-+				stream = mwl8k_add_stream(hw, sta, tid);
-+				if (stream != NULL)
-+					start_ba_session = true;
-+			}
- 		}
- 		spin_unlock(&priv->stream_lock);
- 	}
-@@ -4719,6 +4771,8 @@ static int mwl8k_sta_add(struct ieee80211_hw *hw,
- 		ret = mwl8k_cmd_update_stadb_add(hw, vif, sta);
- 		if (ret >= 0) {
- 			MWL8K_STA(sta)->peer_id = ret;
-+			if (sta->ht_cap.ht_supported)
-+				MWL8K_STA(sta)->is_ampdu_allowed = true;
- 			ret = 0;
- 		}
- 
--- 
-1.7.1.1
 
