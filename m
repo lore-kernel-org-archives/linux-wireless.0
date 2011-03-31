@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46819 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab1CJLlO convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38374 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757146Ab1CaIHS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 06:41:14 -0500
-Received: by wya21 with SMTP id 21so1348438wya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 03:41:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikvcwQx9p1O49DZDJBmWPte9_VVrwJOQgBjPri4@mail.gmail.com>
-References: <AANLkTikvcwQx9p1O49DZDJBmWPte9_VVrwJOQgBjPri4@mail.gmail.com>
-Date: Thu, 10 Mar 2011 17:11:13 +0530
-Message-ID: <AANLkTi=ZvBNJ6Sid_Q+955ksxLrgaDL2cGz41-sg8x7d@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: =?ISO-8859-1?Q?Adri=E0_Cereto_Massagu=E9?= <ssorgatem@gmail.com>,
-	h@realh.co.uk
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 31 Mar 2011 04:07:18 -0400
+Received: by fxm17 with SMTP id 17so1636292fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 01:07:17 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH 0/5] wl12xx: Cleanups & fixes
+Date: Thu, 31 Mar 2011 10:06:56 +0200
+Message-Id: <1301558821-17787-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/10 Adrià Cereto Massagué <ssorgatem@gmail.com>:
-> Hi,
->
-> I can reproduce the same issue, since kernel 2.6.35  and a AR9285.
+The following patches mostly clean up code, but also fix a few minor bugs.
 
-We had got the card, will try to reproduce very soon.
-thanks,
-shafi
+The first four patches fix a few issues in the recently added 128x support.
+The last patch fixes a regression in the driver, preventing it from working
+properly on platforms which do not support level triggered interrupts.
 
->
-> I'm also using debian (sid).
->
-> Seeing we both having this issue use debian, could it be something
-> debian-specific?
->
-> --
-> Adrià Cereto Massagué
-> Biotechnology student
-> Universitat Rovira i Virgili
->
-> Languages: Català, Español, English, Français, Deutsch
->
-> Nota importante | Important Notice
->
->
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
->
+Ido Yariv (5):
+  wl12xx: Clean up and fix the 128x boot sequence
+  wl12xx: Clean up the block size alignment code
+  wl12xx: Clean up the dummy packet mechanism
+  wl12xx: Simplify TX blocks accounting
+  wl12xx: Handle platforms without level trigger interrupts
+
+ drivers/net/wireless/wl12xx/acx.c    |    2 -
+ drivers/net/wireless/wl12xx/boot.c   |  235 +++++++++++++++++-----------------
+ drivers/net/wireless/wl12xx/boot.h   |    1 +
+ drivers/net/wireless/wl12xx/init.c   |    2 +-
+ drivers/net/wireless/wl12xx/io.c     |    3 +-
+ drivers/net/wireless/wl12xx/main.c   |  140 +++++++++++++--------
+ drivers/net/wireless/wl12xx/sdio.c   |   21 ++--
+ drivers/net/wireless/wl12xx/spi.c    |    9 +-
+ drivers/net/wireless/wl12xx/tx.c     |   70 +++++++----
+ drivers/net/wireless/wl12xx/tx.h     |   11 ++-
+ drivers/net/wireless/wl12xx/wl12xx.h |   23 ++-
+ include/linux/wl12xx.h               |   14 ++-
+ 12 files changed, 305 insertions(+), 226 deletions(-)
+
