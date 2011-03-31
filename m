@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755922Ab1CBJYL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 04:24:11 -0500
-Subject: Re: [PATCH] hostapd: Don't force HT Mixed Mode for non-GF STAs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: hostap@lists.shmoo.com, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201103021020.54806.helmut.schaa@googlemail.com>
-References: <1299055031-25080-1-git-send-email-helmut.schaa@googlemail.com>
-	 <201103021013.05798.helmut.schaa@googlemail.com>
-	 <1299057521.4076.12.camel@jlt3.sipsolutions.net>
-	 <201103021020.54806.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Mar 2011 10:24:08 +0100
-Message-ID: <1299057848.4076.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58903 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758462Ab1CaQV6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:21:58 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH 3/4] compat: fix build for kernel < 2.6.29
+Date: Thu, 31 Mar 2011 18:21:34 +0200
+Message-Id: <1301588495-16583-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+References: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-02 at 10:20 +0100, Helmut Schaa wrote:
+get_irq_desc_chip(), get_irq_desc_data(), get_irq_desc_chip_data() and
+get_irq_desc_msi() are not available in kernel < 2.6.29.
 
-> > static bool rs_use_green(struct ieee80211_sta *sta)
-> > {
-> >         struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;   
-> >         struct iwl_rxon_context *ctx = sta_priv->common.ctx;
-> >   
-> >         return (sta->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
-> >                 !(ctx->ht.non_gf_sta_present);
-> > } 
-> 
-> Hmm, that looks a bit fishy as well. iwlagn should be allowed to use GF
-> in that case, it just needs to protect it.
+Luis please add this into the linux-2.6.39.y branch.
 
-Right. That looks like it'd be a bit more tricky, and I don't think I
-care right now.
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.39.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
+index 2c62d90..104fce0 100644
+--- a/include/linux/compat-2.6.39.h
++++ b/include/linux/compat-2.6.39.h
+@@ -71,6 +71,8 @@ static inline void irq_set_probe(unsigned int irq)
+ {
+ 	set_irq_probe(irq);
+ }
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+ static inline struct irq_chip *irq_desc_get_chip(struct irq_desc *desc)
+ {
+ 	return get_irq_desc_chip(desc);
+@@ -89,6 +91,7 @@ static inline struct msi_desc *irq_desc_get_msi_desc(struct irq_desc *desc)
+ {
+ 	return get_irq_desc_msi(desc);
+ }
++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
+ 
+-- 
+1.7.1
 
