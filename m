@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57647 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755426Ab1CPVX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 17:23:59 -0400
-From: Greg Kroah-Hartman <gregkh@suse.de>
-To: devel@linuxdriverproject.org
-Cc: Stefan Weil <weil@mail.berlios.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [PATCH 584/961] staging: brcm80211: Fix memory leak after kmalloc failure
-Date: Wed, 16 Mar 2011 14:03:47 -0700
-Message-Id: <1300309804-3756-584-git-send-email-gregkh@suse.de>
-In-Reply-To: <1300309804-3756-1-git-send-email-gregkh@suse.de>
-References: <20110316210300.GA3311@kroah.com>
- <1300309804-3756-1-git-send-email-gregkh@suse.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61747 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753391Ab1CaQKq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:10:46 -0400
+Message-ID: <4D94A781.6060904@suse.cz>
+Date: Thu, 31 Mar 2011 18:10:41 +0200
+From: Jiri Slaby <jslaby@suse.cz>
+MIME-Version: 1.0
+To: Russell King <rmk@arm.linux.org.uk>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	devel@linuxdriverproject.org, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
+ in separate module
+References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de> <4D948624.3040605@suse.cz> <20110331135126.GC19540@flint.arm.linux.org.uk> <4D948B1C.7080806@suse.cz> <20110331141424.GD19540@flint.arm.linux.org.uk>
+In-Reply-To: <20110331141424.GD19540@flint.arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stefan Weil <weil@mail.berlios.de>
+On 03/31/2011 04:14 PM, Russell King wrote:
+> On Thu, Mar 31, 2011 at 04:09:32PM +0200, Jiri Slaby wrote:
+>> On 03/31/2011 03:51 PM, Russell King wrote:
+>>> On Thu, Mar 31, 2011 at 03:48:20PM +0200, Jiri Slaby wrote:
+>>>> How it can? Packed only tells the compiler to have one byte alignment
+>>>> steps. And it should not matter here as all the members are 32-bit long.
+>>>
+>>> It also tells the compiler that it may be misaligned, so to avoid
+>>> alignment faults it will use byte loads/stores.
+>>
+>> No, it should not (if offsetof % sizeof == 0). Otherwise it's a bug in
+>> the compiler.
+>>
+>> Am I missing something?
+> 
+> $ cat t1.c
+> struct foo {
+>         unsigned long bar;
+> } __attribute__((packed));
+> 
+> unsigned long baz(struct foo *f)
+> {
+>         return f->bar;
+> }
+> $ arm-linux-gcc -O2 -S -o - t1.c
+> ...
+>         .global baz
+>         .type   baz, %function
+> baz:
+>         @ args = 0, pretend = 0, frame = 0
+>         @ frame_needed = 0, uses_anonymous_args = 0
+>         @ link register save eliminated.
+>         ldrb    r3, [r0, #0]    @ zero_extendqisi2
+>         ldrb    r2, [r0, #1]    @ zero_extendqisi2
+>         ldrb    r1, [r0, #2]    @ zero_extendqisi2
+>         orr     r3, r3, r2, asl #8
+>         ldrb    r0, [r0, #3]    @ zero_extendqisi2
+>         orr     r3, r3, r1, asl #16
+>         orr     r0, r3, r0, asl #24
+>         mov     pc, lr
+>         .size   baz, .-baz
+>         .ident  "GCC: (GNU) 4.3.5"
+>         .section        .note.GNU-stack,"",%progbits
+> 
+> It does this because with the packed attribute, it can't make assumptions
+> about the alignment of 'f'.
 
-This error was spotted by cppcheck:
+I don't see why it couldn't like without the packed attribute. (The
+manual says packed attribute for a struct is equivalent to specifying
+packed to each member of that struct. It doesn't say anything about the
+structure alignment itself.)
 
-drivers/staging/brcm80211/phy/wlc_phy_lcn.c:4053: error: Memory leak: ptr
+Ok, not that I'm fully convinced, but it doesn't matter.
 
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Stefan Weil <weil@mail.berlios.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+So let's NOT mark it packed.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
-index 3fbbbb4..f027d50 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
-@@ -4051,6 +4051,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
- 
- 	phy_c32 = kmalloc(sizeof(u16) * 20, GFP_ATOMIC);
- 	if (NULL == phy_c32) {
-+		kfree(ptr);
- 		return;
- 	}
- 	phy_c26 = read_phy_reg(pi, 0x6da);
+Anyway the info you sent was useful for me.
+
+thanks,
 -- 
-1.7.4.1
-
+js
+suse labs
