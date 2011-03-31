@@ -1,266 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2971 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:57057 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757699Ab1D3Qks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 12:40:48 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/14] iwlagn: connect and disconnect sequence for RXON
-Date: Sat, 30 Apr 2011 09:17:32 -0700
-Message-Id: <1304180260-13875-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184115_617263_BA556890)
-In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751945Ab1CaWcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 18:32:03 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 15:31:39 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] cfg80211: add a timer for invalid user reg hints
+Date: Thu, 31 Mar 2011 15:31:38 -0700
+Message-ID: <1301610698-3688-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional changes, separate the connect and disconnect sequences in
-RXON commit function, easier to read and understand.
+We have no other option but to inform userspace that we have
+queued up their regulatory hint request when we are given one
+given that nl80211 operates atomically on user requests. The
+best we can do is accept the request, and set a timer for processing
+it. If the timer is hit we restore the regulatory settings and
+ignore the user input.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This fixes this reported bug:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=28112
+
+Reported-by: gregoryx.alagnou@intel.com
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |  194 +++++++++++++++------------
- 1 files changed, 111 insertions(+), 83 deletions(-)
+ net/wireless/reg.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 7f52ab8..178b2b5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -169,6 +169,103 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
- 	return ret;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3332d5b..62d9ea1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -42,6 +42,7 @@
+ #include <linux/ctype.h>
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
++#include <linux/timer.h>
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
+@@ -106,6 +107,10 @@ struct reg_beacon {
+ static void reg_todo(struct work_struct *work);
+ static DECLARE_WORK(reg_work, reg_todo);
+ 
++static struct timer_list reg_timer;
++static void reg_timeout_work(struct work_struct *work);
++static DECLARE_WORK(reg_timeout, reg_timeout_work);
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 5,
+@@ -1330,6 +1335,9 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
+ 
++	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
++		del_timer_sync(&reg_timer);
++
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
  }
+@@ -1584,6 +1592,7 @@ int regulatory_hint_user(const char *alpha2)
+ 	request->initiator = NL80211_REGDOM_SET_BY_USER;
  
-+static int iwlagn_rxon_disconn(struct iwl_priv *priv,
-+			       struct iwl_rxon_context *ctx)
-+{
-+	int ret;
-+	struct iwl_rxon_cmd *active = (void *)&ctx->active;
-+
-+	if (ctx->ctxid == IWL_RXON_CTX_BSS)
-+		ret = iwlagn_disable_bss(priv, ctx, &ctx->staging);
-+	else
-+		ret = iwlagn_disable_pan(priv, ctx, &ctx->staging);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Un-assoc RXON clears the station table and WEP
-+	 * keys, so we have to restore those afterwards.
-+	 */
-+	iwl_clear_ucode_stations(priv, ctx);
-+	iwl_restore_stations(priv, ctx);
-+	ret = iwl_restore_default_wep_keys(priv, ctx);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	memcpy(active, &ctx->staging, sizeof(*active));
-+	return 0;
-+}
-+
-+static int iwlagn_rxon_connect(struct iwl_priv *priv,
-+			       struct iwl_rxon_context *ctx)
-+{
-+	int ret;
-+	struct iwl_rxon_cmd *active = (void *)&ctx->active;
-+
-+	/* RXON timing must be before associated RXON */
-+	ret = iwl_send_rxon_timing(priv, ctx);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to send timing (%d)!\n", ret);
-+		return ret;
-+	}
-+	/* QoS info may be cleared by previous un-assoc RXON */
-+	iwlagn_update_qos(priv, ctx);
-+
-+	/*
-+	 * We'll run into this code path when beaconing is
-+	 * enabled, but then we also need to send the beacon
-+	 * to the device.
-+	 */
-+	if (ctx->vif && (ctx->vif->type == NL80211_IFTYPE_AP)) {
-+		ret = iwlagn_update_beacon(priv, ctx->vif);
-+		if (ret) {
-+			IWL_ERR(priv,
-+				"Error sending required beacon (%d)!\n",
-+				ret);
-+			return ret;
-+		}
-+	}
-+
-+	priv->start_calib = 0;
-+	/*
-+	 * Apply the new configuration.
-+	 *
-+	 * Associated RXON doesn't clear the station table in uCode,
-+	 * so we don't need to restore stations etc. after this.
-+	 */
-+	ret = iwl_send_cmd_pdu(priv, ctx->rxon_cmd,
-+		      sizeof(struct iwl_rxon_cmd), &ctx->staging);
-+	if (ret) {
-+		IWL_ERR(priv, "Error setting new RXON (%d)\n", ret);
-+		return ret;
-+	}
-+	memcpy(active, &ctx->staging, sizeof(*active));
-+
-+	iwl_reprogram_ap_sta(priv, ctx);
-+
-+	/* IBSS beacon needs to be sent after setting assoc */
-+	if (ctx->vif && (ctx->vif->type == NL80211_IFTYPE_ADHOC))
-+		if (iwlagn_update_beacon(priv, ctx->vif))
-+			IWL_ERR(priv, "Error sending IBSS beacon\n");
-+	iwl_init_sensitivity(priv);
-+
-+	/*
-+	 * If we issue a new RXON command which required a tune then
-+	 * we must send a new TXPOWER command or we won't be able to
-+	 * Tx any frames.
-+	 *
-+	 * It's expected we set power here if channel is changing.
-+	 */
-+	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
-+	if (ret) {
-+		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
-+		return ret;
-+	}
-+	return 0;
-+}
-+
- /**
-  * iwlagn_commit_rxon - commit staging_rxon to hardware
-  *
-@@ -176,6 +273,16 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
-  * the active_rxon structure is updated with the new data.  This
-  * function correctly transitions out of the RXON_ASSOC_MSK state if
-  * a HW tune is required based on the RXON structure changes.
-+ *
-+ * The connect/disconnect flow should be as the following:
-+ *
-+ * 1. make sure send RXON command with association bit unset if not connect
-+ *	this should include the channel and the band for the candidate
-+ *	to be connected to
-+ * 2. Add Station before RXON association with the AP
-+ * 3. RXON_timing has to send before RXON for connection
-+ * 4. full RXON command - associated bit set
-+ * 5. use RXON_ASSOC command to update any flags changes
-  */
- int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- {
-@@ -225,6 +332,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	else
- 		ctx->staging.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
- 
-+	iwl_print_rx_config_cmd(priv, ctx);
- 	ret = iwl_check_rxon_cmd(priv, ctx);
- 	if (ret) {
- 		IWL_ERR(priv, "Invalid RXON configuration. Not committing.\n");
-@@ -255,7 +363,6 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		}
- 
- 		memcpy(active, &ctx->staging, sizeof(*active));
--		iwl_print_rx_config_cmd(priv, ctx);
- 		return 0;
- 	}
- 
-@@ -283,92 +390,13 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 * set up filters in the device.
- 	 */
- 	if ((old_assoc && new_assoc) || !new_assoc) {
--		if (ctx->ctxid == IWL_RXON_CTX_BSS)
--			ret = iwlagn_disable_bss(priv, ctx, &ctx->staging);
--		else
--			ret = iwlagn_disable_pan(priv, ctx, &ctx->staging);
-+		ret = iwlagn_rxon_disconn(priv, ctx);
- 		if (ret)
- 			return ret;
--
--		memcpy(active, &ctx->staging, sizeof(*active));
--
--		/*
--		 * Un-assoc RXON clears the station table and WEP
--		 * keys, so we have to restore those afterwards.
--		 */
--		iwl_clear_ucode_stations(priv, ctx);
--		iwl_restore_stations(priv, ctx);
--		ret = iwl_restore_default_wep_keys(priv, ctx);
--		if (ret) {
--			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
--			return ret;
--		}
- 	}
- 
--	/* RXON timing must be before associated RXON */
--	ret = iwl_send_rxon_timing(priv, ctx);
--	if (ret) {
--		IWL_ERR(priv, "Failed to send timing (%d)!\n", ret);
--		return ret;
--	}
--
--	if (new_assoc) {
--		/* QoS info may be cleared by previous un-assoc RXON */
--		iwlagn_update_qos(priv, ctx);
--
--		/*
--		 * We'll run into this code path when beaconing is
--		 * enabled, but then we also need to send the beacon
--		 * to the device.
--		 */
--		if (ctx->vif && (ctx->vif->type == NL80211_IFTYPE_AP)) {
--			ret = iwlagn_update_beacon(priv, ctx->vif);
--			if (ret) {
--				IWL_ERR(priv,
--					"Error sending required beacon (%d)!\n",
--					ret);
--				return ret;
--			}
--		}
--
--		priv->start_calib = 0;
--		/*
--		 * Apply the new configuration.
--		 *
--		 * Associated RXON doesn't clear the station table in uCode,
--		 * so we don't need to restore stations etc. after this.
--		 */
--		ret = iwl_send_cmd_pdu(priv, ctx->rxon_cmd,
--			      sizeof(struct iwl_rxon_cmd), &ctx->staging);
--		if (ret) {
--			IWL_ERR(priv, "Error setting new RXON (%d)\n", ret);
--			return ret;
--		}
--		memcpy(active, &ctx->staging, sizeof(*active));
--
--		iwl_reprogram_ap_sta(priv, ctx);
--
--		/* IBSS beacon needs to be sent after setting assoc */
--		if (ctx->vif && (ctx->vif->type == NL80211_IFTYPE_ADHOC))
--			if (iwlagn_update_beacon(priv, ctx->vif))
--				IWL_ERR(priv, "Error sending IBSS beacon\n");
--	}
--
--	iwl_print_rx_config_cmd(priv, ctx);
--
--	iwl_init_sensitivity(priv);
--
--	/*
--	 * If we issue a new RXON command which required a tune then we must
--	 * send a new TXPOWER command or we won't be able to Tx any frames.
--	 *
--	 * It's expected we set power here if channel is changing.
--	 */
--	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
--	if (ret) {
--		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
--		return ret;
--	}
-+	if (new_assoc)
-+		return iwlagn_rxon_connect(priv, ctx);
+ 	queue_regulatory_request(request);
++	mod_timer(&reg_timer, jiffies + msecs_to_jiffies(3142));
  
  	return 0;
  }
+@@ -1787,7 +1796,6 @@ static void restore_regulatory_settings(bool reset_user)
+ 		regulatory_hint_user(user_alpha2);
+ }
+ 
+-
+ void regulatory_hint_disconnect(void)
+ {
+ 	REG_DBG_PRINT("All devices are disconnected, going to "
+@@ -2125,6 +2133,18 @@ out:
+ 	mutex_unlock(&reg_mutex);
+ }
+ 
++static void reg_timeout_work(struct work_struct *work)
++{
++	restore_regulatory_settings(true);
++}
++
++static void reg_set_failed_timer(unsigned long data)
++{
++	REG_DBG_PRINT("Timeout while waiting for CRDA to reply,"
++		      "restoring regulatory settings");
++	schedule_work(&reg_timeout);
++}
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+@@ -2137,6 +2157,7 @@ int __init regulatory_init(void)
+ 
+ 	spin_lock_init(&reg_requests_lock);
+ 	spin_lock_init(&reg_pending_beacons_lock);
++	setup_timer(&reg_timer, reg_set_failed_timer, (unsigned long) NULL);
+ 
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+@@ -2178,6 +2199,8 @@ void /* __init_or_exit */ regulatory_exit(void)
+ 	struct reg_beacon *reg_beacon, *btmp;
+ 
+ 	cancel_work_sync(&reg_work);
++	cancel_work_sync(&reg_timeout);
++	del_timer_sync(&reg_timer);
+ 
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
 -- 
-1.7.0.4
+1.7.4.15.g7811d
 
