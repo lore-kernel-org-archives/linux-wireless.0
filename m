@@ -1,33 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37664 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756901Ab1CIJmQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 04:42:16 -0500
-Subject: Re: Delay enabling power save until 4-way Handshake completes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jason Young <a.young.jason@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikwjgKeMPo3UGL=0R2Qxa5DMYC7YejBSSLdqjKd@mail.gmail.com>
-References: <AANLkTikwjgKeMPo3UGL=0R2Qxa5DMYC7YejBSSLdqjKd@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Mar 2011 10:42:14 +0100
-Message-ID: <1299663734.3769.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:40713 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759227Ab1CaT3D convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 15:29:03 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>
+Date: Thu, 31 Mar 2011 12:28:55 -0700
+Subject: RE: [PATCH 1/5] compat-wireless: add support for mwifiex
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA844A04@SC-VEXCH1.marvell.com>
+References: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-08 at 15:54 -0800, Jason Young wrote:
+Hi Hauke,
 
-> Something like the following prevents powersave from being enabled
-> before the 4-way handshake completes, but we still need to call
-> ieee80211_recalc_ps again after WLAN_STA_AUTHORIZED is set and I'm not
-> sure the best place for that. Any ideas or alternate approaches that
-> may solve this problem?
+> -----Original Message-----
+> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
+> Sent: Thursday, March 31, 2011 9:22 AM
+> To: mcgrof@gmail.com; lrodriguez@atheros.com
+> Cc: linux-wireless@vger.kernel.org; Hauke Mehrtens; Bing Zhao
+> Subject: [PATCH 1/5] compat-wireless: add support for mwifiex
+> 
+> This adds support for mwifiex into compat-wireless.
+> 
+> This is only compile tested as I do not have such a device.
 
-This seems fine to me, you just have to call recalc_ps whenever the
-AUTHORIZED flag changes, which is easy enough.
+I will test it.
 
-johannes
+Thanks,
 
+Bing
+
+> 
+> CC: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  config.mk                                 |    4 +
+>  patches/01-netdev.patch                   |   11 ++++
+>  patches/25-multicast-list_head.patch      |   42 ++++++++++++--
+>  patches/26-sdio-quirks.patch              |   12 ++++
+>  patches/29-libertas_sdio_no_suspend.patch |   34 -----------
+>  patches/29-sdio_no_suspend.patch          |   86 +++++++++++++++++++++++++++++
+>  scripts/admin-update.sh                   |    1 +
+>  7 files changed, 151 insertions(+), 39 deletions(-)
+>  delete mode 100644 patches/29-libertas_sdio_no_suspend.patch
+>  create mode 100644 patches/29-sdio_no_suspend.patch
 
