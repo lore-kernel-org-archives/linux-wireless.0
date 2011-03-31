@@ -1,71 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755994Ab1CXJ2n (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:35363 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933058Ab1CaBJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 05:28:43 -0400
-Subject: Re: [PATCH 0/4] Add station BSS parameters to station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=4QLfpeAKCiAxDYcL8dGNbWdaxE3OVic7obe_B@mail.gmail.com>
-References: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
-	 <1300800933.3746.5.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=4QLfpeAKCiAxDYcL8dGNbWdaxE3OVic7obe_B@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Mar 2011 10:28:41 +0100
-Message-ID: <1300958921.3807.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 30 Mar 2011 21:09:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: remove struct mwifiex_802_11_fixed_ies
+Date: Wed, 30 Mar 2011 18:12:45 -0700
+Message-Id: <1301533965-10878-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1301533965-10878-1-git-send-email-bzhao@marvell.com>
+References: <1301533965-10878-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-22 at 07:33 -0700, Paul Stewart wrote:
+struct mwifiex_802_11_fixed_ies is not necessary.
+struct mwifiex_event_wep_icv_err is not used any more.
 
-> > Nice set of patches, but I'm wondering if the station info really is the
-> > best place to put this information? It's not really strictly information
-> > about the station, but rather about the BSS that it created. OTOH, I'm
-> > not sure if we need to distinguish?
-> 
-> I think it makes sense in a way.  This is the station's view of the
-> BSS once it is associated.
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h   |   14 --------------
+ drivers/net/wireless/mwifiex/scan.c |   16 ++++++++--------
+ 2 files changed, 8 insertions(+), 22 deletions(-)
 
-Yeah but it's tell you the view of the BSS as if it was its view of the
-peer station. The BSS and the AP station aren't quite the same.
-
-> In fact, the primary use intended for this
-> is to verify that the station's view of the BSS parameters matches
-> that of the AP.  
-
-Right, but the station info is the local station's view of the remote
-station, not the local station's view on anything else directly.
-
-> After looking a little closer, it looks more for iw,
-> it should show up in the output of "iw link", as part of the output of
-> the hidden "iw link get_sta" command, but from the kernel perspective,
-> the API would be the same.
-
-I think the problem is that we haven't really defined any "view of the
-BSS while connected" at all. We have used the scan data, which is a more
-generic view of the BSS that anyone could have (almost, think hidden
-SSID), and we have the view of the station which contains counters such
-as the number of packets which works because that's the only station we
-ever communicate with (ignoring things like (T)DLS.)
-
-But frankly I'm not sure what to do. We could introduce a concept of an
-associated BSS, but it wouldn't make sense as a separate object because
-there can be only one. That reminds me of database normalisation for the
-sake of it. Or we could put it in the station, like you did. Another
-alternative I could think of would be putting it into the interface
-information, since it's really specific to that interface as well. But
-then again stations are already per interface too, so there's no
-correctness issue either way.
-
-I'm not sure. From a "less confusion" POV I might very slightly prefer
-putting it into the interface data (i.e. nl80211_send_iface) but that
-will obviously complicate iw and other tools using it, and also you've
-already implemented the other approach.
-
-Anyone else want to voice their opinion?
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index d981265..2b93811 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -343,20 +343,6 @@ enum ENH_PS_MODES {
+ #define EVENT_GET_BSS_TYPE(event_cause)         \
+ 	(((event_cause) >> 24) & 0x00ff)
+ 
+-struct mwifiex_event_wep_icv_err {
+-	u16 reason_code;
+-	u8 src_mac_addr[ETH_ALEN];
+-	u8 wep_key_index;
+-	u8 wep_key_length;
+-	u8 key[WLAN_KEY_LEN_WEP104];
+-};
+-
+-struct mwifiex_802_11_fixed_ies {
+-	u8 time_stamp[8];
+-	__le16 beacon_interval;
+-	__le16 capabilities;
+-};
+-
+ struct mwifiex_ie_types_header {
+ 	__le16 type;
+ 	__le16 len;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 69ea32f..64ed60a 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1210,7 +1210,8 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 	struct ieee_types_ds_param_set *ds_param_set;
+ 	struct ieee_types_cf_param_set *cf_param_set;
+ 	struct ieee_types_ibss_param_set *ibss_param_set;
+-	struct mwifiex_802_11_fixed_ies fixed_ie;
++	__le16 beacon_interval;
++	__le16 capabilities;
+ 	u8 *current_ptr;
+ 	u8 *rate;
+ 	u8 element_len;
+@@ -1283,22 +1284,21 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 	bss_entry->beacon_buf_size = bytes_left_for_current_beacon;
+ 
+ 	/* Time stamp is 8 bytes long */
+-	memcpy(fixed_ie.time_stamp, current_ptr, 8);
+ 	memcpy(bss_entry->time_stamp, current_ptr, 8);
+ 	current_ptr += 8;
+ 	bytes_left_for_current_beacon -= 8;
+ 
+ 	/* Beacon interval is 2 bytes long */
+-	memcpy(&fixed_ie.beacon_interval, current_ptr, 2);
+-	bss_entry->beacon_period = le16_to_cpu(fixed_ie.beacon_interval);
++	memcpy(&beacon_interval, current_ptr, 2);
++	bss_entry->beacon_period = le16_to_cpu(beacon_interval);
+ 	current_ptr += 2;
+ 	bytes_left_for_current_beacon -= 2;
+ 
+ 	/* Capability information is 2 bytes long */
+-	memcpy(&fixed_ie.capabilities, current_ptr, 2);
+-	dev_dbg(adapter->dev, "info: InterpretIE: fixed_ie.capabilities=0x%X\n",
+-	       fixed_ie.capabilities);
+-	bss_entry->cap_info_bitmap = le16_to_cpu(fixed_ie.capabilities);
++	memcpy(&capabilities, current_ptr, 2);
++	dev_dbg(adapter->dev, "info: InterpretIE: capabilities=0x%X\n",
++	       capabilities);
++	bss_entry->cap_info_bitmap = le16_to_cpu(capabilities);
+ 	current_ptr += 2;
+ 	bytes_left_for_current_beacon -= 2;
+ 
+-- 
+1.7.0.2
 
