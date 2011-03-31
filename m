@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:59482 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752300Ab1CUOBa (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44486 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757845Ab1CaOJg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 10:01:30 -0400
-Received: by wwj40 with SMTP id 40so5094859wwj.34
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 07:01:06 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Clamp byte mode transfers for 128x chips
-From: Luciano Coelho <coelho@ti.com>
-To: Ido Yariv <ido@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>
-In-Reply-To: <1300452597-13281-1-git-send-email-arik@wizery.com>
-References: <1300452597-13281-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 16:00:29 +0200
-Message-ID: <1300716029.2593.211.camel@cumari>
-Mime-Version: 1.0
+	Thu, 31 Mar 2011 10:09:36 -0400
+Message-ID: <4D948B1C.7080806@suse.cz>
+Date: Thu, 31 Mar 2011 16:09:32 +0200
+From: Jiri Slaby <jslaby@suse.cz>
+MIME-Version: 1.0
+To: Russell King <rmk@arm.linux.org.uk>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	devel@linuxdriverproject.org, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
+ in separate module
+References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de> <4D948624.3040605@suse.cz> <20110331135126.GC19540@flint.arm.linux.org.uk>
+In-Reply-To: <20110331135126.GC19540@flint.arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-03-18 at 14:49 +0200, Arik Nemtsov wrote:
-> On wl128x based devices, when TX packets are aggregated, each packet
-> size must be aligned to the SDIO block size, and sent using block mode
-> transfers.
+On 03/31/2011 03:51 PM, Russell King wrote:
+> On Thu, Mar 31, 2011 at 03:48:20PM +0200, Jiri Slaby wrote:
+>> How it can? Packed only tells the compiler to have one byte alignment
+>> steps. And it should not matter here as all the members are 32-bit long.
 > 
-> The block size is set to 256 bytes, which is less than the maximum
-> possible byte transfer. Thus, if two small packets (< 256 bytes) are
-> aggregated, the aggregation buffer size would be 512, and will be sent
-> using byte mode transfers. This can have undesired side effects.
-> 
-> Fix this by setting the MMC_QUIRK_BLKSZ_FOR_BYTE_MODE mmc card quirk.
-> For 127x chips this has no effect, as the block size is set to 512
-> bytes.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+> It also tells the compiler that it may be misaligned, so to avoid
+> alignment faults it will use byte loads/stores.
 
-Thanks! Applied and fixed Arik's email address, which was corrupted (or
-rather Ido-ized :P)
+No, it should not (if offsetof % sizeof == 0). Otherwise it's a bug in
+the compiler.
 
+Am I missing something?
+
+thanks,
 -- 
-Cheers,
-Luca.
-
+js
+suse labs
