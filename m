@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33566 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751852Ab1CJPQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 10:16:00 -0500
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 2/2] wl1251: fix elp_work race condition
-References: <1299432217-32139-1-git-send-email-notasas@gmail.com>
-	<1299432217-32139-3-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 10 Mar 2011 17:15:58 +0200
-In-Reply-To: <1299432217-32139-3-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Sun\,  6 Mar 2011 19\:23\:37 +0200")
-Message-ID: <87vczrypjl.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58875 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754936Ab1CaQVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:21:49 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/4] compat: backport netdev_refcnt_read.
+Date: Thu, 31 Mar 2011 18:21:32 +0200
+Message-Id: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+Backport of upstream commit:
+	29b4433d991c88d86ca48a4c1cc33c671475be4b
+	net: percpu net_device refcount
 
-> While working on PS I've noticed elp_work is kicking rather often, and
-> sometimes the chip is put to sleep before 5ms delay expires. This
-> seems to happen because by the time wl1251_ps_elp_wakeup is called
-> elp_work might still be pending. After wakeup is done, the processing
-> may take some time, during which 5ms might expire and elp_work might
-> get scheduled. In this case, ss soon as 1st thread finishes work and
-> releases the mutex, elp_work will then put the device to sleep without
-> 5ms delay. In addition 1st thread will queue additional elp_work
-> needlessly.
->
-> Fix this by cancelling work in wl1251_ps_elp_wakeup instead.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.37.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks for debugging this.
-
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
-
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index e993f75..cee23a8 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -108,6 +108,8 @@ extern void compat_led_brightness_set(struct led_classdev *led_cdev,
+ 
+ #define alloc_ordered_workqueue(name, flags) create_singlethread_workqueue(name)
+ 
++#define netdev_refcnt_read(a) atomic_read(&a->refcnt)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
 -- 
-Kalle Valo
+1.7.1
+
