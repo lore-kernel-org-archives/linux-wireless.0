@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:63750 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab1CKRBs convert rfc822-to-8bit (ORCPT
+Received: from w1.fi ([128.177.27.249]:37517 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758463Ab1CaPqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 12:01:48 -0500
-Received: by qyk7 with SMTP id 7so6057859qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 09:01:47 -0800 (PST)
+	Thu, 31 Mar 2011 11:46:46 -0400
+Date: Thu, 31 Mar 2011 18:46:38 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ec15e68ba6a regresion?
+Message-ID: <20110331154638.GA28649@jm.kir.nu>
+References: <20110331154232.GA7370@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05722753@RockMX01.rock.corp>
-References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
-	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
-	<4D798863.2060303@lwfinger.net>
-	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
-	<4D7A3EAD.10306@lwfinger.net>
-	<AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
-	<AANLkTi=wGhWvzqRxEj2eeXm0X0ZfefN-ifNe_cpm6tA+@mail.gmail.com>
-	<BD54DDEB2546894FAB0731EA7B0EDF8D05722753@RockMX01.rock.corp>
-Date: Fri, 11 Mar 2011 18:01:47 +0100
-Message-ID: <AANLkTimoOd-A8_sy97hGDLyb4C6MUp1Lo24UdhwAiC0L@mail.gmail.com>
-Subject: Re: Status of Broadcom 4353?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chaoxing Lin <CLin@3eti.com>
-Cc: "Chen, Xianwen" <xianwen.chen@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110331154232.GA7370@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 marca 2011 17:58 użytkownik Chaoxing Lin <CLin@3eti.com> napisał:
-> Try to put firmware in
-> /lib/firmware/ instead of /lib/firmware/brcm/ which is the located in the git tree, but NOT necessarily the location the driver is looking for.
+On Thu, Mar 31, 2011 at 05:42:41PM +0200, Stanislaw Gruszka wrote:
+> Seems commit:
+> 
+> commit ec15e68ba6a505631016f230899bafbb7b8cd0d6
+> Author: Jouni Malinen <jouni.malinen@atheros.com>
+> Date:   Wed Mar 23 15:29:52 2011 +0200
+> 
+>     cfg80211: Add nl80211 event for deletion of a station entry
+> 
+> is causing problems on my system. Sometimes when I disconnect
+> from wireless network, I can not connect again. Without commit
+> I can not reproduce the problem.
 
-It is. Please, don't mess.
+That sounds strange.. That commit is supposed to just add a new nl80211
+event that existing user space tools would ignore (and new
+wpa_supplicant snapshot would only use in the case of IBSS). Would it be
+possible to get a wpa_supplicant debug log showing this problem?
 
 -- 
-Rafał
+Jouni Malinen                                            PGP id EFC895FA
