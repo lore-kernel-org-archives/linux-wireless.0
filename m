@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.si.unav.es ([159.237.12.162]:41116 "EHLO smtp2.si.unav.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756803Ab1D3NoT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 09:44:19 -0400
-Message-ID: <20110430154415.97676501ev5zejok@webmail.unav.es> (sfid-20110430_154421_335233_5A6732D7)
-Date: Sat, 30 Apr 2011 15:44:15 +0200
-From: Wenceslao =?iso-8859-1?b?R29ueuFsZXotVmnxYXM=?=
-	<wens@fisica.unav.es>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"622842@bugs.debian.org" <622842@bugs.debian.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: brcm80211 not setting correct country code?
-References: <20110415070730.4178.6175.reportbug@calpurnia>
- <20110415081334.GD1387@vostochny.stro.at>
- <20110415161039.15535n2vg4igcykg@webmail.unav.es>
- <20110429164822.62112d9at4vs5xa8@webmail.unav.es>
- <1304088874.3105.57.camel@localhost>
- <20110429173944.10906p14p6bdid4w@webmail.unav.es>
- <1304139874.2833.29.camel@localhost> <4DBBC4DA.8000101@broadcom.com>
- <20110430103817.14736hcizu57ujrw@webmail.unav.es>
- <4DBBF2CF.8050608@broadcom.com>
-In-Reply-To: <4DBBF2CF.8050608@broadcom.com>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:34485 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752605Ab1CaWxp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 18:53:45 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Marc Yang <yangyang@marvell.com>
+Date: Thu, 31 Mar 2011 15:53:32 -0700
+Subject: RE: [PATCH 1/5] compat-wireless: add support for mwifiex
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA844AD8@SC-VEXCH1.marvell.com>
+References: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
+ <477F20668A386D41ADCC57781B1F704307FA844A89@SC-VEXCH1.marvell.com>
+ <4D94F9C8.9060804@hauke-m.de>
+In-Reply-To: <4D94F9C8.9060804@hauke-m.de>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I do not understand.
+Hi Hauke,
 
-I did of course as root. The rule in udev was not defined, though. I  
-defined it , I restarted it , but no change. It does not matter if I  
-use EU, ES or whatever.   ??????
+> > I'm getting an error in "compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c:799" while compiling
+> compat-wireless-2.6.39-rc1-3-s.tar.bz2.
+> 
+> mwifiex is not integrated in the last compat-wireless release from today
+> it will be in compat-wireless-2011-04-01.
+> The kernel version number in the compat-wireless release is the version
+> the code is from. So compat-wireless-2.6.39-rc1-3-s is based on the
+> source code from kernel version 2.6.39-rc1, it should compile and work
+> with every kernel from 2.6.24 to 2.6.39.
+> 
+> You could build your own version based on the latest version of
+> linux-next. It is described at:
+> http://wireless.kernel.org/en/users/Download/hacking
 
-Anyway, I think that is not iw / udev or similar problem as if I put a  
-ralink stick, it works perfectly with regulatory domains and so.
+Thanks a lot for the information.
 
-I think is a problem with driver ... (as hardware worked in MSW7)
+> I created a self made version with the lasted fixes for compat-wireless
+> and and mwifiex at:
+> http://hauke-m.de/fileadmin/openwrt/compat-wireless-2011-03-31-1.tar.bz2
 
-Best and thanks again,
+I tested this tar ball. It passed compilation and mwifiex works fine.
 
+Thanks,
 
-Wenceslao
+Bing
 
-Arend van Spriel <arend@broadcom.com> ha escrito:
-
-> On 04/30/2011 10:38 AM, Wenceslao González-Viñas wrote:
->> After
->> iw reg set EU
->> I do not get any answer in dmesg log.
->
-> I assume you did this as root or used sudo. You may have to check  
-> whether you have the proper udev rules in place. See  
-> http://wireless.kernel.org/en/developers/Regulatory/CRDA#Letting_the_kernel_call_CRDA
->
->> and if I do (after)  : iw reg get , I get:
->>
->> country 98:
->> 	(2402 - 2472 @ 40), (N/A, 20)
->> 	(5170 - 5250 @ 40), (N/A, 17)
->> 	(5250 - 5330 @ 40), (N/A, 20), DFS
->> 	(5490 - 5600 @ 40), (N/A, 20), DFS
->> 	(5650 - 5710 @ 40), (N/A, 20), DFS
->>
->> So, something is not working properly.
->
-> I get country US (after iw reg set EU). I tried 'iw reg set ES'  
-> after that and another message showed up in the log:
-> [ 1613.052044] cfg80211: Calling CRDA for country: EU
-> [ 1845.365115] cfg80211: Pending regulatory request, waiting for it  
-> to be processed...
->
-> It seems cfg80211 expects CRDA to respond to the country setting for  
-> EU. I am not familiar what modules are involved in this usage  
-> scenario.
->
-> Gr. AvS
->
->
-
-----------------------------------------------------------------
-Este mensaje ha sido enviado desde https://webmail.unav.es
