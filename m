@@ -1,237 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44353 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753596Ab1CFO2R (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57937 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749Ab1CaNEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:17 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p26ESHc3026275
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Mar 2011 08:28:17 -0600
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 07/15] wl12xx: 1281/1283 support - Set mem conf & dynamic mem
-Date: Sun,  6 Mar 2011 16:32:12 +0200
-Message-Id: <1299421940-26292-8-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	Thu, 31 Mar 2011 09:04:12 -0400
+Received: by fxm17 with SMTP id 17so1817769fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 06:04:11 -0700 (PDT)
+From: Jarkko Nikula <jhnikula@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Jarkko Nikula <jhnikula@gmail.com>
+Subject: [PATCH 1/2] wl1251: Prepare for idle mode support
+Date: Thu, 31 Mar 2011 16:04:02 +0300
+Message-Id: <1301576643-29224-1-git-send-email-jhnikula@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support dynamic TX mem blocks in the driver to wl128x FW that
-supports moving TX mem blocks to RX in case the RX path is loaded.
-The TX blocks available to use updated dynamically.
+RFC for WL1251 idle mode support brought a few issues that are worth to
+update before adding the idle mode support.
 
-Thanks for Arik Nemtsov <arik@wizery.com> for helping simplify
-wl1271_fw_status() code.
+Since the idle mode can reuse the code that is now used in Power Save Mode
+(PSM), the flag psm in struct wl1251 is changed to variable station_mode
+to be able to distinguish between PSM and idle modes.
+Confusing comment about psm and elp relation is removed since the PSM is
+actually activated by putting the chip into Entreme Low Power (ELP) mode.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Then enum wl1251_cmd_ps_mod in cmd.h is renamed and moved to wl1251.h as it
+is a state rather than chip level command.
+
+Signed-off-by: Jarkko Nikula <jhnikula@gmail.com>
 ---
- drivers/net/wireless/wl12xx/acx.c    |   32 ++++++++++++++--------
- drivers/net/wireless/wl12xx/conf.h   |    3 +-
- drivers/net/wireless/wl12xx/main.c   |   48 +++++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl12xx.h |    5 +++
- 4 files changed, 68 insertions(+), 20 deletions(-)
+RFC for WL1251 idle mode:
+http://marc.info/?l=linux-wireless&m=130140818011186&w=2
+---
+ drivers/net/wireless/wl1251/cmd.h    |    5 -----
+ drivers/net/wireless/wl1251/event.c  |    6 ++++--
+ drivers/net/wireless/wl1251/main.c   |    6 +++---
+ drivers/net/wireless/wl1251/ps.c     |   10 ++++------
+ drivers/net/wireless/wl1251/ps.h     |    2 +-
+ drivers/net/wireless/wl1251/wl1251.h |    8 ++++++--
+ 6 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index aa0fc12..f0345e6 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -965,10 +965,10 @@ int wl1271_acx_ap_mem_cfg(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/wl1251/cmd.h b/drivers/net/wireless/wl1251/cmd.h
+index e5c74c6..669d5bc 100644
+--- a/drivers/net/wireless/wl1251/cmd.h
++++ b/drivers/net/wireless/wl1251/cmd.h
+@@ -312,11 +312,6 @@ struct wl1251_cmd_vbm_update {
+ 	struct wl1251_tim tim;
+ } __packed;
+ 
+-enum wl1251_cmd_ps_mode {
+-	STATION_ACTIVE_MODE,
+-	STATION_POWER_SAVE_MODE
+-};
+-
+ struct wl1251_cmd_ps_params {
+ 	struct wl1251_cmd_header header;
+ 
+diff --git a/drivers/net/wireless/wl1251/event.c b/drivers/net/wireless/wl1251/event.c
+index dfc4579..9f15cca 100644
+--- a/drivers/net/wireless/wl1251/event.c
++++ b/drivers/net/wireless/wl1251/event.c
+@@ -68,14 +68,16 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 	if (vector & BSS_LOSE_EVENT_ID) {
+ 		wl1251_debug(DEBUG_EVENT, "BSS_LOSE_EVENT");
+ 
+-		if (wl->psm_requested && wl->psm) {
++		if (wl->psm_requested &&
++		    wl->station_mode != STATION_ACTIVE_MODE) {
+ 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
+ 			if (ret < 0)
+ 				return ret;
+ 		}
  	}
  
- 	/* memory config */
--	mem_conf->num_stations = wl->conf.mem.num_stations;
--	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
--	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
--	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
-+	mem_conf->num_stations = wl->conf.mem_wl127x.num_stations;
-+	mem_conf->rx_mem_block_num = wl->conf.mem_wl127x.rx_block_num;
-+	mem_conf->tx_min_mem_block_num = wl->conf.mem_wl127x.tx_min_block_num;
-+	mem_conf->num_ssid_profiles = wl->conf.mem_wl127x.ssid_profiles;
- 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
+-	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID && wl->psm) {
++	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID &&
++	    wl->station_mode != STATION_ACTIVE_MODE) {
+ 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
  
- 	ret = wl1271_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
-@@ -986,6 +986,7 @@ out:
- int wl1271_acx_sta_mem_cfg(struct wl1271 *wl)
- {
- 	struct wl1271_acx_sta_config_memory *mem_conf;
-+	struct conf_memory_settings *mem;
- 	int ret;
+ 		/* indicate to the stack, that beacons have been lost */
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index 12c9e63..04a0549 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -497,7 +497,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ 	wl->rx_last_id = 0;
+ 	wl->next_tx_complete = 0;
+ 	wl->elp = false;
+-	wl->psm = 0;
++	wl->station_mode = STATION_ACTIVE_MODE;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->rssi_thold = 0;
+@@ -632,7 +632,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
  
- 	wl1271_debug(DEBUG_ACX, "wl1271 mem cfg");
-@@ -996,16 +997,21 @@ int wl1271_acx_sta_mem_cfg(struct wl1271 *wl)
+ 		wl->psm_requested = false;
+ 
+-		if (wl->psm) {
++		if (wl->station_mode != STATION_ACTIVE_MODE) {
+ 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
+ 			if (ret < 0)
+ 				goto out_sleep;
+@@ -1384,7 +1384,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+ 	wl->rx_config = WL1251_DEFAULT_RX_CONFIG;
+ 	wl->rx_filter = WL1251_DEFAULT_RX_FILTER;
+ 	wl->elp = false;
+-	wl->psm = 0;
++	wl->station_mode = STATION_ACTIVE_MODE;
+ 	wl->psm_requested = false;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+diff --git a/drivers/net/wireless/wl1251/ps.c b/drivers/net/wireless/wl1251/ps.c
+index 9cc5147..5485f03 100644
+--- a/drivers/net/wireless/wl1251/ps.c
++++ b/drivers/net/wireless/wl1251/ps.c
+@@ -39,7 +39,7 @@ void wl1251_elp_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (wl->elp || !wl->psm)
++	if (wl->elp || wl->station_mode == STATION_ACTIVE_MODE)
  		goto out;
+ 
+ 	wl1251_debug(DEBUG_PSM, "chip to elp");
+@@ -57,7 +57,7 @@ void wl1251_ps_elp_sleep(struct wl1251 *wl)
+ {
+ 	unsigned long delay;
+ 
+-	if (wl->psm) {
++	if (wl->station_mode != STATION_ACTIVE_MODE) {
+ 		delay = msecs_to_jiffies(ELP_ENTRY_DELAY);
+ 		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work, delay);
  	}
- 
-+	if (wl->chip.id == CHIP_ID_1283_PG20)
-+		mem = &wl->conf.mem_wl128x;
-+	else
-+		mem = &wl->conf.mem_wl127x;
-+
- 	/* memory config */
--	mem_conf->num_stations = wl->conf.mem.num_stations;
--	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
--	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
--	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
-+	mem_conf->num_stations = mem->num_stations;
-+	mem_conf->rx_mem_block_num = mem->rx_block_num;
-+	mem_conf->tx_min_mem_block_num = mem->tx_min_block_num;
-+	mem_conf->num_ssid_profiles = mem->ssid_profiles;
- 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
--	mem_conf->dyn_mem_enable = wl->conf.mem.dynamic_memory;
--	mem_conf->tx_free_req = wl->conf.mem.min_req_tx_blocks;
--	mem_conf->rx_free_req = wl->conf.mem.min_req_rx_blocks;
--	mem_conf->tx_min = wl->conf.mem.tx_min;
-+	mem_conf->dyn_mem_enable = mem->dynamic_memory;
-+	mem_conf->tx_free_req = mem->min_req_tx_blocks;
-+	mem_conf->rx_free_req = mem->min_req_rx_blocks;
-+	mem_conf->tx_min = mem->tx_min;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
- 				   sizeof(*mem_conf));
-@@ -1072,6 +1078,8 @@ int wl1271_acx_init_mem_config(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_TX, "available tx blocks: %d",
- 		     wl->tx_blocks_available);
- 
-+	wl->tx_new_total = wl->tx_blocks_available;
-+
+@@ -104,7 +104,7 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
  	return 0;
  }
  
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a00f22c..743bd0b 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1204,7 +1204,8 @@ struct conf_drv_settings {
- 	struct conf_scan_settings scan;
- 	struct conf_rf_settings rf;
- 	struct conf_ht_setting ht;
--	struct conf_memory_settings mem;
-+	struct conf_memory_settings mem_wl127x;
-+	struct conf_memory_settings mem_wl128x;
- };
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 4bcac46..94f99ae 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -298,7 +298,7 @@ static struct conf_drv_settings default_conf = {
- 		.tx_ba_win_size = 64,
- 		.inactivity_timeout = 10000,
- 	},
--	.mem = {
-+	.mem_wl127x = {
- 		.num_stations                 = 1,
- 		.ssid_profiles                = 1,
- 		.rx_block_num                 = 70,
-@@ -308,6 +308,16 @@ static struct conf_drv_settings default_conf = {
- 		.min_req_rx_blocks            = 22,
- 		.tx_min                       = 27,
- 	},
-+	.mem_wl128x = {
-+		.num_stations                 = 1,
-+		.ssid_profiles                = 1,
-+		.rx_block_num                 = 40,
-+		.tx_min_block_num             = 40,
-+		.dynamic_memory               = 1,
-+		.min_req_tx_blocks            = 45,
-+		.min_req_rx_blocks            = 22,
-+		.tx_min                       = 27,
-+	},
- };
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl);
-@@ -617,16 +627,27 @@ static void wl1271_fw_status(struct wl1271 *wl,
+-int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
++int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_station_mode mode)
  {
- 	struct wl1271_fw_common_status *status = &full_status->common;
- 	struct timespec ts;
-+	u32 old_tx_blk_count = wl->tx_blocks_available;
- 	u32 total = 0;
- 	int i;
+ 	int ret;
  
--	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_raw_read(wl, FW_STATUS_ADDR, status,
- 				sizeof(struct wl1271_fw_ap_status), false);
--	else
-+	} else {
- 		wl1271_raw_read(wl, FW_STATUS_ADDR, status,
- 				sizeof(struct wl1271_fw_sta_status), false);
+@@ -135,8 +135,6 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
+ 		ret = wl1251_acx_sleep_auth(wl, WL1251_PSM_ELP);
+ 		if (ret < 0)
+ 			return ret;
+-
+-		wl->psm = 1;
+ 		break;
+ 	case STATION_ACTIVE_MODE:
+ 	default:
+@@ -167,9 +165,9 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
+ 		if (ret < 0)
+ 			return ret;
  
-+		/* Update tx total blocks change */
-+		wl->tx_total_diff +=
-+			((struct wl1271_fw_sta_status *)status)->tx_total -
-+			wl->tx_new_total;
-+
-+		/* Update total tx blocks */
-+		wl->tx_new_total =
-+			((struct wl1271_fw_sta_status *)status)->tx_total;
-+	}
-+
- 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
- 		     "drv_rx_counter = %d, tx_results_counter = %d)",
- 		     status->intr,
-@@ -636,17 +657,30 @@ static void wl1271_fw_status(struct wl1271 *wl,
- 
- 	/* update number of available TX blocks */
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
--		u32 cnt = le32_to_cpu(status->tx_released_blks[i]) -
-+		total += le32_to_cpu(status->tx_released_blks[i]) -
- 			wl->tx_blocks_freed[i];
- 
- 		wl->tx_blocks_freed[i] =
- 			le32_to_cpu(status->tx_released_blks[i]);
--		wl->tx_blocks_available += cnt;
--		total += cnt;
-+
-+	}
-+
-+	/*
-+	 * By adding the freed blocks to tx_total_diff we are
-+	 * actually moving them to RX poll
-+	 */
-+	wl->tx_total_diff += total;
-+
-+	/*
-+	 * In case we have positive difference we can add the blocks to TX poll
-+	 */
-+	if (wl->tx_total_diff >= 0) {
-+		wl->tx_blocks_available += wl->tx_total_diff;
-+		wl->tx_total_diff = 0;
+-		wl->psm = 0;
+ 		break;
  	}
++	wl->station_mode = mode;
  
- 	/* if more blocks are available now, tx work can be scheduled */
--	if (total)
-+	if (wl->tx_blocks_available > old_tx_blk_count)
- 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/wl1251/ps.h b/drivers/net/wireless/wl1251/ps.h
+index 55c3dda..75efad2 100644
+--- a/drivers/net/wireless/wl1251/ps.h
++++ b/drivers/net/wireless/wl1251/ps.h
+@@ -26,7 +26,7 @@
+ #include "wl1251.h"
+ #include "acx.h"
  
- 	/* for AP update num of allocated TX blocks per link and ps status */
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index ed4be73..1114b7c 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -267,6 +267,8 @@ struct wl1271_fw_sta_status {
- 	u8  tx_total;
- 	u8  reserved1;
- 	__le16 reserved2;
-+	/* Total structure size is 68 bytes */
-+	u32 spare;
- } __packed;
+-int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode);
++int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_station_mode mode);
+ void wl1251_ps_elp_sleep(struct wl1251 *wl);
+ int wl1251_ps_elp_wakeup(struct wl1251 *wl);
+ void wl1251_elp_work(struct work_struct *work);
+diff --git a/drivers/net/wireless/wl1251/wl1251.h b/drivers/net/wireless/wl1251/wl1251.h
+index bb23cd5..bf245a8 100644
+--- a/drivers/net/wireless/wl1251/wl1251.h
++++ b/drivers/net/wireless/wl1251/wl1251.h
+@@ -129,6 +129,11 @@ enum wl1251_partition_type {
+ 	PART_TABLE_LEN
+ };
  
- struct wl1271_fw_full_status {
-@@ -397,6 +399,9 @@ struct wl1271 {
- 	u32 tx_blocks_freed[NUM_TX_QUEUES];
- 	u32 tx_blocks_available;
- 	u32 tx_results_count;
-+	/* Indicates How much Memory blocks should be moved to RX poll */
-+	int tx_total_diff;
-+	u32 tx_new_total;
++enum wl1251_station_mode {
++	STATION_ACTIVE_MODE,
++	STATION_POWER_SAVE_MODE,
++};
++
+ struct wl1251_partition {
+ 	u32 size;
+ 	u32 start;
+@@ -358,8 +363,7 @@ struct wl1251 {
  
- 	/* Transmitted TX packets counter for chipset interface */
- 	u32 tx_packets_count;
+ 	struct delayed_work elp_work;
+ 
+-	/* we can be in psm, but not in elp, we have to differentiate */
+-	bool psm;
++	enum wl1251_station_mode station_mode;
+ 
+ 	/* PSM mode requested */
+ 	bool psm_requested;
 -- 
 1.7.0.4
 
