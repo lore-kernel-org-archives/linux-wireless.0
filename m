@@ -1,87 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34681 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323Ab1CBJhy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 04:37:54 -0500
-Received: by fxm17 with SMTP id 17so5701974fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 01:37:53 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 2/9] [{mac|nl}80211] Add 2 new radar channel flags
-Date: Wed, 2 Mar 2011 10:37:33 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	"dubowoj@neratec.com" <dubowoj@neratec.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
-References: <201102281740.37036.bernhard.schmidt@saxnet.de> <201102281747.06564.bernhard.schmidt@saxnet.de> <20110301215412.GD6835@tux>
-In-Reply-To: <20110301215412.GD6835@tux>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:43799 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753668Ab1CaVez convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 17:34:55 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Marc Yang <yangyang@marvell.com>
+Date: Thu, 31 Mar 2011 14:34:38 -0700
+Subject: RE: [PATCH 1/5] compat-wireless: add support for mwifiex
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA844A89@SC-VEXCH1.marvell.com>
+References: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103021037.34404.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, March 01, 2011 22:54:12 Luis R. Rodriguez wrote:
-> On Mon, Feb 28, 2011 at 08:47:06AM -0800, Bernhard Schmidt wrote:
-> > DFS introduces 2 new flags a channel requiring radar detection
-> > might take. The interference flag indicates that interference was
-> > detected either during CAC or in-service monitoring and the
-> > channel is not to be used for the NOP period. The clear flag
-> > indicates that during a full CAC no interference was detected and
-> > it is allowed to open a BSS on that channel. The case were both
-> > flags are set is used to indicate that interference has been
-> > detected and we are in progress of closing on that channel.
+
+
+> -----Original Message-----
+> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
+> Sent: Thursday, March 31, 2011 9:22 AM
+> To: mcgrof@gmail.com; lrodriguez@atheros.com
+> Cc: linux-wireless@vger.kernel.org; Hauke Mehrtens; Bing Zhao
+> Subject: [PATCH 1/5] compat-wireless: add support for mwifiex
 > 
-> What does closing mean?
-
-Channel closing time is the period between radar interference and the
-last transmission on a channel. After detected the interferences there
-must be short time frame where you can notify stations about switching
-to another channel (CSA).
-
-> > Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+> This adds support for mwifiex into compat-wireless.
 > 
-> > ---
-> >  include/linux/nl80211.h |    6 ++++++
-> >  include/net/cfg80211.h  |   18 ++++++++++++------
-> >  net/mac80211/cfg.c      |    6 ++++++
-> >  net/mac80211/tx.c       |    6 ++++--
-> >  net/wireless/nl80211.c  |    4 ++++
-> >  5 files changed, 32 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> > index e3c9ec7..2282f56 100644
-> > --- a/include/linux/nl80211.h
-> > +++ b/include/linux/nl80211.h
-> > @@ -1371,6 +1371,10 @@ enum nl80211_band_attr {
-> >   *	(100 * dBm).
-> >   * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-> >   *	currently defined
-> > + * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
-> > + *	been detected.
+> This is only compile tested as I do not have such a device.
+
+Hi Hauke and Luis,
+
+I'm getting an error in "compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c:799" while compiling compat-wireless-2.6.39-rc1-3-s.tar.bz2.
+
+
+/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/config.mk:204: "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m."
+
+...
+
+/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c: In function 'cfg80211_change_iface':
+/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c:799: error: implicit declaration of function 'br_port_exists'
+make[3]: *** [/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.o] Error 1
+make[2]: *** [/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless] Error 2
+make[1]: *** [_module_/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s] Error 2
+make: *** [modules] Error 2
+
+
+I have wireless-testing.git master-2011-03-30 (2.6.39-rc1).
+
+Could you please help?
+
+Thanks,
+
+Bing
+
 > 
-> Why do you need a flag for clear, can you simply count on the
-> lack of the flag as the "clear" state?
+> CC: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  config.mk                                 |    4 +
+>  patches/01-netdev.patch                   |   11 ++++
+>  patches/25-multicast-list_head.patch      |   42 ++++++++++++--
+>  patches/26-sdio-quirks.patch              |   12 ++++
+>  patches/29-libertas_sdio_no_suspend.patch |   34 -----------
+>  patches/29-sdio_no_suspend.patch          |   86 +++++++++++++++++++++++++++++
+>  scripts/admin-update.sh                   |    1 +
+>  7 files changed, 151 insertions(+), 39 deletions(-)
+>  delete mode 100644 patches/29-libertas_sdio_no_suspend.patch
+>  create mode 100644 patches/29-sdio_no_suspend.patch
 
-No. There are 3 states a channel can be in, "usable", "available" and
-"unavailable" (as definied in ETSI v1.5.1). On initialization all
-channels are "usable", this is indicated by no flag at all. Only after
-a full CAC can a channel get "available" (the CLEAR flag) and is now
-allowed to be used for beaconing. "unavailable" channels are those
-on which interference has been detected, those are marked with
-INTERFERENCE, this channel becomes a "usable" (no flag) channel again
-after the non-occupancy period.
-
--- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
