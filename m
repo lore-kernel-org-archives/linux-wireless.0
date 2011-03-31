@@ -1,50 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:51324 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750826Ab1CUH7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 03:59:49 -0400
-Subject: Re: [PATCH] wl12xx: set the actual tid instead of the ac
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTik8DYUn7SuM_L2ciNnuBCK5TobOEcRBPm+gRnyw@mail.gmail.com>
-References: <1300309434-15491-1-git-send-email-eliad@wizery.com>
-	 <1300340306.11073.5784.camel@wimaxnb.nmp.nokia.com>
-	 <AANLkTik8DYUn7SuM_L2ciNnuBCK5TobOEcRBPm+gRnyw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 09:59:40 +0200
-Message-ID: <1300694381.22224.28.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58883 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758329Ab1CaQVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:21:51 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/4] compat: add support for kernel 2.6.39
+Date: Thu, 31 Mar 2011 18:21:33 +0200
+Message-Id: <1301588495-16583-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+References: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-21 at 09:54 +0200, ext Eliad Peller wrote:
-> On Thu, Mar 17, 2011 at 7:38 AM, Juuso Oikarinen
-> <juuso.oikarinen@nokia.com> wrote:
-> > On Wed, 2011-03-16 at 23:03 +0200, ext Eliad Peller wrote:
-> >> When passing a tx frame, the driver incorrectly set desc->tid
-> >> with the ac instead of the actual tid.
-> >>
-> >> It has some serious implications when using 802.11n + QoS,
-> >> as the fw starts a BlockAck with the wrong tid (which finally
-> >> cause beacon loss and disconnection / some fw crash)
-> >>
-> >> Fix it by using the actual tid stored in skb->priority.
-> >
-> > How will the firmware handle the TIDs larger than 3, as currently to the
-> > firmware it appears only TID's 0-3 are configured, and the rest are
-> > whatever values happen to be there default?
-> >
-> that's a good question.
-> according to the fw guys, the fw auto-maps the tid to the correct ac.
-> the confusing thing is that ACX_TID_CFG actually gets AC as its input
-> (in the queue_id param) rather than TID.
-> thus, only 0-3 (ACs, not TIDs) are configured.
-> 
 
-Yes, so the TID's are most likely not configured in a way that the
-firmware will be able to "auto-map". I think the at minimum the
-ACX_TID_CFG must be revisited before this change can work.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.39.h |   17 -----------------
+ include/linux/compat-2.6.40.h |   27 +++++++++++++++++++++++++++
+ include/linux/compat-2.6.h    |    1 +
+ 3 files changed, 28 insertions(+), 17 deletions(-)
+ create mode 100644 include/linux/compat-2.6.40.h
 
--Juuso
+diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
+index bf4442b..2c62d90 100644
+--- a/include/linux/compat-2.6.39.h
++++ b/include/linux/compat-2.6.39.h
+@@ -8,23 +8,6 @@
+ #include <linux/tty.h>
+ #include <linux/irq.h>
+ 
+-/*
+- * This is not part of The 2.6.37 kernel yet but we
+- * we use it to optimize the backport code we
+- * need to implement. Instead of using ifdefs
+- * to check what version of the check we use
+- * we just replace all checks on current code
+- * with this. I'll submit this upstream too, that
+- * way all we'd have to do is to implement this
+- * for older kernels, then we would not have to
+- * edit the upstrema code for backport efforts.
+- */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+-#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
+-#else
+-#define br_port_exists(dev)	(dev->br_port)
+-#endif
+-
+ #define tiocmget(tty) tiocmget(tty, NULL)
+ #define tiocmset(tty, set, clear) tiocmset(tty, NULL, set, clear)
+ 
+diff --git a/include/linux/compat-2.6.40.h b/include/linux/compat-2.6.40.h
+new file mode 100644
+index 0000000..42f9fee
+--- /dev/null
++++ b/include/linux/compat-2.6.40.h
+@@ -0,0 +1,27 @@
++#ifndef LINUX_26_40_COMPAT_H
++#define LINUX_26_40_COMPAT_H
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40))
++
++/*
++ * This is not part of The 2.6.37 kernel yet but we
++ * we use it to optimize the backport code we
++ * need to implement. Instead of using ifdefs
++ * to check what version of the check we use
++ * we just replace all checks on current code
++ * with this. I'll submit this upstream too, that
++ * way all we'd have to do is to implement this
++ * for older kernels, then we would not have to
++ * edit the upstrema code for backport efforts.
++ */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
++#else
++#define br_port_exists(dev)	(dev->br_port)
++#endif
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40)) */
++
++#endif /* LINUX_26_40_COMPAT_H */
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index 478f833..8e45fc0 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -32,5 +32,6 @@
+ #include <linux/compat-2.6.37.h>
+ #include <linux/compat-2.6.38.h>
+ #include <linux/compat-2.6.39.h>
++#include <linux/compat-2.6.40.h>
+ 
+ #endif /* LINUX_26_COMPAT_H */
+-- 
+1.7.1
 
