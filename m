@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:55854 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753846Ab1DSKYF (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54480 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755397Ab1DAKI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 06:24:05 -0400
-Date: Tue, 19 Apr 2011 12:26:56 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Nishant Sarmukadam <nishants@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-Subject: Re: [PATCH 1/4] mwl8k: Do not stop tx queues
-Message-ID: <20110419102656.GL1897@wantstofly.org>
-References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
- <20110419074809.GJ1897@wantstofly.org>
- <1303207697.20919.31.camel@localhost.localdomain>
+	Fri, 1 Apr 2011 06:08:28 -0400
+Received: by wwa36 with SMTP id 36so3885096wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:08:27 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] ssb: pci: trivial: drop useless pointer
+Date: Fri,  1 Apr 2011 12:07:32 +0200
+Message-Id: <1301652454-11251-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303207697.20919.31.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 19, 2011 at 03:38:17PM +0530, Nishant Sarmukadam wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_pcicore.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-> > > This is in preparation to support life time expiry of packets in the
-> > > hardware to avoid head-of-line blocking where a slow client can
-> > > hog a tx queue and affect the traffic to a faster client from the same
-> > > queue. Time stamp the packets in driver to allow dropping them in the
-> > > hardware if they are queued for more than 500ms.
-> > > 
-> > > Since queues are not being stopped now, we need to be prepared for
-> > > a situation where packets hit the driver after the queues are full.
-> > > Drop all such packets in the driver itself.
-> > 
-> > What this patch seems to do is: don't propagate queue start/stop
-> > indications to mac80211, and if a packet is handed to mwl8k for
-> > transmission while a TX queue is full, just drop it in the driver.
-> > (This doesn't seem to correspond with the commit message.)
-> 
-> We were invoking mac80211 routines to start/stop tx queues. Since we do
-> not call these routines now, the queues will not be stopped anymore.
-> Hence, packets that enter the driver after the corresponding queue is
-> full, need to be dropped. This is mentioned in the commit description.
-> Please let me know if I am missing something. 
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 0e8d352..e0cf29e 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -417,11 +417,9 @@ static void ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
+ void ssb_pcicore_init(struct ssb_pcicore *pc)
+ {
+ 	struct ssb_device *dev = pc->dev;
+-	struct ssb_bus *bus;
+ 
+ 	if (!dev)
+ 		return;
+-	bus = dev->bus;
+ 	if (!ssb_device_is_enabled(dev))
+ 		ssb_device_enable(dev, 0);
+ 
+-- 
+1.7.1
 
-Maybe it's me, but to me, the commit message seems to say that queue
-starting/stopping is already not being done anymore by mwl8k, and
-because of that, we need to drop packets that are being transmitted
-in the driver when the TX queue is full, which this patch does.
-
-
-> > But since the driver still has an accurate idea of TX queue fullness
-> > (i.e. it's not as if at transmit time, you go and transparently reclaim
-> > TX queue entries), why do you need to start/stop mac80211 TX queues at
-> > all?  Won't it still work fine without deleting that logic?
-> 
-> We need to timestamp all tx packets. If we stop the queues, packets will
-> be queued up outside the driver (in queue full conditions). Since we
-> will be able to timestamp the packets only after they hit the driver,
-> the timestamp will be less accurate since we cannot consider the time
-> the packets spent in the queues outside the driver.
-
-This is a fair argument, and this really should be in the commit message.
