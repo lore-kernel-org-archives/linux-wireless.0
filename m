@@ -1,45 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48043 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755475Ab1DAK5v (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:59749 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243Ab1DACqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 06:57:51 -0400
-Received: by fxm17 with SMTP id 17so2509461fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:57:49 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: hostapd & mac80211: too many probe responses
-Date: Fri, 1 Apr 2011 12:55:59 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <201104011237.21983.helmut.schaa@googlemail.com> <1301654802.3832.17.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1301654802.3832.17.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201104011255.59751.helmut.schaa@googlemail.com>
+	Thu, 31 Mar 2011 22:46:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: remove unused macros in decl.h and main.h
+Date: Thu, 31 Mar 2011 19:50:14 -0700
+Message-Id: <1301626214-13581-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 1. April 2011 schrieb Johannes Berg:
-> On Fri, 2011-04-01 at 12:37 +0200, Helmut Schaa wrote:
-> 
-> > I've just noticed that hostapd + mac80211 + rt2x00 produces way too many
-> > probe responses when setup as multi bssid AP.
-> > 
-> > The reason seems to be that mac80211 receives a broadcast probe req and
-> > drops it to the monitor interface for each vif (hence X times). And hostapd
-> > will process each received broadcast probe req on all vifs as well (hence X
-> > times again). Resulting in X*X probe responses instead of just X.
-> > 
-> > This can eat up quite some airtime as the probe reponses are sent at 1Mpbs.
-> > 
-> > IMO to fix this issue mac80211 should send a broadcast probe req only once
-> > to the monitor interface. However, I don't have a good idea how to do that
-> > right now :)
-> 
-> Looks like we broke that then, IEEE80211_RX_CMNTR was intended to do
-> this. 
+These macros are leftover of previous cleanup patches.
 
-Ah, I see. I'll do some more debugging in that direction first ...
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/decl.h |   24 ------------------------
+ drivers/net/wireless/mwifiex/main.h |    7 -------
+ 2 files changed, 0 insertions(+), 31 deletions(-)
 
-Helmut
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 4e1f115..c3c15f9 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -51,7 +51,6 @@
+ #define MWIFIEX_RATE_BITMAP_MCS127 159
+ 
+ #define MWIFIEX_RX_DATA_BUF_SIZE     (4 * 1024)
+-#define MWIFIEX_RX_CMD_BUF_SIZE      (2 * 1024)
+ 
+ #define MWIFIEX_RTS_MIN_VALUE              (0)
+ #define MWIFIEX_RTS_MAX_VALUE              (2347)
+@@ -141,13 +140,6 @@ struct mwifiex_bss_attr {
+ 	u32 bss_num;
+ };
+ 
+-enum mwifiex_cmd_result_e {
+-	MWIFIEX_CMD_RESULT_SUCCESS = 0,
+-	MWIFIEX_CMD_RESULT_FAILURE = 1,
+-	MWIFIEX_CMD_RESULT_TIMEOUT = 2,
+-	MWIFIEX_CMD_RESULT_INVALID_DATA = 3
+-} __packed;
+-
+ enum mwifiex_wmm_ac_e {
+ 	WMM_AC_BK,
+ 	WMM_AC_BE,
+@@ -155,22 +147,6 @@ enum mwifiex_wmm_ac_e {
+ 	WMM_AC_VO
+ } __packed;
+ 
+-enum mwifiex_wmm_queue_config_action_e {
+-	MWIFIEX_WMM_QUEUE_CONFIG_ACTION_GET = 0,
+-	MWIFIEX_WMM_QUEUE_CONFIG_ACTION_SET = 1,
+-	MWIFIEX_WMM_QUEUE_CONFIG_ACTION_DEFAULT = 2,
+-	MWIFIEX_WMM_QUEUE_CONFIG_ACTION_MAX
+-} __packed;
+-
+-enum mwifiex_wmm_queue_stats_action_e {
+-	MWIFIEX_WMM_STATS_ACTION_START = 0,
+-	MWIFIEX_WMM_STATS_ACTION_STOP = 1,
+-	MWIFIEX_WMM_STATS_ACTION_GET_CLR = 2,
+-	MWIFIEX_WMM_STATS_ACTION_SET_CFG = 3,	/* Not currently used */
+-	MWIFIEX_WMM_STATS_ACTION_GET_CFG = 4,	/* Not currently used */
+-	MWIFIEX_WMM_STATS_ACTION_MAX
+-} __packed;
+-
+ struct mwifiex_device {
+ 	struct mwifiex_bss_attr bss_attr[MWIFIEX_MAX_BSS_NUM];
+ };
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index c26f704..43ff149 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -50,8 +50,6 @@ enum {
+ };
+ 
+ #define DRV_MODE_STA       0x1
+-#define DRV_MODE_UAP       0x2
+-#define DRV_MODE_UAP_STA   0x3
+ 
+ #define SD8787_W0   0x30
+ #define SD8787_W1   0x31
+@@ -74,13 +72,8 @@ struct mwifiex_drv_mode {
+ #define MWIFIEX_TIMER_10S			10000
+ #define MWIFIEX_TIMER_1S			1000
+ 
+-#define NL_MAX_PAYLOAD      1024
+-#define NL_MULTICAST_GROUP  1
+-
+ #define MAX_TX_PENDING      60
+ 
+-#define HEADER_ALIGNMENT                8
+-
+ #define MWIFIEX_UPLD_SIZE               (2312)
+ 
+ #define MAX_EVENT_SIZE                  1024
+-- 
+1.7.0.2
+
