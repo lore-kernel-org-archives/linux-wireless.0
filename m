@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38918 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753756Ab1DLNSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:46 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/22] ath9k_hw: Don't do ani initialization for AR9340
-Date: Tue, 12 Apr 2011 18:47:44 +0530
-Message-ID: <1302614273-2063-4-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59361 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752984Ab1DAQPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 12:15:36 -0400
+Subject: Re: ChipCommon as independent driver?
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com> (sfid-20110401_120617_934926_1F9732B2)
+References: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
+	 <1301673646.5219.18.camel@maggie>
+	 <BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com>
+	 (sfid-20110401_120617_934926_1F9732B2)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 18:15:30 +0200
+Message-ID: <1301674530.5219.25.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 2011-04-01 at 18:06 +0200, Rafał Miłecki wrote: 
+> W dniu 1 kwietnia 2011 18:00 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> > On Fri, 2011-04-01 at 16:49 +0200, Rafał Miłecki wrote:
+> >> Do you have idea how we could nicely solve that issue?
+> >
+> > Yeah. Just don't share code between ssb and bcmai.
+> > That's the only clean solution to that mess.
+> 
+> Do you want to have core drivers separated as well? Really? Should we
+> have separated pci core? chiccommon core?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9e8a9c6..d154c5c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -462,7 +462,7 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
- 		return ecode;
- 	}
- 
--	if (!AR_SREV_9100(ah)) {
-+	if (!AR_SREV_9100(ah) && !AR_SREV_9340(ah)) {
- 		ath9k_hw_ani_setup(ah);
- 		ath9k_hw_ani_init(ah);
- 	}
+Yes. Those "drivers" are a mess full of ssb specific workarounds
+to hardware limitations.
+
+> gige core?
+
+Are there bcmai devices with gige core?
+This driver is a _real_ mess. It basically is one huge
+workaround, because the hardware is incredibly stupid.
+
+> 80211 (b43) core?
+
+No. The b43 (and b44) driver is pretty much self contained. It will be
+easy
+to make it run on both platforms. There are only a few places
+that need changes.
+
 -- 
-1.7.0.4
+Greetings Michael.
 
