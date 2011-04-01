@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756612Ab1DFUTb (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:40690 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756123Ab1DASJQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 16:19:31 -0400
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302121040.4090.18.camel@jlt3.sipsolutions.net>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
-	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
-	 <1302113542.22852.7.camel@x61.thuisdomein>
-	 <20110406183837.GI11941@tuxdriver.com>
-	 <1302120620.22852.22.camel@x61.thuisdomein>
-	 <1302120922.4090.17.camel@jlt3.sipsolutions.net>
-	 <1302121040.4090.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 22:19:24 +0200
-Message-ID: <1302121164.4090.20.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 1 Apr 2011 14:09:16 -0400
+Received: by eyg5 with SMTP id 5so1371859eyg.24
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 11:09:13 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: fix sparse warning about undeclared wl12xx_alloc_dummy_packet
+Date: Fri,  1 Apr 2011 21:09:47 +0300
+Message-Id: <1301681387-9203-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-06 at 22:17 +0200, Johannes Berg wrote:
-> On Wed, 2011-04-06 at 22:15 +0200, Johannes Berg wrote:
-> > On Wed, 2011-04-06 at 22:10 +0200, Paul Bolle wrote:
-> > > On Wed, 2011-04-06 at 14:38 -0400, John W. Linville wrote:
-> > > > The syntax may seem strange,
-> > > 
-> > > It does!
-> > > 
-> > > > but basically it just says "don't let me by y if RFKILL is m"
-> > > 
-> > > ... but, besides that, I can be any value. So in effect it's shorthand
-> > > for
-> > > 	depends on RFKILL=y || RFKILL=m && m || RFKILL=n
-> > > 
-> > > (which actually looks equally strange). Is that correct?
-> > 
-> > I don't think it is, I believe that an expression like "RFKILL=y" has a
-> > bool type, and a tristate type value that depends on a bool type can
-> > still take the value m.
-> 
-> Err, which is of course perfectly fine since if RFKILL is built in this
-> can be any value, and in the RFKILL=m case you force it to m by making
-> it depend on m directly. So yes, you're right.
+Fix sparse warning:
 
-Whoops ... sorry about the talking to self ...
+  CHECK   drivers/net/wireless/wl12xx/main.c
+drivers/net/wireless/wl12xx/main.c:1246:17: warning: symbol 'wl12xx_alloc_dummy_packet' was not declared. Should it be static?
 
-I still think the original is easier to understand. After all, just
-	depends on RFKILL
-is trivial to understand even with tristates. And knowing that RFKILL
-will provide no-op inlines when it is unconfigured, you add
-	depends on !RFKILL
-for that case.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 732fd21..866453b 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1243,7 +1243,7 @@ int wl1271_tx_dummy_packet(struct wl1271 *wl)
+  */
+ #define TOTAL_TX_DUMMY_PACKET_SIZE (ALIGN(1400, 512))
+ 
+-struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
++static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_hdr_3addr *hdr;
+-- 
+1.7.1
 
