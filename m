@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757421Ab1DAVgt (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43854 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757421Ab1DAVgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:49 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:49 -0700 (PDT)
+	Fri, 1 Apr 2011 17:36:51 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so3915791iyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:51 -0700 (PDT)
 From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
 Cc: javier@cozybit.com, johannes@sipsolutions.net,
 	linville@tuxdriver.com
-Subject: [PATCH v6 06/10] mac80211: ignore peer link requests from unauthenticated stations.
-Date: Fri,  1 Apr 2011 13:35:47 -0700
-Message-Id: <1301690151-14979-7-git-send-email-thomas@cozybit.com>
+Subject: [PATCH v6 07/10] mac80211: Perform PLINK_ACTION on new station
+Date: Fri,  1 Apr 2011 13:35:48 -0700
+Message-Id: <1301690151-14979-8-git-send-email-thomas@cozybit.com>
 In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
 References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,38 +20,51 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Javier Cardona <javier@cozybit.com>
 
+Modify the NEW_STATION command to accept PLINK_ACTIONS, in case
+userspace wants to create stations and initiate a peer link right away
+(for authenticated stations) or create a blocked station (for
+debugging).
+
 Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- net/mac80211/mesh_plink.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ net/mac80211/mesh_plink.c |    2 +-
+ net/wireless/nl80211.c    |    5 +++++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
 diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index bafe255..5d0dd92 100644
+index 5d0dd92..b327e0e 100644
 --- a/net/mac80211/mesh_plink.c
 +++ b/net/mac80211/mesh_plink.c
-@@ -372,6 +372,9 @@ int mesh_plink_open(struct sta_info *sta)
- 	__le16 llid;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (!sta)
+ 		return NULL;
  
-+	if (!test_sta_flags(sta, WLAN_STA_AUTH))
-+		return -EPERM;
-+
- 	spin_lock_bh(&sta->lock);
- 	get_random_bytes(&llid, 2);
- 	sta->llid = llid;
-@@ -484,6 +487,12 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
+-	sta->flags = WLAN_STA_AUTHORIZED;
++	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+ 	rate_control_rate_init(sta);
  
-+	if (sta && !test_sta_flags(sta, WLAN_STA_AUTH)) {
-+		mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
-+		rcu_read_unlock();
-+		return;
-+	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e76dc79..5854366 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2327,11 +2327,16 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.ht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+ 
++	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
++		params.plink_action =
++		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
 +
- 	if (sta && sta->plink_state == PLINK_BLOCKED) {
- 		rcu_read_unlock();
- 		return;
+ 	if (parse_station_flags(info, &params))
+ 		return -EINVAL;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+ 		return -EINVAL;
+ 
 -- 
 1.7.4.1
 
