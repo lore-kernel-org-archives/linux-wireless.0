@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:51982 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab1DTUT5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57145 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab1DAPh1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 16:19:57 -0400
-Date: Wed, 20 Apr 2011 17:20:15 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2011-04-20
-Message-ID: <20110420202015.GA2311@joana>
-References: <20110420170432.GA2301@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110420170432.GA2301@joana>
+	Fri, 1 Apr 2011 11:37:27 -0400
+Subject: Re: [RFC] mac80211: remove few obsolete flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301672173-18984-1-git-send-email-mshajakhan@atheros.com>
+References: <1301672173-18984-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 17:37:25 +0200
+Message-ID: <1301672245.3832.25.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-* Gustavo F. Padovan <padovan@profusion.mobi> [2011-04-20 14:04:32 -0300]:
-
-> Hi John,
+On Fri, 2011-04-01 at 21:06 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 > 
-> Four small fixes for 2.6.39. An incorrect refcnt balance for hci connection by
-> Ville Tervo, a warning fix in the command timer by Vinicius Gomes, an ERTM
-> fix by Ruiyi Zhang, and SCO synchronization fix by Luiz Augusto von Dentz.
-> 
-> Please pull or let me know any problems. Thanks.
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Hold on with the pull! I've found a merge conflict with -next. (I tested the
-merge with --dry-run, but it doesn't check for check conflicts). I'll do the
-right thing now and send a new pull request to you soon. 
+If it compiles, sure! :)
 
-Regards,
+johannes
 
--- 
-Gustavo F. Padovan
-http://profusion.mobi
+
