@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36555 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932374Ab1DZV2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 17:28:09 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] wl12xx: do not set queue_mapping directly
-Date: Tue, 26 Apr 2011 23:27:44 +0200
-Message-Id: <1303853264-2622-1-git-send-email-hauke@hauke-m.de> (sfid-20110426_232820_342849_6F44978C)
+Received: from external1.orbit-lab.org ([128.6.192.131]:40363 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750767Ab1DATDv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 15:03:51 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 942F85400DD
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2011 15:08:11 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110401190349.A56ED40EAF@repository3.orbit-lab.org>
+Date: Fri,  1 Apr 2011 15:03:49 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is preferred to use the setter that to set queue_mapping directly.
-This also helps backporting in compat-wireless.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   c625dee..1d65853  linux-2.6.39.y -> origin/linux-2.6.39.y
+   7b4debf..6a250de  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   33712ab..3f34341  linux-2.6.39.y -> origin/linux-2.6.39.y
+   89e9cfb..c932d97  master     -> origin/master
+ * [new tag]         v2.6.39-rc1-2 -> v2.6.39-rc1-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 338bd4a...a2471e3 akpm-end   -> origin/akpm-end  (forced update)
+   c435267..3f0f2e0  history    -> origin/history
+ + e04c134...260080e master     -> origin/master  (forced update)
+ * [new tag]         next-20110401 -> next-20110401
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dad81f6..9d1d4d6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1293,7 +1293,7 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
- 	skb->priority = WL1271_TID_MGMT;
- 
- 	/* Initialize all fields that might be used */
--	skb->queue_mapping = 0;
-+	skb_set_queue_mapping(skb, 0);
- 	memset(IEEE80211_SKB_CB(skb), 0, sizeof(struct ieee80211_tx_info));
- 
- 	return skb;
--- 
-1.7.1
-
+    858087 - Total upstream lines of code being pulled
