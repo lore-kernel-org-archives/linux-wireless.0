@@ -1,135 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3587 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753692Ab1DRNcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:32:06 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6] staging: brcm80211: implement flush driver callback
- for mac80211
-Date: Mon, 18 Apr 2011 15:31:46 +0200
-Message-ID: <1303133511-8300-1-git-send-email-arend@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58798 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706Ab1DAReC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 13:34:02 -0400
+Received: by bwz15 with SMTP id 15so2691179bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 10:34:01 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: bad packets in monitor mode with ar9170 devices
+Date: Fri, 1 Apr 2011 19:33:57 +0200
+Cc: Realman Namingston <realname1776@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <AANLkTi=pWrS9jK1obHLiXu+oLK6YS00fG-YQqzUieYH7@mail.gmail.com> <201104010951.42502.chunkeey@googlemail.com> <AANLkTinKzC66WUwPZBhuuVgyCEPrfd-9tv36QoP4s60F@mail.gmail.com>
+In-Reply-To: <AANLkTinKzC66WUwPZBhuuVgyCEPrfd-9tv36QoP4s60F@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104011933.57597.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211 interface has a flush callback which is used by mac80211
-to assure all pending transmit packets have been transmitted. This
-is used before scanning off-channel.
+On Friday 01 April 2011 18:54:29 Gábor Stefanik wrote:
+> On Fri, Apr 1, 2011 at 9:51 AM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+> > On Friday 01 April 2011 05:12:45 Realman Namingston wrote:
+> >> ar9170-based devices record a fair amount of bad packets in monitor
+> >> mode both with the old ar9170usb and new carl9170 drivers. The packets
+> >> contain random BSSIDs, some measure of additional random data, and
+> >> seem to scale proportional to the amount of traffic occurring on the
+> >> observed channel. This behavior makes the devices rather unattractive
+> >> for use in Kismet and site survey applications.
+> >>
+> >> I assume this is due to a shortcoming of the hardware.. but is there
+> >> any potential fix possible?
+> > no, you misunderstood that completely: it's a shortcoming of kismet!
+> >
+> > quote:
+> > "Usually the wireless adapter is unable to transmit in monitor mode and
+> > is restricted to a single wireless channel, though this is dependent on
+> > the wireless adapter's driver, its firmware, and its chip set's features.
+> > Also, in monitor mode the adapter does not check to see if the cyclic
+> > redundancy check (CRC) values are correct for packets captured, so some
+> > captured packets may be corrupted."
+> >
+> > http://en.wikipedia.org/wiki/Monitor_mode
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> Isn't ar9170 the wireless-N version of zd1211? Because zd1211
+> also had this problem with ZD_SNIFFER_ON. See
+> http://patches.aircrack-ng.org/zd1211rw_inject_2.6.26.patch
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
----
- drivers/staging/brcm80211/brcmsmac/wl_export.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   24 ++++++++++++++++++++++
- drivers/staging/brcm80211/brcmsmac/wlc_main.c    |   13 +++++++++++
- drivers/staging/brcm80211/brcmsmac/wlc_pub.h     |    1 +
- 4 files changed, 39 insertions(+), 0 deletions(-)
+inject? ???
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_export.h b/drivers/staging/brcm80211/brcmsmac/wl_export.h
-index 9ff760f..0fe0b24 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_export.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_export.h
-@@ -42,5 +42,6 @@ extern void wl_free_timer(struct wl_info *wl, struct wl_timer *timer);
- extern void wl_add_timer(struct wl_info *wl, struct wl_timer *timer, uint ms,
- 			 int periodic);
- extern bool wl_del_timer(struct wl_info *wl, struct wl_timer *timer);
-+extern void wl_msleep(struct wl_info *wl, uint ms);
- 
- #endif				/* _wl_export_h_ */
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index 169d26b..6ea747f 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -151,6 +151,7 @@ static int wl_ops_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 			       u8 buf_size);
- static void wl_ops_rfkill_poll(struct ieee80211_hw *hw);
-+static void wl_ops_flush(struct ieee80211_hw *hw, bool drop);
- 
- static void wl_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
-@@ -690,6 +691,18 @@ static void wl_ops_rfkill_poll(struct ieee80211_hw *hw)
- 	wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, blocked);
- }
- 
-+static void wl_ops_flush(struct ieee80211_hw *hw, bool drop)
-+{
-+	struct wl_info *wl = HW_TO_WL(hw);
-+
-+	no_printk("%s: drop = %s\n", __func__, drop ? "true" : "false");
-+
-+	/* wait for packet queue and dma fifos to run empty */
-+	WL_LOCK(wl);
-+	wlc_wait_for_tx_completion(wl->wlc, drop);
-+	WL_UNLOCK(wl);
-+}
-+
- static const struct ieee80211_ops wl_ops = {
- 	.tx = wl_ops_tx,
- 	.start = wl_ops_start,
-@@ -711,6 +724,7 @@ static const struct ieee80211_ops wl_ops = {
- 	.sta_remove = wl_ops_sta_remove,
- 	.ampdu_action = wl_ops_ampdu_action,
- 	.rfkill_poll = wl_ops_rfkill_poll,
-+	.flush = wl_ops_flush,
- };
- 
- /*
-@@ -1981,3 +1995,13 @@ bool wl_rfkill_set_hw_state(struct wl_info *wl)
- 	WL_LOCK(wl);
- 	return blocked;
- }
-+
-+/*
-+ * precondition: perimeter lock has been acquired
-+ */
-+void wl_msleep(struct wl_info *wl, uint ms)
-+{
-+	WL_UNLOCK(wl);
-+	msleep(ms);
-+	WL_LOCK(wl);
-+}
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index 93e2f2c..3e5d884 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -8097,3 +8097,16 @@ int wlc_get_curband(struct wlc_info *wlc)
- {
- 	return wlc->band->bandunit;
- }
-+
-+void wlc_wait_for_tx_completion(struct wlc_info *wlc, bool drop)
-+{
-+	/* flush packet queue when requested */
-+	if (drop)
-+		pktq_flush(&wlc->active_queue->q, false, NULL, 0);
-+
-+	/* wait for queue and DMA fifos to run dry */
-+	while (!pktq_empty(&wlc->active_queue->q) ||
-+	       TXPKTPENDTOT(wlc) > 0) {
-+		wl_msleep(wlc->wl, 1);
-+	}
-+}
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-index eea9aa7..626d424 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-@@ -569,6 +569,7 @@ extern void wlc_scan_start(struct wlc_info *wlc);
- extern void wlc_scan_stop(struct wlc_info *wlc);
- extern void wlc_associate_upd(struct wlc_info *wlc, bool state);
- extern int wlc_get_curband(struct wlc_info *wlc);
-+extern void wlc_wait_for_tx_completion(struct wlc_info *wlc, bool drop);
- 
- static inline int wlc_iovar_getuint(struct wlc_info *wlc, const char *name,
- 				    uint *arg)
--- 
-1.7.1
+quote from include/net/mac80211.h:
 
+"enum ieee80211_filter_flags - hardware filter flags
 
+These flags determine what the filter in hardware should be
+programmed to let through and what should not be passed to the
+stack. >>>>> It is always safe to pass more frames than requested,
+but this has negative impact on power consumption. <<<<<"
+
+so, if you don't want the garbage then don't enable monitor mode.
+OR set the appropriate FIF_ filter flags and hope the mntr setting
+doesn't affect the way how the hardware/firmware/driver/stack
+marks "bad" frames.
+
+Regards,
+	Chr
