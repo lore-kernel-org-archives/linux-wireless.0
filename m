@@ -1,72 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:48440 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754849Ab1DKSqH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 14:46:07 -0400
-Message-ID: <4DA34C69.1050508@lwfinger.net>
-Date: Mon, 11 Apr 2011 13:46:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:30187 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750711Ab1DALpb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 07:45:31 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 04:45:06 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Subject: [RFC PATCH 1/2] mac80211: Check for queued frames before entering power save.
+Date: Fri, 1 Apr 2011 17:15:23 +0530
+Message-ID: <1301658324-11530-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2800pci: rt2800usb: Firmware update
-References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net> <4DA33F3A.6090707@gmail.com> <BANLkTimJCNpTqn-uQjRLHTyGjHxd+BpJ4Q@mail.gmail.com> <20110411181303.GD2268@decadent.org.uk> <4DA3477F.8080709@gmail.com>
-In-Reply-To: <4DA3477F.8080709@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2011 01:25 PM, Gertjan van Wingerde wrote:
-> On 04/11/11 20:13, Ben Hutchings wrote:
->> On Mon, Apr 11, 2011 at 07:57:15PM +0200, Ivo Van Doorn wrote:
->>>>> From: Shiang Tu<shiang_tu@ralinktech.com>
->>>>>
->>>>> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
->>>>> Version 29.
->>>>>
->>>>> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
->>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->>>>> ---
->>>>>   WHENCE     |    8 ++++----
->>>>>   rt2860.bin |  Bin 8192 ->   8192 bytes
->>>>>   rt2870.bin |  Bin 4096 ->   8192 bytes
->>>>>   3 files changed, 4 insertions(+), 4 deletions(-)
->>>>
->>>> links to rt3070.bin rt3071.bin rt3090.bin ???
->>>
->>> What do you mean? Those files should be deleted from the linux-firmware
->>> package. There is no need to keep them around, as with the removal of
->>> the staging drivers, the last users of those files are gone.
->>
->> Stop repeating this nonsense, Ivo.  If the firmware has been bundled in
->> the Linux tree, that would be correct.  For linux-firmware the policy is
->> different.
->
-> It's unbelievable how much fuzz a set of binary firmware files can create.
->
-> To be honest, I do not care whether they stay or go, as long as it is very
-> clear that rt2x00 does not need, and will never need those files. If they
-> stay, I would recommend simply not touching them at all, and leave them as
-> they are, so that nothing changes for the people running the staging driver
-> (at least with respect to these 3 firmware files).
->
-> Larry, it might be best to update your changes to the WHENCE file to clearly
-> state that these 3 files are only needed for the staging rt2860sta driver,
-> up to kernel 2.6.39 (assuming that that staging driver will be removed in 2.6.40).
+In a highly noisy environment, since the driver could not send
+the packets out in 100ms, some applications stall and eventually
+fail as mac80211 stops the netdevice queues for flush when power
+save is triggered. Most of the WMM testcases fail in the Wifi
+testing because of this.
+Increasing the dynamic ps timeout to 200-300ms helps but in noisy
+channel conditions even if there is a continuous tx traffic, mac80211
+tries to go into PS. The new implementation checks for any frames
+queued in the driver tx queues and based on that mac80211 decides
+to go for power save. This also prevents redundant stopping of
+netdevice queues which helps more applications to run properly.
 
-Agreed. I'll add that as soon as I get the requested info about what changed 
-from Ralink.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ include/net/mac80211.h      |    4 ++++
+ net/mac80211/driver-ops.h   |   13 +++++++++++++
+ net/mac80211/driver-trace.h |   20 ++++++++++++++++++++
+ net/mac80211/mlme.c         |   17 +++++++++--------
+ 4 files changed, 46 insertions(+), 8 deletions(-)
 
-I can test if linking rt3090.bin to rt2860.bin works for the PCI device, but I 
-have no USB stick for testing. As a result, I'm inclined to leave those files 
-intact for the foreseeable future.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cefe1b3..dca4d21 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1808,6 +1808,9 @@ enum ieee80211_ampdu_mlme_action {
+  * @set_ringparam: Set tx and rx ring sizes.
+  *
+  * @get_ringparam: Get tx and rx ring current and maximum sizes.
++ *
++ * @tx_frames_pending: Check if there is any pending frame in the hardware
++ *	queues before entering power save.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1895,6 +1898,7 @@ struct ieee80211_ops {
+ 	int (*set_ringparam)(struct ieee80211_hw *hw, u32 tx, u32 rx);
+ 	void (*get_ringparam)(struct ieee80211_hw *hw,
+ 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
++	bool (*tx_frames_pending)(struct ieee80211_hw *hw);
+ };
+ 
+ /**
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 9c0d62b..00a0685 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -552,4 +552,17 @@ static inline void drv_get_ringparam(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline bool drv_tx_frames_pending(struct ieee80211_local *local)
++{
++	bool ret = false;
++
++	might_sleep();
++
++	trace_drv_tx_frames_pending(local);
++	if (local->ops->tx_frames_pending)
++		ret = local->ops->tx_frames_pending(&local->hw);
++	trace_drv_return_bool(local, ret);
++
++	return ret;
++}
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 45aab80..c8c934d 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -74,6 +74,21 @@ TRACE_EVENT(drv_return_int,
+ 	TP_printk(LOCAL_PR_FMT " - %d", LOCAL_PR_ARG, __entry->ret)
+ );
+ 
++TRACE_EVENT(drv_return_bool,
++	TP_PROTO(struct ieee80211_local *local, bool ret),
++	TP_ARGS(local, ret),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(bool, ret)
++	),
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->ret = ret;
++	),
++	TP_printk(LOCAL_PR_FMT " - %s", LOCAL_PR_ARG, (__entry->ret) ?
++		  "true" : "false")
++);
++
+ TRACE_EVENT(drv_return_u64,
+ 	TP_PROTO(struct ieee80211_local *local, u64 ret),
+ 	TP_ARGS(local, ret),
+@@ -964,6 +979,11 @@ TRACE_EVENT(drv_get_ringparam,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_only_evt, drv_tx_frames_pending,
++	TP_PROTO(struct ieee80211_local *local),
++	TP_ARGS(local)
++);
++
+ DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 64d92d5..fd49280 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -770,15 +770,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+ 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+ 		netif_tx_stop_all_queues(sdata->dev);
+-		/*
+-		 * Flush all the frames queued in the driver before
+-		 * going to power save
+-		 */
+-		drv_flush(local, false);
+-		ieee80211_send_nullfunc(local, sdata, 1);
+ 
+-		/* Flush once again to get the tx status of nullfunc frame */
+-		drv_flush(local, false);
++		if (drv_tx_frames_pending(local))
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++				  msecs_to_jiffies(
++				  local->hw.conf.dynamic_ps_timeout));
++		else {
++			ieee80211_send_nullfunc(local, sdata, 1);
++			/* Flush to get the tx status of nullfunc frame */
++			drv_flush(local, false);
++		}
+ 	}
+ 
+ 	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+-- 
+1.6.3.3
 
-Off-Topic: What are some makes/models of USB sticks? If there are some 
-inexpensive models on E-bay, I could add to my collection.
-
-Larry
