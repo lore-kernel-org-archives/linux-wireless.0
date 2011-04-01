@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:20287 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755401Ab1DERBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:01:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/25] iwlagn: return send calibration result
-Date: Tue,  5 Apr 2011 09:41:54 -0700
-Message-Id: <1302021732-21250-8-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:46046 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751434Ab1DALXO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 07:23:14 -0400
+Received: by mail-ey0-f177.google.com with SMTP id 6so1213056eyh.22
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 04:23:10 -0700 (PDT)
+Subject: Re: [PATCH 2/5] wl12xx: Clean up the block size alignment code
+From: Luciano Coelho <coelho@ti.com>
+To: Ido Yariv <ido@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301558821-17787-3-git-send-email-ido@wizery.com>
+References: <1301558821-17787-1-git-send-email-ido@wizery.com>
+	 <1301558821-17787-3-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 14:23:49 +0300
+Message-ID: <1301657029.1988.478.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In alive notification call, return the status from iwl_send_calib_results()
+On Thu, 2011-03-31 at 10:06 +0200, Ido Yariv wrote:
+> Simplify and clean up the block size alignment code:
+> 1. Set the block size according to the padding field type, as it cannot
+>    exceed the maximum value this field can hold.
+> 2. Move the alignment code into a function instead of duplicating it in
+>    multiple places.
+> 3. In the current implementation, the block_size member can be
+>    misleading because a zero value actually means that there's no need to
+>    align. Declare a block size alignment quirk instead.
+> 
+> Signed-off-by: Ido Yariv <ido@wizery.com>
+> ---
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index bb262a6..127c842 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -530,9 +530,7 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 	iwlagn_send_wimax_coex(priv);
- 
- 	iwlagn_set_Xtal_calib(priv);
--	iwl_send_calib_results(priv);
--
--	return 0;
-+	return iwl_send_calib_results(priv);
- }
- 
- 
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
