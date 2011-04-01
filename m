@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exprod7og119.obsmtp.com ([64.18.2.16]:55631 "EHLO
-	exprod7og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757012Ab1DGXKv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44210 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab1DALul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 19:10:51 -0400
-Received: by pxi16 with SMTP id 16so1597752pxi.4
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 16:10:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <73768.20361.qm@web161614.mail.bf1.yahoo.com>
-References: <4D9E316E.4000908@lwfinger.net>
-	<73768.20361.qm@web161614.mail.bf1.yahoo.com>
-Date: Thu, 7 Apr 2011 18:03:27 -0500
-Message-ID: <BANLkTikRMATHAUmsQa8T4LD4_C9T76asAQ@mail.gmail.com>
-Subject: Re: Questions about rt2800usb
-From: Steev Klimaszewski <steev@genesi-usa.com>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: Jett Chen <jett_chen@ralinktech.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 1 Apr 2011 07:50:41 -0400
+Subject: [PATCH v2] mac80211: fix comment regarding aggregation buf_size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 13:52:34 +0200
+Message-ID: <1301658754.3832.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 7, 2011 at 5:19 PM, Walter Goldens <goldenstranger@yahoo.com> wrote:
->
->> I know from experience that the
->> staging driver rt82860sta has been replaced by rt2800pci and
->> I plan to push a patch deleting the driver from staging.
->>
->> It appears that rt2870sta has been replaced by rt2800usb.
->> Is that correct? If so, I will also include the deletion of
->> that driver from staging in the patch.
->>
->> I noticed that rt2870sta includes a few USB IDs not found
->> in rt2800usb, namely:
->>
->> 0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14.
->>
->> Any reasons why these should not be included in rt2800usb?
->>
->> Please let me know of any objections to removing those two
->> staging drivers.
->
-> Here's my vote against removing the rt2870sta from staging. Some longstanding issues with latency and duplicate packets (rt307x) are persistent with rt2800usb, whereas rt2870sta works fine.
->
-> my two cents
->
-> Walter
+From: Johannes Berg <johannes.berg@intel.com>
 
-Personally, I've had the opposite (since the patch to disable power
-management on rt2800usb.)  rt2870sta hasn't been noticeably more
-stable, and in fact, I tend to see div0 bugs quite often when using
-it.  That said, I'm using Azurewave rt3070s.
+The description for buf_size was misleading and
+just said you couldn't TX larger aggregates, but
+of course you can't TX aggregates in a way that
+would exceed the window either, which is possible
+even if the aggregates are shorter than that.
 
--- 
-Steev Klimaszewski <steev@genesi-usa.com>
-Senior Software Engineer, Genesi USA, Inc.
+Expand the description, thanks to Emmanuel for
+explaining this to me.
+
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: fix explanation bug :)
+
+ include/net/mac80211.h |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+--- a/include/net/mac80211.h	2011-03-31 12:26:15.000000000 +0200
++++ b/include/net/mac80211.h	2011-04-01 13:49:33.000000000 +0200
+@@ -1753,8 +1753,19 @@ enum ieee80211_ampdu_mlme_action {
+  * 	that TX/RX_STOP can pass NULL for this parameter.
+  *	The @buf_size parameter is only valid when the action is set to
+  *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
+- *	buffer size (number of subframes) for this session -- aggregates
+- *	containing more subframes than this may not be transmitted to the peer.
++ *	buffer size (number of subframes) for this session -- the driver
++ *	may neither send aggregates containing more subframes than this
++ *	nor send aggregates in a way that lost frames would exceed the
++ *	buffer size. If just limiting the aggregate size, this would be
++ *	possible with a buf_size of 8:
++ *	 - TX: 1.....7
++ *	 - RX:  2....7 (lost frame #1)
++ *	 - TX:        8..1...
++ *	which is invalid since #1 was now re-transmitted well past the
++ *	buffer size of 8. Correct ways to retransmit #1 would be:
++ *	 - TX:       1 or 18 or 81
++ *	Even "189" would be wrong since 1 could be lost again.
++ *
+  *	Returns a negative error code on failure.
+  *	The callback can sleep.
+  *
+
+
