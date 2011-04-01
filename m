@@ -1,134 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63785 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104Ab1D2FDm convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55699 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168Ab1DALww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 01:03:42 -0400
-Received: by iyb14 with SMTP id 14so2811977iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 22:03:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1303996915.12586.116.camel@cumari>
-References: <1303125329-27214-1-git-send-email-arik@wizery.com>
- <1303125329-27214-10-git-send-email-arik@wizery.com> <1303996915.12586.116.camel@cumari>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 29 Apr 2011 08:03:26 +0300
-Message-ID: <BANLkTinyjnfvsag1=P72yQnrZARR5Pi37w@mail.gmail.com> (sfid-20110429_070344_210402_9557C8A4)
-Subject: Re: [PATCH 10/10] wl12xx: export driver state to debugfs
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Apr 2011 07:52:52 -0400
+Subject: [PATCH] mac80211: clean up station cleanup timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 13:52:48 +0200
+Message-ID: <1301658768.3832.24.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 28, 2011 at 16:21, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-04-18 at 14:15 +0300, Arik Nemtsov wrote:
->> By reading the "driver_state" debugfs value we get all the important
->> state information from the wl12xx driver. This helps testing and
->> debugging, particularly in situations where the driver seems "stuck".
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->>  drivers/net/wireless/wl12xx/debugfs.c |   87 +++++++++++++++++++++++++++++++++
->>  1 files changed, 87 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
->> index 6eb48b7..6970455 100644
->> --- a/drivers/net/wireless/wl12xx/debugfs.c
->> +++ b/drivers/net/wireless/wl12xx/debugfs.c
->> @@ -310,6 +310,92 @@ static const struct file_operations start_recovery_ops = {
->>       .llseek = default_llseek,
->>  };
->>
->> +static ssize_t driver_state_read(struct file *file, char __user *user_buf,
->> +                              size_t count, loff_t *ppos)
->> +{
->> +     struct wl1271 *wl = file->private_data;
->> +     int res = 0;
->> +     char buf[1024];
->> +
->> +     mutex_lock(&wl->mutex);
->> +
->> +#define DRIVER_STATE_PRINT(x, fmt)   \
->> +     (res += scnprintf(buf + res, sizeof(buf) - res,\
->> +                       #x " = " fmt "\n", wl->x))
->> +
->> +#define DRIVER_STATE_PRINT_LONG(x) DRIVER_STATE_PRINT(x, "%ld")
->> +#define DRIVER_STATE_PRINT_INT(x)  DRIVER_STATE_PRINT(x, "%d")
->> +#define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
->> +#define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
->> +#define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
->> +
->> +     DRIVER_STATE_PRINT_INT(tx_blocks_available);
->> +     DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
->> +     DRIVER_STATE_PRINT_INT(tx_frames_cnt);
->> +     DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
->> +     DRIVER_STATE_PRINT_INT(tx_queue_count);
->> +     DRIVER_STATE_PRINT_INT(tx_packets_count);
->> +     DRIVER_STATE_PRINT_INT(tx_results_count);
->> +     DRIVER_STATE_PRINT_LHEX(flags);
->> +     DRIVER_STATE_PRINT_INT(tx_blocks_freed[0]);
->> +     DRIVER_STATE_PRINT_INT(tx_blocks_freed[1]);
->> +     DRIVER_STATE_PRINT_INT(tx_blocks_freed[2]);
->> +     DRIVER_STATE_PRINT_INT(tx_blocks_freed[3]);
->> +     DRIVER_STATE_PRINT_INT(tx_security_last_seq);
->> +     DRIVER_STATE_PRINT_INT(rx_counter);
->> +     DRIVER_STATE_PRINT_INT(session_counter);
->> +     DRIVER_STATE_PRINT_INT(state);
->> +     DRIVER_STATE_PRINT_INT(bss_type);
->> +     DRIVER_STATE_PRINT_INT(channel);
->> +     DRIVER_STATE_PRINT_HEX(rate_set);
->> +     DRIVER_STATE_PRINT_HEX(basic_rate_set);
->> +     DRIVER_STATE_PRINT_HEX(basic_rate);
->> +     DRIVER_STATE_PRINT_INT(band);
->> +     DRIVER_STATE_PRINT_INT(beacon_int);
->> +     DRIVER_STATE_PRINT_INT(psm_entry_retry);
->> +     DRIVER_STATE_PRINT_INT(ps_poll_failures);
->> +     DRIVER_STATE_PRINT_HEX(filters);
->> +     DRIVER_STATE_PRINT_HEX(rx_config);
->> +     DRIVER_STATE_PRINT_HEX(rx_filter);
->> +     DRIVER_STATE_PRINT_INT(power_level);
->> +     DRIVER_STATE_PRINT_INT(rssi_thold);
->> +     DRIVER_STATE_PRINT_INT(last_rssi_event);
->> +     DRIVER_STATE_PRINT_INT(sg_enabled);
->> +     DRIVER_STATE_PRINT_INT(enable_11a);
->> +     DRIVER_STATE_PRINT_INT(noise);
->> +     DRIVER_STATE_PRINT_LHEX(ap_hlid_map[0]);
->> +     DRIVER_STATE_PRINT_INT(last_tx_hlid);
->> +     DRIVER_STATE_PRINT_INT(ba_support);
->> +     DRIVER_STATE_PRINT_HEX(ba_rx_bitmap);
->> +     DRIVER_STATE_PRINT_HEX(ap_fw_ps_map);
->> +     DRIVER_STATE_PRINT_LHEX(ap_ps_map);
->> +     DRIVER_STATE_PRINT_HEX(quirks);
->> +     DRIVER_STATE_PRINT_HEX(irq);
->> +     DRIVER_STATE_PRINT_HEX(ref_clock);
->> +     DRIVER_STATE_PRINT_HEX(tcxo_clock);
->> +     DRIVER_STATE_PRINT_HEX(hw_pg_ver);
->> +     DRIVER_STATE_PRINT_HEX(platform_quirks);
->> +     DRIVER_STATE_PRINT_HEX(chip.id);
->> +     DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
->
-> I'd prefer to have each of these values in separate files, like the FW
-> stats.  If you print this all out in one file, it's hard to know which
-> value means what.  With separate files it's easy to know and you can
-> achieve the same thing as having in one file by doing something like
-> this:
->
-> cat driver_state/*
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think it's pretty easy to understand what means what. The print
-looks like this:
+We currently run this timer exactly once when
+a new mac80211 device is registered, but that
+is completely pointless since it will have no
+work to do at all. Therefore, remove that and
+also simplify some code using the timer.
 
-power_level = 0
-rssi_thold = 0
-last_rssi_event = 0
-sg_enabled = 1
-enable_11a = 1
-noise = 31
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c     |    5 -----
+ net/mac80211/sta_info.c |   13 ++-----------
+ net/mac80211/sta_info.h |    1 -
+ net/mac80211/util.c     |    2 +-
+ 4 files changed, 3 insertions(+), 18 deletions(-)
 
-As for making separate files - I think its preferable if people don't
-have an option to print only parts of the state. This can help bug
-reports by non-developers by giving a fuller picture.
-Perhaps we can add separate files in another patch later on?
+--- a/net/mac80211/main.c	2011-03-30 15:26:10.000000000 +0200
++++ b/net/mac80211/main.c	2011-03-30 15:26:14.000000000 +0200
+@@ -879,10 +879,6 @@ int ieee80211_register_hw(struct ieee802
+ 
+ 	local->dynamic_ps_forced_timeout = -1;
+ 
+-	result = sta_info_start(local);
+-	if (result < 0)
+-		goto fail_sta_info;
+-
+ 	result = ieee80211_wep_init(local);
+ 	if (result < 0)
+ 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+@@ -945,7 +941,6 @@ int ieee80211_register_hw(struct ieee802
+ 	rtnl_unlock();
+ 	ieee80211_wep_free(local);
+ 	sta_info_stop(local);
+- fail_sta_info:
+ 	destroy_workqueue(local->workqueue);
+  fail_workqueue:
+ 	wiphy_unregister(local->hw.wiphy);
+--- a/net/mac80211/sta_info.c	2011-03-30 15:26:10.000000000 +0200
++++ b/net/mac80211/sta_info.c	2011-03-30 15:26:14.000000000 +0200
+@@ -768,9 +768,8 @@ static void sta_info_cleanup(unsigned lo
+ 	if (!timer_needed)
+ 		return;
+ 
+-	local->sta_cleanup.expires =
+-		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+-	add_timer(&local->sta_cleanup);
++	mod_timer(&local->sta_cleanup,
++		  round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL));
+ }
+ 
+ void sta_info_init(struct ieee80211_local *local)
+@@ -783,14 +782,6 @@ void sta_info_init(struct ieee80211_loca
+ 
+ 	setup_timer(&local->sta_cleanup, sta_info_cleanup,
+ 		    (unsigned long)local);
+-	local->sta_cleanup.expires =
+-		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+-}
+-
+-int sta_info_start(struct ieee80211_local *local)
+-{
+-	add_timer(&local->sta_cleanup);
+-	return 0;
+ }
+ 
+ void sta_info_stop(struct ieee80211_local *local)
+--- a/net/mac80211/sta_info.h	2011-03-30 15:26:10.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-03-30 15:26:14.000000000 +0200
+@@ -497,7 +497,6 @@ void sta_info_set_tim_bit(struct sta_inf
+ void sta_info_clear_tim_bit(struct sta_info *sta);
+ 
+ void sta_info_init(struct ieee80211_local *local);
+-int sta_info_start(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+ int sta_info_flush(struct ieee80211_local *local,
+ 		   struct ieee80211_sub_if_data *sdata);
+--- a/net/mac80211/util.c	2011-03-30 15:26:10.000000000 +0200
++++ b/net/mac80211/util.c	2011-03-30 15:26:14.000000000 +0200
+@@ -1290,7 +1290,7 @@ int ieee80211_reconfig(struct ieee80211_
+ 		}
+ 	}
+ 
+-	add_timer(&local->sta_cleanup);
++	mod_timer(&local->sta_cleanup, jiffies + 1);
+ 
+ 	mutex_lock(&local->sta_mtx);
+ 	list_for_each_entry(sta, &local->sta_list, list)
 
-Arik
+
