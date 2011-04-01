@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19819 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754228Ab1DXTkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 15:40:07 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303673360.3603.7.camel@jlt3.sipsolutions.net>
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA) <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-	 <1303670920.22777.10.camel@wwguy-ubuntu>
-	 <1303673360.3603.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 12:37:14 -0700
-Message-ID: <1303673834.22777.15.camel@wwguy-ubuntu> (sfid-20110424_214011_679697_267EA127)
-Mime-Version: 1.0
+Received: from w1.fi ([128.177.27.249]:40960 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754856Ab1DAJyi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 05:54:38 -0400
+Date: Fri, 1 Apr 2011 12:54:28 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ec15e68ba6a regresion?
+Message-ID: <20110401095428.GA11779@jm.kir.nu>
+References: <20110331154232.GA7370@redhat.com>
+ <20110331154638.GA28649@jm.kir.nu>
+ <20110401092506.GB2790@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110401092506.GB2790@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 12:29 -0700, Johannes Berg wrote:
-> On Sun, 2011-04-24 at 11:48 -0700, wwguy wrote:
-> > On Sun, 2011-04-24 at 11:38 -0700, Johannes Berg wrote:
-> > > On Sun, 2011-04-24 at 10:15 -0700, Wey-Yi Guy wrote:
-> > > > The current led blink trigger implementaion assume on/off time are equal,
-> > > > it works but not have any flexbile for different blink pattern.
-> > > > 
-> > > > Add "ratio" parameter in the trigger table and give driver more control
-> > > > on how the on/off blink time behavior should be.
-> > > 
-> > > I considered this when writing the original code, but then decided that
-> > > nobody needed to have unequal on/off times. Why would we need it now?
-> > > (FWIW, blink = 0 is always on already, no?)
-> > > 
-> > But from what I read for iwlwifi, to turn LED_SOLID_ON, on = 11, off =
-> > 0. Did I read it wrong.
-> 
-> Ah, well, mac80211 has:
-> 
->         /* default to just solid on */
->         on = 1;
->         off = 0;
-> 
+On Fri, Apr 01, 2011 at 11:25:08AM +0200, Stanislaw Gruszka wrote:
 
-yes, I know. but not sure since I did not try it yet. (my mess up my
-system so it is not working so far)
+> Seems when disconnect event is handled, we remove some key. I'm
+> attaching non-debug and debug logs. Note this is kinda old
+> version of wpa_supplicant.
 
-in iwlagn, IWL_LED_SOLID = 11.
+> wpa_driver_wext_disassociate
 
+Huh.. This is with WEXT and the commit
+ec15e68ba6a505631016f230899bafbb7b8cd0d6 is adding an nl80211 event. It
+should have no change whatsoever to WEXT. I'm not sure whether I
+understood the debug log correctly, so I'm not sure what was the area
+that behaved incorrectly among multiple successful connections. Anyway,
+I do not see how this particular commit could have anything to do with
+this. Are you sure that this issues shows only when this commit is in
+place and does not show if you revert just this commit?
 
-> So if you want "solid on" by default for 0 tpt, you simply don't specify
-> the -1 value, ie. just remove the -1 line from the table completely.
-> IOW, instead of the patch you posted before, a simple patch just
-> removing the first line from the table should be sufficient.
-> 
-> > Yes, I agree as today, "on" == "off", just thinking we should make more
-> > flexible.
-> 
-> I just don't see the point since we don't really need it.
-
-Just thinking give more control to the driver, but it is ok don't have
-it
-
-Wey
-
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
