@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19822 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755968Ab1DXTwF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 15:52:05 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303674298.3603.9.camel@jlt3.sipsolutions.net>
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA) <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-	 <1303670920.22777.10.camel@wwguy-ubuntu>
-	 <1303673360.3603.7.camel@jlt3.sipsolutions.net>
-	 <1303673834.22777.15.camel@wwguy-ubuntu>
-	 <1303674298.3603.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 12:49:12 -0700
-Message-ID: <1303674552.22777.17.camel@wwguy-ubuntu> (sfid-20110424_215222_576918_7E6F80C0)
-Mime-Version: 1.0
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:49526 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757218Ab1DAQl2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 12:41:28 -0400
+Received: by mail-ey0-f177.google.com with SMTP id 6so1175486eyh.8
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:41:27 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: [PATCH 2.6.39 and stable] wl12xx: fix potential buffer overflow in testmode nvs push
+Date: Fri,  1 Apr 2011 19:42:02 +0300
+Message-Id: <1301676122-4745-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 12:44 -0700, Johannes Berg wrote:
-> On Sun, 2011-04-24 at 12:37 -0700, wwguy wrote:
-> 
-> > > So if you want "solid on" by default for 0 tpt, you simply don't specify
-> > > the -1 value, ie. just remove the -1 line from the table completely.
-> > > IOW, instead of the patch you posted before, a simple patch just
-> > > removing the first line from the table should be sufficient.
-> > > 
-> > > > Yes, I agree as today, "on" == "off", just thinking we should make more
-> > > > flexible.
-> > > 
-> > > I just don't see the point since we don't really need it.
-> > 
-> > Just thinking give more control to the driver, but it is ok don't have
-> > it
-> 
-> I wouldn't really mind, I just don't think it's useful before some
-> driver actually needs it, and all the current ones want symmetric
-> blinking (and also I think asymmetric would look odd).
-> 
-well, if you think it is ok, then I will submit it, or I will just drop
-it.
+We were allocating the size of the NVS file struct and not checking
+whether the length of the buffer passed was correct before copying it
+into the allocated memory.  This is a security hole because buffer
+overflows can occur if the userspace passes a bigger file than what is
+expected.
 
-Wey
+With this patch, we check if the size of the data passed from
+userspace matches the size required.
 
+This bug was introduced in 2.6.36.
+
+Cc: stable@kernel.org
+Reported-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/testmode.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
+index e64403b..6ec06a4 100644
+--- a/drivers/net/wireless/wl12xx/testmode.c
++++ b/drivers/net/wireless/wl12xx/testmode.c
+@@ -204,7 +204,10 @@ static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
+ 
+ 	kfree(wl->nvs);
+ 
+-	wl->nvs = kzalloc(sizeof(struct wl1271_nvs_file), GFP_KERNEL);
++	if (len != sizeof(struct wl1271_nvs_file))
++		return -EINVAL;
++
++	wl->nvs = kzalloc(len, GFP_KERNEL);
+ 	if (!wl->nvs) {
+ 		wl1271_error("could not allocate memory for the nvs file");
+ 		ret = -ENOMEM;
+-- 
+1.7.1
 
