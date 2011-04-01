@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43484 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913Ab1DGSFk (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41735 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757143Ab1DAQJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 14:05:40 -0400
-Received: by wya21 with SMTP id 21so2448373wya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 11:05:39 -0700 (PDT)
+	Fri, 1 Apr 2011 12:09:46 -0400
+Received: by bwz15 with SMTP id 15so2636475bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:09:45 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: George Nychis <gnychis@cmu.edu>
+Subject: Re: products with Atheros AR9002U (UB94) ?
+Date: Fri, 1 Apr 2011 18:08:35 +0200
+Cc: linux-wireless@vger.kernel.org, Stephen.Chen@atheros.com
+References: <AANLkTimERiSQcFp2-F5OTM6KyQHEMsGvJaWsV4w4Rsed@mail.gmail.com>
+In-Reply-To: <AANLkTimERiSQcFp2-F5OTM6KyQHEMsGvJaWsV4w4Rsed@mail.gmail.com>
 MIME-Version: 1.0
-Date: Thu, 7 Apr 2011 14:05:39 -0400
-Message-ID: <BANLkTimL90zWhpHPzODNAWXKtVVtWFfdmQ@mail.gmail.com>
-Subject: [PATCH] p54: Initialize extra_len in p54_tx_80211
-From: Jason Conti <jason.conti@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104011808.35833.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When compiling with gcc-4.5 and CONFIG_DEBUG_SECTION_MISMATCH=y (which enables
--fno-inline-functions-called-once), p54_tx_80211_header will not be
-inlined and extra_len will quickly
-become corrupted because it uninitialized. The outgoing buffer fills
-up before an attempt
-to associate with a WPA access point can complete (it goes into an
-associating 1, 2, 3, timed out
-direct probe 1, 2, 3 timed out loop with wpa_supplicant and the driver
-constantly returns ENOMEM).
+On Friday 01 April 2011 18:01:09 George Nychis wrote:
+> Now that we're on Q2 of 2011, are there any products on the market
+> with the AR9002U/UB94 that anyone has seen?  If an AR9002U/UB94 is
+> available, I'd go for it over the AR9001U.  It seems like ath9k has
+> the needed support for the AR9280.
+Yes, and there are lots of them.
 
-I think this was previously hidden because in gcc-4.4, as well a
-gcc-4.5 without
--fno-inline-functions-called-once, p54_tx_80211_header is always
-inlined, which may have limited
-the corruption.
-
-It was suggested I submit this upstream by Stefan Bader to resolve LP: #722185
-
-This patch is against 2.6.38.2
-
-Signed-off-by: Jason Conti
----
---- a/drivers/net/wireless/p54/txrx.c	2011-04-06 18:05:01.951581773 -0400
-+++ b/drivers/net/wireless/p54/txrx.c	2011-04-06 18:05:26.195581762 -0400
-@@ -705,7 +705,7 @@ int p54_tx_80211(struct ieee80211_hw *de
- 	struct p54_tx_info *p54info;
- 	struct p54_hdr *hdr;
- 	struct p54_tx_data *txhdr;
--	unsigned int padding, len, extra_len;
-+	unsigned int padding, len, extra_len = 0;
- 	int i, j, ridx;
- 	u16 hdr_flags = 0, aid = 0;
- 	u8 rate, queue = 0, crypt_offset = 0;
+For instance:
+TP-Link WN821N *>=v3* is an AR7010+AR9280 solution.
