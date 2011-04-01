@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40034 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520Ab1DKTAZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 15:00:25 -0400
-Date: Mon, 11 Apr 2011 14:58:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Airlie <airlied@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH] iwlegacy: make iwl3945 and iwl4965 select IWLWIFI_LEGACY
-Message-ID: <20110411185807.GC2511@tuxdriver.com>
-References: <BANLkTimoDVMcvFdoUedyfw4Thv8=DsV-5A@mail.gmail.com>
- <1302541599-15383-1-git-send-email-linville@tuxdriver.com>
- <1302547162.5663.2.camel@wwguy-ubuntu>
+Received: from mail.atheros.com ([12.19.149.2]:30192 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751978Ab1DALqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 07:46:47 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 04:46:22 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH] ath9k: Fix phy info print message with AR9485 chipset.
+Date: Fri, 1 Apr 2011 17:16:33 +0530
+Message-ID: <1301658393-2636-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1302547162.5663.2.camel@wwguy-ubuntu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 11:39:22AM -0700, wwguy wrote:
-> On Mon, 2011-04-11 at 10:06 -0700, John W. Linville wrote:
-> > Otherwise, IWLWIFI_LEGACY has to be selected independently before the
-> > drivers are made available.
-> > 
-> > Reported-by: Dave Airlie <airlied@gmail.com>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-> > Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlegacy/Kconfig |    9 +++++----
-> >  1 files changed, 5 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlegacy/Kconfig b/drivers/net/wireless/iwlegacy/Kconfig
-> > index 2a45dd4..aef65cd 100644
-> > --- a/drivers/net/wireless/iwlegacy/Kconfig
-> > +++ b/drivers/net/wireless/iwlegacy/Kconfig
-> > @@ -1,6 +1,5 @@
-> >  config IWLWIFI_LEGACY
-> > -	tristate "Intel Wireless Wifi legacy devices"
-> > -	depends on PCI && MAC80211
-> > +	tristate
-> >  	select FW_LOADER
-> >  	select NEW_LEDS
-> >  	select LEDS_CLASS
-> 
-> Should we add some ---help--- here?, or not..
+The phy information print during driver init time doesn't show
+the numeric part of the chip name properly for AR9485. This patch
+addresses this issue by adding the string to the respective array.
 
-Why would you need it?  This is now automatically selected by the
-driver -- the user doesn't see it.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b86568..e7f4a0d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2566,6 +2566,7 @@ static struct {
+ 	{ AR_SREV_VERSION_9287,         "9287" },
+ 	{ AR_SREV_VERSION_9271,         "9271" },
+ 	{ AR_SREV_VERSION_9300,         "9300" },
++	{ AR_SREV_VERSION_9485,         "9485" },
+ };
+ 
+ /* For devices with external radios */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
