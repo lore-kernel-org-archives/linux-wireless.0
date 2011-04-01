@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:45792 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752425Ab1DSNtc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:49:32 -0400
-Subject: Re: [PATCH 1/2] staging: brcm80211: removed #ifdef __mips__
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <4DAD920A.9080500@broadcom.com>
-References: <1303197225-4263-1-git-send-email-rvossen@broadcom.com>
-	 <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
-	 <1303215002.27432.5.camel@maggie>  <4DAD920A.9080500@broadcom.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:44954 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757919Ab1DAQaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 12:30:20 -0400
+Subject: Re: ChipCommon as independent driver?
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <BANLkTikR3DjQ1LbU47zrm+zV3sqW37bzrA@mail.gmail.com> (sfid-20110401_182157_154317_212E1805)
+References: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
+	 <1301673646.5219.18.camel@maggie>
+	 <BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com>
+	 <1301674530.5219.25.camel@maggie>
+	 <BANLkTikR3DjQ1LbU47zrm+zV3sqW37bzrA@mail.gmail.com>
+	 (sfid-20110401_182157_154317_212E1805)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Apr 2011 15:49:20 +0200
-Message-ID: <1303220960.27432.11.camel@maggie>
+Date: Fri, 01 Apr 2011 18:30:15 +0200
+Message-ID: <1301675415.5219.27.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-19 at 15:45 +0200, Roland Vossen wrote: 
-> Hello guys,
+On Fri, 2011-04-01 at 18:21 +0200, Rafał Miłecki wrote: 
+> W dniu 1 kwietnia 2011 18:15 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> > On Fri, 2011-04-01 at 18:06 +0200, Rafał Miłecki wrote:
+> >> W dniu 1 kwietnia 2011 18:00 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> >> > On Fri, 2011-04-01 at 16:49 +0200, Rafał Miłecki wrote:
+> >> >> Do you have idea how we could nicely solve that issue?
+> >> >
+> >> > Yeah. Just don't share code between ssb and bcmai.
+> >> > That's the only clean solution to that mess.
+> >>
+> >> Do you want to have core drivers separated as well? Really? Should we
+> >> have separated pci core? chiccommon core?
+> >
+> > Yes. Those "drivers" are a mess full of ssb specific workarounds
+> > to hardware limitations.
 > 
-> Greg, please drop this patch set. Rest of this email is FYI only.
+> I really don't understand what you meant in:
 > 
-> Michael:
+> 2011/2/18 Michael Büsch <mb@bu3sch.de>:
+> > Note that this does not mean that we need to duplicate the MIPS,
+> > common and probably pci core drivers. A hybrid module can be done,
+> > if that's desired to avoid code duplication.
 > 
-> > Are you sure? __mips__ is automagically defined by GCC, if compiling
-> > for MIPS. Maybe it should be converted to some CONFIG_... symbol.
-> > But removal seems wrong.
-> 
-> You are right. The majority of the removed #ifdef __mips__ code has to 
-> do with write flushing. To accomplish this, it performs a R_REG after a 
-> W_REG. I assumed that writeb() and friends guarantee ordering and write 
-> flushing, but after some reading I learned that this is not the case.
-> 
-> I will rework the code and submit a new patch set.
-> 
-> For some background info: this patch was a reaction on an email from 
-> John Linville to us. John wrote:
-> 
-> <quote>
-> I took a quick run through a pull of staging from today.  I made a few
-> notes, but a lot of them would seem to relate to the utils stuff you
-> mention above.  One general comment would be that there still seems
-> to be a lot of MIPS-specific stuff buried in the code, in particular
-> a lot of "#ifdef __mips__" stuff that if necessary should at least
-> be hidden inside the W_REG macro.
-> </quote>
+> then :|
 
-You should probably create a new macro W_REG_FLUSH or something like
-that, which enforces ordering by reading back the register, if required.
-That avoids ugly #ifdefs in the code.
+_can_ be done.
+That doesn't mean it must be done or whether it's a good idea to do so.
+
+It certainly is possible to do so, but I don't think it makes
+a lot of sense.
 
 -- 
 Greetings Michael.
