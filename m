@@ -1,135 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11717 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757806Ab1D3Qku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 12:40:50 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/14] iwlagn: remove spectrum measurement header
-Date: Sat, 30 Apr 2011 09:17:37 -0700
-Message-Id: <1304180260-13875-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184102_649836_88ED216F)
-In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757529Ab1DAVg6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 17:36:58 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:58 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v6 10/10] nl80211: report mesh capabilities
+Date: Fri,  1 Apr 2011 13:35:51 -0700
+Message-Id: <1301690151-14979-11-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+NL80211_CMD_GET_WIPHY now returns a flag NL80211_SUPPORT_MESH_AUTH if
+the wiphy's mesh implementation supports routing of mesh auth frames to
+userspace.  This is useful for forward compatibility between old kernels
+and new userspace tools.
 
-This header file isn't used, and if we ever need
-these definitions they shouldn't be added to a
-driver but rather to the common 802.11 include
-file that has all frame definitions. Thus, just
-remove it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-spectrum.h |   92 ---------------------------
- 1 files changed, 0 insertions(+), 92 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-spectrum.h
+ include/linux/nl80211.h |    5 +++++
+ include/net/cfg80211.h  |    3 +++
+ net/mac80211/main.c     |    4 ++++
+ net/wireless/mesh.c     |    4 ++++
+ net/wireless/nl80211.c  |    3 +++
+ 5 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.h b/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-deleted file mode 100644
-index cb80bb4..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-+++ /dev/null
-@@ -1,92 +0,0 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
-- *
-- * Portions of this file are derived from the ieee80211 subsystem header files.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- *****************************************************************************/
--
--#ifndef __iwl_spectrum_h__
--#define __iwl_spectrum_h__
--enum {				/* ieee80211_basic_report.map */
--	IEEE80211_BASIC_MAP_BSS = (1 << 0),
--	IEEE80211_BASIC_MAP_OFDM = (1 << 1),
--	IEEE80211_BASIC_MAP_UNIDENTIFIED = (1 << 2),
--	IEEE80211_BASIC_MAP_RADAR = (1 << 3),
--	IEEE80211_BASIC_MAP_UNMEASURED = (1 << 4),
--	/* Bits 5-7 are reserved */
--
--};
--struct ieee80211_basic_report {
--	u8 channel;
--	__le64 start_time;
--	__le16 duration;
--	u8 map;
--} __packed;
--
--enum {				/* ieee80211_measurement_request.mode */
--	/* Bit 0 is reserved */
--	IEEE80211_MEASUREMENT_ENABLE = (1 << 1),
--	IEEE80211_MEASUREMENT_REQUEST = (1 << 2),
--	IEEE80211_MEASUREMENT_REPORT = (1 << 3),
--	/* Bits 4-7 are reserved */
--};
--
--enum {
--	IEEE80211_REPORT_BASIC = 0,	/* required */
--	IEEE80211_REPORT_CCA = 1,	/* optional */
--	IEEE80211_REPORT_RPI = 2,	/* optional */
--	/* 3-255 reserved */
--};
--
--struct ieee80211_measurement_params {
--	u8 channel;
--	__le64 start_time;
--	__le16 duration;
--} __packed;
--
--struct ieee80211_info_element {
--	u8 id;
--	u8 len;
--	u8 data[0];
--} __packed;
--
--struct ieee80211_measurement_request {
--	struct ieee80211_info_element ie;
--	u8 token;
--	u8 mode;
--	u8 type;
--	struct ieee80211_measurement_params params[0];
--} __packed;
--
--struct ieee80211_measurement_report {
--	struct ieee80211_info_element ie;
--	u8 token;
--	u8 mode;
--	u8 type;
--	union {
--		struct ieee80211_basic_report basic[0];
--	} u;
--} __packed;
--
--#endif
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 2c0bb8d..5a81b3c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -899,6 +899,9 @@ enum nl80211_commands {
+  *	changed once the mesh is active.
+  * @NL80211_ATTR_MESH_CONFIG: Mesh configuration parameters, a nested attribute
+  *	containing attributes from &enum nl80211_meshconf_params.
++ * @NL80211_ATTR_SUPPORT_MESH_AUTH: Currently, this means the underlying driver
++ *	allows auth frames in a mesh to be passed to userspace for processing via
++ *	the @NL80211_MESH_SETUP_USERSPACE_AUTH flag.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1087,6 +1090,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
+ 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
+ 
++	NL80211_ATTR_SUPPORT_MESH_AUTH,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2bbb89b..affdefd 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1416,6 +1416,8 @@ struct cfg80211_ops {
+  *	control port protocol ethertype. The device also honours the
+  *	control_port_no_encrypt flag.
+  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
++ * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
++ *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+  * @WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS: The device supports separate
+  *	unicast and multicast TX keys.
+  */
+@@ -1430,6 +1432,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+ 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+ 	WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS= BIT(9),
++	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ };
+ 
+ struct mac_address {
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0ae9b22..55cc521 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -761,6 +761,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	/* mesh depends on Kconfig, but drivers should set it if they want */
+ 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+ #endif
++	/* if the underlying driver supports mesh, mac80211 will (at least)
++	 * provide routing of mesh authentication frames to userspace */
++	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
++		local->hw.wiphy->flags |= WIPHY_FLAG_MESH_AUTH;
+ 
+ 	/* mac80211 supports control port protocol changing */
+ 	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index ab036b5..5c11608 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -74,6 +74,10 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
+ 		return -EOPNOTSUPP;
+ 
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_MESH_AUTH) &&
++	      setup->is_secure)
++		return -EOPNOTSUPP;
++
+ 	if (wdev->mesh_id_len)
+ 		return -EALREADY;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7ee6197..fda52da 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -124,6 +124,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_BSS_HT_OPMODE] = { .type = NLA_U16 },
+ 
+ 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
++	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
+ 
+ 	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
+ 					 .len = NL80211_HT_CAPABILITY_LEN },
+@@ -594,6 +595,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 
+ 	if (dev->wiphy.flags & WIPHY_FLAG_IBSS_RSN)
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
++	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
++		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
+ 
+ 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
+ 		sizeof(u32) * dev->wiphy.n_cipher_suites,
 -- 
-1.7.0.4
+1.7.4.1
 
