@@ -1,88 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28631 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752274Ab1DTO1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 10:27:35 -0400
-Subject: Re: [PATCH] iwlwifi: fix possible data overwrite in hcmd callback
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
-References: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 07:05:48 -0700
-Message-ID: <1303308348.14995.149.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65070 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757171Ab1DAOtq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 10:49:46 -0400
+Received: by qwk3 with SMTP id 3so2185461qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 07:49:45 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 1 Apr 2011 16:49:45 +0200
+Message-ID: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
+Subject: ChipCommon as independent driver?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+I wanted to make ChipCommon independed, to make it usable with any
+bus. The problem is:
+void ssb_chipco_set_clockmode(struct ssb_chipcommon *cc, enum ssb_clkmode mode)
 
-On Wed, 2011-04-20 at 07:02 -0700, Stanislaw Gruszka wrote:
-> My commit 3598e1774c94e55c71b585340e7dc4538f310e3f
-> "iwlwifi: fix enqueue hcmd race conditions" move hcmd callback after
-> command queue reclaim, to avoid call it with hcmd_lock. But since
-> queue read index was updated, cmd data can be overwritten. Fix problem
-> by calling callback before taking hcmd_lock and queue reclaim.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-tx.c |   15 ++++-----------
->  1 files changed, 4 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 3732380..efff189 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -607,9 +607,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  	struct iwl_cmd_meta *meta;
->  	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
->  	unsigned long flags;
-> -	void (*callback) (struct iwl_priv *priv, struct iwl_device_cmd *cmd,
-> -			  struct iwl_rx_packet *pkt);
-> -
->  
->  	/* If a Tx command is being handled and it isn't in the actual
->  	 * command queue then there a command routing bug has been introduced
-> @@ -623,8 +620,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  		return;
->  	}
->  
-> -	spin_lock_irqsave(&priv->hcmd_lock, flags);
-> -
->  	cmd_index = get_cmd_index(&txq->q, index, huge);
->  	cmd = txq->cmd[cmd_index];
->  	meta = &txq->meta[cmd_index];
-> @@ -634,13 +629,14 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  			 dma_unmap_len(meta, len),
->  			 PCI_DMA_BIDIRECTIONAL);
->  
-> -	callback = NULL;
->  	/* Input error checking is done when commands are added to queue. */
->  	if (meta->flags & CMD_WANT_SKB) {
->  		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
->  		rxb->page = NULL;
-> -	} else
-> -		callback = meta->callback;
-> +	} else if (meta->callback)
-> +		meta->callback(priv, cmd, pkt);
-> +
-> +	spin_lock_irqsave(&priv->hcmd_lock, flags);
->  
->  	iwl_hcmd_queue_reclaim(priv, txq_id, index, cmd_index);
->  
-> @@ -655,7 +651,4 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  	meta->flags = 0;
->  
->  	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-> -
-> -	if (callback)
-> -		callback(priv, cmd, pkt);
->  }
+This function calls code from pci.c which gives us a loop:
+WARNING: Module
+/lib/modules/2.6.39-rc1-wl-wireless+/kernel/drivers/net/wireless/b43/b43.ko
+ignored, due to loop
+WARNING: Module
+/lib/modules/2.6.39-rc1-wl-wireless+/kernel/drivers/ssb/ssb.ko
+ignored, due to loop
+WARNING: Loop detected:
+/lib/modules/2.6.39-rc1-wl-wireless+/kernel/drivers/ssb/bcmcorecc.ko
+needs ssb.ko which needs bcmcorecc.ko again!
+WARNING: Module
+/lib/modules/2.6.39-rc1-wl-wireless+/kernel/drivers/ssb/bcmcorecc.ko
+ignored, due to loop
 
-Could you elaborate a bit more, why you do not need to protect getting
-the cmd index.
+Do you have idea how we could nicely solve that issue?
 
-Wey
-
+-- 
+Rafał
