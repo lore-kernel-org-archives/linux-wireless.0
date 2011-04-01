@@ -1,106 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62387 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757105Ab1DMFxl (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33431 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755345Ab1DAKIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:53:41 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so275754iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:41 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 1 Apr 2011 06:08:42 -0400
+Received: by wya21 with SMTP id 21so2793239wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:08:41 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] ssb: pci: implement mdio reading
+Date: Fri,  1 Apr 2011 12:07:34 +0200
+Message-Id: <1301652454-11251-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1301652454-11251-1-git-send-email-zajec5@gmail.com>
+References: <1301652454-11251-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15094.301154.926384@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:26:06 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 31/40] ath9k_htc: Optimize HTC start/stop API
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-
-There is no point in looping over all the endpoints,
-since the HIF layer uses the start/stop APIs only
-for the TX pipe. Simplify the API accordingly.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
- drivers/net/wireless/ath/ath9k/htc_hst.c |   19 ++-----------------
- drivers/net/wireless/ath/ath9k/htc_hst.h |    4 ++--
- 3 files changed, 6 insertions(+), 21 deletions(-)
+ drivers/ssb/driver_pcicore.c |   43 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index a98b146..4a12c75 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -310,7 +310,7 @@ static int hif_usb_send_tx(struct hif_device_usb *hif_dev, struct sk_buff *skb)
- 	return 0;
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 08fa6fd..76cbf96 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -467,6 +467,49 @@ static void ssb_pcie_mdio_set_phy(struct ssb_pcicore *pc, u8 phy)
+ 	}
  }
  
--static void hif_usb_start(void *hif_handle, u8 pipe_id)
-+static void hif_usb_start(void *hif_handle)
++#if 0
++//done but not used yet
++static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address)
++{
++	const u16 mdio_control = 0x128;
++	const u16 mdio_data = 0x12C;
++	int max_retries = 10;
++	u16 ret = 0;
++	u32 v;
++	int i;
++
++	v = 0x80; /* Enable Preamble Sequence */
++	v |= 0x2; /* MDIO Clock Divisor */
++	pcicore_write32(pc, mdio_control, v);
++
++	if (pc->dev->id.revision >= 10) {
++		max_retries = 200;
++		ssb_pcie_mdio_set_phy(pc, device);
++	}
++
++	v = (1 << 30); /* Start of Transaction */
++	v |= (1 << 29); /* Read Transaction */
++	v |= (1 << 17); /* Turnaround */
++	if (pc->dev->id.revision < 10)
++		v |= (u32)device << 22;
++	v |= (u32)address << 18;
++	pcicore_write32(pc, mdio_data, v);
++	/* Wait for the device to complete the transaction */
++	udelay(10);
++	for (i = 0; i < 200; i++) {
++		v = pcicore_read32(pc, mdio_control);
++		if (v & 0x100 /* Trans complete */) {
++			udelay(10);
++			ret = pcicore_read32(pc, mdio_data);
++			break;
++		}
++		msleep(1);
++	}
++	pcicore_write32(pc, mdio_control, 0);
++	return ret;
++}
++#endif
++
+ static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
+ 				u8 address, u16 data)
  {
- 	struct hif_device_usb *hif_dev = (struct hif_device_usb *)hif_handle;
- 	unsigned long flags;
-@@ -322,7 +322,7 @@ static void hif_usb_start(void *hif_handle, u8 pipe_id)
- 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
- }
- 
--static void hif_usb_stop(void *hif_handle, u8 pipe_id)
-+static void hif_usb_stop(void *hif_handle)
- {
- 	struct hif_device_usb *hif_dev = (struct hif_device_usb *)hif_handle;
- 	struct tx_buf *tx_buf = NULL, *tx_buf_tmp = NULL;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index aecc7f2..be3385e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -302,27 +302,12 @@ int htc_send_epid(struct htc_target *target, struct sk_buff *skb,
- 
- void htc_stop(struct htc_target *target)
- {
--	enum htc_endpoint_id epid;
--	struct htc_endpoint *endpoint;
--
--	for (epid = ENDPOINT0; epid < ENDPOINT_MAX; epid++) {
--		endpoint = &target->endpoint[epid];
--		if (endpoint->service_id != 0)
--			target->hif->stop(target->hif_dev, endpoint->ul_pipeid);
--	}
-+	target->hif->stop(target->hif_dev);
- }
- 
- void htc_start(struct htc_target *target)
- {
--	enum htc_endpoint_id epid;
--	struct htc_endpoint *endpoint;
--
--	for (epid = ENDPOINT0; epid < ENDPOINT_MAX; epid++) {
--		endpoint = &target->endpoint[epid];
--		if (endpoint->service_id != 0)
--			target->hif->start(target->hif_dev,
--					   endpoint->ul_pipeid);
--	}
-+	target->hif->start(target->hif_dev);
- }
- 
- void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 064a324..191e3c0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -33,8 +33,8 @@ struct ath9k_htc_hif {
- 	u8 control_dl_pipe;
- 	u8 control_ul_pipe;
- 
--	void (*start) (void *hif_handle, u8 pipe);
--	void (*stop) (void *hif_handle, u8 pipe);
-+	void (*start) (void *hif_handle);
-+	void (*stop) (void *hif_handle);
- 	int (*send) (void *hif_handle, u8 pipe, struct sk_buff *buf);
- };
- 
 -- 
-1.7.4.4
+1.7.1
 
