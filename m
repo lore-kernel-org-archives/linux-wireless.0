@@ -1,99 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:58499 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756845Ab1DFVMp convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:43580 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754231Ab1DAKnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 17:12:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <1302124112.20093.11.camel@maggie>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	<op.vti9ote53ri7v4@arend-laptop>
-	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	<1302123428.20093.6.camel@maggie>
-	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	<1302124112.20093.11.camel@maggie>
-Date: Wed, 6 Apr 2011 23:12:44 +0200
-Message-ID: <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 1 Apr 2011 06:43:04 -0400
+Received: by eye27 with SMTP id 27so1335303eye.34
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:42:54 -0700 (PDT)
+Subject: Re: [PATCH 1/5] wl12xx: Clean up and fix the 128x boot sequence
+From: Luciano Coelho <coelho@ti.com>
+To: Ido Yariv <ido@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301558821-17787-2-git-send-email-ido@wizery.com>
+References: <1301558821-17787-1-git-send-email-ido@wizery.com>
+	 <1301558821-17787-2-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Apr 2011 13:43:31 +0300
+Message-ID: <1301654611.1988.475.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 kwietnia 2011 23:08 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Wed, 2011-04-06 at 23:01 +0200, Rafał Miłecki wrote:
->> W dniu 6 kwietnia 2011 22:57 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
->> > On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote:
->> >> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
->> >> > If we want to have two drivers working on two (different) cores
->> >> > simultaneously, we will have to add trivial mutex to group core
->> >> > switching with core operation (read/write).
->> >>
->> >> With a little of work we could avoid switching and mutexes on no-host
->> >> boards. MMIO is not limited to one core at once in such a case.
->> >
->> > I don't think that this is a problem at all.
->> > All that magic does happen inside of the bus I/O handlers.
->> > Just like SSB does it.
->> > From a driver point of view, the I/O functions just need to
->> > be atomic.
->> >
->> > For SSB it's not always 100% atomic, but we're always safe
->> > due to some assumptions being made. But this is an SSB implementation
->> > detail that is different from AXI. So don't look too closely
->> > at the SSB implementation of the I/O functions. You certainly want
->> > to implement them slightly differently in AXI. SSB currently doesn't
->> > make use of the additional sliding windows, because they are not
->> > available in the majority of SSB devices.
->> >
->> > The AXI bus subsystem will manage the sliding windows and the driver
->> > doesn't know about the details.
->>
->> Sure, I've meant mutex inside bcmai (or whatever name), not on the driver side!
->>
->> In BCMAI:
->> bcmai_read() {
->> mutex_get();
->> switch_core();
->> ioread();
->> mutex_release();
->> }
->
-> Yeah that basically is the idea. But it's a little bit harder than that.
-> The problem is that the mutex cannot be taken in interrupt context.
-> A spinlock probably is a bit hairy, too, depending on how heavy
-> a core switch is on AXI.
->
-> On SSB we workaround this with some (dirty but working) assumptions.
->
-> On AXI you probably can do lockless I/O, if you use the two windows
-> (how many windows are there?) in a clever way to avoid core switching
-> completely after the system was initialized.
+On Thu, 2011-03-31 at 10:06 +0200, Ido Yariv wrote:
+> Clean up the boot sequence code & fix the following issues:
+> 1. Always read the registers' values and set the relevant bits instead of
+>    zeroing all other bits
+> 2. Handle cases where wl1271_top_reg_read returns an error
+> 3. Verify that the HW can detect the selected clock source
+> 4. Remove 128x PG10 initialization code
+> 5. Configure the MCS PLL to work in HP mode
+> 
+> Signed-off-by: Ido Yariv <ido@wizery.com>
+> ---
 
-We have 2 windows. I didn't try this, but let's assume they have no
-limitations. We can use first window for one driver only, second
-driver for second driver only. That gives us 2 drivers simultaneously
-working drivers. No driver need to reset core really often (and not
-inside interrupt context) so we will switch driver's window to agent
-(from core) only at init/reset.
+This looks nice! Much easier to read now.  I checked it with the version
+of the system initialization procedures that I got and it looks correct.
+Except for some extra register reads in the two validation functions.  I
+think I don't have the latest version of the initialization document,
+since you mentioned to Shahar that in the one you have those registers
+are read.
 
-The question is what amount of driver we will need to support at the same time.
+Anyway, this is fine, as you mentioned, reading the registers shouldn't
+cause any problems here.
+
+Reviewed-by: Luciano Coelho <coelho@ti.com>
+
+And applied, thanks!
+
+A couple of small comments below...
+
+
+> +	/* Mask bits [2] & [8:4] in the sys_clk_cfg register */
+> +	spare_reg = wl1271_top_reg_read(wl, WL_SPARE_REG);
+> +	if (spare_reg == 0xFFFF)
+> +		return -EFAULT;
+> +	spare_reg |= (BIT(3) | BIT(5) | BIT(6));
+> +	wl1271_top_reg_write(wl, WL_SPARE_REG, spare_reg);
+
+The comments of masking bits 2 and 8-4 is quite cryptic here.  You
+actually set bits 3, 5 and 6, so from the driver point of view the
+comment doesn't make much sense.  Since it's in the initialization
+document, I guess it's something the firmware does internally.  This
+should be removed, but I'll keep it for now.
+
+
+> +	/* Mask bits [3:1] in the sys_clk_cfg register */
+> +	spare_reg = wl1271_top_reg_read(wl, WL_SPARE_REG);
+> +	if (spare_reg == 0xFFFF)
+> +		return -EFAULT;
+> +	spare_reg |= BIT(2);
+> +	wl1271_top_reg_write(wl, WL_SPARE_REG, spare_reg);
+
+Same here, the comment is quite cryptic.  Also, the "sys_clk_cfg
+register" is wrong, it should be in the "spare register".  In any case,
+let's keep this comment for now, since it's a good way to map what is
+going on with the system documentation.  Let's remove them later (maybe
+a patch to remove all such information that is still spread around the
+driver?).
+
+
+> +	/* Set the input frequency according to the selected clock source */
+> +	input_freq = (clk & 1) + 1;
+
+Nice trick! :) Maybe some comments about what actually happens here
+would have been nice, though.
+
 
 -- 
-Rafał
+Cheers,
+Luca.
+
