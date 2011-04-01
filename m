@@ -1,47 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37046 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024Ab1D2EwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 00:52:16 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 21:51:49 -0700
-Message-ID: <4DBA43FB.6010709@atheros.com> (sfid-20110429_065224_242972_98B1D06E)
-Date: Fri, 29 Apr 2011 10:22:11 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [RFC/RFT 4/9] ath9k_hw: config diversity based on eeprom contents
-References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <1304000579-5784-5-git-send-email-mshajakhan@atheros.com> <20110428173944.GB29252@tux>
-In-Reply-To: <20110428173944.GB29252@tux>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757161Ab1DAVgj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 17:36:39 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:38 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v6 02/10] nl80211: Add userspace authentication  flag to mesh setup
+Date: Fri,  1 Apr 2011 13:35:43 -0700
+Message-Id: <1301690151-14979-3-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 28 April 2011 11:09 PM, Luis Rodriguez wrote:
-> On Thu, Apr 28, 2011 at 07:22:54AM -0700, Mohammed Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> * enable LNA-diversity, fast-diversity based on the value read from
->>    EEPROM content
->> * if antenna diversity/combining is supported set LNA1 for the main
->>    antenna and LNA2 for the alternate antenna based on the new diversity
->>    algorithm
->>      
-> The commit log does not mention this is specifically only for
-> AR9485. Adding this can help reviewers / distributions.
->    
-Ok Luis, I will address that.
+From: Javier Cardona <javier@cozybit.com>
 
-thanks,
-shafi
->    Luis
-> .
->
->    
+During mesh setup, use NL80211_MESH_SETUP_USERSPACE_AUTH flag to create
+a secure mesh and route management frames to userspace.
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/nl80211.h    |    4 ++++
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    1 +
+ net/mac80211/ieee80211_i.h |    1 +
+ net/wireless/nl80211.c     |    2 ++
+ 5 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 82ef17d..91e3a8d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1691,6 +1691,9 @@ enum nl80211_meshconf_params {
+  * robust security network ie, or a vendor specific information element that
+  * vendors will use to identify the path selection methods and metrics in use.
+  *
++ * @NL80211_MESH_SETUP_USERSPACE_AUTH: Enable this option if an authentication
++ * daemon will be authenticating mesh candidates.
++ *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+  */
+@@ -1699,6 +1702,7 @@ enum nl80211_mesh_setup_params {
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
+ 	NL80211_MESH_SETUP_IE,
++	NL80211_MESH_SETUP_USERSPACE_AUTH,
+ 
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1714943..2334985 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -656,6 +656,7 @@ struct mesh_config {
+  * @path_metric: which metric to use
+  * @ie: vendor information elements (optional)
+  * @ie_len: length of vendor information elements
++ * @is_secure: or not
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -666,6 +667,7 @@ struct mesh_setup {
+ 	u8  path_metric;
+ 	const u8 *ie;
+ 	u8 ie_len;
++	bool is_secure;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f2f345a..4f73085 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1042,6 +1042,7 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
+ 	ifmsh->mesh_pp_id = setup->path_sel_proto;
+ 	ifmsh->mesh_pm_id = setup->path_metric;
++	ifmsh->is_secure = setup->is_secure;
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d0fafde..7d1cb36 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -490,6 +490,7 @@ struct ieee80211_if_mesh {
+ 	bool accepting_plinks;
+ 	const u8 *ie;
+ 	u8 ie_len;
++	bool is_secure;
+ };
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f251089..5878f2b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2804,6 +2804,7 @@ static const struct nla_policy
+ 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
++	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
+ 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 		.len = IEEE80211_MAX_DATA_LEN },
+ };
+@@ -2915,6 +2916,7 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 		setup->ie = nla_data(ieattr);
+ 		setup->ie_len = nla_len(ieattr);
+ 	}
++	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
+ 
+ 	return 0;
+ }
+-- 
+1.7.4.1
+
