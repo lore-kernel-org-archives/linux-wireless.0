@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44092
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751121Ab1DYUFJ (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757161Ab1DAVge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 16:05:09 -0400
-Date: Mon, 25 Apr 2011 13:04:35 -0700 (PDT)
-Message-Id: <20110425.130435.112597353.davem@davemloft.net> (sfid-20110425_220512_862934_1211B01A)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-04-25
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110425.125835.189703400.davem@davemloft.net>
-References: <20110425193017.GC28814@tuxdriver.com>
-	<20110425.125835.189703400.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+	Fri, 1 Apr 2011 17:36:34 -0400
+Received: by iwn34 with SMTP id 34so3925709iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:33 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v6 00/10] {mac|nl}80211: mesh security enhancements
+Date: Fri,  1 Apr 2011 13:35:41 -0700
+Message-Id: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogRGF2aWQgTWlsbGVyIDxkYXZlbUBkYXZlbWxvZnQubmV0Pg0KRGF0ZTogTW9uLCAyNSBB
-cHIgMjAxMSAxMjo1ODozNSAtMDcwMCAoUERUKQ0KDQo+IEZyb206ICJKb2huIFcuIExpbnZpbGxl
-IiA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4NCj4gRGF0ZTogTW9uLCAyNSBBcHIgMjAxMSAxNToz
-MDoxNyAtMDQwMA0KPiANCj4+IEhlcmUgaXMgYW5vdGhlciBiaWcgYmF0Y2ggb2YgdXBkYXRlcyBp
-bnRlbmRlZCBmb3IgMi42LjQwLi4uDQo+PiANCj4+IFRoZXJlIGlzIHRoZSB1c3VhbCBodWdlIGJh
-dGNoIG9mIGNoYW5nZXMgZm9yIGF0aDlrLCBhbmQgaXdsYWduLCBhIGJ1bmNoDQo+PiBmb3IgYXRo
-OWtfaHRjLCBydDJ4MDAsIGFuZCBhdGg1aywgYSBmZXcgbW9yZSBmb3IgbXdpZmlleCwgYW5kIGEg
-aGFuZGZ1bA0KPj4gb2Ygb3RoZXJzLiAgQWxzbyBpbmNsdWRlZCBpcyBhIGJpZyBiYXRjaCBvZiBC
-bHVldG9vdGggdXBkYXRlcyBhcyB3ZWxsLg0KPj4gDQo+PiBQbGVhc2UgbGV0IG1lIGtub3cgaWYg
-dGhlcmUgYXJlIHByb2JsZW1zIQ0KPiANCj4gUHVsbGVkLCB0aGFua3MgYSBsb3QgSm9obi4NCg0K
-SSBndWVzcyB3YXRjaGluZyB0aGUgYnVpbGQgbG9ncyBmb3IgbmV3IHdhcm5pbmdzIGlzIHRvbyBv
-bGQgZmFzaGlvbmVkDQpmb3IgcGVvcGxlLCBhbmQgYmVzaWRlcyBEYXZlIHdpbGwgZG8gaXQgZm9y
-IGV2ZXJ5b25lIGFueXdheXMgcmlnaHQ/DQoNCkFuZCB0aGlzIG9uZSBpcyBhIHJlYWwgYnVnIHRv
-by4gOi0vDQoNCkknbGwgcHVzaCB0aGlzIG91dCB0byBuZXQtbmV4dC0yLjYgb24gdG9wIG9mIHRo
-ZSB3aXJlbGVzcy1uZXh0IHB1bGwsDQpidXQgcGxlYXNlIGJlIG1vcmUgbWluZGZ1bCBpbiB0aGUg
-ZnV0dXJlLg0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLQ0KRnJvbSBiZjczNDg0MzEyMGI5MDViYWNj
-M2QyNGM4OGQ3NDU1YWU3MGJmNmUxIE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQ0KRnJvbTogRGF2
-aWQgUy4gTWlsbGVyIDxkYXZlbUBkYXZlbWxvZnQubmV0Pg0KRGF0ZTogTW9uLCAyNSBBcHIgMjAx
-MSAxMzowMzowMiAtMDcwMA0KU3ViamVjdDogW1BBVENIXSBibHVldG9vdGg6IEZpeCB1c2UtYmVm
-b3JlLWluaXRpYWlsaXplZCB2YXIuDQpNSU1FLVZlcnNpb246IDEuMA0KQ29udGVudC1UeXBlOiB0
-ZXh0L3BsYWluOyBjaGFyc2V0PVVURi04DQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiA4Yml0
-DQoNCm5ldC9ibHVldG9vdGgvbDJjYXBfY29yZS5jOiBJbiBmdW5jdGlvbiChbDJjYXBfcmVjdl9m
-cmFtZaI6DQpuZXQvYmx1ZXRvb3RoL2wyY2FwX2NvcmUuYzozNjEyOjE1OiB3YXJuaW5nOiChc2ui
-IG1heSBiZSB1c2VkIHVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KbmV0L2JsdWV0b290
-aC9sMmNhcF9jb3JlLmM6MzYxMjoxNTogbm90ZTogoXNroiB3YXMgZGVjbGFyZWQgaGVyZQ0KDQpB
-Y3R1YWxseSB0aGUgcHJvYmxlbSBpcyBpbiB0aGUgaW5saW5lIGZ1bmN0aW9uIGwyY2FwX2RhdGFf
-Y2hhbm5lbCgpLCB3ZQ0KYnJhbmNoIHRvIHRoZSBsYWJlbCAnZG9uZScgd2hpY2ggdGVzdHMgJ3Nr
-JyBiZWZvcmUgd2Ugc2V0IGl0IHRvIGFueXRoaW5nLg0KDQpJbml0aWFsaXplIGl0IHRvIE5VTEwg
-dG8gZml4IHRoaXMuDQoNClNpZ25lZC1vZmYtYnk6IERhdmlkIFMuIE1pbGxlciA8ZGF2ZW1AZGF2
-ZW1sb2Z0Lm5ldD4NCi0tLQ0KIG5ldC9ibHVldG9vdGgvbDJjYXBfY29yZS5jIHwgICAgMiArLQ0K
-IDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQ0KDQpkaWZm
-IC0tZ2l0IGEvbmV0L2JsdWV0b290aC9sMmNhcF9jb3JlLmMgYi9uZXQvYmx1ZXRvb3RoL2wyY2Fw
-X2NvcmUuYw0KaW5kZXggZDQ3ZGUyYi4uOGNmYTJhNiAxMDA2NDQNCi0tLSBhL25ldC9ibHVldG9v
-dGgvbDJjYXBfY29yZS5jDQorKysgYi9uZXQvYmx1ZXRvb3RoL2wyY2FwX2NvcmUuYw0KQEAgLTM2
-MDksNyArMzYwOSw3IEBAIGRyb3A6DQogc3RhdGljIGlubGluZSBpbnQgbDJjYXBfZGF0YV9jaGFu
-bmVsKHN0cnVjdCBsMmNhcF9jb25uICpjb25uLCB1MTYgY2lkLCBzdHJ1Y3Qgc2tfYnVmZiAqc2ti
-KQ0KIHsNCiAJc3RydWN0IGwyY2FwX2NoYW4gKmNoYW47DQotCXN0cnVjdCBzb2NrICpzazsNCisJ
-c3RydWN0IHNvY2sgKnNrID0gTlVMTDsNCiAJc3RydWN0IGwyY2FwX3BpbmZvICpwaTsNCiAJdTE2
-IGNvbnRyb2w7DQogCXU4IHR4X3NlcTsNCi0tIA0KMS43LjQuNQ0KDQo=
+v6:
+- remove unneeded bits (Johannes)
+- mesh capabilities returned for a wiphy & check if wiphy supports mesh
+  authentication before joining a secure mesh (Johannes)
+
+Javier Cardona (9):
+  nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
+  nl80211: Add userspace authentication  flag to mesh setup
+  mac80211: ignore peers if security is enabled for this mesh
+  nl80211: let userspace authenticate stations
+  mac80211: Let user space receive and send mesh auth/deauth frames
+  mac80211: ignore peer link requests from unauthenticated stations.
+  mac80211: Perform PLINK_ACTION on new station
+  nl80211: New notification to discover mesh peer candidates.
+  mac80211: send notification on new peer candidate for our secure mesh
+
+Thomas Pedersen (1):
+  nl80211: report mesh capabilities
+
+ include/linux/nl80211.h    |   32 +++++++++++++++++++---
+ include/net/cfg80211.h     |   29 +++++++++++++++++---
+ net/mac80211/cfg.c         |   22 +++++++++-----
+ net/mac80211/ieee80211_i.h |    5 ++-
+ net/mac80211/main.c        |    8 +++++-
+ net/mac80211/mesh.c        |   14 +++++----
+ net/mac80211/mesh.h        |    3 +-
+ net/mac80211/mesh_plink.c  |   35 +++++++++++++++++++-----
+ net/mac80211/rx.c          |    3 +-
+ net/mac80211/tx.c          |    2 +-
+ net/wireless/mesh.c        |   23 ++++++++++++++-
+ net/wireless/nl80211.c     |   64 +++++++++++++++++++++++++++++++++++++++----
+ net/wireless/nl80211.h     |    4 +++
+ 13 files changed, 201 insertions(+), 43 deletions(-)
+
+-- 
+1.7.4.1
+
