@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56990 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757372Ab1DHPuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 11:50:12 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/16] iwlagn: PAPD read for 2000 series devices
-Date: Fri,  8 Apr 2011 08:30:25 -0700
-Message-Id: <1302276636-12802-6-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:59832 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757906Ab1DAQeM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 12:34:12 -0400
+Subject: [2.6.39 PATCH 1/2] zd1211rw: remove URB_SHORT_NOT_OK flag in
+	zd_usb_iowrite16v_async()
+To: "John W. Linville" <linville@tuxdriver.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 01 Apr 2011 19:34:08 +0300
+Message-ID: <20110401163408.24880.70537.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For 2000 series NICs, disable OTP refresh in order to read correct
-PAPD table from high OTP block
+Patch removes the bogus flag introduced by upstream commit
+eefdbec1ea8b7093d2c09d1825f68438701723cf. Old code had buffer length check
+that new code tried to handle with URB_SHORT_NOT_OK flag. With USB debugging
+enabled bogus flag caused usb_submit_urb fail.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Remove URB_SHORT_NOT_OK flag and add buffer length check to urb completion
+handler.
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=32092
+Reported-by: Jonathan Callen <abcd@gentoo.org>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_usb.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index e73ac80..86d7ffd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -98,6 +98,8 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
- 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
- 			    CSR_GP_DRIVER_REG_BIT_RADIO_IQ_INVER);
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 58236e6..9b1a26a 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1671,6 +1671,10 @@ static void iowrite16v_urb_complete(struct urb *urb)
  
-+	if (priv->cfg->disable_otp_refresh)
-+		iwl_write_prph(priv, APMG_ANALOG_SVR_REG, 0x80000010);
+ 	if (urb->status && !usb->cmd_error)
+ 		usb->cmd_error = urb->status;
++
++	if (!usb->cmd_error &&
++			urb->actual_length != urb->transfer_buffer_length)
++		usb->cmd_error = -EIO;
  }
  
- static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
-@@ -409,7 +411,8 @@ static struct iwl_bt_params iwl2030_bt_params = {
- 	.need_dc_calib = true,					\
- 	.need_temp_offset_calib = true,				\
- 	.led_mode = IWL_LED_RF_STATE,				\
--	.iq_invert = true					\
-+	.iq_invert = true,					\
-+	.disable_otp_refresh = true				\
+ static int zd_submit_waiting_urb(struct zd_usb *usb, bool last)
+@@ -1805,7 +1809,7 @@ int zd_usb_iowrite16v_async(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
+ 	usb_fill_int_urb(urb, udev, usb_sndintpipe(udev, EP_REGS_OUT),
+ 			 req, req_len, iowrite16v_urb_complete, usb,
+ 			 ep->desc.bInterval);
+-	urb->transfer_flags |= URB_FREE_BUFFER | URB_SHORT_NOT_OK;
++	urb->transfer_flags |= URB_FREE_BUFFER;
  
- struct iwl_cfg iwl2000_2bgn_cfg = {
- 	.name = "2000 Series 2x2 BGN",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 43d4c92..10a6f85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -331,6 +331,7 @@ struct iwl_ht_params {
-  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
-  * @internal_wimax_coex: internal wifi/wimax combo device
-  * @iq_invert: I/Q inversion
-+ * @disable_otp_refresh: disable OTP refresh current limit
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-  * driver specifies which APIs it supports (with @ucode_api_max being the
-@@ -381,6 +382,7 @@ struct iwl_cfg {
- 	const bool rx_with_siso_diversity;
- 	const bool internal_wimax_coex;
- 	const bool iq_invert;
-+	const bool disable_otp_refresh;
- };
- 
- /***************************
--- 
-1.7.0.4
+ 	/* Submit previous URB */
+ 	r = zd_submit_waiting_urb(usb, false);
 
