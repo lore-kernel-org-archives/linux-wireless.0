@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36234 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755131Ab1DLHM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 03:12:27 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 00:12:01 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2 V2] ath9k: Register id table for platform device
-Date: Tue, 12 Apr 2011 12:42:22 +0530
-Message-ID: <1302592342-25154-1-git-send-email-vasanth@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63583 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754438Ab1DAThg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 15:37:36 -0400
+Received: by iwn34 with SMTP id 34so3830041iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 12:37:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1301645863.3832.5.camel@jlt3.sipsolutions.net>
+References: <1301614180-5401-1-git-send-email-lrodriguez@atheros.com> <1301645863.3832.5.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 1 Apr 2011 12:37:16 -0700
+Message-ID: <AANLkTi=m0tjcwK30it=7bzxW_4Lh2=tQidEu0QkWeUVK@mail.gmail.com>
+Subject: Re: [PATCH v2] cfg80211: add work for processing invalid user reg hints
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the device id in the platform driver is hardcoded to an id
-which is specific to AR9130/AR9132 SOCs as it supports only wmac (wireless mac)
-of these SOCs. But this needs to be dynamic when we want to support different
-wmac of SOCs. So add id_table to driver to make it extendable to more SOCs.
+On Fri, Apr 1, 2011 at 1:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-03-31 at 16:29 -0700, Luis R. Rodriguez wrote:
+>>
+>> +static void reg_timeout_work(struct work_struct *work)
+>> +{
+>> +     REG_DBG_PRINT("Timeout while waiting for CRDA to reply,"
+>> +                   "restoring regulatory settings");
+>> +     restore_regulatory_settings(true);
+>> +}
+>
+> We have a queue of requests but you're timing out only the last one.
+> Wouldn't that still get another one stuck on the queue?
 
-Cc: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
-V2 
+The queue will sit still without processing any queued up regulatory
+requests until the last_request was processed. The last_request will
+be restored to the world regulatory domain request if we timeout on a
+bogus request. There is however one issue here though and that is that
+I did not clear out the pending requests when restoring regulatory
+settings, and then add the pending stuff back on.
 
-- Verbose to commit log
-- Rename platform name to ath9k to avoid breaking existing board support
+> TBH, I don't quite understand why we have last _and_ a queue to start with.
 
- 
- drivers/net/wireless/ath/ath9k/ahb.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+Well so the queue has the list of pending requests, the last_request
+is actually the last request that was processed, this is always
+non-null when after bootup and after restoring regulatory settings.
+I'll send a v3 with the changes I noted.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9cb0efa..5193ed5 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -21,6 +21,14 @@
- #include <linux/ath9k_platform.h>
- #include "ath9k.h"
- 
-+const struct platform_device_id ath9k_platform_id_table[] = {
-+	{
-+		.name = "ath9k",
-+		.driver_data = AR5416_AR9100_DEVID,
-+	},
-+	{},
-+};
-+
- /* return bus cachesize in 4B word units */
- static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
- {
-@@ -57,6 +65,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
- 	struct resource *res;
-+	const struct platform_device_id *id = platform_get_device_id(pdev);
- 	int irq;
- 	int ret = 0;
- 	struct ath_hw *ah;
-@@ -116,7 +125,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		goto err_free_hw;
- 	}
- 
--	ret = ath9k_init_device(AR5416_AR9100_DEVID, sc, 0x0, &ath_ahb_bus_ops);
-+	ret = ath9k_init_device(id->driver_data, sc, 0x0, &ath_ahb_bus_ops);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to initialize device\n");
- 		goto err_irq;
-@@ -165,8 +174,11 @@ static struct platform_driver ath_ahb_driver = {
- 		.name	= "ath9k",
- 		.owner	= THIS_MODULE,
- 	},
-+	.id_table    = ath9k_platform_id_table,
- };
- 
-+MODULE_DEVICE_TABLE(platform, ath9k_platform_id_table);
-+
- int ath_ahb_init(void)
- {
- 	return platform_driver_register(&ath_ahb_driver);
--- 
-1.7.0.4
+Thanks for the review.
 
+  Luis
