@@ -1,73 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50845 "EHLO mga02.intel.com"
+Received: from mgw2.diku.dk ([130.225.96.92]:35616 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab1DHPuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 11:50:10 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/16] update for 2.6.40
-Date: Fri,  8 Apr 2011 08:30:20 -0700
-Message-Id: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751809Ab1DAOXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 10:23:54 -0400
+From: Julia Lawall <julia@diku.dk>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] drivers/staging/brcm80211/brcmfmac/wl_iw.c: introduce missing kfree
+Date: Fri,  1 Apr 2011 16:23:42 +0200
+Message-Id: <1301667827-20056-1-git-send-email-julia@diku.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have more _agn clean up work after driver split
-We also fix a frame rejection bug in radar channel 
+Error handling code following a kmalloc should free the allocated data.
 
-Garen Tamrazian (1):
-  iwlagn: fix radar frame rejection
+The semantic match that finds the problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-Johannes Berg (3):
-  iwlwifi: fix bugs in change_interface
-  iwlagn: clean up & autodetect statistics
-  iwlagn: downgrade warning on unknown TLV
+// <smpl>
+@r exists@
+local idexpression x;
+statement S;
+expression E;
+identifier f,f1,l;
+position p1,p2;
+expression *ptr != NULL;
+@@
 
-Wey-Yi Guy (11):
-  iwlagn: remove un-necessary function pointer
-  iwlagn: PAPD read for 2000 series devices
-  iwlagn: no 3945 define needed
-  iwlagn: remove unused 3945 define
-  iwlagn: cleanup to remove the reference for 3945
-  iwlagn: remove more reference to legacy devices
-  iwlagn: remove un-needed configuration
-  iwlagn: more cleanup to remove unused reference
-  iwlagn: all _agn devices support power save mode
-  iwlagn: tx power calib always done in firmware
-  iwlagn: sensitivity and chain noise done by driver
+x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+...
+if (x == NULL) S
+<... when != x
+     when != if (...) { <+...x...+> }
+(
+x->f1 = E
+|
+ (x->f1 == NULL || ...)
+|
+ f(...,x->f1,...)
+)
+...>
+(
+ return \(0\|<+...x...+>\|ptr\);
+|
+ return@p2 ...;
+)
 
-Jay Sternberg (1):
-  iwlwifi: remove extranious macro from firmware define
+@script:python@
+p1 << r.p1;
+p2 << r.p2;
+@@
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
+// </smpl>
 
- drivers/net/wireless/iwlwifi/iwl-1000.c        |   13 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c        |   25 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c        |   18 +--
- drivers/net/wireless/iwlwifi/iwl-6000.c        |   30 +--
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |   43 +---
- drivers/net/wireless/iwlwifi/iwl-agn-calib.h   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  134 ++++-------
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |   39 ++-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h      |    1 -
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c    |   13 +
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |    3 +
- drivers/net/wireless/iwlwifi/iwl-agn.c         |   24 +--
- drivers/net/wireless/iwlwifi/iwl-agn.h         |    3 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h    |   64 -----
- drivers/net/wireless/iwlwifi/iwl-core.c        |   47 ++--
- drivers/net/wireless/iwlwifi/iwl-core.h        |   28 +--
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   50 ++---
- drivers/net/wireless/iwlwifi/iwl-dev.h         |   44 +++--
- drivers/net/wireless/iwlwifi/iwl-fh.h          |   38 ++--
- drivers/net/wireless/iwlwifi/iwl-helpers.h     |   13 +
- drivers/net/wireless/iwlwifi/iwl-led.c         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-power.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h        |   16 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c          |  319 +++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-tx.c          |    1 -
- 25 files changed, 409 insertions(+), 569 deletions(-)
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+There is some other error handling code about 10 lines down where it looks
+like a kfree is needed as well.  If that is the case, I can extend the patch.
+
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index b49957f..4e4cf36 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -3672,8 +3672,10 @@ int wl_iw_attach(struct net_device *dev, void *dhdp)
+ 		return -ENOMEM;
+ 
+ 	iscan->iscan_ex_params_p = kmalloc(params_size, GFP_KERNEL);
+-	if (!iscan->iscan_ex_params_p)
++	if (!iscan->iscan_ex_params_p) {
++		kfree(iscan);
+ 		return -ENOMEM;
++	}
+ 	iscan->iscan_ex_param_size = params_size;
+ 	iscan->sysioc_tsk = NULL;
+ 
 
