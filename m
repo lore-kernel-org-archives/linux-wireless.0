@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:46217 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752984Ab1DAQAx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:00:53 -0400
-Subject: Re: ChipCommon as independent driver?
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com> (sfid-20110401_104947_004628_8A7D9C8C)
-References: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
-	 (sfid-20110401_104947_004628_8A7D9C8C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 18:00:46 +0200
-Message-ID: <1301673646.5219.18.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48043 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755475Ab1DAK5v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 06:57:51 -0400
+Received: by fxm17 with SMTP id 17so2509461fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:57:49 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: hostapd & mac80211: too many probe responses
+Date: Fri, 1 Apr 2011 12:55:59 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201104011237.21983.helmut.schaa@googlemail.com> <1301654802.3832.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1301654802.3832.17.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104011255.59751.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 16:49 +0200, Rafał Miłecki wrote: 
-> Do you have idea how we could nicely solve that issue?
+Am Freitag, 1. April 2011 schrieb Johannes Berg:
+> On Fri, 2011-04-01 at 12:37 +0200, Helmut Schaa wrote:
+> 
+> > I've just noticed that hostapd + mac80211 + rt2x00 produces way too many
+> > probe responses when setup as multi bssid AP.
+> > 
+> > The reason seems to be that mac80211 receives a broadcast probe req and
+> > drops it to the monitor interface for each vif (hence X times). And hostapd
+> > will process each received broadcast probe req on all vifs as well (hence X
+> > times again). Resulting in X*X probe responses instead of just X.
+> > 
+> > This can eat up quite some airtime as the probe reponses are sent at 1Mpbs.
+> > 
+> > IMO to fix this issue mac80211 should send a broadcast probe req only once
+> > to the monitor interface. However, I don't have a good idea how to do that
+> > right now :)
+> 
+> Looks like we broke that then, IEEE80211_RX_CMNTR was intended to do
+> this. 
 
-Yeah. Just don't share code between ssb and bcmai.
-That's the only clean solution to that mess.
+Ah, I see. I'll do some more debugging in that direction first ...
 
--- 
-Greetings Michael.
-
+Helmut
