@@ -1,64 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2114 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755164Ab1DJJeO convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61941 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711Ab1DAL1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 05:34:14 -0400
-To: "Pavel Machek" <pavel@ucw.cz>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Michael B?sch" <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
- <op.vtisojsk3ri7v4@arend-laptop> <20110410080159.GB2798@ucw.cz>
- <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
- <20110410082420.GA1460@localhost.ucw.cz>
- <BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
-Date: Sun, 10 Apr 2011 11:33:57 +0200
+	Fri, 1 Apr 2011 07:27:48 -0400
+Received: by wya21 with SMTP id 21so2846696wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 04:27:47 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] ssb: pci: implement serdes workaround
+Date: Fri,  1 Apr 2011 13:26:52 +0200
+Message-Id: <1301657212-12126-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtpt6v173ri7v4@arend-laptop>
-In-Reply-To: <BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 10 Apr 2011 10:30:53 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_pcicore.c |   31 ++++++++++++++++++++++++++++---
+ 1 files changed, 28 insertions(+), 3 deletions(-)
 
-> 2011/4/10 Pavel Machek <pavel@ucw.cz>:
->>> >> >+config BCMAI_HOST_PCI_POSSIBLE
->>> >> >+       bool
->>> >> >+       depends on BCMAI && PCI = y
->>> >> >+       default y
->>> >> >+
->>> >> >+config BCMAI_HOST_PCI
->>> >> >+       bool "Support for AI on PCI-host bus"
->>> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
->>> >> >+
-
-Hi Rafał,
-
-Could use term AMBA AXI instead which gives enough hits on Google to hint  
-interested people to more in depth information.
-
-FYI: AXI = Advanced eXtensible Interface
-	High-speed interconnect for chip cores ( provides higher bursts/transfers  
-than predecessor AHB = Advanced High-performance Bus (AHB)).
-
-Gr. AvS
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 76cbf96..1ba9f0e 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -15,6 +15,11 @@
+ 
+ #include "ssb_private.h"
+ 
++static u32 ssb_pcie_read(struct ssb_pcicore *pc, u32 address);
++static void ssb_pcie_write(struct ssb_pcicore *pc, u32 address, u32 data);
++static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address);
++static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
++				u8 address, u16 data);
+ 
+ static inline
+ u32 pcicore_read32(struct ssb_pcicore *pc, u16 offset)
+@@ -403,6 +408,27 @@ static int pcicore_is_in_hostmode(struct ssb_pcicore *pc)
+ }
+ #endif /* CONFIG_SSB_PCICORE_HOSTMODE */
+ 
++/**************************************************
++ * Workarounds.
++ **************************************************/
++
++static u8 ssb_pcicore_polarity_workaround(struct ssb_pcicore *pc)
++{
++	return (ssb_pcie_read(pc, 0x204) & 0x10) ? 0xC0 : 0x80;
++}
++
++static void ssb_pcicore_serdes_workaround(struct ssb_pcicore *pc)
++{
++	const u8 serdes_pll_device = 0x1D;
++	const u8 serdes_rx_device = 0x1F;
++	u16 tmp;
++
++	ssb_pcie_mdio_write(pc, serdes_rx_device, 1 /* Control */,
++			    ssb_pcicore_polarity_workaround(pc));
++	tmp = ssb_pcie_mdio_read(pc, serdes_pll_device, 1 /* Control */);
++	if (tmp & 0x4000)
++		ssb_pcie_mdio_write(pc, serdes_pll_device, 1, tmp & ~0x4000);
++}
+ 
+ /**************************************************
+  * Generic and Clientmode operation code.
+@@ -430,6 +456,8 @@ void ssb_pcicore_init(struct ssb_pcicore *pc)
+ #endif /* CONFIG_SSB_PCICORE_HOSTMODE */
+ 	if (!pc->hostmode)
+ 		ssb_pcicore_init_clientmode(pc);
++
++	ssb_pcicore_serdes_workaround(pc);
+ }
+ 
+ static u32 ssb_pcie_read(struct ssb_pcicore *pc, u32 address)
+@@ -467,8 +495,6 @@ static void ssb_pcie_mdio_set_phy(struct ssb_pcicore *pc, u8 phy)
+ 	}
+ }
+ 
+-#if 0
+-//done but not used yet
+ static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address)
+ {
+ 	const u16 mdio_control = 0x128;
+@@ -508,7 +534,6 @@ static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address)
+ 	pcicore_write32(pc, mdio_control, 0);
+ 	return ret;
+ }
+-#endif
+ 
+ static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
+ 				u8 address, u16 data)
 -- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+1.7.1
 
