@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61401 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753457Ab1DLLW1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:22:27 -0400
-Received: by fxm17 with SMTP id 17so4196296fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 04:22:25 -0700 (PDT)
-Subject: Re: [PATCH 3/4] mac80211: Add function to build HT caps
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1302607008.3639.6.camel@jlt3.sipsolutions.net>
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130449-831@post.gmane.org>
-	 <1302607008.3639.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 13:22:22 +0200
-Message-ID: <1302607342.8929.1.camel@alex-2>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53526 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751320Ab1DBBjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 21:39:55 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/3] ath9k: use the hw opmode to select the beacon timer mode
+Date: Sat,  2 Apr 2011 03:39:48 +0200
+Message-Id: <1301708388-8416-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1301708388-8416-2-git-send-email-nbd@openwrt.org>
+References: <1301708388-8416-1-git-send-email-nbd@openwrt.org>
+ <1301708388-8416-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, den 12.04.2011, 13:16 +0200 schrieb Johannes Berg:
-> On Tue, 2011-04-12 at 11:06 +0000, Alexander Simon wrote:
-> 
-> > +u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-> > +                              u16 cap)
-> 
-> It makes no sense to pass cap as an argument since it's taken from the
-> sband.
-> 
-> johannes
-> 
-Not true, in ieee80211_add_ht_ie in work.c cap is modified before.
+Since the beacon timers are global, the individual vif type should not
+be used to determine the beacon timer configuration mode, use the
+global opmode instead.
 
-Alex
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 24861b2..f688527 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -700,7 +700,7 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	if (cur_conf->dtim_period == 0)
+ 		cur_conf->dtim_period = 1;
+ 
+-	switch (iftype) {
++	switch (sc->sc_ah->opmode) {
+ 	case NL80211_IFTYPE_AP:
+ 		ath_beacon_config_ap(sc, cur_conf);
+ 		break;
+-- 
+1.7.3.2
 
