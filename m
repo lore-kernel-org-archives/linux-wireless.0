@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756161Ab1D1M4U (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:51571 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756012Ab1DBROP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:56:20 -0400
-Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110428T135917-421@post.gmane.org> (sfid-20110428_141415_832084_99A2E356)
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130620-109@post.gmane.org>
-	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
-	 <loom.20110428T135917-421@post.gmane.org>
-	 (sfid-20110428_141415_832084_99A2E356)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 28 Apr 2011 14:56:08 +0200
-Message-ID: <1303995368.3558.9.camel@jlt3.sipsolutions.net> (sfid-20110428_145623_723500_A874553B)
-Mime-Version: 1.0
+	Sat, 2 Apr 2011 13:14:15 -0400
+Received: by ewy4 with SMTP id 4so1337839ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 10:14:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/13 v2] rt2x00: Restructure bw_comp calculation
+Date: Sat, 2 Apr 2011 19:14:09 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103281329.45470.IvDoorn@gmail.com> <201103281331.00838.IvDoorn@gmail.com> <201103281331.31575.IvDoorn@gmail.com>
+In-Reply-To: <201103281331.31575.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104021914.10117.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-28 at 12:13 +0000, Alexander Simon wrote:
-> > Also what if the IBSS is created with HT40+ and then joins, can it join
-> > HT40-? Is the channel type "advisory" like the frequency? Can it join
-> > HT20 IBSS as well?
-> HT type can`t be advisory, as there may be stations without n.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Yeah, but it's possible to still communicate with them.
+Move the HT40 check inside the calculation function to make it easier
+for a later cleanup.
 
-> Our card is set to HT40+/- if set by iw.
-> Some other station is added into our internal station list by its HT beacons.
-> E.g. if we have configured HT40- and there is someone with HT40+, minstrel_ht
-> should use HT20 only. But i admit it seems cleaner to AND both caps.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+v2: Fix subject
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-Well. You need to consider more than just this. I have a feeling you're
-only considering fixed channel use cases. But if we configure HT40+, and
-then find a peer on a channel that may only use HT40-, then what?
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 2ee6ceb..2f8af7a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1819,11 +1819,15 @@ static int rt2800_get_txpower_bw_comp(struct rt2x00_dev *rt2x00dev,
+ 	u16 eeprom;
+ 	u8 comp_en;
+ 	u8 comp_type;
+-	int comp_value;
++	int comp_value = 0;
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_TXPOWER_DELTA, &eeprom);
+ 
+-	if (eeprom == 0xffff)
++	/*
++	 * HT40 compensation not required.
++	 */
++	if (eeprom == 0xffff ||
++	    !test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	if (band == IEEE80211_BAND_2GHZ) {
+@@ -1865,13 +1869,12 @@ static u8 rt2800_compesate_txpower(struct rt2x00_dev *rt2x00dev,
+ 	u8 eirp_txpower;
+ 	u8 eirp_txpower_criterion;
+ 	u8 reg_limit;
+-	int bw_comp = 0;
++	int bw_comp;
+ 
+ 	if (!((band == IEEE80211_BAND_5GHZ) && is_rate_b))
+ 		return txpower;
+ 
+-	if (test_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags))
+-		bw_comp = rt2800_get_txpower_bw_comp(rt2x00dev, band);
++	bw_comp = rt2800_get_txpower_bw_comp(rt2x00dev, band);
+ 
+ 	if (test_bit(CONFIG_SUPPORT_POWER_LIMIT, &rt2x00dev->flags)) {
+ 		/*
+-- 
+1.7.2.3
 
