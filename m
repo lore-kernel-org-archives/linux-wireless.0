@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52164 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756889Ab1DMUSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 16:18:35 -0400
-Message-ID: <4DA60515.6000004@hauke-m.de>
-Date: Wed, 13 Apr 2011 22:18:29 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Tomas Winkler <tomas.winkler@intel.com>
-CC: mcgrof@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [compat 1/1] compat: add license and other module params to kfifo
-References: <1302530175-24451-1-git-send-email-tomas.winkler@intel.com>
-In-Reply-To: <1302530175-24451-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from external1.orbit-lab.org ([128.6.192.131]:47096 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755567Ab1DBTC3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Apr 2011 15:02:29 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id ED9965400DD
+	for <linux-wireless@vger.kernel.org>; Sat,  2 Apr 2011 15:06:51 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110402190228.23EDE40EAF@repository3.orbit-lab.org>
+Date: Sat,  2 Apr 2011 15:02:28 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-On 04/11/2011 03:56 PM, Tomas Winkler wrote:
-> The module taints the kernel if the license is not specified
-> 
-> Add also module description
-> 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-I send a patch including kfifo.ko into compat.ko some days ago [0], but
-it was not yet apply. If kfifo is integrated in compat.ko this patch
-will cause problems. As kifo.ko is small I think it is better to get rid
-of this extra module and integrate it into compat.ko.
+compat-wireless code metrics
 
-[0]: https://patchwork.kernel.org/patch/692651/
-
-Hauke
+    858087 - Total upstream lines of code being pulled
