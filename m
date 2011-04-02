@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:5937 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab1DKPVU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:21:20 -0400
-Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
-	by smtp-out.google.com with ESMTP id p3BFLJc1013456
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 08:21:19 -0700
-Received: from eye13 (eye13.prod.google.com [10.208.5.13])
-	by hpaq6.eem.corp.google.com with ESMTP id p3BFLIFG030114
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 08:21:18 -0700
-Received: by eye13 with SMTP id 13so1947756eye.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 08:21:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1302533629.6487.14.camel@jlt3.sipsolutions.net>
-References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
-	<1302532734.6487.12.camel@jlt3.sipsolutions.net>
-	<108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
-	<1302533629.6487.14.camel@jlt3.sipsolutions.net>
-Date: Mon, 11 Apr 2011 08:21:17 -0700
-Message-ID: <BANLkTi=LT7u8d6dVDWkQ-xp-BZMYZgS_vQ@mail.gmail.com>
-Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
-From: Olof Johansson <olofj@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Anantha Idapalapati <aidapalapati@nvidia.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Uday Raval <uraval@nvidia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Andy Ritger <ARitger@nvidia.com>,
-	Rakesh Kumar <krakesh@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:38522 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756731Ab1DBVZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Apr 2011 17:25:26 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Q68Jw-00073d-VV
+	for linux-wireless@vger.kernel.org; Sat, 02 Apr 2011 23:25:24 +0200
+Received: from ip72-220-74-245.sd.sd.cox.net ([72.220.74.245])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 23:25:24 +0200
+Received: from srumney by ip72-220-74-245.sd.sd.cox.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 23:25:24 +0200
+To: linux-wireless@vger.kernel.org
+From: Steven <srumney@sbcglobal.net>
+Subject: Re: products with Atheros AR9002U (UB94) ?
+Date: Sat, 2 Apr 2011 21:25:13 +0000 (UTC)
+Message-ID: <loom.20110402T231743-492@post.gmane.org>
+References: <AANLkTimERiSQcFp2-F5OTM6KyQHEMsGvJaWsV4w4Rsed@mail.gmail.com> <AANLkTinabDMC7kN6Ryv23VUatGrAM1nt=Ue89Myq79qN@mail.gmail.com> <loom.20110402T010759-583@post.gmane.org> <201104021124.32057.chunkeey@googlemail.com> <BANLkTingByKjmYu7wM07XO4ijqXz=ymWWw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[gah, this gmail account has html formatting on by default. repost in
-plain text]
-
-On Mon, Apr 11, 2011 at 7:53 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Mon, 2011-04-11 at 20:15 +0530, Anantha Idapalapati wrote:
-> > Initially it was written specific to BCM4329. But because of the
-> > reason most of the BT chips have similar switch on/off sequence, this
-> > driver is made generic. If there is any specific changes required for
-> > a particular platform, this driver can be taken as reference.
->
-> Well, so, it still has bcm4329 all over the code, so you should get rid
-> of that and just call it rfkill_gpio or something. Also, if it's all
-> this generic, then how about you make an rfkill GPIO driver that works
-> like the rfkill regulator driver we recently got?
-
-Anantha,
-
-This doesn't seem to be the same version of the driver as the last one
-you uploaded to the Chromium OS code review system, which had all the
-brcm4329 references renamed and moved out of the driver.
-
-Any reason you wouldn't start out with the cleanest version before you submit?
-
-The version I'm referring to is at:   http://codereview.chromium.org/6295009/
+> Thanks for the set of responses!  It's been super helpful.  I am
+> checking out all of these options now.
+> 
+> It would still be great to add these to the "product list" on
+> linuxwireless.org, does anyone know how to add to this list?
+> http://linuxwireless.org/en/users/Devices/USB
+> 
+> Just to get an idea of this... but is the USB AR9280+AR7010 fully
+> supported already?  In checking some of the device driver pages,
+> ath9k_htc is listed as supporting AR9271+AR7010, but I don't see
+> ar9280 like I do ar9170.  I don't know if this is just a documentation
+> detail or not.
 
 
--Olof
+For the product list email one of the admins- http://linuxwireless.org/about.
+I would like to know as well if the AR9280+AR7010 chipset is supported by ath9k
+drivers.  Here is the device wiki which apparently lists the devices with the
+chipset for us, wish I'd known about it it took forever to find-
+http://www.wikidevi.com/wiki/Special:BrowseData/Wireless_adapter?Primary_chip_model=AR7010&Secondary_chip_model=AR9280
+
+I actually have an XBox 360 and would love to get the Microsoft Xbox 360
+Wireless N Networking Adapter working on my PC in linux which uses that chipset.
+ Does anyone know if it will work in linux with the ath9k drivers?  Anyone that
+can point the direction to modifying drivers to get that adapter to work in
+Windows would be great too...
+
