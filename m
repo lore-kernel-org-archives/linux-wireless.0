@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42727 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932544Ab1D2Tav (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 15:30:51 -0400
-Date: Fri, 29 Apr 2011 15:27:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [PATCH] ath9k: Fix drain txq failure in flush
-Message-ID: <20110429192751.GE25999@tuxdriver.com> (sfid-20110429_213055_367418_8153B8D2)
-References: <1303984917-12340-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303984917-12340-1-git-send-email-rmanoharan@atheros.com>
+Received: from nbd.name ([46.4.11.11]:53528 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751173Ab1DBBjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2011 21:39:55 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/3] ath9k: fix signal strength of received packets
+Date: Sat,  2 Apr 2011 03:39:46 +0200
+Message-Id: <1301708388-8416-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 28, 2011 at 03:31:57PM +0530, Rajkumar Manoharan wrote:
-> While draining the txq in flush, the buffers can be
-> added into the tx queue by tx_tasklet which leads to
-> unneccesary chip reset.
-> 
-> This issue was originially found with AR9382 and
-> running heavy uplink udp traffic with higher bandwidth
-> and doing frequent bgscan.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+The reported RSSI values are relative to the calibrated noise floor, not
+relative to a hardcoded value of -95.
 
-Should this be a fix for 2.6.39?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a9c3f46..87d96c5 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -959,6 +959,9 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 				   struct ieee80211_rx_status *rx_status,
+ 				   bool *decrypt_error)
+ {
++	struct ath_hw *ah = common->ah;
++	int noise;
++
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	/*
+@@ -979,7 +982,13 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+-	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
++
++	if (ah->curchan)
++		noise = ah->curchan->noisefloor;
++	else
++		noise = ATH_DEFAULT_NOISE_FLOOR;
++
++	rx_status->signal = noise + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2
+
