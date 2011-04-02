@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53430 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636Ab1DHR1M convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:39624 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173Ab1DBBcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 13:27:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <op.vtmqm7fw3ri7v4@arend-laptop>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-	<op.vtmqm7fw3ri7v4@arend-laptop>
-Date: Fri, 8 Apr 2011 19:27:11 +0200
-Message-ID: <BANLkTimy8LEqBqeJQD5SY=e8ZgEy8pRVHw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 1 Apr 2011 21:32:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: return success in set_default_key for WPA/WPA2
+Date: Fri,  1 Apr 2011 18:36:46 -0700
+Message-Id: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Arend van Spriel <arend@broadcom.com>:
-> On Fri, 08 Apr 2011 18:56:13 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
->
->> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
->>>
->>> 3. Device identification
->>>
->>> The cores are identified by manufacturer, core id and revision in your
->>> patch. I would not use the revision because 4 out of 5 times a revision
->>> change does indicate a hardware change but no change in programming
->>> interface. The enumeration data does contain a more selective field
->>> indicating the core class (4 bits following the core identifier). I
->>> suggest
->>> to replace the revision field by this class field.
->>
->> Could you say something more about *class*, please? For my BCM43224 it
->> seems to be 0x0. WIll check BCM4313 in a moment.
->>
->
-> In principal the manufacturer id is unique (defined/assigned by JEDEC
-> www.jedec.org) and the chip id and chip class are defined by the
-> manufacturer. So I can only indicate what classes Broadcom uses in
-> combination with the manufacturer id BRCM, ARM and MIPS.
->
-> /* Component Classes */
-> #define CC_SIM                  0
-> #define CC_EROM                 1
-> #define CC_CORESIGHT            9
-> #define CC_VERIF                0xb
-> #define CC_OPTIMO               0xd
-> #define CC_GEN                  0xe
-> #define CC_PRIMECELL            0xf
->
-> Looking at this it seems strange that you see a class value of 0x0. It may
-> be rarely used or for non-production chips only (for simulation, chip
-> bringup) which may require additional (debug) functions. So question is
-> whether you will need it, but it is specified by ARM and it is up to
-> manufacturers to use it. So I it is better to be safe than sorry and have
-> this in the device id.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-OK, thanks. I'm compiling kernel with patch V2 right now. Of course
-class included.
+When testing wpa_supplicant with 'nl80211' driver to connect
+to an AP with WPA/WPA2 security, we notice the followings:
 
+1) add_key is called firstly with the key from cfg80211
+2) set_defaut_key is called next
+
+set_default_key() is specific to WEP keys and should not be
+called in case of WPA/WPA2 security. The set_default_key()
+won't be called if wpa_supplicant uses "-Dwext" option,
+but it's been called if "-Dnl80211" option is specified.
+
+We can fix this issue by adding a check to return from
+set_default_key() if WEP key is not configured.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 2d96800..4ac4f5a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -228,6 +228,10 @@ mwifiex_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *netdev,
+ 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
+ 	int ret;
+ 
++	/* Return if WEP key not configured */
++	if (priv->sec_info.wep_status == MWIFIEX_802_11_WEP_DISABLED)
++		return 0;
++
+ 	ret = mwifiex_set_encode(priv, NULL, 0, key_index, 0);
+ 
+ 	wiphy_dbg(wiphy, "info: set default Tx key index\n");
 -- 
-Rafał
+1.7.0.2
+
