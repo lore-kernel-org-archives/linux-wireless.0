@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esgaroth.petrovitsch.at ([78.47.184.11]:4585 "EHLO
-	esgaroth.petrovitsch.priv.at" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751012Ab1DGKRW (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50016 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab1DBJbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 06:17:22 -0400
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302115597.4090.11.camel@jlt3.sipsolutions.net>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
-	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
-	 <1302113542.22852.7.camel@x61.thuisdomein>
-	 <1302115597.4090.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Apr 2011 12:01:12 +0200
-Message-ID: <1302170472.21251.9.camel@thorin>
-Mime-Version: 1.0
+	Sat, 2 Apr 2011 05:31:34 -0400
+Received: by fxm17 with SMTP id 17so3069894fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 02:31:33 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH -stable] p54usb: IDs for two new devices
+Date: Sat, 2 Apr 2011 11:31:29 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104021131.29616.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mit, 2011-04-06 at 20:46 +0200, Johannes Berg wrote: 
-> On Wed, 2011-04-06 at 20:12 +0200, Paul Bolle wrote:
-[...] 
-> > But doesn't
-> > 	depends on RFKILL || !RFKILL
-> > 
-> > always evaluate to true when running "make *config"? (Even if RFKILL is
-> > an unknown symbol when that expression is parsed!)
-> 
-> No, it will not, you're forgetting that these things are tristate.
-
-Boolean operators for tristate logic isn't intuitive at all IMHO.
-
-Bernd
--- 
-Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
-                     LUGA : http://www.luga.at
-
+Cc: <stable@kernel.org>
+Reported-by: Mark Davis [via p54/devices wiki]
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 9b344a9..e183587 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -56,6 +56,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0846, 0x4210)},	/* Netgear WG121 the second ? */
+ 	{USB_DEVICE(0x0846, 0x4220)},	/* Netgear WG111 */
+ 	{USB_DEVICE(0x09aa, 0x1000)},	/* Spinnaker Proto board */
++	{USB_DEVICE(0x0bf8, 0x1007)},	/* Fujitsu E-5400 USB */
+ 	{USB_DEVICE(0x0cde, 0x0006)},	/* Medion 40900, Roper Europe */
+ 	{USB_DEVICE(0x0db0, 0x6826)},	/* MSI UB54G (MS-6826) */
+ 	{USB_DEVICE(0x107b, 0x55f2)},	/* Gateway WGU-210 (Gemtek) */
+@@ -68,6 +69,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x1915, 0x2235)},	/* Linksys WUSB54G Portable OEM */
+ 	{USB_DEVICE(0x2001, 0x3701)},	/* DLink DWL-G120 Spinnaker */
+ 	{USB_DEVICE(0x2001, 0x3703)},	/* DLink DWL-G122 */
++	{USB_DEVICE(0x2001, 0x3762)},	/* Conceptronic C54U */
+ 	{USB_DEVICE(0x5041, 0x2234)},	/* Linksys WUSB54G */
+ 	{USB_DEVICE(0x5041, 0x2235)},	/* Linksys WUSB54G Portable */
+ 
