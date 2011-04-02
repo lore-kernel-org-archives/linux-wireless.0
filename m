@@ -1,60 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63804 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751067Ab1DRERQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 00:17:16 -0400
-Received: from mail.atheros.com ([10.234.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2011 21:16:50 -0700
-Message-ID: <4DABBB45.7090006@atheros.com>
-Date: Mon, 18 Apr 2011 09:47:09 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [PATCH] {mac|nl}80211: Add station connected time
-References: <1302278064-18403-1-git-send-email-mshajakhan@atheros.com> <1302852596.3572.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1302852596.3572.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60431 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017Ab1DBXBE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Apr 2011 19:01:04 -0400
+Received: by wwa36 with SMTP id 36so5272412wwa.1
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 16:01:03 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: avoid premature elp entrance
+Date: Sun,  3 Apr 2011 02:01:59 +0300
+Message-Id: <1301785319-18777-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 April 2011 12:59 PM, Johannes Berg wrote:
-> On Fri, 2011-04-08 at 21:24 +0530, Mohammed Shafi Shajakhan wrote:
->
->    
->> +static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
->> +					size_t count, loff_t *ppos)
->> +{
->> +	struct sta_info *sta = file->private_data;
->> +	struct timespec uptime;
->> +	struct tm result;
->> +	long connected_time_secs;
->> +	char buf[100];
->> +	int res;
->> +	do_posix_clock_monotonic_gettime(&uptime);
->> +	connected_time_secs = uptime.tv_sec - sta->last_connected;
->> +	time_to_tm(connected_time_secs, 0,&result);
->> +	result.tm_year -= 70;
->> +	result.tm_mday -= 1;
->> +	res = scnprintf(buf, sizeof(buf),
->> +		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
->> +			result.tm_year, result.tm_mon, result.tm_mday,
->> +			result.tm_hour, result.tm_min, result.tm_sec);
->>      
-> net/mac80211/debugfs_sta.c: In function 'sta_connected_time_read':
-> net/mac80211/debugfs_sta.c:113:4: warning: format '%d' expects type
-> 'int', but argument 4 has type 'long int'
->
-> Please fix.
->    
-Sure, thanks a lot.
-> johannes
->
->    
+The elp_work is being enqueued on wl1271_ps_elp_sleep, but doesn't get
+cancelled on wl1271_ps_elp_wakeup. This might cause immediate entrance
+to elp when the wl->mutex is being released, rather than using the delayed
+enqueueing optimization.
+
+Cancel elp_work on wakeup request, and add a new WL1271_FLAG_ELP_REQUESTED
+flag to further synchronize the elp actions.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/ps.c     |   30 ++++++++++++++++++++++++------
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 2 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index b8deada..cf1cdb5 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -43,6 +43,10 @@ void wl1271_elp_work(struct work_struct *work)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
++	/* our work might already being cancelled */
++	if (unlikely(!test_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
++		goto out;
++
+ 	if (test_bit(WL1271_FLAG_IN_ELP, &wl->flags) ||
+ 	    (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
+ 	     !test_bit(WL1271_FLAG_IDLE, &wl->flags)))
+@@ -61,12 +65,16 @@ out:
+ /* Routines to toggle sleep mode while in ELP */
+ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ {
+-	if (test_bit(WL1271_FLAG_PSM, &wl->flags) ||
+-	    test_bit(WL1271_FLAG_IDLE, &wl->flags)) {
+-		cancel_delayed_work(&wl->elp_work);
+-		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
+-					     msecs_to_jiffies(ELP_ENTRY_DELAY));
+-	}
++	/* we shouldn't see consequtive sleep requests */
++	if (WARN_ON(test_and_set_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
++		return;
++
++	if (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
++	    !test_bit(WL1271_FLAG_IDLE, &wl->flags))
++		return;
++
++	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
++				     msecs_to_jiffies(ELP_ENTRY_DELAY));
+ }
+ 
+ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+@@ -77,6 +85,16 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+ 	u32 start_time = jiffies;
+ 	bool pending = false;
+ 
++	/*
++	 * we might try waking up although we didn't go to sleep
++	 * before (e.g. on boot)
++	 */
++	if (!test_and_clear_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags))
++		return 0;
++
++	/* don't cancel_sync as it might contend for a mutex and deadlock */
++	cancel_delayed_work(&wl->elp_work);
++
+ 	if (!test_bit(WL1271_FLAG_IN_ELP, &wl->flags))
+ 		return 0;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index fb2b79f..b760143 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -346,6 +346,7 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_TX_QUEUE_STOPPED,
+ 	WL1271_FLAG_TX_PENDING,
+ 	WL1271_FLAG_IN_ELP,
++	WL1271_FLAG_ELP_REQUESTED,
+ 	WL1271_FLAG_PSM,
+ 	WL1271_FLAG_PSM_REQUESTED,
+ 	WL1271_FLAG_IRQ_RUNNING,
+-- 
+1.7.0.4
+
