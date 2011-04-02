@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37371 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755375Ab1DFMXU (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63737 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017Ab1DBXKa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 08:23:20 -0400
-Received: by bwz15 with SMTP id 15so1090207bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 05:23:19 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Joe Culler <joe.culler@gmail.com>
-Subject: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
-Date: Wed, 6 Apr 2011 14:23:02 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Michael Green <michael.green@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	David Quan <david.quan@atheros.com>
-References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
-In-Reply-To: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
+	Sat, 2 Apr 2011 19:10:30 -0400
+Date: Sat, 02 Apr 2011 18:10:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix some warnings/bugs
+Message-ID: <4d97acde.h9Lh18BNtdym9By2%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104061423.02484.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
-> [...]
-> I have a problem with carl9170 driver with my d-link dwa-160 under
-> linux-2.6.39-rc1.
-> Here's the dmesg:
+Some compiler/architecture combinations generate some warnings that are
+not seen on my main system. Two of the "warnings" about unitialized variables
+are really bugs.
 
-> [ 3114.257063] ath: EEPROM regdomain: 0x5c
-> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
-> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
-> [ 3114.257071] ath: Invalid EEPROM contents
-clearly, the regdomain code 0x5c is not defined in the
-drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
-
-this would be easy to fix [see attached patch], however I'm
-not quite sure what to do about the 5GHz band in this case,
-since the CTL_FCC is more restrictive than it should be.
-
-Regards,
-	Chr
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 248c670..5c2cfe6 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
- 	{APL9_WORLD, CTL_ETSI, CTL_ETSI},
+
+John,
+
+This is 2.6.39 material.
+
+Larry
+---
+
+Index: linux-2.6/drivers/net/wireless/rtlwifi/efuse.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/rtlwifi/efuse.c
++++ linux-2.6/drivers/net/wireless/rtlwifi/efuse.c
+@@ -685,7 +685,7 @@ static int efuse_pg_packet_read(struct i
  
- 	{APL3_FCCA, CTL_FCC, CTL_FCC},
-+	{APL7_FCCA, CTL_FCC, CTL_FCC},
- 	{APL1_ETSIC, CTL_FCC, CTL_ETSI},
- 	{APL2_ETSIC, CTL_FCC, CTL_ETSI},
- 	{APL2_APLD, CTL_FCC, NO_CTL},
-
-
+ 	u8 efuse_data, word_cnts = 0;
+ 	u16 efuse_addr = 0;
+-	u8 hworden;
++	u8 hworden = 0;
+ 	u8 tmpdata[8];
+ 
+ 	if (data == NULL)
+Index: linux-2.6/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ linux-2.6/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -303,7 +303,7 @@ static void _rtl92c_fill_h2c_command(str
+ 	u16 box_reg, box_extreg;
+ 	u8 u1b_tmp;
+ 	bool isfw_read = false;
+-	u8 buf_index;
++	u8 buf_index = 0;
+ 	bool bwrite_sucess = false;
+ 	u8 wait_h2c_limmit = 100;
+ 	u8 wait_writeh2c_limmit = 100;
+Index: linux-2.6/drivers/net/wireless/rtlwifi/usb.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/rtlwifi/usb.c
++++ linux-2.6/drivers/net/wireless/rtlwifi/usb.c
+@@ -246,7 +246,7 @@ static void _rtl_usb_io_handler_init(str
+ 
+ static void _rtl_usb_io_handler_release(struct ieee80211_hw *hw)
+ {
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_priv __maybe_unused *rtlpriv = rtl_priv(hw);
+ 
+ 	mutex_destroy(&rtlpriv->io.bb_mutex);
+ }
