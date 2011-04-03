@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:38828 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413Ab1DDUuN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39139 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751824Ab1DCIhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 16:50:13 -0400
-Message-ID: <4D9A2F00.4040405@lwfinger.net>
-Date: Mon, 04 Apr 2011 15:50:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-CC: Jens Axboe <jaxboe@fusionio.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in 2.6.39-rc1 from commit	7eaceaccab5f40bbfda044629a6298616aeaed50
-References: <4D9A0D97.1060505@lwfinger.net> <20110404194716.GB8785@sucs.org>
-In-Reply-To: <20110404194716.GB8785@sucs.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 3 Apr 2011 04:37:11 -0400
+Subject: Re: [PATCH 1/2] mwifiex: return success in set_default_key for
+ WPA/WPA2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1301817775.3984.3.camel@jlt3.sipsolutions.net>
+References: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
+	 <1301817775.3984.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 03 Apr 2011 10:37:06 +0200
+Message-ID: <1301819826.3984.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/04/2011 02:47 PM, Sitsofe Wheeler wrote:
-> On Mon, Apr 04, 2011 at 01:27:35PM -0500, Larry Finger wrote:
->> After I pulled 2.6.39-rc1, my HP laptop failed to boot by never advancing
->> past the device detection stage on my x86_64 system. The problem was
->> bisected, which led to:
->
-> Sounds like the same as http://marc.info/?t=130137969500005&r=1&w=2
-> ("Commit 7eaceaccab5f40 causing boot hang.") ...
+On Sun, 2011-04-03 at 10:02 +0200, Johannes Berg wrote:
+> On Fri, 2011-04-01 at 18:36 -0700, Bing Zhao wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> > 
+> > When testing wpa_supplicant with 'nl80211' driver to connect
+> > to an AP with WPA/WPA2 security, we notice the followings:
+> > 
+> > 1) add_key is called firstly with the key from cfg80211
+> > 2) set_defaut_key is called next
+> > 
+> > set_default_key() is specific to WEP keys and should not be
+> > called in case of WPA/WPA2 security. The set_default_key()
+> > won't be called if wpa_supplicant uses "-Dwext" option,
+> > but it's been called if "-Dnl80211" option is specified.
+> > 
+> > We can fix this issue by adding a check to return from
+> > set_default_key() if WEP key is not configured.
+> 
+> Hmmm. Yeah this seems like it shouldn't be happening, but maybe checking
+> should be in cfg80211 and it should reject the supplicant's call?
 
-Yes it does - thanks. I wonder why Google hadn't indexed that thread.
+Ok Jouni and I just discussed this briefly, and it looks like there is
+indeed a special case where the GTK is also set as the default TX key:
+this case is when the station requested "no pairwise" or when the AP did
+the same thing in the configuration.
 
-The patch from http://marc.info/?l=linux-kernel&m=130148511426634&w=2 allows my 
-computer to boot.
+Is it possible that this just happens to be the case in your tests? It
+looks like that would be rather strange, but that's a corner case where
+the supplicant would possibly set the GTK as the default key.
 
-Larry
+In any case, this patch seems wrong in that you should never return
+success if the operation actually failed.
+
+johannes
+
