@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43519 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689Ab1DKNTq (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:56712 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab1DCKxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 09:19:46 -0400
-Received: by ywj3 with SMTP id 3so2146714ywj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 06:19:45 -0700 (PDT)
-Message-ID: <4DA2FFEE.9050808@lwfinger.net>
-Date: Mon, 11 Apr 2011 08:19:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: Juan Carlos Garza <juancarlosgarza@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: Firmware for rt2800pci and rt2800usb
-References: <4DA2042A.3010301@gmail.com>	 <1302469406.5282.341.camel@localhost> <4DA22545.6050209@gmail.com>	 <4DA2312B.8080303@lwfinger.net> <4DA23594.8090002@gmail.com>	 <4DA2702B.2080305@lwfinger.net>	 <BANLkTinM-iLEOX997VTxG+zK=8aUHXVmQA@mail.gmail.com> <1302520987.5282.568.camel@localhost>
-In-Reply-To: <1302520987.5282.568.camel@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 3 Apr 2011 06:53:16 -0400
+Received: from dlep35.itg.ti.com ([157.170.170.118])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p33ArFs3004646
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sun, 3 Apr 2011 05:53:16 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH v2] wl12xx: Set correct REF CLK and TCXO CLK values to the FW
+Date: Sun,  3 Apr 2011 13:54:54 +0300
+Message-Id: <1301828094-29569-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2011 06:23 AM, Ben Hutchings wrote:
-> On Mon, 2011-04-11 at 13:14 +0200, Juan Carlos Garza wrote:
->> Hi,
->>
->>
->> On Mon, Apr 11, 2011 at 5:06 AM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>> Hi,
->>>
->>> I am in the process of updating the firmware files for rt2800pci and
->>> rt2800usb. If you have one of the devices that use this driver, please test
->>> the firmware file.
->>>
->>
->> Tested rt2870.bin on vid=07b8 pid=3071 in AP mode using HostAPD, up to
->> now, no problems found.
->
-> Could people report versions or md5sums rather than just filenames,
-> please?
+Fix mismatch between the REF CLK and TCXO CLK information that is
+set in the platform data and the NVS, so we override what comes
+from the NVS and replace it with what comes from the platform data.
 
-I think we can safely assume that these testing reports are on the files that I 
-sent yesterday, but for completeness the md5sums are
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |   11 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-75a1da3caa0b1c95e81dfba207f834c6  rt2860.bin
-36c944c3138125605d28c0a3a1338be9  rt2870.bin
-
-The version numbers are 34.00 for rt2860.bin and 29.00 for rt2870.bin.
-
-Larry
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 2468044..beb9f88 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -129,6 +129,9 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
+ 	if (gp->tx_bip_fem_auto_detect)
+ 		answer = true;
+ 
++	/* Override the REF CLK from the NVS with the one from platform data */
++	gen_parms->general_params.ref_clock = wl->ref_clock;
++
+ 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
+ 	if (ret < 0) {
+ 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
+@@ -168,6 +171,14 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
+ 	if (gp->tx_bip_fem_auto_detect)
+ 		answer = true;
+ 
++	/*
++	 * Override the REF&TCXO CLKs from the NVS with the one from platform
++	 * data.
++	 * FW use the relevant CLK (REF or TCXO) according to the boot sequence
++	 */
++	gen_parms->general_params.ref_clock = wl->ref_clock;
++	gen_parms->general_params.tcxo_ref_clock = wl->tcxo_clock;
++
+ 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
+ 	if (ret < 0) {
+ 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
+-- 
+1.7.0.4
 
