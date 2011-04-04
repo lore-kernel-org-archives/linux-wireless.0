@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42450 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005Ab1DCIDA (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42148 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844Ab1DDHhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2011 04:03:00 -0400
-Subject: Re: [PATCH 1/2] mwifiex: return success in set_default_key for
- WPA/WPA2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
-References: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 03 Apr 2011 10:02:55 +0200
-Message-ID: <1301817775.3984.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 4 Apr 2011 03:37:48 -0400
+Received: by wwa36 with SMTP id 36so6132181wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 00:37:47 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: sleep instead of wakeup after tx work
+Date: Mon,  4 Apr 2011 10:38:47 +0300
+Message-Id: <1301902727-25511-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 18:36 -0700, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> When testing wpa_supplicant with 'nl80211' driver to connect
-> to an AP with WPA/WPA2 security, we notice the followings:
-> 
-> 1) add_key is called firstly with the key from cfg80211
-> 2) set_defaut_key is called next
-> 
-> set_default_key() is specific to WEP keys and should not be
-> called in case of WPA/WPA2 security. The set_default_key()
-> won't be called if wpa_supplicant uses "-Dwext" option,
-> but it's been called if "-Dnl80211" option is specified.
-> 
-> We can fix this issue by adding a check to return from
-> set_default_key() if WEP key is not configured.
+commit d05c806 ("wl12xx: rearrange some ELP wake_up/sleep calls")
+introduced a bug in which wl1271_ps_elp_wakeup() was called instead
+of wl1271_ps_elp_sleep() after completing the tx work.
 
-Hmmm. Yeah this seems like it shouldn't be happening, but maybe checking
-should be in cfg80211 and it should reject the supplicant's call?
+Reported-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 7a3339f..c836659 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -630,7 +630,7 @@ void wl1271_tx_work(struct work_struct *work)
+ 
+ 	wl1271_tx_work_locked(wl);
+ 
+-	wl1271_ps_elp_wakeup(wl);
++	wl1271_ps_elp_sleep(wl);
+ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+-- 
+1.7.0.4
 
