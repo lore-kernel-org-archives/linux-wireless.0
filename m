@@ -1,70 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43854 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757421Ab1DAVgv (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:50714 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755127Ab1DDTEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:51 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so3915791iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:51 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 07/10] mac80211: Perform PLINK_ACTION on new station
-Date: Fri,  1 Apr 2011 13:35:48 -0700
-Message-Id: <1301690151-14979-8-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+	Mon, 4 Apr 2011 15:04:24 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 40A05540154
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Apr 2011 15:08:50 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110404190422.6625F40EB0@repository3.orbit-lab.org>
+Date: Mon,  4 Apr 2011 15:04:22 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + a2471e3...c26edee akpm-end   -> origin/akpm-end  (forced update)
+   6aba74f..78fca1b9 akpm-start -> origin/akpm-start
+   3f0f2e0..fab5279  history    -> origin/history
+ + 260080e...338afa8 master     -> origin/master  (forced update)
+   6aba74f..78fca1b9 stable     -> origin/stable
+ * [new tag]         next-20110404 -> next-20110404
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Modify the NEW_STATION command to accept PLINK_ACTIONS, in case
-userspace wants to create stations and initiate a peer link right away
-(for authenticated stations) or create a blocked station (for
-debugging).
+compat-wireless code metrics
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_plink.c |    2 +-
- net/wireless/nl80211.c    |    5 +++++
- 2 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 5d0dd92..b327e0e 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- 	if (!sta)
- 		return NULL;
- 
--	sta->flags = WLAN_STA_AUTHORIZED;
-+	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
- 	rate_control_rate_init(sta);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e76dc79..5854366 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2327,11 +2327,16 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
-+		params.plink_action =
-+		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+
- 	if (parse_station_flags(info, &params))
- 		return -EINVAL;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
- 		return -EINVAL;
- 
--- 
-1.7.4.1
-
+    858090 - Total upstream lines of code being pulled
