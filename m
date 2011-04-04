@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40415 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144Ab1DMNAc (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:38828 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab1DDUuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 09:00:32 -0400
-Date: Wed, 13 Apr 2011 08:51:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: sedat.dilek@gmail.com
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2 1/7] ath5k: optimize tx descriptor setup
-Message-ID: <20110413125134.GA4832@tuxdriver.com>
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
- <1302646041-3917-1-git-send-email-nbd@openwrt.org>
- <BANLkTingC8r-obXeYxjbHVr2G80MCbhyMQ@mail.gmail.com>
+	Mon, 4 Apr 2011 16:50:13 -0400
+Message-ID: <4D9A2F00.4040405@lwfinger.net>
+Date: Mon, 04 Apr 2011 15:50:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTingC8r-obXeYxjbHVr2G80MCbhyMQ@mail.gmail.com>
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+CC: Jens Axboe <jaxboe@fusionio.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in 2.6.39-rc1 from commit	7eaceaccab5f40bbfda044629a6298616aeaed50
+References: <4D9A0D97.1060505@lwfinger.net> <20110404194716.GB8785@sucs.org>
+In-Reply-To: <20110404194716.GB8785@sucs.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 13, 2011 at 06:23:40AM +0200, Sedat Dilek wrote:
-> On Wed, Apr 13, 2011 at 12:07 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> > Use local variables to reduce the number of load/store operations on uncached
-> > memory.
-> >
-> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On 04/04/2011 02:47 PM, Sitsofe Wheeler wrote:
+> On Mon, Apr 04, 2011 at 01:27:35PM -0500, Larry Finger wrote:
+>> After I pulled 2.6.39-rc1, my HP laptop failed to boot by never advancing
+>> past the device detection stage on my x86_64 system. The problem was
+>> bisected, which led to:
+>
+> Sounds like the same as http://marc.info/?t=130137969500005&r=1&w=2
+> ("Commit 7eaceaccab5f40 causing boot hang.") ...
 
-> Looks like this v2 did not found its way to wireless-next [1].
+Yes it does - thanks. I wonder why Google hadn't indexed that thread.
 
-That's what happens, when it is posted after I've already merged the v1. :-)
+The patch from http://marc.info/?l=linux-kernel&m=130148511426634&w=2 allows my 
+computer to boot.
 
-I fixed things up and will commit the difference with the following message:
-
-    ath5k: improve comments for optimized tx descriptor setup
-    
-    Comment the use of local variables to reduce the number of load/store
-    operations on uncached memory, in hopes of not losing this optimization
-    accidentally in the future.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
