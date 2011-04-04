@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36250 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab1DUGuW (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:39054 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751741Ab1DDHSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 02:50:22 -0400
-Subject: Re: [PATCH] cfg80211: module_param to disable HT40 in 2.4GHz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-In-Reply-To: <1303344002-4542-1-git-send-email-bzhao@marvell.com>
-References: <1303344002-4542-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Apr 2011 08:50:17 +0200
-Message-ID: <1303368617.3597.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 4 Apr 2011 03:18:54 -0400
+Received: from dlep34.itg.ti.com ([157.170.170.115])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p347IsUw001115
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 4 Apr 2011 02:18:54 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] wl12xx: Set End-of-transaction Flag at Wl127x AP Mode
+Date: Mon,  4 Apr 2011 10:20:39 +0300
+Message-Id: <1301901639-19457-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-20 at 17:00 -0700, Bing Zhao wrote:
+End-of-transaction flag should be set when working with
+wl127x chip on AP mode.
 
-> @@ -651,16 +660,28 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  			goto nla_put_failure;
->  
->  		/* add HT info */
-> -		if (dev->wiphy.bands[band]->ht_cap.ht_supported) {
-> +		if (sband->ht_cap.ht_supported) {
->  			NLA_PUT(msg, NL80211_BAND_ATTR_HT_MCS_SET,
-> -				sizeof(dev->wiphy.bands[band]->ht_cap.mcs),
-> -				&dev->wiphy.bands[band]->ht_cap.mcs);
-> +				sizeof(sband->ht_cap.mcs), &sband->ht_cap.mcs);
-> +
-> +			/*
-> +			 * Since cfg80211_disable_40mhz_24ghz is global, we can
-> +			 * modify the sband's ht data even if the driver uses a
-> +			 * global structure for that.
-> +			 */
-> +			if (cfg80211_disable_40mhz_24ghz &&
-> +					band == IEEE80211_BAND_2GHZ) {
-> +				sband->ht_cap.cap &=
-> +					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-> +				sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
-> +			}
-> +
->  			NLA_PUT_U16(msg, NL80211_BAND_ATTR_HT_CAPA,
-> -				dev->wiphy.bands[band]->ht_cap.cap);
-> +				sband->ht_cap.cap);
->  			NLA_PUT_U8(msg, NL80211_BAND_ATTR_HT_AMPDU_FACTOR,
-> -				dev->wiphy.bands[band]->ht_cap.ampdu_factor);
-> +				sband->ht_cap.ampdu_factor);
->  			NLA_PUT_U8(msg, NL80211_BAND_ATTR_HT_AMPDU_DENSITY,
-> -				dev->wiphy.bands[band]->ht_cap.ampdu_density);
-> +				sband->ht_cap.ampdu_density);
->  		}
->  
->  		/* add frequencies */
+Thanks Ido Yariv <ido@wizery.com> for the guidance with that.
 
-In send_wiphy? You're kidding, right? NACK. Please try to understand how
-the code in mac80211 worked.
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 85cb4da..13f3442 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1006,6 +1006,10 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
+ 			     wl->chip.id);
+ 
++		/* end-of-transaction flag should be set in wl127x AP mode */
++		if (wl->bss_type == BSS_TYPE_AP_BSS)
++			wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
++
+ 		ret = wl1271_setup(wl);
+ 		if (ret < 0)
+ 			goto out;
+-- 
+1.7.0.4
 
