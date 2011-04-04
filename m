@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57929 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465Ab1DOTwC convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:54642 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864Ab1DDS1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 15:52:02 -0400
+	Mon, 4 Apr 2011 14:27:39 -0400
+Message-ID: <4D9A0D97.1060505@lwfinger.net>
+Date: Mon, 04 Apr 2011 13:27:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1302896541.30441.33.camel@dev.znau.edu.ua>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
-	<1302781431.21145.6.camel@dev.znau.edu.ua>
-	<BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-	<4DA6E9BD.3090404@hauke-m.de>
-	<BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
-	<1302786900.21965.52.camel@dev.znau.edu.ua>
-	<BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
-	<1302892585.30441.12.camel@dev.znau.edu.ua>
-	<BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
-	<1302896541.30441.33.camel@dev.znau.edu.ua>
-Date: Fri, 15 Apr 2011 21:52:01 +0200
-Message-ID: <BANLkTinPVaYC14Y=m5iu7GYodkRb6uTuPw@mail.gmail.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+To: Jens Axboe <jaxboe@fusionio.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Regression in 2.6.39-rc1 from commit 7eaceaccab5f40bbfda044629a6298616aeaed50
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 15 kwietnia 2011 21:42 użytkownik George Kashperko
-<george@znau.edu.ua> napisał:
-> So, we could start with introducing virtual "ocp" bus (which could be of
-> some use for other vendors utilising ocp model) with additional
-> library/module for broadcom-specific extensions (accounting for
-> buscommon/buscore/etc.).
+After I pulled 2.6.39-rc1, my HP laptop failed to boot by never advancing past 
+the device detection stage on my x86_64 system. The problem was bisected, which 
+led to:
 
-I think we over-complicate that.
+7eaceaccab5f40bbfda044629a6298616aeaed50 is the first bad commit
+commit 7eaceaccab5f40bbfda044629a6298616aeaed50
+Author: Jens Axboe <jaxboe@fusionio.com>
+Date:   Thu Mar 10 08:52:07 2011 +0100
 
+     block: remove per-queue plugging
 
-> On other hand just broadcom-specific bus looks like good alternative too
-> but here I just fail to decide on relevant naming.
+     Code has been converted over to the new explicit on-stack plugging,
+     and delay users have been converted to use the new API for that.
+     So lets kill off the old plugging along with aops->sync_page().
 
-Just bcmamba / bcmaxi?
+     Signed-off-by: Jens Axboe <jaxboe@fusionio.com>
 
--- 
-Rafał
+As this patch cannot be reversed on current 2.6.39-rc1-git, I have not been able 
+to do the final test of reverting it, but the bisection was straight forward.
+
+When the system hangs, I can get it to finish booting if I type CTRL/C; however, 
+the only disk partition that has been mounted is /. If it matters, I use a 
+mixture of ext3 and ext4 file systems.
+
+My disk controller is "nVidia Corporation MCP67 IDE Controller [10de:0560] (rev a1)"
+
+Please let me know what additional info is needed.
+
+Larry
