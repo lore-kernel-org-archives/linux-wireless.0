@@ -1,116 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44278 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755087Ab1DJQcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 12:32:25 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH 4/7] ath5k: optimize rx status processing
-Date: Sun, 10 Apr 2011 18:32:16 +0200
-Message-Id: <1302453139-11437-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1302453139-11437-3-git-send-email-nbd@openwrt.org>
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
- <1302453139-11437-2-git-send-email-nbd@openwrt.org>
- <1302453139-11437-3-git-send-email-nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56559 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755591Ab1DDXiY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Apr 2011 19:38:24 -0400
+Received: by iyb14 with SMTP id 14so6391093iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 16:38:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1301945671.14995.110.camel@wwguy-huron>
+References: <1301945671.14995.110.camel@wwguy-huron>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 4 Apr 2011 16:38:04 -0700
+Message-ID: <BANLkTi=+5TA7MMG+ice4PqNj7Nko=q0vaA@mail.gmail.com>
+Subject: Re: new maintenance release of iwlwifi 1000 uCode available
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ACCESS_ONCE to reduce the number of redundant loads on uncached memory
+On Mon, Apr 4, 2011 at 12:34 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+>        Changes:
+>        - Fix "tid mismatch" issue
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/desc.c |   41 ++++++++++++++------------------
- 1 files changed, 18 insertions(+), 23 deletions(-)
+What does this mean? What "tid mismatch issue"?
 
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index 3758b96..e366d30 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -603,37 +603,37 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 					struct ath5k_rx_status *rs)
- {
- 	struct ath5k_hw_rx_status *rx_status;
-+	u32 rxstat0, rxstat1;
- 
- 	rx_status = &desc->ud.ds_rx.rx_stat;
-+	rxstat1 = ACCESS_ONCE(rx_status->rx_status_1);
- 
- 	/* No frame received / not ready */
--	if (unlikely(!(rx_status->rx_status_1 &
--				AR5K_5212_RX_DESC_STATUS1_DONE)))
-+	if (unlikely(!(rxstat1 & AR5K_5212_RX_DESC_STATUS1_DONE)))
- 		return -EINPROGRESS;
- 
- 	memset(rs, 0, sizeof(struct ath5k_rx_status));
-+	rxstat0 = ACCESS_ONCE(rx_status->rx_status_0);
- 
- 	/*
- 	 * Frame receive status
- 	 */
--	rs->rs_datalen = rx_status->rx_status_0 &
--		AR5K_5212_RX_DESC_STATUS0_DATA_LEN;
--	rs->rs_rssi = AR5K_REG_MS(rx_status->rx_status_0,
-+	rs->rs_datalen = rxstat0 & AR5K_5212_RX_DESC_STATUS0_DATA_LEN;
-+	rs->rs_rssi = AR5K_REG_MS(rxstat0,
- 		AR5K_5212_RX_DESC_STATUS0_RECEIVE_SIGNAL);
--	rs->rs_rate = AR5K_REG_MS(rx_status->rx_status_0,
-+	rs->rs_rate = AR5K_REG_MS(rxstat0,
- 		AR5K_5212_RX_DESC_STATUS0_RECEIVE_RATE);
--	rs->rs_antenna = AR5K_REG_MS(rx_status->rx_status_0,
-+	rs->rs_antenna = AR5K_REG_MS(rxstat0,
- 		AR5K_5212_RX_DESC_STATUS0_RECEIVE_ANTENNA);
--	rs->rs_more = !!(rx_status->rx_status_0 &
--		AR5K_5212_RX_DESC_STATUS0_MORE);
--	rs->rs_tstamp = AR5K_REG_MS(rx_status->rx_status_1,
-+	rs->rs_more = !!(rxstat0 & AR5K_5212_RX_DESC_STATUS0_MORE);
-+	rs->rs_tstamp = AR5K_REG_MS(rxstat1,
- 		AR5K_5212_RX_DESC_STATUS1_RECEIVE_TIMESTAMP);
- 
- 	/*
- 	 * Key table status
- 	 */
--	if (rx_status->rx_status_1 & AR5K_5212_RX_DESC_STATUS1_KEY_INDEX_VALID)
--		rs->rs_keyix = AR5K_REG_MS(rx_status->rx_status_1,
-+	if (rxstat1 & AR5K_5212_RX_DESC_STATUS1_KEY_INDEX_VALID)
-+		rs->rs_keyix = AR5K_REG_MS(rxstat1,
- 					   AR5K_5212_RX_DESC_STATUS1_KEY_INDEX);
- 	else
- 		rs->rs_keyix = AR5K_RXKEYIX_INVALID;
-@@ -641,27 +641,22 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 	/*
- 	 * Receive/descriptor errors
- 	 */
--	if (!(rx_status->rx_status_1 &
--	    AR5K_5212_RX_DESC_STATUS1_FRAME_RECEIVE_OK)) {
--		if (rx_status->rx_status_1 &
--				AR5K_5212_RX_DESC_STATUS1_CRC_ERROR)
-+	if (!(rxstat1 & AR5K_5212_RX_DESC_STATUS1_FRAME_RECEIVE_OK)) {
-+		if (rxstat1 & AR5K_5212_RX_DESC_STATUS1_CRC_ERROR)
- 			rs->rs_status |= AR5K_RXERR_CRC;
- 
--		if (rx_status->rx_status_1 &
--				AR5K_5212_RX_DESC_STATUS1_PHY_ERROR) {
-+		if (rxstat1 & AR5K_5212_RX_DESC_STATUS1_PHY_ERROR) {
- 			rs->rs_status |= AR5K_RXERR_PHY;
--			rs->rs_phyerr = AR5K_REG_MS(rx_status->rx_status_1,
-+			rs->rs_phyerr = AR5K_REG_MS(rxstat1,
- 				AR5K_5212_RX_DESC_STATUS1_PHY_ERROR_CODE);
- 			if (!ah->ah_capabilities.cap_has_phyerr_counters)
- 				ath5k_ani_phy_error_report(ah, rs->rs_phyerr);
- 		}
- 
--		if (rx_status->rx_status_1 &
--				AR5K_5212_RX_DESC_STATUS1_DECRYPT_CRC_ERROR)
-+		if (rxstat1 & AR5K_5212_RX_DESC_STATUS1_DECRYPT_CRC_ERROR)
- 			rs->rs_status |= AR5K_RXERR_DECRYPT;
- 
--		if (rx_status->rx_status_1 &
--				AR5K_5212_RX_DESC_STATUS1_MIC_ERROR)
-+		if (rxstat1 & AR5K_5212_RX_DESC_STATUS1_MIC_ERROR)
- 			rs->rs_status |= AR5K_RXERR_MIC;
- 	}
- 	return 0;
--- 
-1.7.3.2
-
+  Luis
