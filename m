@@ -1,165 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753804Ab1DRNgW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:36:22 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:21 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 22/23] rt2x00: Implement get_ringparam callback function
-Date: Mon, 18 Apr 2011 15:34:41 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181534.02553.IvDoorn@gmail.com> <201104181534.23133.IvDoorn@gmail.com>
-In-Reply-To: <201104181534.23133.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:63728 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075Ab1DDRYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Apr 2011 13:24:20 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 10:23:56 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [RFC] mac80211: prevent authentication on channel mismatch w/ hw conf
+Date: Mon, 4 Apr 2011 22:54:26 +0530
+Message-ID: <1301937866-14701-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181534.42625.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+Do not proceed authentication if hw was already configured
+with one of the vif's channel which is differed with requesting
+channel. Not doing so is causing unneccesary dissociation.
+This issue was originaly found while testing concurrent mode
+with p2p vif.
 
-With the get_ringparam callback function we can export ring parameters
-to ethtool through the mac80211 interface.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
- drivers/net/wireless/rt2x00/rt2x00mac.c |   16 ++++++++++++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
- 9 files changed, 25 insertions(+), 0 deletions(-)
+ net/mac80211/mlme.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index d4acdde..bbe76f7 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1720,6 +1720,7 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 	.tx_last_beacon		= rt2400pci_tx_last_beacon,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
- 	.flush			= rt2x00mac_flush,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 64d92d5..dcf3d6f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2282,11 +2282,30 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ {
+ 	const u8 *ssid;
+ 	struct ieee80211_work *wk;
++	struct ieee80211_sub_if_data *ifdata;
++	bool found = false;
+ 	u16 auth_alg;
  
- static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 15f5649..6f48996 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -2013,6 +2013,7 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
- 	.tx_last_beacon		= rt2500pci_tx_last_beacon,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
- 	.flush			= rt2x00mac_flush,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
+ 	if (req->local_state_change)
+ 		return 0; /* no need to update mac80211 state */
  
- static const struct rt2x00lib_ops rt2500pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index d88c367..5ef3386 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1823,6 +1823,7 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
- 	.conf_tx		= rt2x00mac_conf_tx,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
- 	.flush			= rt2x00mac_flush,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
- 
- static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b0c729b..08d3947 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1028,6 +1028,7 @@ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
- 	.ampdu_action		= rt2800_ampdu_action,
- 	.flush			= rt2x00mac_flush,
- 	.get_survey		= rt2800_get_survey,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
- 
- static const struct rt2800_ops rt2800pci_rt2800_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 44ead75..0d4e8fa 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -673,6 +673,7 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
- 	.ampdu_action		= rt2800_ampdu_action,
- 	.flush			= rt2x00mac_flush,
- 	.get_survey		= rt2800_get_survey,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
- 
- static const struct rt2800_ops rt2800usb_rt2800_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index dcdc50d..f1d8f55 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1254,6 +1254,8 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 		      const struct ieee80211_tx_queue_params *params);
- void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw);
- void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop);
-+void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
-+			     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
- 
- /*
-  * Driver allocation handlers.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 4770156..6d1d383 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -737,3 +737,19 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop)
- 		rt2x00queue_flush_queue(queue, drop);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_flush);
-+
-+void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
-+			     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max)
-+{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct data_queue *queue;
-+
-+	tx_queue_for_each(rt2x00dev, queue) {
-+		*tx += queue->length;
-+		*tx_max += queue->limit;
++	/*
++	 * XXX: hw conf check should be removed, once the multiple
++	 * channels are supported by mac80211
++	 */
++	mutex_lock(&sdata->local->iflist_mtx);
++	list_for_each_entry(ifdata, &sdata->local->interfaces, list) {
++		if (ifdata->vif.bss_conf.enable_beacon ||
++		    ifdata->vif.bss_conf.assoc) {
++			found = true;
++			break;
++		}
 +	}
++	mutex_unlock(&sdata->local->iflist_mtx);
 +
-+	*rx = rt2x00dev->rx->length;
-+	*rx_max = rt2x00dev->rx->limit;
-+}
-+EXPORT_SYMBOL_GPL(rt2x00mac_get_ringparam);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index c5dccdb..eb54031 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2979,6 +2979,7 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
- 	.get_tsf		= rt61pci_get_tsf,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
- 	.flush			= rt2x00mac_flush,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
- 
- static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index be3eb5e..bf7fea4 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2310,6 +2310,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
- 	.get_tsf		= rt73usb_get_tsf,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
- 	.flush			= rt2x00mac_flush,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
- };
- 
- static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
++	if (found && (sdata->local->hw.conf.channel != req->bss->channel))
++		return -EOPNOTSUPP;
++
+ 	switch (req->auth_type) {
+ 	case NL80211_AUTHTYPE_OPEN_SYSTEM:
+ 		auth_alg = WLAN_AUTH_OPEN;
 -- 
-1.7.2.3
+1.7.4.2
 
