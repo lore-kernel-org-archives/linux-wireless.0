@@ -1,213 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37843 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757579Ab1DNJrs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 05:47:48 -0400
-Received: by wwa36 with SMTP id 36so1780217wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 02:47:47 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 1/2] wl12xx: consider encryption when configuring auto arp template
-Date: Thu, 14 Apr 2011 12:47:54 +0300
-Message-Id: <1302774475-2977-1-git-send-email-eliad@wizery.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:42745 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753844Ab1DDHFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Apr 2011 03:05:55 -0400
+Received: from dlep33.itg.ti.com ([157.170.170.112])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p3475tpf011830
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 4 Apr 2011 02:05:55 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] wl12xx: FM WLAN coexistence
+Date: Mon,  4 Apr 2011 10:07:40 +0300
+Message-Id: <1301900860-19337-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When configuring the arp response template, and encryption is enabled,
-we should add some space and set the protected flag bit in the fc.
+Add support to FM WLAN coexistence (STA only).
+Few WiFi harmonics may interfere FM operation, to
+avoid this problem special coexistence techniques are
+activated around some FM frequencies.
 
-In order to track the encryption type, set wl->encryption_type when
-setting an encryption key, and reconfigure the arp response.
-Clear this field on wl1271_join, as keys have to be re-configured
-anyway after a join command.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
-v1 -> v2:
-	don't configure template in ap mode
+ drivers/net/wireless/wl12xx/acx.c  |   42 ++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h  |   61 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/conf.h |   14 ++++++++
+ drivers/net/wireless/wl12xx/init.c |    5 +++
+ drivers/net/wireless/wl12xx/main.c |   17 ++++++++++
+ 5 files changed, 139 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/wl12xx/cmd.c          |   65 ++++++++++++++++++++-------
- drivers/net/wireless/wl12xx/main.c         |   19 ++++++++-
- drivers/net/wireless/wl12xx/wl12xx.h       |    4 ++
- drivers/net/wireless/wl12xx/wl12xx_80211.h |    2 +-
- 4 files changed, 71 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 2468044..65bcecb 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -742,28 +742,30 @@ out:
- 
- int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr)
- {
--	int ret;
--	struct wl12xx_arp_rsp_template tmpl;
-+	int ret, extra = 0;
-+	u16 fc;
-+	struct sk_buff *skb;
-+	struct wl12xx_arp_rsp_template *tmpl;
- 	struct ieee80211_hdr_3addr *hdr;
- 	struct arphdr *arp_hdr;
- 
--	memset(&tmpl, 0, sizeof(tmpl));
-+	skb = dev_alloc_skb(sizeof(*hdr) + sizeof(*tmpl) + 8);
-+	if (!skb) {
-+		wl1271_error("failed to allocate buffer for arp rsp template");
-+		return -ENOMEM;
-+	}
- 
--	/* mac80211 header */
--	hdr = &tmpl.hdr;
--	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
--					 IEEE80211_STYPE_DATA |
--					 IEEE80211_FCTL_TODS);
--	memcpy(hdr->addr1, wl->vif->bss_conf.bssid, ETH_ALEN);
--	memcpy(hdr->addr2, wl->vif->addr, ETH_ALEN);
--	memset(hdr->addr3, 0xff, ETH_ALEN);
-+	skb_reserve(skb, sizeof(*hdr) + 8);
-+
-+	tmpl = (struct wl12xx_arp_rsp_template *)skb_put(skb, sizeof(*tmpl));
-+	memset(tmpl, 0, sizeof(tmpl));
- 
- 	/* llc layer */
--	memcpy(tmpl.llc_hdr, rfc1042_header, sizeof(rfc1042_header));
--	tmpl.llc_type = cpu_to_be16(ETH_P_ARP);
-+	memcpy(tmpl->llc_hdr, rfc1042_header, sizeof(rfc1042_header));
-+	tmpl->llc_type = cpu_to_be16(ETH_P_ARP);
- 
- 	/* arp header */
--	arp_hdr = &tmpl.arp_hdr;
-+	arp_hdr = &tmpl->arp_hdr;
- 	arp_hdr->ar_hrd = cpu_to_be16(ARPHRD_ETHER);
- 	arp_hdr->ar_pro = cpu_to_be16(ETH_P_IP);
- 	arp_hdr->ar_hln = ETH_ALEN;
-@@ -771,12 +773,41 @@ int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr)
- 	arp_hdr->ar_op = cpu_to_be16(ARPOP_REPLY);
- 
- 	/* arp payload */
--	memcpy(tmpl.sender_hw, wl->vif->addr, ETH_ALEN);
--	tmpl.sender_ip = ip_addr;
-+	memcpy(tmpl->sender_hw, wl->vif->addr, ETH_ALEN);
-+	tmpl->sender_ip = ip_addr;
-+
-+	/* encryption space */
-+	switch (wl->encryption_type) {
-+	case KEY_TKIP:
-+		extra = WL1271_TKIP_IV_SPACE;
-+		break;
-+	case KEY_AES:
-+		extra = 8;
-+		break;
-+	}
-+
-+	if (extra) {
-+		u8 *space = skb_push(skb, extra);
-+		memset(space, 0, extra);
-+	}
-+
-+	/* mac80211 header */
-+	hdr = (struct ieee80211_hdr_3addr *)skb_push(skb, sizeof(*hdr));
-+	memset(hdr, 0, sizeof(hdr));
-+	fc = IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA | IEEE80211_FCTL_TODS;
-+	if (wl->encryption_type != KEY_NONE)
-+		fc |= IEEE80211_FCTL_PROTECTED;
-+
-+	hdr->frame_control = cpu_to_le16(fc);
-+	memcpy(hdr->addr1, wl->vif->bss_conf.bssid, ETH_ALEN);
-+	memcpy(hdr->addr2, wl->vif->addr, ETH_ALEN);
-+	memset(hdr->addr3, 0xff, ETH_ALEN);
- 
- 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_ARP_RSP,
--				      &tmpl, sizeof(tmpl), 0,
-+				      skb->data, skb->len, 0,
- 				      wl->basic_rate);
-+	dev_kfree_skb(skb);
-+
- 
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index e005aa4..5f5afbe 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1604,3 +1604,45 @@ out:
+ 	kfree(acx);
  	return ret;
  }
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7126506..2ec15bf 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1623,6 +1623,9 @@ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
- 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
- 		wl1271_info("JOIN while associated.");
- 
-+	/* clear encryption type */
-+	wl->encryption_type = KEY_NONE;
 +
- 	if (set_assoc)
- 		set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
- 
-@@ -2196,6 +2199,17 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			wl1271_error("Could not add or replace key");
- 			goto out_sleep;
- 		}
++int wl1271_acx_fm_coex(struct wl1271 *wl)
++{
++	struct wl1271_acx_fm_coex *acx;
++	int ret;
 +
-+		/* reconfiguring arp response (data packet) */
-+		if (wl->bss_type == BSS_TYPE_STA_BSS &&
-+		    wl->encryption_type != key_type) {
-+			wl->encryption_type = key_type;
-+			ret = wl1271_cmd_build_arp_rsp(wl, wl->ip_addr);
-+			if (ret < 0) {
-+				wl1271_warning("build arp rsp failed: %d", ret);
-+				goto out_sleep;
-+			}
-+		}
- 		break;
- 
- 	case DISABLE_KEY:
-@@ -2734,6 +2748,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 
- 		if (bss_conf->arp_addr_cnt == 1 &&
- 		    bss_conf->arp_filter_enabled) {
-+			wl->ip_addr = addr;
- 			/*
- 			 * The template should have been configured only upon
- 			 * association. however, it seems that the correct ip
-@@ -2749,8 +2764,10 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			ret = wl1271_acx_arp_ip_filter(wl,
- 				ACX_ARP_FILTER_ARP_FILTERING,
- 				addr);
--		} else
-+		} else {
-+			wl->ip_addr = 0;
- 			ret = wl1271_acx_arp_ip_filter(wl, 0, addr);
-+		}
- 
- 		if (ret < 0)
- 			goto out;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index fb2b79f..b36a406 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -556,6 +556,10 @@ struct wl1271 {
- 	/* bands supported by this instance of wl12xx */
- 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
- 
-+	/* save the current encryption type for auto-arp config*/
-+	u8 encryption_type;
-+	__be32 ip_addr;
++	wl1271_debug(DEBUG_ACX, "acx fm coex setting");
 +
- 	/* RX BA constraint value */
- 	bool ba_support;
- 	u8 ba_rx_bitmap;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
-index 18fe542..71e29aa 100644
---- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
-@@ -134,7 +134,7 @@ struct wl12xx_qos_null_data_template {
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->enable = wl->conf.fm_coex.enable;
++	acx->swallow_period = wl->conf.fm_coex.swallow_period;
++	acx->n_divider_fref_set_1 = wl->conf.fm_coex.n_divider_fref_set_1;
++	acx->n_divider_fref_set_2 = wl->conf.fm_coex.n_divider_fref_set_2;
++	acx->m_divider_fref_set_1 =
++		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_1);
++	acx->m_divider_fref_set_2 =
++		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_2);
++	acx->coex_pll_stabilization_time =
++		cpu_to_le32(wl->conf.fm_coex.coex_pll_stabilization_time);
++	acx->ldo_stabilization_timwl12xx-fm-coex-v2/e =
++		cpu_to_le16(wl->conf.fm_coex.ldo_stabilization_time);
++	acx->fm_disturbed_band_margin =
++		wl->conf.fm_coex.fm_disturbed_band_margin;
++	acx->swallow_clk_diff = wl->conf.fm_coex.swallow_clk_diff;
++
++	ret = wl1271_cmd_configure(wl, ACX_FM_COEX_CFG, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx fm coex setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
++
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 0a40cae..45242db 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1172,6 +1172,65 @@ struct wl1271_acx_inconnection_sta {
+ 	u8 padding1[2];
  } __packed;
  
- struct wl12xx_arp_rsp_template {
--	struct ieee80211_hdr_3addr hdr;
-+	/* not including ieee80211 header */
++/*
++ * ACX_FM_COEX_CFG
++ * set the FM co-existence parameters.
++ */
++struct wl1271_acx_fm_coex {
++	struct acx_header header;
++	/* enable(1) / disable(0) the FM Coex feature */
++	u8 enable;
++	/*
++	 * Swallow period used in COEX PLL swallowing mechanism.
++	 * 0xFF = use FW default
++	 */
++	u8 swallow_period;
++	/*
++	 * The N divider used in COEX PLL swallowing mechanism for Fref of
++	 * 38.4/19.2 Mhz. 0xFF = use FW default
++	 */
++	u8 n_divider_fref_set_1;
++	/*
++	 * The N divider used in COEX PLL swallowing mechanism for Fref of
++	 * 26/52 Mhz. 0xFF = use FW default
++	 */
++	u8 n_divider_fref_set_2;
++	/*
++	 * The M divider used in COEX PLL swallowing mechanism for Fref of
++	 * 38.4/19.2 Mhz. 0xFFFF = use FW default
++	 */
++	u16 m_divider_fref_set_1;
++	/*
++	 * The M divider used in COEX PLL swallowing mechanism for Fref of
++	 * 26/52 Mhz. 0xFFFF = use FW default
++	 */
++	u16 m_divider_fref_set_2;
++	/*
++	 * The time duration in uSec required for COEX PLL to stabilize.
++	 * 0xFFFFFFFF = use FW default
++	 */
++	u32 coex_pll_stabilization_time;
++	/*
++	 * The time duration in uSec required for LDO to stabilize.
++	 * 0xFFFFFFFF = use FW default
++	 */
++	u16 ldo_stabilization_time;
++	/*
++	 * The disturbed frequency band margin around the disturbed frequency
++	 * center (single sided).
++	 * For example, if 2 is configured, the following channels will be
++	 * considered disturbed channel:
++	 *   80 +- 0.1 MHz, 91 +- 0.1 MHz, 98 +- 0.1 MHz, 102 +- 0.1 MH
++	 * 0xFF = use FW default
++	 */
++	u8 fm_disturbed_band_margin;
++	/*
++	 * The swallow clock difference of the swallowing mechanism.
++	 * 0xFF = use FW default
++	 */
++	u8 swallow_clk_diff;
++} __packed;
++
+ enum {
+ 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+ 	ACX_MEM_CFG                 = 0x0003,
+@@ -1201,6 +1260,7 @@ enum {
+ 	ACX_BCN_DTIM_OPTIONS        = 0x0031,
+ 	ACX_SG_ENABLE               = 0x0032,
+ 	ACX_SG_CFG                  = 0x0033,
++	ACX_FM_COEX_CFG             = 0x0034,
+ 	ACX_BEACON_FILTER_TABLE     = 0x0038,
+ 	ACX_ARP_IP_FILTER           = 0x0039,
+ 	ACX_ROAMING_STATISTICS_TBL  = 0x003B,
+@@ -1310,5 +1370,6 @@ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
+ int wl1271_acx_max_tx_retry(struct wl1271 *wl);
+ int wl1271_acx_config_ps(struct wl1271 *wl);
+ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
++int wl1271_acx_fm_coex(struct wl1271 *wl);
  
- 	u8 llc_hdr[sizeof(rfc1042_header)];
- 	__be16 llc_type;
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 743bd0b..44cbce6 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1193,6 +1193,19 @@ struct conf_memory_settings {
+ 	u8 tx_min;
+ };
+ 
++struct conf_fm_coex {
++	u8 enable;
++	u8 swallow_period;
++	u8 n_divider_fref_set_1;
++	u8 n_divider_fref_set_2;
++	u16 m_divider_fref_set_1;
++	u16 m_divider_fref_set_2;
++	u32 coex_pll_stabilization_time;
++	u16 ldo_stabilization_time;
++	u8 fm_disturbed_band_margin;
++	u8 swallow_clk_diff;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+@@ -1206,6 +1219,7 @@ struct conf_drv_settings {
+ 	struct conf_ht_setting ht;
+ 	struct conf_memory_settings mem_wl127x;
+ 	struct conf_memory_settings mem_wl128x;
++	struct conf_fm_coex fm_coex;
+ };
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 2dbc083..7169d82 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -356,6 +356,11 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* FM WLAN coexistence */
++	ret = wl1271_acx_fm_coex(wl);
++	if (ret < 0)
++		return ret;
++
+ 	/* Beacons and broadcast settings */
+ 	ret = wl1271_init_beacon_broadcast(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 85cb4da..f4c0063 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -318,6 +318,18 @@ static struct conf_drv_settings default_conf = {
+ 		.min_req_rx_blocks            = 22,
+ 		.tx_min                       = 27,
+ 	},
++	.fm_coex = {
++		.enable                       = true,
++		.swallow_period               = 5,
++		.n_divider_fref_set_1         = 0xff,       /* default */
++		.n_divider_fref_set_2         = 12,
++		.m_divider_fref_set_1         = 148,
++		.m_divider_fref_set_2         = 0xffff,     /* default */
++		.coex_pll_stabilization_time  = 0xffffffff, /* default */
++		.ldo_stabilization_time       = 0xffff,     /* default */
++		.fm_disturbed_band_margin     = 0xff,       /* default */
++		.swallow_clk_diff             = 0xff,       /* default */
++	},
+ };
+ 
+ static void __wl1271_op_remove_interface(struct wl1271 *wl);
+@@ -505,6 +517,11 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
++	/* FM WLAN coexistence */
++	ret = wl1271_acx_fm_coex(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	/* Energy detection */
+ 	ret = wl1271_init_energy_detection(wl);
+ 	if (ret < 0)
 -- 
 1.7.0.4
 
