@@ -1,93 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:33893 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755635Ab1DHJmI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 05:42:08 -0400
-Received: by qwk3 with SMTP id 3so1984994qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 02:42:07 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:63899 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751569Ab1DDR0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Apr 2011 13:26:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 10:25:46 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 1/5] ath9k: deny new interface addtion on IBSS mode
+Date: Mon, 4 Apr 2011 22:56:16 +0530
+Message-ID: <1301937979-14770-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <179432.26955.qm@web161615.mail.bf1.yahoo.com>
-References: <BANLkTikRMATHAUmsQa8T4LD4_C9T76asAQ@mail.gmail.com>
-	<179432.26955.qm@web161615.mail.bf1.yahoo.com>
-Date: Fri, 8 Apr 2011 11:42:07 +0200
-Message-ID: <BANLkTi=kkBReSDHcCqyTkbHsAgDLiy7okg@mail.gmail.com>
-Subject: Re: Questions about rt2800usb
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: Steev Klimaszewski <steev@genesi-usa.com>,
-	Jett Chen <jett_chen@ralinktech.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The present check denies the IBSS interface addtion if we
+already have any other vifs. But it fails to deny interface
+addition if IBSS was already present.
 
-On Fri, Apr 8, 2011 at 11:32 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
->> > Here's my vote against removing the rt2870sta from
->> staging. Some longstanding issues with latency and duplicate
->> packets (rt307x) are persistent with rt2800usb, whereas
->> rt2870sta works fine.
->> >
->> > my two cents
->> >
->> > Walter
->>
->> Personally, I've had the opposite (since the patch to
->> disable power
->> management on rt2800usb.)  rt2870sta hasn't been
->> noticeably more
->> stable, and in fact, I tend to see div0 bugs quite often
->> when using
->> it.  That said, I'm using Azurewave rt3070s.
->
-> My vote went against only because of this:
-> (rt3070 - 148f:3070)
->
-> Ping gateway with staging:
->
-> PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-> 64 bytes from 192.168.1.1: icmp_req=1 ttl=64 time=4.34 ms
-> 64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=4.70 ms
-> 64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=1.61 ms
-> 64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=1.68 ms
-> 64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=1.33 ms
-> 64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=6.57 ms
-> 64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=4.45 ms
-> ^C
-> --- 192.168.1.1 ping statistics ---
-> 7 packets transmitted, 7 received, 0% packet loss, time 6009ms
->
->
-> Now pinging gateway with rt2800usb:
-> PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
-> 64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=647 ms
-> 64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=1590 ms
-> 64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=583 ms
-> 64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=29.2 ms
-> 64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=1674 ms
-> 64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=667 ms
-> 64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=668 ms (DUP!)
-> 64 bytes from 192.168.1.1: icmp_req=8 ttl=64 time=1645 ms
-> 64 bytes from 192.168.1.1: icmp_req=9 ttl=64 time=637 ms
-> 64 bytes from 192.168.1.1: icmp_req=10 ttl=64 time=1.38 ms
-> ^C
-> --- 192.168.1.1 ping statistics ---
-> 10 packets transmitted, 9 received, +1 duplicates, 10% packet loss, time 9032ms
-> rtt min/avg/max/mdev = 1.384/814.547/1674.284/588.666 ms, pipe 2
->
->
-> Steev, you mentioned there was a fix? Could you please point which patch resolves this?
->
-> I'll be glad to drop the staging driver if rt2800usb does not lag anymore.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Try:
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6a41302..67b0eea 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1483,8 +1483,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if ((vif->type == NL80211_IFTYPE_ADHOC) &&
+-	    sc->nvifs > 0) {
++	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
++	    ((vif->type == NL80211_IFTYPE_ADHOC) &&
++	     sc->nvifs > 0)) {
+ 		ath_err(common, "Cannot create ADHOC interface when other"
+ 			" interfaces already exist.\n");
+ 		ret = -EINVAL;
+-- 
+1.7.4.2
 
-iwconfig wlan0 power off
-
-to disable powersaving.
-
-Ivo
