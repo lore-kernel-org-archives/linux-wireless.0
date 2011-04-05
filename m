@@ -1,98 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50123 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827Ab1DGJzF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 05:55:05 -0400
+Received: from mail.atheros.com ([12.19.149.2]:26059 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752611Ab1DEP3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:29:21 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:28:56 -0700
+Message-ID: <4D9B354B.3070308@atheros.com>
+Date: Tue, 5 Apr 2011 20:59:15 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1302162886.10725.4.camel@maggie>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	<op.vti9ote53ri7v4@arend-laptop>
-	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	<1302123428.20093.6.camel@maggie>
-	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	<1302124112.20093.11.camel@maggie>
-	<BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	<1302124737.27258.7.camel@dev.znau.edu.ua>
-	<BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-	<1302134429.27258.32.camel@dev.znau.edu.ua>
-	<BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
-	<1302162886.10725.4.camel@maggie>
-Date: Thu, 7 Apr 2011 11:55:03 +0200
-Message-ID: <BANLkTim30i8kBkvsSvmWxQaNxWkfMjhOZA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <4D9B2268.8070902@openwrt.org> <4D9B2F79.2090606@atheros.com> <4D9B346A.5000601@openwrt.org>
+In-Reply-To: <4D9B346A.5000601@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 7 kwietnia 2011 09:54 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Thu, 2011-04-07 at 02:54 +0200, Rafał Miłecki wrote:
->> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
->> <george@znau.edu.ua> napisał:
->> > For PCI function description take a look at PCI specs or PCI
->> > configuration space description (e. g.
->> > http://en.wikipedia.org/wiki/PCI_configuration_space)
->> >
->> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
->> > mean ssb/axi with two functional cores on same interconnect (like w11
->> > +w11, not a lot of these exists I guess). Also there were some b43+b44
->> > on single PCI ssb host and those where implemented as ssb interconnect
->> > on multifunctional PCI host therefore providing separate access windows
->> > for each function.
->> >
->> > Might I mussunderstood something (its late night here at my place) when
->> > you where talking about using coreswitching involved for two drivers
->> > therefore I remembered about those functions. Seems now you were talking
->> > about chipcommon+b43 access sharing same window.
->> >
->> > As for core switching requirments for earlier SSB interconnects on PCI
->> > hosts where there were no direct chipcommon access, that one can be
->> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
->> > bus design.
->> >
->> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
->> > available directly and b43 will be the only one requiring window access.
->>
->> Ahh, so while talking about 4 windows, I guess you counted fixes
->> windows as well. That would be right, matching my knowledge.
->>
->> When asking question about amount of cores we may want to use
->> simultaneously I didn't think about ChipCommon or PCIe. The real
->> problem would be to support for example two 802.11 cores and one
->> ethernet core at the same time. That gives us 3 cores while we have
->> only 2 sliding windows.
+On Tuesday 05 April 2011 08:55 PM, Felix Fietkau wrote:
+> On 2011-04-05 5:04 PM, Mohammed Shafi wrote:
+>    
+>> On Tuesday 05 April 2011 07:38 PM, Felix Fietkau wrote:
+>>      
+>>>   On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
+>>>
+>>>        
+>>>>   From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>
+>>>>   Add station uptime parameter in debugfs. This will be helpful to get a
+>>>>   measure of stability of connection and also during stress testing.
+>>>>
+>>>>   Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>
+>>>>          
+>>>        
+>>>>   diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>>>>   index 999f8fb..08b9f51 100644
+>>>>   --- a/net/mac80211/sta_info.c
+>>>>   +++ b/net/mac80211/sta_info.c
+>>>>   @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>>>>      	sta->local = local;
+>>>>      	sta->sdata = sdata;
+>>>>      	sta->last_rx = jiffies;
+>>>>   +	sta->sta_uptime = jiffies;
+>>>>
+>>>>      	ewma_init(&sta->avg_signal, 1024, 8);
+>>>>
+>>>>
+>>>>          
+>>>   I think jiffies can easily overflow. Maybe it would be better to get a
+>>>   timeval from the monotonic clock.
+>>>
+>>>        
+>> Thanks, yes thats true and I assumed this will work fine for 49 days
+>> assuming 32 bit(please correct me if my calculations are wrong). will
+>> the overflow will take place in less than this time?.
+>>      
+> Yes, but there are people that deploy point to point links that can last
+> longer than that ;)
+>    
+Oh ok, then  I will look into it. Thanks for the review!
+>    
+>> I will dig more into it by looking at the time val.
+>>      
+> Thanks.
 >
-> Would that really be a problem? Think of it. This combination
-> will only be available on embedded devices. But do we have windows
-> on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
-> of all cores will always be mapped. So accesses can be done
-> without switch or lock.
+> - Felix
+> .
 >
-> I do really think that engineers at broadcom are clever enough
-> to design a hardware that does not require expensive window sliding
-> all the time while operating.
-
-I also think so. When asking about amount of cores (non PCIe, non
-ChipCommon) which has to work simultaneously. I'm not sure if we will
-meet AI board with 2 cores (non PCIe, non ChipCommon) on PCIe host. I
-don't think we will see more than 2 cores (non PCIe, non ChipCommon)
-on PCIe host.
-
--- 
-Rafał
+>    
