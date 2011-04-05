@@ -1,85 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60939 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:21335 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752150Ab1DUOMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 10:12:52 -0400
-Subject: Re: updated iwlwifi 5000 uCode available
-From: wwguy <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110421001615.GA2437@tuxdriver.com>
-References: <1303316696.14995.162.camel@wwguy-huron>
-	 <20110420182254.GE2737@tuxdriver.com> <20110420201124.GF2737@tuxdriver.com>
-	 <1303330625.31956.1.camel@wwguy-ubuntu>
-	 <20110421001615.GA2437@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Apr 2011 07:09:36 -0700
-Message-ID: <1303394976.1507.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1755430Ab1DERBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/25] iwlagn: remove pointless return variables
+Date: Tue,  5 Apr 2011 09:41:53 -0700
+Message-Id: <1302021732-21250-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-20 at 17:16 -0700, John W. Linville wrote:
-> On Wed, Apr 20, 2011 at 01:17:05PM -0700, wwguy wrote:
-> > On Wed, 2011-04-20 at 13:11 -0700, John W. Linville wrote:
-> > > On Wed, Apr 20, 2011 at 02:22:54PM -0400, John W. Linville wrote:
-> > > > On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > Due to a packaging error, we've re-released the 5000 uCode version
-> > > > > 8.83.5.1. 
-> > > > > 
-> > > > > The updated version of firmware is available for download from
-> > > > > http://intellinuxwireless.org/?n=Downloads
-> > > > > 
-> > > > > The old, wrongly packaged version has the following sha1sums:
-> > > > > 
-> > > > > bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
-> > > > > iwlwifi-5000-ucode-8.83.5.1.tgz
-> > > > > 8d94177b509be3fb653ce8ba0c633244e4abf5f3
-> > > > > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
-> > > > 
-> > > > The version I get from:
-> > > > 
-> > > > 	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
-> > > > 
-> > > > matches the sha1sum values listed above for the "wrongly packaged" version.
-> > > > 
-> > > > > The new version these:
-> > > > > e70cc4b2249824a6b17ce9b9ae5087942c762213
-> > > > > iwlwifi-5000-ucode-8.83.5.1.tgz
-> > > > > 22bf6093ed8204027cc3207c739d2cab9cc92ea3
-> > > > > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
-> > > > > 
-> > > > > The only change is removing the advertising for multiple interface
-> > > > > support which is not actually present in this microcode.
-> > > > > 
-> > > > > Wey-Yi
-> > > > 
-> > > > So, you are going to release a different version of the file but
-> > > > with the _same_ release number?  Couldn't you at least name it
-> > > > iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
-> > > 
-> > > BTW, this name suggestions sucks...  8.83.5.1.1 or 8.83.5.2 would be
-> > > better for packaging purposes (at least for RPM).
-> > > 
-> > this is really not an official build, so the build# stay the same. I am
-> > ok to rename to anything, but the internal build# will not changed.
-> 
-> Which is the unofficial build?  The one that was previously released?
-> Or the new one?  I am presuming that the one originally released is
-> the "unofficial" one...
-> 
-> I appreciate your situation, but using the same release number for
-> a new release (even if it is the "official" one) is a really bad
-> release policy.  Just for your own sanity I would think that you
-> would want a new release number -- even if you just did a rebuild
-> and changed nothing but that number.
-> 
-Fully agree, I will ask for a new build and push it to URL. not sure it
-can happen today, but I will try to make it happen before EOW
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks
-Wey
+A number of places just use a variable to return
+it right away, which is useless, so let's remove
+the variables there.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |    9 ++-------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 +---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    7 ++-----
+ 3 files changed, 5 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index e394e49..97abc10 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2771,16 +2771,13 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
+ 			  gfp_t gfp)
+ {
+-	struct iwl_lq_sta *lq_sta;
+ 	struct iwl_station_priv *sta_priv = (struct iwl_station_priv *) sta->drv_priv;
+ 	struct iwl_priv *priv;
+ 
+ 	priv = (struct iwl_priv *)priv_rate;
+ 	IWL_DEBUG_RATE(priv, "create station rate scale window\n");
+ 
+-	lq_sta = &sta_priv->lq_sta;
+-
+-	return lq_sta;
++	return &sta_priv->lq_sta;
+ }
+ 
+ /*
+@@ -3259,7 +3256,6 @@ static ssize_t rs_sta_dbgfs_rate_scale_data_read(struct file *file,
+ {
+ 	char buff[120];
+ 	int desc = 0;
+-	ssize_t ret;
+ 
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+ 	struct iwl_priv *priv;
+@@ -3276,8 +3272,7 @@ static ssize_t rs_sta_dbgfs_rate_scale_data_read(struct file *file,
+ 				"Bit Rate= %d Mb/s\n",
+ 				iwl_rates[lq_sta->last_txrate_idx].ieee >> 1);
+ 
+-	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+-	return ret;
++	return simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+ }
+ 
+ static const struct file_operations rs_sta_dbgfs_rate_scale_data_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 5d35e35..bb262a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -653,7 +653,5 @@ int iwl_verify_ucode(struct iwl_priv *priv)
+ 	 * Selection of bootstrap image (vs. other images) is arbitrary. */
+ 	image = (__le32 *)priv->ucode_boot.v_addr;
+ 	len = priv->ucode_boot.len;
+-	ret = iwl_verify_inst_full(priv, image, len);
+-
+-	return ret;
++	return iwl_verify_inst_full(priv, image, len);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 8842411..90f2b64 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1572,12 +1572,10 @@ static ssize_t iwl_dbgfs_bt_traffic_read(struct file *file,
+ 	int pos = 0;
+ 	char buf[200];
+ 	const size_t bufsz = sizeof(buf);
+-	ssize_t ret;
+ 
+ 	if (!priv->bt_enable_flag) {
+ 		pos += scnprintf(buf + pos, bufsz - pos, "BT coex disabled\n");
+-		ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-		return ret;
++		return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ 	}
+ 	pos += scnprintf(buf + pos, bufsz - pos, "BT enable flag: 0x%x\n",
+ 		priv->bt_enable_flag);
+@@ -1608,8 +1606,7 @@ static ssize_t iwl_dbgfs_bt_traffic_read(struct file *file,
+ 		break;
+ 	}
+ 
+-	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-	return ret;
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+ static ssize_t iwl_dbgfs_protection_mode_read(struct file *file,
+-- 
+1.7.0.4
 
