@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60020 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300Ab1DKSA0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42372 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996Ab1DEU2y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 14:00:26 -0400
-Date: Mon, 11 Apr 2011 13:58:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
-Message-ID: <20110411175810.GB2511@tuxdriver.com>
-References: <4DA1E4ED.6080804@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DA1E4ED.6080804@gmail.com>
+	Tue, 5 Apr 2011 16:28:54 -0400
+Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own
+ stack.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+In-Reply-To: <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
+References: <1301969218-9878-1-git-send-email-javier@cozybit.com>
+	 <1301987234.3831.2.camel@jlt3.sipsolutions.net>
+	 <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Apr 2011 22:28:52 +0200
+Message-ID: <1302035332.4968.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 10, 2011 at 07:12:13PM +0200, Xose Vazquez Perez wrote:
-> Larry Finger wrote:
-> 
-> > There are three USB IDs supported by staging/rt2870sta that are not in the
-> > mainline driver rt2800usb.
-> > 
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > Cc: Stable <stable@vger.kernel.org>
-> > ---
-> > 
-> > Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
-> > ===================================================================
-> > --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
-> > +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
-> > @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
-> >  	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	{ USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
-> > +	{ USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-> > +	{ USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	/* Draytek */
-> >  	{ USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	/* Edimax */
-> > @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
-> >  	/* Planex */
-> >  	{ USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	{ USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
-> > +	{ USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	/* Quanta */
-> >  	{ USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
-> >  	/* Ralink */
-> 
-> NACK, unless they also be in the windows driver.
-> They were eliminated in recent versions of ralink LiNUX drivers.
+On Tue, 2011-04-05 at 11:05 -0700, Javier Cardona wrote:
 
-OK, I already had this merged since Ivo and Gertjan had ACKed it.
+> We would like to preserve the ability to join an open mesh without a
+> daemon, in the same way that a station can associate with an AP
+> without one.
 
-I need to rebase wireless-2.6 anyway, so I'll drop this one too
-for now.  Please come to a consensus on whether or not these should
-be included and let me know...
+Keep in mind that even the station case on an open or WEP network is
+pretty useless since it will not reconnect if the connection drops, or
+do any sort of roaming.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> With that goal in mind, the alternatives are to
+> duplicate the MPM in userspace or to reuse the in-kernel MPM with only
+> AMPE in userspace.  Considering that AMPE uses MPM frames and state
+> machines, reusing the in-kernel MPM is a significantly lower effort
+> alternative.  Furthermore, while working on AMPE we can also bring the
+> in-kernel MPM up to spec.
+> Of course this requires agreeing on a suitable API between MPM and
+> AMPE.  If you don't like the generic one I proposed we can try to
+> define a mesh-specific alternative.  But first, setting aside the API change
+> proposal, do you object to this AMPE-in-userspace/MPM-in-kernel partition?
+
+After thinking about this more, yes, I think I do object. Not only is
+the design strange with passing frames back and forth, but also it seems
+like a rather slippery slope, at some point I fear somebody will attempt
+to "fake" MPM to take advantage of that kernel code even when it's not
+really fitting.
+
+Since practically speaking, wpa_supplicant is already required for
+almost everything, I don't see any real disadvantages to duplicating the
+MPM state machine there, and starting to deprecate the one in the kernel
+over time with new features only available in userspace one, maybe even
+removing it at some point. I realise this is a little more short-term
+effort, but I think the long-term benefit probably outweighs it.
+
+johannes
+
