@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:52597 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730Ab1DULbY (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52789 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750984Ab1DETEL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 07:31:24 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, pnemavat@marvell.com,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH V3 4/4] mwl8k: Enable life time expiry for tx packets in the hardware
-Date: Thu, 21 Apr 2011 16:34:59 +0530
-Message-Id: <1303383899-3262-4-git-send-email-nishants@marvell.com>
-In-Reply-To: <1303383899-3262-1-git-send-email-nishants@marvell.com>
-References: <1303383899-3262-1-git-send-email-nishants@marvell.com>
+	Tue, 5 Apr 2011 15:04:11 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 5222954017C
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2011 15:08:39 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110405190409.65E1640EB1@repository3.orbit-lab.org>
+Date: Tue,  5 Apr 2011 15:04:09 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tell the firmware to enable the life time expiry of tx packets
-in the hardware. The hardware will now refer to the timestamp
-in every tx packet and decide whether the packet needs to be
-dropped or transmitted.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + c26edee...8f0a591 akpm-end   -> origin/akpm-end  (forced update)
+   78fca1b9..d7c764c akpm-start -> origin/akpm-start
+   fab5279..7031438  history    -> origin/history
+ + 338afa8...d6671a6 master     -> origin/master  (forced update)
+   78fca1b9..d7c764c stable     -> origin/stable
+ * [new tag]         next-20110405 -> next-20110405
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ed5413d..20c06be 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2504,7 +2504,8 @@ static int mwl8k_cmd_set_hw_spec(struct ieee80211_hw *hw)
- 
- 	cmd->flags = cpu_to_le32(MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT |
- 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP |
--				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON);
-+				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON |
-+				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY);
- 	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
- 	cmd->total_rxd = cpu_to_le32(MWL8K_RX_DESCS);
- 
--- 
-1.6.0.3
-
+    857760 - Total upstream lines of code being pulled
