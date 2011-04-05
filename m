@@ -1,377 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:39974 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752781Ab1DMFyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:54:15 -0400
-Received: by pvg12 with SMTP id 12so108068pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:54:15 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15127.8005.789030@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:26:39 +0530
+Received: from mga11.intel.com ([192.55.52.93]:4582 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755527Ab1DERBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:36 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 36/40] ath9k_htc: Add a timer to cleanup WMI events
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/25] iwlagn: remove hw_rev
+Date: Tue,  5 Apr 2011 09:42:08 -0700
+Message-Id: <1302021732-21250-22-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Occasionally, a WMI event would arrive ahead of the TX
-URB completion handler. Discarding these events would exhaust
-the available TX slots, so handle them by running a timer
-cleaning up such events. Also, timeout packets for which TX
-completion events have not arrived.
+The hw_rev variable is used only during init,
+so there's no need to keep it around.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    8 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   12 +++
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  127 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/wmi.c          |    3 +
- drivers/net/wireless/ath/ath9k/wmi.h          |    9 ++
- 6 files changed, 159 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   11 ++++++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 +-
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index b40753c..b413b46 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -262,7 +262,10 @@ struct ath9k_htc_rx {
- 	spinlock_t rxbuflock;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index da515b2..5912ede 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3683,11 +3683,11 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.offchannel_tx_cancel_wait = iwl_mac_offchannel_tx_cancel_wait,
  };
  
--#define ATH9K_HTC_TX_RESERVE   10
-+#define ATH9K_HTC_TX_CLEANUP_INTERVAL 50 /* ms */
-+#define ATH9K_HTC_TX_TIMEOUT_INTERVAL 2500 /* ms */
-+#define ATH9K_HTC_TX_RESERVE 10
-+#define ATH9K_HTC_TX_TIMEOUT_COUNT 20
- #define ATH9K_HTC_TX_THRESHOLD (MAX_TX_BUF_NUM - ATH9K_HTC_TX_RESERVE)
- 
- #define ATH9K_HTC_OP_TX_QUEUES_STOP BIT(0)
-@@ -279,6 +282,7 @@ struct ath9k_htc_tx {
- 	struct sk_buff_head data_vo_queue;
- 	struct sk_buff_head tx_failed;
- 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
-+	struct timer_list cleanup_timer;
- 	spinlock_t tx_lock;
- };
- 
-@@ -287,6 +291,7 @@ struct ath9k_htc_tx_ctl {
- 	u8 epid;
- 	u8 txok;
- 	u8 sta_idx;
-+	unsigned long timestamp;
- };
- 
- static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
-@@ -557,6 +562,7 @@ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
- void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event);
- void ath9k_htc_tx_failed(struct ath9k_htc_priv *priv);
- void ath9k_tx_failed_tasklet(unsigned long data);
-+void ath9k_htc_tx_cleanup_timer(unsigned long data);
- 
- int ath9k_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index afceeaa..0aec259 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -671,7 +671,6 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 	common->priv = priv;
- 	common->debug_mask = ath9k_debug;
- 
--	spin_lock_init(&priv->wmi->wmi_lock);
- 	spin_lock_init(&priv->beacon_lock);
- 	spin_lock_init(&priv->tx.tx_lock);
- 	mutex_init(&priv->mutex);
-@@ -683,6 +682,8 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 	INIT_DELAYED_WORK(&priv->ani_work, ath9k_htc_ani_work);
- 	INIT_WORK(&priv->ps_work, ath9k_ps_work);
- 	INIT_WORK(&priv->fatal_work, ath9k_fatal_work);
-+	setup_timer(&priv->tx.cleanup_timer, ath9k_htc_tx_cleanup_timer,
-+		    (unsigned long)priv);
- 
- 	/*
- 	 * Cache line size is used to size and align various
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ae85cc4..4de3864 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -194,6 +194,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 	ath9k_htc_stop_ani(priv);
- 	ieee80211_stop_queues(priv->hw);
- 
-+	del_timer_sync(&priv->tx.cleanup_timer);
- 	ath9k_htc_tx_drain(priv);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
-@@ -225,6 +226,9 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 	ath9k_htc_vif_reconfig(priv);
- 	ieee80211_wake_queues(priv->hw);
- 
-+	mod_timer(&priv->tx.cleanup_timer,
-+		  jiffies + msecs_to_jiffies(ATH9K_HTC_TX_CLEANUP_INTERVAL));
-+
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
-@@ -251,6 +255,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 
- 	ath9k_htc_ps_wakeup(priv);
- 
-+	del_timer_sync(&priv->tx.cleanup_timer);
- 	ath9k_htc_tx_drain(priv);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
-@@ -301,6 +306,9 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	    !(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
- 		ath9k_htc_vif_reconfig(priv);
- 
-+	mod_timer(&priv->tx.cleanup_timer,
-+		  jiffies + msecs_to_jiffies(ATH9K_HTC_TX_CLEANUP_INTERVAL));
-+
- err:
- 	ath9k_htc_ps_restore(priv);
- 	return ret;
-@@ -937,6 +945,9 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
- 
- 	ieee80211_wake_queues(hw);
- 
-+	mod_timer(&priv->tx.cleanup_timer,
-+		  jiffies + msecs_to_jiffies(ATH9K_HTC_TX_CLEANUP_INTERVAL));
-+
- 	if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE) {
- 		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
- 					   AR_STOMP_LOW_WLAN_WGHT);
-@@ -972,6 +983,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 
- 	tasklet_kill(&priv->rx_tasklet);
- 
-+	del_timer_sync(&priv->tx.cleanup_timer);
- 	ath9k_htc_tx_drain(priv);
- 	ath9k_wmi_event_drain(priv);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index a9b6bb1..86f5ce9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -495,6 +495,8 @@ static inline void ath9k_htc_tx_drainq(struct ath9k_htc_priv *priv,
- 
- void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
+-static void iwl_hw_detect(struct iwl_priv *priv)
++static u32 iwl_hw_detect(struct iwl_priv *priv)
  {
-+	struct ath9k_htc_tx_event *event, *tmp;
-+
- 	spin_lock_bh(&priv->tx.tx_lock);
- 	priv->tx.flags |= ATH9K_HTC_OP_TX_DRAIN;
- 	spin_unlock_bh(&priv->tx.tx_lock);
-@@ -515,6 +517,16 @@ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
- 	ath9k_htc_tx_drainq(priv, &priv->tx.data_vo_queue);
- 	ath9k_htc_tx_drainq(priv, &priv->tx.tx_failed);
- 
-+	/*
-+	 * The TX cleanup timer has already been killed.
-+	 */
-+	spin_lock_bh(&priv->wmi->event_lock);
-+	list_for_each_entry_safe(event, tmp, &priv->wmi->pending_tx_events, list) {
-+		list_del(&event->list);
-+		kfree(event);
-+	}
-+	spin_unlock_bh(&priv->wmi->event_lock);
-+
- 	spin_lock_bh(&priv->tx.tx_lock);
- 	priv->tx.flags &= ~ATH9K_HTC_OP_TX_DRAIN;
- 	spin_unlock_bh(&priv->tx.tx_lock);
-@@ -595,6 +607,7 @@ void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event)
- 	struct wmi_event_txstatus *txs = (struct wmi_event_txstatus *)wmi_event;
- 	struct __wmi_event_txstatus *__txs;
- 	struct sk_buff *skb;
-+	struct ath9k_htc_tx_event *tx_pend;
- 	int i;
- 
- 	for (i = 0; i < txs->cnt; i++) {
-@@ -603,8 +616,26 @@ void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event)
- 		__txs = &txs->txstatus[i];
- 
- 		skb = ath9k_htc_tx_get_packet(priv, __txs);
--		if (!skb)
-+		if (!skb) {
-+			/*
-+			 * Store this event, so that the TX cleanup
-+			 * routine can check later for the needed packet.
-+			 */
-+			tx_pend = kzalloc(sizeof(struct ath9k_htc_tx_event),
-+					  GFP_ATOMIC);
-+			if (!tx_pend)
-+				continue;
-+
-+			memcpy(&tx_pend->txs, __txs,
-+			       sizeof(struct __wmi_event_txstatus));
-+
-+			spin_lock(&priv->wmi->event_lock);
-+			list_add_tail(&tx_pend->list,
-+				      &priv->wmi->pending_tx_events);
-+			spin_unlock(&priv->wmi->event_lock);
-+
- 			continue;
-+		}
- 
- 		ath9k_htc_tx_process(priv, skb, __txs);
- 	}
-@@ -622,6 +653,7 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 
- 	tx_ctl = HTC_SKB_CB(skb);
- 	tx_ctl->txok = txok;
-+	tx_ctl->timestamp = jiffies;
- 
- 	if (!txok) {
- 		skb_queue_tail(&priv->tx.tx_failed, skb);
-@@ -638,6 +670,99 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 	skb_queue_tail(epid_queue, skb);
+-	priv->hw_rev = _iwl_read32(priv, CSR_HW_REV);
+ 	priv->rev_id = priv->pci_dev->revision;
+ 	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", priv->rev_id);
++	return _iwl_read32(priv, CSR_HW_REV);
  }
  
-+static inline bool check_packet(struct ath9k_htc_priv *priv, struct sk_buff *skb)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_tx_ctl *tx_ctl;
-+
-+	tx_ctl = HTC_SKB_CB(skb);
-+
-+	if (time_after(jiffies,
-+		       tx_ctl->timestamp +
-+		       msecs_to_jiffies(ATH9K_HTC_TX_TIMEOUT_INTERVAL))) {
-+		ath_dbg(common, ATH_DBG_XMIT,
-+			"Dropping a packet due to TX timeout\n");
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+static void ath9k_htc_tx_cleanup_queue(struct ath9k_htc_priv *priv,
-+				       struct sk_buff_head *epid_queue)
-+{
-+	bool process = false;
-+	unsigned long flags;
-+	struct sk_buff *skb, *tmp;
-+	struct sk_buff_head queue;
-+
-+	skb_queue_head_init(&queue);
-+
-+	spin_lock_irqsave(&epid_queue->lock, flags);
-+	skb_queue_walk_safe(epid_queue, skb, tmp) {
-+		if (check_packet(priv, skb)) {
-+			__skb_unlink(skb, epid_queue);
-+			__skb_queue_tail(&queue, skb);
-+			process = true;
-+		}
-+	}
-+	spin_unlock_irqrestore(&epid_queue->lock, flags);
-+
-+	if (process) {
-+		skb_queue_walk_safe(&queue, skb, tmp) {
-+			__skb_unlink(skb, &queue);
-+			ath9k_htc_tx_process(priv, skb, NULL);
-+		}
-+	}
-+}
-+
-+void ath9k_htc_tx_cleanup_timer(unsigned long data)
-+{
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) data;
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_tx_event *event, *tmp;
-+	struct sk_buff *skb;
-+
-+	spin_lock(&priv->wmi->event_lock);
-+	list_for_each_entry_safe(event, tmp, &priv->wmi->pending_tx_events, list) {
-+
-+		skb = ath9k_htc_tx_get_packet(priv, &event->txs);
-+		if (skb) {
-+			ath_dbg(common, ATH_DBG_XMIT,
-+				"Found packet for cookie: %d, epid: %d\n",
-+				event->txs.cookie,
-+				MS(event->txs.ts_rate, ATH9K_HTC_TXSTAT_EPID));
-+
-+			ath9k_htc_tx_process(priv, skb, &event->txs);
-+			list_del(&event->list);
-+			kfree(event);
-+			continue;
-+		}
-+
-+		if (++event->count >= ATH9K_HTC_TX_TIMEOUT_COUNT) {
-+			list_del(&event->list);
-+			kfree(event);
-+		}
-+	}
-+	spin_unlock(&priv->wmi->event_lock);
-+
-+	/*
-+	 * Check if status-pending packets have to be cleaned up.
-+	 */
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.mgmt_ep_queue);
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.cab_ep_queue);
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.data_be_queue);
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.data_bk_queue);
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.data_vi_queue);
-+	ath9k_htc_tx_cleanup_queue(priv, &priv->tx.data_vo_queue);
-+
-+	/* Wake TX queues if needed */
-+	ath9k_htc_check_wake_queues(priv);
-+
-+	mod_timer(&priv->tx.cleanup_timer,
-+		  jiffies + msecs_to_jiffies(ATH9K_HTC_TX_CLEANUP_INTERVAL));
-+}
-+
- int ath9k_tx_init(struct ath9k_htc_priv *priv)
- {
- 	skb_queue_head_init(&priv->tx.mgmt_ep_queue);
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 3f5a4d1..697e5af 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -91,9 +91,12 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
- 	wmi->drv_priv = priv;
- 	wmi->stopped = false;
- 	skb_queue_head_init(&wmi->wmi_event_queue);
-+	spin_lock_init(&wmi->wmi_lock);
-+	spin_lock_init(&wmi->event_lock);
- 	mutex_init(&wmi->op_mutex);
- 	mutex_init(&wmi->multi_write_mutex);
- 	init_completion(&wmi->cmd_wait);
-+	INIT_LIST_HEAD(&wmi->pending_tx_events);
- 	tasklet_init(&wmi->wmi_event_tasklet, ath9k_wmi_event_tasklet,
- 		     (unsigned long)wmi);
+ static int iwl_set_hw_params(struct iwl_priv *priv)
+@@ -3738,6 +3738,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
+ 	unsigned long flags;
+ 	u16 pci_cmd, num_mac;
++	u32 hw_rev;
  
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 44b1738..310d94e 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -130,6 +130,12 @@ struct register_write {
- 	__be32 val;
+ 	/************************
+ 	 * 1. Allocating HW data
+@@ -3883,9 +3884,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+ 
+-	iwl_hw_detect(priv);
++	hw_rev = iwl_hw_detect(priv);
+ 	IWL_INFO(priv, "Detected %s, REV=0x%X\n",
+-		priv->cfg->name, priv->hw_rev);
++		priv->cfg->name, hw_rev);
+ 
+ 	/* We disable the RETRY_TIMEOUT register (0x41) to keep
+ 	 * PCI Tx retries from interfering with C3 CPU state */
+@@ -3901,7 +3902,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 * 4. Read EEPROM
+ 	 *****************/
+ 	/* Read the EEPROM */
+-	err = iwl_eeprom_init(priv);
++	err = iwl_eeprom_init(priv, hw_rev);
+ 	if (err) {
+ 		IWL_ERR(priv, "Unable to init EEPROM\n");
+ 		goto out_iounmap;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f004dae..892bcfa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1253,7 +1253,6 @@ struct iwl_priv {
+ 
+ 	/* pci hardware address support */
+ 	void __iomem *hw_base;
+-	u32  hw_rev;
+ 	u8   rev_id;
+ 
+ 	/* microcode/device supports multiple contexts */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index f70d871..4f8c13e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -188,13 +188,13 @@ static void iwl_set_otp_access(struct iwl_priv *priv, enum iwl_access_mode mode)
+ 				CSR_OTP_GP_REG_OTP_ACCESS_MODE);
+ }
+ 
+-static int iwlcore_get_nvm_type(struct iwl_priv *priv)
++static int iwlcore_get_nvm_type(struct iwl_priv *priv, u32 hw_rev)
+ {
+ 	u32 otpgp;
+ 	int nvm_type;
+ 
+ 	/* OTP only valid for CP/PP and after */
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
++	switch (hw_rev & CSR_HW_REV_TYPE_MSK) {
+ 	case CSR_HW_REV_TYPE_NONE:
+ 		IWL_ERR(priv, "Unknown hardware type\n");
+ 		return -ENOENT;
+@@ -394,7 +394,7 @@ u16 iwl_eeprom_query16(const struct iwl_priv *priv, size_t offset)
+  *
+  * NOTE:  This routine uses the non-debug IO access functions.
+  */
+-int iwl_eeprom_init(struct iwl_priv *priv)
++int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
+ {
+ 	__le16 *e;
+ 	u32 gp = iwl_read32(priv, CSR_EEPROM_GP);
+@@ -404,7 +404,7 @@ int iwl_eeprom_init(struct iwl_priv *priv)
+ 	u16 validblockaddr = 0;
+ 	u16 cache_addr = 0;
+ 
+-	priv->nvm_device_type = iwlcore_get_nvm_type(priv);
++	priv->nvm_device_type = iwlcore_get_nvm_type(priv, hw_rev);
+ 	if (priv->nvm_device_type == -ENOENT)
+ 		return -ENOENT;
+ 	/* allocate eeprom */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 35bf54b..6b4343b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -302,7 +302,7 @@ struct iwl_eeprom_ops {
  };
  
-+struct ath9k_htc_tx_event {
-+	int count;
-+	struct __wmi_event_txstatus txs;
-+	struct list_head list;
-+};
-+
- struct wmi {
- 	struct ath9k_htc_priv *drv_priv;
- 	struct htc_target *htc;
-@@ -144,6 +150,9 @@ struct wmi {
- 	u32 cmd_rsp_len;
- 	bool stopped;
  
-+	struct list_head pending_tx_events;
-+	spinlock_t event_lock;
-+
- 	spinlock_t wmi_lock;
- 
- 	atomic_t mwrite_cnt;
+-int iwl_eeprom_init(struct iwl_priv *priv);
++int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev);
+ void iwl_eeprom_free(struct iwl_priv *priv);
+ int  iwl_eeprom_check_version(struct iwl_priv *priv);
+ int  iwl_eeprom_check_sku(struct iwl_priv *priv);
 -- 
-1.7.4.4
+1.7.0.4
 
