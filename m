@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55321 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab1DHRJF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 13:09:05 -0400
+Received: from mail.atheros.com ([12.19.149.2]:25333 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753775Ab1DEPEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:04:31 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:04:06 -0700
+Message-ID: <4D9B2F79.2090606@atheros.com>
+Date: Tue, 5 Apr 2011 20:34:25 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-Date: Fri, 8 Apr 2011 19:09:03 +0200
-Message-ID: <BANLkTi=DiGX=yg9HAxYHwKdOvedJdYC_sw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <4D9B2268.8070902@openwrt.org>
+In-Reply-To: <4D9B2268.8070902@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
->> 3. Device identification
+On Tuesday 05 April 2011 07:38 PM, Felix Fietkau wrote:
+> On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
+>    
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
 >>
->> The cores are identified by manufacturer, core id and revision in your
->> patch. I would not use the revision because 4 out of 5 times a revision
->> change does indicate a hardware change but no change in programming
->> interface. The enumeration data does contain a more selective field
->> indicating the core class (4 bits following the core identifier). I suggest
->> to replace the revision field by this class field.
+>> Add station uptime parameter in debugfs. This will be helpful to get a
+>> measure of stability of connection and also during stress testing.
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>      
+>    
+>> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>> index 999f8fb..08b9f51 100644
+>> --- a/net/mac80211/sta_info.c
+>> +++ b/net/mac80211/sta_info.c
+>> @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>>    	sta->local = local;
+>>    	sta->sdata = sdata;
+>>    	sta->last_rx = jiffies;
+>> +	sta->sta_uptime = jiffies;
+>>
+>>    	ewma_init(&sta->avg_signal, 1024, 8);
+>>
+>>      
+> I think jiffies can easily overflow. Maybe it would be better to get a
+> timeval from the monotonic clock.
+>    
+Thanks, yes thats true and I assumed this will work fine for 49 days 
+assuming 32 bit(please correct me if my calculations are wrong). will 
+the overflow will take place in less than this time?. I will dig more 
+into it by looking at the time val.
+> - Felix
+> .
 >
-> Could you say something more about *class*, please? For my BCM43224 it
-> seems to be 0x0. WIll check BCM4313 in a moment.
-
-Same for BCM4313.
-
-BCM43224:
-axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
-
-BCM4313
-axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
-
--- 
-Rafał
+>    
