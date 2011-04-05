@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38920 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720Ab1DLNSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:56 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/22] ath9k_hw: Configure RF channel freqency for AR9340
-Date: Tue, 12 Apr 2011 18:47:46 +0530
-Message-ID: <1302614273-2063-6-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61269 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753996Ab1DEP3A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:29:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1302015561-21047-20-git-send-email-mmarek@suse.cz>
+References: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
+	<1302015561-21047-20-git-send-email-mmarek@suse.cz>
+Date: Tue, 5 Apr 2011 17:28:59 +0200
+Message-ID: <BANLkTikK+sYFOE4iCL7N8iZLO5bbx4K4FQ@mail.gmail.com>
+Subject: Re: [PATCH 19/34] rt2x00: Drop __TIME__ usage
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Michal Marek <mmarek@suse.cz>
+Cc: linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   23 ++++++++++++++++++++---
- 1 files changed, 20 insertions(+), 3 deletions(-)
+On Tue, Apr 5, 2011 at 4:59 PM, Michal Marek <mmarek@suse.cz> wrote:
+> The kernel already prints its build timestamp during boot, no need to
+> repeat it in random drivers and produce different object files each
+> time.
+>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Michal Marek <mmarek@suse.cz>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 65c52b4..1ec0d72 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -86,14 +86,31 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			channelSel = (freq * 4) / 120;
- 			chan_frac = (((freq * 4) % 120) * 0x20000) / 120;
- 			channelSel = (channelSel << 17) | chan_frac;
-+		} else if (AR_SREV_9340(ah)) {
-+			if (ah->is_clk_25mhz) {
-+				u32 chan_frac;
-+
-+				channelSel = (freq * 2) / 75;
-+				chan_frac = (((freq * 2) % 75) * 0x20000) / 75;
-+				channelSel = (channelSel << 17) | chan_frac;
-+			} else
-+				channelSel = CHANSEL_2G(freq) >> 1;
- 		} else
- 			channelSel = CHANSEL_2G(freq);
- 		/* Set to 2G mode */
- 		bMode = 1;
- 	} else {
--		channelSel = CHANSEL_5G(freq);
--		/* Doubler is ON, so, divide channelSel by 2. */
--		channelSel >>= 1;
-+		if (AR_SREV_9340(ah) && ah->is_clk_25mhz) {
-+			u32 chan_frac;
-+
-+			channelSel = (freq * 2) / 75;
-+			chan_frac = ((freq % 75) * 0x20000) / 75;
-+			channelSel = (channelSel << 17) | chan_frac;
-+		} else {
-+			channelSel = CHANSEL_5G(freq);
-+			/* Doubler is ON, so, divide channelSel by 2. */
-+			channelSel >>= 1;
-+		}
- 		/* Set to 5G mode */
- 		bMode = 0;
- 	}
+Note that this timestamp is not in the kernel log, but in a special
+debug file in debugfs.
+However, I cannot see how a timestamp is actually useful for debugging
+the driver, so
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> index c92db32..66166ef 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> @@ -568,7 +568,6 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
+>        blob->data = data;
+>        data += sprintf(data, "driver:\t%s\n", intf->rt2x00dev->ops->name);
+>        data += sprintf(data, "version:\t%s\n", DRV_VERSION);
+> -       data += sprintf(data, "compiled:\t%s %s\n", __DATE__, __TIME__);
+>        blob->size = strlen(blob->data);
+>
+>        return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
+> --
+> 1.7.4.1
+>
+>
+
+
+
 -- 
-1.7.0.4
-
+---
+Gertjan
