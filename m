@@ -1,154 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52609 "EHLO nbd.name"
+Received: from mail.perches.com ([173.55.12.10]:4531 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752339Ab1DFMjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 08:39:02 -0400
-Message-ID: <4D9C5EE1.3070105@openwrt.org>
-Date: Wed, 06 Apr 2011 14:38:57 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k_hw: Fix instable target power control b/w CCK/OFDM
-References: <1302092092-11896-1-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1302092092-11896-1-git-send-email-rmanoharan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1755043Ab1DEUhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 16:37:16 -0400
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <BANLkTimTmqop-xzFsWr1=2RXv5z6iTre4Q@mail.gmail.com>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	 <1302032137.3969.10.camel@Joe-Laptop>
+	 <BANLkTimTmqop-xzFsWr1=2RXv5z6iTre4Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Apr 2011 13:37:14 -0700
+Message-ID: <1302035834.3969.27.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-04-06 2:14 PM, Rajkumar Manoharan wrote:
-> The problem is that when the attenuation is increased,
-> the rate will start to drop from MCS7 ->  MCS6, and finally
-> will see MCS1 ->  CCK_11Mbps. When the rate is changed b/w
-> CCK and OFDM, it will use register desired_scale to calculate
-> how much tx gain need to change.
->
-> The output power with the same tx gain for CCK and OFDM modulated
-> signals are different. This difference is constant for AR9280
-> but not AR9285/AR9271. It has different PA architecture
-> a constant. So it should be calibrated against this PA
-> characteristic.
->
-> The driver has to read the calibrated values from EEPROM and set
-> the tx power registers accordingly.
->
-> Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
-> ---
-> v2 : removed magic macro and a for loop
->
->   drivers/net/wireless/ath/ath9k/ar9002_phy.h |    6 +++++
->   drivers/net/wireless/ath/ath9k/eeprom.h     |    6 ++++-
->   drivers/net/wireless/ath/ath9k/eeprom_4k.c  |   33 +++++++++++++++++++++++++++
->   3 files changed, 44 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> index 37663db..47780ef 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-> @@ -483,7 +483,11 @@
->   #define AR_PHY_TX_PWRCTRL_INIT_TX_GAIN     0x01F80000
->   #define AR_PHY_TX_PWRCTRL_INIT_TX_GAIN_S   19
->
-> +#define AR_PHY_TX_PWRCTRL8       0xa278
-> +
->   #define AR_PHY_TX_PWRCTRL9       0xa27C
-> +
-> +#define AR_PHY_TX_PWRCTRL10       0xa394
->   #define AR_PHY_TX_DESIRED_SCALE_CCK        0x00007C00
->   #define AR_PHY_TX_DESIRED_SCALE_CCK_S      10
->   #define AR_PHY_TX_PWRCTRL9_RES_DC_REMOVAL  0x80000000
-> @@ -495,6 +499,8 @@
->
->   #define AR_PHY_CH0_TX_PWRCTRL11  0xa398
->   #define AR_PHY_CH1_TX_PWRCTRL11  0xb398
-> +#define AR_PHY_CH0_TX_PWRCTRL12  0xa3dc
-> +#define AR_PHY_CH0_TX_PWRCTRL13  0xa3e0
->   #define AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP   0x0000FC00
->   #define AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP_S 10
->
-> diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-> index bd82447..3e31613 100644
-> --- a/drivers/net/wireless/ath/ath9k/eeprom.h
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-> @@ -436,7 +436,11 @@ struct modal_eep_4k_header {
->   	u8 db2_2:4, db2_3:4;
->   	u8 db2_4:4, reserved:4;
->   #endif
-> -	u8 futureModal[4];
-> +	u8 tx_diversity;
-> +	u8 flc_pwr_thresh;
-> +	u8 bb_scale_smrt_antenna;
-> +#define EEP_4K_BB_DESIRED_SCALE_MASK	0x1f
-> +	u8 futureModal[1];
->   	struct spur_chan spurChans[AR_EEPROM_MODAL_SPURS];
->   } __packed;
->
-> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> index bc77a30..28851b5 100644
-> --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
->   {
->   	struct modal_eep_4k_header *pModal;
->   	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
-> +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
->   	u8 txRxAttenLocal;
->   	u8 ob[5], db1[5], db2[5];
->   	u8 ant_div_control1, ant_div_control2;
-> @@ -1003,6 +1004,38 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
->   				      AR_PHY_SETTLING_SWITCH,
->   				      pModal->swSettleHt40);
->   	}
-> +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
-> +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
-> +				EEP_4K_BB_DESIRED_SCALE_MASK);
-> +		if ((pBase->txGainType == 0)&&  (bb_desired_scale != 0)) {
-> +			u32 pwrctrl, mask;
-> +
-> +			/* AR_PHY_TX_PWRCTRL8 */
-> +			mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
-> +			pwrctrl = mask * bb_desired_scale;
-> +			REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, 0x3fffffff);
-> +
-> +			/* AR_PHY_TX_PWRCTRL9 */
-> +			mask = BIT(0)|BIT(5)|BIT(15);
-> +			pwrctrl = mask * bb_desired_scale;
-> +			REG_RMW(ah, AR_PHY_TX_PWRCTRL9, pwrctrl, 0xf83ff);
-> +
-> +			/* AR_PHY_TX_PWRCTRL10 */
-> +			mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
-> +			pwrctrl = mask * bb_desired_scale;
-> +			REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, 0x3fffffff);
-> +
-The remaining ones below do not look correct to me - you're masking with 
-0x3ff but setting the bits for 0x3fffffff. This does not match what the 
-previous version of your patch did.
-How about grouping the register writes by mask instead?
+On Tue, 2011-04-05 at 22:15 +0200, Rafał Miłecki wrote:
+> 2011/4/5 Joe Perches <joe@perches.com>:
+> > On Tue, 2011-04-05 at 21:57 +0200, Rafał Miłecki wrote:
+> >> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > Just some trivia.
+[]
+> >> diff --git a/drivers/bcmai/core.c b/drivers/bcmai/core.c
+> > []
+> >> +             bcmai_err("Power control not implemented!\n");
+> > []
+> >> diff --git a/include/linux/bcmai/bcmai.h b/include/linux/bcmai/bcmai.h
+> > []
+> >> +#define bcmai_info(fmt, args...)     printk(KERN_INFO "bcmai: " fmt, ##args)
+> >> +#ifdef CONFIG_BCMAI_DEBUG
+> >> +#define bcmai_dbg(fmt, args...)              printk(KERN_DEBUG "bcmai debug: " fmt, ##args)
+> >> +#else
+> >> +#define bcmai_dbg(fmt, args...)              do { } while (0)
+> >> +#endif
+> >> +#define bcmai_err(fmt, args...)              printk(KERN_ERR "bcmai error: " fmt, ##args)
+> > I think there's very little value in prefixing
+> > "error" and "debug" in front of equivalent
+> > KERN_<level> message levels.
+> > I think you might as well just use pr_<level>
+> > and pr_fmt.
+> Hm, I've taken this idea from ssb and b43:
+> [b43err] printk(KERN_ERR "b43-%s ERROR: %pV", ...);
 
-mask: BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25)
-registers: 8, 10, 12
-mask: BIT(0)|BIT(5)|BIT(15)
-registers: 9
-mask: BIT(0)|BIT(5)
-registers: 11, 13
+I think that per module extra text based
+"error/info/whatnot" prefixes are just unnecessary
+duplication to KERN_<level>.
 
-And by the way, to ensure that the mask matches the fields, you can also 
-do something like this:
-REG_RMW(ah, register, mask * bb_desired_scale, mask * 0x1f);
+> [_pll_init] ssb_printk(KERN_ERR PFX "ERROR: PLL init unknown for...
 
-> +			/* AR_PHY_CH0_TX_PWRCTRL11 */
-> +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, 0x3ff);
-> +
-> +			/* AR_PHY_CH0_TX_PWRCTRL12 */
-> +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12,
-> +				pwrctrl, 0x3fffffff);
-> +
-> +			/* AR_PHY_CH0_TX_PWRCTRL13 */
-> +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, 0x3ff);
-> +		}
-> +	}
->   }
->
->   static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+[]
 
-- Felix
+I think ssb_printk and CONFIG_SSB_SILENT is not
+particularly useful.  I think printk support is
+or should be generally enabled or disabled and a
+per module on/off just for embedded module size
+is unnecessary complexity for almost no benefit.
+
+> is there some official coding-style for such a situations?
+
+There's definitely no mandated coding-style for such things
+and I certainly support per module named module_<level>
+prefixing where the module passes some struct pointer
+or another for things like masking printing of specific
+errors or debugging levels.
+
+Like:
+
+#define <modulename>_info(foo, fmt, ...) \
+	pr_info("%s: " fmt, foo->info, ##__VA_ARGS__)
+
+or
+
+__attribute__((format (printf, 2, 3)))
+int <modulename>_info(struct type, const char *fmt, ...)
+{
+	int rtn;
+	struct va_format vaf;
+	va_list args;
+
+	va_start(args, fmt);
+
+        vaf.fmt = fmt;
+        vaf.va = &args;
+
+	rtn = pr_info"%s: %pV", type->info, &vaf);
+
+        va_end(args);
+
+	return rtn;
+}
+
+> >> diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+> > []
+> >> +/* AI core, see drivers/bcmai/ */
+> >> +struct bcmai_device_id {
+> >> +     __u16   manuf;
+> >> +     __u16   id;
+> >> +     __u8    rev;
+> >> +};
+> >
+> > Do some of these structs need __packed declarations?
+> 
+> I was reading about __packed long time ago and it was a little tricky
+> for me. However I don't see anything in mod_devicetable.h using that
+> __packed. Why should we?
+
+I didn't look very hard.  If this struct (or any other)
+is read directly from some device expecting a contiguous
+byte block, then it's likely that it should be declared
+"__packed".
+ 
+cheers, Joe
+
