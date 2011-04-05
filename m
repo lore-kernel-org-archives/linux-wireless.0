@@ -1,244 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45867 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583Ab1DECQ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 22:16:26 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so6482252iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:25 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v7 01/10] nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
-Date: Mon,  4 Apr 2011 18:15:31 -0700
-Message-Id: <1301966140-26080-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:24088 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752228Ab1DENFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 09:05:50 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 06:05:25 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_hw: Fix instable target power control b/w CCK/OFDM
+Date: Tue, 5 Apr 2011 18:35:56 +0530
+Message-ID: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+The problem is that when the attenuation is increased,
+the rate will start to drop from MCS7 -> MCS6, and finally
+will see MCS1 -> CCK_11Mbps. When the rate is changed b/w
+CCK and OFDM, it will use register desired_scale to calculate
+how much tx gain need to change.
 
-To NL80211_MESH_SETUP_IE. This reflects our ability to insert any ie
-into a mesh beacon, not simply path selection ies.
+The output power with the same tx gain for CCK and OFDM modulated
+signals are different. This difference is constant for AR9280
+but not AR9285/AR9271. It has different PA architecture
+a constant. So it should be calibrated against this PA
+characteristic.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+The driver has to read the calibrated values from EEPROM and set
+the tx power registers accordingly.
+
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- include/linux/nl80211.h    |    9 +++++----
- include/net/cfg80211.h     |    8 ++++----
- net/mac80211/cfg.c         |   15 +++++++--------
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/mesh.c        |    6 +++---
- net/mac80211/mesh_plink.c  |    2 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/mesh.c        |    4 ++--
- net/wireless/nl80211.c     |   11 ++++++-----
- 9 files changed, 31 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_phy.h |    6 +++
+ drivers/net/wireless/ath/ath9k/eeprom.h     |    6 +++-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c  |   51 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    6 +++
+ 4 files changed, 68 insertions(+), 1 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3002218..82ef17d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -545,6 +545,7 @@ enum nl80211_commands {
- /* source-level API compatibility */
- #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
- #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
-+#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+index 37663db..47780ef 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+@@ -483,7 +483,11 @@
+ #define AR_PHY_TX_PWRCTRL_INIT_TX_GAIN     0x01F80000
+ #define AR_PHY_TX_PWRCTRL_INIT_TX_GAIN_S   19
  
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -1686,9 +1687,9 @@ enum nl80211_meshconf_params {
-  * vendor specific path metric or disable it to use the default Airtime
-  * metric.
-  *
-- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
-- * element that vendors will use to identify the path selection methods and
-- * metrics in use.
-+ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
-+ * robust security network ie, or a vendor specific information element that
-+ * vendors will use to identify the path selection methods and metrics in use.
-  *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -1697,7 +1698,7 @@ enum nl80211_mesh_setup_params {
- 	__NL80211_MESH_SETUP_INVALID,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
--	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
-+	NL80211_MESH_SETUP_IE,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 60f7876..1714943 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -654,8 +654,8 @@ struct mesh_config {
-  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-- * @vendor_ie: vendor information elements (optional)
-- * @vendor_ie_len: length of vendor information elements
-+ * @ie: vendor information elements (optional)
-+ * @ie_len: length of vendor information elements
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -664,8 +664,8 @@ struct mesh_setup {
- 	u8 mesh_id_len;
- 	u8  path_sel_proto;
- 	u8  path_metric;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3342135..f2f345a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1023,26 +1023,25 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	u8 *new_ie;
- 	const u8 *old_ie;
- 
--	/* first allocate the new vendor information element */
-+	/* allocate information elements */
- 	new_ie = NULL;
--	old_ie = ifmsh->vendor_ie;
-+	old_ie = ifmsh->ie;
- 
--	ifmsh->vendor_ie_len = setup->vendor_ie_len;
--	if (setup->vendor_ie_len) {
--		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
-+	ifmsh->ie_len = setup->ie_len;
-+	if (setup->ie_len) {
-+		new_ie = kmemdup(setup->ie, setup->ie_len,
- 				GFP_KERNEL);
- 		if (!new_ie)
- 			return -ENOMEM;
- 	}
-+	ifmsh->ie = new_ie;
-+	kfree(old_ie);
- 
- 	/* now copy the rest of the setup parameters */
- 	ifmsh->mesh_id_len = setup->mesh_id_len;
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->vendor_ie = new_ie;
--
--	kfree(old_ie);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a404017..d0fafde 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -488,8 +488,8 @@ struct ieee80211_if_mesh {
- 	struct mesh_config mshcfg;
- 	u32 mesh_seqnum;
- 	bool accepting_plinks;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2a57cc0..1c244c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
- 
--	if (sdata->u.mesh.vendor_ie) {
--		int len = sdata->u.mesh.vendor_ie_len;
--		const u8 *data = sdata->u.mesh.vendor_ie;
-+	if (sdata->u.mesh.ie) {
-+		int len = sdata->u.mesh.ie_len;
-+		const u8 *data = sdata->u.mesh.ie;
- 		if (skb_tailroom(skb) > len)
- 			memcpy(skb_put(skb, len), data, len);
- 	}
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 44b5393..c705b20 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		__le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
--			sdata->u.mesh.vendor_ie_len);
-+			sdata->u.mesh.ie_len);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
- 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 081dcaf..38f6c2d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 		/* headroom, head length, tail length and maximum TIM length */
- 		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.vendor_ie_len);
-+				sdata->u.mesh.ie_len);
- 		if (!skb)
- 			goto out;
- 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 73e39c1..0d4b226 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -53,8 +53,8 @@ const struct mesh_config default_mesh_config = {
- const struct mesh_setup default_mesh_setup = {
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
--	.vendor_ie = NULL,
--	.vendor_ie_len = 0,
-+	.ie = NULL,
-+	.ie_len = 0,
- };
- 
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4ebce42..f251089 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,7 +2804,7 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
--	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
-+	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
- 
-@@ -2906,13 +2906,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		 IEEE80211_PATH_METRIC_VENDOR :
- 		 IEEE80211_PATH_METRIC_AIRTIME;
- 
--	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
++#define AR_PHY_TX_PWRCTRL8       0xa278
 +
-+	if (tb[NL80211_MESH_SETUP_IE]) {
- 		struct nlattr *ieattr =
--			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
-+			tb[NL80211_MESH_SETUP_IE];
- 		if (!is_valid_ie_attr(ieattr))
- 			return -EINVAL;
--		setup->vendor_ie = nla_data(ieattr);
--		setup->vendor_ie_len = nla_len(ieattr);
-+		setup->ie = nla_data(ieattr);
-+		setup->ie_len = nla_len(ieattr);
- 	}
+ #define AR_PHY_TX_PWRCTRL9       0xa27C
++
++#define AR_PHY_TX_PWRCTRL10       0xa394
+ #define AR_PHY_TX_DESIRED_SCALE_CCK        0x00007C00
+ #define AR_PHY_TX_DESIRED_SCALE_CCK_S      10
+ #define AR_PHY_TX_PWRCTRL9_RES_DC_REMOVAL  0x80000000
+@@ -495,6 +499,8 @@
  
- 	return 0;
+ #define AR_PHY_CH0_TX_PWRCTRL11  0xa398
+ #define AR_PHY_CH1_TX_PWRCTRL11  0xb398
++#define AR_PHY_CH0_TX_PWRCTRL12  0xa3dc
++#define AR_PHY_CH0_TX_PWRCTRL13  0xa3e0
+ #define AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP   0x0000FC00
+ #define AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP_S 10
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index bd82447..3e31613 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -436,7 +436,11 @@ struct modal_eep_4k_header {
+ 	u8 db2_2:4, db2_3:4;
+ 	u8 db2_4:4, reserved:4;
+ #endif
+-	u8 futureModal[4];
++	u8 tx_diversity;
++	u8 flc_pwr_thresh;
++	u8 bb_scale_smrt_antenna;
++#define EEP_4K_BB_DESIRED_SCALE_MASK	0x1f
++	u8 futureModal[1];
+ 	struct spur_chan spurChans[AR_EEPROM_MODAL_SPURS];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index bc77a30..8f0cd0e 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ {
+ 	struct modal_eep_4k_header *pModal;
+ 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
++	struct base_eep_header_4k *pBase = &eep->baseEepHeader;
+ 	u8 txRxAttenLocal;
+ 	u8 ob[5], db1[5], db2[5];
+ 	u8 ant_div_control1, ant_div_control2;
+@@ -1003,6 +1004,56 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 				      AR_PHY_SETTLING_SWITCH,
+ 				      pModal->swSettleHt40);
+ 	}
++	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
++		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna &
++				EEP_4K_BB_DESIRED_SCALE_MASK);
++		if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
++			u32 pwrctrl, pwrctrl_n;
++
++			/* AR_PHY_TX_PWRCTRL8 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL8);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 5, bb_desired_scale, 5);
++			pwrctrl_n = (pwrctrl_n & 0xc0000000) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_TX_PWRCTRL8, pwrctrl_n);
++
++			/* AR_PHY_TX_PWRCTRL9 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL9);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 10, bb_desired_scale, 1);
++			NSO(pwrctrl, 5, bb_desired_scale, 1);
++			pwrctrl_n = (pwrctrl_n & 0xfff07c00) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_TX_PWRCTRL9, pwrctrl_n);
++
++			/* AR_PHY_TX_PWRCTRL10 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL10);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 5, bb_desired_scale, 5);
++			pwrctrl_n = (pwrctrl_n & 0xc0000000) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_TX_PWRCTRL10, pwrctrl_n);
++
++			/* AR_PHY_CH0_TX_PWRCTRL11 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_CH0_TX_PWRCTRL11);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 5, bb_desired_scale, 1);
++			pwrctrl_n = (pwrctrl_n & 0xfffffc00) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl_n);
++
++			/* AR_PHY_CH0_TX_PWRCTRL12 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_CH0_TX_PWRCTRL12);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 5, bb_desired_scale, 5);
++			pwrctrl_n = (pwrctrl_n & 0xc0000000) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl_n);
++
++			/* AR_PHY_CH0_TX_PWRCTRL13 */
++			pwrctrl_n = REG_READ(ah, AR_PHY_CH0_TX_PWRCTRL13);
++			pwrctrl = (u32) bb_desired_scale;
++			NSO(pwrctrl, 5, bb_desired_scale, 1);
++			pwrctrl_n = (pwrctrl_n & 0xfffffc00) | pwrctrl;
++			REG_WRITE(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl_n);
++		}
++	}
+ }
+ 
+ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index a778b66..fe3a975 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -90,6 +90,12 @@
+ 
+ #define SM(_v, _f)  (((_v) << _f##_S) & _f)
+ #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
++#define NSO(_r, _s, _v, _c)				\
++	do {						\
++		u8 _i;					\
++		for (_i = 0; _i < _c; _i++)		\
++			_r = (((_r) << _s) | _v);	\
++	} while (0)
+ #define REG_RMW_FIELD(_a, _r, _f, _v) \
+ 	REG_RMW(_a, _r, (((_v) << _f##_S) & _f), (_f))
+ #define REG_READ_FIELD(_a, _r, _f) \
 -- 
-1.7.4.1
+1.7.4.3
 
