@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:47236 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755910Ab1DKVHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 17:07:10 -0400
-Date: Mon, 11 Apr 2011 14:06:31 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-Message-ID: <20110411210631.GA28559@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46883 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753693Ab1DEPVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:21:35 -0400
+Received: by wwa36 with SMTP id 36so591244wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:21:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: print actual rx packet size (without padding)
+Date: Tue,  5 Apr 2011 18:21:31 +0300
+Message-Id: <1302016891-19091-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
-> +static void axi_release_core_dev(struct device *dev)
-> +{
-> +	/* Silent lack-of-release warning */
-> +}
+When debugging, reduce the padding size from each rx packet, to
+get the actual packet size (so comparing it against a cap file
+will be easier)
 
-Ok, WTF!!!!
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/rx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-As per the documentation in the kernel I now get to publically mock you
-for trying to be smarter than the kernel.  Why did you think that if you
-just magically gave an empty function to the kernel it would solve the
-problem that THE KERNEL WAS TRYING TO TELL YOU TO FIX IN THE FIRST
-PLACE?
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 2a58149..faf5a1d 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -121,7 +121,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ 
+ 	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
+ 
+-	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s", skb, skb->len,
++	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s", skb,
++		     skb->len - desc->pad_len,
+ 		     beacon ? "beacon" : "");
+ 
+ 	skb_trim(skb, skb->len - desc->pad_len);
+-- 
+1.7.0.4
 
-{sigh}
-
-It's as if no one reads the documentation, or even pays attention to the
-message that the kernel spits out and they think they know better.
-
-Totally and completely unacceptable.
-
-Fix this now.
-
-greg k-h
