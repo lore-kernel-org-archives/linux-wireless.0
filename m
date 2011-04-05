@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37538 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758344Ab1D1Jwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 05:52:50 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 03/10] iwlegacy: simplify init geos
-Date: Thu, 28 Apr 2011 11:51:26 +0200
-Message-Id: <1303984293-6601-3-git-send-email-sgruszka@redhat.com> (sfid-20110428_115259_612938_9865CB37)
-In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
-References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:48895 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751574Ab1DEXWl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 19:22:41 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Jouni Malinen <j@w1.fi>
+Date: Tue, 5 Apr 2011 16:22:31 -0700
+Subject: RE: [PATCH 1/2] mwifiex: return success in set_default_key for
+ WPA/WPA2
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA911F91@SC-VEXCH1.marvell.com>
+References: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
+	 <1301817775.3984.3.camel@jlt3.sipsolutions.net>
+	 <1301819826.3984.9.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FA911ED9@SC-VEXCH1.marvell.com>
+ <1302029584.4968.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302029584.4968.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't need to use conditional as ch->band is already assigned to
-IEEE80211_BAND_5GHZ or IEEE80211_BAND_2GHZ
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-core.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index c1511b1..daf250e 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -211,10 +211,7 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
- 		if (!iwl_legacy_is_channel_valid(ch))
- 			continue;
- 
--		if (iwl_legacy_is_channel_a_band(ch))
--			sband =  &priv->bands[IEEE80211_BAND_5GHZ];
--		else
--			sband =  &priv->bands[IEEE80211_BAND_2GHZ];
-+		sband = &priv->bands[ch->band];
- 
- 		geo_ch = &sband->channels[sband->n_channels++];
- 
--- 
-1.7.1
-
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9o
+YW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFR1
+ZXNkYXksIEFwcmlsIDA1LCAyMDExIDExOjUzIEFNDQo+IFRvOiBCaW5nIFpoYW8NCj4gQ2M6IGxp
+bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9obiBXLiBMaW52aWxsZTsgQW1pdGt1bWFy
+IEthcndhcjsgS2lyYW4gRGl2ZWthcjsgWW9nZXNoIFBvd2FyOw0KPiBNYXJjIFlhbmc7IEZyYW5r
+IEh1YW5nOyBKb3VuaSBNYWxpbmVuDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggMS8yXSBtd2lmaWV4
+OiByZXR1cm4gc3VjY2VzcyBpbiBzZXRfZGVmYXVsdF9rZXkgZm9yIFdQQS9XUEEyDQo+IA0KPiBI
+aSwNCj4gDQo+ID4gPiBPayBKb3VuaSBhbmQgSSBqdXN0IGRpc2N1c3NlZCB0aGlzIGJyaWVmbHks
+IGFuZCBpdCBsb29rcyBsaWtlIHRoZXJlIGlzDQo+ID4gPiBpbmRlZWQgYSBzcGVjaWFsIGNhc2Ug
+d2hlcmUgdGhlIEdUSyBpcyBhbHNvIHNldCBhcyB0aGUgZGVmYXVsdCBUWCBrZXk6DQo+ID4gPiB0
+aGlzIGNhc2UgaXMgd2hlbiB0aGUgc3RhdGlvbiByZXF1ZXN0ZWQgIm5vIHBhaXJ3aXNlIiBvciB3
+aGVuIHRoZSBBUCBkaWQNCj4gPiA+IHRoZSBzYW1lIHRoaW5nIGluIHRoZSBjb25maWd1cmF0aW9u
+Lg0KPiA+DQo+ID4gRnJvbSB0aGUgd3BhX3N1cHBsaWNhbnQgZGVidWcgbG9nIGdlbmVyYXRlZCBi
+eSBBbWl0LCBpdCBzZWVtcyB0aGF0DQo+ID4gc2V0X2RlZmF1bHRfa2V5KCkgaXMgY2FsbGVkIHdo
+aWxlIGluc3RhbGxpbmcgUFRLIHRvIHRoZSBkcml2ZXIuIElzIGl0DQo+ID4gZXhwZWN0ZWQ/DQo+
+ID4NCj4gPiBXUEE6IEluc3RhbGxpbmcgUFRLIHRvIHRoZSBkcml2ZXIuDQo+ID4gV1BBOiBSU0Mg
+LSBoZXhkdW1wKGxlbj02KTogMDAgMDAgMDAgMDAgMDAgMDANCj4gPiB3cGFfZHJpdmVyX25sODAy
+MTFfc2V0X2tleTogaWZpbmRleD0xMiBhbGc9MiBhZGRyPTB4ODBhNzE2OCBrZXlfaWR4PTAgc2V0
+X3R4PTEgc2VxX2xlbj02IGtleV9sZW49MzINCj4gPiAgICBhZGRyPTAwOjFiOjJmOjU1Ojc5Ojdl
+DQo+ID4NCj4gPiBUaGUgY29tcGxldGUgbG9nIGZpbGUgaXMgYXR0YWNoZWQgZm9yIHlvdXIgcmVm
+ZXJlbmNlLg0KPiANCj4gSG1tLiBJJ2xsIG5lZWQgdG8gbG9vayBhdCB0aGF0IGluIG1vcmUgZGV0
+YWlsLiBCdXQgeWVhaCwgc2V0X3R4PTENCj4gaW5kaWNhdGVzIHRoYXQgaXQnbGwgY2FsbCBzZXRf
+ZGVmYXVsdF9rZXkuDQo+IA0KPiA+ID4gSXMgaXQgcG9zc2libGUgdGhhdCB0aGlzIGp1c3QgaGFw
+cGVucyB0byBiZSB0aGUgY2FzZSBpbiB5b3VyIHRlc3RzPyBJdA0KPiA+ID4gbG9va3MgbGlrZSB0
+aGF0IHdvdWxkIGJlIHJhdGhlciBzdHJhbmdlLCBidXQgdGhhdCdzIGEgY29ybmVyIGNhc2Ugd2hl
+cmUNCj4gPiA+IHRoZSBzdXBwbGljYW50IHdvdWxkIHBvc3NpYmx5IHNldCB0aGUgR1RLIGFzIHRo
+ZSBkZWZhdWx0IGtleS4NCj4gPg0KPiA+IE5vdCB0aGUgc2FtZSBjb3JuZXIgY2FzZS4gSW4gb3Vy
+IHRlc3QgYm90aCBwYWlyd2lzZSBhbmQgZ3JvdXB3aXNlIGFyZSBjb25maWd1cmVkLg0KPiA+DQo+
+ID4gPg0KPiA+ID4gSW4gYW55IGNhc2UsIHRoaXMgcGF0Y2ggc2VlbXMgd3JvbmcgaW4gdGhhdCB5
+b3Ugc2hvdWxkIG5ldmVyIHJldHVybg0KPiA+ID4gc3VjY2VzcyBpZiB0aGUgb3BlcmF0aW9uIGFj
+dHVhbGx5IGZhaWxlZC4NCj4gPg0KPiA+IENvdWxkIHlvdSBwbGVhc2UgYWR2aXNlIGhvdyB3ZSBz
+aG91bGQgcmVzb2x2ZSB0aGlzPw0KPiANCj4gV2hhdCBoYXBwZW5zIGlmIHlvdSBqdXN0IHJlamVj
+dCB0aGUgc2V0X2RlZmF1bHRfa2V5IGFuZCByZXR1cm4gLUVJTlZBTA0KPiBpbnN0ZWFkIG9mIDA/
+DQoNCndwYV9zdXBwbGljYW50IGRpc2Nvbm5lY3RzIGlmIHdlIHJldHVybiAtRUlOVkFMIGluIHNl
+dF9kZWZhdWx0X2tleSBoYW5kbGVyLg0KDQpXUEE6IEluc3RhbGxpbmcgUFRLIHRvIHRoZSBkcml2
+ZXIuDQpXUEE6IFJTQyAtIGhleGR1bXAobGVuPTYpOiAwMCAwMCAwMCAwMCAwMCAwMA0Kd3BhX2Ry
+aXZlcl9ubDgwMjExX3NldF9rZXk6IGlmaW5kZXg9MyBhbGc9MiBhZGRyPTB4OWY2ZWVmOCBrZXlf
+aWR4PTAgc2V0X3R4PTEgc2VxX2xlbj02IGtleV9sZW49MzINCiAgIGFkZHI9MDA6NTA6NDM6MjE6
+MDc6ZjgNCm5sODAyMTE6IHNldF9rZXkgZGVmYXVsdCBmYWlsZWQ7IGVycj0tMjIgSW52YWxpZCBh
+cmd1bWVudCkNCldQQTogRmFpbGVkIHRvIHNldCBQVEsgdG8gdGhlIGRyaXZlciAoYWxnPTIga2V5
+bGVuPTMyIGJzc2lkPTAwOjUwOjQzOjIxOjA3OmY4KQ0Kd3BhX2RyaXZlcl9ubDgwMjExX2Rpc2Nv
+bm5lY3QNCg0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
