@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51744 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751189Ab1DAVrm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:47:42 -0400
-Received: by iwn34 with SMTP id 34so3933829iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:47:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1301689736.3842.4.camel@jlt3.sipsolutions.net>
-References: <1301686955-9402-1-git-send-email-lrodriguez@atheros.com>
- <1301687948.3842.0.camel@jlt3.sipsolutions.net> <AANLkTimJ8F-MFcK6raqcSFMsieGCx_gK_Ud1AF7BNPR2@mail.gmail.com>
- <1301689736.3842.4.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 1 Apr 2011 14:47:21 -0700
-Message-ID: <AANLkTimHCgmoWvC_Ou7BsiDjwxF=YB0h4-g=_afYxsQF@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] cfg80211: fix regulatory restore upon user hints
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from cantor.suse.de ([195.135.220.2]:44464 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754149Ab1DEO7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:59:38 -0400
+From: Michal Marek <mmarek@suse.cz>
+To: linux-kbuild@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 19/34] rt2x00: Drop __TIME__ usage
+Date: Tue,  5 Apr 2011 16:59:06 +0200
+Message-Id: <1302015561-21047-20-git-send-email-mmarek@suse.cz>
+In-Reply-To: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
+References: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 1, 2011 at 1:28 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-04-01 at 13:10 -0700, Luis R. Rodriguez wrote:
->>
->> The order should not matter except that we want the queue to be
->> cleared before processing core hints when doing restoration, otherwise
->> the next user hint in the queue can be bogus and it will prevent a
->> restore.
->
-> I'm just thinking this temporary clearing could cause us to reject a
-> reply from CRDA that's coming in at the same time that is due to a user
-> request.
+The kernel already prints its build timestamp during boot, no need to
+repeat it in random drivers and produce different object files each
+time.
 
-Ah, I see, hmm well I tested this with:
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Michal Marek <mmarek@suse.cz>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-iw reg set US; iw reg set XA; iw reg set XB; iw reg set CR; iw dev
-wlan0 disconnect; iw reg set FR;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index c92db32..66166ef 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -568,7 +568,6 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
+ 	blob->data = data;
+ 	data += sprintf(data, "driver:\t%s\n", intf->rt2x00dev->ops->name);
+ 	data += sprintf(data, "version:\t%s\n", DRV_VERSION);
+-	data += sprintf(data, "compiled:\t%s %s\n", __DATE__, __TIME__);
+ 	blob->size = strlen(blob->data);
+ 
+ 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
+-- 
+1.7.4.1
 
-and things were still being processed in the order sent. There is a
-small race between the unlock of the reg_mutex on
-restore_regulatory_settings() down until where we lock the
-regulatory_hint_core() and regulatory_hint_user(). The chances of a
-user regulatory hint coming in between is very low, I could not do it.
-Then there is also a small race of getting a user reg hint on
-restore_regulatory_settings() in between the regulatory_hint_user()
-and the lock of the reg_mutex again for processing old regulatory
-hints, but the worst that can happen in that case is we squeeze in a
-user regulatory hint in before the other older regulatory hints, and
-this is fine.
-
-I cannot see any other cases here where we'd block a request from userspace.
-
-  Luis
