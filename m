@@ -1,75 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58798 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab1DAReC convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45867 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583Ab1DECQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 13:34:02 -0400
-Received: by bwz15 with SMTP id 15so2691179bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 10:34:01 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: bad packets in monitor mode with ar9170 devices
-Date: Fri, 1 Apr 2011 19:33:57 +0200
-Cc: Realman Namingston <realname1776@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <AANLkTi=pWrS9jK1obHLiXu+oLK6YS00fG-YQqzUieYH7@mail.gmail.com> <201104010951.42502.chunkeey@googlemail.com> <AANLkTinKzC66WUwPZBhuuVgyCEPrfd-9tv36QoP4s60F@mail.gmail.com>
-In-Reply-To: <AANLkTinKzC66WUwPZBhuuVgyCEPrfd-9tv36QoP4s60F@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104011933.57597.chunkeey@googlemail.com>
+	Mon, 4 Apr 2011 22:16:26 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so6482252iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:25 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com
+Subject: [PATCH v7 01/10] nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
+Date: Mon,  4 Apr 2011 18:15:31 -0700
+Message-Id: <1301966140-26080-2-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 April 2011 18:54:29 Gábor Stefanik wrote:
-> On Fri, Apr 1, 2011 at 9:51 AM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Friday 01 April 2011 05:12:45 Realman Namingston wrote:
-> >> ar9170-based devices record a fair amount of bad packets in monitor
-> >> mode both with the old ar9170usb and new carl9170 drivers. The packets
-> >> contain random BSSIDs, some measure of additional random data, and
-> >> seem to scale proportional to the amount of traffic occurring on the
-> >> observed channel. This behavior makes the devices rather unattractive
-> >> for use in Kismet and site survey applications.
-> >>
-> >> I assume this is due to a shortcoming of the hardware.. but is there
-> >> any potential fix possible?
-> > no, you misunderstood that completely: it's a shortcoming of kismet!
-> >
-> > quote:
-> > "Usually the wireless adapter is unable to transmit in monitor mode and
-> > is restricted to a single wireless channel, though this is dependent on
-> > the wireless adapter's driver, its firmware, and its chip set's features.
-> > Also, in monitor mode the adapter does not check to see if the cyclic
-> > redundancy check (CRC) values are correct for packets captured, so some
-> > captured packets may be corrupted."
-> >
-> > http://en.wikipedia.org/wiki/Monitor_mode
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> Isn't ar9170 the wireless-N version of zd1211? Because zd1211
-> also had this problem with ZD_SNIFFER_ON. See
-> http://patches.aircrack-ng.org/zd1211rw_inject_2.6.26.patch
+From: Javier Cardona <javier@cozybit.com>
 
-inject? ???
+To NL80211_MESH_SETUP_IE. This reflects our ability to insert any ie
+into a mesh beacon, not simply path selection ies.
 
-quote from include/net/mac80211.h:
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/nl80211.h    |    9 +++++----
+ include/net/cfg80211.h     |    8 ++++----
+ net/mac80211/cfg.c         |   15 +++++++--------
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/mesh.c        |    6 +++---
+ net/mac80211/mesh_plink.c  |    2 +-
+ net/mac80211/tx.c          |    2 +-
+ net/wireless/mesh.c        |    4 ++--
+ net/wireless/nl80211.c     |   11 ++++++-----
+ 9 files changed, 31 insertions(+), 30 deletions(-)
 
-"enum ieee80211_filter_flags - hardware filter flags
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3002218..82ef17d 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -545,6 +545,7 @@ enum nl80211_commands {
+ /* source-level API compatibility */
+ #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
+ #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
++#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -1686,9 +1687,9 @@ enum nl80211_meshconf_params {
+  * vendor specific path metric or disable it to use the default Airtime
+  * metric.
+  *
+- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
+- * element that vendors will use to identify the path selection methods and
+- * metrics in use.
++ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
++ * robust security network ie, or a vendor specific information element that
++ * vendors will use to identify the path selection methods and metrics in use.
+  *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+@@ -1697,7 +1698,7 @@ enum nl80211_mesh_setup_params {
+ 	__NL80211_MESH_SETUP_INVALID,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
+-	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
++	NL80211_MESH_SETUP_IE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 60f7876..1714943 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -654,8 +654,8 @@ struct mesh_config {
+  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
+  * @path_sel_proto: which path selection protocol to use
+  * @path_metric: which metric to use
+- * @vendor_ie: vendor information elements (optional)
+- * @vendor_ie_len: length of vendor information elements
++ * @ie: vendor information elements (optional)
++ * @ie_len: length of vendor information elements
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -664,8 +664,8 @@ struct mesh_setup {
+ 	u8 mesh_id_len;
+ 	u8  path_sel_proto;
+ 	u8  path_metric;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3342135..f2f345a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1023,26 +1023,25 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	u8 *new_ie;
+ 	const u8 *old_ie;
+ 
+-	/* first allocate the new vendor information element */
++	/* allocate information elements */
+ 	new_ie = NULL;
+-	old_ie = ifmsh->vendor_ie;
++	old_ie = ifmsh->ie;
+ 
+-	ifmsh->vendor_ie_len = setup->vendor_ie_len;
+-	if (setup->vendor_ie_len) {
+-		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
++	ifmsh->ie_len = setup->ie_len;
++	if (setup->ie_len) {
++		new_ie = kmemdup(setup->ie, setup->ie_len,
+ 				GFP_KERNEL);
+ 		if (!new_ie)
+ 			return -ENOMEM;
+ 	}
++	ifmsh->ie = new_ie;
++	kfree(old_ie);
+ 
+ 	/* now copy the rest of the setup parameters */
+ 	ifmsh->mesh_id_len = setup->mesh_id_len;
+ 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
+ 	ifmsh->mesh_pp_id = setup->path_sel_proto;
+ 	ifmsh->mesh_pm_id = setup->path_metric;
+-	ifmsh->vendor_ie = new_ie;
+-
+-	kfree(old_ie);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a404017..d0fafde 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -488,8 +488,8 @@ struct ieee80211_if_mesh {
+ 	struct mesh_config mshcfg;
+ 	u32 mesh_seqnum;
+ 	bool accepting_plinks;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
+ };
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 2a57cc0..1c244c0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+ 	*pos++ = 0x00;
+ 
+-	if (sdata->u.mesh.vendor_ie) {
+-		int len = sdata->u.mesh.vendor_ie_len;
+-		const u8 *data = sdata->u.mesh.vendor_ie;
++	if (sdata->u.mesh.ie) {
++		int len = sdata->u.mesh.ie_len;
++		const u8 *data = sdata->u.mesh.ie;
+ 		if (skb_tailroom(skb) > len)
+ 			memcpy(skb_put(skb, len), data, len);
+ 	}
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 44b5393..c705b20 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		__le16 reason) {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+-			sdata->u.mesh.vendor_ie_len);
++			sdata->u.mesh.ie_len);
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
+ 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 081dcaf..38f6c2d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 
+ 		/* headroom, head length, tail length and maximum TIM length */
+ 		skb = dev_alloc_skb(local->tx_headroom + 400 +
+-				sdata->u.mesh.vendor_ie_len);
++				sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 73e39c1..0d4b226 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -53,8 +53,8 @@ const struct mesh_config default_mesh_config = {
+ const struct mesh_setup default_mesh_setup = {
+ 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
+ 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
+-	.vendor_ie = NULL,
+-	.vendor_ie_len = 0,
++	.ie = NULL,
++	.ie_len = 0,
+ };
+ 
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4ebce42..f251089 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2804,7 +2804,7 @@ static const struct nla_policy
+ 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
+-	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
++	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 		.len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+@@ -2906,13 +2906,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 		 IEEE80211_PATH_METRIC_VENDOR :
+ 		 IEEE80211_PATH_METRIC_AIRTIME;
+ 
+-	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
++
++	if (tb[NL80211_MESH_SETUP_IE]) {
+ 		struct nlattr *ieattr =
+-			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
++			tb[NL80211_MESH_SETUP_IE];
+ 		if (!is_valid_ie_attr(ieattr))
+ 			return -EINVAL;
+-		setup->vendor_ie = nla_data(ieattr);
+-		setup->vendor_ie_len = nla_len(ieattr);
++		setup->ie = nla_data(ieattr);
++		setup->ie_len = nla_len(ieattr);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.4.1
 
-These flags determine what the filter in hardware should be
-programmed to let through and what should not be passed to the
-stack. >>>>> It is always safe to pass more frames than requested,
-but this has negative impact on power consumption. <<<<<"
-
-so, if you don't want the garbage then don't enable monitor mode.
-OR set the appropriate FIF_ filter flags and hope the mntr setting
-doesn't affect the way how the hardware/firmware/driver/stack
-marks "bad" frames.
-
-Regards,
-	Chr
