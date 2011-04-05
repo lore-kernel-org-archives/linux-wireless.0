@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3837 "EHLO mms2.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:25260 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244Ab1DJOg3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 10:36:29 -0400
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Pavel Machek" <pavel@ucw.cz>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Michael B?sch" <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
- <op.vtisojsk3ri7v4@arend-laptop> <20110410080159.GB2798@ucw.cz>
- <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
- <20110410082420.GA1460@localhost.ucw.cz>
- <BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
- <op.vtpt6v173ri7v4@arend-laptop>
- <BANLkTimgJ--19=q-od7S8uj6T6AcXrtg7w@mail.gmail.com>
-Date: Sun, 10 Apr 2011 16:36:10 +0200
+	id S1754102Ab1DEO7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:59:36 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 07:59:11 -0700
+Message-ID: <4D9B2E53.7080209@atheros.com>
+Date: Tue, 5 Apr 2011 20:29:31 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtp76iua3ri7v4@arend-laptop>
-In-Reply-To: <BANLkTimgJ--19=q-od7S8uj6T6AcXrtg7w@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com>	 <201104051604.16143.helmut.schaa@googlemail.com>	 <4D9B28D0.7020306@atheros.com> <1302015045.4968.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302015045.4968.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 10 Apr 2011 13:32:43 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
-
-> W dniu 10 kwietnia 2011 11:33 użytkownik Arend van Spriel
-> <arend@broadcom.com> napisał:
->> On Sun, 10 Apr 2011 10:30:53 +0200, Rafał Miłecki <zajec5@gmail.com>  
->> wrote:
->>
->>> 2011/4/10 Pavel Machek <pavel@ucw.cz>:
->>>>>
->>>>> >> >+config BCMAI_HOST_PCI_POSSIBLE
->>>>> >> >+       bool
->>>>> >> >+       depends on BCMAI && PCI = y
->>>>> >> >+       default y
->>>>> >> >+
->>>>> >> >+config BCMAI_HOST_PCI
->>>>> >> >+       bool "Support for AI on PCI-host bus"
->>>>> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
->>>>> >> >+
->>
->> Hi Rafał,
->>
->> Could use term AMBA AXI instead which gives enough hits on Google to  
->> hint
->> interested people to more in depth information.
->>
->> FYI: AXI = Advanced eXtensible Interface
->>        High-speed interconnect for chip cores ( provides higher
->> bursts/transfers than predecessor AHB = Advanced High-performance Bus
->> (AHB)).
+On Tuesday 05 April 2011 08:20 PM, Johannes Berg wrote:
+> On Tue, 2011-04-05 at 20:06 +0530, Mohammed Shafi wrote:
+>    
+>> On Tuesday 05 April 2011 07:34 PM, Helmut Schaa wrote:
+>>      
+>>> Am Dienstag, 5. April 2011 schrieb Mohammed Shafi Shajakhan:
+>>>
+>>>        
+>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>
+>>>> Add station uptime parameter in debugfs. This will be helpful to get a
+>>>> measure of stability of connection and also during stress testing.
+>>>>
+>>>>          
+>>> It might even make sense to make this available through nl80211. At least
+>>> in AP mode it would be interesting to see how long each STA is already
+>>> connected.
+>>>
+>>> Helmut
+>>>
+>>>        
+>> Thanks, will do it  once the maintainers are ok with this patch.
+>>      
+> Fine with me, but you should probably not call it "uptime" but rather
+> "connected_time" or something, and address Felix's point.
+>    
+Thanks for the review, I will look to address both the things.
+thanks,
+shafi
+> johannes
 >
-> "If you check PATCH V2, we renamed this to (AMBA) AXI"
->
-
-Geez, I totally missed Pavel was commenting on the first patch. Sorry,  
-Rafał.
-
-Gr. AvS
--- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
-
+>    
