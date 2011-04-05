@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58319 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317Ab1DMVTu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 17:19:50 -0400
+Received: from nbd.name ([46.4.11.11]:36260 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077Ab1DEPZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:25:32 -0400
+Message-ID: <4D9B346A.5000601@openwrt.org>
+Date: Tue, 05 Apr 2011 17:25:30 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1302729243.8479.1.camel@dev.znau.edu.ua>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	<20110413163113.GA24015@kroah.com>
-	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-	<1302726703.8015.1.camel@dev.znau.edu.ua>
-	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
-	<1302727516.8015.9.camel@dev.znau.edu.ua>
-	<BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
-	<1302729243.8479.1.camel@dev.znau.edu.ua>
-Date: Wed, 13 Apr 2011 23:19:48 +0200
-Message-ID: <BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Mohammed Shafi <mshajakhan@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <4D9B2268.8070902@openwrt.org> <4D9B2F79.2090606@atheros.com>
+In-Reply-To: <4D9B2F79.2090606@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/13 George Kashperko <george@znau.edu.ua>:
->> I had no idea what you were referring to. We do not dig into PCIe
->> functions yet, so I believe for now we need this "if".
-> You are already deep inside. Your host code drives pci function.
+On 2011-04-05 5:04 PM, Mohammed Shafi wrote:
+> On Tuesday 05 April 2011 07:38 PM, Felix Fietkau wrote:
+>>  On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
+>>
+>>>  From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>
+>>>  Add station uptime parameter in debugfs. This will be helpful to get a
+>>>  measure of stability of connection and also during stress testing.
+>>>
+>>>  Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>
+>>
+>>>  diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>>>  index 999f8fb..08b9f51 100644
+>>>  --- a/net/mac80211/sta_info.c
+>>>  +++ b/net/mac80211/sta_info.c
+>>>  @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>>>     	sta->local = local;
+>>>     	sta->sdata = sdata;
+>>>     	sta->last_rx = jiffies;
+>>>  +	sta->sta_uptime = jiffies;
+>>>
+>>>     	ewma_init(&sta->avg_signal, 1024, 8);
+>>>
+>>>
+>>  I think jiffies can easily overflow. Maybe it would be better to get a
+>>  timeval from the monotonic clock.
+>>
+> Thanks, yes thats true and I assumed this will work fine for 49 days
+> assuming 32 bit(please correct me if my calculations are wrong). will
+> the overflow will take place in less than this time?.
+Yes, but there are people that deploy point to point links that can last 
+longer than that ;)
 
-But I don't use multiple PCIe functions, do not focus on that at all.
+> I will dig more into it by looking at the time val.
+Thanks.
 
--- 
-Rafał
+- Felix
