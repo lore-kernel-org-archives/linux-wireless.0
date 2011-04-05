@@ -1,114 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3588 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753700Ab1DRNcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:32:06 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 4/6] staging: brcm80211: provide TSF value in receive
- status
-Date: Mon, 18 Apr 2011 15:31:49 +0200
-Message-ID: <1303133511-8300-4-git-send-email-arend@broadcom.com>
-In-Reply-To: <1303133511-8300-1-git-send-email-arend@broadcom.com>
-References: <1303133511-8300-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63892 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846Ab1DECHF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Apr 2011 22:07:05 -0400
+Received: by iwn34 with SMTP id 34so6341997iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:07:03 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own stack.
+Date: Mon,  4 Apr 2011 19:06:58 -0700
+Message-Id: <1301969218-9878-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Packets passed to the mac80211 stack have a mactime field in the
-receive status indicating the actual time it was received by the
-phy radio. It was not (properly) filled in before this change.
+This is useful for implementing frame protection in userspace. The kernel may
+request a userspace daemon to verify a frame (sent to userspace via
+cfg80211_rx_mgmt()).  The userspace daemon can then pass back the
+verified/unprotected frame to the stack for further processing (via a
+self-addressed frame sent with cfg80211_mlme_mgmt_tx())
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
+We are using this for our implementation authenticated peering.  11s defines
+two versions of mesh peering, the non-secure mesh peering management (MPM) and
+the Authenticated Mesh Peering Exchange (AMPE).  The latter is based on the
+exact same state machine as MPM.  It is really convenient to use the in-kernel
+MPM with a minimal userspace daemon to add the security bits introduced by
+AMPE.  This way both secured and open mesh networks can use exact same peering
+code.
+
+What do you think... will this fly?
+
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_main.c |   50 ++++++++++++++++++++----
- 1 files changed, 41 insertions(+), 9 deletions(-)
+ net/mac80211/cfg.c  |   12 +++++++++++-
+ net/wireless/mlme.c |    3 ++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index 0eb1040..34584be 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -282,6 +282,7 @@ static void wlc_compute_ofdm_plcp(ratespec_t rate, uint length, u8 *plcp);
- static void wlc_compute_mimo_plcp(ratespec_t rate, uint length, u8 *plcp);
- static u16 wlc_compute_frame_dur(struct wlc_info *wlc, ratespec_t rate,
- 				    u8 preamble_type, uint next_frag_len);
-+static u64 wlc_recover_tsf64(struct wlc_info *wlc, struct wlc_d11rxhdr *rxh);
- static void wlc_recvctl(struct wlc_info *wlc,
- 			d11rxhdr_t *rxh, struct sk_buff *p);
- static uint wlc_calc_frame_len(struct wlc_info *wlc, ratespec_t rate,
-@@ -6472,25 +6473,56 @@ void wlc_bcn_li_upd(struct wlc_info *wlc)
- 			      (wlc->bcn_li_dtim << 8) | wlc->bcn_li_bcn);
- }
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5548a4c..8b6ff5a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1773,6 +1773,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+ 		    IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 	bool is_offchan = false;
++	bool is_to_self = false;
  
-+/*
-+ * recover 64bit TSF value from the 16bit TSF value in the rx header
-+ * given the assumption that the TSF passed in header is within 65ms
-+ * of the current tsf.
-+ *
-+ * 6       5       4       4       3       2       1
-+ * 3.......6.......8.......0.......2.......4.......6.......8......0
-+ * |<---------- tsf_h ----------->||<--- tsf_l -->||<-RxTSFTime ->|
-+ *
-+ * The RxTSFTime are the lowest 16 bits and provided by the ucode. The
-+ * tsf_l is filled in by wlc_bmac_recv, which is done earlier in the
-+ * receive call sequence after rx interrupt. Only the higher 16 bits
-+ * are used. Finally, the tsf_h is read from the tsf register.
-+ */
-+static u64 wlc_recover_tsf64(struct wlc_info *wlc, struct wlc_d11rxhdr *rxh)
-+{
-+	u32 tsf_h, tsf_l;
-+	u16 rx_tsf_0_15, rx_tsf_16_31;
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+@@ -1792,6 +1793,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	if (is_offchan && !offchan)
+ 		return -EBUSY;
+ 
++	is_to_self = !memcmp(mgmt->da, dev->dev_addr, ETH_ALEN);
 +
-+	wlc_bmac_read_tsf(wlc->hw, &tsf_l, &tsf_h);
-+
-+	rx_tsf_16_31 = (u16)(tsf_l >> 16);
-+	rx_tsf_0_15 = rxh->rxhdr.RxTSFTime;
-+
-+	/*
-+	 * a greater tsf time indicates the low 16 bits of
-+	 * tsf_l wrapped, so decrement the high 16 bits.
-+	 */
-+	if ((u16)tsf_l < rx_tsf_0_15) {
-+		rx_tsf_16_31 -= 1;
-+		if (rx_tsf_16_31 == 0xffff)
-+			tsf_h -= 1;
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_AP:
+@@ -1799,7 +1802,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		if (!ieee80211_is_action(mgmt->frame_control) ||
+-		    mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)
++		    mgmt->u.action.category == WLAN_CATEGORY_PUBLIC ||
++		    is_to_self)
+ 			break;
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, mgmt->da);
+@@ -1827,6 +1831,12 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	*cookie = (unsigned long) skb;
+ 
++	if (is_to_self) {
++		ieee80211_rx_irqsafe(wiphy_to_ieee80211_hw(wiphy),
++				skb);
++		return 0;
 +	}
 +
-+	return ((u64)tsf_h << 32) | (((u32)rx_tsf_16_31 << 16) + rx_tsf_0_15);
-+}
-+
- static void
- prep_mac80211_status(struct wlc_info *wlc, d11rxhdr_t *rxh, struct sk_buff *p,
- 		     struct ieee80211_rx_status *rx_status)
- {
--	u32 tsf_l, tsf_h;
- 	wlc_d11rxhdr_t *wlc_rxh = (wlc_d11rxhdr_t *) rxh;
- 	int preamble;
- 	int channel;
- 	ratespec_t rspec;
- 	unsigned char *plcp;
+ 	if (is_offchan && local->ops->offchannel_tx) {
+ 		int ret;
  
--#if 0
--	/* Clearly, this is bogus -- reading the TSF now is wrong */
--	wlc_read_tsf(wlc, &tsf_l, &tsf_h);	/* mactime */
--	rx_status->mactime = tsf_h;
--	rx_status->mactime <<= 32;
--	rx_status->mactime |= tsf_l;
--	rx_status->flag |= RX_FLAG_MACTIME_MPDU; /* clearly wrong */
--#endif
-+	/* fill in TSF and flag its presence */
-+	rx_status->mactime = wlc_recover_tsf64(wlc, wlc_rxh);
-+	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 493b939..eb00d60 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -983,7 +983,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			return err;
+ 	}
  
- 	channel = WLC_CHAN_CHANNEL(rxh->RxChan);
+-	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
++	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0 &&
++		memcmp(mgmt->da, dev->dev_addr, ETH_ALEN) != 0)
+ 		return -EINVAL;
  
+ 	/* Transmit the Action frame as requested by user space */
 -- 
 1.7.1
-
 
