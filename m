@@ -1,68 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40132 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755592Ab1DDUin convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 16:38:43 -0400
-Received: by wya21 with SMTP id 21so5019766wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 13:38:41 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:25462 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753991Ab1DEPKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 11:10:00 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:09:36 -0700
+Date: Tue, 5 Apr 2011 20:40:06 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_hw: Fix instable target power control b/w CCK/OFDM
+Message-ID: <20110405151006.GA4837@vmraj-lnx.users.atheros.com>
+References: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
+ <4D9B1BB6.1090507@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1301919673.3870.10.camel@jlt3.sipsolutions.net>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-	<1301919673.3870.10.camel@jlt3.sipsolutions.net>
-Date: Mon, 4 Apr 2011 13:38:41 -0700
-Message-ID: <BANLkTim8wWf08fqRzG3F9KfMiq0WGzq0WQ@mail.gmail.com>
-Subject: Re: [PATCH v6 00/10] {mac|nl}80211: mesh security enhancements
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4D9B1BB6.1090507@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 4, 2011 at 5:21 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-04-01 at 13:35 -0700, Thomas Pedersen wrote:
->> v6:
->> - remove unneeded bits (Johannes)
->> - mesh capabilities returned for a wiphy & check if wiphy supports mesh
->>   authentication before joining a secure mesh (Johannes)
->>
->> Javier Cardona (9):
->>   nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
->>   nl80211: Add userspace authentication  flag to mesh setup
->>   mac80211: ignore peers if security is enabled for this mesh
->>   nl80211: let userspace authenticate stations
->>   mac80211: Let user space receive and send mesh auth/deauth frames
->>   mac80211: ignore peer link requests from unauthenticated stations.
->>   mac80211: Perform PLINK_ACTION on new station
->>   nl80211: New notification to discover mesh peer candidates.
->>   mac80211: send notification on new peer candidate for our secure mesh
->>
->> Thomas Pedersen (1):
->>   nl80211: report mesh capabilities
+On Tue, Apr 05, 2011 at 07:10:06PM +0530, Felix Fietkau wrote:
+> On 2011-04-05 3:05 PM, Rajkumar Manoharan wrote:
+> > The problem is that when the attenuation is increased,
+> > the rate will start to drop from MCS7 ->  MCS6, and finally
+> > will see MCS1 ->  CCK_11Mbps. When the rate is changed b/w
+> > CCK and OFDM, it will use register desired_scale to calculate
+> > how much tx gain need to change.
+> >
+> > The output power with the same tx gain for CCK and OFDM modulated
+> > signals are different. This difference is constant for AR9280
+> > but not AR9285/AR9271. It has different PA architecture
+> > a constant. So it should be calibrated against this PA
+> > characteristic.
+> >
+> > The driver has to read the calibrated values from EEPROM and set
+> > the tx power registers accordingly.
+> >
+> > Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
+> > ---
+> > diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > index bc77a30..8f0cd0e 100644
+> > --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >   {
+> >   	struct modal_eep_4k_header *pModal;
+> >   	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
+> > +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
+> >   	u8 txRxAttenLocal;
+> >   	u8 ob[5], db1[5], db2[5];
+> >   	u8 ant_div_control1, ant_div_control2;
+> > @@ -1003,6 +1004,56 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >   				      AR_PHY_SETTLING_SWITCH,
+> >   				      pModal->swSettleHt40);
+> >   	}
+> > +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
+> > +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
+> > +				EEP_4K_BB_DESIRED_SCALE_MASK);
+> > +		if ((pBase->txGainType == 0)&&  (bb_desired_scale != 0)) {
+> > +			u32 pwrctrl, pwrctrl_n;
+> > +
+> > +			/* AR_PHY_TX_PWRCTRL8 */
+> > +			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL8);
+> > +			pwrctrl = (u32) bb_desired_scale;
+> > +			NSO(pwrctrl, 5, bb_desired_scale, 5);
+> I think the NSO macro is somewhat confusing. How about something like 
+> this instead, to make it more readable:
+> 
+> u32 mask;
+> mask = BIT(0) | BIT(5) | BIT(10) | BIT(15) | BIT(20);
+> pwrctl = mask * bb_desired_scale;
 >
-> I don't believe this patchset works, since mac80211 doesn't set
-> @WIPHY_FLAG_MESH_AUTH afaict.
->
+NSO - N times Shift and OR. Sounds reasonable. isn't it?
 
-in patch 10/10:
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0ae9b22..55cc521 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -761,6 +761,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-       /* mesh depends on Kconfig, but drivers should set it if they want */
-       local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
- #endif
-+       /* if the underlying driver supports mesh, mac80211 will (at least)
-+        * provide routing of mesh authentication frames to userspace */
-+       if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
-+               local->hw.wiphy->flags |= WIPHY_FLAG_MESH_AUTH;
-
-       /* mac80211 supports control port protocol changing */
-       local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
-
-> johannes
->
->
+--
+Rajkumar
