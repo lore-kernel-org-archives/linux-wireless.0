@@ -1,85 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58841 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572Ab1DMFwS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:52:18 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so275049iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:52:18 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15011.484382.666651@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:24:43 +0530
+Received: from mga11.intel.com ([192.55.52.93]:21335 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755455Ab1DERBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:32 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 17/40] ath9k_htc: Sync struct ath9k_htc_target_vif with FW
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/25] iwlagn: verify specific ucode
+Date: Tue,  5 Apr 2011 09:41:56 -0700
+Message-Id: <1302021732-21250-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+When we loaded a ucode, there's no point in
+checking any one that is present, we know
+which one is supposed to be present so also
+verify that it is exactly the right one.
+
+That also simplifies the code and makes it
+faster since it doesn't have to check all.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   12 +++---------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++++----
- 2 files changed, 7 insertions(+), 13 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   51 ++++++--------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    2 +-
+ 3 files changed, 14 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index e096624..f74f45f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -117,17 +117,11 @@ struct ath9k_htc_cap_target {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 2205b60..c7b9b83 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -311,7 +311,7 @@ void iwlagn_init_alive_start(struct iwl_priv *priv)
+ 	/* initialize uCode was loaded... verify inst image.
+ 	 * This is a paranoid check, because we would not have gotten the
+ 	 * "initialize" alive if code weren't properly loaded.  */
+-	if (iwl_verify_ucode(priv)) {
++	if (iwl_verify_ucode(priv, &priv->ucode_init)) {
+ 		/* Runtime instruction load was bad;
+ 		 * take it all the way back down so we can try again */
+ 		IWL_DEBUG_INFO(priv, "Bad \"initialize\" uCode load.\n");
+@@ -539,8 +539,11 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
+  *   using sample data 100 bytes apart.  If these sample points are good,
+  *   it's a pretty good bet that everything between them is good, too.
+  */
+-static int iwlcore_verify_inst_sparse(struct iwl_priv *priv, __le32 *image, u32 len)
++static int iwlcore_verify_inst_sparse(struct iwl_priv *priv,
++				      struct fw_desc *fw_desc)
+ {
++	__le32 *image = (__le32 *)fw_desc->v_addr;
++	u32 len = fw_desc->len;
+ 	u32 val;
+ 	u32 i;
  
- struct ath9k_htc_target_vif {
- 	u8 index;
--	u8 des_bssid[ETH_ALEN];
--	__be32 opmode;
-+	u8 opmode;
- 	u8 myaddr[ETH_ALEN];
--	u8 bssid[ETH_ALEN];
--	u32 flags;
--	u32 flags_ext;
--	u16 ps_sta;
--	__be16 rtsthreshold;
- 	u8 ath_cap;
--	u8 node;
--	s8 mcast_rate;
-+	__be16 rtsthreshold;
-+	u8 pad;
- } __packed;
+@@ -561,8 +564,10 @@ static int iwlcore_verify_inst_sparse(struct iwl_priv *priv, __le32 *image, u32
+ }
  
- #define ATH_HTC_STA_AUTH  0x0001
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 9bb20f3..4002267 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -349,7 +349,7 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
+ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+-				    __le32 *image, u32 len)
++				    struct fw_desc *fw_desc)
+ {
++	__le32 *image = (__le32 *)fw_desc->v_addr;
++	u32 len = fw_desc->len;
+ 	u32 val;
+ 	u32 offs;
+ 	int errors = 0;
+@@ -592,47 +597,15 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+  * iwl_verify_ucode - determine which instruction image is in SRAM,
+  *    and verify its contents
+  */
+-int iwl_verify_ucode(struct iwl_priv *priv)
++int iwl_verify_ucode(struct iwl_priv *priv, struct fw_desc *fw_desc)
+ {
+-	__le32 *image;
+-	u32 len;
+-	int ret;
+-
+-	/* Try bootstrap */
+-	image = (__le32 *)priv->ucode_boot.v_addr;
+-	len = priv->ucode_boot.len;
+-	ret = iwlcore_verify_inst_sparse(priv, image, len);
+-	if (!ret) {
++	if (!iwlcore_verify_inst_sparse(priv, fw_desc)) {
+ 		IWL_DEBUG_INFO(priv, "Bootstrap uCode is good in inst SRAM\n");
+ 		return 0;
+ 	}
  
--	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
-+	hvif.opmode = HTC_M_MONITOR;
- 	hvif.index = ffz(priv->vif_slot);
+-	/* Try initialize */
+-	image = (__le32 *)priv->ucode_init.v_addr;
+-	len = priv->ucode_init.len;
+-	ret = iwlcore_verify_inst_sparse(priv, image, len);
+-	if (!ret) {
+-		IWL_DEBUG_INFO(priv, "Initialize uCode is good in inst SRAM\n");
+-		return 0;
+-	}
+-
+-	/* Try runtime/protocol */
+-	image = (__le32 *)priv->ucode_code.v_addr;
+-	len = priv->ucode_code.len;
+-	ret = iwlcore_verify_inst_sparse(priv, image, len);
+-	if (!ret) {
+-		IWL_DEBUG_INFO(priv, "Runtime uCode is good in inst SRAM\n");
+-		return 0;
+-	}
+-
+-	IWL_ERR(priv, "NO VALID UCODE IMAGE IN INSTRUCTION SRAM!!\n");
+-
+-	/* Since nothing seems to match, show first several data entries in
+-	 * instruction SRAM, so maybe visual inspection will give a clue.
+-	 * Selection of bootstrap image (vs. other images) is arbitrary. */
+-	image = (__le32 *)priv->ucode_boot.v_addr;
+-	len = priv->ucode_boot.len;
+-	iwl_print_mismatch_inst(priv, image, len);
++	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
  
- 	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
-@@ -1039,13 +1039,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
++	iwl_print_mismatch_inst(priv, fw_desc);
+ 	return -EIO;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 18d6d66..8fd9a60 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2239,7 +2239,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 	/* Initialize uCode has loaded Runtime uCode ... verify inst image.
+ 	 * This is a paranoid check, because we would not have gotten the
+ 	 * "runtime" alive if code weren't properly loaded.  */
+-	if (iwl_verify_ucode(priv)) {
++	if (iwl_verify_ucode(priv, &priv->ucode_code)) {
+ 		/* Runtime instruction load was bad;
+ 		 * take it all the way back down so we can try again */
+ 		IWL_DEBUG_INFO(priv, "Bad runtime uCode load.\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 4a0a46e..d2953bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -152,7 +152,7 @@ void iwlagn_rx_calib_complete(struct iwl_priv *priv,
+ 			   struct iwl_rx_mem_buffer *rxb);
+ void iwlagn_init_alive_start(struct iwl_priv *priv);
+ int iwlagn_alive_notify(struct iwl_priv *priv);
+-int iwl_verify_ucode(struct iwl_priv *priv);
++int iwl_verify_ucode(struct iwl_priv *priv, struct fw_desc *fw_desc);
+ void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwlagn_send_prio_tbl(struct iwl_priv *priv);
  
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		hvif.opmode = cpu_to_be32(HTC_M_STA);
-+		hvif.opmode = HTC_M_STA;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
-+		hvif.opmode = HTC_M_IBSS;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
-+		hvif.opmode = HTC_M_HOSTAP;
- 		break;
- 	default:
- 		ath_err(common,
 -- 
-1.7.4.4
+1.7.0.4
 
