@@ -1,27 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:38773 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368Ab1DOHEp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077Ab1DEPUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 03:04:45 -0400
-Received: by pzk9 with SMTP id 9so823235pzk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 00:04:44 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19879.61084.376771.7406@gargle.gargle.HOWL>
-Date: Fri, 15 Apr 2011 12:37:08 +0530
+	Tue, 5 Apr 2011 11:20:24 -0400
+Subject: Re: [RFC] mac80211: prevent authentication on channel mismatch w/
+ hw conf
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/2] ath9k_htc: Add debugfs support to change debug mask
-In-Reply-To: <1302850733-23388-1-git-send-email-rmanoharan@atheros.com>
-References: <1302850733-23388-1-git-send-email-rmanoharan@atheros.com>
+Cc: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110405151834.GB4837@vmraj-lnx.users.atheros.com>
+References: <1301937866-14701-1-git-send-email-rmanoharan@atheros.com>
+	 <1301941003.3795.0.camel@jlt3.sipsolutions.net>
+	 <20110405151834.GB4837@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Apr 2011 17:20:21 +0200
+Message-ID: <1302016821.4968.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+On Tue, 2011-04-05 at 20:48 +0530, Rajkumar Manoharan wrote:
+> On Mon, Apr 04, 2011 at 11:46:43PM +0530, Johannes Berg wrote:
+> > On Mon, 2011-04-04 at 22:54 +0530, Rajkumar Manoharan wrote:
+> > > Do not proceed authentication if hw was already configured
+> > > with one of the vif's channel which is differed with requesting
+> > > channel. Not doing so is causing unneccesary dissociation.
+> > > This issue was originaly found while testing concurrent mode
+> > > with p2p vif.
+> > 
+> > This will break any kind of pre-authentication, no?
+> >
+> Yeah...I completely ignored roaming part. sorry for that and thanks for pointing out.
+> Is that fine to proceed authentication in case of matching ssid found in any of the vif's
+> bss and having such vif iteration under auth. Please help me to sort out.
 
-Acked-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+You could also pre-auth if it's a different network if you like ...
 
-Sujith
+What's the problem anyway?
+
+johannes
+
