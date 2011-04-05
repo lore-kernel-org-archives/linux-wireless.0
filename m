@@ -1,191 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:45398 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757095Ab1DFXmu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 19:42:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: use common keyinfo bitmap for different key types
-Date: Wed,  6 Apr 2011 16:46:56 -0700
-Message-Id: <1302133616-6595-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1302133616-6595-1-git-send-email-bzhao@marvell.com>
-References: <1302133616-6595-1-git-send-email-bzhao@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:40767 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753775Ab1DERtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:49:10 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 10:48:45 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 2/2] cfg80211: add a timer for invalid user reg hints
+Date: Tue, 5 Apr 2011 10:49:04 -0700
+Message-ID: <1302025744-824-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1302025744-824-1-git-send-email-lrodriguez@atheros.com>
+References: <1302025744-824-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+We have no other option but to inform userspace that we
+have queued up their regulatory hint request when we are
+given one given that nl80211 operates atomically on user
+requests. The best we can do is accept the request, and
+add a delayed work item for processing failure and cancel it
+if we succeeed. Upon failure we restore the regulatory
+settings and ignore the user input.
 
-Instead of having separate key information definitions for
-each type of key, a common key information bitmap is used.
+This fixes this reported bug:
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=28112
+
+Reported-by: gregoryx.alagnou@intel.com
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/mwifiex/fw.h          |   27 +++------------------------
- drivers/net/wireless/mwifiex/sta_cmd.c     |   27 +++++++++++++--------------
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    3 +--
- drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 +--
- 4 files changed, 18 insertions(+), 42 deletions(-)
+v5:
+Just resending both to be clear, no further feedback has been
+provided, I think these are ready.
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 2b93811..f8c008f 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -72,33 +72,12 @@ enum KEY_TYPE_ID {
- 	KEY_TYPE_ID_AES,
- 	KEY_TYPE_ID_WAPI,
- };
--
--enum KEY_INFO_WEP {
--	KEY_INFO_WEP_MCAST = 0x01,
--	KEY_INFO_WEP_UNICAST = 0x02,
--	KEY_INFO_WEP_ENABLED = 0x04
--};
--
--enum KEY_INFO_TKIP {
--	KEY_INFO_TKIP_MCAST = 0x01,
--	KEY_INFO_TKIP_UNICAST = 0x02,
--	KEY_INFO_TKIP_ENABLED = 0x04
--};
--
--enum KEY_INFO_AES {
--	KEY_INFO_AES_MCAST = 0x01,
--	KEY_INFO_AES_UNICAST = 0x02,
--	KEY_INFO_AES_ENABLED = 0x04
--};
-+#define KEY_MCAST	BIT(0)
-+#define KEY_UNICAST	BIT(1)
-+#define KEY_ENABLED	BIT(2)
+v4:
+didn't exist
+
+v3:
+The slight modification here was we did the part 1 to this
+patch as a separate fix and then I moved the delayed work
+scheduling call to reg_process_hint() instead of the user
+reg hint call, given that when we restore regulatory we
+want to also trigger the delay timer check.
+
+ net/wireless/reg.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e759204..2480bfd 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -106,6 +106,9 @@ struct reg_beacon {
+ static void reg_todo(struct work_struct *work);
+ static DECLARE_WORK(reg_work, reg_todo);
  
- #define WAPI_KEY_LEN			50
++static void reg_timeout_work(struct work_struct *work);
++static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 5,
+@@ -1330,6 +1333,9 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
  
--enum KEY_INFO_WAPI {
--	KEY_INFO_WAPI_MCAST = 0x01,
--	KEY_INFO_WAPI_UNICAST = 0x02,
--	KEY_INFO_WAPI_ENABLED = 0x04
--};
--
- #define MAX_POLL_TRIES			100
++	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
++		cancel_delayed_work_sync(&reg_timeout);
++
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+ }
+@@ -1440,8 +1446,17 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	r = __regulatory_hint(wiphy, reg_request);
+ 	/* This is required so that the orig_* parameters are saved */
+ 	if (r == -EALREADY && wiphy &&
+-	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
++	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
+ 		wiphy_update_regulatory(wiphy, initiator);
++		return;
++	}
++
++	/*
++	 * We only time out user hints, given that they should be the only
++	 * source of bogus requests.
++	 */
++	if (reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
++		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
+ }
  
- #define MAX_MULTI_INTERFACE_POLL_TRIES  1000
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 6fff261..19de652 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -500,9 +500,8 @@ mwifiex_set_keyparamset_wep(struct mwifiex_private *priv,
- 			key_param_set->key_type_id =
- 				cpu_to_le16(KEY_TYPE_ID_WEP);
- 			key_param_set->key_info =
--				cpu_to_le16(KEY_INFO_WEP_ENABLED |
--					    KEY_INFO_WEP_UNICAST |
--					    KEY_INFO_WEP_MCAST);
-+				cpu_to_le16(KEY_ENABLED | KEY_UNICAST |
-+					    KEY_MCAST);
- 			key_param_set->key_len =
- 				cpu_to_le16(priv->wep_key[i].key_length);
- 			/* Set WEP key index */
-@@ -589,10 +588,10 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 			cpu_to_le16(KEY_TYPE_ID_WAPI);
- 		if (cmd_oid == KEY_INFO_ENABLED)
- 			key_material->key_param_set.key_info =
--				cpu_to_le16(KEY_INFO_WAPI_ENABLED);
-+				cpu_to_le16(KEY_ENABLED);
- 		else
- 			key_material->key_param_set.key_info =
--				cpu_to_le16(!KEY_INFO_WAPI_ENABLED);
-+				cpu_to_le16(!KEY_ENABLED);
+ /*
+@@ -2169,6 +2184,13 @@ out:
+ 	mutex_unlock(&reg_mutex);
+ }
  
- 		key_material->key_param_set.key[0] = enc_key->key_index;
- 		if (!priv->sec_info.wapi_key_on)
-@@ -604,10 +603,10 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
- 			/* WAPI pairwise key: unicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_WAPI_UNICAST);
-+				cpu_to_le16(KEY_UNICAST);
- 		} else {	/* WAPI group key: multicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_WAPI_MCAST);
-+				cpu_to_le16(KEY_MCAST);
- 			priv->sec_info.wapi_key_on = true;
- 		}
++static void reg_timeout_work(struct work_struct *work)
++{
++	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, "
++		      "restoring regulatory settings");
++	restore_regulatory_settings(true);
++}
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+@@ -2222,6 +2244,7 @@ void /* __init_or_exit */ regulatory_exit(void)
+ 	struct reg_beacon *reg_beacon, *btmp;
  
-@@ -634,32 +633,32 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 			cpu_to_le16(KEY_TYPE_ID_AES);
- 		if (cmd_oid == KEY_INFO_ENABLED)
- 			key_material->key_param_set.key_info =
--				cpu_to_le16(KEY_INFO_AES_ENABLED);
-+				cpu_to_le16(KEY_ENABLED);
- 		else
- 			key_material->key_param_set.key_info =
--				cpu_to_le16(!KEY_INFO_AES_ENABLED);
-+				cpu_to_le16(!KEY_ENABLED);
+ 	cancel_work_sync(&reg_work);
++	cancel_delayed_work_sync(&reg_timeout);
  
- 		if (enc_key->key_index & MWIFIEX_KEY_INDEX_UNICAST)
- 				/* AES pairwise key: unicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_AES_UNICAST);
-+				cpu_to_le16(KEY_UNICAST);
- 		else		/* AES group key: multicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_AES_MCAST);
-+				cpu_to_le16(KEY_MCAST);
- 	} else if (enc_key->key_len == WLAN_KEY_LEN_TKIP) {
- 		dev_dbg(priv->adapter->dev, "cmd: WPA_TKIP\n");
- 		key_material->key_param_set.key_type_id =
- 			cpu_to_le16(KEY_TYPE_ID_TKIP);
- 		key_material->key_param_set.key_info =
--			cpu_to_le16(KEY_INFO_TKIP_ENABLED);
-+			cpu_to_le16(KEY_ENABLED);
- 
- 		if (enc_key->key_index & MWIFIEX_KEY_INDEX_UNICAST)
- 				/* TKIP pairwise key: unicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_TKIP_UNICAST);
-+				cpu_to_le16(KEY_UNICAST);
- 		else		/* TKIP group key: multicast */
- 			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_INFO_TKIP_MCAST);
-+				cpu_to_le16(KEY_MCAST);
- 	}
- 
- 	if (key_material->key_param_set.key_type_id) {
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 74add45..648df69 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -574,8 +574,7 @@ static int mwifiex_ret_802_11_key_material(struct mwifiex_private *priv,
- 		&resp->params.key_material;
- 
- 	if (le16_to_cpu(key->action) == HostCmd_ACT_GEN_SET) {
--		if ((le16_to_cpu(key->key_param_set.key_info) &
--		     KEY_INFO_TKIP_MCAST)) {
-+		if ((le16_to_cpu(key->key_param_set.key_info) & KEY_MCAST)) {
- 			dev_dbg(priv->adapter->dev, "info: key: GTK is set\n");
- 			priv->wpa_is_gtk_set = true;
- 			priv->scan_block = false;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index b163507..2fcdbc2 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -1729,8 +1729,7 @@ static int mwifiex_sec_ioctl_set_wpa_key(struct mwifiex_adapter *adapter,
- 		       sizeof(ibss_key->key_param_set.key_len));
- 		ibss_key->key_param_set.key_type_id
- 			= cpu_to_le16(KEY_TYPE_ID_TKIP);
--		ibss_key->key_param_set.key_info
--			= cpu_to_le16(KEY_INFO_TKIP_ENABLED);
-+		ibss_key->key_param_set.key_info = cpu_to_le16(KEY_ENABLED);
- 
- 		/* Send the key as GTK to firmware */
- 		encrypt_key->key_index = ~MWIFIEX_KEY_INDEX_UNICAST;
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
 -- 
-1.7.0.2
+1.7.4.15.g7811d
 
