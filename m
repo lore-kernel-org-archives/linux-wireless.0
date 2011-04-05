@@ -1,123 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756932Ab1DMFyI (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39153 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753739Ab1DEUPy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:54:08 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:54:08 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 5 Apr 2011 16:15:54 -0400
+Received: by qwk3 with SMTP id 3so465147qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 13:15:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15119.906565.930041@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:26:31 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 35/40] ath9k_htc: Add a debugfs file showing endpoint status
+In-Reply-To: <1302032137.3969.10.camel@Joe-Laptop>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<1302032137.3969.10.camel@Joe-Laptop>
+Date: Tue, 5 Apr 2011 22:15:53 +0200
+Message-ID: <BANLkTimTmqop-xzFsWr1=2RXv5z6iTre4Q@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+2011/4/5 Joe Perches <joe@perches.com>:
+> On Tue, 2011-04-05 at 21:57 +0200, Rafał Miłecki wrote:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>
+> Just some trivia.
+>
+>> diff --git a/drivers/bcmai/b43_pci_ai_bridge.c b/drivers/bcmai/b43_pci_ai_bridge.c
+> []
+>> +#include <linux/bcmai/bcmai.h>
+>> +#include <linux/bcmai/bcmai_regs.h>
+>> +#include <linux/pci.h>
+>> +
+>> +static const struct pci_device_id b43_pci_ai_bridge_tbl[] = {
+>
+> DEFINE_PCI_DEVICE_TABLE
 
-Location: ath9k_htc/phy#/queue
+Thanks, I'll convert.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h           |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   54 ++++++++++++++++++++++++
- 2 files changed, 55 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index b9c7bec..b40753c 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -339,6 +339,7 @@ struct ath9k_debug {
- 	struct dentry *debugfs_xmit;
- 	struct dentry *debugfs_recv;
- 	struct dentry *debugfs_slot;
-+	struct dentry *debugfs_queue;
- 	struct ath_tx_stats tx_stats;
- 	struct ath_rx_stats rx_stats;
- 	u32 txrate;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 119cc54..961bec2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -279,6 +279,53 @@ static const struct file_operations fops_slot = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t read_file_queue(struct file *file, char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct ath9k_htc_priv *priv = file->private_data;
-+	char buf[512];
-+	unsigned int len = 0;
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Mgmt endpoint", skb_queue_len(&priv->tx.mgmt_ep_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Cab endpoint", skb_queue_len(&priv->tx.cab_ep_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Data BE endpoint", skb_queue_len(&priv->tx.data_be_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Data BK endpoint", skb_queue_len(&priv->tx.data_bk_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Data VI endpoint", skb_queue_len(&priv->tx.data_vi_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Data VO endpoint", skb_queue_len(&priv->tx.data_vo_queue));
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Failed queue", skb_queue_len(&priv->tx.tx_failed));
-+
-+	spin_lock_bh(&priv->tx.tx_lock);
-+	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
-+			"Queued count", priv->tx.queued_cnt);
-+	spin_unlock_bh(&priv->tx.tx_lock);
-+
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+
-+}
-+
-+static const struct file_operations fops_queue = {
-+	.read = read_file_queue,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath9k_htc_init_debug(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -317,6 +364,12 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
- 	if (!priv->debug.debugfs_slot)
- 		goto err;
- 
-+	priv->debug.debugfs_queue = debugfs_create_file("queue", S_IRUSR,
-+							priv->debug.debugfs_phy,
-+							priv, &fops_queue);
-+	if (!priv->debug.debugfs_queue)
-+		goto err;
-+
- 	return 0;
- 
- err:
-@@ -329,6 +382,7 @@ void ath9k_htc_exit_debug(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
- 
-+	debugfs_remove(priv->debug.debugfs_queue);
- 	debugfs_remove(priv->debug.debugfs_slot);
- 	debugfs_remove(priv->debug.debugfs_recv);
- 	debugfs_remove(priv->debug.debugfs_xmit);
+>> diff --git a/drivers/bcmai/core.c b/drivers/bcmai/core.c
+> []
+>> +             bcmai_err("Power control not implemented!\n");
+> []
+>> diff --git a/include/linux/bcmai/bcmai.h b/include/linux/bcmai/bcmai.h
+> []
+>> +#define bcmai_info(fmt, args...)     printk(KERN_INFO "bcmai: " fmt, ##args)
+>> +#ifdef CONFIG_BCMAI_DEBUG
+>> +#define bcmai_dbg(fmt, args...)              printk(KERN_DEBUG "bcmai debug: " fmt, ##args)
+>> +#else
+>> +#define bcmai_dbg(fmt, args...)              do { } while (0)
+>> +#endif
+>> +#define bcmai_err(fmt, args...)              printk(KERN_ERR "bcmai error: " fmt, ##args)
+>
+> I think there's very little value in prefixing
+> "error" and "debug" in front of equivalent
+> KERN_<level> message levels.
+>
+> I think you might as well just use pr_<level>
+> and pr_fmt.
+
+Hm, I've taken this idea from ssb and b43:
+[b43err] printk(KERN_ERR "b43-%s ERROR: %pV", ...);
+[_pll_init] ssb_printk(KERN_ERR PFX "ERROR: PLL init unknown for...
+
+Some more reviews, please? Should I drop that prefix, is Joe right? Or
+is there some official coding-style for such a situations?
+
+
+
+>> diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+> []
+>> +/* AI core, see drivers/bcmai/ */
+>> +struct bcmai_device_id {
+>> +     __u16   manuf;
+>> +     __u16   id;
+>> +     __u8    rev;
+>> +};
+>
+> Do some of these structs need __packed declarations?
+
+I was reading about __packed long time ago and it was a little tricky
+for me. However I don't see anything in mod_devicetable.h using that
+__packed. Why should we?
+
 -- 
-1.7.4.4
-
+Rafał
