@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50150 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab1D2MgI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 08:36:08 -0400
-Received: by fxm17 with SMTP id 17so2458935fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 05:36:05 -0700 (PDT)
-Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1304066264.2931.23.camel@alex-2>
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130620-109@post.gmane.org>
-	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
-	 <loom.20110428T135917-421@post.gmane.org>
-	 (sfid-20110428_141415_832084_99A2E356) <1303995368.3558.9.camel@jlt3.sipsolutions.net>
-	 <loom.20110429T084118-365@post.gmane.org>
-	 (sfid-20110429_085443_970145_470B3272)  <1304061675.3589.1.camel@jlt3.sipsolutions.net>
-	 <1304066264.2931.23.camel@alex-2>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 14:36:03 +0200
-Message-ID: <1304080563.2931.41.camel@alex-2> (sfid-20110429_143612_006856_91560407)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:45815 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752639Ab1DEOIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:08:42 -0400
+Message-ID: <4D9B2268.8070902@openwrt.org>
+Date: Tue, 05 Apr 2011 16:08:40 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for replying to myself but i'll try to explain this a little bit
-easier:
+On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>
+> Add station uptime parameter in debugfs. This will be helpful to get a
+> measure of stability of connection and also during stress testing.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
 
-- If the channel is not *fixed*, the channel type is only advisory.
-This means that a merge of two HT40 networks with fixed channels will
-only take place if the HT40 configuration equals.
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index 999f8fb..08b9f51 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>   	sta->local = local;
+>   	sta->sdata = sdata;
+>   	sta->last_rx = jiffies;
+> +	sta->sta_uptime = jiffies;
+>
+>   	ewma_init(&sta->avg_signal, 1024, 8);
+>
+I think jiffies can easily overflow. Maybe it would be better to get a 
+timeval from the monotonic clock.
 
-- When merging, the looser will obey the winner's HT configuration if
-there is one. If not, keep the old one.
-
-- If HT has been configured through iw and a non-HT network is to be
-joined, iw's HT setting is used and announced.
-
-HT configuration within an IBSS may get inhomogeneous as a HT station
-may join from a non-HT beacon but there are other HT members.
-
-- When receiving a different HT configuration from another member of our
-BSSID, use this configuration (first beacon wins)
-
-Alex
-
-
+- Felix
