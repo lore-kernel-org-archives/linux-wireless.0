@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:33941 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753552Ab1DUIYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 04:24:19 -0400
-Subject: Re: [PATCH V2 3/4] mwl8k: Reserve buffers for tx management frames
-From: Nishant Sarmukadam <nishants@marvell.com>
-Reply-To: <nishants@marvell.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-In-Reply-To: <20110421074436.GY1897@wantstofly.org>
-References: <1303231582-17333-1-git-send-email-nishants@marvell.com>
-	 <1303231582-17333-3-git-send-email-nishants@marvell.com>
-	 <20110421074436.GY1897@wantstofly.org>
-Content-Type: text/plain
-Date: Thu, 21 Apr 2011 13:45:14 +0530
-Message-ID: <1303373714.24017.47.camel@localhost.localdomain>
+Received: from nbd.name ([46.4.11.11]:58542 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab1DENkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 09:40:13 -0400
+Message-ID: <4D9B1BB6.1090507@openwrt.org>
+Date: Tue, 05 Apr 2011 15:40:06 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: Fix instable target power control b/w CCK/OFDM
+References: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2011-04-05 3:05 PM, Rajkumar Manoharan wrote:
+> The problem is that when the attenuation is increased,
+> the rate will start to drop from MCS7 ->  MCS6, and finally
+> will see MCS1 ->  CCK_11Mbps. When the rate is changed b/w
+> CCK and OFDM, it will use register desired_scale to calculate
+> how much tx gain need to change.
+>
+> The output power with the same tx gain for CCK and OFDM modulated
+> signals are different. This difference is constant for AR9280
+> but not AR9285/AR9271. It has different PA architecture
+> a constant. So it should be calibrated against this PA
+> characteristic.
+>
+> The driver has to read the calibrated values from EEPROM and set
+> the tx power registers accordingly.
+>
+> Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> index bc77a30..8f0cd0e 100644
+> --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+>   {
+>   	struct modal_eep_4k_header *pModal;
+>   	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
+> +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
+>   	u8 txRxAttenLocal;
+>   	u8 ob[5], db1[5], db2[5];
+>   	u8 ant_div_control1, ant_div_control2;
+> @@ -1003,6 +1004,56 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+>   				      AR_PHY_SETTLING_SWITCH,
+>   				      pModal->swSettleHt40);
+>   	}
+> +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
+> +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
+> +				EEP_4K_BB_DESIRED_SCALE_MASK);
+> +		if ((pBase->txGainType == 0)&&  (bb_desired_scale != 0)) {
+> +			u32 pwrctrl, pwrctrl_n;
+> +
+> +			/* AR_PHY_TX_PWRCTRL8 */
+> +			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL8);
+> +			pwrctrl = (u32) bb_desired_scale;
+> +			NSO(pwrctrl, 5, bb_desired_scale, 5);
+I think the NSO macro is somewhat confusing. How about something like 
+this instead, to make it more readable:
 
-On Thu, 2011-04-21 at 00:44 -0700, Lennert Buytenhek wrote:
-> On Tue, Apr 19, 2011 at 10:16:21PM +0530, Nishant Sarmukadam wrote:
-> 
-> > -	if (txq->len >= MWL8K_TX_DESCS) {
-> > -		if (start_ba_session) {
-> > -			spin_lock(&priv->stream_lock);
-> > -			mwl8k_remove_stream(hw, stream);
-> > -			spin_unlock(&priv->stream_lock);
-> > +	/* Mgmt frames that go out frequently are probe responses.
-> > +	 * Other mgmt frames got out relatively infrequently.
-> > +	 * Hence reserve 2 buffers so that other mgmt frames do not get
-> > +	 * dropped due to an already queued probe response in one of
-> > +	 * the reserved buffers.
-> > +	 */
-> 
-> Comment formatting..
-> 
-> 
-> > +	if (txq->len >= (MWL8K_TX_DESCS - 2)) {
-> > +		if ((mgmtframe == false) ||
-> > +			(txq->len == MWL8K_TX_DESCS)) {
-> > +			if (start_ba_session) {
-> > +				spin_lock(&priv->stream_lock);
-> > +				mwl8k_remove_stream(hw, stream);
-> > +				spin_unlock(&priv->stream_lock);
-> > +			}
-> 
-> ..and lots of superfluous parentheses here:
-> 
-> 	txq->len >= MWL8K_TX_DESCS - 2
-> 	mgmtframe == false
-> 	txq->len == MWL8K_TX_DESCS
+u32 mask;
+mask = BIT(0) | BIT(5) | BIT(10) | BIT(15) | BIT(20);
+pwrctl = mask * bb_desired_scale;
 
-I will address both these comments in patch set V3.
-
-
+- Felix
