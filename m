@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:51073 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757722Ab1DXUms convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 16:42:48 -0400
-Received: by qyg14 with SMTP id 14so919659qyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 13:42:47 -0700 (PDT)
+Received: from kroah.org ([198.145.64.141]:47279 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754028Ab1DEO62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:58:28 -0400
+Date: Tue, 5 Apr 2011 07:13:30 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Vipin Mehta <Vipin.Mehta@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Naveen Singh <Naveen.Singh@Atheros.com>
+Subject: Re: [PATCH 34/34] ath6kl: remove the HTC raw interface
+Message-ID: <20110405141330.GA25749@kroah.com>
+References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+ <1301446591-15236-35-git-send-email-lrodriguez@atheros.com>
+ <35B17FE5076C7040809188FBE7913F984316D17DDC@SC1EXMB-MBCL.global.atheros.com>
+ <AANLkTi=_T-f7e0dGC05mACjGFD86VP+MULZsfXinTXkq@mail.gmail.com>
+ <20110404225248.GA30856@vmehta-desktop>
 MIME-Version: 1.0
-In-Reply-To: <1303672484.14128.2.camel@maxim-laptop>
-References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
- <1303632949.3795.7.camel@jlt3.sipsolutions.net> <1303672484.14128.2.camel@maxim-laptop>
-From: Matteo Croce <matteo@openwrt.org>
-Date: Sun, 24 Apr 2011 22:42:07 +0200
-Message-ID: <BANLkTikWr0xsOcrKAGF4EVF02Ji=7s3vHg@mail.gmail.com> (sfid-20110424_224251_796630_8990D743)
-Subject: Re: [PATCH v2] 802.11n frame injection
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110404225248.GA30856@vmehta-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/24 Maxim Levitsky <maximlevitsky@gmail.com>:
-> On Sun, 2011-04-24 at 10:15 +0200, Johannes Berg wrote:
->> On Fri, 2011-04-22 at 18:34 +0200, Matteo Croce wrote:
->> > This patch allows to set the tx rate and retries when injecting,
->> > and report correct MCS information on received frames.
->>
->> This description is wrong. It doesn't touch rx.c, does it?
->
-> It does appear to touch radiotap processing, and I bet the developer
-> tested this, but other than that don't know.
->
->>
->> johannes
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Best regards,
->        Maxim Levitsky
->
-> Visit my blog: http://maximlevitsky.wordpress.com
-> Warning: Above blog contains rants.
->
->
+On Mon, Apr 04, 2011 at 03:56:43PM -0700, Vipin Mehta wrote:
+> On Thu, Mar 31, 2011 at 11:03:50AM -0700, Luis R. Rodriguez wrote:
+> > On Thu, Mar 31, 2011 at 9:50 AM, Vipin Mehta <Vipin.Mehta@atheros.com> wrote:
+> > > The raw HTC support is required for the tools used on the manufacturing floor
+> > > For module calibration. Without this code, the driver and the hardware
+> > > cannot be shipped. I suggest we keep this code until we add the support for
+> > > nl80211 test command interface and migrate the tools to use the new interface.
+> > 
+> > Vipin, so you NACK the patch -- that's fine. Greg please drop this
+> > one. Vipin, when do you plan on adding the nl80211 test command
+> > support? The API already exists. I'll remind you that this is a
+> > blocker for getting this out of staging.
+> > 
+> >   Luis
+> Greg,
+>   Can you apply the rest of the changes from patch 0 through 33 in
+> this series if you are satisfied with them. We have more patches coming
+> but are currently waiting for you to apply the existing ones.
 
-The old patch added RX processing but now all it's merged in mainline
-and the only piece left in rx.c was:
+Already applied.
 
---- a/net/mac80211/rx.c	2011-04-21 19:08:26.253148959 +0200
-+++ b/net/mac80211/rx.c	2011-04-22 11:56:24.257134886 +0200
-@@ -195,6 +195,7 @@
- 	put_unaligned_le16(rx_flags, pos);
- 	pos += 2;
+thanks,
 
-+	/* IEEE80211_RADIOTAP_RATE_MCS */
- 	if (status->flag & RX_FLAG_HT) {
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
- 		*pos++ = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
-
-
-so I decided to remove this chunk, but I forget the original description
-
--- 
-Matteo Croce
-OpenWrt Developer
- _______                     ________        __
-|       |.-----.-----.-----.|  |  |  |.----.|  |_
-|   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
-|_______||   __|_____|__|__||________||__|  |____|
-         |__| W I R E L E S S   F R E E D O M
-ATTITUDE ADJUSTMENT (bleeding edge) --------------
- * 1/4 oz Vodka      Pour all ingredents into mixing
- * 1/4 oz Gin        tin with ice, strain into glass.
- * 1/4 oz Amaretto
- * 1/4 oz Triple sec
- * 1/4 oz Peach schnapps
- * 1/4 oz Sour mix
- * 1 splash Cranberry juice
------------------------------------------------------
+greg k-h
