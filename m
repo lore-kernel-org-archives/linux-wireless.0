@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53527 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751216Ab1DBBjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 21:39:55 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/3] ath9k: fix beacon slot processing in ad-hoc mode
-Date: Sat,  2 Apr 2011 03:39:47 +0200
-Message-Id: <1301708388-8416-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1301708388-8416-1-git-send-email-nbd@openwrt.org>
-References: <1301708388-8416-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:60429 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab1DEOus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:50:48 -0400
+Subject: Re: [RFC] mac80211: Add station uptime in debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi <mshajakhan@atheros.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D9B28D0.7020306@atheros.com>
+References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com>
+	 <201104051604.16143.helmut.schaa@googlemail.com>
+	 <4D9B28D0.7020306@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Apr 2011 16:50:45 +0200
+Message-ID: <1302015045.4968.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recent cleanups in the beacon code fixed SWBA backoff calculation,
-however it did not remove a line of code that worked around the issues
-from the earlier version of the code.
-After the cleanup, the initial TSF based slot calculation now always
-returns 0 instead of ATH_BCBUF-1, so the previous hack that reversed the
-slot order needs to be removed, as ad-hoc mode does not use staggered
-beacons.
+On Tue, 2011-04-05 at 20:06 +0530, Mohammed Shafi wrote:
+> On Tuesday 05 April 2011 07:34 PM, Helmut Schaa wrote:
+> > Am Dienstag, 5. April 2011 schrieb Mohammed Shafi Shajakhan:
+> >    
+> >> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>
+> >> Add station uptime parameter in debugfs. This will be helpful to get a
+> >> measure of stability of connection and also during stress testing.
+> >>      
+> > It might even make sense to make this available through nl80211. At least
+> > in AP mode it would be interesting to see how long each STA is already
+> > connected.
+> >
+> > Helmut
+> >    
+> Thanks, will do it  once the maintainers are ok with this patch.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+Fine with me, but you should probably not call it "uptime" but rather
+"connected_time" or something, and address Felix's point.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 74f33bc..24861b2 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -392,14 +392,6 @@ void ath_beacon_tasklet(unsigned long data)
- 	tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
- 	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
- 	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
--	/*
--	 * Reverse the slot order to get slot 0 on the TBTT offset that does
--	 * not require TSF adjustment and other slots adding
--	 * slot/ATH_BCBUF * beacon_int to timestamp. For example, with
--	 * ATH_BCBUF = 4, we process beacon slots as follows: 3 2 1 0 3 2 1 ..
--	 * and slot 0 is at correct offset to TBTT.
--	 */
--	slot = ATH_BCBUF - slot - 1;
- 	vif = sc->beacon.bslot[slot];
- 
- 	ath_dbg(common, ATH_DBG_BEACON,
--- 
-1.7.3.2
+johannes
 
