@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:59400 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907Ab1DLFe2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 01:34:28 -0400
-Message-ID: <4DA3E45E.3040005@lwfinger.net>
-Date: Tue, 12 Apr 2011 00:34:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: RA-Shiang Tu <Shiang_Tu@ralinktech.com>
-CC: Walter Goldens <goldenstranger@yahoo.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"gwingerde@gmail.com" <gwingerde@gmail.com>,
-	"ben@decadent.org.uk" <ben@decadent.org.uk>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
-References: <4DA33FFD.5070004@gmail.com> <312743.30438.qm@web161611.mail.bf1.yahoo.com> <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
-In-Reply-To: <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:21335 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755455Ab1DERBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/25] iwlagn: remove rxb page bookkeeping
+Date: Tue,  5 Apr 2011 09:42:10 -0700
+Message-Id: <1302021732-21250-24-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2011 12:23 AM, RA-Shiang Tu wrote:
-> Hi,
->>>> Are there any changelogs for these firmware files? Do
->>> they
->>>> only offer support for newer chips, or are there any
->>> actual
->>>> improvements and bug fixes implemented? Users should
->>> know
->>>> whether updating the firmware will be of any use to
->>> them.
->>>
->>> Shiang Tu from ralink says [1] :
->>> "We always suggest to use latest firmware, because it's backward
->>> compatible and also has some enhancement, bug fix, or
->> support of new
->>> chip.
->>
->> Sorry, but how very ... Microsoft-y of Ralink.
->> Something has changed, a bug, an improvement, but we are to
->> guess what it is?
->> Maybe if people knew how these firmware files affect
->> different generations of chips, they'd knew how to maintain
->> them better. I think this contributes to the mess here.
->>
->
-> First of all, thanks for all for the great help to make Ralink chipset can
-> work well in Linux.
->
-> In deed, restricted by the limited resources, Ralink didn't involve in the
-> rt2x00 project development closely for long time and the rt2x00 project
-> developers and free contributors only can get limited information from
-> Ralink's open source code. I think that' why make the situation becomes
-> a little bit complicate. Sorry for that.
->
-> Now we try to work closely with rt2x00 project, we also will sumbit latest
-> frimware to linux-firmware once have any updates. We are newbie to work
-> with open source community, if we have any problem, your kindly help will
-> be highly appreciated.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Shiang,
+We never use the value in alloc_rxb_page,
+so there's no point in keeping it either.
 
-We greatly appreciate the help you have given. We certainly understand the 
-problems of limited resources.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-rx.c      |    1 -
+ 3 files changed, 0 insertions(+), 5 deletions(-)
 
-Does Ralink have any documentation that you can share regarding the changes in 
-rt2860.bin from revision 11, which is now in linux-firmware, to the current 
-revision 34. The same information on the changes from revision 12 to revision 29 
-of rt2870.bin would also be useful. As you have seen in the E-mails, the details 
-are requested for the acceptance of the new versions in linux-firmware.
-
-Thanks,
-
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 9a3d69d..9e47be6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -912,7 +912,6 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+ 		rxq->free_count++;
+-		priv->alloc_rxb_page++;
+ 
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 460316b..22cac44 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1190,7 +1190,6 @@ struct iwl_priv {
+ 	int frames_count;
+ 
+ 	enum ieee80211_band band;
+-	int alloc_rxb_page;
+ 
+ 	void (*rx_handlers[REPLY_MAX])(struct iwl_priv *priv,
+ 				       struct iwl_rx_mem_buffer *rxb);
+@@ -1609,12 +1608,10 @@ static inline int is_channel_ibss(const struct iwl_channel_info *ch)
+ static inline void __iwl_free_pages(struct iwl_priv *priv, struct page *page)
+ {
+ 	__free_pages(page, priv->hw_params.rx_page_order);
+-	priv->alloc_rxb_page--;
+ }
+ 
+ static inline void iwl_free_pages(struct iwl_priv *priv, unsigned long page)
+ {
+ 	free_pages(page, priv->hw_params.rx_page_order);
+-	priv->alloc_rxb_page--;
+ }
+ #endif				/* __iwl_dev_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index b5124de..c421f56 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -898,7 +898,6 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
+ 
+ 	ieee80211_rx(priv->hw, skb);
+-	priv->alloc_rxb_page--;
+ 	rxb->page = NULL;
+ }
+ 
+-- 
+1.7.0.4
 
