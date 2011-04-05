@@ -1,99 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:9030 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755069Ab1DLOUH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58787 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab1DEH25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 10:20:07 -0400
-From: Anantha Idapalapati <aidapalapati@nvidia.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "olofj@chromium.org" <olofj@chromium.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Uday Raval <uraval@nvidia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Andy Ritger <ARitger@nvidia.com>,
-	Rakesh Kumar <krakesh@nvidia.com>
-Date: Tue, 12 Apr 2011 19:49:45 +0530
-Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
-Message-ID: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A5513A@BGMAIL02.nvidia.com>
-References: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
- <1302608540.3639.16.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1302608540.3639.16.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 5 Apr 2011 03:28:57 -0400
+Subject: Re: [PATCH v7 03/10] mac80211: Support userspace mesh
+ authentication
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com
+In-Reply-To: <1301966140-26080-4-git-send-email-thomas@cozybit.com>
+References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+	 <1301966140-26080-4-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Apr 2011 09:28:55 +0200
+Message-ID: <1301988535.3831.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sm9oYW5uZXMsDQoNClNvIGl0IHJlYWxseSBpcyBhIEdQSU9fUkZLSUxMIGRyaXZlci4gV2hhdCdz
-IGJsdWV0b290aCBzcGVjaWZpYyBpbiBpdD8NCjxBbmFudGhhPiBNYWluIGFpbSBvZiB0aGUgZHJp
-dmVyIGlzIHRvIHByb3ZpZGUgYSBzaW5nbGUgcG9pbnQgb2YgZW50cnkgDQpmb3IgYWxsIHJlcXVp
-cmVtZW50cyB0byBzd2l0Y2ggb24gQlQgQ2hpcC4gTm90IG9ubHkgR1BJT3MgYXJlIEhhbmRsZXMg
-DQppbiB0aGlzIGRyaXZlciwgT3RoZXIgcmVzb3VyY2VzIGxpa2UgInJlZmVyZW5jZSBjbG9jayIg
-cmVxdWlyZW1lbnRzIA0KYXJlIGFsc28gaGFuZGxlZC4gSWYgcmVxdWlyZWQgbmVlZCB0byBhZGQg
-YW55IHJlZ3VsYXRvciBvcGVyYXRpb25zIA0KcmVxdWlyZWQgYnkgQlQgY2hpcC4gUGxlYXNlIGxl
-dCBtZSBrbm93IGlmIGl0IHN0aWxsIG1ha2Ugc2Vuc2UgdG8gb25seQ0KaGF2ZSBHUElPIG9wZXJh
-dGlvbnMgaW4gdGhpcyBkcml2ZXI/DQoNCg0KR1BJTyBzaG91bGQgc2hvdyB1cCBpbiB0aGUgbmFt
-ZSBhbmQgZGVzY3JpcHRpb24uIEJUIHNob3VsZCBub3QuIFRoZSANCmRyaXZlciBzaG91bGQgYmUg
-bW92ZWQgdG8gbmV0L3Jma2lsbC8gYW5kIGJlIGdlbmVyaWMgZm9yIEdQSU8uDQo8QW5hbnRoYT4g
-SSBjYW4gbW92ZSB0byBuZXQvcmZraWxsLy4NCg0KSSBkb24ndCB0aGluayBhbGwgb2YgdGhpcyBp
-cyByZWFsbHkgdGhlIGJlc3Qgd2F5IHRvIGRvIHRoaW5ncy4gVGhpcw0KaGFyZGNvZGVzICJidF9j
-bGsiIGZvciBleGFtcGxlLiBCdXQgdGhhdCdzIHVzZWxlc3MgZm9yIGEgZ2VuZXJpYyBkcml2ZXIu
-DQo8QW5hbnRoYT4gVGhpcyByZXF1aXJlcyBjcmVhdGlvbiBvZiBhIG5ldyBoZWFkZXIgZmlsZSB0
-aGF0IGlzIHNoYXJlZCANCmJldHdlZW4gZHJpdmVyIGFuZCBwbGF0Zm9ybS4gSSB3YXMgdHJ5aW5n
-IHRvIGVsaW1pbmF0ZSB0aGUgcmVxdWlyZW1lbnQNCm9mIGEgbmV3IGhlYWRlciBmaWxlIGJ5IGNy
-ZWF0aW5nIGdlbmVyaWMgcGxhdGZvcm0gcmVzb3VyY2VzLiBXaWxsIGFkZCANCm5ldyBoZWFkZXIg
-ZmlsZS4NCg0KLUFuYW50aGENCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpv
-aGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFR1
-ZXNkYXksIEFwcmlsIDEyLCAyMDExIDU6MTIgUE0NClRvOiBBbmFudGhhIElkYXBhbGFwYXRpDQpD
-Yzogb2xvZmpAY2hyb21pdW0ub3JnOyBsaW52aWxsZUB0dXhkcml2ZXIuY29tOyBVZGF5IFJhdmFs
-OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFuZHkgUml0Z2VyOyBSYWtlc2ggS3Vt
-YXINClN1YmplY3Q6IFJlOiBbUEFUQ0hdIENIUk9NSVVNOiBjb25maWc6IGJsdWV0b290aDogcmZr
-aWxsIGRyaXZlcg0KDQpPbiBUdWUsIDIwMTEtMDQtMTIgYXQgMTY6NTUgKzA1MzAsIGFpZGFwYWxh
-cGF0aUBudmlkaWEuY29tIHdyb3RlOg0KPiBGcm9tOiBBbmFudGhhIElkYXBhbGFwYXRpIDxhaWRh
-cGFsYXBhdGlAbnZpZGlhLmNvbT4NCj4gDQo+IEluaXRpYWwgdmVyc2lvbiBvZiBuZXcgInJma2ls
-bCIgZHJpdmVyIHRvIGNvbnRyb2wgQlQgcmFkaW8uDQo+IEEgbmV3IGtlcm5lbCBjb25maWcgdmFy
-aWFibGUgQ09ORklHX0JUX1JGS0lMTCBpcyBkZWZpbmVkIGFuZA0KPiBuZWVkIHRvIGJlIHVzZWQg
-dG8gaW5jbHVkZSB0aGlzIGRyaXZlciBpbiB0aGUga2VybmVsLg0KPiANCj4gVGhyZWUgUGxhdGZv
-cm0gcmVzb3VyY2VzIGFyZSBleHBlY3RlZCBieSB0aGUgZHJpdmVyLg0KPiAgLSBTaHV0ZG93biBH
-UElPDQo+ICAtIFJlc2V0IEdQSU8gYW5kDQo+ICAtIFJlZmVyZW5jZSBDbG9jay4NCj4gQW55L0Fs
-bCBvZiB0aGUgcmVzb3VyY2VzIGNhbiBiZSBkZWZpbmVkIGJ5IGEgcGxhdGZvcm0uDQoNClNvIGl0
-IHJlYWxseSBpcyBhIEdQSU9fUkZLSUxMIGRyaXZlci4gV2hhdCdzIGJsdWV0b290aCBzcGVjaWZp
-YyBpbiBpdD8NCg0KPiBCVUc9bm9uZQ0KPiBURVNUPSB0ZXN0ZWQgb24gYm9hcmQgdXNpbmcgQkNN
-NDMyOSAodmVudGFuYSkNCj4gDQo+IENoYW5nZS1JZDogSTM4ZTZhZDNhNzcyMTgwYjdjYWI1Y2Yy
-ZDU5YjQ1OWIyMTA1MTgxN2UNCg0KPiAtLS0gYS9kcml2ZXJzL2JsdWV0b290aC9LY29uZmlnDQo+
-ICsrKyBiL2RyaXZlcnMvYmx1ZXRvb3RoL0tjb25maWcNCj4gQEAgLTIxOSw0ICsyMTksMTIgQEAg
-Y29uZmlnIEJUX0FUSDNLDQo+ICAJICBTYXkgWSBoZXJlIHRvIGNvbXBpbGUgc3VwcG9ydCBmb3Ig
-IkF0aGVyb3MgZmlybXdhcmUgZG93bmxvYWQgZHJpdmVyIg0KPiAgCSAgaW50byB0aGUga2VybmVs
-IG9yIHNheSBNIHRvIGNvbXBpbGUgaXQgYXMgbW9kdWxlIChhdGgzaykuDQo+ICANCj4gK2NvbmZp
-ZyBCVF9SRktJTEwNCj4gKwlib29sICJCbHVldG9vdGggUkZLSUxMIGRyaXZlciINCj4gKwlkZXBl
-bmRzIG9uIEJUICYmIFJGS0lMTA0KPiArCWhlbHANCj4gKwkgIElmIHlvdSBzYXkgeWVzIGhlcmUg
-eW91IGdldCBzdXBwb3J0IG9mIGEgZ2VuZXJpYyBibHVldG9vdGggUkZLSUxMDQo+ICsJICBkcml2
-ZXIgZm9yIEJUIGNoaXBzZXQuIFBsYXRmb3JtIG5lZWRzIHRvIGRlZmluZSB0aGUgcmVzb3VyY2Vz
-DQo+ICsJICByZXF1aXJlZC4NCg0KR1BJTyBzaG91bGQgc2hvdyB1cCBpbiB0aGUgbmFtZSBhbmQg
-ZGVzY3JpcHRpb24uIEJUIHNob3VsZCBub3QuIFRoZQ0KZHJpdmVyIHNob3VsZCBiZSBtb3ZlZCB0
-byBuZXQvcmZraWxsLyBhbmQgYmUgZ2VuZXJpYyBmb3IgR1BJTy4NCg0KPiArc3RhdGljIGludCBi
-dF9yZmtpbGxfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gK3sNCj4gKwlz
-dHJ1Y3QgcmZraWxsICpidF9yZmtpbGxfZGV2Ow0KPiArCXN0cnVjdCByZXNvdXJjZSAqcmVzOw0K
-PiArCWludCByZXQ7DQo+ICsJYm9vbCBlbmFibGUgPSBmYWxzZTsgIC8qIG9mZiAqLw0KPiArCWJv
-b2wgZGVmYXVsdF9zd19ibG9ja19zdGF0ZTsNCj4gKw0KPiArCWJ0X3Jma2lsbCA9IGt6YWxsb2Mo
-c2l6ZW9mKCpidF9yZmtpbGwpLCBHRlBfS0VSTkVMKTsNCj4gKwlpZiAoIWJ0X3Jma2lsbCkNCj4g
-KwkJcmV0dXJuIC1FTk9NRU07DQo+ICsNCj4gKwlidF9yZmtpbGwtPmJ0X2NsayA9IGNsa19nZXQo
-JnBkZXYtPmRldiwgImJ0X2NsayIpOw0KDQpJIGRvbid0IHRoaW5rIGFsbCBvZiB0aGlzIGlzIHJl
-YWxseSB0aGUgYmVzdCB3YXkgdG8gZG8gdGhpbmdzLiBUaGlzDQpoYXJkY29kZXMgImJ0X2NsayIg
-Zm9yIGV4YW1wbGUuIEJ1dCB0aGF0J3MgdXNlbGVzcyBmb3IgYSBnZW5lcmljIGRyaXZlci4NCg0K
-UGxlYXNlIGxvb2sgYXQNCmh0dHA6Ly9hcnRpY2xlLmdtYW5lLm9yZy9nbWFuZS5saW51eC5rZXJu
-ZWwvMTEyNDEzNw0KDQpUaGF0IGRyaXZlciByZXF1aXJlcyB0aGF0IHNvbWUgc3BlY2lmaWMgY29k
-ZSByZWdpc3RlcnMgYSBwbGF0Zm9ybSBkZXZpY2UNCndpdGggdGhlIHJpZ2h0IGRhdGEsIGJ1dCB5
-b3UgY291bGQgZG8gdGhhdCBmb3IgdGhpcyBhcyB3ZWxsIGFuZCBnZXQgcmlkDQpvZiBhbGwgdGhl
-IGhhcmRjb2RlZCBzdHJpbmdzIGFuZCB0aGUgaGFyZC1jb2RlZCBhc3N1bXB0aW9uIHRoYXQgaXQn
-cyBmb3INCmJsdWV0b290aC4gSSB0aGluayB0aGF0IGFwcHJvYWNoIGlzIE1VQ0ggYmV0dGVyLCBz
-aW5jZSB0aGVuIGlmIHNvbWVib2R5DQpoYXMgYSBXaWZpIG9yIEdQUyBkZXZpY2Ugd2l0aCBHUElP
-IGNvbnRyb2wgdGhleSBjYW4gcmV1c2UgdGhpcyBjb2RlLg0KDQpqb2hhbm5lcw0KDQoNCi0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpUaGlzIGVtYWlsIG1lc3NhZ2UgaXMgZm9yIHRoZSBzb2xl
-IHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpIGFuZCBtYXkgY29udGFpbg0KY29uZmlk
-ZW50aWFsIGluZm9ybWF0aW9uLiAgQW55IHVuYXV0aG9yaXplZCByZXZpZXcsIHVzZSwgZGlzY2xv
-c3VyZSBvciBkaXN0cmlidXRpb24NCmlzIHByb2hpYml0ZWQuICBJZiB5b3UgYXJlIG5vdCB0aGUg
-aW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGJ5DQpyZXBseSBl
-bWFpbCBhbmQgZGVzdHJveSBhbGwgY29waWVzIG9mIHRoZSBvcmlnaW5hbCBtZXNzYWdlLg0KLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg==
+On Mon, 2011-04-04 at 18:15 -0700, Thomas Pedersen wrote:
+> Also, disallow joining a secure mesh if the wiphy does not support
+> authentication.
+
+> +	/* if the underlying driver supports mesh, mac80211 will (at least)
+> +	 * provide routing of mesh authentication frames to userspace */
+> +	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
+> +		local->hw.wiphy->flags |= WIPHY_FLAG_MESH_AUTH;
+
+I'm getting bored and I'm sure you're also getting annoyed by resending
+this all the time, and I guess it doesn't matter, but strictly speaking
+after this patch mac80211 doesn't even support this feature yet since
+the whole feature needs all the different bits from patches 4-10 too.
+Therefore you should really prepare the feature with a bunch of patches
+and then have a last patch that enables it, if it's split up, so that at
+any point in time the kernel can not only compile but also has a
+consistent feature advertising.
+
+> --- a/net/wireless/mesh.c
+> +++ b/net/wireless/mesh.c
+> @@ -72,6 +72,10 @@ int __cfg80211_join_mesh(struct
+> cfg80211_registered_device *rdev,
+>         if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
+>                 return -EOPNOTSUPP;
+>  
+> +       if (!(rdev->wiphy.flags & WIPHY_FLAG_MESH_AUTH) &&
+> +             setup->is_secure)
+> +               return -EOPNOTSUPP;
+
+However this really should be a part of patch 2 or so since it's not
+related to mac80211 at all.
+
+How about you split this patch, and make the mac80211 bits part of what
+is patch 10, and the nl80211 bits part of what is patch 2, then you have
+only 9 patches, the feature gets enabled cleanly and there's no
+confusion about mac80211 vs. nl80211.
+
+The trivial mac80211 bits in patch 2 should probably be in patch 4,
+since they aren't required to compile the kernel with patch 2 by itself.
+
+Also the description for patch 8 should incorporate that it also
+includes nl80211 API changes, or possibly be split up into
+nl80211/mac80211 bits. I don't really mind combined nl80211/mac80211
+patches, but I think it should be clear when looking over them, like
+e.g.
+
+commit 026331c4d9b526561ea96f95fac4bfc52b69e316
+Author: Jouni Malinen <jouni.malinen@atheros.com>
+Date:   Mon Feb 15 12:53:10 2010 +0200
+
+    cfg80211/mac80211: allow registering for and sending action frames
+
+
+Anyway, I do think the code can be as it is, I just think the patch
+splitting is a bit unfortunate. As such, I'd be OK with it going in now
+anyway.
+
+johannes
+
