@@ -1,145 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:54369 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753150Ab1DJRt1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 13:49:27 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTi=-bRn_6yie1b=wxgVowqZq6+03CQ@mail.gmail.com>
-References: <1302450962.5282.129.camel@localhost>
-	 <BANLkTi=-bRn_6yie1b=wxgVowqZq6+03CQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-04Jr8TzYl2z2629ypoET"
-Date: Sun, 10 Apr 2011 18:49:14 +0100
-Message-ID: <1302457754.5282.219.camel@localhost>
-Mime-Version: 1.0
-Subject: Re: Firmware files for Ralink RT28x0
+Received: from mga11.intel.com ([192.55.52.93]:4582 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755472Ab1DERBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:32 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/25] iwlagn: centralize and fix ucode restart
+Date: Tue,  5 Apr 2011 09:41:58 -0700
+Message-Id: <1302021732-21250-12-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---=-04Jr8TzYl2z2629ypoET
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The ucode restart has to take into account a number
+of things, like clearing the HCMD_ACTIVE and other
+status bits, and waking up the wait_command_queue.
+Currently, however, there are a number of places
+that neither do that, nor actually set the FW error
+bit that leads to proper restart handling, which
+means that in those cases things will probably just
+hang completely.
 
-On Sun, 2011-04-10 at 18:35 +0200, Ivo Van Doorn wrote:
-> Hi,
->=20
-> On Sun, Apr 10, 2011 at 5:56 PM, Ben Hutchings <ben@decadent.org.uk> wrot=
-e:
-> > I notice that rt2800{pci,usb} each specify only one firmware image,
-> > regardless of the controller version.
-> >
-> > This is inconsistent with rt28{6,7}0sta and with the firmware images in
-> > linux-firmware.
->=20
-> Well the rt2800pci/usb firmware behavior is consistent with the original
-> Ralink drivers (Not sure about the staging drivers, I only look to the dr=
-ivers
-> on the Ralink website).
+To clean this up, make all ucode restart go through
+a single function, except for the cases where it's
+called during firmware loading.
 
-Are you referring to the #ifdef BIN_IN_FILE code?  This code is not
-enabled, so you should assume it is broken.  I suspect that it was
-intended to ease firmware development.
+Also fix a bug in wimax coexist restart avoidance,
+it needs to first clear the status bits (and it has
+to clear the HCMD_ACTIVE one as well) and then wake
+up anything waiting on wait_command_queue.
 
-Ralink provides multiple drivers per bus type for RT28xx and later
-chips.  For PCI devices they split between RT2860 and RT309x; for USB
-devices they split between RT2870 and RT307x (I think - the chip model
-numbers don't seem to be stated consistently).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   99 ++++++++++++++++---------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |    4 +-
+ 3 files changed, 56 insertions(+), 50 deletions(-)
 
-In addition, the USB drivers have two separate images packed together
-and they can select different images based on the controller version:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index d778f52..64b28b0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -890,10 +890,8 @@ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+ 	IWL_DEBUG_RADIO(priv, "u16 assoc_id: 0x%x\n", le16_to_cpu(rxon->assoc_id));
+ }
+ #endif
+-/**
+- * iwl_irq_handle_error - called for HW or SW error interrupt from card
+- */
+-void iwl_irq_handle_error(struct iwl_priv *priv)
++
++void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
+ {
+ 	unsigned int reload_msec;
+ 	unsigned long reload_jiffies;
+@@ -904,18 +902,62 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 	/* Cancel currently queued command. */
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
+ 
++	/* Keep the restart process from trying to send host
++	 * commands by clearing the ready bit */
++	clear_bit(STATUS_READY, &priv->status);
++
++	wake_up_interruptible(&priv->wait_command_queue);
++
++	if (!ondemand) {
++		/*
++		 * If firmware keep reloading, then it indicate something
++		 * serious wrong and firmware having problem to recover
++		 * from it. Instead of keep trying which will fill the syslog
++		 * and hang the system, let's just stop it
++		 */
++		reload_jiffies = jiffies;
++		reload_msec = jiffies_to_msecs((long) reload_jiffies -
++					(long) priv->reload_jiffies);
++		priv->reload_jiffies = reload_jiffies;
++		if (reload_msec <= IWL_MIN_RELOAD_DURATION) {
++			priv->reload_count++;
++			if (priv->reload_count >= IWL_MAX_CONTINUE_RELOAD_CNT) {
++				IWL_ERR(priv, "BUG_ON, Stop restarting\n");
++				return;
++			}
++		} else
++			priv->reload_count = 0;
++	}
++
++	if (!test_bit(STATUS_EXIT_PENDING, &priv->status)) {
++		if (priv->cfg->mod_params->restart_fw) {
++			IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
++				  "Restarting adapter due to uCode error.\n");
++			queue_work(priv->workqueue, &priv->restart);
++		} else
++			IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
++				  "Detected FW error, but not restarting\n");
++	}
++}
++
++/**
++ * iwl_irq_handle_error - called for HW or SW error interrupt from card
++ */
++void iwl_irq_handle_error(struct iwl_priv *priv)
++{
+ 	/* W/A for WiFi/WiMAX coex and WiMAX own the RF */
+ 	if (priv->cfg->internal_wimax_coex &&
+ 	    (!(iwl_read_prph(priv, APMG_CLK_CTRL_REG) &
+ 			APMS_CLK_VAL_MRB_FUNC_MODE) ||
+ 	     (iwl_read_prph(priv, APMG_PS_CTRL_REG) &
+ 			APMG_PS_CTRL_VAL_RESET_REQ))) {
+-		wake_up_interruptible(&priv->wait_command_queue);
+ 		/*
+-		 *Keep the restart process from trying to send host
+-		 * commands by clearing the INIT status bit
++		 * Keep the restart process from trying to send host
++		 * commands by clearing the ready bit.
+ 		 */
+ 		clear_bit(STATUS_READY, &priv->status);
++		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
++		wake_up_interruptible(&priv->wait_command_queue);
+ 		IWL_ERR(priv, "RF is used by WiMAX\n");
+ 		return;
+ 	}
+@@ -935,38 +977,7 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 					&priv->contexts[IWL_RXON_CTX_BSS]);
+ #endif
+ 
+-	wake_up_interruptible(&priv->wait_command_queue);
+-
+-	/* Keep the restart process from trying to send host
+-	 * commands by clearing the INIT status bit */
+-	clear_bit(STATUS_READY, &priv->status);
+-
+-	/*
+-	 * If firmware keep reloading, then it indicate something
+-	 * serious wrong and firmware having problem to recover
+-	 * from it. Instead of keep trying which will fill the syslog
+-	 * and hang the system, let's just stop it
+-	 */
+-	reload_jiffies = jiffies;
+-	reload_msec = jiffies_to_msecs((long) reload_jiffies -
+-				(long) priv->reload_jiffies);
+-	priv->reload_jiffies = reload_jiffies;
+-	if (reload_msec <= IWL_MIN_RELOAD_DURATION) {
+-		priv->reload_count++;
+-		if (priv->reload_count >= IWL_MAX_CONTINUE_RELOAD_CNT) {
+-			IWL_ERR(priv, "BUG_ON, Stop restarting\n");
+-			return;
+-		}
+-	} else
+-		priv->reload_count = 0;
+-
+-	if (!test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
+-			  "Restarting adapter due to uCode error.\n");
+-
+-		if (priv->cfg->mod_params->restart_fw)
+-			queue_work(priv->workqueue, &priv->restart);
+-	}
++	iwlagn_fw_error(priv, false);
+ }
+ 
+ static int iwl_apm_stop_master(struct iwl_priv *priv)
+@@ -1755,15 +1766,7 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 			break;
+ 		}
+ 		IWL_ERR(priv, "On demand firmware reload\n");
+-		/* Set the FW error flag -- cleared on iwl_down */
+-		set_bit(STATUS_FW_ERROR, &priv->status);
+-		wake_up_interruptible(&priv->wait_command_queue);
+-		/*
+-		 * Keep the restart process from trying to send host
+-		 * commands by clearing the INIT status bit
+-		 */
+-		clear_bit(STATUS_READY, &priv->status);
+-		queue_work(priv->workqueue, &priv->restart);
++		iwlagn_fw_error(priv, true);
+ 		break;
+ 	}
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 46c90b3..8bc2346 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -729,4 +729,7 @@ static inline bool iwl_bt_statistics(struct iwl_priv *priv)
+ extern bool bt_coex_active;
+ extern bool bt_siso_mode;
+ 
++
++void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
++
+ #endif /* __iwl_core_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 277c917..b5d51b0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -471,7 +471,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		}
+ 		if (!is_ct_kill) {
+ 			IWL_ERR(priv, "Restarting adapter due to queue full\n");
+-			queue_work(priv->workqueue, &priv->restart);
++			iwlagn_fw_error(priv, false);
+ 		}
+ 		return -ENOSPC;
+ 	}
+@@ -584,7 +584,7 @@ static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id,
+ 		if (nfreed++ > 0) {
+ 			IWL_ERR(priv, "HCMD skipped: index (%d) %d %d\n", idx,
+ 					q->write_ptr, q->read_ptr);
+-			queue_work(priv->workqueue, &priv->restart);
++			iwlagn_fw_error(priv, false);
+ 		}
+ 
+ 	}
+-- 
+1.7.0.4
 
-#ifdef RTMP_MAC_USB
-		if ((Version !=3D 0x2860) && (Version !=3D 0x2872) && (Version !=3D 0x307=
-0))=20
-		{	// Use Firmware V2.
-			//printk("KH:Use New Version,part2\n");
-			pFirmwareImage =3D (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV1_LENGTH];
-			FileLength =3D FIRMWAREIMAGEV2_LENGTH;
-		}
-		else
-		{
-			//printk("KH:Use New Version,part1\n");
-			pFirmwareImage =3D FirmwareImage;
-			FileLength =3D FIRMWAREIMAGEV1_LENGTH;
-		}
-#endif // RTMP_MAC_USB //
-
-The firmware blobs in RT2870 version 2009-08-20 and RT3070 version
-2009-05-25 are all marked as version 17 (or 0.17), but *they all have
-different contents*.
-
-I attempted to maintain the same version selection logic when converting
-the staging drivers to use the firmware loader, since I assumed there
-was a good reason for it.
-
-> As for the linux-firmware that contains some firmware files for rt30** ch=
-ipsets,
-> but that are not used by rt2800pci/usb for the simple reason that the lat=
-est
-> version of the rt2860.bin and rt2870.bin files contain support for
-> those chipsets
-> as well.
-
-So I have heard.  But do they still support the original chips
-correctly?
-
-> > If you think that a single image per bus type can cover all controllers=
-,
-> > please identify those firmware images, test them on each hardware
-> > generation, and get them into linux-firmware.
->=20
-> Updating the firmware files in the linux-firmware tree seems to be
-> close to impossible. Multiple attempts have been made to update the
-> firmware files for rt73usb, rt61pci, rt2800pci and rt2800usb, and every
-> attempt has been ignored.
-> Even when Ralink sent the update directly, and it seemed that the patches
-> were accepted, they were still not applied.
-
-This roughly matches my experience, except that I have been persistent
-enough to get my changes applied eventually.
-
-> So honestly, I think it might be easier to simply remove the Ralink firmw=
-are
-> files from the linux-firmware tree, as then at least the users won't acci=
-dently
-> use the outdated firmware files from that tree.
-
-linux-firmware is supposed to have all firmware files referenced by any
-version of Linux; therefore these files must not be removed.
-
-If just two files are sufficient then the other files could be replaced
-by symlinks to them.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-04Jr8TzYl2z2629ypoET
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATaHtlee/yOyVhhEJAQpc1Q/+NTmYzegsEIEPOHGQbUwxJL7vHsDTEuay
-KtuzqT9yc5tby3ufVStSESUzejhoTKvATRPCIsddJVepHMxeps92PDI12Jw3GB0o
-ykSe9EI3gICHBd+gug8CY59H9jVLBIUSUSatZAdQvlKuV+bad8jKRiyHsRwky9Tl
-1e0NDUZm6Zc01AT87yVbvxIbpGbGvM/xPimZ/o2jd2l4JYZYeXHMC9g1sf7CZwMT
-PyUdP7Tk4pPe+Ghbc/HG8rm3xSkyqsc1J5yeQGFtal9J3mt/B+n4R6oD47AOxFVn
-Vv1vaujdhXBcblwTMFWWxMroed8Vnr38WNi82SzNiOwl4LPdnCArDtEOYQ5/fL7m
-65Zl+eVg6wrcy6ZNtrz7OjFtbMWyMf1i3LNUIHu636jYDqGkSxUjXndMcqVmvd2D
-t1i7Zfg8SNvstqEJpZSt4YBLAxJJatM4tYtXbKvS2cmYQGkoDl5EujzmE3rtTGAc
-z1pNFoHf1pxwtAYj/Ouh1CHyYrzQEPaw5aZRc8L9A8+iW3gxfHxx3zJi0+e8ruAp
-dgd9jStyFvjlyhbrlPZ4No+yMFtCd2ON/JIu5ODCd0l7xlxxLSZ2yihA0XDRKdcY
-rf6PEmi8J8Qw/FGnFcDNkHEdWLry7vVUW3L6fjkrJJTAc4vs4D18weQINJxrCMuG
-Dnyyzu4fXrc=
-=FDS6
------END PGP SIGNATURE-----
-
---=-04Jr8TzYl2z2629ypoET--
