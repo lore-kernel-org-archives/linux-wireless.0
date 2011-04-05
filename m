@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp207.alice.it ([82.57.200.103]:50294 "EHLO smtp207.alice.it"
+Received: from kroah.org ([198.145.64.141]:43861 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752255Ab1DOKYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 06:24:38 -0400
-Date: Fri, 15 Apr 2011 12:24:25 +0200
-From: Antonio Ospite <ospite@studenti.unina.it>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-Subject: Re: [PATCH v3] rfkill: Regulator consumer driver for rfkill
-Message-Id: <20110415122425.96ebd7f0.ospite@studenti.unina.it>
-In-Reply-To: <20110414130626.GA7890@opensource.wolfsonmicro.com>
-References: <1302686356.3731.1.camel@jlt3.sipsolutions.net>
-	<1302723645-5286-1-git-send-email-ospite@studenti.unina.it>
-	<1302724383.3731.19.camel@jlt3.sipsolutions.net>
-	<20110414123912.71e4bd52.ospite@studenti.unina.it>
-	<20110414130626.GA7890@opensource.wolfsonmicro.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__15_Apr_2011_12_24_25_+0200_W9zl.ZHWB36Is9vb"
+	id S1753183Ab1DET3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 15:29:12 -0400
+Date: Tue, 5 Apr 2011 12:29:51 -0700
+From: Greg KH <greg@kroah.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>
+Subject: Re: [PATCH 2/3] linux-firmware: Removed codeversion from brcm
+ firmware filenames.
+Message-ID: <20110405192951.GA15638@kroah.com>
+References: <1302015522-20601-1-git-send-email-henryp@broadcom.com>
+ <1302015522-20601-3-git-send-email-henryp@broadcom.com>
+ <4D9B3679.10509@lwfinger.net>
+ <4D9B5684.6020304@broadcom.com>
+ <4D9B66C2.5000200@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D9B66C2.5000200@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Fri__15_Apr_2011_12_24_25_+0200_W9zl.ZHWB36Is9vb
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tue, Apr 05, 2011 at 02:00:18PM -0500, Larry Finger wrote:
+> On 04/05/2011 12:51 PM, Henry Ptasinski wrote:
+> >On 04/05/2011 08:34 AM, Larry Finger wrote:
+> >>I also endorse removing the version number from the firmware name; however, I
+> >>see a fundamental flaw in the present submission. Both brcmsmac and its
+> >>predecessor brcm80211 have been included in mainline and compat-wireless, have
+> >>been widely distributed, and have a number of users. This change will break the
+> >>system of every one of them - including mine.
+> >
+> >Hmm. Sounds like you've got the firmware installed with it's original name, and
+> >are using symlinks. Is that correct? A lot of installations (including at least
+> >one major distro) rename the files, and skip the whole symlink approach.
+> >
+> >That's we decided to dump the version number appendage. However, if there are a
+> >mix of installation approaches, we should take a somewhat different approach on
+> >the fix.
+> >
+> > > My proposed solution is to do the
+> >>rename as done in this patch, but also include links to the new name from every
+> >>name used in any distributed version.
+> >
+> >The brcm80211/brcmsmac driver has always looked for "brcm/bcm43xx-0.fw". It
+> >never looked for the version info on the filename. So I don't quite understand
+> >what you mean by "from every name used in any distributed version", as the only
+> >name used in all distributed versions of the driver is exactly the name we're
+> >trying to give to the firmware file. Could you clarify?
+> 
+> You are right. Sorry for the noise. Having one name for the firmware
+> in linux-firmware and a different one in the driver got me confused.
+> The current patches will fix that.
+> 
+> My distro is openSUSE, which does make a symlink between the name
+> with version info and what the driver actually loads.
 
-On Thu, 14 Apr 2011 06:06:26 -0700
-Mark Brown <broonie@opensource.wolfsonmicro.com> wrote:
+I created that symlink for openSUSE, and if there is a better way to
+solve it, please let me know.
 
-> On Thu, Apr 14, 2011 at 12:39:12PM +0200, Antonio Ospite wrote:
-> > Johannes Berg <johannes@sipsolutions.net> wrote:
->=20
-> > > Should remove do platform_set_drvdata(pdev, NULL)?
->=20
-> > AFAICS this is not strictly necessary because we never check for NULL
-> > here and we are setting drvdata again in _probe() each time the module
-> > is loaded anyways. If it is considered a good practice for symmetry
-> > reasons then I'll add it, no problem. Does anyone have comments on that?
->=20
-> We went round this loop with I2C - anything peering at driver data that
-> it didn't originally set is buggy anyway so no need to reset to zero.
-> If there was a need the platform bus or driver core should do it since
-> all devices would need it.
->=20
+thanks,
 
-Ok, so v3 is the one which could be merged.
-
-John if you are the one who is going to commit it, would you please add
-the line:
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-Thanks everybody for the comments.
-
-Regards,
-   Antonio
-
---=20
-Antonio Ospite
-http://ao2.it
-
-PGP public key ID: 0x4553B001
-
-A: Because it messes up the order in which people normally read text.
-   See http://en.wikipedia.org/wiki/Posting_style
-Q: Why is top-posting such a bad thing?
-
---Signature=_Fri__15_Apr_2011_12_24_25_+0200_W9zl.ZHWB36Is9vb
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2oHNkACgkQ5xr2akVTsAFR/gCfQ8GE5fi/wdMTh/sMcgr8V/R9
-YAsAoI8gzHFlJR28QT32t3ehLnGMSx9f
-=Ut+5
------END PGP SIGNATURE-----
-
---Signature=_Fri__15_Apr_2011_12_24_25_+0200_W9zl.ZHWB36Is9vb--
+greg k-h
