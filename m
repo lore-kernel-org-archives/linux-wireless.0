@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40725 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:20287 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753850Ab1DZKkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 06:40:17 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 03:39:50 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] ath9k: Use ps wrappers for btcoex logic.
-Date: Tue, 26 Apr 2011 10:39:55 +0530
-Message-ID: <1303794595-4031-4-git-send-email-vnatarajan@atheros.com> (sfid-20110426_124021_110677_95A5131F)
-In-Reply-To: <1303794595-4031-3-git-send-email-vnatarajan@atheros.com>
-References: <1303794595-4031-1-git-send-email-vnatarajan@atheros.com>
- <1303794595-4031-2-git-send-email-vnatarajan@atheros.com>
- <1303794595-4031-3-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755401Ab1DERBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 13:01:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/25] iwlagn: return send calibration result
+Date: Tue,  5 Apr 2011 09:41:54 -0700
+Message-Id: <1302021732-21250-8-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ps wrappers before accessing hw registers in btcoex.
+In alive notification call, return the status from iwl_send_calib_results()
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 3a4ddd1..0349b3a 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -179,6 +179,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	u32 timer_period;
- 	bool is_btscan;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index bb262a6..127c842 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -530,9 +530,7 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
+ 	iwlagn_send_wimax_coex(priv);
  
-+	ath9k_ps_wakeup(sc);
- 	ath_detect_bt_priority(sc);
- 
- 	is_btscan = sc->sc_flags & SC_OP_BT_SCAN;
-@@ -201,6 +202,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 		btcoex->hw_timer_enabled = true;
- 	}
- 
-+	ath9k_ps_restore(sc);
- 	mod_timer(&btcoex->period_timer, jiffies +
- 				  msecs_to_jiffies(ATH_BTCOEX_DEF_BT_PERIOD));
- }
-@@ -220,6 +222,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	ath_dbg(common, ATH_DBG_BTCOEX,
- 		"no stomp timer running\n");
- 
-+	ath9k_ps_wakeup(sc);
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
- 	if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_LOW || is_btscan)
-@@ -228,6 +231,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_LOW);
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
-+	ath9k_ps_restore(sc);
+ 	iwlagn_set_Xtal_calib(priv);
+-	iwl_send_calib_results(priv);
+-
+-	return 0;
++	return iwl_send_calib_results(priv);
  }
  
- int ath_init_btcoex_timer(struct ath_softc *sc)
+ 
 -- 
-1.7.1
+1.7.0.4
 
