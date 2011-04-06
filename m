@@ -1,208 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754136Ab1DRNgU (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60813 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049Ab1DFUkv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:36:20 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:19 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
-Date: Mon, 18 Apr 2011 15:34:22 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181533.42494.IvDoorn@gmail.com> <201104181534.02553.IvDoorn@gmail.com>
-In-Reply-To: <201104181534.02553.IvDoorn@gmail.com>
+	Wed, 6 Apr 2011 16:40:51 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181534.23133.IvDoorn@gmail.com>
+In-Reply-To: <op.vti9ote53ri7v4@arend-laptop>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	<op.vti9ote53ri7v4@arend-laptop>
+Date: Wed, 6 Apr 2011 22:40:50 +0200
+Message-ID: <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+2011/4/6 Arend van Spriel <arend@broadcom.com>:
+> On Wed, 06 Apr 2011 20:02:20 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
+>>>
+>>> 1. Term Broadcom AI
+>>>
+>>
+>> I'm still little confused with that, let me read old mails, google a
+>> little, etc. I though AMBA AXI is AI on ARM host, give me some time
+>> for this.
+>
+> It is the interconnect or backplane which the cores in the chip are hooked
+> up to. See the ARM website for some more info:
+> http://www.arm.com/products/system-ip/interconnect/axi/index.php
+>
+>>
+>>> 2. Bus registration
+>>>
+>>
+>> You should drop initialization (to do not perform it twice), but
+>> ChipCommon ops are still allowed. See: bcmai_cc_read32,
+>> bcmai_cc_write32, bcmai_cc_mask32, bcmai_cc_set32, bcmai_cc_maskset32.
+>>
+>> You can simply call:
+>> bcmai_cc_read32(mydev->bus.drv_cc, CC_REGISTER);
+>>
+>> There is nothing stopping you from registering one driver for few
+>> cores. We do this in b43 for old SSBs with 2 wireless cores. Of course
+>> this is not possible to use 2 drivers for 1 core at the same time.
+>
+> So in theory 2 drivers for 2 separate cores can both call bcmai_cc_read32().
+> 2 drivers for 1 core indeed seems a 'little awkward' ;-)
 
-All register reads/writes in rt2800usb were previously done with
-rt2800_register_read/rt2800_register_write. These however indirectly
-call rt2x00usb_register_read/rt2x00usb_register_write which adds an
-additional overhead of at least one call and several move instructions
-to each register access.
+If we want to have two drivers working on two (different) cores
+simultaneously, we will have to add trivial mutex to group core
+switching with core operation (read/write).
 
-Replacing the calls to rt2800_register_read/rt2800_register_write with
-direct calls to rt2x00usb_register_read/rt2x00usb_register_write gets
-rid of quite a number of instructions in the drivers hotpaths (IRQ
-handling and txdone handling).
+We could also use the fact that [base + (2 * BCMAI_CORE_SIZE)] always
+points to PCIe and [base + (3 * BCMAI_CORE_SIZE)] always points to
+ChipCommon. For that cores we do not need core switching and so we do
+not need mutexes. (Don't take my "always" too seriously, just wanted
+to explain it easier, this can be not 100% always).
 
-For consistency replace all references to rt2800_register_read/write
-with the rt2x00usb_register_read/write variants.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   56 +++++++++++++++---------------
- 1 files changed, 28 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index fd8aa99..44ead75 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -59,16 +59,16 @@ static void rt2800usb_start_queue(struct data_queue *queue)
- 
- 	switch (queue->qid) {
- 	case QID_RX:
--		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+		rt2x00usb_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 1);
--		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+		rt2x00usb_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 		break;
- 	case QID_BEACON:
--		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
-+		rt2x00usb_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
--		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+		rt2x00usb_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 		break;
- 	default:
- 		break;
-@@ -82,16 +82,16 @@ static void rt2800usb_stop_queue(struct data_queue *queue)
- 
- 	switch (queue->qid) {
- 	case QID_RX:
--		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+		rt2x00usb_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 0);
--		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+		rt2x00usb_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 		break;
- 	case QID_BEACON:
--		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
-+		rt2x00usb_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 0);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 0);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
--		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+		rt2x00usb_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 		break;
- 	default:
- 		break;
-@@ -185,11 +185,11 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Write firmware to device.
- 	 */
--	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
--				   data + offset, length);
-+	rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-+				      data + offset, length);
- 
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
-+	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
-+	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
- 
- 	/*
- 	 * Send firmware request to device to load firmware,
-@@ -204,7 +204,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	msleep(10);
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
-+	rt2x00usb_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
- 
- 	return 0;
- }
-@@ -222,22 +222,22 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	if (rt2800_wait_csr_ready(rt2x00dev))
- 		return -EBUSY;
- 
--	rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg & ~0x00002000);
-+	rt2x00usb_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
-+	rt2x00usb_register_write(rt2x00dev, PBF_SYS_CTRL, reg & ~0x00002000);
- 
--	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
-+	rt2x00usb_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
- 
--	rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+	rt2x00usb_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_BBP, 1);
--	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+	rt2x00usb_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 
--	rt2800_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
-+	rt2x00usb_register_write(rt2x00dev, USB_DMA_CFG, 0x00000000);
- 
- 	rt2x00usb_vendor_request_sw(rt2x00dev, USB_DEVICE_MODE, 0,
- 				    USB_MODE_RESET, REGISTER_TIMEOUT);
- 
--	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
-+	rt2x00usb_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
- 
- 	return 0;
- }
-@@ -249,7 +249,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev)))
- 		return -EIO;
- 
--	rt2800_register_read(rt2x00dev, USB_DMA_CFG, &reg);
-+	rt2x00usb_register_read(rt2x00dev, USB_DMA_CFG, &reg);
- 	rt2x00_set_field32(&reg, USB_DMA_CFG_PHY_CLEAR, 0);
- 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_EN, 0);
- 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_TIMEOUT, 128);
-@@ -262,7 +262,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
- 			    / 1024) - 3);
- 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_EN, 1);
- 	rt2x00_set_field32(&reg, USB_DMA_CFG_TX_BULK_EN, 1);
--	rt2800_register_write(rt2x00dev, USB_DMA_CFG, reg);
-+	rt2x00usb_register_write(rt2x00dev, USB_DMA_CFG, reg);
- 
- 	return rt2800_enable_radio(rt2x00dev);
- }
-@@ -338,12 +338,12 @@ static void rt2800usb_watchdog(struct rt2x00_dev *rt2x00dev)
- 	unsigned int i;
- 	u32 reg;
- 
--	rt2800_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
-+	rt2x00usb_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
- 	if (rt2x00_get_field32(reg, TXRXQ_PCNT_TX0Q)) {
- 		WARNING(rt2x00dev, "TX HW queue 0 timed out,"
- 			" invoke forced kick\n");
- 
--		rt2800_register_write(rt2x00dev, PBF_CFG, 0xf40012);
-+		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40012);
- 
- 		for (i = 0; i < 10; i++) {
- 			udelay(10);
-@@ -351,15 +351,15 @@ static void rt2800usb_watchdog(struct rt2x00_dev *rt2x00dev)
- 				break;
- 		}
- 
--		rt2800_register_write(rt2x00dev, PBF_CFG, 0xf40006);
-+		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40006);
- 	}
- 
--	rt2800_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
-+	rt2x00usb_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
- 	if (rt2x00_get_field32(reg, TXRXQ_PCNT_TX1Q)) {
- 		WARNING(rt2x00dev, "TX HW queue 1 timed out,"
- 			" invoke forced kick\n");
- 
--		rt2800_register_write(rt2x00dev, PBF_CFG, 0xf4000a);
-+		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf4000a);
- 
- 		for (i = 0; i < 10; i++) {
- 			udelay(10);
-@@ -367,7 +367,7 @@ static void rt2800usb_watchdog(struct rt2x00_dev *rt2x00dev)
- 				break;
- 		}
- 
--		rt2800_register_write(rt2x00dev, PBF_CFG, 0xf40006);
-+		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40006);
- 	}
- 
- 	rt2x00usb_watchdog(rt2x00dev);
 -- 
-1.7.2.3
-
+Rafał
