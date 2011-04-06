@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30251 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932724Ab1DZBfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 21:35:53 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 18:35:26 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] cfg80211: fix regresion on reg user timeout
-Date: Mon, 25 Apr 2011 18:35:48 -0700
-Message-ID: <1303781748-21498-1-git-send-email-lrodriguez@atheros.com> (sfid-20110426_033555_920044_E50545DF)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47156 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106Ab1DFXh5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 19:37:57 -0400
+Received: by iyb14 with SMTP id 14so1921350iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 16:37:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1302100683.4090.9.camel@jlt3.sipsolutions.net>
+References: <1301969218-9878-1-git-send-email-javier@cozybit.com>
+ <1301987234.3831.2.camel@jlt3.sipsolutions.net> <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
+ <1302035332.4968.11.camel@jlt3.sipsolutions.net> <BANLkTinG4b9bzGhamHuF0zi0V=OQT5uBWQ@mail.gmail.com>
+ <1302100683.4090.9.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 6 Apr 2011 16:37:37 -0700
+Message-ID: <BANLkTino+eaE_YG2ETvfX2W=7EmtxUYE-w@mail.gmail.com>
+Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own stack.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "cfg80211: add a timer for invalid user reg hints"
-introduced a regression for the case where a secondary identical
-regulatory hint from a user is sent. What would happen is the
-second hint would schedule delayed work in to catch a timeout
-but since we are never processing it given that the hint was already
-applied we'd always hit the timeout and and restore regulatory
-settings back to world regulatory domain. This is fixed by simply
-avoiding sheduling work if the hint was already applied.
+On Wed, Apr 6, 2011 at 7:38 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2011-04-05 at 15:04 -0700, Javier Cardona wrote:
+>
+>> > After thinking about this more, yes, I think I do object. Not only is
+>> > the design strange with passing frames back and forth, but also it seems
+>> > like a rather slippery slope, at some point I fear somebody will attempt
+>> > to "fake" MPM to take advantage of that kernel code even when it's not
+>> > really fitting.
+>>
+>> The above seem to be concerns with the API itself and not with
+>> partitioning.  We could make the API specific for mesh peering frames
+>> in a way that cannot be used for any other purpose other than
+>> protecting mesh peering frames.
+>
+> Well, it's a bit of both. I can just see somebody trying to implement a
+> new protocol and making it look like MPM in order to be able to feed it
+> back into the kernel, or something like that. More generally, I don't
+> much like the looping back of things.
+>
+>> I know of a few mesh use cases where wpa_supplicant is not required,
+>> such as resource constrained embedded platforms like the ones used in
+>> sensor networks.  But hey, we'll re-evaluate the wpa_supplicant route
+>> and see if it is doable.
+>
+> I think in that case it'd make some sense to make the code in the kernel
+> configurable? Can't be all that much overhead to have essentially the
+> same code outside the kernel?
 
-Tested-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+We are analyzing how hard it would be to do MPM in userspace while
+keeping (default) path selection in the kernel.  In this approach
+userspace would not only authenticate but also establish peer links
+and (in-kernel) stations would represent only established peer links.
+It's probably not that hard after all, but definitely some overhead
+compared to leaving it as it is :)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 58d6995..1613080 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1455,7 +1455,8 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	 * We only time out user hints, given that they should be the only
- 	 * source of bogus requests.
- 	 */
--	if (reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+	if (r != -EALREADY &&
-+	    reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
- 		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
--- 
-1.7.4.15.g7811d
-
+Javier
