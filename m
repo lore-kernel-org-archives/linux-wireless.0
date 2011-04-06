@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38831 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752502Ab1DLNGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:06:06 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:05:41 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 20/22] ath9k_hw: Assign macversion based on devid for built-in wmac
-Date: Tue, 12 Apr 2011 18:27:20 +0530
-Message-ID: <1302613042-1754-21-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
-References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46458 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756494Ab1DFSpV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 14:45:21 -0400
+Date: Wed, 6 Apr 2011 14:38:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+Message-ID: <20110406183837.GI11941@tuxdriver.com>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+ <20110406141131.GC2810@opensource.wolfsonmicro.com>
+ <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+ <1302113542.22852.7.camel@x61.thuisdomein>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1302113542.22852.7.camel@x61.thuisdomein>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++---
- 1 files changed, 11 insertions(+), 3 deletions(-)
+On Wed, Apr 06, 2011 at 08:12:22PM +0200, Paul Bolle wrote:
+> On Wed, 2011-04-06 at 16:21 +0200, Johannes Berg wrote:
+> > On Wed, 2011-04-06 at 23:11 +0900, Mark Brown wrote:
+> > > On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
+> > > 
+> > > > +	tristate "Generic rfkill regulator driver"
+> > > > +	depends on RFKILL || !RFKILL
+> > > 
+> > > That looks *odd*.
+> > 
+> > That's normal for rfkill -- if RFKILL==n then this can be anything since
+> > the rfkill API goes all no-op inlines, but if RFKILL==m then this can't
+> > be ==y. "depends on !RFKILL" covers the former, "depends on RFKILL" the
+> > latter.
+> 
+> But doesn't
+> 	depends on RFKILL || !RFKILL
+> 
+> always evaluate to true when running "make *config"? (Even if RFKILL is
+> an unknown symbol when that expression is parsed!)
+> 
+> I'd say that dependencies such as this one might as well be dropped from
+> their Kconfig file.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 67556ca..aaf7f7a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -247,6 +247,17 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- {
- 	u32 val;
- 
-+	switch (ah->hw_version.devid) {
-+	case AR5416_AR9100_DEVID:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
-+		break;
-+	case AR9300_DEVID_AR9340:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
-+		val = REG_READ(ah, AR_SREV);
-+		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-+		return;
-+	}
-+
- 	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
- 
- 	if (val == 0xFF) {
-@@ -487,9 +498,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
--		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
--
- 	ath9k_hw_read_revisions(ah);
- 
- 	/*
+The syntax may seem strange, but basically it just says "don't let
+me by y if RFKILL is m".
+
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
