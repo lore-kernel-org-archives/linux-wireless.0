@@ -1,82 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55911 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493Ab1DTBrK (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:45398 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757095Ab1DFXmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 21:47:10 -0400
-Received: by iwn34 with SMTP id 34so215020iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 18:47:09 -0700 (PDT)
-Message-ID: <4DAE3B17.4080308@lwfinger.net>
-Date: Tue, 19 Apr 2011 20:47:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [RFC][PATCH] ssb: cc: add & fix defines
-References: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 6 Apr 2011 19:42:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: use common keyinfo bitmap for different key types
+Date: Wed,  6 Apr 2011 16:46:56 -0700
+Message-Id: <1302133616-6595-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1302133616-6595-1-git-send-email-bzhao@marvell.com>
+References: <1302133616-6595-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2011 08:17 PM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
-> With updated defines following MMIO with defines makes sense:
->   read32 0xf04001e0 ->  0x00010000
-> write32 0xf04001e0<- 0x00010002	|= SSB_CHIPCO_CLKCTLST_FORCEHT
->   read32 0xf04001e0 ->  0x00010002
-> (...)
->   read32 0xf04001e0 ->  0x00010002
->   read32 0xf04001e0 ->  0x00010002
->   read32 0xf04001e0 ->  0x00030002	(&  SSB_CHIPCO_CLKCTLST_HAVEHT)
->
-> Of course MMIO does not come from 4328. It is from 4312 and wl (just SSB defs).
->
-> The tricky part is that we were using SSB_CHIPCO_CLKCTLST_HAVEHT in PMU driver.
->
-> My guess is that we were always checking for the wrong register and we got
-> false positives on test for turning PLL down.
-> ---
->   include/linux/ssb/ssb_driver_chipcommon.h |    9 +++++++--
->   1 files changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-> index ba83bc5..45e7b6c 100644
-> --- a/include/linux/ssb/ssb_driver_chipcommon.h
-> +++ b/include/linux/ssb/ssb_driver_chipcommon.h
-> @@ -133,6 +133,9 @@
->   #define SSB_CHIPCO_GPIOIRQ		0x0074
->   #define SSB_CHIPCO_WATCHDOG		0x0080
->   #define SSB_CHIPCO_GPIOTIMER		0x0088		/* LED powersave (corerev>= 16) */
-> +#define  SSB_CHIPCO_GPIOTIMER_OFFTIME	0x0000FFFF
-> +#define  SSB_CHIPCO_GPIOTIMER_OFFTIME_SHIFT	0
-> +#define  SSB_CHIPCO_GPIOTIMER_ONTIME	0xFFFF0000
->   #define  SSB_CHIPCO_GPIOTIMER_ONTIME_SHIFT	16
->   #define SSB_CHIPCO_GPIOTOUTM		0x008C		/* LED powersave (corerev>= 16) */
->   #define SSB_CHIPCO_CLOCK_N		0x0090
-> @@ -191,8 +194,10 @@
->   #define  SSB_CHIPCO_CLKCTLST_HAVEALPREQ	0x00000008 /* ALP available request */
->   #define  SSB_CHIPCO_CLKCTLST_HAVEHTREQ	0x00000010 /* HT available request */
->   #define  SSB_CHIPCO_CLKCTLST_HWCROFF	0x00000020 /* Force HW clock request off */
-> -#define  SSB_CHIPCO_CLKCTLST_HAVEHT	0x00010000 /* HT available */
-> -#define  SSB_CHIPCO_CLKCTLST_HAVEALP	0x00020000 /* APL available */
-> +#define  SSB_CHIPCO_CLKCTLST_HAVEHT	0x00010000 /* ALP available */
-> +#define  SSB_CHIPCO_CLKCTLST_HAVEALP	0x00020000 /* HT available */
-> +#define  SSB_CHIPCO_CLKCTLST_4328A0_HAVEHT	0x00010000 /* 4328a0 has reversed bits */
-> +#define  SSB_CHIPCO_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
->   #define SSB_CHIPCO_HW_WORKAROUND	0x01E4 /* Hardware workaround (rev>= 20) */
->   #define SSB_CHIPCO_UART0_DATA		0x0300
->   #define SSB_CHIPCO_UART0_IMR		0x0304
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-I agree that the HAVEHT bit is different for the 4328 than for the rest of the 
-versions, but I think you did not get the rest quite right. Having the HT bit 
-attached to a symbol named ALP and vice versa will only create confusion. Make 
-SSB_CHIPCO_CLKCTLST_HAVEHT be 0x00020000 and SSB_CHIPCO_CLKCTLST_HAVEALP be 
-0x000100000.
+Instead of having separate key information definitions for
+each type of key, a common key information bitmap is used.
 
-Larry
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h          |   27 +++------------------------
+ drivers/net/wireless/mwifiex/sta_cmd.c     |   27 +++++++++++++--------------
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    3 +--
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 +--
+ 4 files changed, 18 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 2b93811..f8c008f 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -72,33 +72,12 @@ enum KEY_TYPE_ID {
+ 	KEY_TYPE_ID_AES,
+ 	KEY_TYPE_ID_WAPI,
+ };
+-
+-enum KEY_INFO_WEP {
+-	KEY_INFO_WEP_MCAST = 0x01,
+-	KEY_INFO_WEP_UNICAST = 0x02,
+-	KEY_INFO_WEP_ENABLED = 0x04
+-};
+-
+-enum KEY_INFO_TKIP {
+-	KEY_INFO_TKIP_MCAST = 0x01,
+-	KEY_INFO_TKIP_UNICAST = 0x02,
+-	KEY_INFO_TKIP_ENABLED = 0x04
+-};
+-
+-enum KEY_INFO_AES {
+-	KEY_INFO_AES_MCAST = 0x01,
+-	KEY_INFO_AES_UNICAST = 0x02,
+-	KEY_INFO_AES_ENABLED = 0x04
+-};
++#define KEY_MCAST	BIT(0)
++#define KEY_UNICAST	BIT(1)
++#define KEY_ENABLED	BIT(2)
+ 
+ #define WAPI_KEY_LEN			50
+ 
+-enum KEY_INFO_WAPI {
+-	KEY_INFO_WAPI_MCAST = 0x01,
+-	KEY_INFO_WAPI_UNICAST = 0x02,
+-	KEY_INFO_WAPI_ENABLED = 0x04
+-};
+-
+ #define MAX_POLL_TRIES			100
+ 
+ #define MAX_MULTI_INTERFACE_POLL_TRIES  1000
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 6fff261..19de652 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -500,9 +500,8 @@ mwifiex_set_keyparamset_wep(struct mwifiex_private *priv,
+ 			key_param_set->key_type_id =
+ 				cpu_to_le16(KEY_TYPE_ID_WEP);
+ 			key_param_set->key_info =
+-				cpu_to_le16(KEY_INFO_WEP_ENABLED |
+-					    KEY_INFO_WEP_UNICAST |
+-					    KEY_INFO_WEP_MCAST);
++				cpu_to_le16(KEY_ENABLED | KEY_UNICAST |
++					    KEY_MCAST);
+ 			key_param_set->key_len =
+ 				cpu_to_le16(priv->wep_key[i].key_length);
+ 			/* Set WEP key index */
+@@ -589,10 +588,10 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 			cpu_to_le16(KEY_TYPE_ID_WAPI);
+ 		if (cmd_oid == KEY_INFO_ENABLED)
+ 			key_material->key_param_set.key_info =
+-				cpu_to_le16(KEY_INFO_WAPI_ENABLED);
++				cpu_to_le16(KEY_ENABLED);
+ 		else
+ 			key_material->key_param_set.key_info =
+-				cpu_to_le16(!KEY_INFO_WAPI_ENABLED);
++				cpu_to_le16(!KEY_ENABLED);
+ 
+ 		key_material->key_param_set.key[0] = enc_key->key_index;
+ 		if (!priv->sec_info.wapi_key_on)
+@@ -604,10 +603,10 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 		if (0 != memcmp(enc_key->mac_addr, bc_mac, sizeof(bc_mac))) {
+ 			/* WAPI pairwise key: unicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_WAPI_UNICAST);
++				cpu_to_le16(KEY_UNICAST);
+ 		} else {	/* WAPI group key: multicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_WAPI_MCAST);
++				cpu_to_le16(KEY_MCAST);
+ 			priv->sec_info.wapi_key_on = true;
+ 		}
+ 
+@@ -634,32 +633,32 @@ static int mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
+ 			cpu_to_le16(KEY_TYPE_ID_AES);
+ 		if (cmd_oid == KEY_INFO_ENABLED)
+ 			key_material->key_param_set.key_info =
+-				cpu_to_le16(KEY_INFO_AES_ENABLED);
++				cpu_to_le16(KEY_ENABLED);
+ 		else
+ 			key_material->key_param_set.key_info =
+-				cpu_to_le16(!KEY_INFO_AES_ENABLED);
++				cpu_to_le16(!KEY_ENABLED);
+ 
+ 		if (enc_key->key_index & MWIFIEX_KEY_INDEX_UNICAST)
+ 				/* AES pairwise key: unicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_AES_UNICAST);
++				cpu_to_le16(KEY_UNICAST);
+ 		else		/* AES group key: multicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_AES_MCAST);
++				cpu_to_le16(KEY_MCAST);
+ 	} else if (enc_key->key_len == WLAN_KEY_LEN_TKIP) {
+ 		dev_dbg(priv->adapter->dev, "cmd: WPA_TKIP\n");
+ 		key_material->key_param_set.key_type_id =
+ 			cpu_to_le16(KEY_TYPE_ID_TKIP);
+ 		key_material->key_param_set.key_info =
+-			cpu_to_le16(KEY_INFO_TKIP_ENABLED);
++			cpu_to_le16(KEY_ENABLED);
+ 
+ 		if (enc_key->key_index & MWIFIEX_KEY_INDEX_UNICAST)
+ 				/* TKIP pairwise key: unicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_TKIP_UNICAST);
++				cpu_to_le16(KEY_UNICAST);
+ 		else		/* TKIP group key: multicast */
+ 			key_material->key_param_set.key_info |=
+-				cpu_to_le16(KEY_INFO_TKIP_MCAST);
++				cpu_to_le16(KEY_MCAST);
+ 	}
+ 
+ 	if (key_material->key_param_set.key_type_id) {
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 74add45..648df69 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -574,8 +574,7 @@ static int mwifiex_ret_802_11_key_material(struct mwifiex_private *priv,
+ 		&resp->params.key_material;
+ 
+ 	if (le16_to_cpu(key->action) == HostCmd_ACT_GEN_SET) {
+-		if ((le16_to_cpu(key->key_param_set.key_info) &
+-		     KEY_INFO_TKIP_MCAST)) {
++		if ((le16_to_cpu(key->key_param_set.key_info) & KEY_MCAST)) {
+ 			dev_dbg(priv->adapter->dev, "info: key: GTK is set\n");
+ 			priv->wpa_is_gtk_set = true;
+ 			priv->scan_block = false;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index b163507..2fcdbc2 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -1729,8 +1729,7 @@ static int mwifiex_sec_ioctl_set_wpa_key(struct mwifiex_adapter *adapter,
+ 		       sizeof(ibss_key->key_param_set.key_len));
+ 		ibss_key->key_param_set.key_type_id
+ 			= cpu_to_le16(KEY_TYPE_ID_TKIP);
+-		ibss_key->key_param_set.key_info
+-			= cpu_to_le16(KEY_INFO_TKIP_ENABLED);
++		ibss_key->key_param_set.key_info = cpu_to_le16(KEY_ENABLED);
+ 
+ 		/* Send the key as GTK to firmware */
+ 		encrypt_key->key_index = ~MWIFIEX_KEY_INDEX_UNICAST;
+-- 
+1.7.0.2
 
