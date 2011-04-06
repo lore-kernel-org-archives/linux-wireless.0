@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58764 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754720Ab1DJQ4D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 12:56:03 -0400
-Received: by wya21 with SMTP id 21so4216185wya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 09:56:01 -0700 (PDT)
-Message-ID: <4DA1E11D.6060703@gmail.com>
-Date: Sun, 10 Apr 2011 18:55:57 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from smtp30.kymp.net ([80.248.96.181]:2960 "EHLO smtp.kymp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756203Ab1DFOUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:20:16 -0400
+Message-ID: <4D9C764E.2040107@saunalahti.fi>
+Date: Wed, 06 Apr 2011 17:18:54 +0300
+From: Kimmo Huoso <kimmo.huoso@saunalahti.fi>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: Questions about rt2800usb
-Content-Type: text/plain; charset=ISO-8859-15
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB Adapter(rev.A)
+ [Atheros AR9001U-(2)NG] Invalid misc and Tx excessive retries
+References: <4D9B077E.3090106@saunalahti.fi> <201104061438.43678.chunkeey@googlemail.com>
+In-Reply-To: <201104061438.43678.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
+Thanks for answering.
 
-> I noticed that rt2870sta includes a few USB IDs not found in rt2800usb, namely:
-> 
-> 0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14.
-> 
-> Any reasons why these should not be included in rt2800usb?
+Im trying now to get the carl9170 debug working. I didnt see any 
+parameter for debug while running modinfo carl9170. But some sort of 
+debug code seems to be in place in compat-wireless under carl9170. What 
+should i do to enable it. And second how can i get readings from 
+/sys/kernel/debug to be exact. I dont know much of what comes to kernel 
+debugging. And for third even the softmac numbers/statistics might be 
+bogus, im still having problems with the driver while trying to run 
+programs that are strict for smooth connection like online games.
 
-They were in the ralink driver imported into the kernel,
-and later they were eliminated in recent versions of ralink drivers:
-2010_0709_RT2870_Linux_STA_v2.4.0.1
-2010_1215_RT3572_Linux_STA_v2.5.0.0.DPO
-2011_0107_RT3070_RT3370_Linux_STA_v2.5.0.1_DPO
+The card is 7d1:3c10 which has been marked as Rev.A1 and sticker at the 
+back says so too.
 
+Thanks Kimmo
 
-Only these four were meaningful, and they were included by me in rt2800usb.c:
+06.04.2011 15:38, Christian Lamparter kirjoitti:
+> On Tuesday 05 April 2011 14:13:50 Kimmo Huoso wrote:
+>> Im having vast amount of  Invalid misc, Tx excessive retries. my
+>> hardware is 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB
+>> Adapter(rev.A) [Atheros AR9001U-(2)NG].
+> There are two "rev A", hope you got the second revision.
+>
+> But back to the topic: these softmac numbers/statistics are bogus...
+> It might sound a bit weird, but in fact they are not high enough.
+>
+> To make a fair comparison you would have to check the hardware
+> counters [RX_PHY_MISC_ERROR&  friends] instead. carl9170 already
+> has a debugfs interface for this reason [hw_[r|t]x_tally], but
+> ar9170usb lacks this feature.
+>
+> Regards,
+> 	Chr
+>
 
-<http://marc.info/?l=linux-wireless&m=130125079513964&w=2>
-0x0411,0x016f de37cd49b5a54facef174cf34496919857436e8f MelCo(Buffalo) WLI-UC-G301N
-0x050d,0x825b 12840c63b0679f7fab88ea1cc26b52db8b574ce7 Belkin F5D8055
-0x050d,0x935a 705059a670f3af2b37695e82de0ee58e75e656ed Belkin F6D4050 v1
-0x050d,0x935b 5d92fe3387d086fc2f10426fbdb6b86d6cce5a47 Belkin F6D4050 v2
-
-I think 0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14 can be despised,
-unless they also be in the windows driver.
