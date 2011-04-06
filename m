@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43161 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754021Ab1DUUax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 16:30:53 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 13:30:26 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>, <kvalo@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 5/5] ath6kl: fix operations for power management
-Date: Thu, 21 Apr 2011 13:30:40 -0700
-Message-ID: <1303417840-19605-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
-References: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40409 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756370Ab1DFPPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 11:15:21 -0400
+Date: Wed, 6 Apr 2011 11:14:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Cong Wang <amwang@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+Message-ID: <20110406151429.GD11941@tuxdriver.com>
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+ <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+ <4D9C43A8.5060500@redhat.com>
+ <20110406125728.GA2197@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20110406125728.GA2197@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naveen Singh <nsingh@atheros.com>
+On Wed, Apr 06, 2011 at 02:57:29PM +0200, Stanislaw Gruszka wrote:
+> On Wed, Apr 06, 2011 at 06:42:48PM +0800, Cong Wang wrote:
+> > 于 2011年04月06日 18:09, Johannes Berg 写道:
+> > >On Wed, 2011-04-06 at 17:49 +0800, Amerigo Wang wrote:
+> > >>As scheduled in Documentation/feature-removal-schedule.txt,
+> > >>remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+> > >
+> > >Mostly fine, but for iwlegacy Stanislaw we want to keep hw scan (and it
+> > >was actually made default now)
+> 
+> Indeed, disable_hw_scan should be removed in iwlwifi but leaved in iwlegacy.
+> 
+> > Ok, I will wait for Stanislaw's response and then send an updated patch.
+> 
+> Have it now :-)
 
-The cfg80211 ops for power management were completely
-broken. If we were asked for to go into power save it was putting
-device in awake, and when we were asked to become awake we were
-putting the device into power save... This fixes the powersave
-operations to do the right thing.
+Maybe the MODULE_ALIAS("iwl4965") should go to iwlegacy too?
 
-Signed-off-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/os/linux/cfg80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index d5e554e..e87d3aa 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1209,10 +1209,10 @@ ar6k_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 
-     if(pmgmt) {
-         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Max Perf\n", __func__));
--        pwrMode.powerMode = MAX_PERF_POWER;
-+        pwrMode.powerMode = REC_POWER;
-     } else {
-         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Rec Power\n", __func__));
--        pwrMode.powerMode = REC_POWER;
-+        pwrMode.powerMode = MAX_PERF_POWER;
-     }
- 
-     if(wmi_powermode_cmd(ar->arWmi, pwrMode.powerMode) != 0) {
+John
 -- 
-1.7.4.15.g7811d
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
