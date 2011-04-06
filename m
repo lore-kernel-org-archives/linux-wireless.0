@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33673 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756769Ab1DAPgU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 11:36:20 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 08:35:55 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] mac80211: remove few obsolete flags
-Date: Fri, 1 Apr 2011 21:06:13 +0530
-Message-ID: <1301672173-18984-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:39694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755212Ab1DFJ3p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 05:29:45 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Ospite <ospite@studenti.unina.it>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 11:29:38 +0200
+Message-ID: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Wed, 2011-04-06 at 11:21 +0200, Antonio Ospite wrote:
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- net/mac80211/mlme.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+> +	if (regulator_is_enabled(vcc)) {
+> +		dev_dbg(&pdev->dev, "Regulator already enabled\n");
+> +		rfkill_data->reg_enabled = 1;
+> +	}
+> +	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
+> +
+> +	ret = rfkill_register(rf_kill);
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 64d92d5..865fed4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -90,20 +90,11 @@ enum rx_mgmt_action {
- 	/* no action required */
- 	RX_MGMT_NONE,
- 
--	/* caller must call cfg80211_send_rx_auth() */
--	RX_MGMT_CFG80211_AUTH,
--
--	/* caller must call cfg80211_send_rx_assoc() */
--	RX_MGMT_CFG80211_ASSOC,
--
- 	/* caller must call cfg80211_send_deauth() */
- 	RX_MGMT_CFG80211_DEAUTH,
- 
- 	/* caller must call cfg80211_send_disassoc() */
- 	RX_MGMT_CFG80211_DISASSOC,
--
--	/* caller must tell cfg80211 about internal error */
--	RX_MGMT_CFG80211_ASSOC_ERROR,
- };
- 
- /* utils */
--- 
-1.7.0.4
+We recently had a thread about how rfkill_init_sw_state() isn't quite
+working the right way. Also, it is indented to be used for devices that
+keep their state over resume. I think you should remove it here and rely
+on rfkill to sync you after registration.
+
+Cf. the long thread here:
+http://thread.gmane.org/gmane.linux.acpi.devel/49577
+
+Other than that, no comments from me from an rfkill POV.
+
+johannes
+
 
