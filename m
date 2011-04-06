@@ -1,105 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40366 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755676Ab1DKWpe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 18:45:34 -0400
+Received: from mail.atheros.com ([12.19.149.2]:53919 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754743Ab1DFNLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 09:11:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 06:10:56 -0700
+Date: Wed, 6 Apr 2011 18:41:28 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath9k_hw: Fix instable target power control b/w
+ CCK/OFDM
+Message-ID: <20110406131128.GA2795@vmraj-lnx.users.atheros.com>
+References: <1302092092-11896-1-git-send-email-rmanoharan@atheros.com>
+ <4D9C5EE1.3070105@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20110411223632.GB31833@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
-	<20110411210631.GA28559@kroah.com>
-	<BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
-	<20110411212513.GA17809@kroah.com>
-	<BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
-	<20110411215619.GA27943@kroah.com>
-	<BANLkTimjThXn347+=m98NsBXY84guJjNqA@mail.gmail.com>
-	<20110411223632.GB31833@kroah.com>
-Date: Tue, 12 Apr 2011 00:45:33 +0200
-Message-ID: <BANLkTinpKKRCrBik6-9C5WqcSDGuEt5yCw@mail.gmail.com>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4D9C5EE1.3070105@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/12 Greg KH <greg@kroah.com>:
-> On Tue, Apr 12, 2011 at 12:12:47AM +0200, Rafał Miłecki wrote:
->> 2011/4/11 Greg KH <greg@kroah.com>:
->> > On Mon, Apr 11, 2011 at 11:36:39PM +0200, Rafał Miłecki wrote:
->> >> 2011/4/11 Greg KH <greg@kroah.com>:
->> >> > Please read the documentation for how to do this properly.  I find it
->> >> > really hard to believe that you wrote that comment instead of putting in
->> >> > the 2 lines of code required for this function.
->> >> >
->> >> > Especially as-it-is, your code does not work properly and leaks memory
->> >> > badly.  Why would you do that on purpose?
->> >>
->> >> I tried to read some documentation about this.
->> >>
->> >> 1) driver-mode/device.txt says only that:
->> >> > Callback to free the device after all references have
->> >> > gone away. This should be set by the allocator of the
->> >> > device (i.e. the bus driver that discovered the device).
->> >> I *really* do not know how my driver should "free" core on AXI bus.
->> >
->> > The structure that you have created, added to the bus, is now ready to
->> > have its memory freed.  So free it.
->> >
->> > This usually means something like:
->> >        struct my_obj = to_my_obj(dev);
->> >        kfree(my_obj);
->> > in the release function.
->>
->> I register core->dev to the bus (I set core->dev.bus and
->> core->dev.parent, is that what you mean?). This core->dev is "struct
->> dev" embedded in "struct axi_device". By embedded I mean it is *not* a
->> pointer, I do not alloc it, it's part of the "struct axi_device".
+On Wed, Apr 06, 2011 at 06:08:57PM +0530, Felix Fietkau wrote:
+> On 2011-04-06 2:14 PM, Rajkumar Manoharan wrote:
+> > The problem is that when the attenuation is increased,
+> > the rate will start to drop from MCS7 ->  MCS6, and finally
+> > will see MCS1 ->  CCK_11Mbps. When the rate is changed b/w
+> > CCK and OFDM, it will use register desired_scale to calculate
+> > how much tx gain need to change.
+> >
+> > The output power with the same tx gain for CCK and OFDM modulated
+> > signals are different. This difference is constant for AR9280
+> > but not AR9285/AR9271. It has different PA architecture
+> > a constant. So it should be calibrated against this PA
+> > characteristic.
+> >
+> > The driver has to read the calibrated values from EEPROM and set
+> > the tx power registers accordingly.
+> >
+> > Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
+> > ---
+> > v2 : removed magic macro and a for loop
+> >
+> >   drivers/net/wireless/ath/ath9k/ar9002_phy.h |    6 +++++
+> >   drivers/net/wireless/ath/ath9k/eeprom.h     |    6 ++++-
+> >   drivers/net/wireless/ath/ath9k/eeprom_4k.c  |   33 +++++++++++++++++++++++++++
+> >   3 files changed, 44 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > index bc77a30..28851b5 100644
+> > --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> > @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >   {
+> >   	struct modal_eep_4k_header *pModal;
+> >   	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
+> > +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
+> >   	u8 txRxAttenLocal;
+> >   	u8 ob[5], db1[5], db2[5];
+> >   	u8 ant_div_control1, ant_div_control2;
+> > @@ -1003,6 +1004,38 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >   				      AR_PHY_SETTLING_SWITCH,
+> >   				      pModal->swSettleHt40);
+> >   	}
+> > +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
+> > +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
+> > +				EEP_4K_BB_DESIRED_SCALE_MASK);
+> > +		if ((pBase->txGainType == 0)&&  (bb_desired_scale != 0)) {
+> > +			u32 pwrctrl, mask;
+> > +
+> > +			/* AR_PHY_TX_PWRCTRL8 */
+> > +			mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
+> > +			pwrctrl = mask * bb_desired_scale;
+> > +			REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, 0x3fffffff);
+> > +
+> > +			/* AR_PHY_TX_PWRCTRL9 */
+> > +			mask = BIT(0)|BIT(5)|BIT(15);
+> > +			pwrctrl = mask * bb_desired_scale;
+> > +			REG_RMW(ah, AR_PHY_TX_PWRCTRL9, pwrctrl, 0xf83ff);
+> > +
+> > +			/* AR_PHY_TX_PWRCTRL10 */
+> > +			mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
+> > +			pwrctrl = mask * bb_desired_scale;
+> > +			REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, 0x3fffffff);
+> > +
+> The remaining ones below do not look correct to me - you're masking with 
+> 0x3ff but setting the bits for 0x3fffffff. This does not match what the 
+> previous version of your patch did.
+mask           clr
+0xc0000000 -> 0x3fffffff
+0xfffffc00 -> 0x3ff
+> How about grouping the register writes by mask instead?
 >
-> That is exactly as it should be.
->
-> Then in your release function, free the struct axi_device.  It's that
-> simple.  To try to free it before then would be wrong and cause
-> problems.
-
-This is because it is defined as:
-struct axi_device cores[AXI_MAX_NR_CORES];
-
-
->> >> 4) SSB in it's ssb_release_dev just calls kfree on struct that was
->> >> allocated when registering drivers. *I do not* allocate such a struct,
->> >> so I believe I do exactly the same memory leak as SSB does.
->> >
->> > Well someone allocated it, right?  Who did it?  If it wasn't you, where
->> > did that structure come from and why are you registering it on your bus?
->> >
->> >> Can you spend 2 more minues in addition to commenting my ideas and
->> >> help me with writing that 2 lines I missed? Where do I leak memory in
->> >> my driver? Which struct should I kfree?
->> >
->> > The structure that you wrap around 'struct device' for your bus.
->>
->> As explained above, this I do not dynamically alloc this 'struct
->> device'. So is there really any memory leak?
->
-> Yes, no one ever freed your struct axi_device that you created.
-
-I agree that defining "cores" as array with maxium possible size
-instead of linked list eats more memory than needed, but at least it
-does not leak anything.
-
--- 
-Rafał
+> mask: BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25)
+> registers: 8, 10, 12
+> mask: BIT(0)|BIT(5)|BIT(15)
+> registers: 9
+> mask: BIT(0)|BIT(5)
+> registers: 11, 13
+> 
+> And by the way, to ensure that the mask matches the fields, you can also 
+> do something like this:
+> REG_RMW(ah, register, mask * bb_desired_scale, mask * 0x1f);
+> 
+> > +			/* AR_PHY_CH0_TX_PWRCTRL11 */
+> > +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, 0x3ff);
+> > +
+> > +			/* AR_PHY_CH0_TX_PWRCTRL12 */
+> > +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12,
+> > +				pwrctrl, 0x3fffffff);
+> > +
+> > +			/* AR_PHY_CH0_TX_PWRCTRL13 */
+> > +			REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, 0x3ff);
+> > +		}
+> > +	}
+> >   }
+> >
+> >   static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+> 
+> - Felix
