@@ -1,126 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61773 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755002Ab1DAUBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 16:01:20 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 13:00:56 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 1/2] cfg80211: fix regulatory restore upon user hints
-Date: Fri, 1 Apr 2011 13:01:17 -0700
-Message-ID: <1301688077-9892-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:52033 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754811Ab1DFKJq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 06:09:46 -0400
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amerigo Wang <amwang@redhat.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 12:09:42 +0200
+Message-ID: <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we restore regulatory settings its possible CRDA
-will not reply because of a bogus user entry. In this
-case the bogus entry will prevent any further processing
-on cfg80211 for regulatory domains even if we restore
-regulatory settings.
+On Wed, 2011-04-06 at 17:49 +0800, Amerigo Wang wrote:
+> As scheduled in Documentation/feature-removal-schedule.txt,
+> remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
 
-To prevent this we suck out all pending requests when
-restoring regulatory settings and add them back into the
-queue after we have queued up the reset work.
+Mostly fine, but for iwlegacy Stanislaw we want to keep hw scan (and it
+was actually made default now)
 
-The impact of not having this applied is that a user
-with privileges can issue a userspace regulatory hint
-while we are disasocciating and this would prevent any
-further processing of regulatory domains.
+johannes
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-v4:
-I removed the uncessary static for the list on the routine.
-The v3 for patch 2 should still apply though.
-
-v3:
-John, since this doesn't kill any kittens I didn't mark this
-as stable but I'll leave it to you to decide, I tried to describe
-the impact as best as possible. Let me know if you have any
-questions.
-
- net/wireless/reg.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 45 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3332d5b..e759204 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1744,6 +1744,8 @@ static void restore_regulatory_settings(bool reset_user)
- {
- 	char alpha2[2];
- 	struct reg_beacon *reg_beacon, *btmp;
-+	struct regulatory_request *reg_request, *tmp;
-+	LIST_HEAD(tmp_reg_req_list);
- 
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
-@@ -1751,6 +1753,25 @@ static void restore_regulatory_settings(bool reset_user)
- 	reset_regdomains();
- 	restore_alpha2(alpha2, reset_user);
- 
-+	/*
-+	 * If there's any pending requests we simply
-+	 * stash them to a temporary pending queue and
-+	 * add then after we've restored regulatory
-+	 * settings.
-+	 */
-+	spin_lock(&reg_requests_lock);
-+	if (!list_empty(&reg_requests_list)) {
-+		list_for_each_entry_safe(reg_request, tmp,
-+					 &reg_requests_list, list) {
-+			if (reg_request->initiator !=
-+			    NL80211_REGDOM_SET_BY_USER)
-+				continue;
-+			list_del(&reg_request->list);
-+			list_add_tail(&reg_request->list, &tmp_reg_req_list);
-+		}
-+	}
-+	spin_unlock(&reg_requests_lock);
-+
- 	/* Clear beacon hints */
- 	spin_lock_bh(&reg_pending_beacons_lock);
- 	if (!list_empty(&reg_pending_beacons)) {
-@@ -1785,8 +1806,31 @@ static void restore_regulatory_settings(bool reset_user)
- 	 */
- 	if (is_an_alpha2(alpha2))
- 		regulatory_hint_user(user_alpha2);
--}
- 
-+	if (list_empty(&tmp_reg_req_list))
-+		return;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	mutex_lock(&reg_mutex);
-+
-+	spin_lock(&reg_requests_lock);
-+	list_for_each_entry_safe(reg_request, tmp, &tmp_reg_req_list, list) {
-+		REG_DBG_PRINT("Adding request for country %c%c back "
-+			      "into the queue\n",
-+			      reg_request->alpha2[0],
-+			      reg_request->alpha2[1]);
-+		list_del(&reg_request->list);
-+		list_add_tail(&reg_request->list, &reg_requests_list);
-+	}
-+	spin_unlock(&reg_requests_lock);
-+
-+	mutex_unlock(&reg_mutex);
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	REG_DBG_PRINT("Kicking the queue\n");
-+
-+	schedule_work(&reg_work);
-+}
- 
- void regulatory_hint_disconnect(void)
- {
--- 
-1.7.4.15.g7811d
 
