@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41625 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012Ab1DKXWi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 19:22:38 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:24679 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756024Ab1DFM6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 08:58:22 -0400
+Date: Wed, 6 Apr 2011 14:57:29 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Cong Wang <amwang@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+Message-ID: <20110406125728.GA2197@redhat.com>
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+ <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+ <4D9C43A8.5060500@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-Date: Tue, 12 Apr 2011 01:22:37 +0200
-Message-ID: <BANLkTimgeKJZ+pyF8wOpxMtt2KSiD6=eCA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4D9C43A8.5060500@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/12 Rafał Miłecki <zajec5@gmail.com>:
-> V3.1: Include forgotten changes (pr_* and include related)
->    Explain why we dare to implement empty release function
+On Wed, Apr 06, 2011 at 06:42:48PM +0800, Cong Wang wrote:
+> 于 2011年04月06日 18:09, Johannes Berg 写道:
+> >On Wed, 2011-04-06 at 17:49 +0800, Amerigo Wang wrote:
+> >>As scheduled in Documentation/feature-removal-schedule.txt,
+> >>remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+> >
+> >Mostly fine, but for iwlegacy Stanislaw we want to keep hw scan (and it
+> >was actually made default now)
 
-I forgot to include TODO in commit message. This is still not ready
-for mainline.
+Indeed, disable_hw_scan should be removed in iwlwifi but leaved in iwlegacy.
 
-TODO:
-- Documentation/ABI/README entry for new sysfs files
+> Ok, I will wait for Stanislaw's response and then send an updated patch.
 
-(Greg: earlier in V3 I put this part of TODO in file, sorry for confusing).
+Have it now :-)
 
-I hope rest of tasks from *file* TODO can be done after getting this mainline.
-
--- 
-Rafał
+Stanislaw
