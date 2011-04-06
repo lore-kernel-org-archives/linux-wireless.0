@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:20287 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755530Ab1DERBh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:01:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/25] iwlagn: remove rev_id
-Date: Tue,  5 Apr 2011 09:42:09 -0700
-Message-Id: <1302021732-21250-23-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54366 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756530Ab1DFSt0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 14:49:26 -0400
+Received: by qwk3 with SMTP id 3so1060856qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:49:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1302099854.14995.115.camel@wwguy-huron>
+References: <1301945671.14995.110.camel@wwguy-huron> <20110406141258.GA11941@tuxdriver.com>
+ <1302099870.4090.3.camel@jlt3.sipsolutions.net> <20110406142711.GB11941@tuxdriver.com>
+ <1302099854.14995.115.camel@wwguy-huron>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 6 Apr 2011 20:49:05 +0200
+Message-ID: <BANLkTi=mrU7mgiB=E6tJN1Z1Qz_g8RdEUw@mail.gmail.com>
+Subject: Re: new maintenance release of iwlwifi 1000 uCode available
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Apr 6, 2011 at 4:24 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> On Wed, 2011-04-06 at 07:27 -0700, John W. Linville wrote:
+>> On Wed, Apr 06, 2011 at 04:24:30PM +0200, Johannes Berg wrote:
+>> > On Wed, 2011-04-06 at 10:12 -0400, John W. Linville wrote:
+>> > > On Mon, Apr 04, 2011 at 12:34:31PM -0700, Guy, Wey-Yi wrote:
+>> > > > Hi,
+>> > > >
+>> > > >         Maintenance release version 39.31.5.1 of uCode for Intel 1000BGN
+>> > > >         Series
+>> > > >         WiFi Adapter is now available for download from
+>> > > >         http://intellinuxwireless.org/?n=Downloads
+>> > > >
+>> > > >         Changes:
+>> > > >         - Fix "tid mismatch" issue
+>> > > >
+>> > > >         Wey-Yi
+>> > >
+>> > > Hmmm...the previous release was 128.50.3.1...
+>> > >
+>> > > I realize that the API portion advanced from 3.1 to 5.1, but the
+>> > > overall release number appears to be moving backwards.  Is this
+>> > > intentional?
+>> >
+>> > They're all over the place and basically random ... I *think* they
+>> > depend on the branch it comes from internally, but I'm not even sure.
+>>
+>> OK, I can cope.  But if you (i.e. your team) can influence them
+>> towards a sane numbering scheme, it will probably make packagers
+>> and/or release engineers happier in the distros...
+>>
+> I will give feedback to our build engineer team, thanks
+>
+> Wey
+>
 
-The rev_id variable is only printed, we
-don't need to store it.
+Perhaps formatting the number as "3.1.128.50" and "5.1.39.31" would be
+a saner idea.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5912ede..a2f9237 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3685,8 +3685,10 @@ struct ieee80211_ops iwlagn_hw_ops = {
- 
- static u32 iwl_hw_detect(struct iwl_priv *priv)
- {
--	priv->rev_id = priv->pci_dev->revision;
--	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", priv->rev_id);
-+	u8 rev_id;
-+
-+	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID, &rev_id);
-+	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
- 	return _iwl_read32(priv, CSR_HW_REV);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 892bcfa..460316b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1253,7 +1253,6 @@ struct iwl_priv {
- 
- 	/* pci hardware address support */
- 	void __iomem *hw_base;
--	u8   rev_id;
- 
- 	/* microcode/device supports multiple contexts */
- 	u8 valid_contexts;
 -- 
-1.7.0.4
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
