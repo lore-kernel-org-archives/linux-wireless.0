@@ -1,64 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45434 "EHLO mx1.redhat.com"
+Received: from smtp208.alice.it ([82.57.200.104]:42592 "EHLO smtp208.alice.it"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756133Ab1D2N5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 09:57:37 -0400
-Date: Fri, 29 Apr 2011 15:57:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+	id S1755986Ab1DFOZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:25:01 -0400
+Date: Wed, 6 Apr 2011 16:24:31 +0200
+From: Antonio Ospite <ospite@studenti.unina.it>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-2.6] iwlagn: fix "Received BA when not expected"
-Message-ID: <20110429135711.GA5537@redhat.com> (sfid-20110429_155749_376697_A942D693)
-References: <20110428111011.GA6967@redhat.com>
- <1303990661.3558.3.camel@jlt3.sipsolutions.net>
- <20110428115947.GB7030@redhat.com>
- <1303992593.3558.7.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303992593.3558.7.camel@jlt3.sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+Message-Id: <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
+In-Reply-To: <1302098968.4090.0.camel@jlt3.sipsolutions.net>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	<1302082178.3811.7.camel@jlt3.sipsolutions.net>
+	<20110406160654.e629dfde.ospite@studenti.unina.it>
+	<1302098968.4090.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 28, 2011 at 02:09:53PM +0200, Johannes Berg wrote:
-> > > Maybe we should make it clear here that it's about non-data frames and
-> > > remove the multicast check since that ought to be handled in the other
-> > > path?
-> > 
-> > We call iwl_sta_modify_sleep_tx_count(priv, sta_id, 1); for any frame
-> > as long as some other conditions are true.
-> 
-> That can only happen in AP mode, and if the station is asleep, I don't
-> think it's a concern.
-> 
-> > Also multicast frames are important. When we send data and multicast
-> > frame we probably modify 
-> > 
-> > priv->stations[sta_id].tid[tid]
-> > 
-> > with wrong sta_id (other station with unicast address), what make related
-> > aggregation data wrong for that other station.
-> 
-> Yeah, but multicast is already handled properly, since in that case
-> info->control.sta will be set to NULL by mac80211. Keep in mind that
-> again this is AP mode only, since a client connected to an AP never
-> sends real multicast frames (if it sends 802.3 multicast frames they're
-> still unicast to the AP).
+--Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-We use sta_id for building tx command in:
+On Wed, 06 Apr 2011 16:09:28 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-if (info->control.hw_key)
-	iwlagn_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
+> On Wed, 2011-04-06 at 16:06 +0200, Antonio Ospite wrote:
+>=20
+> > > > +	if (regulator_is_enabled(vcc)) {
+> > > > +		dev_dbg(&pdev->dev, "Regulator already enabled\n");
+> > > > +		rfkill_data->reg_enabled =3D 1;
+> > > > +	}
+> > > > +	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
+> > > > +
+> > > > +	ret =3D rfkill_register(rf_kill);
+> > >=20
+> > > We recently had a thread about how rfkill_init_sw_state() isn't quite
+> > > working the right way. Also, it is indented to be used for devices th=
+at
+> > > keep their state over resume. I think you should remove it here and r=
+ely
+> > > on rfkill to sync you after registration.
+> > >=20
+> > > Cf. the long thread here:
+> > > http://thread.gmane.org/gmane.linux.acpi.devel/49577
+> > >
+> >=20
+> > Ok, but I still need to replace that call with a rfkill_set_sw_state()
+> > to expose the initial status of the regulator to the rfkill system,
+> > right?
+>=20
+> Well, you could, but if you don't do that then the rfkill subsystem will
+> simply call set_block() shortly after registration to put it into the
+> state that it thinks it should be in, which is usually more useful.
+>=20
 
-/* TODO need this for burst mode later on */
-iwlagn_tx_cmd_build_basic(priv, skb, tx_cmd, info, hdr, sta_id);
+I see, let's just drop rfkill_init_sw_state() then.
 
-so problems seems to be that the firmware do not handle
-unicast sta_id for management frames. I'll repost patches
-that check only ieee80211_is_data(fc).
+Regards,
+   Antonio
 
-BTW, iwlagn_tx_skb function needs serious cleanup, it's
-completely unreadable!
+--=20
+Antonio Ospite
+http://ao2.it
 
-Stanislaw
+PGP public key ID: 0x4553B001
+
+A: Because it messes up the order in which people normally read text.
+   See http://en.wikipedia.org/wiki/Posting_style
+Q: Why is top-posting such a bad thing?
+
+--Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2cd58ACgkQ5xr2akVTsAF/kQCfbMOLILqwo6ezUCgKUrV7EtcQ
+lKoAnikpZcgtBRBntMph9zxpklX8nREz
+=nDLU
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk--
