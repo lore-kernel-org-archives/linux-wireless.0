@@ -1,65 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:46847 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755296Ab1DTQgp (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:40012 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752918Ab1DFSNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 12:36:45 -0400
-Received: by eyx24 with SMTP id 24so267913eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 09:36:44 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC][PATCH] ssb: mark bus as powered up earlier?
-Date: Wed, 20 Apr 2011 19:14:09 +0200
-Message-Id: <1303319649-2189-1-git-send-email-zajec5@gmail.com>
+	Wed, 6 Apr 2011 14:13:53 -0400
+Received: by mail-vw0-f50.google.com with SMTP id 14so1843530vws.23
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:13:50 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: FM WLAN coexistence
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301900860-19337-1-git-send-email-shahar_levi@ti.com>
+References: <1301900860-19337-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 11:13:32 -0700
+Message-ID: <1302113612.2366.34.camel@pimenta>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-This order seems to be wrong for me, but how we didn't get any reports about
-errors? Are cores supported by ssb_chipco_set_clockmode so rare? Or is ssb so
-rarely compiled with DEBUG?
+On Mon, 2011-04-04 at 10:07 +0300, Shahar Levi wrote:
+> Add support to FM WLAN coexistence (STA only).
+> Few WiFi harmonics may interfere FM operation, to
+> avoid this problem special coexistence techniques are
+> activated around some FM frequencies.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-The problem is that ssb_chipco_set_clockmode may want to touch CC registers to
-control power of the bus. However touching registers without powered_up set
-causes warnings.
+Some comments.
 
-Am I right at this?
----
- drivers/ssb/main.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index e06d634..076362e 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1309,20 +1309,20 @@ EXPORT_SYMBOL(ssb_bus_may_powerdown);
- 
- int ssb_bus_powerup(struct ssb_bus *bus, bool dynamic_pctl)
- {
--	struct ssb_chipcommon *cc;
- 	int err;
- 	enum ssb_clkmode mode;
- 
- 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 1);
- 	if (err)
- 		goto error;
--	cc = &bus->chipco;
--	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
--	ssb_chipco_set_clockmode(cc, mode);
- 
- #ifdef CONFIG_SSB_DEBUG
- 	bus->powered_up = 1;
- #endif
-+
-+	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
-+	ssb_chipco_set_clockmode(&bus->chipco, mode);
-+
- 	return 0;
- error:
- 	ssb_printk(KERN_ERR PFX "Bus powerup failed\n");
+> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+> index e005aa4..5f5afbe 100644
+> --- a/drivers/net/wireless/wl12xx/acx.c
+> +++ b/drivers/net/wireless/wl12xx/acx.c
+> @@ -1604,3 +1604,45 @@ out:
+>  	kfree(acx);
+>  	return ret;
+>  }
+> +
+> +int wl1271_acx_fm_coex(struct wl1271 *wl)
+> +{
+> +	struct wl1271_acx_fm_coex *acx;
+> +	int ret;
+> +
+> +	wl1271_debug(DEBUG_ACX, "acx fm coex setting");
+> +
+> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+> +	if (!acx) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	acx->enable = wl->conf.fm_coex.enable;
+> +	acx->swallow_period = wl->conf.fm_coex.swallow_period;
+> +	acx->n_divider_fref_set_1 = wl->conf.fm_coex.n_divider_fref_set_1;
+> +	acx->n_divider_fref_set_2 = wl->conf.fm_coex.n_divider_fref_set_2;
+> +	acx->m_divider_fref_set_1 =
+> +		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_1);
+> +	acx->m_divider_fref_set_2 =
+> +		cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_2);
+> +	acx->coex_pll_stabilization_time =
+> +		cpu_to_le32(wl->conf.fm_coex.coex_pll_stabilization_time);
+
+> +	acx->ldo_stabilization_timwl12xx-fm-coex-v2/e =
+> +		cpu_to_le16(wl->conf.fm_coex.ldo_stabilization_time);
+
+What's this? There is some garbage pasted into this statement here!
+
+
+> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+> index 0a40cae..45242db 100644
+> --- a/drivers/net/wireless/wl12xx/acx.h
+> +++ b/drivers/net/wireless/wl12xx/acx.h
+> @@ -1172,6 +1172,65 @@ struct wl1271_acx_inconnection_sta {
+>  	u8 padding1[2];
+>  } __packed;
+>  
+> +/*
+> + * ACX_FM_COEX_CFG
+> + * set the FM co-existence parameters.
+> + */
+> +struct wl1271_acx_fm_coex {
+> +	struct acx_header header;
+> +	/* enable(1) / disable(0) the FM Coex feature */
+> +	u8 enable;
+> +	/*
+> +	 * Swallow period used in COEX PLL swallowing mechanism.
+> +	 * 0xFF = use FW default
+> +	 */
+> +	u8 swallow_period;
+> +	/*
+> +	 * The N divider used in COEX PLL swallowing mechanism for Fref of
+> +	 * 38.4/19.2 Mhz. 0xFF = use FW default
+> +	 */
+> +	u8 n_divider_fref_set_1;
+> +	/*
+> +	 * The N divider used in COEX PLL swallowing mechanism for Fref of
+> +	 * 26/52 Mhz. 0xFF = use FW default
+> +	 */
+> +	u8 n_divider_fref_set_2;
+> +	/*
+> +	 * The M divider used in COEX PLL swallowing mechanism for Fref of
+> +	 * 38.4/19.2 Mhz. 0xFFFF = use FW default
+> +	 */
+> +	u16 m_divider_fref_set_1;
+
+This must be __le16.
+
+
+> +	/*
+> +	 * The M divider used in COEX PLL swallowing mechanism for Fref of
+> +	 * 26/52 Mhz. 0xFFFF = use FW default
+> +	 */
+> +	u16 m_divider_fref_set_2;
+
+Same here.
+
+
+> +	/*
+> +	 * The time duration in uSec required for COEX PLL to stabilize.
+> +	 * 0xFFFFFFFF = use FW default
+> +	 */
+> +	u32 coex_pll_stabilization_time;
+
+__le32
+
+
+> +	/*
+> +	 * The time duration in uSec required for LDO to stabilize.
+> +	 * 0xFFFFFFFF = use FW default
+> +	 */
+> +	u16 ldo_stabilization_time;
+
+__le16
+
+
 -- 
-1.7.3.4
+Cheers,
+Luca.
 
