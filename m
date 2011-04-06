@@ -1,140 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:34505 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754959Ab1DMR5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 13:57:54 -0400
-Date: Wed, 13 Apr 2011 13:57:52 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
-In-Reply-To: <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1104131348530.16793@p34.internal.lan>
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com> <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan> <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com>
- <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:45172 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754885Ab1DFRRd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 13:17:33 -0400
+Received: by qwk3 with SMTP id 3so1008956qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 10:17:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="655872-826444373-1302717472=:16793"
+In-Reply-To: <201104061423.02484.chunkeey@googlemail.com>
+References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com> <201104061423.02484.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 6 Apr 2011 10:17:13 -0700
+Message-ID: <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com>
+Subject: Re: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Joe Culler <joe.culler@gmail.com>, linux-wireless@vger.kernel.org,
+	Michael Green <michael.green@atheros.com>,
+	David Quan <david.quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---655872-826444373-1302717472=:16793
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-
-
-On Wed, 13 Apr 2011, Daniel Halperin wrote:
-
-> Ugh! Couldn't you configure the stupid mailing list filter to only
-> drop rich text mails that have [PATCH or [RFC or [RFT in the subject,
-> e.g.? Original mail below.
+On Wed, Apr 6, 2011 at 5:23 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
+>> [...]
+>> I have a problem with carl9170 driver with my d-link dwa-160 under
+>> linux-2.6.39-rc1.
+>> Here's the dmesg:
 >
-> (sorry for the resend, Justin and Ivo).
+>> [ 3114.257063] ath: EEPROM regdomain: 0x5c
+>> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
+>> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
+>> [ 3114.257071] ath: Invalid EEPROM contents
+> clearly, the regdomain code 0x5c is not defined in the
+> drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
 >
-> Dan
+> this would be easy to fix [see attached patch], however I'm
+> not quite sure what to do about the 5GHz band in this case,
+> since the CTL_FCC is more restrictive than it should be.
 >
-> On Wed, Apr 13, 2011 at 9:23 AM, Daniel Halperin
-> <dhalperi@cs.washington.edu> wrote:
->>
->> On Wed, Apr 13, 2011 at 9:01 AM, Justin Piszcz <jpiszcz@lucidpixels.com>=
- wrote:
->>>>
->>>> Can you try disabling powersaving?
->>>> iwconfig wlan0 power off
->>>>
->>> Wow! That was it, now its interactive again.
->>>
->>> 64 bytes from wireless-host (192.168.1.2): icmp_req=3D1 ttl=3D64 time=
-=3D0.581 ms
->>> 64 bytes from wireless-host (192.168.1.2): icmp_req=3D2 ttl=3D64 time=
-=3D0.647 ms
->>>
->>> Thanks, so its recommend to keep this off then, can that be set as the =
-driver default?
->>>
->>
->> That's a bad idea, what you're seeing is likely completely a red herring=
-=2E=A0Wi-Fi power saving mode saves energy by putting the RF hardware most =
-of the time. This is a Good Thing.
->> Power save is designed to kick in only when the load is very slow; the c=
-lient's network stack should automatically disable power save during times =
-of high load, e.g., during a download or a VoIP call. You should run some t=
-ests to see if this is actually occurring; there may be a bug in the rtl im=
-plementation.
->> The real problem here is that your ping test has invalid assumptions. On=
-e packet/second is not enough load to disable Wi-Fi power save, so you shou=
-ld not see interactive ping times. Again, this is a good thing and somethin=
-g I doubt you want to disable! (Assuming that RTL's implementation isn't fu=
-ndamentally broken elsewhere) It certainly should NOT be the driver default=
-=2E
->> Try again with sudo ping -i 0.01 -s 1400 (e.g., to ping with large packe=
-ts every 10 ms); this should probably trigger the logic that automatically =
-disables the power saving mode. Or try pinging while doing a 1 Mbit UDP tra=
-nsfer (e.g., with iperf).
->> Dan
+> Regards,
+>        Chr
 >
+> ---
+> diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+> index 248c670..5c2cfe6 100644
+> --- a/drivers/net/wireless/ath/regd_common.h
+> +++ b/drivers/net/wireless/ath/regd_common.h
+> @@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+>        {APL9_WORLD, CTL_ETSI, CTL_ETSI},
+>
+>        {APL3_FCCA, CTL_FCC, CTL_FCC},
+> +       {APL7_FCCA, CTL_FCC, CTL_FCC},
+>        {APL1_ETSIC, CTL_FCC, CTL_ETSI},
+>        {APL2_ETSIC, CTL_FCC, CTL_ETSI},
+>        {APL2_APLD, CTL_FCC, NO_CTL},
 
-Hi,
+I verified internally with our other code and this is correct, APL7
+maps to FCC CTL and FCCA maps to FCC CTL as well. For an upstream
+patch:
 
-When powersave is enabled, it is very jumpy, I've used satellite comms befo=
-re
-and (~600ms-1200ms was more smooth) as it did not jump around as much.  The
-application is just a standalone desktop with minimal activity for the majo=
-rity
-of the time, maybe thats why..
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-With powersave disabled, I now see 0% packet loss (802.11n) and low ping
-times, this looks like the proper solution for the wireless USB device I
-am using.  By the way, is it possible/are there wireless USB devices out th=
-ere
-that support wake on wireless lan (WOWL?
-
-Your ping command with power off:
-1408 bytes from server (192.168.1.2): icmp_req=3D539 ttl=3D64 time=3D1.07 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D540 ttl=3D64 time=3D1.31 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D541 ttl=3D64 time=3D1.07 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D542 ttl=3D64 time=3D1.26 m=
-s
-
-Your ping command with power on:
-1408 bytes from server (192.168.1.2): icmp_req=3D649 ttl=3D64 time=3D1.80 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D650 ttl=3D64 time=3D1.85 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D651 ttl=3D64 time=3D2.86 m=
-s
-1408 bytes from server (192.168.1.2): icmp_req=3D652 ttl=3D64 time=3D1.46 m=
-s
-
-You are correct, if there is a lot of traffic, its good, but if the system
-is relatively idle and all that's going on is an SSH session, there is horr=
-ible
-latency.
-
-So the fix/workaround, for Debian-based distributions (if you come across=
-=20
-this problem):
-
-File: /etc/network/interfaces
-
--- snip --
-
-# Wireless
-auto wlan0
-iface wlan0 inet dhcp
-   wpa-ssid your-ssid
-   wpa-psk your-private-key
-   post-up /sbin/iwconfig wlan0 power off
-
--- snip --
-
-Justin.
-
---655872-826444373-1302717472=:16793--
+  Luis
