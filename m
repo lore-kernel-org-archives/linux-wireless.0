@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47340 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100Ab1DUAah (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48024 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755015Ab1DFUR2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 20:30:37 -0400
-Date: Wed, 20 Apr 2011 20:18:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2011-04-20
-Message-ID: <20110421001836.GB2437@tuxdriver.com>
-References: <20110420170432.GA2301@joana>
- <20110420202015.GA2311@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110420202015.GA2311@joana>
+	Wed, 6 Apr 2011 16:17:28 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <1302120922.4090.17.camel@jlt3.sipsolutions.net>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+	 <1302113542.22852.7.camel@x61.thuisdomein>
+	 <20110406183837.GI11941@tuxdriver.com>
+	 <1302120620.22852.22.camel@x61.thuisdomein>
+	 <1302120922.4090.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 22:17:20 +0200
+Message-ID: <1302121040.4090.18.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 20, 2011 at 05:20:15PM -0300, Gustavo F. Padovan wrote:
-> Hi John,
-> 
-> * Gustavo F. Padovan <padovan@profusion.mobi> [2011-04-20 14:04:32 -0300]:
-> 
-> > Hi John,
+On Wed, 2011-04-06 at 22:15 +0200, Johannes Berg wrote:
+> On Wed, 2011-04-06 at 22:10 +0200, Paul Bolle wrote:
+> > On Wed, 2011-04-06 at 14:38 -0400, John W. Linville wrote:
+> > > The syntax may seem strange,
 > > 
-> > Four small fixes for 2.6.39. An incorrect refcnt balance for hci connection by
-> > Ville Tervo, a warning fix in the command timer by Vinicius Gomes, an ERTM
-> > fix by Ruiyi Zhang, and SCO synchronization fix by Luiz Augusto von Dentz.
+> > It does!
 > > 
-> > Please pull or let me know any problems. Thanks.
+> > > but basically it just says "don't let me by y if RFKILL is m"
+> > 
+> > ... but, besides that, I can be any value. So in effect it's shorthand
+> > for
+> > 	depends on RFKILL=y || RFKILL=m && m || RFKILL=n
+> > 
+> > (which actually looks equally strange). Is that correct?
 > 
-> Hold on with the pull! I've found a merge conflict with -next. (I tested the
-> merge with --dry-run, but it doesn't check for check conflicts). I'll do the
-> right thing now and send a new pull request to you soon. 
-> 
-> Regards,
-> 
-> -- 
-> Gustavo F. Padovan
-> http://profusion.mobi
+> I don't think it is, I believe that an expression like "RFKILL=y" has a
+> bool type, and a tristate type value that depends on a bool type can
+> still take the value m.
 
-FWIW, I already did the pull into wireless-2.6 and pushed it out
-for some soak time.  If there is a merge conflict with -next, then
-please let me know how to fix it and I'll pull wireless-2.6 into
-wireless-next-2.6 as soon as possible to eliminate the conflict.
+Err, which is of course perfectly fine since if RFKILL is built in this
+can be any value, and in the RFKILL=m case you force it to m by making
+it depend on m directly. So yes, you're right.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
