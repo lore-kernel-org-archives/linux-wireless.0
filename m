@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:40690 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756123Ab1DASJQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 14:09:16 -0400
-Received: by eyg5 with SMTP id 5so1371859eyg.24
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 11:09:13 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: fix sparse warning about undeclared wl12xx_alloc_dummy_packet
-Date: Fri,  1 Apr 2011 21:09:47 +0300
-Message-Id: <1301681387-9203-1-git-send-email-coelho@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26043 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750807Ab1DFKns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 06:43:48 -0400
+Message-ID: <4D9C43A8.5060500@redhat.com>
+Date: Wed, 06 Apr 2011 18:42:48 +0800
+From: Cong Wang <amwang@redhat.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com> <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix sparse warning:
+于 2011年04月06日 18:09, Johannes Berg 写道:
+> On Wed, 2011-04-06 at 17:49 +0800, Amerigo Wang wrote:
+>> As scheduled in Documentation/feature-removal-schedule.txt,
+>> remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+>
+> Mostly fine, but for iwlegacy Stanislaw we want to keep hw scan (and it
+> was actually made default now)
+>
 
-  CHECK   drivers/net/wireless/wl12xx/main.c
-drivers/net/wireless/wl12xx/main.c:1246:17: warning: symbol 'wl12xx_alloc_dummy_packet' was not declared. Should it be static?
+Ok, I will wait for Stanislaw's response and then send an updated patch.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 732fd21..866453b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1243,7 +1243,7 @@ int wl1271_tx_dummy_packet(struct wl1271 *wl)
-  */
- #define TOTAL_TX_DUMMY_PACKET_SIZE (ALIGN(1400, 512))
- 
--struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
-+static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
- {
- 	struct sk_buff *skb;
- 	struct ieee80211_hdr_3addr *hdr;
--- 
-1.7.1
-
+Thanks.
