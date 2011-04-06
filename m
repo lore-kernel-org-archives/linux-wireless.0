@@ -1,104 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57094 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754440Ab1DQQIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Apr 2011 12:08:16 -0400
-Received: from mail.atheros.com ([10.234.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2011 09:07:50 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k: Fix beacon generation on foreign channel
-Date: Sun, 17 Apr 2011 21:38:10 +0530
-Message-ID: <1303056490-6775-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37371 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755375Ab1DFMXU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 08:23:20 -0400
+Received: by bwz15 with SMTP id 15so1090207bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 05:23:19 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Joe Culler <joe.culler@gmail.com>
+Subject: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
+Date: Wed, 6 Apr 2011 14:23:02 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Michael Green <michael.green@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	David Quan <david.quan@atheros.com>
+References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
+In-Reply-To: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104061423.02484.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While leaving the oper channel, beacon generation is stopped
-by mac80211 and beacon slots are marked as inactive.
-During the scan, ath9k configures beacon timers
-based on IEEE80211_CONF_OFFCHANNEL which inturn generates
-beacon alert even though bslot is inactive.
+On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
+> [...]
+> I have a problem with carl9170 driver with my d-link dwa-160 under
+> linux-2.6.39-rc1.
+> Here's the dmesg:
 
-ath9k fails to disable beacon alert while moving to offchannel
-if none of the beacon slot is active. This is causing beacon
-transmission on foreign channel. This patch enables swba
-based on active bslots.
+> [ 3114.257063] ath: EEPROM regdomain: 0x5c
+> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
+> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
+> [ 3114.257071] ath: Invalid EEPROM contents
+clearly, the regdomain code 0x5c is not defined in the
+drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
 
-This issue was reported with two vifs (AP+STA) and triggered
-scan in STA vif in unassociated state.
+this would be easy to fix [see attached patch], however I'm
+not quite sure what to do about the 5GHz band in this case,
+since the CTL_FCC is more restrictive than it should be.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Regards,
+	Chr
+
 ---
- drivers/net/wireless/ath/ath9k/beacon.c |   36 +++++++++++++++++++------------
- 1 files changed, 22 insertions(+), 14 deletions(-)
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 248c670..5c2cfe6 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+ 	{APL9_WORLD, CTL_ETSI, CTL_ETSI},
+ 
+ 	{APL3_FCCA, CTL_FCC, CTL_FCC},
++	{APL7_FCCA, CTL_FCC, CTL_FCC},
+ 	{APL1_ETSIC, CTL_FCC, CTL_ETSI},
+ 	{APL2_ETSIC, CTL_FCC, CTL_ETSI},
+ 	{APL2_APLD, CTL_FCC, NO_CTL},
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 9193a38..24f565b 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -746,6 +746,25 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	ath_set_beacon(sc);
- }
- 
-+static bool ath_has_valid_bslot(struct ath_softc *sc)
-+{
-+	struct ath_vif *avp;
-+	int slot;
-+	bool found = false;
-+
-+	for (slot = 0; slot < ATH_BCBUF; slot++) {
-+		if (sc->beacon.bslot[slot]) {
-+			avp = (void *)sc->beacon.bslot[slot]->drv_priv;
-+			if (avp->is_bslot_active) {
-+				found = true;
-+				break;
-+			}
-+		}
-+	}
-+	return found;
-+}
-+
-+
- void ath_set_beacon(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -753,7 +772,8 @@ void ath_set_beacon(struct ath_softc *sc)
- 
- 	switch (sc->sc_ah->opmode) {
- 	case NL80211_IFTYPE_AP:
--		ath_beacon_config_ap(sc, cur_conf);
-+		if (ath_has_valid_bslot(sc))
-+			ath_beacon_config_ap(sc, cur_conf);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_MESH_POINT:
-@@ -780,20 +800,8 @@ void ath_set_beacon(struct ath_softc *sc)
- void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_vif *avp;
--	int slot;
--	bool found = false;
- 
--	for (slot = 0; slot < ATH_BCBUF; slot++) {
--		if (sc->beacon.bslot[slot]) {
--			avp = (void *)sc->beacon.bslot[slot]->drv_priv;
--			if (avp->is_bslot_active) {
--				found = true;
--				break;
--			}
--		}
--	}
--	if (!found)
-+	if (!ath_has_valid_bslot(sc))
- 		return;
- 
- 	ath9k_ps_wakeup(sc);
--- 
-1.7.4.4
 
