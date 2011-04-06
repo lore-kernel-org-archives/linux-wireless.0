@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:55282 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750937Ab1DTSFO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 14:05:14 -0400
-Received: by eyh5 with SMTP id 5so345378eyh.40
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 11:05:12 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: configure rates when working in ibss mode
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1302180725-8796-1-git-send-email-eliad@wizery.com>
-References: <1302180725-8796-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 21:07:40 +0300
-Message-ID: <1303322860.1988.741.camel@cumari>
+Received: from smtp209.alice.it ([82.57.200.105]:44960 "EHLO smtp209.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755952Ab1DFO3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:29:10 -0400
+Date: Wed, 6 Apr 2011 16:29:01 +0200
+From: Antonio Ospite <ospite@studenti.unina.it>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+Message-Id: <20110406162901.0efa11ad.ospite@studenti.unina.it>
+In-Reply-To: <20110406141131.GC2810@opensource.wolfsonmicro.com>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	<20110406141131.GC2810@opensource.wolfsonmicro.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__6_Apr_2011_16_29_01_+0200_y1Jge.GaRKe2jFhV"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-07 at 15:52 +0300, Eliad Peller wrote:
-> When working in ibss mode, we don't configure rate policy per station
-> (as we use the same link for multiple stations), so currently the
-> 1mb/s rate is being used.
-> 
-> Instead, configure the firmware to use the whole 11b rates by default.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+--Signature=_Wed__6_Apr_2011_16_29_01_+0200_y1Jge.GaRKe2jFhV
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Applied, obrigado! ;)
+On Wed, 6 Apr 2011 23:11:33 +0900
+Mark Brown <broonie@opensource.wolfsonmicro.com> wrote:
 
--- 
-Cheers,
-Luca.
+> On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
+>=20
+> > +	tristate "Generic rfkill regulator driver"
+> > +	depends on RFKILL || !RFKILL
+>=20
+> That looks *odd*.
 
+Taken from Documentation/rfkill.txt section 3.  Kernel API.
+I guess I can drop it if we want to be stricter and just require RFKILL
+to be enabled. Johannes?
+
+> Otherwise this looks fine from a regulator API point
+> of view.  You use an exclusive get() so you could get away without
+> remembering the enable state as nothing else could hold the device open
+> but there's no harm in doing so and it's defensive against silly
+> constraints that force the regulator on.
+>=20
+
+Thanks Mark.
+
+Regards,
+   Antonio
+
+--=20
+Antonio Ospite
+http://ao2.it
+
+PGP public key ID: 0x4553B001
+
+A: Because it messes up the order in which people normally read text.
+   See http://en.wikipedia.org/wiki/Posting_style
+Q: Why is top-posting such a bad thing?
+
+--Signature=_Wed__6_Apr_2011_16_29_01_+0200_y1Jge.GaRKe2jFhV
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2ceK0ACgkQ5xr2akVTsAHw8wCeJ1SFlc0FYqYQifw4c35qs3qn
+fPUAni64Tm91GrqZMb7LCsOVE+rT2eld
+=Pc7K
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__6_Apr_2011_16_29_01_+0200_y1Jge.GaRKe2jFhV--
