@@ -1,71 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:63309 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885Ab1DFRSF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 13:18:05 -0400
-Received: by qyk7 with SMTP id 7so2677694qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 10:18:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com>
-References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
- <201104061423.02484.chunkeey@googlemail.com> <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 6 Apr 2011 10:17:45 -0700
-Message-ID: <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
-Subject: Re: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Joe Culler <joe.culler@gmail.com>, linux-wireless@vger.kernel.org,
-	Michael Green <michael.green@atheros.com>,
-	David Quan <david.quan@atheros.com>
+Message-Id: <4D9D0A45020000230002AEF7@novprvlin0050.provo.novell.com>
+Date: Wed, 06 Apr 2011 08:50:13 -0600
+From: "Joey Lee" <jlee@novell.com>
+To: <ospite@studenti.unina.it>
+Cc: <gmzhuo@gmail.com>, <marek.vasut@gmail.com>,
+	<openezx-devel@lists.openezx.org>,
+	<broonie@opensource.wolfsonmicro.com>, <johannes@sipsolutions.net>,
+	<lrg@slimlogic.co.uk>, <linville@tuxdriver.com>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+ <1302082178.3811.7.camel@jlt3.sipsolutions.net>
+ <20110406160654.e629dfde.ospite@studenti.unina.it>
+ <1302098968.4090.0.camel@jlt3.sipsolutions.net>
+ <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
+In-Reply-To: <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 6, 2011 at 10:17 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Apr 6, 2011 at 5:23 AM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
->> On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
->>> [...]
->>> I have a problem with carl9170 driver with my d-link dwa-160 under
->>> linux-2.6.39-rc1.
->>> Here's the dmesg:
->>
->>> [ 3114.257063] ath: EEPROM regdomain: 0x5c
->>> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
->>> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
->>> [ 3114.257071] ath: Invalid EEPROM contents
->> clearly, the regdomain code 0x5c is not defined in the
->> drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
->>
->> this would be easy to fix [see attached patch], however I'm
->> not quite sure what to do about the 5GHz band in this case,
->> since the CTL_FCC is more restrictive than it should be.
->>
->> Regards,
->>        Chr
->>
->> ---
->> diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
->> index 248c670..5c2cfe6 100644
->> --- a/drivers/net/wireless/ath/regd_common.h
->> +++ b/drivers/net/wireless/ath/regd_common.h
->> @@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
->>        {APL9_WORLD, CTL_ETSI, CTL_ETSI},
->>
->>        {APL3_FCCA, CTL_FCC, CTL_FCC},
->> +       {APL7_FCCA, CTL_FCC, CTL_FCC},
->>        {APL1_ETSIC, CTL_FCC, CTL_ETSI},
->>        {APL2_ETSIC, CTL_FCC, CTL_ETSI},
->>        {APL2_APLD, CTL_FCC, NO_CTL},
->
-> I verified internally with our other code and this is correct, APL7
-> maps to FCC CTL and FCCA maps to FCC CTL as well. For an upstream
-> patch:
->
-> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Hi Antonio, 
 
-Oh and please Cc stable@kernel.org, thanks a lot!
+於 三，2011-04-06 於 16:24 +0200，Antonio Ospite 提到：
+> On Wed, 06 Apr 2011 16:09:28 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > On Wed, 2011-04-06 at 16:06 +0200, Antonio Ospite wrote:
+> > 
+> > > > > +	if (regulator_is_enabled(vcc)) {
+> > > > > +		dev_dbg(&pdev->dev, "Regulator already enabled\n");
+> > > > > +		rfkill_data->reg_enabled = 1;
+> > > > > +	}
+> > > > > +	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
+> > > > > +
+> > > > > +	ret = rfkill_register(rf_kill);
+> > > > 
+> > > > We recently had a thread about how rfkill_init_sw_state() isn't quite
+> > > > working the right way. Also, it is indented to be used for devices that
+> > > > keep their state over resume. I think you should remove it here and rely
+> > > > on rfkill to sync you after registration.
+> > > > 
+> > > > Cf. the long thread here:
+> > > > http://thread.gmane.org/gmane.linux.acpi.devel/49577
+> > > >
+> > > 
+> > > Ok, but I still need to replace that call with a rfkill_set_sw_state()
+> > > to expose the initial status of the regulator to the rfkill system,
+> > > right?
+> > 
+> > Well, you could, but if you don't do that then the rfkill subsystem will
+> > simply call set_block() shortly after registration to put it into the
+> > state that it thinks it should be in, which is usually more useful.
+> > 
+> 
+> I see, let's just drop rfkill_init_sw_state() then.
+> 
+> Regards,
+>    Antonio
+> 
 
-  Luis
+Like Johannes's comment, the rfkill_init_sw_state is a bit tricky
+especially when RFKILL_INPUT enabled. The rfkill_init_sw_state will
+replicate the state to device global state, then rfkill will replicate
+it to other killswitch.
+
+If you want to use rfkill_init_sw_state to set rfkill initial state when
+driver probed, then I suggest you need test it when:
+	- RFKILL_INPUT enabled
+	and
+	- when device initial state is disabled(BLOCKED)
+
+If you want to maintain the rfkill initial state by your self, you can
+reference this patch:
+http://git.kernel.org/?p=linux/kernel/git/mjg59/platform-drivers-x86.git;a=commitdiff;h=8215af019040ce9182728afee9642d8fdeb17f59
+
+The patch set intial state by rfkill_set_sw_state after rfkill register,
+and don't touch the BIOS (firmware?) state in set_block until driver
+probe finished.
+
+
+Thank's a lot!
+Joey Lee
+
