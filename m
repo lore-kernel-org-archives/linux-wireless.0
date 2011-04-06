@@ -1,101 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60431 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017Ab1DBXBE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Apr 2011 19:01:04 -0400
-Received: by wwa36 with SMTP id 36so5272412wwa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 16:01:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: avoid premature elp entrance
-Date: Sun,  3 Apr 2011 02:01:59 +0300
-Message-Id: <1301785319-18777-1-git-send-email-eliad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:53405 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808Ab1DFLUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 07:20:38 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 04:20:13 -0700
+Date: Wed, 6 Apr 2011 16:50:44 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_hw: Fix instable target power control b/w CCK/OFDM
+Message-ID: <20110406112044.GA7982@vmraj-lnx.users.atheros.com>
+References: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
+ <4D9B1BB6.1090507@openwrt.org>
+ <20110405151006.GA4837@vmraj-lnx.users.atheros.com>
+ <4D9B333F.9060106@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4D9B333F.9060106@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The elp_work is being enqueued on wl1271_ps_elp_sleep, but doesn't get
-cancelled on wl1271_ps_elp_wakeup. This might cause immediate entrance
-to elp when the wl->mutex is being released, rather than using the delayed
-enqueueing optimization.
+On Tue, Apr 05, 2011 at 08:50:31PM +0530, Felix Fietkau wrote:
+> On 2011-04-05 5:10 PM, Rajkumar Manoharan wrote:
+> > On Tue, Apr 05, 2011 at 07:10:06PM +0530, Felix Fietkau wrote:
+> >>  On 2011-04-05 3:05 PM, Rajkumar Manoharan wrote:
+> >>  >  The problem is that when the attenuation is increased,
+> >>  >  the rate will start to drop from MCS7 ->   MCS6, and finally
+> >>  >  will see MCS1 ->   CCK_11Mbps. When the rate is changed b/w
+> >>  >  CCK and OFDM, it will use register desired_scale to calculate
+> >>  >  how much tx gain need to change.
+> >>  >
+> >>  >  The output power with the same tx gain for CCK and OFDM modulated
+> >>  >  signals are different. This difference is constant for AR9280
+> >>  >  but not AR9285/AR9271. It has different PA architecture
+> >>  >  a constant. So it should be calibrated against this PA
+> >>  >  characteristic.
+> >>  >
+> >>  >  The driver has to read the calibrated values from EEPROM and set
+> >>  >  the tx power registers accordingly.
+> >>  >
+> >>  >  Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
+> >>  >  ---
+> >>  >  diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> >>  >  index bc77a30..8f0cd0e 100644
+> >>  >  --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> >>  >  +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+> >>  >  @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >>  >    {
+> >>  >    	struct modal_eep_4k_header *pModal;
+> >>  >    	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
+> >>  >  +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
+> >>  >    	u8 txRxAttenLocal;
+> >>  >    	u8 ob[5], db1[5], db2[5];
+> >>  >    	u8 ant_div_control1, ant_div_control2;
+> >>  >  @@ -1003,6 +1004,56 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+> >>  >    				AR_PHY_SETTLING_SWITCH,
+> >>  >    				pModal->swSettleHt40);
+> >>  >    	}
+> >>  >  +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
+> >>  >  +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
+> >>  >  +				EEP_4K_BB_DESIRED_SCALE_MASK);
+> >>  >  +		if ((pBase->txGainType == 0)&&   (bb_desired_scale != 0)) {
+> >>  >  +			u32 pwrctrl, pwrctrl_n;
+> >>  >  +
+> >>  >  +			/* AR_PHY_TX_PWRCTRL8 */
+> >>  >  +			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL8);
+> >>  >  +			pwrctrl = (u32) bb_desired_scale;
+> >>  >  +			NSO(pwrctrl, 5, bb_desired_scale, 5);
+> >>  I think the NSO macro is somewhat confusing. How about something like
+> >>  this instead, to make it more readable:
+> >>
+> >>  u32 mask;
+> >>  mask = BIT(0) | BIT(5) | BIT(10) | BIT(15) | BIT(20);
+> >>  pwrctl = mask * bb_desired_scale;
+> >>
+> > NSO - N times Shift and OR. Sounds reasonable. isn't it?
+> The name may be reasonable, but it's not really obvious, and IMHO the 
+> macro is not really necessary either.
+> I'm not sure if the compiler can always optimize away the for loop - and 
+> even if it can, I still think think the bitmask + multiplication 
+> approach is somewhat more readable and does not require introducing yet 
+> another magic macro.
+> 
+Nice..
+> You could also make the code more efficient and smaller by using REG_RMW 
+> instead of masking pwrctl_n vs pwrctl manually.
 
-Cancel elp_work on wakeup request, and add a new WL1271_FLAG_ELP_REQUESTED
-flag to further synchronize the elp actions.
+Yeah..We can avoid magic macros and unneccesary loops. Thanks a lot for
+your comments. Will send the updated patch.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/ps.c     |   30 ++++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 2 files changed, 25 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index b8deada..cf1cdb5 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -43,6 +43,10 @@ void wl1271_elp_work(struct work_struct *work)
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
- 		goto out;
- 
-+	/* our work might already being cancelled */
-+	if (unlikely(!test_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
-+		goto out;
-+
- 	if (test_bit(WL1271_FLAG_IN_ELP, &wl->flags) ||
- 	    (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
- 	     !test_bit(WL1271_FLAG_IDLE, &wl->flags)))
-@@ -61,12 +65,16 @@ out:
- /* Routines to toggle sleep mode while in ELP */
- void wl1271_ps_elp_sleep(struct wl1271 *wl)
- {
--	if (test_bit(WL1271_FLAG_PSM, &wl->flags) ||
--	    test_bit(WL1271_FLAG_IDLE, &wl->flags)) {
--		cancel_delayed_work(&wl->elp_work);
--		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
--					     msecs_to_jiffies(ELP_ENTRY_DELAY));
--	}
-+	/* we shouldn't see consequtive sleep requests */
-+	if (WARN_ON(test_and_set_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
-+		return;
-+
-+	if (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
-+	    !test_bit(WL1271_FLAG_IDLE, &wl->flags))
-+		return;
-+
-+	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
-+				     msecs_to_jiffies(ELP_ENTRY_DELAY));
- }
- 
- int wl1271_ps_elp_wakeup(struct wl1271 *wl)
-@@ -77,6 +85,16 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
- 	u32 start_time = jiffies;
- 	bool pending = false;
- 
-+	/*
-+	 * we might try waking up although we didn't go to sleep
-+	 * before (e.g. on boot)
-+	 */
-+	if (!test_and_clear_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags))
-+		return 0;
-+
-+	/* don't cancel_sync as it might contend for a mutex and deadlock */
-+	cancel_delayed_work(&wl->elp_work);
-+
- 	if (!test_bit(WL1271_FLAG_IN_ELP, &wl->flags))
- 		return 0;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index fb2b79f..b760143 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -346,6 +346,7 @@ enum wl12xx_flags {
- 	WL1271_FLAG_TX_QUEUE_STOPPED,
- 	WL1271_FLAG_TX_PENDING,
- 	WL1271_FLAG_IN_ELP,
-+	WL1271_FLAG_ELP_REQUESTED,
- 	WL1271_FLAG_PSM,
- 	WL1271_FLAG_PSM_REQUESTED,
- 	WL1271_FLAG_IRQ_RUNNING,
--- 
-1.7.0.4
-
+--
+Rajkumar
