@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35233 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244Ab1DAIVG (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61986 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756375Ab1DFPRC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 04:21:06 -0400
-Subject: Re: [PATCH] nl80211: report mesh capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <1301622549-16788-1-git-send-email-thomas@cozybit.com>
-References: <1301472903.3935.3.camel@jlt3.sipsolutions.net>
-	 <1301622549-16788-1-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 10:23:00 +0200
-Message-ID: <1301646180.3832.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Apr 2011 11:17:02 -0400
+Received: by bwz15 with SMTP id 15so1228128bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 08:17:00 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kimmo Huoso <kimmo.huoso@saunalahti.fi>
+Subject: Re: 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB Adapter(rev.A) [Atheros AR9001U-(2)NG] Invalid misc and Tx excessive retries
+Date: Wed, 6 Apr 2011 17:16:43 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <4D9B077E.3090106@saunalahti.fi> <201104061438.43678.chunkeey@googlemail.com> <4D9C764E.2040107@saunalahti.fi>
+In-Reply-To: <4D9C764E.2040107@saunalahti.fi>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104061716.43553.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-31 at 18:49 -0700, Thomas Pedersen wrote:
-> NL80211_CMD_GET_WIPHY now returns a flag NL80211_SUPPORT_MESH_AUTH if
-> the wiphy's mesh implementation supports routing of mesh auth frames to
-> userspace.  This is useful for forward compatibility between old kernels
-> and new userspace tools.
+On Wednesday 06 April 2011 16:18:54 Kimmo Huoso wrote:
+> And for third even the softmac numbers/statistics might be 
+> bogus, im still having problems with the driver while trying to run 
+> programs that are strict for smooth connection like online games.
+ah, that's why you are so concerned about excessive tx retries & invalid
+misc numbers. Well, one of the worst enemy of programs that rely on low latency,
+time-critical connection is "bufferbloat". However, by design 11n aggregation
+needs to do a fair amount of additional caching & reordering so it's not
+really suited for rt data anyway... Given that you have already ruled out your
+router/AP and your environment, etc.. as a culprit, the good news is that
+someone has already thought about this [QoS + the fact that aggregation is
+not enabled for AC_VO]. The bad news is that ar9170's QoS [note: I'm talking
+about the device and not the driver] does not work every well unless 11n is
+completely disabled [module parameter noht=1 does that].
 
-Patch looks good, but you should check whether mesh auth is supported in
-join_mesh when it is requested, and refuse otherwise, so that we force
-drivers to correctly advertise it.
-
-
-> Thanks for your comments, I've tried to implement the necessary changes below.
-> wiphy->flags now gets a WIPHY_FLAG_MESH_AUTH flag in case the mesh
-> implementation supports routing of mesh auth frames to userspace. If you know
-> of a better place to put this (rdev maybe?), please let me know. Also, it would
-> be nice if all you have is the ifindex; not having to send a command to
-> nl80211, parse the response, then get the wiphy index so you can request
-> capabilities from the stack. I'd like to be able to get capabilities directly
-> from an interface, should this happen in CMD_GET_MESH_CONFIG,
-> CMD_GET_INTERFACE, or maybe somewhere else?
-
-iw can't do this because it overloads the command line, but in nl80211
-you can always use an ifindex instead of a wiphy index to identify a
-device.
-
-johannes
-
+Regards,
+	Chr
