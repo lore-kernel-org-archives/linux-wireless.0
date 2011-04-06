@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50970 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755493Ab1DXTOw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756152Ab1DFOVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 15:14:52 -0400
-Received: by wya21 with SMTP id 21so1224296wya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 12:14:51 -0700 (PDT)
-Subject: Re: [PATCH v2] 802.11n frame injection
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Matteo Croce <matteo@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1303632949.3795.7.camel@jlt3.sipsolutions.net>
-References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
-	 <1303632949.3795.7.camel@jlt3.sipsolutions.net>
+	Wed, 6 Apr 2011 10:21:13 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <20110406141131.GC2810@opensource.wolfsonmicro.com>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 22:14:44 +0300
-Message-ID: <1303672484.14128.2.camel@maxim-laptop> (sfid-20110424_211503_603812_762D5F8B)
+Date: Wed, 06 Apr 2011 16:21:09 +0200
+Message-ID: <1302099669.4090.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 10:15 +0200, Johannes Berg wrote:
-> On Fri, 2011-04-22 at 18:34 +0200, Matteo Croce wrote:
-> > This patch allows to set the tx rate and retries when injecting,
-> > and report correct MCS information on received frames.
+On Wed, 2011-04-06 at 23:11 +0900, Mark Brown wrote:
+> On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
 > 
-> This description is wrong. It doesn't touch rx.c, does it?
-
-It does appear to touch radiotap processing, and I bet the developer
-tested this, but other than that don't know.
-
+> > +	tristate "Generic rfkill regulator driver"
+> > +	depends on RFKILL || !RFKILL
 > 
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> That looks *odd*.
 
--- 
-Best regards,
-        Maxim Levitsky
+That's normal for rfkill -- if RFKILL==n then this can be anything since
+the rfkill API goes all no-op inlines, but if RFKILL==m then this can't
+be ==y. "depends on !RFKILL" covers the former, "depends on RFKILL" the
+latter.
 
-Visit my blog: http://maximlevitsky.wordpress.com
-Warning: Above blog contains rants.
+johannes
 
