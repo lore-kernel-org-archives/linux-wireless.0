@@ -1,89 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:18488 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757140Ab1DGACu (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:47639 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752005Ab1DFTEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 20:02:50 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 <1302123428.20093.6.camel@maggie>
-	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	 <1302124112.20093.11.camel@maggie>
-	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	 <1302124737.27258.7.camel@dev.znau.edu.ua>
-	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 07 Apr 2011 03:00:29 +0300
-Message-Id: <1302134429.27258.32.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Wed, 6 Apr 2011 15:04:15 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id CADE45401CC
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Apr 2011 15:08:45 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110406190413.DB37040EB1@repository3.orbit-lab.org>
+Date: Wed,  6 Apr 2011 15:04:13 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 8f0a591...395560b akpm-end   -> origin/akpm-end  (forced update)
+   d7c764c..44148a6  akpm-start -> origin/akpm-start
+   7031438..88580e0  history    -> origin/history
+ + d6671a6...edda5da master     -> origin/master  (forced update)
+   d7c764c..44148a6  stable     -> origin/stable
+ * [new tag]         next-20110406 -> next-20110406
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-> W dniu 6 kwietnia 2011 23:18 użytkownik George Kashperko
-> <george@znau.edu.ua> napisał:
-> >> We have 2 windows. I didn't try this, but let's assume they have no
-> >> limitations. We can use first window for one driver only, second
-> >> driver for second driver only. That gives us 2 drivers simultaneously
-> >> working drivers. No driver need to reset core really often (and not
-> >> inside interrupt context) so we will switch driver's window to agent
-> >> (from core) only at init/reset.
-> >>
-> >> The question is what amount of driver we will need to support at the same time.
-> >>
-> >
-> > I guess (correct me please, Broadcom guys if I'm wrong) there are two
-> > functions two-head w11 pci host and therefore 4 sliding windows, 2 per
-> > each function.
-> 
-> I don't understand you. Can you use more friendly language? functions?
-> 2head? w11?
-> 
+compat-wireless code metrics
 
-For PCI function description take a look at PCI specs or PCI
-configuration space description (e. g.
-http://en.wikipedia.org/wiki/PCI_configuration_space)
-
-Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
-mean ssb/axi with two functional cores on same interconnect (like w11
-+w11, not a lot of these exists I guess). Also there were some b43+b44
-on single PCI ssb host and those where implemented as ssb interconnect
-on multifunctional PCI host therefore providing separate access windows
-for each function.
-
-Might I mussunderstood something (its late night here at my place) when
-you where talking about using coreswitching involved for two drivers
-therefore I remembered about those functions. Seems now you were talking
-about chipcommon+b43 access sharing same window.
-
-As for core switching requirments for earlier SSB interconnects on PCI
-hosts where there were no direct chipcommon access, that one can be
-accomplished without spin_lock/mutex for b43 or b44 cores with proper
-bus design.
-
-AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
-available directly and b43 will be the only one requiring window access.
-
-Have nice day,
-George
-
-
+    846053 - Total upstream lines of code being pulled
