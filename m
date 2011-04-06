@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56623 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756426Ab1DLPZn convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45786 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755015Ab1DFUPg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 11:25:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110412151453.GA20978@kroah.com>
-References: <20110411210631.GA28559@kroah.com>
-	<BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
-	<20110411212513.GA17809@kroah.com>
-	<BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
-	<20110411215619.GA27943@kroah.com>
-	<BANLkTimjThXn347+=m98NsBXY84guJjNqA@mail.gmail.com>
-	<20110411223632.GB31833@kroah.com>
-	<BANLkTinpKKRCrBik6-9C5WqcSDGuEt5yCw@mail.gmail.com>
-	<20110411233506.GA13240@kroah.com>
-	<BANLkTi=cG3U8yXaQ6PusmNaWcr+AWv3e_w@mail.gmail.com>
-	<20110412151453.GA20978@kroah.com>
-Date: Tue, 12 Apr 2011 17:25:39 +0200
-Message-ID: <BANLkTi=6tDsBF9jULDXLJ05zaHrD-+EC2g@mail.gmail.com>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Apr 2011 16:15:36 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <1302120620.22852.22.camel@x61.thuisdomein>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+	 <1302113542.22852.7.camel@x61.thuisdomein>
+	 <20110406183837.GI11941@tuxdriver.com>
+	 <1302120620.22852.22.camel@x61.thuisdomein>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 22:15:22 +0200
+Message-ID: <1302120922.4090.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/12 Greg KH <greg@kroah.com>:
-> On Tue, Apr 12, 2011 at 07:41:18AM +0200, Rafał Miłecki wrote:
->> > You can't do that, no static struct devices please.  Make these dynamic
->> > and everything will be fine.  The -mm tree used to have a huge warning
->> > if you ever tried to register a statically allocated struct, but that
->> > didn't really work out, but would have saved you a lot of time here,
->> > sorry.
->> >
->> > So dynamically allocate the structures and you will be fine.
->>
->> Well, I saw that along kernel, I had no idea there is anything wrong
->> about this. It seems more ppl do not know about this:
->> struct radeon_ib      ibs[RADEON_IB_POOL_SIZE];
->> struct radeon_pm_clock_info clock_info[8];
->> struct radeon_pm_profile profiles[PM_PROFILE_MAX];
->> struct radeon_surface_reg surface_regs[RADEON_GEM_MAX_SURFACES];
->
-> Are you sure these are all containing a 'struct device'?
+On Wed, 2011-04-06 at 22:10 +0200, Paul Bolle wrote:
+> On Wed, 2011-04-06 at 14:38 -0400, John W. Linville wrote:
+> > The syntax may seem strange,
+> 
+> It does!
+> 
+> > but basically it just says "don't let me by y if RFKILL is m"
+> 
+> ... but, besides that, I can be any value. So in effect it's shorthand
+> for
+> 	depends on RFKILL=y || RFKILL=m && m || RFKILL=n
+> 
+> (which actually looks equally strange). Is that correct?
 
-I didn't catch from you mail that you mean "struct device" only. I
-though it apply to all structs.
+I don't think it is, I believe that an expression like "RFKILL=y" has a
+bool type, and a tristate type value that depends on a bool type can
+still take the value m.
 
+johannes
 
->> checkpatch does no catch this, so maybe just some manual? Could you
->> point me to it?
->
-> It's a structure that has dynamic lifetime rules, you can't statically
-> allocate it safely.  It's that simple.
-
-Ah, and this is a great explanation, for all the time I tough the
-problem is memory issue. Now it makes sense, thanks.
-
--- 
-Rafał
