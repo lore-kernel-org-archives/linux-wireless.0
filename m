@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:63635 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753685Ab1DTQq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 12:46:26 -0400
-Subject: updated iwlwifi 5000 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: wey-yi.w.guy@intel.com
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:40794 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755015Ab1DFUKW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 16:10:22 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <20110406183837.GI11941@tuxdriver.com>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+	 <1302113542.22852.7.camel@x61.thuisdomein>
+	 <20110406183837.GI11941@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 09:24:56 -0700
-Message-ID: <1303316696.14995.162.camel@wwguy-huron>
+Date: Wed, 06 Apr 2011 22:10:19 +0200
+Message-ID: <1302120620.22852.22.camel@x61.thuisdomein>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-04-06 at 14:38 -0400, John W. Linville wrote:
+> The syntax may seem strange,
 
-Due to a packaging error, we've re-released the 5000 uCode version
-8.83.5.1. 
+It does!
 
-The updated version of firmware is available for download from
-http://intellinuxwireless.org/?n=Downloads
+> but basically it just says "don't let me by y if RFKILL is m"
 
-The old, wrongly packaged version has the following sha1sums:
+... but, besides that, I can be any value. So in effect it's shorthand
+for
+	depends on RFKILL=y || RFKILL=m && m || RFKILL=n
 
-bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
-iwlwifi-5000-ucode-8.83.5.1.tgz
-8d94177b509be3fb653ce8ba0c633244e4abf5f3
-iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+(which actually looks equally strange). Is that correct?
 
-The new version these:
-e70cc4b2249824a6b17ce9b9ae5087942c762213
-iwlwifi-5000-ucode-8.83.5.1.tgz
-22bf6093ed8204027cc3207c739d2cab9cc92ea3
-iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+Anyhow, perhaps this should be added to the "Kconfig hints" in
+Documentation/kbuild/kconfig-language.txt.
 
-The only change is removing the advertising for multiple interface
-support which is not actually present in this microcode.
 
-Wey-Yi
+Paul Bolle
 
