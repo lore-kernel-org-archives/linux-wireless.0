@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40699 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759711Ab1D0R7e (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51518 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756540Ab1DFPaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 13:59:34 -0400
-Received: by pzk9 with SMTP id 9so1174609pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 10:59:33 -0700 (PDT)
-Message-ID: <4DB85981.2090606@lwfinger.net> (sfid-20110427_195936_763428_AC1F2E2E)
-Date: Wed, 27 Apr 2011 12:59:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 6 Apr 2011 11:30:25 -0400
+Date: Wed, 6 Apr 2011 11:19:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Cong Wang <amwang@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+Message-ID: <20110406151942.GE11941@tuxdriver.com>
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+ <1302084582.3811.9.camel@jlt3.sipsolutions.net>
+ <4D9C43A8.5060500@redhat.com>
+ <20110406125728.GA2197@redhat.com>
+ <20110406151429.GD11941@tuxdriver.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 2/2] ssb: pci: update PCIe workarounds
-References: <1303918788-4903-1-git-send-email-zajec5@gmail.com> <1303918788-4903-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1303918788-4903-2-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20110406151429.GD11941@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/2011 10:39 AM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
->   drivers/ssb/driver_pcicore.c |   35 +++++++++++++++++++++++++++--------
->   1 files changed, 27 insertions(+), 8 deletions(-)
+On Wed, Apr 06, 2011 at 11:14:29AM -0400, John W. Linville wrote:
+> On Wed, Apr 06, 2011 at 02:57:29PM +0200, Stanislaw Gruszka wrote:
+> > On Wed, Apr 06, 2011 at 06:42:48PM +0800, Cong Wang wrote:
+> > > 于 2011年04月06日 18:09, Johannes Berg 写道:
+> > > >On Wed, 2011-04-06 at 17:49 +0800, Amerigo Wang wrote:
+> > > >>As scheduled in Documentation/feature-removal-schedule.txt,
+> > > >>remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+> > > >
+> > > >Mostly fine, but for iwlegacy Stanislaw we want to keep hw scan (and it
+> > > >was actually made default now)
+> > 
+> > Indeed, disable_hw_scan should be removed in iwlwifi but leaved in iwlegacy.
+> > 
+> > > Ok, I will wait for Stanislaw's response and then send an updated patch.
+> > 
+> > Have it now :-)
+> 
+> Maybe the MODULE_ALIAS("iwl4965") should go to iwlegacy too?
 
-ACK.
+Nevermind, forgot the "Internal alias support has been present in
+module-init-tools" part...
 
-Larry
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
