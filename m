@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:52072 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652Ab1DUC0h convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59670 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab1DFVB4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 22:26:37 -0400
-Received: by vws1 with SMTP id 1so996435vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 19:26:36 -0700 (PDT)
+	Wed, 6 Apr 2011 17:01:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <BANLkTikssXGwo7e1aqz-Qb8D08mv9g_MNA@mail.gmail.com>
-References: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
- <4DAE3B17.4080308@lwfinger.net> <BANLkTikssXGwo7e1aqz-Qb8D08mv9g_MNA@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 21 Apr 2011 12:26:16 +1000
-Message-ID: <BANLkTikdRatp3puWDDyXhHQNQNtzDSPOtw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: cc: add & fix defines
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
+In-Reply-To: <1302123428.20093.6.camel@maggie>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	<op.vti9ote53ri7v4@arend-laptop>
+	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	<1302123428.20093.6.camel@maggie>
+Date: Wed, 6 Apr 2011 23:01:55 +0200
+Message-ID: <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	=?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 20, 2011 at 18:15, Rafał Miłecki <zajec5@gmail.com> wrote:
-[snip]
+W dniu 6 kwietnia 2011 22:57 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote:
+>> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
+>> > If we want to have two drivers working on two (different) cores
+>> > simultaneously, we will have to add trivial mutex to group core
+>> > switching with core operation (read/write).
+>>
+>> With a little of work we could avoid switching and mutexes on no-host
+>> boards. MMIO is not limited to one core at once in such a case.
 >
-> It was bad idea to send patch so late. Did I really update comments
-> hoping it will work? :|
+> I don't think that this is a problem at all.
+> All that magic does happen inside of the bus I/O handlers.
+> Just like SSB does it.
+> From a driver point of view, the I/O functions just need to
+> be atomic.
+>
+> For SSB it's not always 100% atomic, but we're always safe
+> due to some assumptions being made. But this is an SSB implementation
+> detail that is different from AXI. So don't look too closely
+> at the SSB implementation of the I/O functions. You certainly want
+> to implement them slightly differently in AXI. SSB currently doesn't
+> make use of the additional sliding windows, because they are not
+> available in the majority of SSB devices.
+>
+> The AXI bus subsystem will manage the sliding windows and the driver
+> doesn't know about the details.
 
-I read the patch and wondered what the heck you were doing, but I
-thought to myself: Rafał knows way more about ssb and the related code
-than I do, so surely he knows what he's doing. =)
+Sure, I've meant mutex inside bcmai (or whatever name), not on the driver side!
 
-Thanks,
+In BCMAI:
+bcmai_read() {
+mutex_get();
+switch_core();
+ioread();
+mutex_release();
+}
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Rafał
