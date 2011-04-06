@@ -1,74 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:61996 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325Ab1DTGod (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44295 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756206Ab1DFSaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 02:44:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Arend van Spriel" <arend@broadcom.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-Date: Wed, 20 Apr 2011 08:44:10 +0200
-Cc: "Greg KH" <greg@kroah.com>,
-	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Jonas Gorski" <jonas.gorski@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Andy Botting" <andy@andybotting.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <20110419140257.GA20456@kroah.com> <op.vt74sxvp3ri7v4@arend-laptop>
-In-Reply-To: <op.vt74sxvp3ri7v4@arend-laptop>
+	Wed, 6 Apr 2011 14:30:20 -0400
+Date: Wed, 6 Apr 2011 13:18:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Joe Culler <joe.culler@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Green <michael.green@atheros.com>,
+	David Quan <david.quan@atheros.com>
+Subject: Re: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
+Message-ID: <20110406171858.GH11941@tuxdriver.com>
+References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
+ <201104061423.02484.chunkeey@googlemail.com>
+ <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com>
+ <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104200844.10607.arnd@arndb.de>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 20 April 2011 08:39:59 Arend van Spriel wrote:
-> On Tue, 19 Apr 2011 16:02:57 +0200, Greg KH <greg@kroah.com> wrote:
+On Wed, Apr 06, 2011 at 10:17:45AM -0700, Luis R. Rodriguez wrote:
+> On Wed, Apr 6, 2011 at 10:17 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Wed, Apr 6, 2011 at 5:23 AM, Christian Lamparter
+> > <chunkeey@googlemail.com> wrote:
+> >> On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
+> >>> [...]
+> >>> I have a problem with carl9170 driver with my d-link dwa-160 under
+> >>> linux-2.6.39-rc1.
+> >>> Here's the dmesg:
+> >>
+> >>> [ 3114.257063] ath: EEPROM regdomain: 0x5c
+> >>> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
+> >>> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
+> >>> [ 3114.257071] ath: Invalid EEPROM contents
+> >> clearly, the regdomain code 0x5c is not defined in the
+> >> drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
+> >>
+> >> this would be easy to fix [see attached patch], however I'm
+> >> not quite sure what to do about the 5GHz band in this case,
+> >> since the CTL_FCC is more restrictive than it should be.
+> >>
+> >> Regards,
+> >>        Chr
+> >>
+> >> ---
+> >> diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+> >> index 248c670..5c2cfe6 100644
+> >> --- a/drivers/net/wireless/ath/regd_common.h
+> >> +++ b/drivers/net/wireless/ath/regd_common.h
+> >> @@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+> >>        {APL9_WORLD, CTL_ETSI, CTL_ETSI},
+> >>
+> >>        {APL3_FCCA, CTL_FCC, CTL_FCC},
+> >> +       {APL7_FCCA, CTL_FCC, CTL_FCC},
+> >>        {APL1_ETSIC, CTL_FCC, CTL_ETSI},
+> >>        {APL2_ETSIC, CTL_FCC, CTL_ETSI},
+> >>        {APL2_APLD, CTL_FCC, NO_CTL},
+> >
+> > I verified internally with our other code and this is correct, APL7
+> > maps to FCC CTL and FCCA maps to FCC CTL as well. For an upstream
+> > patch:
+> >
+> > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 > 
-> > Please don't use a platform device, unless there is no other way for
-> > your device to work.  For this device, you are connected to the PCI bus,
-> > so a platform device does not make sense at all.
-> 
-> Hi Greg,
-> 
-> This is only true for a particular usage model. There are two models as  
-> shown below:
-> 
-> 1) PCI(e) card
->                        ...........
-> +----------+          :   x y z :     x, y, and z are cores.
-> |    uC    |__________:___|_|_| :
-> |          |  PCI-bus : axi-bus :
-> +----------+          :.........:
->                        bcm chipset
-> 
-> 2) SoC
->            ...............
->            : uC    x y z :
->            :  |____|_|_| :
->            :    axi-bus  :
->            :.............:
->              bcm chipset
-> 
-> Your statement is true for 1) but in usage model 2) there is no PCI bus.  
-> Also you refer to the chipset when you say 'device'. In the axi bus type  
-> each individual core is registered as a device in the linux device tree.
+> Oh and please Cc stable@kernel.org, thanks a lot!
 
-I guess what Greg was referring to is having platform devices for x/y/z
-here. In case 2, you might still need to have a platform_device for the
-combination of the three IP cores if they make up one logical device.
+...and don't forget the Signed-off-by...
 
-As mentioned in my reply, it depends a lot on what these cores actually
-are, e.g. whether you might want to have only one of them active in a
-given system to drive a specific functionality, or if you always need
-all three of them.
-
-	Arnd
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
