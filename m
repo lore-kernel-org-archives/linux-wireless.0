@@ -1,122 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40767 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775Ab1DERtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:49:10 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 10:48:45 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 2/2] cfg80211: add a timer for invalid user reg hints
-Date: Tue, 5 Apr 2011 10:49:04 -0700
-Message-ID: <1302025744-824-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1302025744-824-1-git-send-email-lrodriguez@atheros.com>
-References: <1302025744-824-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:58499 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756845Ab1DFVMp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 17:12:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1302124112.20093.11.camel@maggie>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	<op.vti9ote53ri7v4@arend-laptop>
+	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	<1302123428.20093.6.camel@maggie>
+	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+	<1302124112.20093.11.camel@maggie>
+Date: Wed, 6 Apr 2011 23:12:44 +0200
+Message-ID: <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have no other option but to inform userspace that we
-have queued up their regulatory hint request when we are
-given one given that nl80211 operates atomically on user
-requests. The best we can do is accept the request, and
-add a delayed work item for processing failure and cancel it
-if we succeeed. Upon failure we restore the regulatory
-settings and ignore the user input.
+W dniu 6 kwietnia 2011 23:08 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Wed, 2011-04-06 at 23:01 +0200, Rafał Miłecki wrote:
+>> W dniu 6 kwietnia 2011 22:57 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+>> > On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote:
+>> >> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
+>> >> > If we want to have two drivers working on two (different) cores
+>> >> > simultaneously, we will have to add trivial mutex to group core
+>> >> > switching with core operation (read/write).
+>> >>
+>> >> With a little of work we could avoid switching and mutexes on no-host
+>> >> boards. MMIO is not limited to one core at once in such a case.
+>> >
+>> > I don't think that this is a problem at all.
+>> > All that magic does happen inside of the bus I/O handlers.
+>> > Just like SSB does it.
+>> > From a driver point of view, the I/O functions just need to
+>> > be atomic.
+>> >
+>> > For SSB it's not always 100% atomic, but we're always safe
+>> > due to some assumptions being made. But this is an SSB implementation
+>> > detail that is different from AXI. So don't look too closely
+>> > at the SSB implementation of the I/O functions. You certainly want
+>> > to implement them slightly differently in AXI. SSB currently doesn't
+>> > make use of the additional sliding windows, because they are not
+>> > available in the majority of SSB devices.
+>> >
+>> > The AXI bus subsystem will manage the sliding windows and the driver
+>> > doesn't know about the details.
+>>
+>> Sure, I've meant mutex inside bcmai (or whatever name), not on the driver side!
+>>
+>> In BCMAI:
+>> bcmai_read() {
+>> mutex_get();
+>> switch_core();
+>> ioread();
+>> mutex_release();
+>> }
+>
+> Yeah that basically is the idea. But it's a little bit harder than that.
+> The problem is that the mutex cannot be taken in interrupt context.
+> A spinlock probably is a bit hairy, too, depending on how heavy
+> a core switch is on AXI.
+>
+> On SSB we workaround this with some (dirty but working) assumptions.
+>
+> On AXI you probably can do lockless I/O, if you use the two windows
+> (how many windows are there?) in a clever way to avoid core switching
+> completely after the system was initialized.
 
-This fixes this reported bug:
+We have 2 windows. I didn't try this, but let's assume they have no
+limitations. We can use first window for one driver only, second
+driver for second driver only. That gives us 2 drivers simultaneously
+working drivers. No driver need to reset core really often (and not
+inside interrupt context) so we will switch driver's window to agent
+(from core) only at init/reset.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=28112
+The question is what amount of driver we will need to support at the same time.
 
-Reported-by: gregoryx.alagnou@intel.com
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-v5:
-Just resending both to be clear, no further feedback has been
-provided, I think these are ready.
-
-v4:
-didn't exist
-
-v3:
-The slight modification here was we did the part 1 to this
-patch as a separate fix and then I moved the delayed work
-scheduling call to reg_process_hint() instead of the user
-reg hint call, given that when we restore regulatory we
-want to also trigger the delay timer check.
-
- net/wireless/reg.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e759204..2480bfd 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -106,6 +106,9 @@ struct reg_beacon {
- static void reg_todo(struct work_struct *work);
- static DECLARE_WORK(reg_work, reg_todo);
- 
-+static void reg_timeout_work(struct work_struct *work);
-+static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 5,
-@@ -1330,6 +1333,9 @@ static void reg_set_request_processed(void)
- 		need_more_processing = true;
- 	spin_unlock(&reg_requests_lock);
- 
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+		cancel_delayed_work_sync(&reg_timeout);
-+
- 	if (need_more_processing)
- 		schedule_work(&reg_work);
- }
-@@ -1440,8 +1446,17 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	r = __regulatory_hint(wiphy, reg_request);
- 	/* This is required so that the orig_* parameters are saved */
- 	if (r == -EALREADY && wiphy &&
--	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
- 		wiphy_update_regulatory(wiphy, initiator);
-+		return;
-+	}
-+
-+	/*
-+	 * We only time out user hints, given that they should be the only
-+	 * source of bogus requests.
-+	 */
-+	if (reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
- /*
-@@ -2169,6 +2184,13 @@ out:
- 	mutex_unlock(&reg_mutex);
- }
- 
-+static void reg_timeout_work(struct work_struct *work)
-+{
-+	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, "
-+		      "restoring regulatory settings");
-+	restore_regulatory_settings(true);
-+}
-+
- int __init regulatory_init(void)
- {
- 	int err = 0;
-@@ -2222,6 +2244,7 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	struct reg_beacon *reg_beacon, *btmp;
- 
- 	cancel_work_sync(&reg_work);
-+	cancel_delayed_work_sync(&reg_timeout);
- 
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
 -- 
-1.7.4.15.g7811d
-
+Rafał
