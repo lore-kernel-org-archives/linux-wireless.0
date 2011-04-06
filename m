@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm3-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.154]:40329 "HELO
-	nm3-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752672Ab1D0JB7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 05:01:59 -0400
-Message-ID: <140850.94569.qm@web161612.mail.bf1.yahoo.com> (sfid-20110427_110202_691098_5F5F4CE0)
-Date: Wed, 27 Apr 2011 02:01:58 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Reply-To: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 2/2 re-send] compat-wireless: add rtl8192c/u to driver-select
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:46372 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755975Ab1DFOlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:41:01 -0400
+Subject: Re: [PATCH 1/3] iwlwifi: fix enqueue hcmd race conditions
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110406141848.GA8979@redhat.com>
+References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
+	 <E9954878DD1FB34FAE5187FB88C58A3501428BA47D@orsmsx506.amr.corp.intel.com>
+	 <20110401072206.GA2790@redhat.com> <1301670445.22383.11.camel@wwguy-ubuntu>
+	 <20110406141848.GA8979@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 07:21:48 -0700
+Message-ID: <1302099708.14995.113.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2011-04-06 at 07:18 -0700, Stanislaw Gruszka wrote:
+> On Fri, Apr 01, 2011 at 08:07:25AM -0700, wwguy wrote:
+> > > > Do you have a bug# against this?
+> > > No, I was fixing problems happened on my local system.
+> > > 
+> > fair enough :-), thanks for the update
+> 
+> So we could consider patch as acked.
 
-Add rtl8192c & rtl8192cu to rtlwifi/driver-selct 
+forgot to "ack", sorry :-)
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+Wey
 
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -59,7 +59,7 @@ function usage {
-     echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ${NORMAL}>"
-     echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
-     echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
--    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
-+    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192c rtl8192ce rtl8192cu ${NORMAL}>"
-     echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
-     
-     echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
-@@ -327,7 +327,8 @@ case $1 in
-         disable_var_02
-         ;;
-     rtlwifi)
--        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI
-+        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI \
-+                    CONFIG_RTL8192C CONFIG_RTL8192CU
-         disable_staging
-         disable_bt_usb_ethernet_var
-         ;;
 
