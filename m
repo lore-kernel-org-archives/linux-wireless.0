@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40629
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752164Ab1DFVGT (ORCPT
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:58615 "EHLO
+	opensource2.wolfsonmicro.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755986Ab1DFOL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 17:06:19 -0400
-Date: Wed, 06 Apr 2011 14:05:43 -0700 (PDT)
-Message-Id: <20110406.140543.02286734.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-04-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110406200032.GK11941@tuxdriver.com>
-References: <20110406200032.GK11941@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 6 Apr 2011 10:11:27 -0400
+Date: Wed, 6 Apr 2011 23:11:33 +0900
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+To: Antonio Ospite <ospite@studenti.unina.it>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+Message-ID: <20110406141131.GC2810@opensource.wolfsonmicro.com>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 6 Apr 2011 16:00:33 -0400
+On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
 
-> Here is another batch of fixes intended for 2.6.39...
-> 
-> This includes a fix to avoid receiving duplicate frames in "cooked"
-> monitor mode, a mac80211 documentation fix to avoid developer
-> confusion, an rt2x00 fix to avoid cancelling some uninitialized work,
-> a wl12xx buffer overflow fix, an email address correction for wl12xx
-> module info, a zd1211rw regression fix, a zd1211rw WARNING fix,
-> and rtlwifi fix to avoid using some uninitialized variables, a fix
-> to broaden the iwl600 hardware supported by iwlagn to match what the
-> Windows driver is supporting, a b43 fix to allocate properly sized
-> receive buffers, and some stuff related to device IDs.
-> 
-> Please let me know if there are problems!
+> +	tristate "Generic rfkill regulator driver"
+> +	depends on RFKILL || !RFKILL
 
-Pulled, thanks John.
+That looks *odd*.  Otherwise this looks fine from a regulator API point
+of view.  You use an exclusive get() so you could get away without
+remembering the enable state as nothing else could hold the device open
+but there's no harm in doing so and it's defensive against silly
+constraints that force the regulator on.
