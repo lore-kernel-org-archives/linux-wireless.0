@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40618 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756289Ab1DLOd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 10:33:27 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 07:33:02 -0700
-Date: Tue, 12 Apr 2011 20:03:06 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ralf@linux-mips.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 03/22] ath9k_hw: Introduce a bool for 25mhz clock and
-	populate it
-Message-ID: <20110412143305.GB15609@vasanth-laptop>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com> <4DA458A8.5030205@openwrt.org> <20110412140035.GA15609@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110412140035.GA15609@vasanth-laptop>
+Received: from he.sipsolutions.net ([78.46.109.217]:45483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755952Ab1DFOcG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:32:06 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Ospite <ospite@studenti.unina.it>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <20110406162901.0efa11ad.ospite@studenti.unina.it>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <20110406162901.0efa11ad.ospite@studenti.unina.it>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 16:32:02 +0200
+Message-ID: <1302100322.4090.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2011 at 07:30:36PM +0530, Vasanth Thiagarajan wrote:
-> > >   {
-> > > +#define AR9340_SOC_SEL_25M_40M 0xB80600B0
-> > > +#define AR9340_REF_CLK_40 (1<<  4) /* 0 - 25MHz   1 - 40 MHz */
-> > > +
-> > >   	struct ath_common *common = ath9k_hw_common(ah);
-> > >   	int r = 0;
-> > >
-> > > @@ -508,6 +511,14 @@ static int __ath9k_hw_init(struct ath_hw *ah)
-> > >
-> > >   	ath9k_hw_attach_ops(ah);
-> > >
-> > > +	if (AR_SREV_9340(ah)) {
-> > > +		if (*((volatile u32 *) AR9340_SOC_SEL_25M_40M)&
-> > > +		    AR9340_REF_CLK_40)
-> > > +			ah->is_clk_25mhz = false;
-> > > +		else
-> > > +			ah->is_clk_25mhz = true;
-> > > +	}
-> > > +
-> > >   	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
-> > >   		ath_err(common, "Couldn't wakeup chip\n");
-> > >   		return -EIO;
-> > I think this flag should be passed down from the arch code through 
-> > platform data instead. Also, dereferencing volatile u32 pointers for 
-> > reading registers is somewhat hackish, readl or ioread32 would be better.
+On Wed, 2011-04-06 at 16:29 +0200, Antonio Ospite wrote:
+> On Wed, 6 Apr 2011 23:11:33 +0900
+> Mark Brown <broonie@opensource.wolfsonmicro.com> wrote:
 > 
-> Yeah, I was also not comfortable with this part of code. I'll fix
-> that. thanks for the comments.
+> > On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
+> > 
+> > > +	tristate "Generic rfkill regulator driver"
+> > > +	depends on RFKILL || !RFKILL
+> > 
+> > That looks *odd*.
+> 
+> Taken from Documentation/rfkill.txt section 3.  Kernel API.
+> I guess I can drop it if we want to be stricter and just require RFKILL
+> to be enabled. Johannes?
 
-Linville, ralf,
+I guess it depends on what you're looking to do. Since all you implement
+is set_block() you might very well not need to be able to have this if
+nothing is ever going to invoke set_block(), in which case you can do
+"depends on RFKILL".
 
-The code change needs to be done in arch code also to fix this
-cleanly. I'm not quite sure about the right way of submitting changes
-in BSP and ath9k driver without possibly breaking the driver due to
-the fact that the change in BSP may not be available along with
-driver change soon in wireless-testing.
+The reason for this usually is that a driver, like a wireless driver,
+should work even if there's no rfkill API available, but it shouldn't
+need to put #ifdefs into the code itself.
 
-Vasanth
+johannes
+
