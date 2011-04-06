@@ -1,70 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54402 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753517Ab1CaWBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 18:01:51 -0400
-Message-ID: <4D94F9C8.9060804@hauke-m.de>
-Date: Fri, 01 Apr 2011 00:01:44 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41368 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954Ab1DFAhr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2011 20:37:47 -0400
+Received: by iwn34 with SMTP id 34so925662iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 17:37:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>
-CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Marc Yang <yangyang@marvell.com>
-Subject: Re: [PATCH 1/5] compat-wireless: add support for mwifiex
-References: <1301588527-16615-1-git-send-email-hauke@hauke-m.de> <477F20668A386D41ADCC57781B1F704307FA844A89@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307FA844A89@SC-VEXCH1.marvell.com>
+In-Reply-To: <4D9B5473.6040003@lwfinger.net>
+References: <BANLkTimnXJGy07-8gt=O7ruH-Hyt=NqtuQ@mail.gmail.com> <4D9B5473.6040003@lwfinger.net>
+From: Gottfried Haider <gottfried.haider@gmail.com>
+Date: Wed, 6 Apr 2011 02:37:27 +0200
+Message-ID: <BANLkTi=ueo0Vm5VPRh=LMCQ-huGzXMyvFQ@mail.gmail.com>
+Subject: Re: rtl8192ce: odd ping behavior
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Hi Larry,
 
-On 03/31/2011 11:34 PM, Bing Zhao wrote:
->> Subject: [PATCH 1/5] compat-wireless: add support for mwifiex
->>
->> This adds support for mwifiex into compat-wireless.
->>
->> This is only compile tested as I do not have such a device.
-> 
-> Hi Hauke and Luis,
-> 
-> I'm getting an error in "compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c:799" while compiling compat-wireless-2.6.39-rc1-3-s.tar.bz2.
+> I repeated your test. My ping results were much better than yours:
+>
+> I do not see the deauthentication/authentication results that you see. Those
+> would definitely cause network delays.
+>
+> There are one difference in our systems. I have a 10ec:8178 device, but I
+> have an 8176 here that I will try now. I have also received a new version of
+> the driver from Realtek. If my 8176 has the same problems as yours, perhaps
+> that will help.
 
-mwifiex is not integrated in the last compat-wireless release from today
-it will be in compat-wireless-2011-04-01.
-The kernel version number in the compat-wireless release is the version
-the code is from. So compat-wireless-2.6.39-rc1-3-s is based on the
-source code from kernel version 2.6.39-rc1, it should compile and work
-with every kernel from 2.6.24 to 2.6.39.
+Thanks for testing. I had hoped that the ping results could make a
+light go on somewhere..
 
-You could build your own version based on the latest version of
-linux-next. It is described at:
-http://wireless.kernel.org/en/users/Download/hacking
+I am only starting to get into rolling my own kernels again - but if I
+can test something, please let me know.
 
-I created a self made version with the lasted fixes for compat-wireless
-and and mwifiex at:
-http://hauke-m.de/fileadmin/openwrt/compat-wireless-2011-03-31-1.tar.bz2
+One thing that appears to me as being broken with this driver is the
+LPS mode. I was watching the debug messages go by while having another
+terminal continuously ping my WiFi router:
 
-> /home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/config.mk:204: "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m."
 
-This just says that the wext interface will not work, because your
-kernel was compiled with CONFIG_WIRELESS_EXT=n, if you do not need wext
-just ignore it otherwise compile your kernel with CONFIG_WIRELESS_EXT
-enabled.
+[ 3751.605727] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-0>
+Readback Thermal Meter = 0x10 pre thermal meter 0xf
+eeprom_thermalmeter 0xf delta 0x1 delta_lck 0x0 delta_iqk 0x2
+[ 3751.605744] rtl8192c_common:rtl92c_dm_txpower_tracking_callback_thermalmeter():<0-0>
+<===
+[ 3751.605757] rtlwifi:rtl_lps_enter():<0-0> Enter 802.11 power save mode...
+[ 3751.605767] rtlwifi:rtl_lps_set_psmode():<0-0> FW LPS enter ps_mode:3
+[ 3751.605778] rtl8192c_common:rtl92c_set_fw_pwrmode_cmd():<0-0> FW LPS mode = 3
+[ 3751.605787] rtl8192c_common: In process "kworker/0:1" (pid
+2323):rtl92c_set_fw_rsvdpagepkt(): u1_h2c_set_pwrmode
+[ 3751.605799] 03 01 05
+[ 3751.605806]
+[ 3751.605812] rtl8192c_common:_rtl92c_fill_h2c_command():<0-0> come in
+[ 3751.606120] rtl8192c_common:_rtl92c_fill_h2c_command():<0-0> Write
+element_id box_reg( 1dc) =  1
+[ 3751.606132] rtl8192c_common:_rtl92c_fill_h2c_command():<0-0>
+pHalData->last_hmeboxnum  = 0
+[ 3751.606143] rtl8192c_common:_rtl92c_fill_h2c_command():<0-0> go out
 
-> /home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c: In function 'cfg80211_change_iface':
-> /home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.c:799: error: implicit declaration of function 'br_port_exists'
-> make[3]: *** [/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless/util.o] Error 1
-> make[2]: *** [/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s/net/wireless] Error 2
-> make[1]: *** [_module_/home/bzhao/git-10.80.114.125/mwifiex-devel/compat-wireless-2.6.39-rc1-3-s] Error 2
-> make: *** [modules] Error 2
+(then every second a)
+[ 3751.789003] rtl8192ce:rtl92ce_led_control():<200-1> ledaction 4,
+(until)
 
-This is a bug which will be fixed in the next release. ;-)
-Build your own compat-wireless version from git, wait till tomorrow or
-use my version at this will be fixed.
+[ 3856.004637] rtlwifi:rtl_op_sw_scan_start():<0-0>
+[ 3856.004655] rtlwifi:rtl_lps_leave():<0-0> Busy Traffic,Leave 802.11
+power save..
+[ 3856.004666] rtlwifi:rtl_lps_set_psmode():<0-0> FW LPS leave ps_mode:0
+[ 3856.004725] rtl8192c_common:rtl92c_set_fw_pwrmode_cmd():<0-0> FW LPS mode = 0
 
-Hauke
+
+and when I afterwards looked at the second terminal I saw that the
+pings were just being replied to again - and before I had a long list
+of failed ping requests. Now maybe this is policy-wise totally the
+expected behavior - waiting for a storm till leaving the power saving
+mode - but for debugging it would be good to iron this out, as it's a
+bit hard to track when it kicks in (and it's obviously _not_
+completely transparent to the user).
+
+On the ThinkPad Wiki, LPS is also mentioned as a source of problems
+[1] - though I don't know how similar the in-kernel driver is to the
+version that the text refers to.
+
+
+send trough my USB-tethered phone ;)
+
+Gottfried
+
+[1] http://www.thinkwiki.org/wiki/ThinkPad_11b/g/n_Wireless_LAN_Mini-PCI_Express_Adapter_II
