@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42002 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751777Ab1DLTEK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35631 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395Ab1DFKpb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 15:04:10 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 04A2D540446
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 15:08:52 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-12 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110412190409.1469B40EB3@repository3.orbit-lab.org>
-Date: Tue, 12 Apr 2011 15:04:08 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 6 Apr 2011 06:45:31 -0400
+Subject: Re: [Patch] wireless: remove obsolete ar9170usb driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amerigo Wang <amwang@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1302086160-9158-1-git-send-email-amwang@redhat.com>
+References: <1302086160-9158-1-git-send-email-amwang@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 12:45:29 +0200
+Message-ID: <1302086729.3811.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + a5f3ae2...bc2e31b akpm-end   -> origin/akpm-end  (forced update)
-   4263a2f..a6360dd  akpm-start -> origin/akpm-start
-   66b7101..fdab1e2  history    -> origin/history
- + ee8870a...611af9e master     -> origin/master  (forced update)
-   4263a2f..a6360dd  stable     -> origin/stable
- * [new tag]         next-20110412 -> next-20110412
- * [new tag]         v2.6.39-rc3 -> v2.6.39-rc3
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Wed, 2011-04-06 at 18:36 +0800, Amerigo Wang wrote:
+> AR9170USB is scheduled to be removed in 2.6.40.
+> 
+> Cc: Christian Lamparter <chunkeey@googlemail.com>
 
-compat-wireless code metrics
+Christian already submitted this patch, and I believe it was merged.
 
-    837874 - Total upstream lines of code being pulled
+What tree are you working against? You seem to be missing a bunch of
+wireless things that _should_ be in linux-next (I was going to check but
+git.kernel.org is really slow right now)?
+
+johannes
+
