@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54664 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932632Ab1DMQ0E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 12:26:04 -0400
-MIME-Version: 1.0
-In-Reply-To: <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com>
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
- <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com> <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan>
- <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Wed, 13 Apr 2011 09:25:42 -0700
-Message-ID: <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
-Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:31294 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756249Ab1DFOZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2011 10:25:08 -0400
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Amerigo Wang <amwang@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Apr 2011 07:05:55 -0700
+Message-ID: <1302098755.14995.112.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ugh! Couldn't you configure the stupid mailing list filter to only
-drop rich text mails that have [PATCH or [RFC or [RFT in the subject,
-e.g.? Original mail below.
+On Wed, 2011-04-06 at 02:49 -0700, Amerigo Wang wrote:
+> As scheduled in Documentation/feature-removal-schedule.txt,
+> remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+> 
+> Cc: Intel Linux Wireless <ilw@linux.intel.com>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com> 
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: WANG Cong <amwang@redhat.com>
+> 
+> ---
+what tree you are base on?
+please check commit#7eaa6a5e964f1ab02d849bda36950c0d30be8ce2 in
+wireless-next-2.6
 
-(sorry for the resend, Justin and Ivo).
+Thanks
+Wey
 
-Dan
 
-On Wed, Apr 13, 2011 at 9:23 AM, Daniel Halperin
-<dhalperi@cs.washington.edu> wrote:
->
-> On Wed, Apr 13, 2011 at 9:01 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->>>
->>> Can you try disabling powersaving?
->>> iwconfig wlan0 power off
->>>
->> Wow! That was it, now its interactive again.
->>
->> 64 bytes from wireless-host (192.168.1.2): icmp_req=1 ttl=64 time=0.581 ms
->> 64 bytes from wireless-host (192.168.1.2): icmp_req=2 ttl=64 time=0.647 ms
->>
->> Thanks, so its recommend to keep this off then, can that be set as the driver default?
->>
->
-> That's a bad idea, what you're seeing is likely completely a red herring. Wi-Fi power saving mode saves energy by putting the RF hardware most of the time. This is a Good Thing.
-> Power save is designed to kick in only when the load is very slow; the client's network stack should automatically disable power save during times of high load, e.g., during a download or a VoIP call. You should run some tests to see if this is actually occurring; there may be a bug in the rtl implementation.
-> The real problem here is that your ping test has invalid assumptions. One packet/second is not enough load to disable Wi-Fi power save, so you should not see interactive ping times. Again, this is a good thing and something I doubt you want to disable! (Assuming that RTL's implementation isn't fundamentally broken elsewhere) It certainly should NOT be the driver default.
-> Try again with sudo ping -i 0.01 -s 1400 (e.g., to ping with large packets every 10 ms); this should probably trigger the logic that automatically disables the power saving mode. Or try pinging while doing a 1 Mbit UDP transfer (e.g., with iperf).
-> Dan
