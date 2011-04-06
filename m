@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50767 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab1DKKit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:35045 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756320Ab1DFSku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 06:38:49 -0400
-Subject: Re: Is the todo-list up-to-date?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ali@internetdog.org
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110411074109.GA20913@internetdog.org>
-References: <20110411074109.GA20913@internetdog.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Apr 2011 12:40:54 +0200
-Message-ID: <1302518454.6487.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Apr 2011 14:40:50 -0400
+Received: by bwz15 with SMTP id 15so1395816bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:40:48 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com
+Subject: [PATCH -stable] ath: add missing regdomain pair 0x5c mapping
+Date: Wed, 6 Apr 2011 20:40:31 +0200
+Cc: Joe Culler <joe.culler@gmail.com>, linux-wireless@vger.kernel.org
+References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com> <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com> <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
+In-Reply-To: <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104062040.31950.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe Culler reported a problem with his AR9170 device:
 
-> is 
-> http://linuxwireless.org/en/developers/todo-list
-> up to date? Can I plan some work on its basis?
+> ath: EEPROM regdomain: 0x5c
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: invalid regulatory domain/country code 0x5c
+> ath: Invalid EEPROM contents
 
-It's pretty much up-to-date (except for some of the "AP support" things
-where we decided to do things differently), but most of the items on the
-list are under-specified and require a good understanding of the stack.
-I'm not saying that you can't do it, but I suspect it will not be very
-rewarding initially since you'd probably spend a good deal of time on
-understanding what a certain todo item really means since they're just
-very short descriptions of mostly complex issues.
+It turned out that the regdomain 'APL7_FCCA' was not mapped yet.
+According to Luis R. Rodriguez [Atheros' engineer] APL7 maps to
+FCC_CTL and FCCA maps to FCC_CTL as well, so the attached patch
+should be correct.
 
-That said, if you have a specific thing you'd like to work on I suggest
-you come back to the list for pointers and help :-)
+Cc: <stable@kernel.org>
+Reported-by: Joe Culler <joe.culler@gmail.com>
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Joe,
 
-johannes
+does this patch fix your problem? If so, can you please
+reply with a "tested-by:" tag?
 
+Regards,
+	Christian
+---
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 248c670..5c2cfe6 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+ 	{APL9_WORLD, CTL_ETSI, CTL_ETSI},
+ 
+ 	{APL3_FCCA, CTL_FCC, CTL_FCC},
++	{APL7_FCCA, CTL_FCC, CTL_FCC},
+ 	{APL1_ETSIC, CTL_FCC, CTL_ETSI},
+ 	{APL2_ETSIC, CTL_FCC, CTL_ETSI},
+ 	{APL2_APLD, CTL_FCC, NO_CTL},
