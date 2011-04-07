@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57143 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309Ab1DJQSO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 12:18:14 -0400
-Received: by iwn34 with SMTP id 34so4895033iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 09:18:13 -0700 (PDT)
-Message-ID: <4DA1D842.2060006@lwfinger.net>
-Date: Sun, 10 Apr 2011 11:18:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Firmware files for Ralink RT28x0
-References: <1302450962.5282.129.camel@localhost>
-In-Reply-To: <1302450962.5282.129.camel@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:33124 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754565Ab1DGVn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 17:43:27 -0400
+Subject: Re: [PATCH RFC 1/3] libertas_spi: cancel packet work on module
+ removal
+From: Dan Williams <dcbw@redhat.com>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Thu, 07 Apr 2011 16:43:59 -0500
+In-Reply-To: <1302207960-28536-2-git-send-email-anarsoul@gmail.com>
+References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
+	 <1302207960-28536-2-git-send-email-anarsoul@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1302212641.17586.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/10/2011 10:56 AM, Ben Hutchings wrote:
-> I notice that rt2800{pci,usb} each specify only one firmware image,
-> regardless of the controller version.
->
-> This is inconsistent with rt28{6,7}0sta and with the firmware images in
-> linux-firmware.
->
-> If you think that a single image per bus type can cover all controllers,
-> please identify those firmware images, test them on each hardware
-> generation, and get them into linux-firmware.
+On Thu, 2011-04-07 at 23:25 +0300, Vasily Khoruzhick wrote:
+> Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
 
-With rt2800pci, my rt3090 works with rt2860.bin, which is already in linux-firmware.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Larry
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 078ef43..d893560 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -1195,6 +1195,7 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+>  	lbs_remove_card(priv); /* will call free_netdev */
+>  
+>  	free_irq(spi->irq, card);
+> +	cancel_work_sync(&card->packet_work);
+>  	flush_workqueue(card->workqueue);
+>  	destroy_workqueue(card->workqueue);
+>  	if (card->pdata->teardown)
+
+
