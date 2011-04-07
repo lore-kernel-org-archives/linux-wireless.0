@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38237 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757772Ab1DZUAt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 16:00:49 -0400
-Date: Tue, 26 Apr 2011 15:47:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath9k_hw: Fix warnings due to
- -Wunused-but-set-variable
-Message-ID: <20110426194741.GL2804@tuxdriver.com> (sfid-20110426_220059_613953_3AB2279E)
-References: <1303727180-22212-1-git-send-email-rmanoharan@atheros.com>
- <1303727180-22212-5-git-send-email-rmanoharan@atheros.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52288 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751674Ab1DGHSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 03:18:15 -0400
+Message-ID: <4D9D6521.5070607@redhat.com>
+Date: Thu, 07 Apr 2011 15:17:53 +0800
+From: Cong Wang <amwang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303727180-22212-5-git-send-email-rmanoharan@atheros.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Patch] iwlwifi: remove obsoleted module alias and parameters
+References: <1302083382-6715-1-git-send-email-amwang@redhat.com> <1302098755.14995.112.camel@wwguy-huron>
+In-Reply-To: <1302098755.14995.112.camel@wwguy-huron>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 25, 2011 at 03:56:20PM +0530, Rajkumar Manoharan wrote:
-> These warnings are exposed by gcc 4.6.
-> drivers/net/wireless/ath/ath9k/hw.c: In function
-> 'ath9k_hw_fill_cap_info':
-> drivers/net/wireless/ath/ath9k/hw.c:1796:6: warning: variable 'capField'
-> set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/ath/ath9k/ar9003_phy.c: In function
-> 'ar9003_hw_process_ini':
-> drivers/net/wireless/ath/ath9k/ar9003_phy.c:602:18: warning: variable
-> 'freqIndex' set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/ath/ath9k/eeprom_9287.c: In function
-> 'ath9k_hw_set_ar9287_power_cal_table':
-> drivers/net/wireless/ath/ath9k/eeprom_9287.c:322:10: warning: variable
-> 'modalIdx' set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c: In function
-> 'ar9300_compress_decision':
-> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3220:6: warning: variable
-> 'dptr' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+于 2011年04月06日 22:05, Guy, Wey-Yi 写道:
+> On Wed, 2011-04-06 at 02:49 -0700, Amerigo Wang wrote:
+>> As scheduled in Documentation/feature-removal-schedule.txt,
+>> remove "*50", "disable_hw_scan" module parameters and MODULE_ALIAS("iwl4965").
+>>
+>> Cc: Intel Linux Wireless<ilw@linux.intel.com>
+>> Cc: Johannes Berg<johannes.berg@intel.com>
+>> Cc: "John W. Linville"<linville@tuxdriver.com>
+>> Cc: Wey-Yi Guy<wey-yi.w.guy@intel.com>
+>> Cc: Stanislaw Gruszka<sgruszka@redhat.com>
+>> Cc: Meenakshi Venkataraman<meenakshi.venkataraman@intel.com>
+>> Cc: Larry Finger<Larry.Finger@lwfinger.net>
+>> Signed-off-by: WANG Cong<amwang@redhat.com>
+>>
+>> ---
+> what tree you are base on?
+> please check commit#7eaa6a5e964f1ab02d849bda36950c0d30be8ce2 in
+> wireless-next-2.6
 
-This doesn't seem to apply either...
+The latest Linus tree, sorry that I didn't know wireless has its own tree,
+I just checked wireless-next-2.6 but don't find any commit matched
+that commit ID, but I assume you meant you already sent a same patch?
+If yes, feel free to discard mine.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks.
