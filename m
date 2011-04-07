@@ -1,46 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53076 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753713Ab1DMFwl (ORCPT
+	with ESMTP id S1756667Ab1DGXJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:52:41 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:52:41 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15034.756190.319196@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:25:06 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 21/40] ath9k_htc: Reduce TX queue size
+	Thu, 7 Apr 2011 19:09:38 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so2939043iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 16:09:38 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes.berg@sipsolutions.net, linville@tuxdriver.com,
+	javier@cozybit.com
+Subject: [PATCH v8 8/9] nl80211: New notification to discover mesh peer candidates.
+Date: Thu,  7 Apr 2011 15:08:34 -0700
+Message-Id: <1302214115-3688-9-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
+References: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Javier Cardona <javier@cozybit.com>
 
-The current max queue length of 1024 is quite large
-and unnecessary. 256 suffices well enough even for high
-throughput situations.
+Notify userspace when a beacon/presp is received from a suitable mesh
+peer candidate for whom no sta information exists.  Userspace can then
+decide to create a sta info for the candidate.  If userspace is not
+ready to authenticate the peer right away, it can create the sta info
+with the authenticated flag unset and set it later.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/nl80211.h |   12 ++++++++++++
+ include/net/cfg80211.h  |   16 ++++++++++++++++
+ net/wireless/mesh.c     |   14 ++++++++++++++
+ net/wireless/nl80211.c  |   38 ++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    4 ++++
+ 5 files changed, 84 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 7b9d863..f82b32b 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -31,7 +31,7 @@
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 43c620e..5a81b3c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -410,6 +410,16 @@
+  *	notification. This event is used to indicate that an unprotected
+  *	disassociation frame was dropped when MFP is in use.
+  *
++ * @NL80211_CMD_NEW_PEER_CANDIDATE: Notification on the reception of a
++ *      beacon or probe response from a compatible mesh peer.  This is only
++ *      sent while no station information (sta_info) exists for the new peer
++ *      candidate and when @NL80211_MESH_SETUP_USERSPACE_AUTH is set.  On
++ *      reception of this notification, userspace may decide to create a new
++ *      station (@NL80211_CMD_NEW_STATION).  To stop this notification from
++ *      reoccurring, the userspace authentication daemon may want to create the
++ *      new station with the AUTHENTICATED flag unset and maybe change it later
++ *      depending on the authentication result.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -522,6 +532,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_UNPROT_DEAUTHENTICATE,
+ 	NL80211_CMD_UNPROT_DISASSOCIATE,
  
- /* FIXME: Verify these numbers (with Windows) */
- #define MAX_TX_URB_NUM  8
--#define MAX_TX_BUF_NUM  1024
-+#define MAX_TX_BUF_NUM  256
- #define MAX_TX_BUF_SIZE 32768
- #define MAX_TX_AGGR_NUM 20
++	NL80211_CMD_NEW_PEER_CANDIDATE,
++
+ 	/* add new commands above here */
  
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d5b2cef..332bc97 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2455,6 +2455,22 @@ void cfg80211_michael_mic_failure(struct net_device *dev, const u8 *addr,
+ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid, gfp_t gfp);
+ 
+ /**
++ * cfg80211_notify_new_candidate - notify cfg80211 of a new mesh peer candidate
++ *
++ * @dev: network device
++ * @macaddr: the MAC address of the new candidate
++ * @ie: information elements advertised by the peer candidate
++ * @ie_len: lenght of the information elements buffer
++ * @gfp: allocation flags
++ *
++ * This function notifies cfg80211 that the mesh peer candidate has been
++ * detected, most likely via a beacon or, less likely, via a probe response.
++ * cfg80211 then sends a notification to userspace.
++ */
++void cfg80211_notify_new_peer_candidate(struct net_device *dev,
++		const u8 *macaddr, const u8 *ie, u8 ie_len, gfp_t gfp);
++
++/**
+  * DOC: RFkill integration
+  *
+  * RFkill integration in cfg80211 is almost invisible to drivers,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index e0226e8..5c11608 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -1,5 +1,6 @@
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
++#include "nl80211.h"
+ #include "core.h"
+ 
+ /* Default values, timeouts in ms */
+@@ -110,6 +111,19 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	return err;
+ }
+ 
++void cfg80211_notify_new_peer_candidate(struct net_device *dev,
++		const u8 *macaddr, const u8* ie, u8 ie_len, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_MESH_POINT))
++		return;
++
++	nl80211_send_new_peer_candidate(wiphy_to_dev(wdev->wiphy), dev,
++			macaddr, ie, ie_len, gfp);
++}
++EXPORT_SYMBOL(cfg80211_notify_new_peer_candidate);
++
+ static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *dev)
+ {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f31c73b..9ad8fc6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5799,6 +5799,44 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ 	nlmsg_free(msg);
+ }
+ 
++void nl80211_send_new_peer_candidate(struct cfg80211_registered_device *rdev,
++		struct net_device *netdev,
++		const u8 *macaddr, const u8* ie, u8 ie_len,
++		gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NEW_PEER_CANDIDATE);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, macaddr);
++	if (ie_len && ie)
++		NLA_PUT(msg, NL80211_ATTR_IE, ie_len , ie);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ void nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *netdev, const u8 *addr,
+ 				 enum nl80211_key_type key_type, int key_id,
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index dcac5cd..f2af695 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -50,6 +50,10 @@ void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
+ 			       struct net_device *netdev, u16 reason,
+ 			       const u8 *ie, size_t ie_len, bool from_ap);
+ 
++void nl80211_send_new_peer_candidate(struct cfg80211_registered_device *rdev,
++				     struct net_device *netdev,
++				     const u8 *macaddr, const u8* ie, u8 ie_len,
++				     gfp_t gfp);
+ void
+ nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
+ 			    struct net_device *netdev, const u8 *addr,
 -- 
 1.7.4.4
 
