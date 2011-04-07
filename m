@@ -1,165 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:25498 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758438Ab1DNNGz (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49201 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773Ab1DGAye convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 09:06:55 -0400
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
+	Wed, 6 Apr 2011 20:54:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <1302134429.27258.32.camel@dev.znau.edu.ua>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	<op.vti9ote53ri7v4@arend-laptop>
+	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	<1302123428.20093.6.camel@maggie>
+	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+	<1302124112.20093.11.camel@maggie>
+	<BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+	<1302124737.27258.7.camel@dev.znau.edu.ua>
+	<BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
+	<1302134429.27258.32.camel@dev.znau.edu.ua>
+Date: Thu, 7 Apr 2011 02:54:33 +0200
+Message-ID: <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, b43-dev@lists.infradead.org,
-	Greg KH <greg@kroah.com>, Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
-	 <1302781431.21145.6.camel@dev.znau.edu.ua>
-	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Thu, 14 Apr 2011 16:03:37 +0300
-Message-Id: <1302786217.21965.49.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
+<george@znau.edu.ua> napisał:
+> For PCI function description take a look at PCI specs or PCI
+> configuration space description (e. g.
+> http://en.wikipedia.org/wiki/PCI_configuration_space)
+>
+> Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
+> mean ssb/axi with two functional cores on same interconnect (like w11
+> +w11, not a lot of these exists I guess). Also there were some b43+b44
+> on single PCI ssb host and those where implemented as ssb interconnect
+> on multifunctional PCI host therefore providing separate access windows
+> for each function.
+>
+> Might I mussunderstood something (its late night here at my place) when
+> you where talking about using coreswitching involved for two drivers
+> therefore I remembered about those functions. Seems now you were talking
+> about chipcommon+b43 access sharing same window.
+>
+> As for core switching requirments for earlier SSB interconnects on PCI
+> hosts where there were no direct chipcommon access, that one can be
+> accomplished without spin_lock/mutex for b43 or b44 cores with proper
+> bus design.
+>
+> AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
+> available directly and b43 will be the only one requiring window access.
 
-> W dniu 14 kwietnia 2011 13:43 użytkownik George Kashperko
-> <george@znau.edu.ua> napisał:
-> >> We have slightly improved our knowledge of new Broadcom's bus. It
-> >> appears Broadcom took standard AMBA bus and put on it two cores for
-> >> every device:
-> >> 1) First core from each pair is real AMBA device, it has CID and PID.
-> >> Broadcom called it wrapper, it is used to control second core
-> >> (enabling second, disabling second, resetting second, setting flags of
-> >> second).
-> >> 2) Second core from each pair is Broadcom specific device. It can
-> >> *not* be treated as standard AMBA core - attempting to read it's CID
-> >> on PID leads to machine hang. Instead it is identified by MANUF, ID,
-> >> REV and CLASS. Example can be 80211 core.
-> >>
-> >> One of the idea is to integrate with current AMBA driver:
-> >> 1) First driver read info about all cores in Broadcom specific way. It
-> >> registers all *wrapper* (AMBA type) cores as amba_device(s).
-> >> 2) Second driver registers for cores with PID 0x103BB369 (Broadcom
-> >> specific I believe). It receives wrappers (from AMBA bus) and exposes
-> >> wrapper-related Broadcom specific core in the system.
-> >>
-> >> Problem: how to expose Broadcom specific cores in the system? Remember
-> >> we can not use amba_device, because Broadcom specific cores are
-> >> programmed and identified differently.
-> >>
-> >> Could we register some virtual bcm_amba bus in the system and register
-> >> Broadcom specific cores with it? Or is there something better for this
-> >> case? In summary everything I need is to make driver (for example b43)
-> >> able to register for Broadcom specific core with Broadcom specific
-> >> identifiers. For example:
-> >> static const struct axi_device_id b43_axi_tbl[] = {
-> >>       AXI_CORE(AXI_MANUF_BCM, AXI_CORE_80211, 0x17, AXI_ANY_CLASS),
-> >>       AXI_CORETABLE_END
-> >> };
-> >> MODULE_DEVICE_TABLE(axi, b43_axi_tbl);
-> >>
-> >> We have problems deciding architecture, the whole proposed layout is
-> >> not approved as final yet. Right now I try to check possibilities.
-> >>
-> > If you beleive you do need to register broadcom ip core devices on amba
-> > bus then I would suggest you to introduce class driver for broadcom
-> > cores rather than breaking into bus_type layout. But to be honest I
-> > think it is bad idea and your original approach where you managed agents
-> > internally and registered _broadcom_ devices on dedicated _broadcom_ bus
-> > have much more sense. Going your original way you still can also
-> > register agents on amba thus registering two buses per host but honestly
-> > registering them just for the sake of registering makes no sense at all.
-> 
-> I think you may be right, but we got so messed with so many ideas we
-> need to clean this out. Our old ideas:
-> 1) Extending ssb
-> 2) Separated library (brcmaxi)
-> 3) Broadcom specific bus (bcmai)
-> 4) AMBA AXI bus (axi)
-> 5) Integrating with drivers/amba
-First of all, think its obvious we have to implement dedicated broadcom
-bus for specific broadcom devices management. Yes, the fact is,
-old-style broadcom devices used Sonics SiliconBackplane interconnects,
-new-line ones are based on amba axi, but both of them are industrial
-buses 99,9% of which specs are electrical and about 0,1% refer to some
-programmers' model. You could plan for amba or some other industrial bus
-interface use by implementing enable/disable/reset/state/control as ops,
-but at this point I suggest to manage agents internally by your
-broadcom-specific bus driver code.
+Ahh, so while talking about 4 windows, I guess you counted fixes
+windows as well. That would be right, matching my knowledge.
 
-As for layout I've reviwed my original intent on bus model several days
-ago after finally rewieved my latest ssb-related .pdf's findings,
-Broadcom GPL sources for android, number of 2.4- and 2.6-based
-ASUS/Buffalo/Dlink/Linksys/Netgear/Siemens/USRobotics/HewlettPackard/Belkin embeddables' firmwares.
+When asking question about amount of cores we may want to use
+simultaneously I didn't think about ChipCommon or PCIe. The real
+problem would be to support for example two 802.11 cores and one
+ethernet core at the same time. That gives us 3 cores while we have
+only 2 sliding windows. But I would not care for that too much for
+now.
 
-Finally I see it as host->bridge->interconnect->ip_core->device where:
-* host and bridge are implemented and managed by host device driver (e.
-g. pci device driver managing all device pci functions or e. g. mips/arm
-embeddable host);
-* interconnect layer is managed by dedicated type handlers abstracted by
-functional tables (providing scanning and agent management services);
-* cores and their devices are managed by the bus core code regardless of
-the host device type and underlying interconnect implementation.
+For the rest (PCI function) I have to sleep before reading specs ;)
 
-In this way we will separate cows from horses and won't need inventing
-some other bus driver when decide to support same broadcom buses over e.
-g. usb.
-
-* host driver manages bus lifetime, host-specific workarounds, provide
-interconnect ports' accesses via 1+ bridges;
-* interconnect handler (it could become driver at some point if/when
-amba will evolve to not only platform-like embeddable bus) provides bus
-enumeration and agent management;
-* bus driver itself manages cooperation of upstream host/bridges with
-underlying interconnect handler feeding the system with actual
-buscommon/buscore/configuration/port devices.
-
-As for devices here, classifying them to specific types
-(buscommon/buscore/configuration/port/platform) will finally
-differentiate pci bridge cores from host ones, will let to have
-sprom/otp/flash configuration containers managed by dedicated drivers,
-cleans support for non-chipcommon buscommons, buscommon-less or
-chipcommon-as-buscore interconnects and more.
-
-I see rather beneficial managing both buscommon and buscore separately
-from host driver. You already "detouched" chipcommon from the bus core
-code, the same way buscore can (and should I beleive) be separate
-driver. The only thing here you seems to miss in your code is that
-chipcommon devices (and buscore as well if only you decide to have it as
-separate driver as well) are "special" and you must manage their
-lifetimes to
-1. ensure it's driver is loaded and initialized prior any other device
-on the bus;
-2. should not be unloaded until any other bus device have driver bound
-to the bus;
-
-> 
-> I simply decide to consider every idea seriously and decide which will
-> fit our needs the best way.
-> 
-> Hauke: you were proposing integrating with drivers/amba. I really
-> expect you to comment on this, please tell us how do you see this now,
-> when we have better overview. I took your proposal seriously, you can
-> see the results above.
-> 
-> I think I agree with George that in proposed architecture we are using
-> drivers/amba just for the idea of using it. We don't get anything from
-> it, we don't provide anything to it that could be used anywhere else.
-> I think we should simply take the last version of my patch, rename it
-> to bcmamba, fix last issues and commit. It looks we use almos nothing
-> AMBA specific in your driver.
-> 
-> But as I said, I treat every proposal seriously. So please share your
-> minds Hauke & others.
-> 
-
-Have nice day,
-George
-
-
+-- 
+Rafał
