@@ -1,125 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63542 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757551Ab1DXQNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 12:13:43 -0400
-Subject: Re: [PATCH 2.6.39] iwlegacy: led stay solid on when no traffic
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303632533.3795.1.camel@jlt3.sipsolutions.net>
-References: <1303578538-19474-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1303632533.3795.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 09:10:50 -0700
-Message-ID: <1303661450.13112.6.camel@wwguy-ubuntu> (sfid-20110424_181346_372300_2A4CAB55)
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36158 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754293Ab1DGV4r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 17:56:47 -0400
+Received: by wya21 with SMTP id 21so2608966wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 14:56:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinRhmByJFoMLsN82ZVfvRa=WOsKVhAcbk8hX2Pv@mail.gmail.com>
+References: <AANLkTin2ob-EOmY_iqxZbQ98dTA6_vAGsGWrMNKBZTVV@mail.gmail.com>
+	<AANLkTinRhmByJFoMLsN82ZVfvRa=WOsKVhAcbk8hX2Pv@mail.gmail.com>
+Date: Thu, 7 Apr 2011 22:56:46 +0100
+Message-ID: <BANLkTinQcXReH8JXFVvmv1LG_7rUog--jg@mail.gmail.com>
+Subject: Re: [ath9k-devel] Override Minstrel HT RC to set an MCS bitrate (mask)
+From: "M. A." <jdiq123@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On Sun, 2011-04-24 at 01:08 -0700, Johannes Berg wrote:
-> On Sat, 2011-04-23 at 10:08 -0700, Wey-Yi Guy wrote:
-> > commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc change the led behavior
-> > for iwlwifi driver; the side effect cause led blink all the time.
-> 
-> Uh, no, it didn't change behaviour, that was intentional and was the way
-> it was before as well...
-> 
-> > Modify the led blink table to fix this problem
-> 
-> Fine with me.
-> 
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlegacy/iwl-led.c |   22 +++++++++++++++++++++-
-> >  1 files changed, 21 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
-> > index 15eb8b7..b226a3c 100644
-> > --- a/drivers/net/wireless/iwlegacy/iwl-led.c
-> > +++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-> > @@ -48,8 +48,22 @@ module_param(led_mode, int, S_IRUGO);
-> >  MODULE_PARM_DESC(led_mode, "0=system default, "
-> >  		"1=On(RF On)/Off(RF Off), 2=blinking");
-> >  
-> > +/* Throughput		OFF time(ms)	ON time (ms)
-> > + *	>300			25		25
-> > + *	>200 to 300		40		40
-> > + *	>100 to 200		55		55
-> > + *	>70 to 100		65		65
-> > + *	>50 to 70		75		75
-> > + *	>20 to 50		85		85
-> > + *	>10 to 20		95		95
-> > + *	>5 to 10		110		110
-> > + *	>1 to 5			130		130
-> > + *	>0 to 1			167		167
-> > + *	<=0					SOLID ON
-> > + */
-> >  static const struct ieee80211_tpt_blink iwl_blink[] = {
-> > -	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
-> > +	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
-> > +	{ .throughput = 0 * 1024, .blink_time = 334 },
-> 
-> The -1, 0 is default, so you can leave that line out.
-> 
-> johannes
-> 
-> >  	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
-> >  	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
-> >  	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
-> > @@ -101,6 +115,12 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
-> >  	if (priv->blink_on == on && priv->blink_off == off)
-> >  		return 0;
-> >  
-> > +	if (on == 0) {        on = 1;
-        off = 0;
-
-        for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
-                if (tpt_trig->blink_table[i].throughput < 0 ||
-                    tpt > tpt_trig->blink_table[i].throughput) {
-                        off = tpt_trig->blink_table[i].blink_time / 2;
-                        on = tpt_trig->blink_table[i].blink_time - off;
-                        break;
-                }
-        }
-> > +		/* led is SOLID_ON */
-> > +		on = IWL_LED_SOLID;
-> > +		off = 0;
-> > +	}
-> 
-> Why would you want to do that?
-> 
-
-Maybe I mis-understand the behavior, but in mac80211
-
-        for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
-                if (tpt_trig->blink_table[i].throughput < 0 ||
-                    tpt > tpt_trig->blink_table[i].throughput) {
-                        off = tpt_trig->blink_table[i].blink_time / 2;
-                        on = tpt_trig->blink_table[i].blink_time - off;
-                        break;
-                }
-        }
-
-if throughput < 0, it will continue blink, now I change the table to as
-following
-
-  static const struct ieee80211_tpt_blink iwl_blink[] = {
- -	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
- +	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
- +	{ .throughput = 0 * 1024, .blink_time = 334 },
-
-when throughput become negative number, the "blink_time = 0". so mac80211 will call 
-iwlwifi with both "on" and "off" equal to "0". and I want to make sure in this case, the LED stay solid.
-
-Wey
+Dear all,
+Can anyone help in fixing/ overriding MCS rates as described above,
 
 
- 
+Thank you all!
 
-
+On Tue, Mar 15, 2011 at 5:02 AM, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+> On Tue, Mar 8, 2011 at 11:10 PM, M. A. <jdiq123@googlemail.com> wrote:
+>> Hi all,
+>>
+>> My question is how can I modify Minstrel HT rate control to be able to
+>> override it (by a boolean or otherwise) to select an MCS or specific
+>> rate index from user space (such that once set it driver will only try
+>> sending at that rate until unset then driver will resort back to
+>> Minstrel RC).
+>
+> I don't think we can fix the MCS rate index from user space, may be we
+> need a hack.
+> iw  dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
+> and this is only for legacy rates.
+>
+>
+>>
+>> I have been able to change other kernel parameters at runtime(echo
+>> /sys/kernel/debug/ieee80211/...) by passing them through (fops) to
+>> DebugFs. however I am unsure of what parameters to pass through in the
+>> case of MCS rate fixing and what modifications to the code are
+>> required to achieve this.
+>
+> don't know and I am not sure whether this can be easily done.
+>
+>>
+>>
+>> Also I have been told that these sections of code facilitate the
+>> masking of rates;
+>>
+>> =========================================================================
+>> include/net/cfg80211.h: cfg80211_bitrate_mask
+>> -------------------------------------------------------------------------------------------------------
+>> /*
+>>  * cfg80211_bitrate_mask - masks for bitrate control
+>>  */
+>> struct cfg80211_bitrate_mask {
+>>        struct {
+>>                u32 legacy;
+>>                /* TODO: add support for masking MCS rates; e.g.: */
+>>                /* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
+>>        } control[IEEE80211_NUM_BANDS];
+>> };
+>> -------------------------------------------------------------------------------------------------------
+>> net/mac80211/cfg.c ieee80211_set_bitrate_mask
+>> -------------------------------------------------------------------------------------------------------
+>> static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+>>                                      struct net_device *dev,
+>>                                      const u8 *addr,
+>>                                      const struct cfg80211_bitrate_mask *mask)
+>> {
+>>        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>>        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+>>        int i;
+>>
+>>        /*
+>>         * This _could_ be supported by providing a hook for
+>>         * drivers for this function, but at this point it
+>>         * doesn't seem worth bothering.
+>>         */
+>>        if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+>>                return -EOPNOTSUPP;
+>>
+>>
+>>        for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+>>                sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+>>
+>>        return 0;
+>> }
+>> -------------------------------------------------------------------------------------------------------
+>> net/wireless/nl80211.c: nl80211_set_tx_bitrate_mask
+>> -------------------------------------------------------------------------------------------------------
+>> static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+>>                                       struct genl_info *info)
+>> {
+>>        struct nlattr *tb[NL80211_TXRATE_MAX + 1];
+>>        struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>>        struct cfg80211_bitrate_mask mask;
+>>        int rem, i;
+>>        struct net_device *dev = info->user_ptr[1];
+>>        struct nlattr *tx_rates;
+>>        struct ieee80211_supported_band *sband;
+>>
+>>        if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
+>>                return -EINVAL;
+>>
+>>        if (!rdev->ops->set_bitrate_mask)
+>>                return -EOPNOTSUPP;
+>>
+>>        memset(&mask, 0, sizeof(mask));
+>>        /* Default to all rates enabled */
+>>        for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+>>                sband = rdev->wiphy.bands[i];
+>>                mask.control[i].legacy =
+>>                        sband ? (1 << sband->n_bitrates) - 1 : 0;
+>>        }
+>>
+>>        /*
+>>         * The nested attribute uses enum nl80211_band as the index. This maps
+>>         * directly to the enum ieee80211_band values used in cfg80211.
+>>         */
+>>        nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+>>        {
+>>                enum ieee80211_band band = nla_type(tx_rates);
+>>                if (band < 0 || band >= IEEE80211_NUM_BANDS)
+>>                        return -EINVAL;
+>>                sband = rdev->wiphy.bands[band];
+>>                if (sband == NULL)
+>>                        return -EINVAL;
+>>                nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+>>                          nla_len(tx_rates), nl80211_txattr_policy);
+>>                if (tb[NL80211_TXRATE_LEGACY]) {
+>>                        mask.control[band].legacy = rateset_to_mask(
+>>                                sband,
+>>                                nla_data(tb[NL80211_TXRATE_LEGACY]),
+>>                                nla_len(tb[NL80211_TXRATE_LEGACY]));
+>>                        if (mask.control[band].legacy == 0)
+>>                                return -EINVAL;
+>>                }
+>>        }
+>>
+>>        return rdev->ops->set_bitrate_mask(&rdev->wiphy, dev, NULL, &mask);
+>> }
+>
+> As you see everything is for legacy thing and for MCS it's a TODO section.
+>
+>> ====================================================================================================================
+>>
+>>
+>> Any help is much appreciated!
+>>
+>> Thank you all very much
+>> _______________________________________________
+>> ath9k-devel mailing list
+>> ath9k-devel@lists.ath9k.org
+>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>>
+>
