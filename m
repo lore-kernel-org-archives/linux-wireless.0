@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4582 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755401Ab1DERBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:01:34 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/25] iwlagn: check more error return code
-Date: Tue,  5 Apr 2011 09:42:01 -0700
-Message-Id: <1302021732-21250-15-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:39382 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755912Ab1DGTEN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 15:04:13 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4BEC2540188
+	for <linux-wireless@vger.kernel.org>; Thu,  7 Apr 2011 15:08:46 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-07 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110407190412.5EB3040EB1@repository3.orbit-lab.org>
+Date: Thu,  7 Apr 2011 15:04:12 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In alive notify, we should check return code instead of assume everything ok
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 395560b...8705bda akpm-end   -> origin/akpm-end  (forced update)
+   44148a6..6221f222 akpm-start -> origin/akpm-start
+   88580e0..0fd5839  history    -> origin/history
+ + edda5da...76ccece master     -> origin/master  (forced update)
+   44148a6..6221f222 stable     -> origin/stable
+ * [new tag]         next-20110407 -> next-20110407
+ * [new tag]         v2.6.39-rc2 -> v2.6.39-rc2
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index a7c9131..9c5abff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -432,6 +432,7 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 	unsigned long flags;
- 	int i, chan;
- 	u32 reg_val;
-+	int ret;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -527,9 +528,14 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 	iwl_clear_bits_prph(priv, APMG_PCIDEV_STT_REG,
- 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
- 
--	iwlagn_send_wimax_coex(priv);
-+	ret = iwlagn_send_wimax_coex(priv);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwlagn_set_Xtal_calib(priv);
-+	if (ret)
-+		return ret;
- 
--	iwlagn_set_Xtal_calib(priv);
- 	return iwl_send_calib_results(priv);
- }
- 
--- 
-1.7.0.4
-
+    846053 - Total upstream lines of code being pulled
