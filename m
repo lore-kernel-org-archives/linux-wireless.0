@@ -1,244 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43854 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757161Ab1DAVgh (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:19494 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757030Ab1DGBEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:37 -0400
-Received: by iyb14 with SMTP id 14so3915791iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:36 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 01/10] nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
-Date: Fri,  1 Apr 2011 13:35:42 -0700
-Message-Id: <1301690151-14979-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+	Wed, 6 Apr 2011 21:04:41 -0400
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	 <op.vtisojsk3ri7v4@arend-laptop>
+	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	 <op.vti9ote53ri7v4@arend-laptop>
+	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	 <1302123428.20093.6.camel@maggie>
+	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+	 <1302124112.20093.11.camel@maggie>
+	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+	 <1302124737.27258.7.camel@dev.znau.edu.ua>
+	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
+	 <1302134429.27258.32.camel@dev.znau.edu.ua>
+	 <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 07 Apr 2011 04:02:19 +0300
+Message-Id: <1302138139.27258.35.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
 
-To NL80211_MESH_SETUP_IE. This reflects our ability to insert any ie
-into a mesh beacon, not simply path selection ies.
+> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
+> <george@znau.edu.ua> napisał:
+> > For PCI function description take a look at PCI specs or PCI
+> > configuration space description (e. g.
+> > http://en.wikipedia.org/wiki/PCI_configuration_space)
+> >
+> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
+> > mean ssb/axi with two functional cores on same interconnect (like w11
+> > +w11, not a lot of these exists I guess). Also there were some b43+b44
+> > on single PCI ssb host and those where implemented as ssb interconnect
+> > on multifunctional PCI host therefore providing separate access windows
+> > for each function.
+> >
+> > Might I mussunderstood something (its late night here at my place) when
+> > you where talking about using coreswitching involved for two drivers
+> > therefore I remembered about those functions. Seems now you were talking
+> > about chipcommon+b43 access sharing same window.
+> >
+> > As for core switching requirments for earlier SSB interconnects on PCI
+> > hosts where there were no direct chipcommon access, that one can be
+> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
+> > bus design.
+> >
+> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
+> > available directly and b43 will be the only one requiring window access.
+> 
+> Ahh, so while talking about 4 windows, I guess you counted fixes
+> windows as well. That would be right, matching my knowledge.
+Nop, I mean sliding windows only.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- include/linux/nl80211.h    |    9 +++++----
- include/net/cfg80211.h     |    8 ++++----
- net/mac80211/cfg.c         |   15 +++++++--------
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/mesh.c        |    6 +++---
- net/mac80211/mesh_plink.c  |    2 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/mesh.c        |    4 ++--
- net/wireless/nl80211.c     |   11 ++++++-----
- 9 files changed, 31 insertions(+), 30 deletions(-)
+> 
+> When asking question about amount of cores we may want to use
+> simultaneously I didn't think about ChipCommon or PCIe. The real
+> problem would be to support for example two 802.11 cores and one
+> ethernet core at the same time. That gives us 3 cores while we have
+> only 2 sliding windows. But I would not care for that too much for
+> now.
+That will give us 3 PCI functions, each with own sliding windows.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3002218..82ef17d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -545,6 +545,7 @@ enum nl80211_commands {
- /* source-level API compatibility */
- #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
- #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
-+#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -1686,9 +1687,9 @@ enum nl80211_meshconf_params {
-  * vendor specific path metric or disable it to use the default Airtime
-  * metric.
-  *
-- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
-- * element that vendors will use to identify the path selection methods and
-- * metrics in use.
-+ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
-+ * robust security network ie, or a vendor specific information element that
-+ * vendors will use to identify the path selection methods and metrics in use.
-  *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -1697,7 +1698,7 @@ enum nl80211_mesh_setup_params {
- 	__NL80211_MESH_SETUP_INVALID,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
--	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
-+	NL80211_MESH_SETUP_IE,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 60f7876..1714943 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -654,8 +654,8 @@ struct mesh_config {
-  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-- * @vendor_ie: vendor information elements (optional)
-- * @vendor_ie_len: length of vendor information elements
-+ * @ie: vendor information elements (optional)
-+ * @ie_len: length of vendor information elements
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -664,8 +664,8 @@ struct mesh_setup {
- 	u8 mesh_id_len;
- 	u8  path_sel_proto;
- 	u8  path_metric;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3342135..f2f345a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1023,26 +1023,25 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	u8 *new_ie;
- 	const u8 *old_ie;
- 
--	/* first allocate the new vendor information element */
-+	/* allocate information elements */
- 	new_ie = NULL;
--	old_ie = ifmsh->vendor_ie;
-+	old_ie = ifmsh->ie;
- 
--	ifmsh->vendor_ie_len = setup->vendor_ie_len;
--	if (setup->vendor_ie_len) {
--		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
-+	ifmsh->ie_len = setup->ie_len;
-+	if (setup->ie_len) {
-+		new_ie = kmemdup(setup->ie, setup->ie_len,
- 				GFP_KERNEL);
- 		if (!new_ie)
- 			return -ENOMEM;
- 	}
-+	ifmsh->ie = new_ie;
-+	kfree(old_ie);
- 
- 	/* now copy the rest of the setup parameters */
- 	ifmsh->mesh_id_len = setup->mesh_id_len;
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->vendor_ie = new_ie;
--
--	kfree(old_ie);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a404017..d0fafde 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -488,8 +488,8 @@ struct ieee80211_if_mesh {
- 	struct mesh_config mshcfg;
- 	u32 mesh_seqnum;
- 	bool accepting_plinks;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2a57cc0..1c244c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
- 
--	if (sdata->u.mesh.vendor_ie) {
--		int len = sdata->u.mesh.vendor_ie_len;
--		const u8 *data = sdata->u.mesh.vendor_ie;
-+	if (sdata->u.mesh.ie) {
-+		int len = sdata->u.mesh.ie_len;
-+		const u8 *data = sdata->u.mesh.ie;
- 		if (skb_tailroom(skb) > len)
- 			memcpy(skb_put(skb, len), data, len);
- 	}
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 44b5393..c705b20 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		__le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
--			sdata->u.mesh.vendor_ie_len);
-+			sdata->u.mesh.ie_len);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
- 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 081dcaf..38f6c2d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 		/* headroom, head length, tail length and maximum TIM length */
- 		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.vendor_ie_len);
-+				sdata->u.mesh.ie_len);
- 		if (!skb)
- 			goto out;
- 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 73e39c1..0d4b226 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -53,8 +53,8 @@ const struct mesh_config default_mesh_config = {
- const struct mesh_setup default_mesh_setup = {
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
--	.vendor_ie = NULL,
--	.vendor_ie_len = 0,
-+	.ie = NULL,
-+	.ie_len = 0,
- };
- 
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4ebce42..f251089 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,7 +2804,7 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
--	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
-+	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
- 
-@@ -2906,13 +2906,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		 IEEE80211_PATH_METRIC_VENDOR :
- 		 IEEE80211_PATH_METRIC_AIRTIME;
- 
--	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
-+
-+	if (tb[NL80211_MESH_SETUP_IE]) {
- 		struct nlattr *ieattr =
--			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
-+			tb[NL80211_MESH_SETUP_IE];
- 		if (!is_valid_ie_attr(ieattr))
- 			return -EINVAL;
--		setup->vendor_ie = nla_data(ieattr);
--		setup->vendor_ie_len = nla_len(ieattr);
-+		setup->ie = nla_data(ieattr);
-+		setup->ie_len = nla_len(ieattr);
- 	}
- 
- 	return 0;
--- 
-1.7.4.1
+> 
+> For the rest (PCI function) I have to sleep before reading specs ;)
+> 
+
+Have nice day,
+George
+
 
