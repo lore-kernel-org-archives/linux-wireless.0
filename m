@@ -1,40 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60442 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932713Ab1DMQo3 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3021 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750712Ab1DGI6o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 12:44:29 -0400
-Received: by fxm17 with SMTP id 17so585940fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 09:44:28 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Damian Lesiuk <lesiuk@gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
-Date: Wed, 13 Apr 2011 18:43:57 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
-In-Reply-To: <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+	Thu, 7 Apr 2011 04:58:44 -0400
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+cc: "George Kashperko" <george@znau.edu.ua>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+ <op.vtisojsk3ri7v4@arend-laptop>
+ <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+ <op.vti9ote53ri7v4@arend-laptop>
+ <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+ <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+ <1302123428.20093.6.camel@maggie>
+ <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+ <1302124112.20093.11.camel@maggie>
+ <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+ <1302124737.27258.7.camel@dev.znau.edu.ua>
+ <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
+ <1302134429.27258.32.camel@dev.znau.edu.ua>
+ <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+ <1302162886.10725.4.camel@maggie>
+Date: Thu, 7 Apr 2011 10:58:25 +0200
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104131843.57676.chunkeey@googlemail.com>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vtj8jn133ri7v4@arend-laptop>
+In-Reply-To: <1302162886.10725.4.camel@maggie>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 April 2011 18:11:48 Damian Lesiuk wrote:
-> When I turned off N i have this in log.
-> http://pastebin.com/raw.php?i=q0zKxUZn
- 
-That's an assert to catch unwanted calls into the driver by
-the stack or from userspace. In this case the driver WARNED
-that it received an update to the bss_conf after all virtual
-interfaces have been removed. (This makes no sense, since
-*vif might not point to an old/gone ieee80211_vif.)
+On Thu, 07 Apr 2011 09:54:46 +0200, Michael Büsch <mb@bu3sch.de> wrote:
 
-But it's simple to fix: get compat-wireless.
-<http://wireless.kernel.org/en/users/Download>
+>> Ahh, so while talking about 4 windows, I guess you counted fixes
+>> windows as well. That would be right, matching my knowledge.
+>>
+>> When asking question about amount of cores we may want to use
+>> simultaneously I didn't think about ChipCommon or PCIe. The real
+>> problem would be to support for example two 802.11 cores and one
+>> ethernet core at the same time. That gives us 3 cores while we have
+>> only 2 sliding windows.
+>
+> Would that really be a problem? Think of it. This combination
+> will only be available on embedded devices. But do we have windows
+> on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
+> of all cores will always be mapped. So accesses can be done
+> without switch or lock.
 
-Regards,
-	Chr
+Agree. For embedded systems there is no need to switch cores. Each core  
+register space and wrapper register space is mapped. In the brcm80211 we  
+have the concept of fast versus slow host interface. The criteria for fast  
+host interface is based on following expression:
 
-P.S.: where's that hostapd from 2011-04-20 coming from?
-AFAIK it's still the 13/14th of April on Earth :D
+fast_host_bus = (host_bus_coretype == PCIE_CORE_ID) ||
+	((host_bus_coretype == PCI_CORE_ID) && (host_bus_corerev >= 13))
+
+If this is true, chipcommon and pci/pcie registers are accessed without  
+sliding the window using the fixed offsets Rafał mentioned earlier. The  
+BAR0 window size is 16KB.
+
+> I do really think that engineers at broadcom are clever enough
+> to design a hardware that does not require expensive window sliding
+> all the time while operating.
+>
+
+If a bigger window is clever enough ;-)
+
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
