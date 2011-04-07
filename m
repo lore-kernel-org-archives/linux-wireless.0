@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49955 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756639Ab1DBUYS (ORCPT
+Received: from esgaroth.petrovitsch.at ([78.47.184.11]:4739 "EHLO
+	esgaroth.petrovitsch.priv.at" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752634Ab1DGKd4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Apr 2011 16:24:18 -0400
-Received: by bwz15 with SMTP id 15so3213548bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Apr 2011 13:24:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201104021124.32057.chunkeey@googlemail.com>
-References: <AANLkTimERiSQcFp2-F5OTM6KyQHEMsGvJaWsV4w4Rsed@mail.gmail.com>
-	<AANLkTinabDMC7kN6Ryv23VUatGrAM1nt=Ue89Myq79qN@mail.gmail.com>
-	<loom.20110402T010759-583@post.gmane.org>
-	<201104021124.32057.chunkeey@googlemail.com>
-Date: Sat, 2 Apr 2011 16:24:16 -0400
-Message-ID: <BANLkTingByKjmYu7wM07XO4ijqXz=ymWWw@mail.gmail.com>
-Subject: Re: products with Atheros AR9002U (UB94) ?
-From: George Nychis <gnychis@cmu.edu>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Steven <srumney@sbcglobal.net>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 7 Apr 2011 06:33:56 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <1302170978.3779.0.camel@jlt3.sipsolutions.net>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+	 <1302113542.22852.7.camel@x61.thuisdomein>
+	 <1302115597.4090.11.camel@jlt3.sipsolutions.net>
+	 <1302170472.21251.9.camel@thorin>
+	 <1302170978.3779.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Apr 2011 12:33:37 +0200
+Message-ID: <1302172417.21251.48.camel@thorin>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> oh, heh right. missed the "DUAL BAND" checkbox. Nevermind, there are
-> some other supposedly dual-band ath9k_htc you can get quite easily.
-> [although they all cost a fortune - compared to the WN821 v3!]:
->
-> TiVo AN0100
-> Microsoft Xbox 360 Wireless N Networking Adapter
-> Sony UWA-BR100
-> Netgear WNDA3200
->
+On Don, 2011-04-07 at 12:09 +0200, Johannes Berg wrote: 
+> On Thu, 2011-04-07 at 12:01 +0200, Bernd Petrovitsch wrote:
+> > On Mit, 2011-04-06 at 20:46 +0200, Johannes Berg wrote: 
+> > > On Wed, 2011-04-06 at 20:12 +0200, Paul Bolle wrote:
+> > [...] 
+> > > > But doesn't
+> > > > 	depends on RFKILL || !RFKILL
+> > > > 
+> > > > always evaluate to true when running "make *config"? (Even if RFKILL is
+> > > > an unknown symbol when that expression is parsed!)
+> > > 
+> > > No, it will not, you're forgetting that these things are tristate.
+> > 
+> > Boolean operators for tristate logic isn't intuitive at all IMHO.
+> 
+> *shrug*. You're free to propose patches to the kconfig system to make it
+> more intuitive. :-)
 
-Thanks for the set of responses!  It's been super helpful.  I am
-checking out all of these options now.
+FullACK;-)
+But no intuitive tristate logic operators come to my mind (otherwise I
+would have mentioned them above).
+And there are more logic implications in "depends on RFKILL".
+Hmm, I have to think more about it ....
 
-It would still be great to add these to the "product list" on
-linuxwireless.org, does anyone know how to add to this list?
-http://linuxwireless.org/en/users/Devices/USB
+Bernd
+-- 
+Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
+                     LUGA : http://www.luga.at
 
-Just to get an idea of this... but is the USB AR9280+AR7010 fully
-supported already?  In checking some of the device driver pages,
-ath9k_htc is listed as supporting AR9271+AR7010, but I don't see
-ar9280 like I do ar9170.  I don't know if this is just a documentation
-detail or not.
-
-- George
