@@ -1,159 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:45726 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754232Ab1DKLMZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 07:12:25 -0400
-Received: by wwk4 with SMTP id 4so2858077wwk.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 04:12:23 -0700 (PDT)
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60403 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab1DGVEb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 17:04:31 -0400
+Received: by fxm17 with SMTP id 17so1951607fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 14:04:30 -0700 (PDT)
+Message-ID: <4D9E2380.30006@googlemail.com>
+Date: Thu, 07 Apr 2011 22:50:08 +0200
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1302113612.2366.34.camel@pimenta>
-References: <1301900860-19337-1-git-send-email-shahar_levi@ti.com>
-	<1302113612.2366.34.camel@pimenta>
-Date: Mon, 11 Apr 2011 14:12:23 +0300
-Message-ID: <BANLkTikLAdB7cpZmJPYDzHJ21aks=tuyZA@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: FM WLAN coexistence
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: ath9k: antenna selection possible?
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 6, 2011 at 9:13 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-04-04 at 10:07 +0300, Shahar Levi wrote:
->> Add support to FM WLAN coexistence (STA only).
->> Few WiFi harmonics may interfere FM operation, to
->> avoid this problem special coexistence techniques are
->> activated around some FM frequencies.
->>
->> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> ---
->
-> Some comments.
->
->
->> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
->> index e005aa4..5f5afbe 100644
->> --- a/drivers/net/wireless/wl12xx/acx.c
->> +++ b/drivers/net/wireless/wl12xx/acx.c
->> @@ -1604,3 +1604,45 @@ out:
->>       kfree(acx);
->>       return ret;
->>  }
->> +
->> +int wl1271_acx_fm_coex(struct wl1271 *wl)
->> +{
->> +     struct wl1271_acx_fm_coex *acx;
->> +     int ret;
->> +
->> +     wl1271_debug(DEBUG_ACX, "acx fm coex setting");
->> +
->> +     acx = kzalloc(sizeof(*acx), GFP_KERNEL);
->> +     if (!acx) {
->> +             ret = -ENOMEM;
->> +             goto out;
->> +     }
->> +
->> +     acx->enable = wl->conf.fm_coex.enable;
->> +     acx->swallow_period = wl->conf.fm_coex.swallow_period;
->> +     acx->n_divider_fref_set_1 = wl->conf.fm_coex.n_divider_fref_set_1;
->> +     acx->n_divider_fref_set_2 = wl->conf.fm_coex.n_divider_fref_set_2;
->> +     acx->m_divider_fref_set_1 =
->> +             cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_1);
->> +     acx->m_divider_fref_set_2 =
->> +             cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_2);
->> +     acx->coex_pll_stabilization_time =
->> +             cpu_to_le32(wl->conf.fm_coex.coex_pll_stabilization_time);
->
->> +     acx->ldo_stabilization_timwl12xx-fm-coex-v2/e =
->> +             cpu_to_le16(wl->conf.fm_coex.ldo_stabilization_time);
->
-> What's this? There is some garbage pasted into this statement here!
-How that get in? This is a typo of copy&paste of "wl12xx-fm-coex-v2/"
-Will be fix.
+Hello linux-wireless list!
 
->
->
->> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
->> index 0a40cae..45242db 100644
->> --- a/drivers/net/wireless/wl12xx/acx.h
->> +++ b/drivers/net/wireless/wl12xx/acx.h
->> @@ -1172,6 +1172,65 @@ struct wl1271_acx_inconnection_sta {
->>       u8 padding1[2];
->>  } __packed;
->>
->> +/*
->> + * ACX_FM_COEX_CFG
->> + * set the FM co-existence parameters.
->> + */
->> +struct wl1271_acx_fm_coex {
->> +     struct acx_header header;
->> +     /* enable(1) / disable(0) the FM Coex feature */
->> +     u8 enable;
->> +     /*
->> +      * Swallow period used in COEX PLL swallowing mechanism.
->> +      * 0xFF = use FW default
->> +      */
->> +     u8 swallow_period;
->> +     /*
->> +      * The N divider used in COEX PLL swallowing mechanism for Fref of
->> +      * 38.4/19.2 Mhz. 0xFF = use FW default
->> +      */
->> +     u8 n_divider_fref_set_1;
->> +     /*
->> +      * The N divider used in COEX PLL swallowing mechanism for Fref of
->> +      * 26/52 Mhz. 0xFF = use FW default
->> +      */
->> +     u8 n_divider_fref_set_2;
->> +     /*
->> +      * The M divider used in COEX PLL swallowing mechanism for Fref of
->> +      * 38.4/19.2 Mhz. 0xFFFF = use FW default
->> +      */
->> +     u16 m_divider_fref_set_1;
->
-> This must be __le16.
-Will be fix
+ath5k got an option to change usage of antennae as mentioned here (via
+debugfs):
 
->
->
->> +     /*
->> +      * The M divider used in COEX PLL swallowing mechanism for Fref of
->> +      * 26/52 Mhz. 0xFFFF = use FW default
->> +      */
->> +     u16 m_divider_fref_set_2;
->
-> Same here.
-Will be fix
+http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg02979.html
 
->
->
->> +     /*
->> +      * The time duration in uSec required for COEX PLL to stabilize.
->> +      * 0xFFFFFFFF = use FW default
->> +      */
->> +     u32 coex_pll_stabilization_time;
->
-> __le32
-Will be fix
+Is this possible with ath9k as well? And if so, how?
 
->
->
->> +     /*
->> +      * The time duration in uSec required for LDO to stabilize.
->> +      * 0xFFFFFFFF = use FW default
->> +      */
->> +     u16 ldo_stabilization_time;
->
-> __le16
-Will be fix
+Best regards,
+Dennis
 
->
->
-> --
-> Cheers,
-> Luca.
-
--- 
-All the best,
-Shahar
