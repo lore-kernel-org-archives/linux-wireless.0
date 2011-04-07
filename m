@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:34664 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751794Ab1DLNgk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48901 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756421Ab1DGRaX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:36:40 -0400
-Date: Tue, 12 Apr 2011 16:36:35 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-Message-ID: <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	Thu, 7 Apr 2011 13:30:23 -0400
+Date: Thu, 7 Apr 2011 13:13:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Cong Wang <amwang@redhat.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [Patch V2] wireless: remove obsolete ar9170usb driver
+Message-ID: <20110407171334.GA9692@tuxdriver.com>
+References: <1302086729.3811.14.camel@jlt3.sipsolutions.net>
+ <1302162181-24065-1-git-send-email-amwang@redhat.com>
+ <201104071056.01191.chunkeey@googlemail.com>
+ <4D9D7E7C.4040703@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <4D9D7E7C.4040703@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Apr 07, 2011 at 05:06:04PM +0800, Cong Wang wrote:
+> 于 2011年04月07日 16:56, Christian Lamparter 写道:
+> >On Thursday 07 April 2011 09:43:01 Amerigo Wang wrote:
+> >>V2: against wireless-next-2.6 and really compile tested.
+> >>
+> >>AR9170USB is scheduled to be removed in 2.6.40.
+> >>
+> >>Cc: Christian Lamparter<chunkeey@googlemail.com>
+> >>Cc: Johannes Berg<johannes@sipsolutions.net>
+> >>Cc: "Luis R. Rodriguez"<lrodriguez@atheros.com>
+> >>Cc: "John W. Linville"<linville@tuxdriver.com>
+> >>Signed-off-by: WANG Cong<amwang@redhat.com>
+> >another duplicate?
+> >
+> >please see:
+> >http://www.spinics.net/lists/linux-wireless/msg66871.html
+> >[the patch from last week in case you missed that one too.]
+> 
+> Ah, I am not in wireless list, so didn't know this.
+> Why it is not in wireless-next-2.6?
 
-On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
-> Cc: Michael Büsch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: George Kashperko <george@znau.edu.ua>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Andy Botting <andy@andybotting.com>
-> Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> V2: Rename to axi
->     Use DEFINE_PCI_DEVICE_TABLE in bridge
->     Make use of pr_fmt and pr_*
->     Store core class
->     Rename bridge to not b43 specific
->     Replace magic 0x1000 with BCMAI_CORE_SIZE
->     Remove some old "ssb" names and defines
->     Move BCMAI_ADDR_BASE def
->     Add drvdata field
-> V3: Fix reloading (kfree issue)
->     Add 14e4:0x4331
->     Fix non-initialized struct issue
->     Drop useless inline functions wrappers for pci core drv
->     Proper pr_* usage
-> V3.1: Include forgotten changes (pr_* and include related)
->     Explain why we dare to implement empty release function
+Because I haven't merged it yet -- it's as simple as that.
 
-I'm not sure we need this. If you have an IP Core which talks AXI and
-you want to put it on a PCI bus, you will have a PCI Bus wrapper around
-that IP Core, so you should go and let the kernel know about that. See
-[1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
-
-Besides, if you introduce this bus layer, it'll be more difficult for
-other licensees of the same core to re-use the same driver, since it's
-now talking a PCI emulated on top of AXI. The same can be achieved with
-the platform_bus which is more widely used, specially on ARM SoCs.
-
-[1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
-[2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
+Anyone else want to quibble over my schedule???
 
 -- 
-balbi
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
