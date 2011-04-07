@@ -1,34 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:53646 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755651Ab1DFSXo (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47134 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756890Ab1DGU14 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:23:44 -0400
-Received: by mail-vw0-f54.google.com with SMTP id 18so1873215vws.41
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:23:42 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Update Power Save Exit Retries Packets
-From: Luciano Coelho <coelho@ti.com>
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1301901331-19394-1-git-send-email-shahar_levi@ti.com>
-References: <1301901331-19394-1-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 11:23:29 -0700
-Message-ID: <1302114209.2366.38.camel@pimenta>
-Mime-Version: 1.0
+	Thu, 7 Apr 2011 16:27:56 -0400
+Received: by fxm17 with SMTP id 17so1931585fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 13:27:55 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	anarsoul@gmail.com
+Subject: [PATCH RFC 0/3] libertas: powersave fixes
+Date: Thu,  7 Apr 2011 23:25:57 +0300
+Message-Id: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-04 at 10:15 +0300, Shahar Levi wrote:
-> Reducing the retries of sending PS exit packets to the peer AP
-> 
-> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> ---
-
-Can you explain in the commit message why this change is needed?
-
-
--- 
-Cheers,
-Luca.
+This series attempts to make libertas driver a bit powersave friendlier by
+adding .set_power callback, so common part can disable hw when it's necessary
+(when iface is down or before going into suspend). Also it adds implementation of
+.set_power callback for if_spi subdriver.
 
