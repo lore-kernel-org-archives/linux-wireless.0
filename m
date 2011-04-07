@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:62263 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753554Ab1DKLJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 07:09:47 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 04:09:21 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2] ath9k: Register id table for platform device
-Date: Mon, 11 Apr 2011 16:39:41 +0530
-Message-ID: <1302520181-11949-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302520181-11949-1-git-send-email-vasanth@atheros.com>
-References: <1302520181-11949-1-git-send-email-vasanth@atheros.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54266 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750896Ab1DGVrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 17:47:17 -0400
+Message-ID: <4D9E30DE.5060500@hauke-m.de>
+Date: Thu, 07 Apr 2011 23:47:10 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Walter Goldens <goldenstranger@yahoo.com>
+CC: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Compat-wireless release for 2011-04-07 is baked
+References: <776804.71360.qm@web161620.mail.bf1.yahoo.com>
+In-Reply-To: <776804.71360.qm@web161620.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take devid from driver_data of platform_device_id instead of using a hardcoded
-value.
+On 04/07/2011 10:47 PM, Walter Goldens wrote:
+> --- On Thu, 4/7/11, Compat-wireless cronjob account <compat@orbit-lab.org> wrote:
+> 
+>> From: Compat-wireless cronjob account <compat@orbit-lab.org>
+>> Subject: Compat-wireless release for 2011-04-07 is baked
+> 
+> Luis, I've been meaning to ask you. Every now and then the CW mails claim that a new compat-wireless is released, but often is the case where it's not actually uploaded. Neither in kernel.org nor orbit-lab.
+> Do you manually upload them and is it possible to automate to uploading procedure as well?
+> 
+> 
+> Walter
+Hi Walter,
 
-Cc: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+the subject of this message is wrong, compat-wireless release for
+2011-04-07 was not baked, because some patches do not apply. ;-)
+A successful message should look like this:
+http://www.spinics.net/lists/linux-wireless/msg66930.html
+When the statistic is included it was successful.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9cb0efa..92da321 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -21,6 +21,13 @@
- #include <linux/ath9k_platform.h>
- #include "ath9k.h"
- 
-+const struct platform_device_id ath9k_platform_id_table[] = {
-+	{
-+		.name = "ar913x_wmac",
-+		.driver_data = AR5416_AR9100_DEVID,
-+	},
-+};
-+
- /* return bus cachesize in 4B word units */
- static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
- {
-@@ -57,6 +64,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
- 	struct resource *res;
-+	const struct platform_device_id *id = platform_get_device_id(pdev);
- 	int irq;
- 	int ret = 0;
- 	struct ath_hw *ah;
-@@ -116,7 +124,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		goto err_free_hw;
- 	}
- 
--	ret = ath9k_init_device(AR5416_AR9100_DEVID, sc, 0x0, &ath_ahb_bus_ops);
-+	ret = ath9k_init_device(id->driver_data, sc, 0x0, &ath_ahb_bus_ops);
- 	if (ret) {
- 		dev_err(&pdev->dev, "failed to initialize device\n");
- 		goto err_irq;
-@@ -165,6 +173,7 @@ static struct platform_driver ath_ahb_driver = {
- 		.name	= "ath9k",
- 		.owner	= THIS_MODULE,
- 	},
-+	.id_table    = ath9k_platform_id_table,
- };
- 
- int ath_ahb_init(void)
--- 
-1.7.0.4
+compat-wireless is build automatically by a daily cron job and this cron
+job also sends these mails.
 
+You could apply the patches I send to the mailing list some hours ago
+and generate your own compat-wireless version or wait some time.
+
+Hauke
