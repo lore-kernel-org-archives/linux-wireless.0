@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2562 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932185Ab1DYWpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 18:45:30 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
-Subject: [PATCH 1/7] staging: brcm80211: Add bcmchip.h
-Date: Mon, 25 Apr 2011 15:45:07 -0700
-Message-ID: <1303771513-18851-2-git-send-email-frankyl@broadcom.com> (sfid-20110426_004543_793374_5B6866AE)
-In-Reply-To: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
-References: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:60938 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab1DGKd4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 06:33:56 -0400
+Subject: Re: [RFC PATCH 1/2] mac80211: Check for queued frames before
+ entering power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
+References: <1301658324-11530-1-git-send-email-vnatarajan@atheros.com>
+	 <1301658705.3832.21.camel@jlt3.sipsolutions.net>
+	 <AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Apr 2011 12:33:55 +0200
+Message-ID: <1302172435.3779.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcmchip.h contains chip specific core register base address and
-address translation macro for core register access. This is
-introduced for si/sb utils dependence removal in fullmac driver.
+On Fri, 2011-04-01 at 17:42 +0530, Vivek Natarajan wrote:
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmchip.h |   34 ++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
- create mode 100644 drivers/staging/brcm80211/brcmfmac/bcmchip.h
+> Ideally the driver should enter power save only when there is no tx
+> frame. When there are about 10 APs in the environment the tx rate of
+> the driver drops and the application slows down since it has not yet
+> received ACKs for the frames already queued in the hardware. Since
+> this ACK may take more than 100ms, stopping the dev queues for
+> entering PS at this stage breaks applications, WMM test case in my
+> testing. If there are tx_frames already pending in the queue,
+> postponing the PS logic helps to avoid redundant queue stops. Since, I
+> could not find any other way in mac80211 to see if the driver has not
+> completed the transmission of any frame, a new API to check for
+> pending frames is used. When power save is enabled by default and in a
+> noisy environment, this API certainly helps in improving the average
+> throughput. Any other idea?
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmchip.h b/drivers/staging/brcm80211/brcmfmac/bcmchip.h
-new file mode 100644
-index 0000000..29eeee2
---- /dev/null
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmchip.h
-@@ -0,0 +1,34 @@
-+/*
-+ * Copyright (c) 2011 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _bcmchip_h_
-+#define _bcmchip_h_
-+
-+/* Core reg address translation */
-+#define CORE_CC_REG(base, field)	(base + offsetof(chipcregs_t, field))
-+#define CORE_BUS_REG(base, field)	(base + offsetof(sdpcmd_regs_t, field))
-+#define CORE_SB(base, field) \
-+		(base + SBCONFIGOFF + offsetof(sbconfig_t, field))
-+
-+/* bcm4329 */
-+/* SDIO device core, ID 0x829 */
-+#define BCM4329_CORE_BUS_BASE		0x18011000
-+/* internal memory core, ID 0x80e */
-+#define BCM4329_CORE_SOCRAM_BASE	0x18003000
-+/* ARM Cortex M3 core, ID 0x82a */
-+#define BCM4329_CORE_ARM_BASE		0x18002000
-+
-+#endif				/* _bcmchip_h_ */
--- 
-1.7.1
+I'm not sure I understand. Where does the 100ms come from? This code
+flushes the TX queues, which can take as much time as it wants, no? How
+does it break applications?
 
+I'll agree that entering powersave is pointless if that means you won't
+be able to transmit all frames. It seems to me that maybe instead we
+should give flush() a timeout, and if it can't complete in that time, we
+can postpone the powersave then?
+
+johannes
 
