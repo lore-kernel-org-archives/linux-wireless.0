@@ -1,34 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:36663 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758496Ab1DZWai (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56816 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886Ab1DGMwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 18:30:38 -0400
-Message-ID: <4DB74788.2000908@lwfinger.net> (sfid-20110427_003055_521054_01D6E522)
-Date: Tue, 26 Apr 2011 17:30:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-CC: Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com> <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 7 Apr 2011 08:52:35 -0400
+Received: by wwa36 with SMTP id 36so2992837wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 05:52:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: configure rates when working in ibss mode
+Date: Thu,  7 Apr 2011 15:52:05 +0300
+Message-Id: <1302180725-8796-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> I am trying a different driver now: rt2870sta
-> I've read a few reports this may be the 'proper' one to use.
-> So far so good, no lag or anything and I did not have to set power off
-> either.
+When working in ibss mode, we don't configure rate policy per station
+(as we use the same link for multiple stations), so currently the
+1mb/s rate is being used.
 
-Driver rtl2870sta is not the proper one to use. In fact, a patch to delete 
-rt2860sta and rt2870sta from the kernel was queued yesterday, and they will be 
-gone by the time 2.6.40 is released.
+Instead, configure the firmware to use the whole 11b rates by default.
 
-New firmware for rt2800usb was just accepted into the linux-firmware git tree. 
-Please obtain a copy and try it.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/conf.h |    7 +++++++
+ drivers/net/wireless/wl12xx/main.c |   18 ++++++++++++++++++
+ 2 files changed, 25 insertions(+), 0 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 743bd0b..8121b57 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -516,6 +516,13 @@ struct conf_rx_settings {
+ #define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
+ 	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS)
+ 
++/*
++ * Default rates for working as IBSS. use 11b rates
++ */
++#define CONF_TX_IBSS_DEFAULT_RATES  (CONF_HW_BIT_RATE_1MBPS |       \
++		CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS | \
++		CONF_HW_BIT_RATE_11MBPS);
++
+ struct conf_tx_rate_class {
+ 
+ 	/*
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7126506..ed7914c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2503,6 +2503,24 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 		}
+ 	}
+ 
++	if (changed & BSS_CHANGED_IBSS) {
++		wl1271_debug(DEBUG_ADHOC, "ibss_joined: %d",
++			     bss_conf->ibss_joined);
++
++		if (bss_conf->ibss_joined) {
++			u32 rates = bss_conf->basic_rates;
++			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
++									 rates);
++			wl->basic_rate = wl1271_tx_min_rate_get(wl);
++
++			/* by default, use 11b rates */
++			wl->rate_set = CONF_TX_IBSS_DEFAULT_RATES;
++			ret = wl1271_acx_sta_rate_policies(wl);
++			if (ret < 0)
++				goto out;
++		}
++	}
++
+ 	ret = wl1271_bss_erp_info_changed(wl, bss_conf, changed);
+ 	if (ret < 0)
+ 		goto out;
+-- 
+1.7.0.4
+
