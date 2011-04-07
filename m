@@ -1,60 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:33744 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754381Ab1DKPFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:05:42 -0400
-Date: Mon, 11 Apr 2011 17:05:34 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: Firmware for rt2800pci and rt2800usb
-Message-ID: <20110411150534.GA28875@sig21.net>
-References: <4DA2042A.3010301@gmail.com>
- <1302469406.5282.341.camel@localhost>
- <4DA22545.6050209@gmail.com>
- <4DA2312B.8080303@lwfinger.net>
- <4DA23594.8090002@gmail.com>
- <4DA2702B.2080305@lwfinger.net>
- <BANLkTimdBz9iSvjfkmbRS7FfgBT-Bzdk7Q@mail.gmail.com>
- <4DA2FB92.9070500@lwfinger.net>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:50123 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827Ab1DGJzF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 05:55:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DA2FB92.9070500@lwfinger.net>
+In-Reply-To: <1302162886.10725.4.camel@maggie>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	<op.vti9ote53ri7v4@arend-laptop>
+	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	<1302123428.20093.6.camel@maggie>
+	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+	<1302124112.20093.11.camel@maggie>
+	<BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+	<1302124737.27258.7.camel@dev.znau.edu.ua>
+	<BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
+	<1302134429.27258.32.camel@dev.znau.edu.ua>
+	<BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+	<1302162886.10725.4.camel@maggie>
+Date: Thu, 7 Apr 2011 11:55:03 +0200
+Message-ID: <BANLkTim30i8kBkvsSvmWxQaNxWkfMjhOZA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+W dniu 7 kwietnia 2011 09:54 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Thu, 2011-04-07 at 02:54 +0200, Rafał Miłecki wrote:
+>> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
+>> <george@znau.edu.ua> napisał:
+>> > For PCI function description take a look at PCI specs or PCI
+>> > configuration space description (e. g.
+>> > http://en.wikipedia.org/wiki/PCI_configuration_space)
+>> >
+>> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
+>> > mean ssb/axi with two functional cores on same interconnect (like w11
+>> > +w11, not a lot of these exists I guess). Also there were some b43+b44
+>> > on single PCI ssb host and those where implemented as ssb interconnect
+>> > on multifunctional PCI host therefore providing separate access windows
+>> > for each function.
+>> >
+>> > Might I mussunderstood something (its late night here at my place) when
+>> > you where talking about using coreswitching involved for two drivers
+>> > therefore I remembered about those functions. Seems now you were talking
+>> > about chipcommon+b43 access sharing same window.
+>> >
+>> > As for core switching requirments for earlier SSB interconnects on PCI
+>> > hosts where there were no direct chipcommon access, that one can be
+>> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
+>> > bus design.
+>> >
+>> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
+>> > available directly and b43 will be the only one requiring window access.
+>>
+>> Ahh, so while talking about 4 windows, I guess you counted fixes
+>> windows as well. That would be right, matching my knowledge.
+>>
+>> When asking question about amount of cores we may want to use
+>> simultaneously I didn't think about ChipCommon or PCIe. The real
+>> problem would be to support for example two 802.11 cores and one
+>> ethernet core at the same time. That gives us 3 cores while we have
+>> only 2 sliding windows.
+>
+> Would that really be a problem? Think of it. This combination
+> will only be available on embedded devices. But do we have windows
+> on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
+> of all cores will always be mapped. So accesses can be done
+> without switch or lock.
+>
+> I do really think that engineers at broadcom are clever enough
+> to design a hardware that does not require expensive window sliding
+> all the time while operating.
 
-On Mon, Apr 11, 2011 at 08:01:06AM -0500, Larry Finger wrote:
-> 
-> They came from
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003381.html
-> 
-> and
-> 
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003382.html.
-> 
-> These were the Ralink submissions to linux-firmware that did not get
-> accepted or rejected.
-> 
-> Once ralinktech.com.tw comes back up, I will grab the files from
-> there and make a comparison.
+I also think so. When asking about amount of cores (non PCIe, non
+ChipCommon) which has to work simultaneously. I'm not sure if we will
+meet AI board with 2 cores (non PCIe, non ChipCommon) on PCIe host. I
+don't think we will see more than 2 cores (non PCIe, non ChipCommon)
+on PCIe host.
 
-I had asked Ralink guys in private mail a while ago and they
-said the files on ralinktech.com.tw are older.  The current
-versions are those posted for linux-firmware.
-(Actually I complained because each of the driver packages
-contains a different version of the firmware, it's not very
-clear which one is the latest one on the Ralink download site.)
-
-Also, if you look at rt2800_check_firmware(), it seems some of
-the firmware files are actually multiple different firmware
-images packaged in one file.  I think this makes versioning
-even more confusing.
-
-
-Johannes
+-- 
+Rafał
