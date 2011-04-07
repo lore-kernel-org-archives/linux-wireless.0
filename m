@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340Ab1DRM0w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 08:26:52 -0400
-Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet
- loss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1303125749-31967-1-git-send-email-arik@wizery.com>
-References: <1303125749-31967-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Apr 2011 14:26:50 +0200
-Message-ID: <1303129610.3588.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4528 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755775Ab1DGL4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 07:56:33 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Question of CSA callback
+References: <op.vtkf4iiu3ri7v4@arend-laptop>
+ <1302177128.3779.12.camel@jlt3.sipsolutions.net>
+Date: Thu, 7 Apr 2011 13:56:20 +0200
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vtkgr6op3ri7v4@arend-laptop>
+In-Reply-To: <1302177128.3779.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-18 at 14:22 +0300, Arik Nemtsov wrote:
-> Add API that allows low level drivers to notify mac80211 about TX
-> packet loss. This is useful when there are FW triggers to notify the
-> low level driver about these events.
+On Thu, 07 Apr 2011 13:52:08 +0200, Johannes Berg  
+<johannes@sipsolutions.net> wrote:
 
-> +void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
-> +{
-> +	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-> +	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
-> +				    num_packets, GFP_ATOMIC);
+> On Thu, 2011-04-07 at 13:42 +0200, Arend van Spriel wrote:
+>> Hi Johannes,
+>>
+>> Recently I have taken a look at csa switch callback. After looking more
+>> closely I decided to let mac80211 handle this itself, but I noticed
+>> something strange in the interface so maybe you can clarify this.
+>>
+>> void (*channel_switch)(struct ieee80211_hw *hw,
+>> 		       struct ieee80211_channel_switch *ch_switch);
+>>
+>> void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
+>>
+>> Basically we get a channel switch callback for iee80211_hw and for the
+>> ieee80211_chswitch_done() the driver has to provide a vif. Should the
+>> channel switch also operate on a vif?
+>
+> Ah, well, no, not right now anyway -- mac80211 doesn't support
+> multi-channel operation yet.
+>
+> However, I think this kind of hw offload isn't necessary for your device
+> at all.
 
-I think it would make more sense to add num_packets to sta->lost_packets
-and invoke it only when over the threshold as done in
-ieee80211_tx_status(), as then we can share any threshold calculation
-improvements.
+Indeed I concluded we do not need this, but I just wanted to clarify the  
+intended use of the interface.
 
-Also, are you sure? Do you really not get _any_ TX status?
-
-johannes
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
 
