@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42483 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969Ab1DKN4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 09:56:20 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: mcgrof@gmail.com, lrodriguez@atheros.com, hauke@hauke-m.de
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [compat 1/1] compat: add license and other module params to kfifo
-Date: Mon, 11 Apr 2011 16:56:15 +0300
-Message-Id: <1302530175-24451-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:59513 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab1DGVth (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 17:49:37 -0400
+Received: by yia27 with SMTP id 27so1211519yia.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 14:49:36 -0700 (PDT)
+Message-ID: <4D9E316E.4000908@lwfinger.net>
+Date: Thu, 07 Apr 2011 16:49:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jett Chen <jett_chen@ralinktech.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Questions about rt2800usb
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The module taints the kernel if the license is not specified
+I know from experience that the staging driver rt82860sta has been replaced by 
+rt2800pci and I plan to push a patch deleting the driver from staging.
 
-Add also module description
+It appears that rt2870sta has been replaced by rt2800usb. Is that correct? If 
+so, I will also include the deletion of that driver from staging in the patch.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- compat/kfifo.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I noticed that rt2870sta includes a few USB IDs not found in rt2800usb, namely:
 
-diff --git a/compat/kfifo.c b/compat/kfifo.c
-index 01a0700..7890662 100644
---- a/compat/kfifo.c
-+++ b/compat/kfifo.c
-@@ -27,6 +27,8 @@
- #include <linux/uaccess.h>
- #include <linux/kfifo.h>
- 
-+MODULE_DESCRIPTION("kfifo backport");
-+MODULE_LICENSE("GPL");
- /*
-  * internal helper to calculate the unused elements in a fifo
-  */
--- 
-1.7.4.2
+0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Any reasons why these should not be included in rt2800usb?
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Please let me know of any objections to removing those two staging drivers.
 
+Thanks,
+
+Larry
