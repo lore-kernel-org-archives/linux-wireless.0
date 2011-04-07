@@ -1,52 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:56764 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083Ab1DNMjf (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47134 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756996Ab1DGU2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 08:39:35 -0400
-Received: by pxi2 with SMTP id 2so889555pxi.10
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 05:39:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTin9KAQtYg0qWOPxw2HVq4MeXdhY3Q@mail.gmail.com>
-References: <BANLkTimnQ92mgOzXMWXuF54tUs+M1ZbR1A@mail.gmail.com>
-	<BANLkTin9KAQtYg0qWOPxw2HVq4MeXdhY3Q@mail.gmail.com>
-Date: Thu, 14 Apr 2011 14:34:27 +0200
-Message-ID: <BANLkTi=M+EfZqYqojkFxVnLWBgpHuEk4+w@mail.gmail.com>
-Subject: Re: iwlagn / wpa_supplicant issue
-From: Fabio Coatti <fabio.coatti@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 7 Apr 2011 16:28:02 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so1931585fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 13:28:01 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	anarsoul@gmail.com
+Subject: [PATCH RFC 3/3] libertas_spi: introduce set_power callback
+Date: Thu,  7 Apr 2011 23:26:00 +0300
+Message-Id: <1302207960-28536-4-git-send-email-anarsoul@gmail.com>
+In-Reply-To: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
+References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/14 Sedat Dilek <sedat.dilek@googlemail.com>:
-> Sorry for the top-post:
->
-> Not sure if I have the same problem like you.
-> I was not lucky with the wpasupplicant (0.7.3-X) packaged in
-> Debian/sid, I downgraded to (0.6.10-2.1).
->
-> IIRC last time I investigated the issue:
-> Replacing /etc/wpa_supplicant/functions.sh file from 0.7.x package
-> with the one from 0.6.x helped.
-> So... it could be a packaging problem?
->
-> ( BTW, I am running systemd and resolvconf package and using a /e/n/i
-> with static-IPADDR setup, might be related to them, too. Busy with
-> other stuff and need a stable "working" Internet connection. And NO, I
-> did not write a bug-report. )
+Introduce set_power callback for spi cards, it makes driver a bit
+powersave friendlier.
 
+Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |   54 ++++++++++++-------------------
+ 1 files changed, 21 insertions(+), 33 deletions(-)
 
-Could you send to my mailbox  the two functions.sh scritps, so I can
-have a look if this can provide me any hint? Right now I've no debian
-available; I can check whatever changed and see what happens on my
-setup. It could be worth a try.
-
-Thanks.
-
-
-
-
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index d893560..1e629b3 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1068,18 +1068,25 @@ static void if_spi_resume_worker(struct work_struct *work)
+ 	card = container_of(work, struct if_spi_card, resume_work);
+ 
+ 	if (card->suspended) {
+-		if (card->pdata->setup)
+-			card->pdata->setup(card->spi);
++		lbs_resume(card->priv);
+ 
+-		/* Init card ... */
+-		if_spi_init_card(card);
++		card->suspended = 0;
++	}
++}
+ 
+-		enable_irq(card->spi->irq);
++static void if_spi_set_power(struct lbs_private *priv, int enable)
++{
++	struct if_spi_card *card = priv->card;
+ 
+-		/* And resume it ... */
+-		lbs_resume(card->priv);
++	if (enable) {
++		card->pdata->setup(card->spi);
++		if_spi_init_card(card);
++		enable_irq(card->spi->irq);
+ 
+-		card->suspended = 0;
++	} else {
++		flush_workqueue(card->workqueue);
++		disable_irq(card->spi->irq);
++		card->pdata->teardown(card->spi);
+ 	}
+ }
+ 
+@@ -1097,17 +1104,11 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 		goto out;
+ 	}
+ 
+-	if (pdata->setup) {
+-		err = pdata->setup(spi);
+-		if (err)
+-			goto out;
+-	}
+-
+ 	/* Allocate card structure to represent this specific device */
+ 	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
+ 	if (!card) {
+ 		err = -ENOMEM;
+-		goto teardown;
++		goto out;
+ 	}
+ 	spi_set_drvdata(spi, card);
+ 	card->pdata = pdata;
+@@ -1118,13 +1119,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	INIT_LIST_HEAD(&card->data_packet_list);
+ 	spin_lock_init(&card->buffer_lock);
+ 
+-	/* Initialize the SPI Interface Unit */
+-
+-	/* Firmware load */
+-	err = if_spi_init_card(card);
+-	if (err)
+-		goto free_card;
+-
+ 	/* Register our card with libertas.
+ 	 * This will call alloc_etherdev */
+ 	priv = lbs_add_card(card, &spi->dev);
+@@ -1133,9 +1127,10 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 		goto free_card;
+ 	}
+ 	card->priv = priv;
+-	priv->setup_fw_on_resume = 1;
+ 	priv->card = card;
+ 	priv->hw_host_to_card = if_spi_host_to_card;
++	if (pdata->setup && pdata->teardown)
++		priv->set_power = if_spi_set_power;
+ 	priv->enter_deep_sleep = NULL;
+ 	priv->exit_deep_sleep = NULL;
+ 	priv->reset_deep_sleep_wakeup = NULL;
+@@ -1153,6 +1148,9 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 		goto terminate_workqueue;
+ 	}
+ 
++	/* Disable IRQ, hw is not ready yet */
++	disable_irq(spi->irq);
++
+ 	/* Start the card.
+ 	 * This will call register_netdev, and we'll start
+ 	 * getting interrupts... */
+@@ -1173,9 +1171,6 @@ terminate_workqueue:
+ 	lbs_remove_card(priv); /* will call free_netdev */
+ free_card:
+ 	free_if_spi_card(card);
+-teardown:
+-	if (pdata->teardown)
+-		pdata->teardown(spi);
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+ 	return err;
+@@ -1198,8 +1193,6 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 	cancel_work_sync(&card->packet_work);
+ 	flush_workqueue(card->workqueue);
+ 	destroy_workqueue(card->workqueue);
+-	if (card->pdata->teardown)
+-		card->pdata->teardown(spi);
+ 	free_if_spi_card(card);
+ 	lbs_deb_leave(LBS_DEB_SPI);
+ 	return 0;
+@@ -1212,11 +1205,6 @@ static int if_spi_suspend(struct device *dev)
+ 
+ 	if (!card->suspended) {
+ 		lbs_suspend(card->priv);
+-		flush_workqueue(card->workqueue);
+-		disable_irq(spi->irq);
+-
+-		if (card->pdata->teardown)
+-			card->pdata->teardown(spi);
+ 		card->suspended = 1;
+ 	}
+ 
 -- 
-Fabio
+1.7.4.1
+
