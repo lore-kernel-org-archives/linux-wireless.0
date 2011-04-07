@@ -1,29 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm22-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.126]:35306 "HELO
-	nm22-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750727Ab1DGUx5 (ORCPT
+Received: from esgaroth.petrovitsch.at ([78.47.184.11]:4585 "EHLO
+	esgaroth.petrovitsch.priv.at" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751012Ab1DGKRW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 16:53:57 -0400
-Message-ID: <776804.71360.qm@web161620.mail.bf1.yahoo.com>
-Date: Thu, 7 Apr 2011 13:47:53 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Compat-wireless release for 2011-04-07 is baked
-To: linux-wireless@vger.kernel.org,
-	Compat-wireless cronjob account <compat@orbit-lab.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20110407190412.5EB3040EB1@repository3.orbit-lab.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 7 Apr 2011 06:17:22 -0400
+Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
+From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <1302115597.4090.11.camel@jlt3.sipsolutions.net>
+References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
+	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
+	 <1302113542.22852.7.camel@x61.thuisdomein>
+	 <1302115597.4090.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Apr 2011 12:01:12 +0200
+Message-ID: <1302170472.21251.9.camel@thorin>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Thu, 4/7/11, Compat-wireless cronjob account <compat@orbit-lab.org> wrote:
+On Mit, 2011-04-06 at 20:46 +0200, Johannes Berg wrote: 
+> On Wed, 2011-04-06 at 20:12 +0200, Paul Bolle wrote:
+[...] 
+> > But doesn't
+> > 	depends on RFKILL || !RFKILL
+> > 
+> > always evaluate to true when running "make *config"? (Even if RFKILL is
+> > an unknown symbol when that expression is parsed!)
+> 
+> No, it will not, you're forgetting that these things are tristate.
 
-> From: Compat-wireless cronjob account <compat@orbit-lab.org>
-> Subject: Compat-wireless release for 2011-04-07 is baked
+Boolean operators for tristate logic isn't intuitive at all IMHO.
 
-Luis, I've been meaning to ask you. Every now and then the CW mails claim that a new compat-wireless is released, but often is the case where it's not actually uploaded. Neither in kernel.org nor orbit-lab.
-Do you manually upload them and is it possible to automate to uploading procedure as well?
+Bernd
+-- 
+Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
+                     LUGA : http://www.luga.at
 
-
-Walter
