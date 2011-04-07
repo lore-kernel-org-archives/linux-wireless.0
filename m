@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49256 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886Ab1DSUDB (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48174 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756049Ab1DGXJe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 16:03:01 -0400
-Received: by eyx24 with SMTP id 24so15753eyx.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 13:02:59 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] ssb: pci: trivial: correct amount of maximum retries
-Date: Tue, 19 Apr 2011 22:40:22 +0200
-Message-Id: <1303245624-3057-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Apr 2011 19:09:34 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so2935734iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 16:09:34 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes.berg@sipsolutions.net, linville@tuxdriver.com,
+	javier@cozybit.com
+Subject: [PATCH v8 6/9] mac80211: ignore peer link requests from unauthenticated stations.
+Date: Thu,  7 Apr 2011 15:08:32 -0700
+Message-Id: <1302214115-3688-7-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
+References: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/driver_pcicore.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+From: Javier Cardona <javier@cozybit.com>
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 1ba9f0e..dbda168 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -522,7 +522,7 @@ static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address)
- 	pcicore_write32(pc, mdio_data, v);
- 	/* Wait for the device to complete the transaction */
- 	udelay(10);
--	for (i = 0; i < 200; i++) {
-+	for (i = 0; i < max_retries; i++) {
- 		v = pcicore_read32(pc, mdio_control);
- 		if (v & 0x100 /* Trans complete */) {
- 			udelay(10);
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index bafe255..5d0dd92 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -372,6 +372,9 @@ int mesh_plink_open(struct sta_info *sta)
+ 	__le16 llid;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
++	if (!test_sta_flags(sta, WLAN_STA_AUTH))
++		return -EPERM;
++
+ 	spin_lock_bh(&sta->lock);
+ 	get_random_bytes(&llid, 2);
+ 	sta->llid = llid;
+@@ -484,6 +487,12 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	}
+ 
++	if (sta && !test_sta_flags(sta, WLAN_STA_AUTH)) {
++		mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
++		rcu_read_unlock();
++		return;
++	}
++
+ 	if (sta && sta->plink_state == PLINK_BLOCKED) {
+ 		rcu_read_unlock();
+ 		return;
 -- 
-1.7.3.4
+1.7.4.4
 
