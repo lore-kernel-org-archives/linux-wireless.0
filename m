@@ -1,173 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8682 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932079Ab1DVRzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 13:55:14 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/10] iwlagn: refactor up path
-Date: Fri, 22 Apr 2011 10:33:12 -0700
-Message-Id: <1303493598-10979-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60779 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755775Ab1DGMEe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 08:04:34 -0400
+Received: by wya21 with SMTP id 21so2147098wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 05:04:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1302177081.3779.11.camel@jlt3.sipsolutions.net>
+References: <1301658324-11530-1-git-send-email-vnatarajan@atheros.com>
+	<1301658705.3832.21.camel@jlt3.sipsolutions.net>
+	<AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
+	<1302172435.3779.2.camel@jlt3.sipsolutions.net>
+	<BANLkTimNaaUyJ2jKG1gZ3WeWPA9E25y3pw@mail.gmail.com>
+	<1302177081.3779.11.camel@jlt3.sipsolutions.net>
+Date: Thu, 7 Apr 2011 17:34:33 +0530
+Message-ID: <BANLkTimcofYdm8r+YnapmUK7nvtntQPBEA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2] mac80211: Check for queued frames before entering
+ power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Apr 7, 2011 at 5:21 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-04-07 at 17:17 +0530, Vivek Natarajan wrote:
+>
+>> > I'm not sure I understand. Where does the 100ms come from? This code
+>> > flushes the TX queues, which can take as much time as it wants, no? How
+>> > does it break applications?
+>>
+>> 100ms is the time after which the dynamic ps timer stops the netif
+>> queues and flushes all the frames in the driver. Actually two factors
+>> caused the application to timeout:
+>>  One is the delay in the flush() for which the netif queues are
+>> stopped and eventually the application could not send out the frames.
+>> The second is the dropping of frames in the flush() callback when it
+>> reaches the timeout period.
+>
+> Is that an ath9k specific thing? mac80211 never invokes flush() with
+> drop=true, at this point. I thought we needed it and added it, but I
+> guess we don't really need it.
 
-Starting the device consists of many things,
-refactor out enabling the hardware and also
-return -ERFKILL when the rfkill signal is
-found to be asserted (which makes more sense
-anyway, but is also required now to make the
-__iwl_up function return right away.)
+Currently, ath9k gives a timeout of 200 ms for the pending frames to
+complete. After this timeout, the pending frames will be dropped even
+if drop is set as false in mac80211.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   46 ++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   44 ++-------------------------
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    2 +
- 3 files changed, 51 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 5c7eeac..5e62a08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2294,6 +2294,52 @@ void iwlagn_remove_notification(struct iwl_priv *priv,
- 	spin_unlock_bh(&priv->_agn.notif_wait_lock);
- }
- 
-+int iwlagn_start_device(struct iwl_priv *priv)
-+{
-+	int ret;
-+
-+	iwl_prepare_card_hw(priv);
-+	if (!priv->hw_ready) {
-+		IWL_WARN(priv, "Exit HW not ready\n");
-+		return -EIO;
-+	}
-+
-+	/* If platform's RF_KILL switch is NOT set to KILL */
-+	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-+		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+	else
-+		set_bit(STATUS_RF_KILL_HW, &priv->status);
-+
-+	if (iwl_is_rfkill(priv)) {
-+		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
-+		iwl_enable_interrupts(priv);
-+		return -ERFKILL;
-+	}
-+
-+	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-+
-+	ret = iwlagn_hw_nic_init(priv);
-+	if (ret) {
-+		IWL_ERR(priv, "Unable to init nic\n");
-+		return ret;
-+	}
-+
-+	/* make sure rfkill handshake bits are cleared */
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
-+		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
-+
-+	/* clear (again), then enable host interrupts */
-+	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-+	iwl_enable_interrupts(priv);
-+
-+	/* really make sure rfkill handshake bits are cleared */
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+
-+	return 0;
-+}
-+
- void iwlagn_stop_device(struct iwl_priv *priv)
- {
- 	unsigned long flags;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f3d9055..e99cd94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2416,7 +2416,7 @@ static int iwl_set_hw_ready(struct iwl_priv *priv)
- 	return ret;
- }
- 
--static int iwl_prepare_card_hw(struct iwl_priv *priv)
-+int iwl_prepare_card_hw(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -2462,47 +2462,9 @@ static int __iwl_up(struct iwl_priv *priv)
- 		}
- 	}
- 
--	iwl_prepare_card_hw(priv);
--
--	if (!priv->hw_ready) {
--		IWL_WARN(priv, "Exit HW not ready\n");
--		return -EIO;
--	}
--
--	/* If platform's RF_KILL switch is NOT set to KILL */
--	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
--		clear_bit(STATUS_RF_KILL_HW, &priv->status);
--	else
--		set_bit(STATUS_RF_KILL_HW, &priv->status);
--
--	if (iwl_is_rfkill(priv)) {
--		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
--
--		iwl_enable_interrupts(priv);
--		IWL_WARN(priv, "Radio disabled by HW RF Kill switch\n");
--		return 0;
--	}
--
--	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--
--	ret = iwlagn_hw_nic_init(priv);
--	if (ret) {
--		IWL_ERR(priv, "Unable to init nic\n");
-+	ret = iwlagn_start_device(priv);
-+	if (ret)
- 		return ret;
--	}
--
--	/* make sure rfkill handshake bits are cleared */
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
--		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
--
--	/* clear (again), then enable host interrupts */
--	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--	iwl_enable_interrupts(priv);
--
--	/* really make sure rfkill handshake bits are cleared */
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
- 
- 	for (i = 0; i < MAX_HW_RESTARTS; i++) {
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 1211f45..ef1bbd4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -128,7 +128,9 @@ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
- 	tasklet_kill(&priv->irq_tasklet);
- }
- 
-+int iwl_prepare_card_hw(struct iwl_priv *priv);
- 
-+int iwlagn_start_device(struct iwl_priv *priv);
- void iwlagn_stop_device(struct iwl_priv *priv);
- 
- /* tx queue */
--- 
-1.7.0.4
-
+Vivek.
