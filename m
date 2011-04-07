@@ -1,47 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:55693 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750712Ab1DYEab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 00:30:31 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 21:30:04 -0700
-Message-ID: <4DB4F8D5.1060108@atheros.com> (sfid-20110425_063045_233865_73282E42)
-Date: Mon, 25 Apr 2011 10:00:13 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+Received: from mail.academy.zt.ua ([82.207.120.245]:53968 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892Ab1DGSj1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 14:39:27 -0400
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Russell King <rmk@arm.linux.org.uk>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"L.Kriara@sms.ed.ac.uk" <L.Kriara@sms.ed.ac.uk>
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>	 <1303652185.3603.0.camel@jlt3.sipsolutions.net>	 <4DB4318F.6070801@atheros.com>	 <1303657150.3603.1.camel@jlt3.sipsolutions.net>	 <4DB4415F.2070707@atheros.com> <1303659120.3603.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1303659120.3603.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTim30i8kBkvsSvmWxQaNxWkfMjhOZA@mail.gmail.com>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	 <op.vtisojsk3ri7v4@arend-laptop>
+	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
+	 <op.vti9ote53ri7v4@arend-laptop>
+	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
+	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
+	 <1302123428.20093.6.camel@maggie>
+	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
+	 <1302124112.20093.11.camel@maggie>
+	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
+	 <1302124737.27258.7.camel@dev.znau.edu.ua>
+	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
+	 <1302134429.27258.32.camel@dev.znau.edu.ua>
+	 <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+	 <1302162886.10725.4.camel@maggie>
+	 <BANLkTim30i8kBkvsSvmWxQaNxWkfMjhOZA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 07 Apr 2011 21:36:58 +0300
+Message-Id: <1302201418.30694.3.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 24 April 2011 09:02 PM, Johannes Berg wrote:
-> On Sun, 2011-04-24 at 20:57 +0530, Mohammed Shafi wrote:
->    
->> On Sunday 24 April 2011 08:29 PM, Johannes Berg wrote:
->>      
->>> iw wlan0 station dump | grep ... | wc -l
->>>        
->> thanks, that  works! I need to divide by 11 :)
->>      
-> Heh, yes, but that might change and/or be HW dependent, hence grep. So
-> if you do
->
-> iw wlan0 station dump | grep '^Station ' | wc -l
->
-> you won't need to divide and won't be HW dependent.
->    
-Oh ok, thanks!
-regards,
-shafi
 
-> johannes
->
->    
+> W dniu 7 kwietnia 2011 09:54 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> > On Thu, 2011-04-07 at 02:54 +0200, Rafał Miłecki wrote:
+> >> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
+> >> <george@znau.edu.ua> napisał:
+> >> > For PCI function description take a look at PCI specs or PCI
+> >> > configuration space description (e. g.
+> >> > http://en.wikipedia.org/wiki/PCI_configuration_space)
+> >> >
+> >> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
+> >> > mean ssb/axi with two functional cores on same interconnect (like w11
+> >> > +w11, not a lot of these exists I guess). Also there were some b43+b44
+> >> > on single PCI ssb host and those where implemented as ssb interconnect
+> >> > on multifunctional PCI host therefore providing separate access windows
+> >> > for each function.
+> >> >
+> >> > Might I mussunderstood something (its late night here at my place) when
+> >> > you where talking about using coreswitching involved for two drivers
+> >> > therefore I remembered about those functions. Seems now you were talking
+> >> > about chipcommon+b43 access sharing same window.
+> >> >
+> >> > As for core switching requirments for earlier SSB interconnects on PCI
+> >> > hosts where there were no direct chipcommon access, that one can be
+> >> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
+> >> > bus design.
+> >> >
+> >> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
+> >> > available directly and b43 will be the only one requiring window access.
+> >>
+> >> Ahh, so while talking about 4 windows, I guess you counted fixes
+> >> windows as well. That would be right, matching my knowledge.
+> >>
+> >> When asking question about amount of cores we may want to use
+> >> simultaneously I didn't think about ChipCommon or PCIe. The real
+> >> problem would be to support for example two 802.11 cores and one
+> >> ethernet core at the same time. That gives us 3 cores while we have
+> >> only 2 sliding windows.
+> >
+> > Would that really be a problem? Think of it. This combination
+> > will only be available on embedded devices. But do we have windows
+> > on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
+> > of all cores will always be mapped. So accesses can be done
+> > without switch or lock.
+> >
+> > I do really think that engineers at broadcom are clever enough
+> > to design a hardware that does not require expensive window sliding
+> > all the time while operating.
+Yes they are. As I've already mentioned earlier ssb/axi interconnects on
+multifunctional pci bridges provide each function with separate sliding
+windows, up to 4 functions on single pci bridge.
+
+> 
+> I also think so. When asking about amount of cores (non PCIe, non
+> ChipCommon) which has to work simultaneously. I'm not sure if we will
+> meet AI board with 2 cores (non PCIe, non ChipCommon) on PCIe host. I
+> don't think we will see more than 2 cores (non PCIe, non ChipCommon)
+> on PCIe host.
+> 
+
+Have nice day,
+George
+
+
