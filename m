@@ -1,45 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm18.bullet.mail.bf1.yahoo.com ([98.139.212.177]:39670 "HELO
-	nm18.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756677Ab1DYNas convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 09:30:48 -0400
-Message-ID: <916242.83545.qm@web161604.mail.bf1.yahoo.com> (sfid-20110425_153050_957387_427C2A17)
-Date: Mon, 25 Apr 2011 06:30:47 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Reply-To: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 2/2] compat-wireless: add rtl8192c/u to driver-select
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from nbd.name ([46.4.11.11]:58658 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753698Ab1DGRTE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 13:19:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, j@w1.fi
+Subject: [PATCH] mac80211: receive EAP frames from a station in an AP VLAN on the main AP
+Date: Thu,  7 Apr 2011 19:18:56 +0200
+Message-Id: <1302196736-30656-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add rtl8192c & rtl8192cu to rtlwifi/driver-selct 
+This makes it easier to handle moving stations to VLAN interfaces that are
+part of a different bridge.
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ net/mac80211/rx.c |   24 +++++++++++++++++++-----
+ 1 files changed, 19 insertions(+), 5 deletions(-)
 
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -59,7 +59,7 @@ function usage {
-     echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ${NORMAL}>"
-     echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
-     echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
--    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
-+    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192c rtl8192ce rtl8192cu ${NORMAL}>"
-     echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
-     
-     echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
-@@ -327,7 +327,8 @@ case $1 in
-         disable_var_02
-         ;;
-     rtlwifi)
--        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI
-+        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI \
-+                    CONFIG_RTL8192C CONFIG_RTL8192CU
-         disable_staging
-         disable_bt_usb_ethernet_var
-         ;;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fc2ff78..31c7082 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1585,7 +1585,7 @@ ieee80211_drop_unencrypted_mgmt(struct ieee80211_rx_data *rx)
+ }
+ 
+ static int
+-__ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
++__ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+@@ -1593,6 +1593,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ 	struct ethhdr *ehdr;
+ 	int ret;
+ 
++	*port_control = false;
+ 	if (ieee80211_has_a4(hdr->frame_control) &&
+ 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
+ 		return -1;
+@@ -1611,12 +1612,16 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ 		return -1;
+ 
+ 	ret = ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
+-	if (ret < 0 || !check_port_control)
++	if (ret < 0)
+ 		return ret;
+ 
+ 	ehdr = (struct ethhdr *) rx->skb->data;
+-	if (ehdr->h_proto != rx->sdata->control_port_protocol)
+-		return -1;
++	if (ehdr->h_proto == rx->sdata->control_port_protocol) {
++		*port_control = true;
++
++		if (check_port_control)
++			return -1;
++	}
+ 
+ 	return 0;
+ }
+@@ -1916,6 +1921,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	struct net_device *dev = sdata->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	__le16 fc = hdr->frame_control;
++	bool port_control;
+ 	int err;
+ 
+ 	if (unlikely(!ieee80211_is_data(hdr->frame_control)))
+@@ -1932,13 +1938,21 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	    sdata->vif.type == NL80211_IFTYPE_AP)
+ 		return RX_DROP_MONITOR;
+ 
+-	err = __ieee80211_data_to_8023(rx);
++	err = __ieee80211_data_to_8023(rx, &port_control);
+ 	if (unlikely(err))
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	if (!ieee80211_frame_allowed(rx, fc))
+ 		return RX_DROP_MONITOR;
+ 
++	if (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++	    unlikely(port_control) && sdata->bss) {
++		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
++				     u.ap);
++		dev = sdata->dev;
++		rx->sdata = sdata;
++	}
++
+ 	rx->skb->dev = dev;
+ 
+ 	dev->stats.rx_packets++;
+-- 
+1.7.3.2
 
