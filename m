@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:35399 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:64278 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758847Ab1DYSzJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 14:55:09 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QEQw6-0007bd-VZ
-	for linux-wireless@vger.kernel.org; Mon, 25 Apr 2011 20:55:07 +0200
-Received: from 198.237.32.66 ([198.237.32.66])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 20:55:06 +0200
-Received: from steve.obrien by 198.237.32.66 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 20:55:06 +0200
-To: linux-wireless@vger.kernel.org
-From: Steve <steve.obrien@hdesd.org>
-Subject: Re: Broadcom 4331 wireless device
-Date: Mon, 25 Apr 2011 18:38:31 +0000 (UTC)
-Message-ID: <loom.20110425T203659-857@post.gmane.org> (sfid-20110425_205522_488030_10A65AD4)
-References: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com> <AANLkTikHx2J-zzCob+xVy04=RYX+K9T2HJ_14zyrto2J@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1756685Ab1DGTP5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2011 15:15:57 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 12:15:32 -0700
+Date: Fri, 8 Apr 2011 00:46:03 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 2.6.39] ath9k: fix missing
+ ath9k_ps_wakeup/ath9k_ps_restore calls
+Message-ID: <20110407191603.GA6387@vmraj-lnx.users.atheros.com>
+References: <1302196037-27378-1-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1302196037-27378-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Apr 07, 2011 at 10:37:17PM +0530, Felix Fietkau wrote:
+> These missing chip wakeups mainly cause crashes on AR5416 cards in MIPS
+> boards, but have also been reported to cause radio stability issues on
+> AR9285.
 > 
-> So yes, it looks like new BCM4331 chipset. AFAIK there is no support
-> for it in wl. Plus no support in b43 or brcm80211.
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@kernel.org
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |   12 ++++++++++--
+>  1 files changed, 10 insertions(+), 2 deletions(-)
 > 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 6a41302..802a910 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1376,7 +1376,6 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+>  
+>  	ath9k_calculate_iter_data(hw, vif, &iter_data);
+>  
+> -	ath9k_ps_wakeup(sc);
+>  	/* Set BSSID mask. */
+>  	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
+>  	ath_hw_setbssidmask(common);
+> @@ -1411,7 +1410,6 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+>  	}
+>  
+>  	ath9k_hw_set_interrupts(ah, ah->imask);
+> -	ath9k_ps_restore(sc);
+>
+It seems to be the existing ps calls in ath9k_calculate_summary_state() are enough
+to awake chip before doing hw access. Why the ps calls are unneccesarilly moved
+to mac callbacks? If chip is not waken up, it should be noticed in x86 too.
+isn't it?
 
-Any news? I also looking for a linux driver for the 4331 and have had no luck
-with wl.
-Steve
-
-
-
+--
+Rajkumar
