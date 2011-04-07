@@ -1,161 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:44342 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756890Ab1DLKqC convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33235 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752870Ab1DGX3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 06:46:02 -0400
-Received: by qyk7 with SMTP id 7so1883251qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 03:46:02 -0700 (PDT)
+	Thu, 7 Apr 2011 19:29:01 -0400
+Received: by fxm17 with SMTP id 17so2009105fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 16:29:00 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [RFT] p54: implement multicast + arp req PS filter
+Date: Fri, 8 Apr 2011 03:28:52 +0400
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <201104020058.17232.chunkeey@googlemail.com>
+In-Reply-To: <201104020058.17232.chunkeey@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <4da3e0e7.OIpXziberWyLiFw6%Larry.Finger@lwfinger.net>
-References: <4da3e0e7.OIpXziberWyLiFw6%Larry.Finger@lwfinger.net>
-Date: Tue, 12 Apr 2011 12:46:01 +0200
-Message-ID: <BANLkTikYCe0kyg9AD3jBgTAhFjZy1-mG-Q@mail.gmail.com>
-Subject: Re: [PATCH v2] rt2800usb: Add seven new USB IDs
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, marked86@gmail.com,
-	helmut.schaa@googlemail.com, IvDoorn@gmail.com,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104080328.53801.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2011 at 7:19 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Mark Davis <marked86@gmail.com>
->
-> Adds USB IDs for seven previously missing devices. Additionally, all
-> instances of 'Conceptronic' have been replaced by the OEM name.
->
-> Devices added are..
-> 0411:01a2 - Buffalo WLI-UC-GNM, RT3070V
-> 0586:341e - ZyXEL NWD2105, RT3070
-> 13b1:002f - Linksys AE1000, RT3572
-> 13b1:0031 - Cisco / Linksys AM10, RT3072
-> 14b2:3c2c - Keebox W150NU / Alpha Networks WUS-N12, RT3070
-> 157e:3013 - TRENDnet TEW-645UB, RT2770+RT2720
-> 15a9:0012 - Airlink AWLL7025 / Gemtek WUBR-208N, RT2870+RT2850
->
-> Signed-off-by: Mark Davis <marked86@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Hi, Christian.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> "For best CPU usage and power consumption, having as few
+> frames as possible percolate through the stack is
+> desirable. Hence, the hardware should filter as much
+> as possible."
+> 
+> Note: The available stlc45xx softmac specification does not
+> specify whenever these features are implemented in the
+> common [pci/usb] branches, or not . At least from the data
+> I could gather, it doesn't look like this is the case.
+> Therefore, I'm looking for test results from p54spi users.
 
-> ---
->
-> V1 => V2 Change spaces to tabs.
->
->  drivers/net/wireless/rt2x00/rt2800usb.c |   35 +++++++++++++++++++-----------
->  1 files changed, 22 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-> b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 6ba31a0..d2f5c87 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -710,6 +710,16 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x8516, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x8516, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x8516, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       /* Alpha Networks */
-> +       { USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c2c), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Amit */
->        { USB_DEVICE(0x15c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Askey */
-> @@ -736,15 +746,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        /* Buffalo */
->        { USB_DEVICE(0x0411, 0x00e8), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0411, 0x016f), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       /* Conceptronic */
-> -       { USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x0411, 0x01a2), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Corega */
->        { USB_DEVICE(0x07aa, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x07aa, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -776,6 +778,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       /* Gemtek */
-> +       { USB_DEVICE(0x15a9, 0x0012), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Gigabyte */
->        { USB_DEVICE(0x1044, 0x800b), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -792,6 +796,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Linksys */
-> +       { USB_DEVICE(0x13b1, 0x0031), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Logitec */
-> @@ -870,8 +875,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x15a9, 0x0006), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Sweex */
->        { USB_DEVICE(0x177f, 0x0302), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       /* U-Media*/
-> +       /* U-Media */
->        { USB_DEVICE(0x157e, 0x300e), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x157e, 0x3013), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* ZCOM */
->        { USB_DEVICE(0x0cde, 0x0022), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0cde, 0x0025), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -883,6 +889,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        /* Zyxel */
->        { USB_DEVICE(0x0586, 0x3416), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0586, 0x3418), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x0586, 0x341e), USB_DEVICE_DATA(&rt2800usb_ops) },
->  #ifdef CONFIG_RT2800USB_RT33XX
->        /* Ralink */
->        { USB_DEVICE(0x148f, 0x3370), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -901,6 +908,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x1740, 0x9801), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* I-O DATA */
->        { USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       /* Linksys */
-> +       { USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Ralink */
->        { USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Sitecom */
-> @@ -915,6 +924,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
->         * Unclear what kind of devices these are (they aren't supported by the
->         * vendor linux driver).
->         */
-> +       /* Alpha Networks */
-> +       { USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       { USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Amigo */
->        { USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -933,9 +945,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        { USB_DEVICE(0x0411, 0x0148), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0411, 0x0150), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x0411, 0x015d), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       /* Conceptronic */
-> -       { USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -       { USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Corega */
->        { USB_DEVICE(0x07aa, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x07aa, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
->
+I used for tests the following cell:
 
+wlan1     Scan completed :
+          Cell 01 - Address: 00:22:15:1C:09:D1
+                    Channel:11
+                    Frequency:2.462 GHz (Channel 11)
+                    Quality=67/70  Signal level=-43 dBm  
+                    Encryption key:on
+                    ESSID:"test"
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+                              9 Mb/s; 12 Mb/s; 18 Mb/s
+                    Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
+                    Mode:Master
+                    Extra:tsf=0000000ebd708a53
+                    Extra: Last beacon: 1016ms ago
+                    IE: Unknown: 000474657374
+                    IE: Unknown: 010882848B960C121824
+                    IE: Unknown: 03010B
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 32043048606C
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101000003A4000027A4000042435E0062322F00
 
+Is it suitable? I guess that to do e.g. ARP filtering firmware must be able to decipher incoming packets.
+How can I make sure that it does?
 
--- 
----
-Gertjan
+So, I associated with that AP and obtained an IP address.
+Here's dmesg output to that moment:
+
+[    4.192993] ieee80211 phy0: device now idle
+[    4.197265] omap_device: omap2_mcspi.2: new worst case deactivate latency 0: 335693
+[    4.217712] p54_set_groupfilter 1
+[   30.147735] ieee80211 phy0: device no longer idle - scanning
+[   30.152770] p54_set_groupfilter 1
+[   31.028350] p54_set_groupfilter 1
+[   31.028503] ieee80211 phy0: device now idle
+[   36.037445] ieee80211 phy0: device no longer idle - scanning
+[   36.037628] p54_set_groupfilter 1
+[   36.919036] p54_set_groupfilter 1
+[   36.919189] ieee80211 phy0: device now idle
+[   36.931854] ieee80211 phy0: device no longer idle - working
+[   36.932067] wlan0: authenticate with 00:22:15:1c:09:d1 (try 1)
+[   36.948089] wlan0: authenticated
+[   36.952606] ieee80211 phy0: device now idle
+[   36.969268] ieee80211 phy0: device no longer idle - working
+[   36.969512] wlan0: associate with 00:22:15:1c:09:d1 (try 1)
+[   36.988677] wlan0: RX AssocResp from 00:22:15:1c:09:d1 (capab=0x411 status=0 aid=2)
+[   36.988830] wlan0: associated
+[   36.988922] ieee80211 phy0: Allocated STA 00:22:15:1c:09:d1
+[   36.992919] ieee80211 phy0: Inserted STA 00:22:15:1c:09:d1
+[   36.993103] ieee80211 phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0 uapsd=0
+[   36.993255] ieee80211 phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0 uapsd=0
+[   36.993377] ieee80211 phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=0
+[   36.993530] ieee80211 phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=0
+[   36.993743] p54_set_arpfilter 0
+[   37.006134] omap_device: omap2_mcspi.2: new worst case deactivate latency 0: 1220703
+[   37.028442] omap_device: omap2_mcspi.2: new worst case activate latency 0: 122070
+[   51.168762] p54_set_arpfilter 1
+[   51.170257] p54_set_groupfilter 1
+[   51.171569] p54_set_groupfilter 1
+
+Regarding ARP filtering I tried the following test:
+- ping station from the outside to see if ARPs for its IP pass through;
+- ping non-existing IP in the same network from the outside to see if other ARPs pass through.
+
+To test multicast filtering I tried to ping several multicast addresses from the outside.
+
+> +	if (on) {
+> +		arp->filter_enable = cpu_to_le16(1);
+> +		memcpy(arp->ipv4_addr, &bss_conf->arp_addr_list[0],
+> +		       sizeof(arp->ipv4_addr));
+> +	} else {
+> +		arp->filter_enable = cpu_to_le16(0);
+> +		memset(arp->ipv4_addr, 0, sizeof(arp->ipv4_addr));
+> +	}
+
+I see that although ARP filter was set (I added printfs to both branches above), all ARP requests pass through:
+
+(none):~# ./tcpdump -i wlan0 -nn -s0 arp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on wlan0, link-type EN10MB (Ethernet), capture size 65535 bytes
+00:01:33.715332 arp who-has 192.168.4.33 tell 192.168.4.138
+00:01:33.716644 arp reply 192.168.4.33 is-at 00:1d:6e:9b:ee:0d
+00:01:38.765838 arp who-has 192.168.4.138 tell 192.168.4.33
+00:01:38.777496 arp reply 192.168.4.138 is-at 00:21:00:38:5e:d9
+00:01:45.486572 arp who-has 192.168.4.34 tell 192.168.4.138
+00:01:46.458496 arp who-has 192.168.4.34 tell 192.168.4.138
+
+> +	if (on) {
+> +		grp->filter_enable = cpu_to_le16(1);
+> +		grp->num_address = cpu_to_le16(priv->mc_maclist_num);
+> +		memcpy(grp->mac_list, priv->mc_maclist, sizeof(grp->mac_list));
+> +	} else {
+> +		grp->filter_enable = cpu_to_le16(0);
+> +		grp->num_address = cpu_to_le16(0);
+> +		memset(grp->mac_list, 0, sizeof(grp->mac_list));
+> +	}
+
+And the same (no filtering, although multicast filter was set) result for multicast messages:
+
+(none):~# ./tcpdump -i wlan0 -nn -s0 -e icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on wlan0, link-type EN10MB (Ethernet), capture size 65535 bytes
+00:22:23.855499 00:21:00:38:5e:d9 > 01:00:5e:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.0.0.1: ICMP echo request, id 11114, seq 1, length 64
+00:22:24.856842 00:21:00:38:5e:d9 > 01:00:5e:00:00:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.0.0.1: ICMP echo request, id 11114, seq 2, length 64
+00:22:26.632324 00:21:00:38:5e:d9 > 01:00:5e:00:00:02, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.0.0.2: ICMP echo request, id 11370, seq 1, length 64
+00:22:31.850555 00:21:00:38:5e:d9 > 01:00:5e:00:01:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.0.1.1: ICMP echo request, id 13162, seq 1, length 64
+00:22:32.846283 00:21:00:38:5e:d9 > 01:00:5e:00:01:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.0.1.1: ICMP echo request, id 13162, seq 2, length 64
+00:22:35.624542 00:21:00:38:5e:d9 > 01:00:5e:01:01:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.1.1.1: ICMP echo request, id 13418, seq 1, length 64
+00:22:36.624847 00:21:00:38:5e:d9 > 01:00:5e:01:01:01, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 224.1.1.1: ICMP echo request, id 13418, seq 2, length 64
+00:22:43.052642 00:21:00:38:5e:d9 > 01:00:5e:01:02:03, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 230.1.2.3: ICMP echo request, id 13674, seq 1, length 64
+00:22:44.052764 00:21:00:38:5e:d9 > 01:00:5e:01:02:03, ethertype IPv4 (0x0800), length 98: 192.168.4.138 > 230.1.2.3: ICMP echo request, id 13674, seq 2, length 64
+
+Do you have any other tests in mind that I could run?
+By the way, I see that ARP filter does not apply to the station in IBSS or mesh mode. Is that intended?
+
+Thanks.
+-- Max
