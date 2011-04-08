@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57265 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752690Ab1DSN72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:28 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:02 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 09/22] ath9k_hw: Read spur frequency information from eeprom for AR9340
-Date: Tue, 19 Apr 2011 19:29:07 +0530
-Message-ID: <1303221560-25139-10-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37274 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753190Ab1DHV6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 17:58:17 -0400
+Subject: Re: [PATCH][2.6.39?] b43: trivial: update module info about
+ firmware
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <1302267632-2326-1-git-send-email-zajec5@gmail.com> (sfid-20110408_082321_349809_A49377CD)
+References: <1302267632-2326-1-git-send-email-zajec5@gmail.com>
+	 (sfid-20110408_082321_349809_A49377CD)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Apr 2011 23:58:10 +0200
+Message-ID: <1302299890.28673.1.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Fri, 2011-04-08 at 15:00 +0200, Rafał Miłecki wrote: 
+> We do not use ucode9,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c4d0805..0b999f9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -151,7 +151,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 	 * is out-of-band and can be ignored.
- 	 */
- 
--	if (AR_SREV_9485(ah)) {
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah)) {
- 		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
- 							 IS_CHAN_2GHZ(chan));
- 		if (spur_fbin_ptr[0] == 0) /* No spur */
-@@ -176,7 +176,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 
- 	for (i = 0; i < max_spur_cnts; i++) {
- 		negative = 0;
--		if (AR_SREV_9485(ah))
-+		if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
- 			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
- 					IS_CHAN_2GHZ(chan)) - synth_freq;
- 		else
+Well, but we should.
+There are only minor differences between r5 and r9 firmware.
+r9 basically is a r5 firmware with workarounds added that are
+needed for r9 devices.
+
+So I think we should start using r9 instead of removing it here.
+
 -- 
-1.7.0.4
+Greetings Michael.
 
