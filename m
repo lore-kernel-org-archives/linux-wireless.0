@@ -1,154 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:58332 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758253Ab1DMUfA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 16:35:00 -0400
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	 <20110413163113.GA24015@kroah.com>
-	 <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 13 Apr 2011 23:31:43 +0300
-Message-Id: <1302726703.8015.1.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:56990 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757372Ab1DHPuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:14 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/16] iwlagn: all _agn devices support power save mode
+Date: Fri,  8 Apr 2011 08:30:32 -0700
+Message-Id: <1302276636-12802-13-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove broken_power_save checking
 
-В Срд, 13/04/2011 в 21:39 +0200, Rafał Miłecki пишет:
-> 2011/4/13 Greg KH <greg@kroah.com>:
-> >> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
-> >> new file mode 100644
-> >> index 0000000..17e882c
-> >> --- /dev/null
-> >> +++ b/drivers/axi/axi_pci_bridge.c
-> >> @@ -0,0 +1,33 @@
-> >> +/*
-> >> + * AXI PCI bridge module
-> >> + *
-> >> + * Licensed under the GNU/GPL. See COPYING for details.
-> >> + */
-> >> +
-> >> +#include "axi_private.h"
-> >> +
-> >> +#include <linux/axi/axi.h>
-> >> +#include <linux/pci.h>
-> >> +
-> >> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
-> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
-> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
-> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
-> >> +     { 0, },
-> >> +};
-> >> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
-> >> +
-> >> +static struct pci_driver axi_pci_bridge_driver = {
-> >> +     .name = "axi-pci-bridge",
-> >> +     .id_table = axi_pci_bridge_tbl,
-> >> +};
-> >> +
-> >> +int __init axi_pci_bridge_init(void)
-> >> +{
-> >> +     return axi_host_pci_register(&axi_pci_bridge_driver);
-> >> +}
-> >> +
-> >> +void __exit axi_pci_bridge_exit(void)
-> >> +{
-> >> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
-> >> +}
-> >
-> > You register a pci driver that does nothing?  That's not right, you need
-> > to then base your axi bus off of that pci device, so it is hooked up
-> > correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
-> > the virtual location for your axi bus, right?
-> 
-> Please take a look at:
-> driver->probe = axi_host_pci_probe;
-> driver->remove = axi_host_pci_remove;
-> return pci_register_driver(driver);
-> 
-> 
-> >> +bool axi_core_is_enabled(struct axi_device *core)
-> >> +{
-> >> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
-> >> +         != AXI_IOCTL_CLK)
-> >> +             return false;
-> >> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
-> >> +             return false;
-> >> +     return true;
-> >> +}
-> >> +EXPORT_SYMBOL(axi_core_is_enabled);
-> >
-> > EXPORT_SYMBOL_GPL()?
-> >
-> > What module uses this?  And why would it care?
-> >
-> >> +EXPORT_SYMBOL(axi_core_enable);
-> >
-> > EXPORT_SYMBOL_GPL()?
-> >
-> > Same goes for your other exports, just want you to be sure here.
-> 
-> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
-> drivers from using our bus driver, right? I'm don't have preferences
-> on this, if you prefer us to force GPL, I can.
-> 
-> 
-> >> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
-> >> +{
-> >> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
-> >> +}
-> >> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
-> >
-> > "xaxi"?  Shouldn't that be consistant with the other exports and start
-> > with "axi"?
-> 
-> Left from old tests/rewrites/splitting. Thanks.
-> 
-> 
-> >> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
-> >> +{
-> >> +     if (unlikely(core->bus->mapped_core != core))
-> >
-> > Are you sure about the use of unlikely in this, and other functions?
-> > The compiler almost always does a better job than we do for these types
-> > of calls, just let it do it's job.
-> >
-> >> +             axi_host_pci_switch_core(core);
-> >> +     return ioread8(core->bus->mmio + offset);
-> >
-> > I think because of that unlikely, you just slowed down all pci devices,
-> > right?  That's not very nice :)
-> 
-> Hm, my logic suggests it is alright, but please consider this once
-> more with me ;)
-> 
-> For the most of the time mapped_core (active core) do not change. We
-> perform few hundreds of operations on one core in a row. This way
-> mapped_core points to passed core for most of the time. Condition
-> (mapped_core != core) is unlikely to happen.
-> 
-> Is there anything wrong in my logic?
-> 
-Yes, there is. You don't need that "if" at all.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    7 ++-----
+ drivers/net/wireless/iwlwifi/iwl-power.c   |    4 +---
+ 4 files changed, 5 insertions(+), 12 deletions(-)
 
-Have nice day,
-George
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 60bfde7..23b89c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2828,9 +2828,8 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 
+ 	hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
+ 
+-	if (!priv->cfg->base_params->broken_powersave)
+-		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
+-			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
++	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
++		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
+ 
+ 	if (priv->cfg->sku & IWL_SKU_N)
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7d303ac..a0530d0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -269,7 +269,6 @@ struct iwl_base_params {
+ 	const u16 max_ll_items;
+ 	const bool shadow_ram_support;
+ 	u16 led_compensation;
+-	const bool broken_powersave;
+ 	int chain_noise_num_beacons;
+ 	bool adv_thermal_throttle;
+ 	bool support_ct_kill_exit;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 93a8699..2c58980 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1723,11 +1723,8 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(status, dir_data, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(interrupt, dir_data, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(qos, dir_data, S_IRUSR);
+-	if (!priv->cfg->base_params->broken_powersave) {
+-		DEBUGFS_ADD_FILE(sleep_level_override, dir_data,
+-				 S_IWUSR | S_IRUSR);
+-		DEBUGFS_ADD_FILE(current_sleep_command, dir_data, S_IRUSR);
+-	}
++	DEBUGFS_ADD_FILE(sleep_level_override, dir_data, S_IWUSR | S_IRUSR);
++	DEBUGFS_ADD_FILE(current_sleep_command, dir_data, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(thermal_throttling, dir_data, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(disable_ht40, dir_data, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(rx_statistics, dir_debug, S_IRUSR);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index c43c8e6..ae176d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -354,9 +354,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 
+ 	dtimper = priv->hw->conf.ps_dtim_period ?: 1;
+ 
+-	if (priv->cfg->base_params->broken_powersave)
+-		iwl_power_sleep_cam_cmd(priv, cmd);
+-	else if (priv->hw->conf.flags & IEEE80211_CONF_IDLE)
++	if (priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+ 	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
+ 		 priv->cfg->ops->lib->tt_ops.tt_power_mode &&
+-- 
+1.7.0.4
 
