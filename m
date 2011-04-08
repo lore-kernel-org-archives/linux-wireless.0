@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24197 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182Ab1DWRLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 13:11:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2.6.39] iwlegacy: led stay solid on when no traffic
-Date: Sat, 23 Apr 2011 10:08:58 -0700
-Message-Id: <1303578538-19474-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:55321 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab1DHRJF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 13:09:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
+Date: Fri, 8 Apr 2011 19:09:03 +0200
+Message-ID: <BANLkTi=DiGX=yg9HAxYHwKdOvedJdYC_sw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc change the led behavior
-for iwlwifi driver; the side effect cause led blink all the time.
+2011/4/8 Rafał Miłecki <zajec5@gmail.com>:
+> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
+>> 3. Device identification
+>>
+>> The cores are identified by manufacturer, core id and revision in your
+>> patch. I would not use the revision because 4 out of 5 times a revision
+>> change does indicate a hardware change but no change in programming
+>> interface. The enumeration data does contain a more selective field
+>> indicating the core class (4 bits following the core identifier). I suggest
+>> to replace the revision field by this class field.
+>
+> Could you say something more about *class*, please? For my BCM43224 it
+> seems to be 0x0. WIll check BCM4313 in a moment.
 
-Modify the led blink table to fix this problem
+Same for BCM4313.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlegacy/iwl-led.c |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
+BCM43224:
+axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
+axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
+axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
-index 15eb8b7..b226a3c 100644
---- a/drivers/net/wireless/iwlegacy/iwl-led.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-@@ -48,8 +48,22 @@ module_param(led_mode, int, S_IRUGO);
- MODULE_PARM_DESC(led_mode, "0=system default, "
- 		"1=On(RF On)/Off(RF Off), 2=blinking");
- 
-+/* Throughput		OFF time(ms)	ON time (ms)
-+ *	>300			25		25
-+ *	>200 to 300		40		40
-+ *	>100 to 200		55		55
-+ *	>70 to 100		65		65
-+ *	>50 to 70		75		75
-+ *	>20 to 50		85		85
-+ *	>10 to 20		95		95
-+ *	>5 to 10		110		110
-+ *	>1 to 5			130		130
-+ *	>0 to 1			167		167
-+ *	<=0					SOLID ON
-+ */
- static const struct ieee80211_tpt_blink iwl_blink[] = {
--	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
-+	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
-+	{ .throughput = 0 * 1024, .blink_time = 334 },
- 	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
- 	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
- 	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
-@@ -101,6 +115,12 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
- 	if (priv->blink_on == on && priv->blink_off == off)
- 		return 0;
- 
-+	if (on == 0) {
-+		/* led is SOLID_ON */
-+		on = IWL_LED_SOLID;
-+		off = 0;
-+	}
-+
- 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
- 			priv->cfg->base_params->led_compensation);
- 	led_cmd.on = iwl_legacy_blink_compensation(priv, on,
+BCM4313
+axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
+axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
+axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
+
 -- 
-1.7.0.4
-
+Rafał
