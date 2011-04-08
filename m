@@ -1,87 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:47249 "EHLO coco.kroah.org"
+Received: from mms1.broadcom.com ([216.31.210.17]:1532 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756026Ab1DKVHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 17:07:11 -0400
-Date: Mon, 11 Apr 2011 14:07:03 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-Message-ID: <20110411210703.GB28559@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+	id S1755965Ab1DHOv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 10:51:26 -0400
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: dwmw2@infradead.org
+cc: henryp@broadcom.com, brudley@broadcom.com, rvossen@broadcom.com,
+	arend@broadcom.com, linux-wireless@vger.kernel.org,
+	devel@linuxdriverproject.org
+Subject: [PATCH 1/3] linux-firmware: Simplified license file for brcm
+ firmware
+Date: Fri, 8 Apr 2011 07:51:12 -0700
+Message-ID: <1302274274-2534-1-git-send-email-henryp@broadcom.com>
+In-Reply-To: <20110407211521.GA3252@broadcom.com>
+References: <20110407211521.GA3252@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
-> Cc: Michael Büsch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: George Kashperko <george@znau.edu.ua>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: linux-arm-kernel@lists.infradead.org <linux-arm-kernel@lists.infradead.org>
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Andy Botting <andy@andybotting.com>
-> Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> V2: Rename to axi
->     Use DEFINE_PCI_DEVICE_TABLE in bridge
->     Make use of pr_fmt and pr_*
->     Store core class
->     Rename bridge to not b43 specific
->     Replace magic 0x1000 with BCMAI_CORE_SIZE
->     Remove some old "ssb" names and defines
->     Move BCMAI_ADDR_BASE def
->     Add drvdata field
-> V3: Fix reloading (kfree issue)
->     Add 14e4:4331
->     Fix non-initialized struct issue
->     Drop useless inline functions wrappers for pci core drv
->     Proper pr_* usage
->     Helps in Kconfig
-> ---
->  drivers/Kconfig                           |    2 +
->  drivers/Makefile                          |    1 +
->  drivers/axi/Kconfig                       |   33 +++
->  drivers/axi/Makefile                      |    7 +
->  drivers/axi/TODO                          |    3 +
->  drivers/axi/axi_pci_bridge.c              |   34 +++
->  drivers/axi/axi_private.h                 |   45 ++++
->  drivers/axi/core.c                        |   52 ++++
->  drivers/axi/driver_chipcommon.c           |   87 +++++++
->  drivers/axi/driver_chipcommon_pmu.c       |  134 ++++++++++
->  drivers/axi/driver_pci.c                  |  167 ++++++++++++
->  drivers/axi/host_pci.c                    |  177 +++++++++++++
->  drivers/axi/main.c                        |  256 +++++++++++++++++++
->  drivers/axi/scan.c                        |  393 +++++++++++++++++++++++++++++
->  drivers/axi/scan.h                        |   56 ++++
->  include/linux/axi/axi.h                   |  221 ++++++++++++++++
->  include/linux/axi/axi_driver_chipcommon.h |  308 ++++++++++++++++++++++
->  include/linux/axi/axi_driver_pci.h        |   89 +++++++
->  include/linux/axi/axi_regs.h              |   34 +++
->  include/linux/mod_devicetable.h           |   17 ++
->  scripts/mod/file2alias.c                  |   21 ++
+New, much shorter license for firmware files submitted by Broadcom to
+linux-firmware repository.
 
-Where is the documentation files for the new sysfs files you just
-created?
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+---
+ LICENCE.broadcom_bcm43xx |  262 +++++++++++-----------------------------------
+ 1 files changed, 61 insertions(+), 201 deletions(-)
 
-thanks,
+diff --git a/LICENCE.broadcom_bcm43xx b/LICENCE.broadcom_bcm43xx
+index e2cf868..ff26fdd 100644
+--- a/LICENCE.broadcom_bcm43xx
++++ b/LICENCE.broadcom_bcm43xx
+@@ -1,205 +1,65 @@
+ SOFTWARE LICENSE AGREEMENT
+ 
+-Unless you and Broadcom Corporation (“Broadcom”) execute a separate written
+-software license agreement governing use of the accompanying software, this
+-software is licensed to you under the terms of this Software License Agreement
+-(“Agreement”).
+-
+-ANY USE, REPRODUCTION OR DISTRIBUTION OF THE SOFTWARE CONSTITUTES YOUR
+-ACCEPTANCE OF THIS AGREEMENT.
+-
+-1.	DEFINITIONS.
+-
+-1.1.	“Broadcom Product” means any of the proprietary integrated circuit
+-product(s) sold by Broadcom with which the Software was designed to be used, or
+-their successors.
+-
+-1.2.	“Licensee” means you or if you are accepting on behalf of an entity
+-then the entity and its affiliates exercising rights under, and complying with
+-all of the terms of this Agreement.
+-
+-1.3.	“Software” shall mean that software made available by Broadcom to
+-Licensee in binary code form with this Agreement.
+-
+-2.	LICENSE GRANT; OWNERSHIP
+-
+-2.1.	License Grants.  Subject to the terms and conditions of this Agreement,
+-Broadcom hereby grants to Licensee a non-exclusive, non-transferable,
+-royalty-free license (i) to use and integrate the Software in conjunction with
+-any other software; and (ii) to reproduce and distribute the Software complete,
+-unmodified and as provided by Broadcom, and only for use with a Broadcom
+-Product.
+-
+-2.2.	Restriction on Modification.  Licensee may not make any modifications
+-to the Software.
+-
+-2.3.	Restriction on Distribution.  Licensee shall only distribute the
+-Software under the terms of this Agreement and a copy of this Agreement
+-accompanies such distribution.
+-
+-2.4.	Proprietary Notices.  Licensee shall not remove, efface or obscure any
+-copyright or trademark notices from the Software.  Licensee shall include
+-reproductions of the Broadcom copyright notice with each copy of the Software,
+-except where such Software is embedded in a manner not readily accessible to
+-the end user.  Licensee acknowledges that any symbols, trademarks, tradenames,
+-and service marks adopted by Broadcom to identify the Software belong to
+-Broadcom and that Licensee shall have no rights therein.
+-
+-2.5.	Ownership.  Broadcom shall retain all right, title and interest,
+-including all intellectual property rights, in and to the Software.  Licensee
+-hereby covenants that it will not assert any claim that the Software created by
+-or for Broadcom infringe any intellectual property right owned or controlled by
+-Licensee; provided however, the foregoing shall not apply in case the Agreement
+-is terminated.
+-
+-2.6.	No Other Rights Granted; Restrictions.  Apart from the license rights
+-expressly set forth in this Agreement, Broadcom does not grant and Licensee
+-does not receive any ownership right, title or interest nor any security
+-interest or other interest in any intellectual property rights relating to the
+-Software, nor in any copy of any part of the foregoing.  No license is granted
+-to Licensee in any human readable code of the Software (source code). Licensee
+-shall not (i) use, license, sell or otherwise distribute the Software except as
+-provided in this Agreement, (ii) attempt to modify in any way, reverse
+-engineer, decompile or disassemble any portion of the Software; or (iii) use
+-the Software or other material in violation of any applicable law or
+-regulation, including but not limited to any regulatory agency, such as FCC,
+-rules.
+-
+-3.	NO WARRANTY OR SUPPORT
+-
+-3.1.	No Warranty. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM GRANTS AND
+-LICENSEE RECEIVES NO WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, BY STATUTE,
+-COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.  BROADCOM SPECIFICALLY
+-DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A SPECIFIC
+-PURPOSE OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR ANY UPGRADES TO OR
+-DOCUMENTATION FOR THE SOFTWARE.  WITHOUT LIMITATION OF THE ABOVE, BROADCOM
+-GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL OPERATE WITHOUT
+-INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE RESULTS THEREFROM
+-INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY OR RELIABILITY.
+-
+-3.2.	No Support.  Nothing in this agreement shall obligate Broadcom to
+-provide any support for the Software. Broadcom may, but shall be under no
+-obligation to, correct any defects in the Software and/or provide updates to
+-licensees of the Software.  Licensee shall make reasonable efforts to promptly
+-report to Broadcom any defects it finds in the Software, as an aid to creating
+-improved revisions of the Software.
+-
+-3.3.	Dangerous Applications.  The Software is not designed, intended, or
+-certified for use in components of systems intended for the operation of
+-weapons, weapons systems, nuclear installations, means of mass transportation,
+-aviation, life-support computers or equipment (including resuscitation
+-equipment and surgical implants), pollution control, hazardous substances
+-management, or for any other dangerous application in which the failure of the
+-Software could create a situation where personal injury or death may occur. 
+-Licensee understands that use of the Software in such applications is fully at
+-the risk of Licensee.
+-
+-4.	TERM AND TERMINATION
+-
+-4.1.	Termination.  This Agreement will automatically terminate if Licensee
+-fails to comply with any of the terms and conditions hereof. In such event,
+-Licensee must destroy all copies of the Software and all of its component
+-parts.
+-
+-4.2.	Effect Of Termination.  Upon any termination of this Agreement, the
+-rights and licenses granted to Licensee under this Agreement shall immediately
+-terminate.
+-
+-4.3.	Survival.  The rights and obligations under this Agreement which by
+-their nature should survive termination will remain in effect after expiration
+-or termination of this Agreement.
+-
+-5.	CONFIDENTIALITY
+-
+-5.1.	Obligations.  Licensee acknowledges and agrees that any documentation
+-relating to the Software, and any other information (if such other information
+-is identified as confidential or should be recognized as confidential under the
+-circumstances) provided to Licensee by Broadcom hereunder (collectively,
+-“Confidential Information”) constitute the confidential and proprietary
+-information of Broadcom, and that Licensee’s protection thereof is an essential
+-condition to Licensee’s use and possession of the Software.  Licensee shall
+-retain all Confidential Information in strict confidence and not disclose it to
+-any third party or use it in any way except under a written agreement with
+-terms and conditions at least as protective as the terms of this Section.
+-Licensee will exercise at least the same amount of diligence in preserving the
+-secrecy of the Confidential Information as it uses in preserving the secrecy of
+-its own most valuable confidential information, but in no event less than
+-reasonable diligence.  Information shall not be considered Confidential
+-Information if and to the extent that it: (i) was in the public domain at the
+-time it was disclosed or has entered the public domain through no fault of
+-Licensee; (ii) was known to Licensee, without restriction, at the time of
+-disclosure as proven by the files of Licensee in existence at the time of
+-disclosure; or (iii) becomes known to Licensee, without restriction, from a
+-source other than Broadcom without breach of this Agreement by Licensee and
+-otherwise not in violation of Broadcom’s rights.
+-
+-5.2.	Return of Confidential Information.  Notwithstanding the foregoing, all
+-documents and other tangible objects containing or representing Broadcom
+-Confidential Information and all copies thereof which are in the possession of
+-Licensee shall be and remain the property of Broadcom, and shall be promptly
+-returned to Broadcom upon written request by Broadcom or upon termination of
+-this Agreement.
+-
+-6.	LIMITATION OF LIABILITY TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO
+-EVENT SHALL BROADCOM OR ANY OF BROADCOM’S LICENSORS HAVE ANY LIABILITY FOR ANY
+-INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON
+-ANY THEORY OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING
+-NEGLIGENCE) OR OTHERWISE, ARISING OUT OF THIS AGREEMENT, INCLUDING BUT NOT
+-LIMITED TO LOSS OF PROFITS, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE
+-POSSIBILITY OF SUCH DAMAGES. IN NO EVENT WILL BROADCOM’S LIABILITY WHETHER IN
+-CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, EXCEED THE AMOUNT PAID BY
+-LICENSEE FOR SOFTWARE UNDER THIS AGREEMENT.  THESE LIMITATIONS SHALL APPLY
+-NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY.
+-
+-7.	MISCELLANEOUS
+-
+-7.1.	Export Regulations. YOU UNDERSTAND AND AGREE THAT THE SOFTWARE IS
++The accompanying software in binary code form (“Software”), is licensed to you,
++or, if you are accepting on behalf of an entity, the entity and its affiliates
++exercising rights hereunder (“Licensee”) subject to the terms of this software
++license agreement (“Agreement”), unless Licensee and Broadcom Corporation
++(“Broadcom”) execute a separate written software license agreement governing
++use of the Software. ANY USE, REPRODUCTION, OR DISTRIBUTION OF THE SOFTWARE
++CONSTITUTES LICENSEE’S ACCEPTANCE OF THIS AGREEMENT.
++
++1.	License. Subject to the terms and conditions of this Agreement,
++Broadcom hereby grants to Licensee a limited, non-exclusive, non-transferable,
++royalty-free license: (i) to use and integrate the Software with any other
++software; and (ii) to reproduce and distribute the Software complete,
++unmodified, and as provided by Broadcom, solely for use with Broadcom
++proprietary integrated circuit product(s) sold by Broadcom with which the
++Software was designed to be used, or their successors.
++
++2.	Restrictions. Licensee shall distribute Software with a copy of this
++Agreement. Licensee shall not remove, efface or obscure any copyright or
++trademark notices from the Software. Reproductions of the Broadcom copyright
++notice shall be included with each copy of the Software, except where such
++Software is embedded in a manner not readily accessible to the end user.
++Licensee shall not: (i) use, license, sell or otherwise distribute the Software
++except as provided in this Agreement; (ii) attempt to modify in any way,
++reverse engineer, decompile or disassemble any portion of the Software; or
++(iii) use the Software or other material in violation of any applicable law or
++regulation, including but not limited to any regulatory agency. This Agreement
++shall automatically terminate upon Licensee’s failure to comply with any of the
++terms of this Agreement. In such event, Licensee will destroy all copies of the
++Software and its component parts.
++
++3.	Ownership. The Software is licensed and not sold.  Title to and
++ownership of the Software, including all intellectual property rights thereto,
++and any portion thereof remain with Broadcom or its licensors. Licensee hereby
++covenants that it will not assert any claim that the Software created by or for
++Broadcom infringe any intellectual property right owned or controlled by
++Licensee.
++
++4.     	Disclaimer. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM PROVIDES AND
++GRANTS AND LICENSEE RECEIVES NO SUPPORT AND NO WARRANTIES OF ANY KIND, EXPRESS
++OR IMPLIED, BY STATUTE, COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.
++BROADCOM SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A SPECIFIC PURPOSE, OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR
++ANY UPGRADES TO OR DOCUMENTATION FOR THE SOFTWARE. WITHOUT LIMITATION OF THE
++ABOVE, BROADCOM GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL
++OPERATE WITHOUT INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE
++RESULTS THEREFROM INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY, OR
++RELIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL BROADCOM
++OR ANY OF ITS LICENSORS HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
++INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON ANY THEORY
++OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR
++OTHERWISE, ARISING OUT OF THIS AGREEMENT OR USE, REPRODUCTION, OR DISTRIBUTION
++OF THE SOFTWARE, INCLUDING BUT NOT LIMITED TO LOSS OF DATA AND LOSS OF PROFITS,
++EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THESE
++LIMITATIONS SHALL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
++LIMITED REMEDY.
++
++5. 	Export Laws.  LICENSEE UNDERSTANDS AND AGREES THAT THE SOFTWARE IS
+ SUBJECT TO UNITED STATES AND OTHER APPLICABLE EXPORT-RELATED LAWS AND
+-REGULATIONS AND THAT YOU MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE SOFTWARE OR
+-ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE LAWS.
+-WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT OR TRANSFER OF THE SOFTWARE
+-TO CUBA, IRAN, NORTH KOREA, SUDAN AND SYRIA IS PROHIBITED.
+-
+-7.2	Assignment. This Agreement shall be binding upon and inure to the
+-benefit of the parties and their respective successors and assigns, provided,
+-however that Licensee may not assign this Agreement or any rights or obligation
+-hereunder, directly or indirectly, by operation of law or otherwise, without
+-the prior written consent of Broadcom, and any such attempted assignment shall
+-be void.  Notwithstanding the foregoing, Licensee may assign this Agreement to
+-a successor to all or substantially all of its business or assets to which this
+-Agreement relates that is not a competitor of Broadcom.
+-
+-7.3.	Governing Law; Venue.  This Agreement shall be governed by the laws of
+-California without regard to any conflict-of-laws rules, and the United Nations
+-Convention on Contracts for the International Sale of Goods is hereby excluded.
+-The sole jurisdiction and venue for actions related to the subject matter
+-hereof shall be the state and federal courts located in the County of Orange,
+-California, and both parties hereby consent to such jurisdiction and venue.
+-
+-7.4.	Severability.  All terms and provisions of this Agreement shall, if
+-possible, be construed in a manner which makes them valid, but in the event any
+-term or provision of this Agreement is found by a court of competent
+-jurisdiction to be illegal or unenforceable, the validity or enforceability of
+-the remainder of this Agreement shall not be affected if the illegal or
+-unenforceable provision does not materially affect the intent of this
+-Agreement.  If the illegal or unenforceable provision materially affects the
+-intent of the parties to this Agreement, this Agreement shall become
+-terminated.
+-
+-7.5.	Equitable Relief.  Licensee hereby acknowledges that its breach of this
+-Agreement would cause irreparable harm and significant injury to Broadcom that
+-may be difficult to ascertain and that a remedy at law would be inadequate.
+-Accordingly, Licensee agrees that Broadcom shall have the right to seek and
+-obtain immediate injunctive relief to enforce obligations under the Agreement
+-in addition to any other rights and remedies it may have.
+-
+-7.6.	Waiver.  The waiver of, or failure to enforce, any breach or default
+-hereunder shall not constitute the waiver of any other or subsequent breach or
+-default.
+-
+-7.7.	Entire Agreement.  This Agreement sets forth the entire Agreement
+-between the parties and supersedes any and all prior proposals, agreements and
+-representations between them, whether written or oral concerning the Software.
+-This Agreement may be changed only by mutual agreement of the parties in
+-writing.
++REGULATIONS AND THAT LICENSEE MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE
++SOFTWARE OR ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE
++LAWS. WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT, OR TRANSFER OF THE
++SOFTWARE TO CUBA, IRAN, NORTH KOREA, SUDAN, AND SYRIA IS PROHIBITED.
+ 
+-- 
+1.7.1
 
-greg k-h
+
