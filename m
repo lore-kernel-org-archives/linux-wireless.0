@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64841 "EHLO mail.atheros.com"
+Received: from mga02.intel.com ([134.134.136.20]:50845 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757654Ab1D1OXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 10:23:11 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:22:44 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC/RFT 0/9]  ath9k: Add  Antenna diversity support for AR9485
-Date: Thu, 28 Apr 2011 19:52:50 +0530
-Message-ID: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162315_093693_473B2412)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1757374Ab1DHPuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:13 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/16] iwlagn: no 3945 define needed
+Date: Fri,  8 Apr 2011 08:30:26 -0700
+Message-Id: <1302276636-12802-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Remove 3945 define
 
-*These are purely RFC/RFT patches, none of them are tested.
- once tested we will send it as patches.
-*This patch set adds Antenna diversity support for AR9485, previously
- antenna diversity is only supported in AR9285
-*The basic antenna diversity algorithm remains the same
-*slight change in the diversity field in eeprom
-*introduction of main/alt gain table and lna1_lna2 delta fields
-*initially set LNA1 for main antenna
-*introduction of diversity group
-*based on diversity group, fast diversity bias parmaters and
-lna1_lna2_delta varies
-*implement an API to take the decision of swapping main/ALT LNA's
-for AR9485
-*configure fast diversity bias based on diversity group
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Mohammed Shafi Shajakhan (9):
-  ath9k_hw: make antenna diversity modules chip specific
-  ath9k_hw: enable Antenna diversity for AR9485
-  ath9k_hw: define registers/macros to support Antenna diversity
-  ath9k_hw: config diversity based on eeprom contents
-  ath9k_hw: define modules to get/set Antenna diversity paramaters
-  ath9k_hw: define antenna diversity group
-  ath9k: Implement an API to swap main/ALT LNA's
-  ath9k: configure fast_div_bias based on diversity group
-  ath9k: make sure main_rssi is positive
-
- drivers/net/wireless/ath/ath9k/ar9002_mac.c    |    2 +
- drivers/net/wireless/ath/ath9k/ar9002_phy.c    |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   50 +++++-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c    |    2 +
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |   44 +++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |   31 +++-
- drivers/net/wireless/ath/ath9k/ath9k.h         |    1 -
- drivers/net/wireless/ath/ath9k/hw-ops.h        |   12 ++
- drivers/net/wireless/ath/ath9k/hw.c            |   16 ++
- drivers/net/wireless/ath/ath9k/hw.h            |   23 ++-
- drivers/net/wireless/ath/ath9k/recv.c          |  211 ++++++++++++++++++------
- 11 files changed, 337 insertions(+), 65 deletions(-)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 69a2993..bdae82e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -83,7 +83,6 @@ enum {
+ 
+ enum {
+ 	IWL_FIRST_OFDM_RATE = IWL_RATE_6M_INDEX,
+-	IWL39_LAST_OFDM_RATE = IWL_RATE_54M_INDEX,
+ 	IWL_LAST_OFDM_RATE = IWL_RATE_60M_INDEX,
+ 	IWL_FIRST_CCK_RATE = IWL_RATE_1M_INDEX,
+ 	IWL_LAST_CCK_RATE = IWL_RATE_11M_INDEX,
+-- 
+1.7.0.4
 
