@@ -1,41 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56443 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab1DRPF0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 11:05:26 -0400
-Subject: [PATCH] mac80211: explain padding in place of rate field
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Apr 2011 17:05:21 +0200
-Message-ID: <1303139121.3812.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nm30.bullet.mail.bf1.yahoo.com ([98.139.212.189]:39488 "HELO
+	nm30.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754591Ab1DHJcy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 05:32:54 -0400
+Message-ID: <179432.26955.qm@web161615.mail.bf1.yahoo.com>
+Date: Fri, 8 Apr 2011 02:32:53 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Questions about rt2800usb
+To: Steev Klimaszewski <steev@genesi-usa.com>
+Cc: Jett Chen <jett_chen@ralinktech.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTikRMATHAUmsQa8T4LD4_C9T76asAQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> > Here's my vote against removing the rt2870sta from
+> staging. Some longstanding issues with latency and duplicate
+> packets (rt307x) are persistent with rt2800usb, whereas
+> rt2870sta works fine.
+> >
+> > my two cents
+> >
+> > Walter
+> 
+> Personally, I've had the opposite (since the patch to
+> disable power
+> management on rt2800usb.)  rt2870sta hasn't been
+> noticeably more
+> stable, and in fact, I tend to see div0 bugs quite often
+> when using
+> it.  That said, I'm using Azurewave rt3070s.
 
-Apparently this was confusing still ... add a
-note that the byte is needed as padding.
+My vote went against only because of this: 
+(rt3070 - 148f:3070)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ping gateway with staging:
 
---- a/net/mac80211/rx.c	2011-04-18 17:02:40.000000000 +0200
-+++ b/net/mac80211/rx.c	2011-04-18 17:04:07.000000000 +0200
-@@ -143,7 +143,8 @@ ieee80211_add_rx_radiotap_header(struct
- 	if (status->flag & RX_FLAG_HT) {
- 		/*
- 		 * MCS information is a separate field in radiotap,
--		 * added below.
-+		 * added below. The byte here is needed as padding
-+		 * for the channel though, so initialise it to 0.
- 		 */
- 		*pos = 0;
- 	} else {
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_req=1 ttl=64 time=4.34 ms
+64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=4.70 ms
+64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=1.61 ms
+64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=1.68 ms
+64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=1.33 ms
+64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=6.57 ms
+64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=4.45 ms
+^C
+--- 192.168.1.1 ping statistics ---
+7 packets transmitted, 7 received, 0% packet loss, time 6009ms
 
 
+Now pinging gateway with rt2800usb:
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=647 ms
+64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=1590 ms
+64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=583 ms
+64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=29.2 ms
+64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=1674 ms
+64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=667 ms
+64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=668 ms (DUP!)
+64 bytes from 192.168.1.1: icmp_req=8 ttl=64 time=1645 ms
+64 bytes from 192.168.1.1: icmp_req=9 ttl=64 time=637 ms
+64 bytes from 192.168.1.1: icmp_req=10 ttl=64 time=1.38 ms
+^C
+--- 192.168.1.1 ping statistics ---
+10 packets transmitted, 9 received, +1 duplicates, 10% packet loss, time 9032ms
+rtt min/avg/max/mdev = 1.384/814.547/1674.284/588.666 ms, pipe 2
+
+
+Steev, you mentioned there was a fix? Could you please point which patch resolves this?
+
+I'll be glad to drop the staging driver if rt2800usb does not lag anymore.
+
+Walter
