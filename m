@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4626 "EHLO mms1.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:56990 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753849Ab1DEO7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 10:59:06 -0400
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: dwmw2@infradead.org
-cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	henryp@broadcom.com, brudley@broadcom.com, arend@broadcom.com,
-	rvossen@broadcom.com
-Subject: [PATCH 2/3] linux-firmware: Removed codeversion from brcm
- firmware filenames.
-Date: Tue, 5 Apr 2011 07:58:41 -0700
-Message-ID: <1302015522-20601-3-git-send-email-henryp@broadcom.com>
-In-Reply-To: <1302015522-20601-1-git-send-email-henryp@broadcom.com>
-References: <1302015522-20601-1-git-send-email-henryp@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1757372Ab1DHPuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:12 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/16] iwlagn: PAPD read for 2000 series devices
+Date: Fri,  8 Apr 2011 08:30:25 -0700
+Message-Id: <1302276636-12802-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The basename-apiversion-codeversion construction for firmware filenames is not
-used by most other firmware files, adds complexity, and is not providing any
-value.  Renamed the firmware files using just basename-apiversion and fixed
-WHENCE to have correct names and path to these files.
+For 2000 series NICs, disable OTP refresh in order to read correct
+PAPD table from high OTP block
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- WHENCE                                             |   12 ++++++------
- ...llmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} |  Bin 269595 -> 269595 bytes
- ...llmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} |    0
- brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw}      |  Bin 97376 -> 97376 bytes
- ...bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} |  Bin 180 -> 180 bytes
- 5 files changed, 6 insertions(+), 6 deletions(-)
- rename brcm/{bcm4329-fullmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} (100%)
- rename brcm/{bcm4329-fullmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} (100%)
- rename brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw} (100%)
- rename brcm/{bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} (100%)
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/WHENCE b/WHENCE
-index 6632b85..c81a2b4 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1433,19 +1433,19 @@ Licence:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index e73ac80..86d7ffd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -98,6 +98,8 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
+ 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
+ 			    CSR_GP_DRIVER_REG_BIT_RADIO_IQ_INVER);
  
- --------------------------------------------------------------------------
++	if (priv->cfg->disable_otp_refresh)
++		iwl_write_prph(priv, APMG_ANALOG_SVR_REG, 0x80000010);
+ }
  
--Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
-+Driver: brcmsmac - Broadcom 802.11n softmac wireless LAN driver.
+ static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
+@@ -409,7 +411,8 @@ static struct iwl_bt_params iwl2030_bt_params = {
+ 	.need_dc_calib = true,					\
+ 	.need_temp_offset_calib = true,				\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.iq_invert = true					\
++	.iq_invert = true,					\
++	.disable_otp_refresh = true				\
  
--File: brcm/bcm43xx-0-610-809-0.fw
--File: brcm/bcm43xx_hdr-0-610-809-0.fw
-+File: brcm/bcm43xx-0.fw
-+File: brcm/bcm43xx_hdr-0.fw
+ struct iwl_cfg iwl2000_2bgn_cfg = {
+ 	.name = "2000 Series 2x2 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 43d4c92..10a6f85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -331,6 +331,7 @@ struct iwl_ht_params {
+  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+  * @internal_wimax_coex: internal wifi/wimax combo device
+  * @iq_invert: I/Q inversion
++ * @disable_otp_refresh: disable OTP refresh current limit
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -381,6 +382,7 @@ struct iwl_cfg {
+ 	const bool rx_with_siso_diversity;
+ 	const bool internal_wimax_coex;
+ 	const bool iq_invert;
++	const bool disable_otp_refresh;
+ };
  
- Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
- 
- --------------------------------------------------------------------------
- 
--Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
-+Driver: brcmfmac - Broadcom 802.11n fullmac wireless LAN driver.
- 
--File: bcm4329-fullmac-4-218-248-5.bin
--File: bcm4329-fullmac-4-218-248-5.txt
-+File: brcm/bcm4329-fullmac-4.bin
-+File: brcm/bcm4329-fullmac-4.txt
- 
- Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
- 
-diff --git a/brcm/bcm4329-fullmac-4-218-248-5.txt b/brcm/bcm4329-fullmac-4.txt
-similarity index 100%
-rename from brcm/bcm4329-fullmac-4-218-248-5.txt
-rename to brcm/bcm4329-fullmac-4.txt
+ /***************************
 -- 
-1.7.1
-
+1.7.0.4
 
