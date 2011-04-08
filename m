@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54649 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469Ab1DOGrw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41605 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482Ab1DHGsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 02:47:52 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1958692bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 23:47:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTimfifFrKdgYuMvAMhSGKAJXu3W9mA@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
- <201104142251.10881.chunkeey@googlemail.com> <BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
- <BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com> <BANLkTimmdRi_CmwgH14aJbQJecYav-4r8Q@mail.gmail.com>
- <BANLkTimfifFrKdgYuMvAMhSGKAJXu3W9mA@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Fri, 15 Apr 2011 08:47:11 +0200
-Message-ID: <BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Apr 2011 02:48:37 -0400
+Subject: Re: [PATCH v8 0/9] {mac|nl}80211: mesh security enhancements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@sipsolutions.net,
+	linville@tuxdriver.com, javier@cozybit.com
+In-Reply-To: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
+References: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Apr 2011 08:48:34 +0200
+Message-ID: <1302245314.3564.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok I found it.
-https://dev.openwrt.org/browser/trunk/package/hostapd/patches/130-scan_wait.patch?rev=20090
+On Thu, 2011-04-07 at 15:08 -0700, Thomas Pedersen wrote:
+> Johannes, 
+> 
+> Thanks for your comments, your help is much appreciated. Hopefully this will be
+> the last revision (rhymes with attrition :P). Changes in v8 are pretty much
+> just reorganizing the patches (Johannes), and fixing a bug in copy_mesh_setup()
+> (Stanislaw).  
 
-2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
-> Look at noscan option in their docs.
-> http://wiki.openwrt.org/doc/uci/wireless
->
-> 2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
->> Openwrt have noscan option with mac80211
->> (https://dev.openwrt.org/browser/branches/backfire/package/mac80211/files/lib/wifi/mac80211.sh?rev=22356)
->> They patched code?
->>
->> Where can I find that patch?
->>
->> 2011/4/15 Helmut Schaa <helmut.schaa@googlemail.com>:
->>> On Fri, Apr 15, 2011 at 8:22 AM, Damian Lesiuk <lesiuk@gmail.com> wrote:
->>>> Is there option to do not scan for overlapping BSSs?
->>>
->>> AFAIK not without patching the code.
->>>
->>> Helmut
->>>
->>
->
+:-)
+Looks good to me, thanks for your patience.
+
+johannes
+
