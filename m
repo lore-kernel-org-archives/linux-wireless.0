@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33752 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab1CaXG7 (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65304 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756952Ab1DHPqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 19:06:59 -0400
-Received: by iyb14 with SMTP id 14so2869981iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 16:06:59 -0700 (PDT)
+	Fri, 8 Apr 2011 11:46:53 -0400
+Received: by gyd10 with SMTP id 10so1472265gyd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 08:46:53 -0700 (PDT)
+Message-ID: <4D9F2DEA.9080200@lwfinger.net>
+Date: Fri, 08 Apr 2011 10:46:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1301610698-3688-1-git-send-email-lrodriguez@atheros.com>
-References: <1301610698-3688-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 31 Mar 2011 16:06:38 -0700
-Message-ID: <AANLkTikf65sZ3v72w8XJd=ncaUwtX6qA7jmX3N9Sg97Q@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: add a timer for invalid user reg hints
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: gregoryx.alagnou@intel.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Igor Plyatov <plyatov@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	George <george0505@realtek.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: net/wireless/rtlwifi: problem with D-link DWA-131 USB adapter
+References: <4D9F0DAE.30809@gmail.com> <4D9F14FE.8060905@lwfinger.net> <4D9F2462.60600@gmail.com>
+In-Reply-To: <4D9F2462.60600@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 31, 2011 at 3:31 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We have no other option but to inform userspace that we have
-> queued up their regulatory hint request when we are given one
-> given that nl80211 operates atomically on user requests. The
-> best we can do is accept the request, and set a timer for processing
-> it. If the timer is hit we restore the regulatory settings and
-> ignore the user input.
+On 04/08/2011 10:06 AM, Igor Plyatov wrote:
+> Dear Larry,
 >
-> This fixes this reported bug:
+>> The driver rtl8192cu is for the RTL8192CU/RTL8188CU chips. The DWA-131
+>> contains an RTL8192SU chip. It cannot be driven by rtl8192cu - it will never
+>> work.
+>>
+>> On my TODO list is the preparation of a driver named rtl8192su, but since
+>> r8712u works, the priority is low. I'm much more interested in getting the
+>> drivers for the RTL8192SE and RTL8192DE chips into the kernel. Note that
+>> rtl8192su will share a lot of code with rtl8192se in the same fashion that
+>> rtl8192ce and rtl8192cu share routines.
+>>
+>> When I prepared the r8712u driver for staging, I did not worry about the LED,
+>> which is why it doesn't blink. What kind of LED action do you prefer. Some
+>> users only want the LED on when the interface is active and complain when it
+>> blinks. Others want it to blink when transmitting.
+>>
+>> Larry
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=28112
+> Thank you for descriptive answer!
 >
-> Reported-by: gregoryx.alagnou@intel.com
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Is there any way to detect Realtek chipset type by some means like lsusb or else?
 
-I'll respin using schedule_delayed_work() instead.
+For my DWA-130, lsusb outputs the following
 
-  Luis
+Bus 001 Device 003: ID 07d1:3300 D-Link System DWA-130 802.11n Wireless N 
+Adapter(rev.E) [Realtek RTL8192SU]
+
+The descriptive info is in file /usr/share/usb.ids and available on-line at 
+http://www.linux-usb.org/usb.ids.
+
+Larry
+
