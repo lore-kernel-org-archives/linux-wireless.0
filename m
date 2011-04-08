@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:54863 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752497Ab1DATWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 15:22:04 -0400
-To: Jarkko Nikula <jhnikula@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] wl1251: Prepare for idle mode support
-References: <1301576643-29224-1-git-send-email-jhnikula@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 01 Apr 2011 22:22:01 +0300
-In-Reply-To: <1301576643-29224-1-git-send-email-jhnikula@gmail.com> (Jarkko Nikula's message of "Thu\, 31 Mar 2011 16\:04\:02 +0300")
-Message-ID: <87aag9srom.fsf@purkki.adurom.net>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44958 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab1DHGwB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 02:52:01 -0400
+Received: by fxm17 with SMTP id 17so2145655fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 23:52:00 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Questions about rt2800usb
+Date: Fri, 8 Apr 2011 08:50:10 +0200
+Cc: Jett Chen <jett_chen@ralinktech.com>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4D9E316E.4000908@lwfinger.net>
+In-Reply-To: <4D9E316E.4000908@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104080850.11086.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jarkko Nikula <jhnikula@gmail.com> writes:
+Hi Larry,
 
-> RFC for WL1251 idle mode support brought a few issues that are worth to
-> update before adding the idle mode support.
->
+Am Donnerstag, 7. April 2011 schrieb Larry Finger:
+> I know from experience that the staging driver rt82860sta has been replaced by 
+> rt2800pci and I plan to push a patch deleting the driver from staging.
 
-[...]
+rt2800pci is quite stable already (at least for me). So removing rt2860sta
+would be ok I think.
 
-> Then enum wl1251_cmd_ps_mod in cmd.h is renamed and moved to wl1251.h as it
-> is a state rather than chip level command.
+> It appears that rt2870sta has been replaced by rt2800usb. Is that correct? If 
+> so, I will also include the deletion of that driver from staging in the patch.
+> 
+> I noticed that rt2870sta includes a few USB IDs not found in rt2800usb, namely:
+> 
+> 0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14.
+> 
+> Any reasons why these should not be included in rt2800usb?
 
-But now you are moving a firmware interface value outside cmd.h. I was
-thinking that you would touch wl1251_cmd_ps_mod at all, instead just
-create a new enum wl1251_station_mode which will be used as the driver
-state variable.
+I'm not quite sure about rt2800usb. It's still a bit immature in my opinion.
 
-That way it's clear which enum is for the firmware interface and which
-one is an internal variable.
+On the other hand, as long as people just use the staging driver instead of
+reporting bugs for rt2800usb that situation won't change that fast.
 
-To make it even more clear we could change the function to this:
-
-int wl1251_cmd_ps_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mod mode);
-
-Otherwise patch looks very good to me.
-
--- 
-Kalle Valo
+Helmut
