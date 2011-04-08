@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43854 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757391Ab1DAVgr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:47 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so3915791iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:46 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 05/10] mac80211: Let user space receive and send mesh auth/deauth frames
-Date: Fri,  1 Apr 2011 13:35:46 -0700
-Message-Id: <1301690151-14979-6-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+Received: from mga02.intel.com ([134.134.136.20]:56990 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757395Ab1DHPuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:13 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/16] iwlagn: remove unused 3945 define
+Date: Fri,  8 Apr 2011 08:30:27 -0700
+Message-Id: <1302276636-12802-8-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+3945 no longer apply
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/main.c |    4 +++-
- net/mac80211/rx.c   |    3 ++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fh.h |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 562d298..0ae9b22 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -545,7 +545,9 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	},
- 	[NL80211_IFTYPE_MESH_POINT] = {
- 		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4),
- 	},
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index da06d13..0f1052f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -424,7 +424,6 @@
+ #define RX_LOW_WATERMARK 8
  
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5c1930b..fe0f1e3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -502,7 +502,8 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+ /* Size of one Rx buffer in host DRAM */
+-#define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
+ #define IWL_RX_BUF_SIZE_4K (4 * 1024)
+ #define IWL_RX_BUF_SIZE_8K (8 * 1024)
  
- 		if (ieee80211_is_probe_req(hdr->frame_control) ||
- 		    ieee80211_is_probe_resp(hdr->frame_control) ||
--		    ieee80211_is_beacon(hdr->frame_control))
-+		    ieee80211_is_beacon(hdr->frame_control) ||
-+		    ieee80211_is_auth(hdr->frame_control))
- 			return RX_CONTINUE;
+@@ -443,7 +442,7 @@ struct iwl_rb_status {
+ 	__le16 closed_fr_num;
+ 	__le16 finished_rb_num;
+ 	__le16 finished_fr_nam;
+-	__le32 __unused; /* 3945 only */
++	__le32 __unused;
+ } __packed;
  
- 		return RX_DROP_MONITOR;
+ 
 -- 
-1.7.4.1
+1.7.0.4
 
