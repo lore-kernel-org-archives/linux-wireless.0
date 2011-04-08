@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61217 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720Ab1DLNVp convert rfc822-to-8bit (ORCPT
+Received: from nm29-vm1.bullet.mail.bf1.yahoo.com ([98.139.213.144]:27174 "HELO
+	nm29-vm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752636Ab1DHQg4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:21:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <op.vtttxt083ri7v4@arend-laptop>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-	<BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
-	<op.vtttxt083ri7v4@arend-laptop>
-Date: Tue, 12 Apr 2011 15:21:44 +0200
-Message-ID: <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Fri, 8 Apr 2011 12:36:56 -0400
+Message-ID: <768443.34687.qm@web161607.mail.bf1.yahoo.com>
+Date: Fri, 8 Apr 2011 09:31:26 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Questions about rt2800usb
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Steev Klimaszewski <steev@genesi-usa.com>,
+	Jett Chen <jett_chen@ralinktech.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201104081441.32833.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/12 Arend van Spriel <arend@broadcom.com>:
-> On Tue, 12 Apr 2011 15:04:48 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
->
->> There is one more change I started to consider. Is "core" correct name
->> for AXI's device? Almost everywhere we can read about *components* on
->> the AXI interconnect.
->>
->> Maybe it'd make sense to s/core/comp/? Arend?
->
-> I have no strong preference on this. I tried the latest patch and it does
-> not crash anymore with load/unload.
+> Walter Goldens:
+> > Further investigation suggests the DUP! packets stem
+> from one specific AP.
+> > Different APs seem to have less duplicate packets and
+> overall packet-loss.
+> > Its puzzling to me however that the said AP does not
+> produce DUP! packs
+> > at all with rt2870sta.
+> 
+> Is the AP 11n capable? Could you try to get a wifi capture
+> when these
+> duplicates happen (with a second station in monitor mode)?
 
-Could you post dmesg? Probably nothing exciting, just my curiosity :)
+Hi Helmut,
 
--- 
-Rafał
+Your question about the 11N AP sparked interesting results. An 11n capable AP, but connected to a 54G mode did NOT produce a _single_ DUP! packet! Well over 2000 packets transmitted, not a single one duplicate. 
+
+This clearly isolates the problem to 54 B/G-Only APs. 
+
+Regarding your request for a capture file where duplicate packets occur, I have this to ask. I found out rt2800usb has the ability to switch to monitor mode - while connected to the AP and the gateway is ping-able. Will a capture from the same PC connected to the AP do the job for analysis? It will take me some time to set up a second station running the rt2800usb module and capture communications between the AP and the said PC.
+
+Please let me know.
+
+Walter
