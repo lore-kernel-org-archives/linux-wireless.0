@@ -1,244 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48174 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755664Ab1DGXJY (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52404 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754181Ab1DHLbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 19:09:24 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so2935734iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 16:09:24 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes.berg@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com
-Subject: [PATCH v8 1/9] nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
-Date: Thu,  7 Apr 2011 15:08:27 -0700
-Message-Id: <1302214115-3688-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
-References: <1302214115-3688-1-git-send-email-thomas@cozybit.com>
+	Fri, 8 Apr 2011 07:31:38 -0400
+Received: by bwz15 with SMTP id 15so2750209bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 04:31:37 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: Alberto Panizzo <alberto@amarulasolutions.com>
+Subject: Re: [PATCH RFC 2/3] libertas: add set_power callback for iface subdrivers
+Date: Fri, 8 Apr 2011 14:30:10 +0300
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com> <201104081236.54157.anarsoul@gmail.com> <1302258194.2649.94.camel@realization>
+In-Reply-To: <1302258194.2649.94.camel@realization>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104081430.11248.anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Friday 08 April 2011 13:23:14 Alberto Panizzo wrote:
+> On Fri, 2011-04-08 at 12:36 +0300, Vasily Khoruzhick wrote:
+> > On Friday 08 April 2011 12:10:53 Alberto Panizzo wrote:
+> > > > +	} else {
+> > > > +		/* Copy addr back to hw */
+> > > > +		memcpy(priv->current_addr, priv->dev->dev_addr, ETH_ALEN);
+> > > > +		hw_addr_cmd.hdr.size = cpu_to_le16(sizeof(hw_addr_cmd));
+> > > > +		hw_addr_cmd.action = cpu_to_le16(CMD_ACT_SET);
+> > > > +		memcpy(hw_addr_cmd.macadd, priv->current_addr, ETH_ALEN);
+> > > > +
+> > > > +		ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS,
+> > > > +			&hw_addr_cmd);
+> > > > +		if (ret)
+> > > > +			lbs_deb_net("set MAC address failed\n");
+> > > 
+> > > Does this be really related to the subject of the patch?
+> > 
+> > Yep, this function is called right after power on, and we have to copy
+> > mac address back to hardware (in case it was changed).
+> 
+> So, are you assuming that someone can change the wifi card while this
+> is powered off?
 
-To NL80211_MESH_SETUP_IE. This reflects our ability to insert any ie
-into a mesh beacon, not simply path selection ies.
+Nope, I assume someone can do 'ifconfig wlan0 hw ether xx:xx:xx:xx:xx:xx' 
+while card is powered down. Or when it's powered up - we need then to load 
+choosen mac into hw back after power cycle sequence.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- include/linux/nl80211.h    |    9 +++++----
- include/net/cfg80211.h     |    8 ++++----
- net/mac80211/cfg.c         |   15 +++++++--------
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/mesh.c        |    6 +++---
- net/mac80211/mesh_plink.c  |    2 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/mesh.c        |    4 ++--
- net/wireless/nl80211.c     |   11 ++++++-----
- 9 files changed, 31 insertions(+), 30 deletions(-)
+> > Moved it to avoid forward declatation.
+> 
+> Mmm, personally I like more the forward declaration.. the moving do not
+> allow readers if you have modified something in the function.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3002218..82ef17d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -545,6 +545,7 @@ enum nl80211_commands {
- /* source-level API compatibility */
- #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
- #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
-+#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
+Depends on person, someone hates forward declarations, someone likes them. I 
+have nothing against them, but most part of kernel maintainers do not like 
+them for some reason.
  
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -1686,9 +1687,9 @@ enum nl80211_meshconf_params {
-  * vendor specific path metric or disable it to use the default Airtime
-  * metric.
-  *
-- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
-- * element that vendors will use to identify the path selection methods and
-- * metrics in use.
-+ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
-+ * robust security network ie, or a vendor specific information element that
-+ * vendors will use to identify the path selection methods and metrics in use.
-  *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -1697,7 +1698,7 @@ enum nl80211_mesh_setup_params {
- 	__NL80211_MESH_SETUP_INVALID,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
--	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
-+	NL80211_MESH_SETUP_IE,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2c45304..a6c9b46 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -655,8 +655,8 @@ struct mesh_config {
-  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-- * @vendor_ie: vendor information elements (optional)
-- * @vendor_ie_len: length of vendor information elements
-+ * @ie: vendor information elements (optional)
-+ * @ie_len: length of vendor information elements
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -665,8 +665,8 @@ struct mesh_setup {
- 	u8 mesh_id_len;
- 	u8  path_sel_proto;
- 	u8  path_metric;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3342135..7f5d3b0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1023,26 +1023,25 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	u8 *new_ie;
- 	const u8 *old_ie;
- 
--	/* first allocate the new vendor information element */
-+	/* allocate information elements */
- 	new_ie = NULL;
--	old_ie = ifmsh->vendor_ie;
-+	old_ie = ifmsh->ie;
- 
--	ifmsh->vendor_ie_len = setup->vendor_ie_len;
--	if (setup->vendor_ie_len) {
--		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
-+	if (setup->ie_len) {
-+		new_ie = kmemdup(setup->ie, setup->ie_len,
- 				GFP_KERNEL);
- 		if (!new_ie)
- 			return -ENOMEM;
- 	}
-+	ifmsh->ie_len = setup->ie_len;
-+	ifmsh->ie = new_ie;
-+	kfree(old_ie);
- 
- 	/* now copy the rest of the setup parameters */
- 	ifmsh->mesh_id_len = setup->mesh_id_len;
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->vendor_ie = new_ie;
--
--	kfree(old_ie);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6eb2c852..6450100 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -488,8 +488,8 @@ struct ieee80211_if_mesh {
- 	struct mesh_config mshcfg;
- 	u32 mesh_seqnum;
- 	bool accepting_plinks;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2a57cc0..1c244c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
- 
--	if (sdata->u.mesh.vendor_ie) {
--		int len = sdata->u.mesh.vendor_ie_len;
--		const u8 *data = sdata->u.mesh.vendor_ie;
-+	if (sdata->u.mesh.ie) {
-+		int len = sdata->u.mesh.ie_len;
-+		const u8 *data = sdata->u.mesh.ie;
- 		if (skb_tailroom(skb) > len)
- 			memcpy(skb_put(skb, len), data, len);
- 	}
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 44b5393..c705b20 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		__le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
--			sdata->u.mesh.vendor_ie_len);
-+			sdata->u.mesh.ie_len);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
- 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ce4596e..17b10be 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 		/* headroom, head length, tail length and maximum TIM length */
- 		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.vendor_ie_len);
-+				sdata->u.mesh.ie_len);
- 		if (!skb)
- 			goto out;
- 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 73e39c1..0d4b226 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -53,8 +53,8 @@ const struct mesh_config default_mesh_config = {
- const struct mesh_setup default_mesh_setup = {
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
--	.vendor_ie = NULL,
--	.vendor_ie_len = 0,
-+	.ie = NULL,
-+	.ie_len = 0,
- };
- 
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 40c90fb..cc92fc5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,7 +2804,7 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
--	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
-+	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
- 
-@@ -2906,13 +2906,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		 IEEE80211_PATH_METRIC_VENDOR :
- 		 IEEE80211_PATH_METRIC_AIRTIME;
- 
--	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
-+
-+	if (tb[NL80211_MESH_SETUP_IE]) {
- 		struct nlattr *ieattr =
--			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
-+			tb[NL80211_MESH_SETUP_IE];
- 		if (!is_valid_ie_attr(ieattr))
- 			return -EINVAL;
--		setup->vendor_ie = nla_data(ieattr);
--		setup->vendor_ie_len = nla_len(ieattr);
-+		setup->ie = nla_data(ieattr);
-+		setup->ie_len = nla_len(ieattr);
- 	}
- 
- 	return 0;
--- 
-1.7.4.4
+> > In this place there's no iface yet (we're still in probe callback of
+> > driver).
+> > 
+> > lbs_power_on/lbs_power_off are called only on iface up/down and in
+> > suspend/resume handlers (at least, for now), so we can't get race
+> > condition here.
+> 
+> Ok, I understand what you are doing. It's the same as removing the
+> module when the interface is not used..
 
+Not same, wlan0 is still here :)
+ 
+> I think this driver needs a good documentation of software flows: You
+> are adding a mechanism that is really useful for saving power while the
+> wlan interface is not used. But this should not be the same as the
+> policy this driver use through suspensions.
+
+Hmm, driver is expected to disable hw or put it into powersaving mode in 
+.ndo_stop(). It's already documented, isn't it?
+
+> I know that at this moment, this driver is not managing Power Save very
+> well and ok, this allow you to give up and turn off the card during
+> suspension.
+
+Host goes suspend (i.e. bus is not active anymore), and there's no way to put 
+device into deep sleep mode in some cases (I'm not sure if gpio to wake card 
+wired somewhere on my device :)), so looks like there's no choice.
+
+> Look for "CMD_802_11_HOST_SLEEP_CFG pdf" in google, you will be excited
+> on the results..!
+
+Thanks, will take a look on fw datasheet.
+
+Regards
+Vasily
