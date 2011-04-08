@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56799 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758898Ab1DNOlW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 10:41:22 -0400
-Received: by bwz15 with SMTP id 15so1431757bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 07:41:21 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:57734 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753107Ab1DHW4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 18:56:12 -0400
+Message-ID: <4D9F9289.5000000@openwrt.org>
+Date: Sat, 09 Apr 2011 00:56:09 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
- <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
- <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Thu, 14 Apr 2011 16:40:41 +0200
-Message-ID: <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k_hw: remove unnecessary parts of the AR9380 SREV
+ check
+References: <1302288556-69156-1-git-send-email-nbd@openwrt.org> <BANLkTi=dEnukztxRXQ5X0FaVCfk4pChAjQ@mail.gmail.com>
+In-Reply-To: <BANLkTi=dEnukztxRXQ5X0FaVCfk4pChAjQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-uniwersytecka-server ~ # iw wlan0 station dump
-Station 74:f0:6d:33:ea:00 (on wlan0)
-       inactive time:  20 ms
-       rx bytes:       5043668
-       rx packets:     9305
-       tx bytes:       13762256
-       tx packets:     11634
-       signal:         -31 dBm
-       tx bitrate:     65.0 MBit/s MCS 7
+On 2011-04-09 12:48 AM, Gábor Stefanik wrote:
+> On Fri, Apr 8, 2011 at 8:49 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  Older versions have not been sold and the driver does not explicitly
+>>  check for them anyway, so we can simply ignore the macRev here.
+>>  Reduces ath9k_hw size on mips by more than 2 KB.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>    drivers/net/wireless/ath/ath9k/reg.h |    4 +---
+>>    1 files changed, 1 insertions(+), 3 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+>>  index 693d543..2fbbe88 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/reg.h
+>>  +++ b/drivers/net/wireless/ath/ath9k/reg.h
+>>  @@ -858,9 +858,7 @@
+>>    #define AR_SREV_9300(_ah) \
+>>          (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
+>>    #define AR_SREV_9300_20_OR_LATER(_ah) \
+>>  -       (((_ah)->hw_version.macVersion>  AR_SREV_VERSION_9300) || \
+>>  -        (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300)&&  \
+>>  -         ((_ah)->hw_version.macRev>= AR_SREV_REVISION_9300_20)))
+>>  +       ((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9300)
+>
+> Shouldn't this entire check be removed and replaced with AR_SREV_9300
+> everywhere? (BTW, the definition of AR_SREV_9300 has superfluous
+> parentheses around it.)
+Yes, I was planning on making a patch for that later, because the AR9300 
+SREV checks aren't the only ones that need cleaning, almost all of the 
+other chip types are affected as well.
+I prefer to keep the change that affects the generated code separate 
+from that.
 
-So it helped in some way.
-Why that network isn't 300 mbps?
-
-My config is:
-interface=wlan0
-driver=nl80211
-ssid=lesiuk
-channel=7
-hw_mode=g
-ieee80211n=1
-wme_enabled=1
-ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
+- Felix
