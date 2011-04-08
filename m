@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:53521 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab1DROTu (ORCPT
+Received: from nm15-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.254]:36144 "HELO
+	nm15-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756088Ab1DHMVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 10:19:50 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-Date: Mon, 18 Apr 2011 16:19:34 +0200
-Cc: George Kashperko <george@znau.edu.ua>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <201104171938.12834.arnd@arndb.de> <BANLkTim6iCAsViJQS4XrY-XObs8pp-BiQQ@mail.gmail.com>
-In-Reply-To: <BANLkTim6iCAsViJQS4XrY-XObs8pp-BiQQ@mail.gmail.com>
+	Fri, 8 Apr 2011 08:21:18 -0400
+Message-ID: <888400.56093.qm@web161618.mail.bf1.yahoo.com>
+Date: Fri, 8 Apr 2011 05:21:17 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Questions about rt2800usb
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Steev Klimaszewski <steev@genesi-usa.com>,
+	Jett Chen <jett_chen@ralinktech.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <699128.18071.qm@web161601.mail.bf1.yahoo.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104181619.35115.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 18 April 2011, Rafał Miłecki wrote:
-> W dniu 17 kwietnia 2011 19:38 użytkownik Arnd Bergmann <arnd@arndb.de> napisał:
->
-> > In general, the bus_type directly relates to how a device gets probed.
-> > If broadcom uses the same basic register layout as regular AMBA devices,
-> > it should use the amba bus type.
+> > Try:
+> > 
+> > iwconfig wlan0 power off
+> > 
+> > to disable powersaving.
+> > 
+> > Ivo
 > 
-> From Broadcom side we *could* use some registers that are AMBA
-> specific, they are present... but there is totally no point in doing
-> that. Everything we use is Broadcom specific.
+> Hi Ivo,
 > 
+> Disabling power decreased latency substantially to a normal
+> level, however it paved the way for myriad duplicate
+> packets.
 > 
-> > I think it would be fine to extend the AMBA bus slightly if there are
-> > just minor differences.
+> rt2800usb:
 > 
-> As I said, Broadcom specific driver use nothing from AMBA common
-> things. Plus we implement routines that are Broadcom specific and no
-> other platform will use them.
+> PING gmail.com (209.85.229.19) 56(84) bytes of data.
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=1 ttl=53 time=52.9 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=2 ttl=53 time=50.2 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=3 ttl=53 time=51.6 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=4 ttl=53 time=52.8 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=5 ttl=53 time=53.3 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=6 ttl=53 time=51.4 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=6 ttl=53 time=52.4 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=6 ttl=53 time=52.5 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=51.8 ms
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=54.8 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=56.5 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=58.2 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=59.9 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=61.3 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=62.9 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=7 ttl=53 time=63.3 ms (DUP!)
+> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
+> icmp_req=8 ttl=53 time=51.4 ms
+> ^C
+> --- gmail.com ping statistics ---
+> 8 packets transmitted, 8 received, +9 duplicates, 0% packet
+> loss, time 7011ms
+> rtt min/avg/max/mdev = 50.285/55.181/63.304/4.219 ms
+> 
+> Without these, the rt2800usb is looking to be pretty
+> stellar driver.
 
-You mean the hardware has two sets of registers containing the same
-information, one of them the standard registers, and one with broadcom
-specific ones?
+Further investigation suggests the DUP! packets stem from one specific AP. Different APs seem to have less duplicate packets and overall packet-loss. Its puzzling to me however that the said AP does not produce DUP! packs at all with rt2870sta.
 
-Why don't you just use the standard ones then?
+I think the problem may be originating from the device's retransmission pattern. The device thinks that certain package(s) were not transmitted correctly and attempts to re-send them again which in essence results in duplicates.
 
-	Arnd
+Network tests completed with staging and rt2800usb indicate staging slightly outperforms rt2800usb. Also it appears some throughput is lost with rt2800usb.
+
+My verdict nevertheless: Drop the staging driver and leave rt2800usb as primary. 
+I'm sure improvements will be made. Plus, having both drivers load together, clash with each other and confuse users isn't desirable, either.
+
+Walter
