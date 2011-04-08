@@ -1,141 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40220 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab1DRLQa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:16:30 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 21so3798215wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:16:29 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 09/10] wl12xx: fix race condition during recovery in AP mode
-Date: Mon, 18 Apr 2011 14:15:28 +0300
-Message-Id: <1303125329-27214-9-git-send-email-arik@wizery.com>
-In-Reply-To: <1303125329-27214-1-git-send-email-arik@wizery.com>
-References: <1303125329-27214-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:44711 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756243Ab1DHSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 14:13:25 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2.6.39 v3] ath9k_hw: fix stopping rx DMA during resets
+Date: Fri,  8 Apr 2011 20:13:18 +0200
+Message-Id: <1302286398-11340-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <4D9EFA5F.3040900@openwrt.org>
+References: <4D9EFA5F.3040900@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating as AP, the TX queues are not stopped when we start
-recovery. mac80211 is notified only after the fact. When there is
-pending TX, it will be queued even after the FW is down. This leads to
-situations where the TX queues are stopped (because of the TX-watermark
-mechanism), and are never woken up when we return from recovery.
+During PHY errors, the MAC can sometimes fail to enter an idle state on older
+hardware (before AR9380) after an rx stop has been requested.
 
-Fix this by explicitly stopping the TX queues when before initiating
-recovery.
+This typically shows up in the kernel log with messages like these:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+------------[ cut here ]------------
+WARNING: at drivers/net/wireless/ath/ath9k/recv.c:504 ath_stoprecv+0xcc/0xf0 [ath9k]()
+Call Trace:
+[<8023f0e8>] dump_stack+0x8/0x34
+[<80075050>] warn_slowpath_common+0x78/0xa4
+[<80075094>] warn_slowpath_null+0x18/0x24
+[<80d66d60>] ath_stoprecv+0xcc/0xf0 [ath9k]
+[<80d642cc>] ath_set_channel+0xbc/0x270 [ath9k]
+[<80d65254>] ath_radio_disable+0x4a4/0x7fc [ath9k]
+
+When this happens, the state that the MAC enters is easy to identify and
+does not result in bogus DMA traffic, however to ensure a working state
+after a channel change, the hardware should still be reset.
+
+This patch adds detection for this specific MAC state, after which the above
+warnings completely disappear in my tests.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+Cc: Kyungwan Nam <Kyungwan.Nam@Atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   21 ++++++++++++++++-----
- drivers/net/wireless/wl12xx/tx.c   |    8 +++++---
- drivers/net/wireless/wl12xx/tx.h   |    2 +-
- 3 files changed, 22 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c   |    9 ---------
+ drivers/net/wireless/ath/ath9k/mac.c  |   25 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/mac.h  |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+ 4 files changed, 26 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d2a8b83..d7cb84b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -338,7 +338,8 @@ static struct conf_drv_settings default_conf = {
- 	},
- };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1b5bd13..c8a2d0d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1249,15 +1249,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ah->txchainmask = common->tx_chainmask;
+ 	ah->rxchainmask = common->rx_chainmask;
  
--static void __wl1271_op_remove_interface(struct wl1271 *wl);
-+static void __wl1271_op_remove_interface(struct wl1271 *wl,
-+					 bool reset_tx_queues);
- static void wl1271_free_ap_keys(struct wl1271 *wl);
+-	if ((common->bus_ops->ath_bus_type != ATH_USB) && !ah->chip_fullsleep) {
+-		ath9k_hw_abortpcurecv(ah);
+-		if (!ath9k_hw_stopdmarecv(ah)) {
+-			ath_dbg(common, ATH_DBG_XMIT,
+-				"Failed to stop receive dma\n");
+-			bChannelChange = false;
+-		}
+-	}
+-
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
  
- 
-@@ -953,10 +954,19 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
- 		ieee80211_connection_loss(wl->vif);
- 
-+	/* Prevent spurious TX during FW restart */
-+	ieee80211_stop_queues(wl->hw);
-+
- 	/* reboot the chipset */
--	__wl1271_op_remove_interface(wl);
-+	__wl1271_op_remove_interface(wl, false);
- 	ieee80211_restart_hw(wl->hw);
- 
-+	/*
-+	 * Its safe to enable TX now - the queues are stopped after a request
-+	 * to restart the HW.
-+	 */
-+	ieee80211_wake_queues(wl->hw);
-+
- out:
- 	mutex_unlock(&wl->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 6f431cb..1968c67 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -710,27 +710,46 @@ void ath9k_hw_abortpcurecv(struct ath_hw *ah)
  }
-@@ -1456,7 +1466,8 @@ out:
- 	return ret;
- }
+ EXPORT_SYMBOL(ath9k_hw_abortpcurecv);
  
--static void __wl1271_op_remove_interface(struct wl1271 *wl)
-+static void __wl1271_op_remove_interface(struct wl1271 *wl,
-+					 bool reset_tx_queues)
+-bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
++bool ath9k_hw_stopdmarecv(struct ath_hw *ah, bool *reset)
  {
+ #define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	u32 mac_status, last_mac_status = 0;
  	int i;
  
-@@ -1502,7 +1513,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 	mutex_lock(&wl->mutex);
++	/* Enable access to the DMA observation bus */
++	REG_WRITE(ah, AR_MACMISC,
++		  ((AR_MACMISC_DMA_OBS_LINE_8 << AR_MACMISC_DMA_OBS_S) |
++		   (AR_MACMISC_MISC_OBS_BUS_1 <<
++		    AR_MACMISC_MISC_OBS_BUS_MSB_S)));
++
+ 	REG_WRITE(ah, AR_CR, AR_CR_RXD);
  
- 	/* let's notify MAC80211 about the remaining pending TX frames */
--	wl1271_tx_reset(wl);
-+	wl1271_tx_reset(wl, reset_tx_queues);
- 	wl1271_power_off(wl);
- 
- 	memset(wl->bssid, 0, ETH_ALEN);
-@@ -1563,7 +1574,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	 */
- 	if (wl->vif) {
- 		WARN_ON(wl->vif != vif);
--		__wl1271_op_remove_interface(wl);
-+		__wl1271_op_remove_interface(wl, true);
+ 	/* Wait for rx enable bit to go low */
+ 	for (i = AH_RX_STOP_DMA_TIMEOUT / AH_TIME_QUANTUM; i != 0; i--) {
+ 		if ((REG_READ(ah, AR_CR) & AR_CR_RXE) == 0)
+ 			break;
++
++		if (!AR_SREV_9300_20_OR_LATER(ah)) {
++			mac_status = REG_READ(ah, AR_DMADBG_7) & 0x7f0;
++			if (mac_status == 0x1c0 && mac_status == last_mac_status) {
++				*reset = true;
++				break;
++			}
++
++			last_mac_status = mac_status;
++		}
++
+ 		udelay(AH_TIME_QUANTUM);
  	}
  
- 	mutex_unlock(&wl->mutex);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 7a3339f..5c7f963 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -766,8 +766,8 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
- 	wl1271_handle_tx_low_watermark(wl);
+ 	if (i == 0) {
+ 		ath_err(common,
+-			"DMA failed to stop in %d ms AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
++			"DMA failed to stop in %d ms AR_CR=0x%08x AR_DIAG_SW=0x%08x DMADBG_7=0x%08x\n",
+ 			AH_RX_STOP_DMA_TIMEOUT / 1000,
+ 			REG_READ(ah, AR_CR),
+-			REG_READ(ah, AR_DIAG_SW));
++			REG_READ(ah, AR_DIAG_SW),
++			REG_READ(ah, AR_DMADBG_7));
+ 		return false;
+ 	} else {
+ 		return true;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index b2b2ff8..c2a5938 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -695,7 +695,7 @@ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+ void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning);
+ void ath9k_hw_abortpcurecv(struct ath_hw *ah);
+-bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
++bool ath9k_hw_stopdmarecv(struct ath_hw *ah, bool *reset);
+ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
+ /* Interrupt Handling */
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 9e9cd83..56ce5f7 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -483,12 +483,12 @@ start_recv:
+ bool ath_stoprecv(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+-	bool stopped;
++	bool stopped, reset = false;
+ 
+ 	spin_lock_bh(&sc->rx.rxbuflock);
+ 	ath9k_hw_abortpcurecv(ah);
+ 	ath9k_hw_setrxfilter(ah, 0);
+-	stopped = ath9k_hw_stopdmarecv(ah);
++	stopped = ath9k_hw_stopdmarecv(ah, &reset);
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+ 		ath_edma_stop_recv(sc);
+@@ -503,7 +503,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 			"confusing the DMA engine when we start RX up\n");
+ 		ATH_DBG_WARN_ON_ONCE(!stopped);
+ 	}
+-	return stopped;
++	return stopped || reset;
  }
  
--/* caller must hold wl->mutex */
--void wl1271_tx_reset(struct wl1271 *wl)
-+/* caller must hold wl->mutex and TX must be stopped */
-+void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
- {
- 	int i;
- 	struct sk_buff *skb;
-@@ -803,8 +803,10 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 	/*
- 	 * Make sure the driver is at a consistent state, in case this
- 	 * function is called from a context other than interface removal.
-+	 * This call will always wake the TX queues.
- 	 */
--	wl1271_handle_tx_low_watermark(wl);
-+	if (reset_tx_queues)
-+		wl1271_handle_tx_low_watermark(wl);
- 
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++) {
- 		if (wl->tx_frames[i] == NULL)
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index fc7835c..832f925 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -185,7 +185,7 @@ static inline int wl1271_tx_get_queue(int queue)
- void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_work_locked(struct wl1271 *wl);
- void wl1271_tx_complete(struct wl1271 *wl);
--void wl1271_tx_reset(struct wl1271 *wl);
-+void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues);
- void wl1271_tx_flush(struct wl1271 *wl);
- u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
+ void ath_flushrecv(struct ath_softc *sc)
 -- 
-1.7.1
+1.7.3.2
 
