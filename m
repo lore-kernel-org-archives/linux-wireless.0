@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:60153 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753658Ab1DAToP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 15:44:15 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 12:43:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 2/2] cfg80211: add a timer for invalid user reg hints
-Date: Fri, 1 Apr 2011 12:44:11 -0700
-Message-ID: <1301687051-9555-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:41298 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab1DHHms (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 03:42:48 -0400
+Received: by qyg14 with SMTP id 14so2302932qyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 00:42:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4D9E316E.4000908@lwfinger.net>
+References: <4D9E316E.4000908@lwfinger.net>
+Date: Fri, 8 Apr 2011 09:42:47 +0200
+Message-ID: <BANLkTik+XBR65AThzFGf6Ug2LQXo88ju=Q@mail.gmail.com>
+Subject: Re: Questions about rt2800usb
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jett Chen <jett_chen@ralinktech.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have no other option but to inform userspace that we
-have queued up their regulatory hint request when we are
-given one given that nl80211 operates atomically on user
-requests. The best we can do is accept the request, and
-add a delayed work item for processing failure and cancel it
-if we succeeed. Upon failure we restore the regulatory
-settings and ignore the user input.
+Hi,
 
-This fixes this reported bug:
+> I know from experience that the staging driver rt82860sta has been replaced
+> by rt2800pci and I plan to push a patch deleting the driver from staging.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=28112
+Excellent! :)
 
-Reported-by: gregoryx.alagnou@intel.com
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+> It appears that rt2870sta has been replaced by rt2800usb. Is that correct?
+> If so, I will also include the deletion of that driver from staging in the
+> patch.
 
-The slight modification here was we did the part 1 to this
-patch as a separate fix and then I moved the delayed work
-scheduling call to reg_process_hint() instead of the user
-reg hint call, given that when we restore regulatory we
-want to also trigger the delay timer check.
+Yeah, rt2800usb is the rt2x00 version of rt2870sta.
 
- net/wireless/reg.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
+> I noticed that rt2870sta includes a few USB IDs not found in rt2800usb,
+> namely:
+>
+> 0x2001:0x3c09, 0x2001:0x3c0a, and 0x2019:0xed14.
+>
+> Any reasons why these should not be included in rt2800usb?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e759204..2480bfd 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -106,6 +106,9 @@ struct reg_beacon {
- static void reg_todo(struct work_struct *work);
- static DECLARE_WORK(reg_work, reg_todo);
- 
-+static void reg_timeout_work(struct work_struct *work);
-+static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 5,
-@@ -1330,6 +1333,9 @@ static void reg_set_request_processed(void)
- 		need_more_processing = true;
- 	spin_unlock(&reg_requests_lock);
- 
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+		cancel_delayed_work_sync(&reg_timeout);
-+
- 	if (need_more_processing)
- 		schedule_work(&reg_work);
- }
-@@ -1440,8 +1446,17 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	r = __regulatory_hint(wiphy, reg_request);
- 	/* This is required so that the orig_* parameters are saved */
- 	if (r == -EALREADY && wiphy &&
--	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
- 		wiphy_update_regulatory(wiphy, initiator);
-+		return;
-+	}
-+
-+	/*
-+	 * We only time out user hints, given that they should be the only
-+	 * source of bogus requests.
-+	 */
-+	if (reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
- /*
-@@ -2169,6 +2184,13 @@ out:
- 	mutex_unlock(&reg_mutex);
- }
- 
-+static void reg_timeout_work(struct work_struct *work)
-+{
-+	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, "
-+		      "restoring regulatory settings");
-+	restore_regulatory_settings(true);
-+}
-+
- int __init regulatory_init(void)
- {
- 	int err = 0;
-@@ -2222,6 +2244,7 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	struct reg_beacon *reg_beacon, *btmp;
- 
- 	cancel_work_sync(&reg_work);
-+	cancel_delayed_work_sync(&reg_timeout);
- 
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
--- 
-1.7.4.15.g7811d
+Nope, could you post a patch to add them?
 
+> Please let me know of any objections to removing those two staging drivers.
+
+I would definately welcome the removal of the staging drivers.
+
+Ivo
