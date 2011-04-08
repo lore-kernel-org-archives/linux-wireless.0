@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43431 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754772Ab1DXS5A (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:34805 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756418Ab1DHOyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 14:57:00 -0400
-Received: by bwz15 with SMTP id 15so1250477bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 11:56:58 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 24 Apr 2011 20:41:16 +0200
-Subject: [PATCH] mac80211: fix too early reorder release timer
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Message-Id: <E1QE4UJ-0007nO-Sx@debian64.daheim> (sfid-20110424_205703_781501_E95A3C37)
+	Fri, 8 Apr 2011 10:54:00 -0400
+Message-ID: <4D9F2185.10108@lwfinger.net>
+Date: Fri, 08 Apr 2011 09:53:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Greg Kroah-Hartman <gregkh@suse.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Removal of staging/rt2860sta (and rt2870sta)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The release timer has to expire "just" after a
-frame is up for release. Currently, if the timer
-callback starts on time, the "!time_after" check
-above will start a new timer instead of
-releasing the frames.
+Greg,
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- net/mac80211/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+When I looked again at the removal of rt2860sta from staging, it was quickly 
+obvious that unless rt2870sta was also removed, very little of the code could be 
+removed. As I have no experience with rt2800usb, the mainline driver for that 
+device, I went to the wireless mailing list with the question. There was one 
+objection to the removal, but the maintainers were in favor, thus I will be 
+submitting a patch to delete both drivers.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a864890..599fa90 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -652,7 +652,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
-  set_release_timer:
- 
- 		mod_timer(&tid_agg_rx->reorder_timer,
--			  tid_agg_rx->reorder_time[j] +
-+			  tid_agg_rx->reorder_time[j] + 1 +
- 			  HT_RX_REORDER_BUF_TIMEOUT);
- 	} else {
- 		del_timer(&tid_agg_rx->reorder_timer);
--- 
-1.7.4.4
+I did the changes on my local git tree, committed them, and used 'git 
+format-patch'. I expected that 'git rm' statements would be used to delete the 
+files, but I got normal patch format. As a result, the resulting patch is over 
+2.4 GB, and has over 75,000 lines. Obviously, I'm reluctant to dump a patch of 
+this size on the lists. Is there a way to force git to use "rm" statements, or 
+is there some way to handle this large patch?
+
+Thanks,
+
+Larry
+
 
