@@ -1,337 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757105Ab1DMFxf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:53:35 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:35 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:17715 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754374Ab1DHPye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:54:34 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 08:54:08 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<nbd@openwrt.org>, <helmut.schaa@googlemail.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: [PATCH] {mac|nl}80211: Add station connected time
+Date: Fri, 8 Apr 2011 21:24:24 +0530
+Message-ID: <1302278064-18403-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15087.911814.545439@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:25:59 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 30/40] ath9k_htc: Drain pending TX frames properly
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-When doing a channel set or a reset operation the pending
-frames queued up for transmission have to be flushed and
-sent to mac80211. Fixing this has to be done in two separate
-steps:
+Add station connected time in debugfs. This will be helpful to get a
+measure of stability of the connection and for debugging stress issues
 
-  * Flush queued frames and kill the URB TX completion handler.
-  * Complete all the frames that in the TX pending queue.
-
-This patch adds proper support for draining and all the callsites
-namely, channel change/reset/idle/stop are fixed. A separate queue
-is used for handling failed frames.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c       |   55 +++++++++---------------
- drivers/net/wireless/ath/ath9k/htc.h           |    6 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    8 ++--
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   15 ++++---
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   31 +++++++++++++-
- 6 files changed, 69 insertions(+), 49 deletions(-)
+ include/linux/nl80211.h    |    2 ++
+ include/net/cfg80211.h     |    4 ++++
+ net/mac80211/cfg.c         |    7 ++++++-
+ net/mac80211/debugfs_sta.c |   26 ++++++++++++++++++++++++++
+ net/mac80211/sta_info.c    |    3 +++
+ net/mac80211/sta_info.h    |    2 ++
+ net/wireless/nl80211.c     |    3 +++
+ 7 files changed, 46 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 09b416a..a98b146 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -131,7 +131,19 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 16eea72..ad7fc6b 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1277,6 +1277,7 @@ enum nl80211_sta_bss_param {
+  *	attribute, like NL80211_STA_INFO_TX_BITRATE.
+  * @NL80211_STA_INFO_BSS_PARAM: current station's view of BSS, nested attribute
+  *     containing info as possible, see &enum nl80211_sta_bss_param
++ * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1297,6 +1298,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_SIGNAL_AVG,
+ 	NL80211_STA_INFO_RX_BITRATE,
+ 	NL80211_STA_INFO_BSS_PARAM,
++	NL80211_STA_INFO_CONNECTED_TIME,
  
- 	while ((skb = __skb_dequeue(list)) != NULL) {
- 		dev_kfree_skb_any(skb);
--		TX_STAT_INC(skb_dropped);
-+	}
-+}
-+
-+static inline void ath9k_skb_queue_complete(struct hif_device_usb *hif_dev,
-+					    struct sk_buff_head *queue,
-+					    bool txok)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = __skb_dequeue(queue)) != NULL) {
-+		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
-+					  skb, txok);
-+		(txok) ? TX_STAT_INC(skb_success) : TX_STAT_INC(skb_failed);
- 	}
- }
- 
-@@ -139,7 +151,7 @@ static void hif_usb_tx_cb(struct urb *urb)
- {
- 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
- 	struct hif_device_usb *hif_dev;
--	struct sk_buff *skb;
-+	bool txok = true;
- 
- 	if (!tx_buf || !tx_buf->hif_dev)
- 		return;
-@@ -153,10 +165,7 @@ static void hif_usb_tx_cb(struct urb *urb)
- 	case -ECONNRESET:
- 	case -ENODEV:
- 	case -ESHUTDOWN:
--		/*
--		 * The URB has been killed, free the SKBs.
--		 */
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
-+		txok = false;
- 
- 		/*
- 		 * If the URBs are being flushed, no need to add this
-@@ -165,41 +174,19 @@ static void hif_usb_tx_cb(struct urb *urb)
- 		spin_lock(&hif_dev->tx.tx_lock);
- 		if (hif_dev->tx.flags & HIF_USB_TX_FLUSH) {
- 			spin_unlock(&hif_dev->tx.tx_lock);
-+			ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
- 			return;
- 		}
- 		spin_unlock(&hif_dev->tx.tx_lock);
- 
--		/*
--		 * In the stop() case, this URB has to be added to
--		 * the free list.
--		 */
--		goto add_free;
-+		break;
- 	default:
-+		txok = false;
- 		break;
- 	}
- 
--	/*
--	 * Check if TX has been stopped, this is needed because
--	 * this CB could have been invoked just after the TX lock
--	 * was released in hif_stop() and kill_urb() hasn't been
--	 * called yet.
--	 */
--	spin_lock(&hif_dev->tx.tx_lock);
--	if (hif_dev->tx.flags & HIF_USB_TX_STOP) {
--		spin_unlock(&hif_dev->tx.tx_lock);
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
--		goto add_free;
--	}
--	spin_unlock(&hif_dev->tx.tx_lock);
--
--	/* Complete the queued SKBs. */
--	while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
--		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
--					  skb, 1);
--		TX_STAT_INC(skb_completed);
--	}
-+	ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, txok);
- 
--add_free:
- 	/* Re-initialize the SKB queue */
- 	tx_buf->len = tx_buf->offset = 0;
- 	__skb_queue_head_init(&tx_buf->skb_queue);
-@@ -272,7 +259,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
- 	ret = usb_submit_urb(tx_buf->urb, GFP_ATOMIC);
- 	if (ret) {
- 		tx_buf->len = tx_buf->offset = 0;
--		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
-+		ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, false);
- 		__skb_queue_head_init(&tx_buf->skb_queue);
- 		list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
- 		hif_dev->tx.tx_buf_cnt++;
-@@ -342,7 +329,7 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
--	ath9k_skb_queue_purge(hif_dev, &hif_dev->tx.tx_skb_queue);
-+	ath9k_skb_queue_complete(hif_dev, &hif_dev->tx.tx_skb_queue, false);
- 	hif_dev->tx.tx_skb_cnt = 0;
- 	hif_dev->tx.flags |= HIF_USB_TX_STOP;
- 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 45cf755..0d2e2b1 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -271,6 +271,7 @@ struct ath9k_htc_tx {
- 	u8 flags;
- 	int queued_cnt;
- 	struct sk_buff_head tx_queue;
-+	struct sk_buff_head tx_failed;
- 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
- 	spinlock_t tx_lock;
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ba7384a..0253d50 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -423,6 +423,7 @@ struct station_parameters {
+  * @STATION_INFO_SIGNAL_AVG: @signal_avg filled
+  * @STATION_INFO_RX_BITRATE: @rxrate fields are filled
+  * @STATION_INFO_BSS_PARAM: @bss_param filled
++ * @STATION_INFO_CONNECTED_TIME: @connected_time filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -441,6 +442,7 @@ enum station_info_flags {
+ 	STATION_INFO_SIGNAL_AVG		= 1<<13,
+ 	STATION_INFO_RX_BITRATE		= 1<<14,
+ 	STATION_INFO_BSS_PARAM          = 1<<15,
++	STATION_INFO_CONNECTED_TIME	= 1<<16
  };
-@@ -305,8 +306,8 @@ struct ath_tx_stats {
- 	u32 buf_queued;
- 	u32 buf_completed;
- 	u32 skb_queued;
--	u32 skb_completed;
--	u32 skb_dropped;
-+	u32 skb_success;
-+	u32 skb_failed;
- 	u32 cab_queued;
- 	u32 queue_stats[WME_NUM_AC];
- };
-@@ -544,6 +545,7 @@ void ath9k_htc_check_stop_queues(struct ath9k_htc_priv *priv);
- void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv);
- int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv);
- void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
-+void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
  
- int ath9k_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 6fc6cb7..91a486c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -88,11 +88,11 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 			"%20s : %10u\n", "SKBs queued",
- 			priv->debug.tx_stats.skb_queued);
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"%20s : %10u\n", "SKBs completed",
--			priv->debug.tx_stats.skb_completed);
-+			"%20s : %10u\n", "SKBs success",
-+			priv->debug.tx_stats.skb_success);
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"%20s : %10u\n", "SKBs dropped",
--			priv->debug.tx_stats.skb_dropped);
-+			"%20s : %10u\n", "SKBs failed",
-+			priv->debug.tx_stats.skb_failed);
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "CAB queued",
- 			priv->debug.tx_stats.cab_queued);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 92e4b31..dc0b33d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -429,9 +429,8 @@ void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+ /**
+@@ -511,6 +513,7 @@ struct sta_bss_parameters {
+  * Station information filled by driver for get_station() and dump_station.
+  *
+  * @filled: bitflag of flags from &enum station_info_flags
++ * @connected_time: time(in secs) since a station is last connected
+  * @inactive_time: time since last station activity (tx/rx) in milliseconds
+  * @rx_bytes: bytes received from this station
+  * @tx_bytes: bytes transmitted to this station
+@@ -533,6 +536,7 @@ struct sta_bss_parameters {
+  */
+ struct station_info {
+ 	u32 filled;
++	u32 connected_time;
+ 	u32 inactive_time;
+ 	u32 rx_bytes;
+ 	u32 tx_bytes;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index bf5d28d..de2d626 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -330,6 +330,7 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct timespec uptime;
  
- 	/* Stop TX */
- 	ieee80211_stop_queues(hw);
--	htc_stop(priv->htc);
-+	ath9k_htc_tx_drain(priv);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
--	skb_queue_purge(&priv->tx.tx_queue);
+ 	sinfo->generation = sdata->local->sta_generation;
  
- 	/* Stop RX */
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index c7e056b..fb9ff11 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -193,7 +193,9 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 
- 	ath9k_htc_stop_ani(priv);
- 	ieee80211_stop_queues(priv->hw);
--	htc_stop(priv->htc);
+@@ -343,7 +344,11 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			STATION_INFO_TX_BITRATE |
+ 			STATION_INFO_RX_BITRATE |
+ 			STATION_INFO_RX_DROP_MISC |
+-			STATION_INFO_BSS_PARAM;
++			STATION_INFO_BSS_PARAM |
++			STATION_INFO_CONNECTED_TIME;
 +
-+	ath9k_htc_tx_drain(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-@@ -248,7 +250,9 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
++	do_posix_clock_monotonic_gettime(&uptime);
++	sinfo->connected_time = uptime.tv_sec - sta->last_connected;
  
- 	ath9k_htc_ps_wakeup(priv);
--	htc_stop(priv->htc);
-+
-+	ath9k_htc_tx_drain(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-@@ -263,6 +267,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 
- 	if (!fastcc)
- 		caldata = &priv->caldata;
-+
- 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
- 	if (ret) {
- 		ath_err(common,
-@@ -960,16 +965,14 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	}
- 
- 	ath9k_htc_ps_wakeup(priv);
--	htc_stop(priv->htc);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
- 
- 	tasklet_kill(&priv->rx_tasklet);
--	tasklet_kill(&priv->tx_tasklet);
--
--	skb_queue_purge(&priv->tx.tx_queue);
- 
-+	ath9k_htc_tx_drain(priv);
- 	ath9k_wmi_event_drain(priv);
- 
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 944440c..9e0c34b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -423,6 +423,26 @@ send_mac80211:
- 	ieee80211_tx_status(priv->hw, skb);
+ 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes = sta->rx_bytes;
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index c04a139..c008232 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -92,6 +92,31 @@ static ssize_t sta_inactive_ms_read(struct file *file, char __user *userbuf,
  }
+ STA_OPS(inactive_ms);
  
-+void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
++
++static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
++					size_t count, loff_t *ppos)
 +{
-+	struct sk_buff *skb = NULL;
-+
-+	/*
-+	 * Ensure that all pending TX frames are flushed,
-+	 * and that the TX completion tasklet is killed.
-+	 */
-+	htc_stop(priv->htc);
-+	tasklet_kill(&priv->tx_tasklet);
-+
-+	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
-+
-+	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
++	struct sta_info *sta = file->private_data;
++	struct timespec uptime;
++	struct tm result;
++	long connected_time_secs;
++	char buf[100];
++	int res;
++	do_posix_clock_monotonic_gettime(&uptime);
++	connected_time_secs = uptime.tv_sec - sta->last_connected;
++	time_to_tm(connected_time_secs, 0, &result);
++	result.tm_year -= 70;
++	result.tm_mday -= 1;
++	res = scnprintf(buf, sizeof(buf),
++		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
++			result.tm_year, result.tm_mon, result.tm_mday,
++			result.tm_hour, result.tm_min, result.tm_sec);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
 +}
++STA_OPS(connected_time);
 +
- void ath9k_tx_tasklet(unsigned long data)
++
++
+ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
+ 				      size_t count, loff_t *ppos)
  {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-@@ -432,6 +452,10 @@ void ath9k_tx_tasklet(unsigned long data)
- 		ath9k_htc_tx_process(priv, skb);
- 	}
- 
-+	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
-+		ath9k_htc_tx_process(priv, skb);
-+	}
-+
- 	/* Wake TX queues if needed */
- 	ath9k_htc_check_wake_queues(priv);
- }
-@@ -445,13 +469,18 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 	tx_ctl = HTC_SKB_CB(skb);
- 	tx_ctl->txok = txok;
- 
--	skb_queue_tail(&priv->tx.tx_queue, skb);
-+	if (txok)
-+		skb_queue_tail(&priv->tx.tx_queue, skb);
-+	else
-+		skb_queue_tail(&priv->tx.tx_failed, skb);
-+
- 	tasklet_schedule(&priv->tx_tasklet);
- }
- 
- int ath9k_tx_init(struct ath9k_htc_priv *priv)
+@@ -324,6 +349,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(flags);
+ 	DEBUGFS_ADD(num_ps_buf_frames);
+ 	DEBUGFS_ADD(inactive_ms);
++	DEBUGFS_ADD(connected_time);
+ 	DEBUGFS_ADD(last_seq_ctrl);
+ 	DEBUGFS_ADD(agg_status);
+ 	DEBUGFS_ADD(dev);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 999f8fb..8a9068a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -228,6 +228,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
  {
- 	skb_queue_head_init(&priv->tx.tx_queue);
-+	skb_queue_head_init(&priv->tx.tx_failed);
- 	return 0;
- }
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
++	struct timespec uptime;
+ 	int i;
  
+ 	sta = kzalloc(sizeof(*sta) + local->hw.sta_data_size, gfp);
+@@ -245,6 +246,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	sta->sdata = sdata;
+ 	sta->last_rx = jiffies;
+ 
++	do_posix_clock_monotonic_gettime(&uptime);
++	sta->last_connected = uptime.tv_sec;
+ 	ewma_init(&sta->avg_signal, 1024, 8);
+ 
+ 	if (sta_prepare_rate_control(local, sta, gfp)) {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 43238e9..984a03d 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -226,6 +226,7 @@ enum plink_state {
+  * @rx_bytes: Number of bytes received from this STA
+  * @wep_weak_iv_count: number of weak WEP IVs received from this station
+  * @last_rx: time (in jiffies) when last frame was received from this STA
++ * @last_connected: time (in seconds) when a station got connected
+  * @num_duplicates: number of duplicate frames received from this STA
+  * @rx_fragments: number of received MPDUs
+  * @rx_dropped: number of dropped MPDUs from this STA
+@@ -295,6 +296,7 @@ struct sta_info {
+ 	unsigned long rx_packets, rx_bytes;
+ 	unsigned long wep_weak_iv_count;
+ 	unsigned long last_rx;
++	long last_connected;
+ 	unsigned long num_duplicates;
+ 	unsigned long rx_fragments;
+ 	unsigned long rx_dropped;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 297d7ce..bf0ab93 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2016,6 +2016,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 	sinfoattr = nla_nest_start(msg, NL80211_ATTR_STA_INFO);
+ 	if (!sinfoattr)
+ 		goto nla_put_failure;
++	if (sinfo->filled & STATION_INFO_CONNECTED_TIME)
++		NLA_PUT_U32(msg, NL80211_STA_INFO_CONNECTED_TIME,
++			    sinfo->connected_time);
+ 	if (sinfo->filled & STATION_INFO_INACTIVE_TIME)
+ 		NLA_PUT_U32(msg, NL80211_STA_INFO_INACTIVE_TIME,
+ 			    sinfo->inactive_time);
 -- 
-1.7.4.4
+1.7.0.4
 
