@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38027 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440Ab1DIADE convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:56266 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1DHJPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 20:03:04 -0400
-MIME-Version: 1.0
-In-Reply-To: <1302292554.1664.12.camel@Joe-Laptop>
-References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-	<1302290881.1664.7.camel@Joe-Laptop>
-	<BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
-	<1302292554.1664.12.camel@Joe-Laptop>
-Date: Sat, 9 Apr 2011 02:03:03 +0200
-Message-ID: <BANLkTimQBAHgFaH0RVCOYBGSKuHN2Dprmw@mail.gmail.com>
-Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Apr 2011 05:15:19 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: interrupt handling changes
+Date: Fri,  8 Apr 2011 14:00:49 +0530
+Message-Id: <1302251449-763-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Joe Perches <joe@perches.com>:
-> On Fri, 2011-04-08 at 21:46 +0200, Rafał Miłecki wrote:
->> 2011/4/8 Joe Perches <joe@perches.com>:
->> > On Fri, 2011-04-08 at 21:45 +0200, Rafał Miłecki wrote:
->> >> diff --git a/include/linux/axi/axi.h b/include/linux/axi/axi.h
->> > []
->> >> +#define axi_info     pr_info
->> >> +#ifdef CONFIG_AXI_DEBUG
->> >> +#define axi_debug    pr_debug
->> >> +#else
->> >> +#define axi_debug    do { } while (0)
->> >> +#endif
->> >> +#define axi_err              pr_err
->> >
->> > I think redefining standard functionality like
->> > this doesn't gain anything and loses some basic
->> > grep capability.
->>
->> But on the other hand using:
->> pr_info, pr_err, BUT axi_debug
->> can easily lead to mistakes.
->>
->> Or is this possible to re-define pr_debug locally?
->
-> It is, but is that CONFIG_AXI_DEBUG actually
-> worthwhile?
->
-> If you think so, doesn't adding this to the Makefile
-> give you the same capability?
->
-> ccflags-$(CONFIG_CONFIG_AXI_DEBUG) := -DDEBUG
+We do not need to enable all the interrupts in mwl8k_probe_hw.
+We need to enable only MWL8K_A2H_INT_OPC_DONE interrupt for sending
+commands to the firmware. Keep the other interrupts masked in
+mwl8k_probe_hw. Also, in mwl8k_start, where we expect other interrupts,
+enable only those interrupts we are interested in.
 
-But pr_debug does not depend on DEBUG define:
-http://lxr.free-electrons.com/source/tools/perf/util/include/linux/kernel.h#L94
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-How do you expect -DDEBUG to affect pr_debug? Could you explain this
-to me, please?
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 8913180..07e8134 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -4285,6 +4285,8 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 
+ 	/* Enable interrupts */
+ 	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
++	iowrite32(MWL8K_A2H_EVENTS,
++		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+ 
+ 	rc = mwl8k_fw_lock(hw);
+ 	if (!rc) {
+@@ -5283,7 +5285,8 @@ static int mwl8k_probe_hw(struct ieee80211_hw *hw)
+ 	iowrite32(MWL8K_A2H_INT_TX_DONE|MWL8K_A2H_INT_RX_READY|
+ 		  MWL8K_A2H_INT_BA_WATCHDOG,
+ 		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_CLEAR_SEL);
+-	iowrite32(0xffffffff, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
++	iowrite32(MWL8K_A2H_INT_OPC_DONE,
++		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+ 
+ 	rc = request_irq(priv->pdev->irq, mwl8k_interrupt,
+ 			 IRQF_SHARED, MWL8K_NAME, hw);
 -- 
-Rafał
+1.6.0.3
+
