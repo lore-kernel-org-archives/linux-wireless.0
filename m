@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35045 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756320Ab1DFSku (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:42171 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757265Ab1DHAla convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:40:50 -0400
-Received: by bwz15 with SMTP id 15so1395816bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:40:48 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com
-Subject: [PATCH -stable] ath: add missing regdomain pair 0x5c mapping
-Date: Wed, 6 Apr 2011 20:40:31 +0200
-Cc: Joe Culler <joe.culler@gmail.com>, linux-wireless@vger.kernel.org
-References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com> <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com> <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
-In-Reply-To: <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
+	Thu, 7 Apr 2011 20:41:30 -0400
+Received: by pwi15 with SMTP id 15so1077460pwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 17:41:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104062040.31950.chunkeey@googlemail.com>
+In-Reply-To: <201104061423.02484.chunkeey@googlemail.com>
+References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
+	<201104061423.02484.chunkeey@googlemail.com>
+Date: Fri, 8 Apr 2011 08:41:29 +0800
+Message-ID: <BANLkTikz5PpnT0BAR==CosWApBGWLUE-9A@mail.gmail.com>
+Subject: Re: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
+From: Joe Culler <joe.culler@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Green <michael.green@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	David Quan <david.quan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Culler reported a problem with his AR9170 device:
+Hello Christian,
 
-> ath: EEPROM regdomain: 0x5c
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: invalid regulatory domain/country code 0x5c
-> ath: Invalid EEPROM contents
+Your patch works for me, thanks.
+Tested-by: Joe Culler
 
-It turned out that the regdomain 'APL7_FCCA' was not mapped yet.
-According to Luis R. Rodriguez [Atheros' engineer] APL7 maps to
-FCC_CTL and FCCA maps to FCC_CTL as well, so the attached patch
-should be correct.
-
-Cc: <stable@kernel.org>
-Reported-by: Joe Culler <joe.culler@gmail.com>
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Joe,
-
-does this patch fix your problem? If so, can you please
-reply with a "tested-by:" tag?
-
-Regards,
-	Christian
----
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 248c670..5c2cfe6 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
- 	{APL9_WORLD, CTL_ETSI, CTL_ETSI},
- 
- 	{APL3_FCCA, CTL_FCC, CTL_FCC},
-+	{APL7_FCCA, CTL_FCC, CTL_FCC},
- 	{APL1_ETSIC, CTL_FCC, CTL_ETSI},
- 	{APL2_ETSIC, CTL_FCC, CTL_ETSI},
- 	{APL2_APLD, CTL_FCC, NO_CTL},
+On Wed, Apr 6, 2011 at 8:23 PM, Christian Lamparter wrote:
+> On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
+>> [...]
+>> I have a problem with carl9170 driver with my d-link dwa-160 under
+>> linux-2.6.39-rc1.
+>> Here's the dmesg:
+>
+>> [ 3114.257063] ath: EEPROM regdomain: 0x5c
+>> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
+>> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
+>> [ 3114.257071] ath: Invalid EEPROM contents
+> clearly, the regdomain code 0x5c is not defined in the
+> drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
+>
+> this would be easy to fix [see attached patch], however I'm
+> not quite sure what to do about the 5GHz band in this case,
+> since the CTL_FCC is more restrictive than it should be.
+>
+> Regards,
+>        Chr
+>
+> ---
+> diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+> index 248c670..5c2cfe6 100644
+> --- a/drivers/net/wireless/ath/regd_common.h
+> +++ b/drivers/net/wireless/ath/regd_common.h
+> @@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+>        {APL9_WORLD, CTL_ETSI, CTL_ETSI},
+>
+>        {APL3_FCCA, CTL_FCC, CTL_FCC},
+> +       {APL7_FCCA, CTL_FCC, CTL_FCC},
+>        {APL1_ETSIC, CTL_FCC, CTL_ETSI},
+>        {APL2_ETSIC, CTL_FCC, CTL_ETSI},
+>        {APL2_APLD, CTL_FCC, NO_CTL},
+>
+>
+>
