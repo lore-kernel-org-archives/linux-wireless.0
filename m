@@ -1,114 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53867 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab1DZIjo convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:55484 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752191Ab1DHRjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 04:39:44 -0400
-Received: by bwz15 with SMTP id 15so317828bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 01:39:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1303800793.2336.25.camel@cumari>
-References: <1302774475-2977-1-git-send-email-eliad@wizery.com>
-	<1303800793.2336.25.camel@cumari>
-Date: Tue, 26 Apr 2011 11:39:42 +0300
-Message-ID: <BANLkTinN2jZdqeCPi6R+tCoF=318UJ_qyQ@mail.gmail.com> (sfid-20110426_103948_315276_6104690D)
-Subject: Re: [PATCH V2 1/2] wl12xx: consider encryption when configuring auto
- arp template
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
+	Fri, 8 Apr 2011 13:39:07 -0400
+Received: by mail-qw0-f41.google.com with SMTP id 26so2957157qwa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 10:39:06 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: use 2 spare TX blocks for GEM cipher
+From: Luciano Coelho <coelho@ti.com>
+To: Guy Eilam <guy@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1301834245-16679-1-git-send-email-guy@wizery.com>
+References: <1301834245-16679-1-git-send-email-guy@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Apr 2011 10:38:58 -0700
+Message-ID: <1302284338.2031.21.camel@pimenta>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Luca,
+On Sun, 2011-04-03 at 15:37 +0300, Guy Eilam wrote:
+> Add tx_spare_blocks member to the wl1271 struct
+> for more generic configuration of the amount
+> of spare TX blocks that should be used.
+> The default value is 1.
+> in case GEM cipher is used by the STA, we need
+> 2 spare TX blocks instead of just 1.
+> 
+> Signed-off-by: Guy Eilam <guy@wizery.com>
+> ---
 
-On Tue, Apr 26, 2011 at 9:53 AM, Luciano Coelho <coelho@ti.com> wrote:
-> On Thu, 2011-04-14 at 12:47 +0300, Eliad Peller wrote:
->> When configuring the arp response template, and encryption is enabled,
->> we should add some space and set the protected flag bit in the fc.
->>
->> In order to track the encryption type, set wl->encryption_type when
->> setting an encryption key, and reconfigure the arp response.
->> Clear this field on wl1271_join, as keys have to be re-configured
->> anyway after a join command.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> A couple of style comments.
-> [...]
->
->> +     skb_reserve(skb, sizeof(*hdr) + 8);
->
-> What's 8? Maybe it would be better to make it clear with something like
-> WL1271_EXTRA_SPACE_MAX?
->
-sure.
+Looks good, but I have a couple of comments.
 
->
->> @@ -771,12 +773,41 @@ int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr)
->>       arp_hdr->ar_op = cpu_to_be16(ARPOP_REPLY);
->>
->>       /* arp payload */
->> -     memcpy(tmpl.sender_hw, wl->vif->addr, ETH_ALEN);
->> -     tmpl.sender_ip = ip_addr;
->> +     memcpy(tmpl->sender_hw, wl->vif->addr, ETH_ALEN);
->> +     tmpl->sender_ip = ip_addr;
->> +
->> +     /* encryption space */
->> +     switch (wl->encryption_type) {
->> +     case KEY_TKIP:
->> +             extra = WL1271_TKIP_IV_SPACE;
->> +             break;
->> +     case KEY_AES:
->> +             extra = 8;
->> +             break;
->> +     }
->
-> It would be nicer to have WL1271_EXTRA_SPACE_AES here instead.  And
-> maybe rename the WL1271_TKIP_IV_SPACE to WL1271_EXTRA_SPACE_TKIP, to
-> make it consistent and clearer?
->
-WL1271_TKIP_IV_SPACE is already being used in tx.c.
-It's a bit tricky, as while we use the WL1271_TKIP_IV_SPACE (or
-WL1271_EXTRA_SPACE_TKIP) in our tx path, we won't use
-WL1271_EXTRA_SPACE_AES in the tx path, because we set the
-IEEE80211_KEY_FLAG_GENERATE_IV for the key.
-anyway, i'll just add it :)
 
-> Maybe we should also complete the switch and explicitly set extra to
-> zero for KEY_NONE, KEY_WEP, KEY_GEM and default?
->
->
->> @@ -2734,6 +2748,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
->>
->>               if (bss_conf->arp_addr_cnt == 1 &&
->>                   bss_conf->arp_filter_enabled) {
->> +                     wl->ip_addr = addr;
->>                       /*
->>                        * The template should have been configured only upon
->>                        * association. however, it seems that the correct ip
->> @@ -2749,8 +2764,10 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
->>                       ret = wl1271_acx_arp_ip_filter(wl,
->>                               ACX_ARP_FILTER_ARP_FILTERING,
->>                               addr);
->> -             } else
->> +             } else {
->> +                     wl->ip_addr = 0;
->>                       ret = wl1271_acx_arp_ip_filter(wl, 0, addr);
->> +             }
->
-> This is not important at all, but maybe it's a bit cleaner: you could
-> remove the addr argument in wl1271_acx_arp_ip_filter() and always use
-> wl->ip_addr instead? You could then also get rid of the local addr here.
->
-in fact, since we are going toward multi-role fw, i do try to avoid
-using the global wl struct as much as possible.
-anyway, i didn't change this function, so i don't think it's the right
-patch to change it.
-(we should probably change a lot of functions after we'll have a
-per-interface data)
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 85cb4da..f962e43 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
 
-thanks for the review,
-Eliad.
+[..]
+
+> @@ -2039,6 +2043,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+>  			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+>  		};
+>  
+> +		/*
+> +		 * A STA set to GEM cipher requires 2 tx spare blocks.
+> +		 * Return to default value when GEM cipher key is removed
+> +		 */
+> +		if (key_type == KEY_GEM) {
+> +			if (action == KEY_ADD_OR_REPLACE)
+> +				wl->tx_spare_blocks = 2;
+> +			else
+> +				wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+> +		}
+> +
+
+This won't make a real difference in the code flow, but wouldn't it be
+better to make it explicit that the "else" case is KEY_REMOVE? There is
+also KEY_SET_ID, which is only used with WEP, so it doesn't matter now.
+But I think it's more consistent to be clear about it.
+
+
+
+> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+> index db9e47e..2c79b6e 100644
+> --- a/drivers/net/wireless/wl12xx/tx.c
+> +++ b/drivers/net/wireless/wl12xx/tx.c
+> @@ -135,12 +135,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+>  	u32 len;
+>  	u32 total_blocks;
+>  	int id, ret = -EBUSY;
+> -	u32 spare_blocks;
+> +	u32 spare_blocks = wl->tx_spare_blocks;
+>  
+>  	if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
+>  		spare_blocks = 2;
+> -	else
+> -		spare_blocks = 1;
+
+Do we still need the quirk now? Wouldn't it be nicer to change the
+wl->tx_spare_blocks value directly instead?
+
+
+-- 
+Cheers,
+Luca.
+
