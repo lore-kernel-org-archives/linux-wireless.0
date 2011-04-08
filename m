@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:41410 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:36723 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581Ab1DVL5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 07:57:10 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Apr 2011 04:56:43 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Add TSFOOR interrupt stats in debug info
-Date: Fri, 22 Apr 2011 17:27:01 +0530
-Message-ID: <1303473421-2899-1-git-send-email-mshajakhan@atheros.com>
+	id S1756962Ab1DHSAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 14:00:46 -0400
+Message-ID: <4D9F4D49.5060300@openwrt.org>
+Date: Fri, 08 Apr 2011 20:00:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 2.6.39 v2] ath9k_hw: fix stopping rx DMA during resets
+References: <4D9EFA5F.3040900@openwrt.org> <20110408171747.GA2550@tuxdriver.com>
+In-Reply-To: <20110408171747.GA2550@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On 2011-04-08 7:17 PM, John W. Linville wrote:
+> On Fri, Apr 08, 2011 at 02:06:55PM +0200, Felix Fietkau wrote:
+>>  During PHY errors, the MAC can sometimes fail to enter an idle state on older
+>>  hardware (before AR9380) after an rx stop has been requested.
+>>
+>>  This typically shows up in the kernel log with messages like these:
+>>
+>>  ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+>>  ------------[ cut here ]------------
+>>  WARNING: at drivers/net/wireless/ath/ath9k/recv.c:504 ath_stoprecv+0xcc/0xf0 [ath9k]()
+>>  Call Trace:
+>>  [<8023f0e8>] dump_stack+0x8/0x34
+>>  [<80075050>] warn_slowpath_common+0x78/0xa4
+>>  [<80075094>] warn_slowpath_null+0x18/0x24
+>>  [<80d66d60>] ath_stoprecv+0xcc/0xf0 [ath9k]
+>>  [<80d642cc>] ath_set_channel+0xbc/0x270 [ath9k]
+>>  [<80d65254>] ath_radio_disable+0x4a4/0x7fc [ath9k]
+>>
+>>  When this happens, the state that the MAC enters is easy to identify and
+>>  does not result in bogus DMA traffic, however to ensure a working state
+>>  after a channel change, the hardware should still be reset.
+>>
+>>  This patch adds detection for this specific MAC state, after which the above
+>>  warnings completely disappear in my tests.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  Cc: stable@kernel.org
+>>  Cc: Kyungwan Nam<Kyungwan.Nam@Atheros.com>
+>>
+>>  ---
+>>  v2: remove a redundant ath9k_hw_stopdmarecv call, print the MAC DMA state when the error still occurs
+>>
+>>   drivers/net/wireless/ath/ath9k/hw.c   |    9 ---------
+>>   drivers/net/wireless/ath/ath9k/mac.c  |   25 ++++++++++++++++++++++---
+>>   drivers/net/wireless/ath/ath9k/mac.h  |    2 +-
+>>   drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+>>   4 files changed, 26 insertions(+), 16 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>>  index 1b5bd13..c8a2d0d 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/hw.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>>  @@ -1249,15 +1249,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+>>   	ah->txchainmask = common->tx_chainmask;
+>>   	ah->rxchainmask = common->rx_chainmask;
+>>   -	if ((common->bus_ops->ath_bus_type != ATH_USB)&&  !ah->chip_fullsleep) {
+>
+> This patch seems a bit busted...?  I tried to fix it up manually but
+> the errors just keep coming...
+Hm, you're right. No idea what my email client did there. I'll resend...
 
-This helped the developers to fix an issue of chip not entering network
-sleep during idle state, previously this was only available as a debug
-message
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    5 +++++
- drivers/net/wireless/ath/ath9k/debug.h |    4 ++++
- 2 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 34f191e..bad1a87 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -326,6 +326,8 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
- 		sc->debug.stats.istats.dtimsync++;
- 	if (status & ATH9K_INT_DTIM)
- 		sc->debug.stats.istats.dtim++;
-+	if (status & ATH9K_INT_TSFOOR)
-+		sc->debug.stats.istats.tsfoor++;
- }
- 
- static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
-@@ -380,8 +382,11 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 		"%8s: %10u\n", "DTIM", sc->debug.stats.istats.dtim);
- 	len += snprintf(buf + len, sizeof(buf) - len,
-+		"%8s: %10u\n", "TSFOOR", sc->debug.stats.istats.tsfoor);
-+	len += snprintf(buf + len, sizeof(buf) - len,
- 		"%8s: %10u\n", "TOTAL", sc->debug.stats.istats.total);
- 
-+
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 1f9f8ea..5488a32 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -54,6 +54,9 @@ struct ath_buf;
-  * @dtimsync: DTIM sync lossage
-  * @dtim: RX Beacon with DTIM
-  * @bb_watchdog: Baseband watchdog
-+ * @tsfoor: TSF out of range, indicates that the corrected TSF received
-+ * from a beacon differs from the PCU's internal TSF by more than a
-+ * (programmable) threshold
-  */
- struct ath_interrupt_stats {
- 	u32 total;
-@@ -78,6 +81,7 @@ struct ath_interrupt_stats {
- 	u32 dtimsync;
- 	u32 dtim;
- 	u32 bb_watchdog;
-+	u32 tsfoor;
- };
- 
- /**
--- 
-1.7.0.4
-
+- Felix
