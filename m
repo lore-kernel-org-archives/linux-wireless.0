@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47134 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756890Ab1DGU16 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:49800 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550Ab1DHRb6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 16:27:58 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so1931585fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 13:27:57 -0700 (PDT)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: Dan Williams <dcbw@redhat.com>,
+	Fri, 8 Apr 2011 13:31:58 -0400
+MIME-Version: 1.0
+In-Reply-To: <op.vtmqujir3ri7v4@arend-laptop>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
+	<op.vtmqm7fw3ri7v4@arend-laptop>
+	<BANLkTimy8LEqBqeJQD5SY=e8ZgEy8pRVHw@mail.gmail.com>
+	<op.vtmqujir3ri7v4@arend-laptop>
+Date: Fri, 8 Apr 2011 19:31:56 +0200
+Message-ID: <BANLkTina48Z_BfHopVELJrnWt4bBDfE6PA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	anarsoul@gmail.com
-Subject: [PATCH RFC 1/3] libertas_spi: cancel packet work on module removal
-Date: Thu,  7 Apr 2011 23:25:58 +0300
-Message-Id: <1302207960-28536-2-git-send-email-anarsoul@gmail.com>
-In-Reply-To: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
-References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
----
- drivers/net/wireless/libertas/if_spi.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+2011/4/8 Arend van Spriel <arend@broadcom.com>:
+> On Fri, 08 Apr 2011 19:27:11 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> OK, thanks. I'm compiling kernel with patch V2 right now. Of course
+>> class included.
+>>
+>
+> Great. I tried to apply you patch on my kernel tree but it did not apply.
+> Which tree are you using. linux-next, wireless-next?
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 078ef43..d893560 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -1195,6 +1195,7 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 	lbs_remove_card(priv); /* will call free_netdev */
- 
- 	free_irq(spi->irq, card);
-+	cancel_work_sync(&card->packet_work);
- 	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
- 	if (card->pdata->teardown)
+I'm using few days old wireless-testing. However, I've not idea how it
+could not apply. That are mostly new files, we do not modify much of
+current kernel code. Where did it fail to apply?
+
 -- 
-1.7.4.1
-
+Rafał
