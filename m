@@ -1,29 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:49535 "EHLO purkki.adurom.net"
+Received: from mga02.intel.com ([134.134.136.20]:50845 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754362Ab1DMLFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 07:05:22 -0400
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 02/22] ath9k_hw: Take care of few host interface register changes for AR9340
-References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
-	<1302613042-1754-3-git-send-email-vasanth@atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 13 Apr 2011 14:05:19 +0300
-In-Reply-To: <1302613042-1754-3-git-send-email-vasanth@atheros.com> (Vasanthakumar Thiagarajan's message of "Tue\, 12 Apr 2011 18\:27\:02 +0530")
-Message-ID: <87sjtml8cw.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1757397Ab1DHPuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:13 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/16] iwlagn: remove more reference to legacy devices
+Date: Fri,  8 Apr 2011 08:30:29 -0700
+Message-Id: <1302276636-12802-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vasanth@atheros.com> writes:
+Remove the reference to both 3945 and 4965 in LED code
 
-> -#define AR_WA                		0x4004
-> +#define AR_WA			(AR_SREV_9340(ah) ? 0x40c4 : 0x4004)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-led.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-So now allthe macros require this ah variable? That's confusing as
-that's not visible when using the macro.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index c2862d4..0d90004 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -63,8 +63,8 @@ static const struct ieee80211_tpt_blink iwl_blink[] = {
+ 
+ /*
+  * Adjust led blink rate to compensate on a MAC Clock difference on every HW
+- * Led blink rate analysis showed an average deviation of 0% on 3945,
+- * 5% on 4965 HW and 20% on 5000 series and up.
++ * Led blink rate analysis showed an average deviation of 20% on 5000 series
++ * and up.
+  * Need to compensate on the led on/off time per HW according to the deviation
+  * to achieve the desired led frequency
+  * The calculation is: (100-averageDeviation)/100 * blinkTime
 -- 
-Kalle Valo
+1.7.0.4
+
