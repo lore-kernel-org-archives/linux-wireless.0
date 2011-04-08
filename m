@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:38352 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758299Ab1DAQrh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:47:37 -0400
-Received: by ewy19 with SMTP id 19so1127173ewy.3
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:47:35 -0700 (PDT)
-Subject: Re: [PATCH 2.6.40] wl12xx: fix potential buffer overflow in
- testmode nvs push
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1301676400-4912-1-git-send-email-coelho@ti.com>
-References: <1301676400-4912-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 19:48:14 +0300
-Message-ID: <1301676494.1988.492.camel@cumari>
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1928 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752580Ab1DHOvb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 10:51:31 -0400
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: dwmw2@infradead.org
+cc: henryp@broadcom.com, brudley@broadcom.com, rvossen@broadcom.com,
+	arend@broadcom.com, linux-wireless@vger.kernel.org,
+	devel@linuxdriverproject.org
+Subject: [PATCH 2/3] linux-firmware: Removed codeversion from brcm
+ firmware filenames.
+Date: Fri, 8 Apr 2011 07:51:13 -0700
+Message-ID: <1302274274-2534-2-git-send-email-henryp@broadcom.com>
+In-Reply-To: <20110407211521.GA3252@broadcom.com>
+References: <20110407211521.GA3252@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 19:46 +0300, Luciano Coelho wrote:
-> We were allocating the size of the NVS file according to the chip ID
-> and not checking whether the length of the buffer passed was correct
-> before copying it into the allocated memory.  This is a security hole
-> because buffer overflows can occur if the userspace passes a bigger
-> file than what is expected.
-> 
-> With this patch, we check if the size of the data passed from
-> userspace matches the size required by the chip.
-> 
-> Reported-by: Ido Yariv <ido@wizery.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+The basename-apiversion-codeversion construction for firmware filenames is not
+used by most other firmware files, adds complexity, and is not providing any
+value.  Renamed the firmware files using just basename-apiversion and fixed
+WHENCE to have correct names and path to these files.
 
-I'll merge this change so that it fits with the one I sent for 2.6.39
-and stable, when time comes.  For now, we don't want things overflowing
-in the wl12xx.git tree either, so fix it there too. ;)
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+---
+ WHENCE                                             |   12 ++++++------
+ ...llmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} |  Bin 269595 -> 269595 bytes
+ ...llmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} |    0
+ brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw}      |  Bin 97376 -> 97376 bytes
+ ...bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} |  Bin 180 -> 180 bytes
+ 5 files changed, 6 insertions(+), 6 deletions(-)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} (100%)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} (100%)
+ rename brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw} (100%)
+ rename brcm/{bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} (100%)
 
+diff --git a/WHENCE b/WHENCE
+index 6632b85..c81a2b4 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1433,19 +1433,19 @@ Licence:
+ 
+ --------------------------------------------------------------------------
+ 
+-Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
++Driver: brcmsmac - Broadcom 802.11n softmac wireless LAN driver.
+ 
+-File: brcm/bcm43xx-0-610-809-0.fw
+-File: brcm/bcm43xx_hdr-0-610-809-0.fw
++File: brcm/bcm43xx-0.fw
++File: brcm/bcm43xx_hdr-0.fw
+ 
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
+ 
+ --------------------------------------------------------------------------
+ 
+-Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
++Driver: brcmfmac - Broadcom 802.11n fullmac wireless LAN driver.
+ 
+-File: bcm4329-fullmac-4-218-248-5.bin
+-File: bcm4329-fullmac-4-218-248-5.txt
++File: brcm/bcm4329-fullmac-4.bin
++File: brcm/bcm4329-fullmac-4.txt
+ 
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
+ 
+diff --git a/brcm/bcm4329-fullmac-4-218-248-5.txt b/brcm/bcm4329-fullmac-4.txt
+similarity index 100%
+rename from brcm/bcm4329-fullmac-4-218-248-5.txt
+rename to brcm/bcm4329-fullmac-4.txt
 -- 
-Cheers,
-Luca.
+1.7.1
+
 
