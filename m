@@ -1,92 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58699 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812Ab1DEARS convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35044 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581Ab1DHJiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 20:17:18 -0400
-Received: by qwk3 with SMTP id 3so3686081qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 17:17:18 -0700 (PDT)
+	Fri, 8 Apr 2011 05:38:21 -0400
+Received: by fxm17 with SMTP id 17so2212168fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 02:38:20 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: Alberto Panizzo <alberto@amarulasolutions.com>
+Subject: Re: [PATCH RFC 2/3] libertas: add set_power callback for iface subdrivers
+Date: Fri, 8 Apr 2011 12:36:53 +0300
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com> <1302207960-28536-3-git-send-email-anarsoul@gmail.com> <1302253853.2649.28.camel@realization>
+In-Reply-To: <1302253853.2649.28.camel@realization>
 MIME-Version: 1.0
-In-Reply-To: <201104011933.57597.chunkeey@googlemail.com>
-References: <AANLkTi=pWrS9jK1obHLiXu+oLK6YS00fG-YQqzUieYH7@mail.gmail.com>
- <201104010951.42502.chunkeey@googlemail.com> <AANLkTinKzC66WUwPZBhuuVgyCEPrfd-9tv36QoP4s60F@mail.gmail.com>
- <201104011933.57597.chunkeey@googlemail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 5 Apr 2011 02:16:58 +0200
-Message-ID: <BANLkTim51mYCDf-BRbR_GQd+E3DbUWDWYw@mail.gmail.com>
-Subject: Re: bad packets in monitor mode with ar9170 devices
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Realman Namingston <realname1776@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104081236.54157.anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/1 Christian Lamparter <chunkeey@googlemail.com>:
-> On Friday 01 April 2011 18:54:29 Gábor Stefanik wrote:
->> On Fri, Apr 1, 2011 at 9:51 AM, Christian Lamparter
->> <chunkeey@googlemail.com> wrote:
->> > On Friday 01 April 2011 05:12:45 Realman Namingston wrote:
->> >> ar9170-based devices record a fair amount of bad packets in monitor
->> >> mode both with the old ar9170usb and new carl9170 drivers. The packets
->> >> contain random BSSIDs, some measure of additional random data, and
->> >> seem to scale proportional to the amount of traffic occurring on the
->> >> observed channel. This behavior makes the devices rather unattractive
->> >> for use in Kismet and site survey applications.
->> >>
->> >> I assume this is due to a shortcoming of the hardware.. but is there
->> >> any potential fix possible?
->> > no, you misunderstood that completely: it's a shortcoming of kismet!
->> >
->> > quote:
->> > "Usually the wireless adapter is unable to transmit in monitor mode and
->> > is restricted to a single wireless channel, though this is dependent on
->> > the wireless adapter's driver, its firmware, and its chip set's features.
->> > Also, in monitor mode the adapter does not check to see if the cyclic
->> > redundancy check (CRC) values are correct for packets captured, so some
->> > captured packets may be corrupted."
->> >
->> > http://en.wikipedia.org/wiki/Monitor_mode
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->>
->> Isn't ar9170 the wireless-N version of zd1211? Because zd1211
->> also had this problem with ZD_SNIFFER_ON. See
->> http://patches.aircrack-ng.org/zd1211rw_inject_2.6.26.patch
->
-> inject? ???
+On Friday 08 April 2011 12:10:53 Alberto Panizzo wrote:
+> > +	} else {
+> > +		/* Copy addr back to hw */
+> > +		memcpy(priv->current_addr, priv->dev->dev_addr, ETH_ALEN);
+> > +		hw_addr_cmd.hdr.size = cpu_to_le16(sizeof(hw_addr_cmd));
+> > +		hw_addr_cmd.action = cpu_to_le16(CMD_ACT_SET);
+> > +		memcpy(hw_addr_cmd.macadd, priv->current_addr, ETH_ALEN);
+> > +
+> > +		ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS,
+> > +			&hw_addr_cmd);
+> > +		if (ret)
+> > +			lbs_deb_net("set MAC address failed\n");
+> 
+> Does this be really related to the subject of the patch?
 
-The patch is misnamed.
+Yep, this function is called right after power on, and we have to copy mac 
+address back to hardware (in case it was changed).
 
->
-> quote from include/net/mac80211.h:
->
-> "enum ieee80211_filter_flags - hardware filter flags
->
-> These flags determine what the filter in hardware should be
-> programmed to let through and what should not be passed to the
-> stack. >>>>> It is always safe to pass more frames than requested,
-> but this has negative impact on power consumption. <<<<<"
->
-> so, if you don't want the garbage then don't enable monitor mode.
-> OR set the appropriate FIF_ filter flags and hope the mntr setting
-> doesn't affect the way how the hardware/firmware/driver/stack
-> marks "bad" frames.
+> > -	lbs_cmd_async(priv, CMD_MAC_CONTROL, &cmd.hdr, sizeof(cmd));
+> > +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
+> > +	if (ret)
+> > +		lbs_deb_net("set MAC control failed\n");
+> 
+> Same here.
 
-IIRC in zd1211, the garbage was not simply PLCP-failed frames - the HW
-returns completely bogus frames with ZD_SNIFFER_ON, even if placed in
-an RF isolation chamber. Not sure about ar9170, but AFAIK ar9170
-inherits quite a bit from zd1211.
+I changed cmd to be sync to be sure that there's no host<->card activity 
+during power down. Otherwise this command timedout.
 
+> > +/**
+> > + * @brief This function gets the HW spec from the firmware and sets
+> > + *        some basic parameters.
+> > + *
+> > + *  @param priv    A pointer to struct lbs_private structure
+> > + *  @return        0 or -1
+> > + */
+> > +static int lbs_setup_firmware(struct lbs_private *priv)
+> > +{
+> > +	int ret = -1;
+> > +	s16 curlevel = 0, minlevel = 0, maxlevel = 0;
+> > +
+> > +	lbs_deb_enter(LBS_DEB_FW);
+> > +
+> > +	/* Read MAC address from firmware */
+> > +	memset(priv->current_addr, 0xff, ETH_ALEN);
+> > +	ret = lbs_update_hw_spec(priv);
+> > +	if (ret)
+> > +		goto done;
+> > +
+> > +	/* Read power levels if available */
+> > +	ret = lbs_get_tx_power(priv, &curlevel, &minlevel, &maxlevel);
+> > +	if (ret == 0) {
+> > +		priv->txpower_cur = curlevel;
+> > +		priv->txpower_min = minlevel;
+> > +		priv->txpower_max = maxlevel;
+> > +	}
+> > +
+> > +	/* Send cmd to FW to enable 11D function */
+> > +	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
+> > +
+> > +	lbs_set_mac_control(priv);
+> > +done:
+> > +	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
+> > +	return ret;
+> > +
+> 
+> Same for this function
+
+Moved it to avoid forward declatation.
+ 
+> > +static void lbs_power_on(struct lbs_private *priv)
+> > +{
+> > +	if (priv->set_power) {
+> > +		priv->power_on_cnt++;
+> > +		if (priv->power_on_cnt == 1) {
+> 
+> Here you have room for race conditions. power_on_cnt should be
+> protected by a mutex.
+
+I'm pretty sure that iface open/close (up/down?) is protected with mutex. So 
+why bother here? 
+ 
+> > +			priv->set_power(priv, 1);
+> > +			lbs_setup_firmware(priv);
+> 
+> Do you think that all users needs 8002.11D?
+
+It does nothing if mesh is not enabled in config.
+
+> > @@ -201,15 +271,16 @@ int lbs_set_mac_address(struct net_device *dev,
+> > void *addr)
+> > 
+> >  	/* In case it was called from the mesh device */
+> >  	dev = priv->dev;
+> > 
+> > +	if (priv->power_on_cnt) {
+> 
+> Same here, you need at least a read lock.
+
+In this place there's no iface yet (we're still in probe callback of driver).
+
+lbs_power_on/lbs_power_off are called only on iface up/down and in 
+suspend/resume handlers (at least, for now), so we can't get race condition 
+here.
+ 
+> >  int lbs_suspend(struct lbs_private *priv)
+> >  {
+> > 
+> > -	int ret;
+> > +	int ret = 0;
+> > 
+> >  	lbs_deb_enter(LBS_DEB_FW);
+> > 
+> > -	if (priv->is_deep_sleep) {
+> > -		ret = lbs_set_deep_sleep(priv, 0);
+> > -		if (ret) {
+> > -			lbs_pr_err("deep sleep cancellation failed: %d\n", ret);
+> > -			return ret;
+> > +	if (priv->set_power)
+> > +		lbs_power_off(priv);
+> 
+> Do you really want to power off the chip on suspend only because
+> set_power exist?
+> Is this something that should be driven by userspace?
 >
-> Regards,
->        Chr
->
+> And don't you want to setup any wake conditions?
 
+Unfortunately there's no datasheet on libertas chip. And looks like there was 
+no WOL support in driver, so why keep it enabled?
+ 
+Thanks for review!
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards
+Vasily
