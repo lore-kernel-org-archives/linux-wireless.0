@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44432 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753840Ab1DAQVt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:21:49 -0400
-Received: by ewy4 with SMTP id 4so1106282ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:21:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1301674530.5219.25.camel@maggie>
-References: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
-	<1301673646.5219.18.camel@maggie>
-	<BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com>
-	<1301674530.5219.25.camel@maggie>
-Date: Fri, 1 Apr 2011 18:21:47 +0200
-Message-ID: <BANLkTikR3DjQ1LbU47zrm+zV3sqW37bzrA@mail.gmail.com>
-Subject: Re: ChipCommon as independent driver?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Received: from mga02.intel.com ([134.134.136.20]:50845 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636Ab1DHPuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 11:50:10 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/16] update for 2.6.40
+Date: Fri,  8 Apr 2011 08:30:20 -0700
+Message-Id: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 1 kwietnia 2011 18:15 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Fri, 2011-04-01 at 18:06 +0200, Rafał Miłecki wrote:
->> W dniu 1 kwietnia 2011 18:00 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
->> > On Fri, 2011-04-01 at 16:49 +0200, Rafał Miłecki wrote:
->> >> Do you have idea how we could nicely solve that issue?
->> >
->> > Yeah. Just don't share code between ssb and bcmai.
->> > That's the only clean solution to that mess.
->>
->> Do you want to have core drivers separated as well? Really? Should we
->> have separated pci core? chiccommon core?
->
-> Yes. Those "drivers" are a mess full of ssb specific workarounds
-> to hardware limitations.
+We have more _agn clean up work after driver split
+We also fix a frame rejection bug in radar channel 
 
-I really don't understand what you meant in:
+Garen Tamrazian (1):
+  iwlagn: fix radar frame rejection
 
-2011/2/18 Michael Büsch <mb@bu3sch.de>:
-> Note that this does not mean that we need to duplicate the MIPS,
-> common and probably pci core drivers. A hybrid module can be done,
-> if that's desired to avoid code duplication.
+Johannes Berg (3):
+  iwlwifi: fix bugs in change_interface
+  iwlagn: clean up & autodetect statistics
+  iwlagn: downgrade warning on unknown TLV
 
-then :|
+Wey-Yi Guy (11):
+  iwlagn: remove un-necessary function pointer
+  iwlagn: PAPD read for 2000 series devices
+  iwlagn: no 3945 define needed
+  iwlagn: remove unused 3945 define
+  iwlagn: cleanup to remove the reference for 3945
+  iwlagn: remove more reference to legacy devices
+  iwlagn: remove un-needed configuration
+  iwlagn: more cleanup to remove unused reference
+  iwlagn: all _agn devices support power save mode
+  iwlagn: tx power calib always done in firmware
+  iwlagn: sensitivity and chain noise done by driver
 
--- 
-Rafał
+Jay Sternberg (1):
+  iwlwifi: remove extranious macro from firmware define
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c        |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c        |   25 +--
+ drivers/net/wireless/iwlwifi/iwl-5000.c        |   18 +--
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |   30 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |   43 +---
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.h   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  134 ++++-------
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |   39 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c    |   13 +
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |    3 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |   24 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.h         |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |   64 -----
+ drivers/net/wireless/iwlwifi/iwl-core.c        |   47 ++--
+ drivers/net/wireless/iwlwifi/iwl-core.h        |   28 +--
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   50 ++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h         |   44 +++--
+ drivers/net/wireless/iwlwifi/iwl-fh.h          |   38 ++--
+ drivers/net/wireless/iwlwifi/iwl-helpers.h     |   13 +
+ drivers/net/wireless/iwlwifi/iwl-led.c         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h        |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c          |  319 +++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-tx.c          |    1 -
+ 25 files changed, 409 insertions(+), 569 deletions(-)
+
