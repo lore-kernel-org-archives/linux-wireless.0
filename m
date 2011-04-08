@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42478 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755581Ab1D2Pv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 11:51:29 -0400
-Date: Fri, 29 Apr 2011 17:51:06 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH wireless-2.6 v2] iwlagn: fix "Received BA when not expected"
-Message-ID: <20110429155105.GB5537@redhat.com> (sfid-20110429_175132_603213_63544DC0)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53430 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636Ab1DHR1M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 13:27:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <op.vtmqm7fw3ri7v4@arend-laptop>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	<op.vtisojsk3ri7v4@arend-laptop>
+	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
+	<op.vtmqm7fw3ri7v4@arend-laptop>
+Date: Fri, 8 Apr 2011 19:27:11 +0200
+Message-ID: <BANLkTimy8LEqBqeJQD5SY=e8ZgEy8pRVHw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Need to use broadcast sta_id for management frames, otherwise we broke
-BA session in the firmware and get messages like that:
+2011/4/8 Arend van Spriel <arend@broadcom.com>:
+> On Fri, 08 Apr 2011 18:56:13 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
+>>>
+>>> 3. Device identification
+>>>
+>>> The cores are identified by manufacturer, core id and revision in your
+>>> patch. I would not use the revision because 4 out of 5 times a revision
+>>> change does indicate a hardware change but no change in programming
+>>> interface. The enumeration data does contain a more selective field
+>>> indicating the core class (4 bits following the core identifier). I
+>>> suggest
+>>> to replace the revision field by this class field.
+>>
+>> Could you say something more about *class*, please? For my BCM43224 it
+>> seems to be 0x0. WIll check BCM4313 in a moment.
+>>
+>
+> In principal the manufacturer id is unique (defined/assigned by JEDEC
+> www.jedec.org) and the chip id and chip class are defined by the
+> manufacturer. So I can only indicate what classes Broadcom uses in
+> combination with the manufacturer id BRCM, ARM and MIPS.
+>
+> /* Component Classes */
+> #define CC_SIM                  0
+> #define CC_EROM                 1
+> #define CC_CORESIGHT            9
+> #define CC_VERIF                0xb
+> #define CC_OPTIMO               0xd
+> #define CC_GEN                  0xe
+> #define CC_PRIMECELL            0xf
+>
+> Looking at this it seems strange that you see a class value of 0x0. It may
+> be rarely used or for non-production chips only (for simulation, chip
+> bringup) which may require additional (debug) functions. So question is
+> whether you will need it, but it is specified by ARM and it is up to
+> manufacturers to use it. So I it is better to be safe than sorry and have
+> this in the device id.
 
-"Received BA when not expected"
+OK, thanks. I'm compiling kernel with patch V2 right now. Of course
+class included.
 
-or (on older kernels):
-
-"BA scd_flow 0 does not match txq_id 10"
-
-This fix regression introduced in 2.6.35 during station management
-code rewrite by:
-
-commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Apr 30 11:30:45 2010 -0700
-
-    iwlwifi: use iwl_find_station less
-
-Patch partially resolve:
-https://bugzilla.kernel.org/show_bug.cgi?id=16691
-However, there are still 11n performance problems on 4965 and 5xxx
-devices that need to be investigated.
-
-Cc: stable@kernel.org # 2.6.35+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 494de0e..4afae14 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -582,12 +582,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	hdr_len = ieee80211_hdrlen(fc);
- 
--	/* Find index into station table for destination station */
--	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
--	if (sta_id == IWL_INVALID_STATION) {
--		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
--			       hdr->addr1);
--		goto drop_unlock;
-+	/* For management frames use broadcast id to do not break aggregation */
-+	if (!ieee80211_is_data(fc))
-+		sta_id = ctx->bcast_sta_id;
-+	else {
-+		/* Find index into station table for destination station */
-+		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-+		if (sta_id == IWL_INVALID_STATION) {
-+			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
-+				       hdr->addr1);
-+			goto drop_unlock;
-+		}
- 	}
- 
- 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
 -- 
-1.7.1
-
+Rafał
