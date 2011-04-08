@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esgaroth.petrovitsch.at ([78.47.184.11]:4739 "EHLO
-	esgaroth.petrovitsch.priv.at" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752634Ab1DGKd4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 06:33:56 -0400
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302170978.3779.0.camel@jlt3.sipsolutions.net>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
-	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
-	 <1302113542.22852.7.camel@x61.thuisdomein>
-	 <1302115597.4090.11.camel@jlt3.sipsolutions.net>
-	 <1302170472.21251.9.camel@thorin>
-	 <1302170978.3779.0.camel@jlt3.sipsolutions.net>
+Received: from mail.perches.com ([173.55.12.10]:4590 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757779Ab1DHTz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 15:55:57 -0400
+Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
+References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
+	 <1302290881.1664.7.camel@Joe-Laptop>
+	 <BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Apr 2011 12:33:37 +0200
-Message-ID: <1302172417.21251.48.camel@thorin>
+Date: Fri, 08 Apr 2011 12:55:54 -0700
+Message-ID: <1302292554.1664.12.camel@Joe-Laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Don, 2011-04-07 at 12:09 +0200, Johannes Berg wrote: 
-> On Thu, 2011-04-07 at 12:01 +0200, Bernd Petrovitsch wrote:
-> > On Mit, 2011-04-06 at 20:46 +0200, Johannes Berg wrote: 
-> > > On Wed, 2011-04-06 at 20:12 +0200, Paul Bolle wrote:
-> > [...] 
-> > > > But doesn't
-> > > > 	depends on RFKILL || !RFKILL
-> > > > 
-> > > > always evaluate to true when running "make *config"? (Even if RFKILL is
-> > > > an unknown symbol when that expression is parsed!)
-> > > 
-> > > No, it will not, you're forgetting that these things are tristate.
-> > 
-> > Boolean operators for tristate logic isn't intuitive at all IMHO.
+On Fri, 2011-04-08 at 21:46 +0200, Rafał Miłecki wrote:
+> 2011/4/8 Joe Perches <joe@perches.com>:
+> > On Fri, 2011-04-08 at 21:45 +0200, Rafał Miłecki wrote:
+> >> diff --git a/include/linux/axi/axi.h b/include/linux/axi/axi.h
+> > []
+> >> +#define axi_info     pr_info
+> >> +#ifdef CONFIG_AXI_DEBUG
+> >> +#define axi_debug    pr_debug
+> >> +#else
+> >> +#define axi_debug    do { } while (0)
+> >> +#endif
+> >> +#define axi_err              pr_err
+> >
+> > I think redefining standard functionality like
+> > this doesn't gain anything and loses some basic
+> > grep capability.
 > 
-> *shrug*. You're free to propose patches to the kconfig system to make it
-> more intuitive. :-)
+> But on the other hand using:
+> pr_info, pr_err, BUT axi_debug
+> can easily lead to mistakes.
+> 
+> Or is this possible to re-define pr_debug locally?
 
-FullACK;-)
-But no intuitive tristate logic operators come to my mind (otherwise I
-would have mentioned them above).
-And there are more logic implications in "depends on RFKILL".
-Hmm, I have to think more about it ....
+It is, but is that CONFIG_AXI_DEBUG actually
+worthwhile?
 
-Bernd
--- 
-Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
-                     LUGA : http://www.luga.at
+If you think so, doesn't adding this to the Makefile
+give you the same capability?
+
+ccflags-$(CONFIG_CONFIG_AXI_DEBUG) := -DDEBUG
+
 
