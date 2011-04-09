@@ -1,38 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:35103 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752722Ab1D2UEm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 16:04:42 -0400
-Received: by mail-ey0-f173.google.com with SMTP id 6so1415887eyb.32
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 13:04:29 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: add debugfs entries for dtim_interval and
- beacon_interval
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1303028447-16264-1-git-send-email-eliad@wizery.com>
-References: <1303028447-16264-1-git-send-email-eliad@wizery.com>
+Received: from mail.perches.com ([173.55.12.10]:4599 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757888Ab1DIAHp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 20:07:45 -0400
+Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTimQBAHgFaH0RVCOYBGSKuHN2Dprmw@mail.gmail.com>
+References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
+	 <1302290881.1664.7.camel@Joe-Laptop>
+	 <BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
+	 <1302292554.1664.12.camel@Joe-Laptop>
+	 <BANLkTimQBAHgFaH0RVCOYBGSKuHN2Dprmw@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 23:04:25 +0300
-Message-ID: <1304107465.12586.158.camel@cumari> (sfid-20110429_220445_209042_6557B31E)
+Date: Fri, 08 Apr 2011 17:07:43 -0700
+Message-ID: <1302307663.1664.19.camel@Joe-Laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-17 at 11:20 +0300, Eliad Peller wrote:
-> +static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
-> +                                   size_t count, loff_t *ppos)
-> +{
-> +       struct wl1271 *wl = file->private_data;
-> +       u8 value;
-> +
-> +       if (wl->conf.conn.wake_up_event == CONF_WAKE_UP_EVENT_BEACON|| 
+On Sat, 2011-04-09 at 02:03 +0200, Rafał Miłecki wrote:
+> 2011/4/8 Joe Perches <joe@perches.com>:
+> > On Fri, 2011-04-08 at 21:46 +0200, Rafał Miłecki wrote:
+> >> 2011/4/8 Joe Perches <joe@perches.com>:
+> >> > On Fri, 2011-04-08 at 21:45 +0200, Rafał Miłecki wrote:
+> >> >> diff --git a/include/linux/axi/axi.h b/include/linux/axi/axi.h
+> >> > []
+> >> >> +#define axi_info     pr_info
+> >> >> +#ifdef CONFIG_AXI_DEBUG
+> >> >> +#define axi_debug    pr_debug
+> >> >> +#else
+> >> >> +#define axi_debug    do { } while (0)
+> >> >> +#endif
+> >> >> +#define axi_err              pr_err
+> >> > I think redefining standard functionality like
+> >> > this doesn't gain anything and loses some basic
+> >> > grep capability.
+> >> But on the other hand using:
+> >> pr_info, pr_err, BUT axi_debug
+> >> can easily lead to mistakes.
+> >> Or is this possible to re-define pr_debug locally?
+> > It is, but is that CONFIG_AXI_DEBUG actually
+> > worthwhile?
+> > If you think so, doesn't adding this to the Makefile
+> > give you the same capability?
+> > ccflags-$(CONFIG_CONFIG_AXI_DEBUG) := -DDEBUG
 
-I also added one extra space before || here to avoid a checkpatch.pl
-warning.
+Just CONFIG_AXI_DEBUG of course.
 
--- 
-Cheers,
-Luca.
+> But pr_debug does not depend on DEBUG define:
+> http://lxr.free-electrons.com/source/tools/perf/util/include/linux/kernel.h#L94
+> How do you expect -DDEBUG to affect pr_debug? Could you explain this
+> to me, please?
+
+Sure.  You're not looking at the right place.
+
+Look instead at include/linux/printk.h
+
+/* If you are writing a driver, please use dev_dbg instead */
+#if defined(DEBUG)
+#define pr_debug(fmt, ...) \
+	printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+#elif defined(CONFIG_DYNAMIC_DEBUG)
+/* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
+#define pr_debug(fmt, ...) \
+	dynamic_pr_debug(fmt, ##__VA_ARGS__)
+#else
+#define pr_debug(fmt, ...) \
+	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+#endif
+
+cheers, Joe
 
