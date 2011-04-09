@@ -1,125 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34958 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757263Ab1DLWHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 18:07:23 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v2 1/7] ath5k: optimize tx descriptor setup
-Date: Wed, 13 Apr 2011 00:07:21 +0200
-Message-Id: <1302646041-3917-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61556 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754723Ab1DIXe1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Apr 2011 19:34:27 -0400
+Received: by eyx24 with SMTP id 24so1406817eyx.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2011 16:34:26 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [RFT] p54: implement multicast + arp req PS filter
+Date: Sun, 10 Apr 2011 03:34:21 +0400
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <201104020058.17232.chunkeey@googlemail.com> <201104100023.52526.jcmvbkbc@gmail.com> <201104100024.30155.chunkeey@googlemail.com>
+In-Reply-To: <201104100024.30155.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104100334.22689.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use local variables to reduce the number of load/store operations on uncached
-memory.
+> > In the ARP case, when there's no other traffic on p54spi, all ARP requests
+> > are dropped. But if there's some egress traffic from p54spi, filter seems
+> > to work correctly: only ARP requests that match filter pass through.
+> "no other traffic" sounds like a the psm filter at work, have you disabled
+> it before starting the experiment?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/desc.c |   45 +++++++++++++++++++--------------
- 1 files changed, 26 insertions(+), 19 deletions(-)
+I ran tests first without "iwconfig wlan0 power on", rebooted and re-ran them with PSM.
+Didn't notice any difference.
 
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index 16b44ff..6996d55 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -185,6 +185,12 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	struct ath5k_hw_4w_tx_ctl *tx_ctl;
- 	unsigned int frame_len;
- 
-+	/*
-+	 * Use local variables for these to reduce load/store access on
-+	 * uncached memory
-+	 */
-+	u32 txctl0 = 0, txctl1 = 0, txctl2 = 0, txctl3 = 0;
-+
- 	tx_ctl = &desc->ud.ds_tx5212.tx_ctl;
- 
- 	/*
-@@ -208,8 +214,9 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	if (tx_power > AR5K_TUNE_MAX_TXPOWER)
- 		tx_power = AR5K_TUNE_MAX_TXPOWER;
- 
--	/* Clear descriptor */
--	memset(&desc->ud.ds_tx5212, 0, sizeof(struct ath5k_hw_5212_tx_desc));
-+	/* Clear descriptor status area */
-+	memset(&desc->ud.ds_tx5212.tx_stat, 0,
-+	       sizeof(desc->ud.ds_tx5212.tx_stat));
- 
- 	/* Setup control descriptor */
- 
-@@ -221,7 +228,7 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	if (frame_len & ~AR5K_4W_TX_DESC_CTL0_FRAME_LEN)
- 		return -EINVAL;
- 
--	tx_ctl->tx_control_0 = frame_len & AR5K_4W_TX_DESC_CTL0_FRAME_LEN;
-+	txctl0 = frame_len & AR5K_4W_TX_DESC_CTL0_FRAME_LEN;
- 
- 	/* Verify and set buffer length */
- 
-@@ -232,21 +239,17 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	if (pkt_len & ~AR5K_4W_TX_DESC_CTL1_BUF_LEN)
- 		return -EINVAL;
- 
--	tx_ctl->tx_control_1 = pkt_len & AR5K_4W_TX_DESC_CTL1_BUF_LEN;
-+	txctl1 = pkt_len & AR5K_4W_TX_DESC_CTL1_BUF_LEN;
- 
--	tx_ctl->tx_control_0 |=
--		AR5K_REG_SM(tx_power, AR5K_4W_TX_DESC_CTL0_XMIT_POWER) |
--		AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
--	tx_ctl->tx_control_1 |= AR5K_REG_SM(type,
--					AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
--	tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0,
--					AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
--	tx_ctl->tx_control_3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
-+	txctl0 |= AR5K_REG_SM(tx_power, AR5K_4W_TX_DESC_CTL0_XMIT_POWER) |
-+		  AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
-+	txctl1 |= AR5K_REG_SM(type, AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
-+	txctl2 = AR5K_REG_SM(tx_tries0, AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
-+	txctl3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
- 
- #define _TX_FLAGS(_c, _flag)					\
- 	if (flags & AR5K_TXDESC_##_flag) {			\
--		tx_ctl->tx_control_##_c |=			\
--			AR5K_4W_TX_DESC_CTL##_c##_##_flag;	\
-+		txctl##_c |= AR5K_4W_TX_DESC_CTL##_c##_##_flag;	\
- 	}
- 
- 	_TX_FLAGS(0, CLRDMASK);
-@@ -262,8 +265,8 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	 * WEP crap
- 	 */
- 	if (key_index != AR5K_TXKEYIX_INVALID) {
--		tx_ctl->tx_control_0 |= AR5K_4W_TX_DESC_CTL0_ENCRYPT_KEY_VALID;
--		tx_ctl->tx_control_1 |= AR5K_REG_SM(key_index,
-+		txctl0 |= AR5K_4W_TX_DESC_CTL0_ENCRYPT_KEY_VALID;
-+		txctl1 |= AR5K_REG_SM(key_index,
- 				AR5K_4W_TX_DESC_CTL1_ENCRYPT_KEY_IDX);
- 	}
- 
-@@ -274,12 +277,16 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 		if ((flags & AR5K_TXDESC_RTSENA) &&
- 				(flags & AR5K_TXDESC_CTSENA))
- 			return -EINVAL;
--		tx_ctl->tx_control_2 |= rtscts_duration &
--				AR5K_4W_TX_DESC_CTL2_RTS_DURATION;
--		tx_ctl->tx_control_3 |= AR5K_REG_SM(rtscts_rate,
-+		txctl2 |= rtscts_duration & AR5K_4W_TX_DESC_CTL2_RTS_DURATION;
-+		txctl3 |= AR5K_REG_SM(rtscts_rate,
- 				AR5K_4W_TX_DESC_CTL3_RTS_CTS_RATE);
- 	}
- 
-+	tx_ctl->tx_control_0 = txctl0;
-+	tx_ctl->tx_control_1 = txctl1;
-+	tx_ctl->tx_control_2 = txctl2;
-+	tx_ctl->tx_control_3 = txctl3;
-+
- 	return 0;
- }
- 
--- 
-1.7.3.2
+And having ingress traffic only doesn't help ARPs to get through. They need egress to get in.
+In other words: I saw ingress packets in tcpdump, but no ARPs matching filter among them.
+But once packets start to go out of p54spi, ARPs matching filter get in. Looks very strange.
 
+> > In the multicast case filter seems to work correctly, but it treats broadcast
+> > as subject to that filtering too. By default only 01:00:5e:00:00:01 gets into
+> > priv->mc_maclist, so we miss all broadcasts.
+> ok, so we have to reserve a spot of ff:ff:ff:ff:ff:ff.
+
+But currently that cancels ARP filtering completely.
+
+> > These two filters seem to interfere:
+> > - if we set ARP filter and multicast filter without broadcast, we miss all
+> > ARPs if there's no egress traffic;
+> > - if we set ARP filter and multicast filter with broadcast, or don't set
+> > multicast filter at all we get all ARPs.
+> > 
+> > This effect does not depend on filter setup order.
+> interesting, well a unnamed [but trustworthy] source told us that ST identified
+> a problem with the arp/multicast filter some time ago, unfortunately I haven't
+> seen any updated p54spi firmwares lately. Maybe this sagred stuff works?
+
+"sagred stuff" ?
+
+Thanks.
+-- Max
