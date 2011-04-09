@@ -1,93 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42770 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932231Ab1DZWDX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 18:03:23 -0400
-Received: by iyb14 with SMTP id 14so886006iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 15:03:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTim45NHT3o2mB7Ofb9KvqBDrGjJcaw@mail.gmail.com>
-References: <1303849642-9014-1-git-send-email-arik@wizery.com> <BANLkTim45NHT3o2mB7Ofb9KvqBDrGjJcaw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 27 Apr 2011 01:03:08 +0300
-Message-ID: <BANLkTikMMMck78MhFuFNqc+CrUBGpG+TxQ@mail.gmail.com> (sfid-20110427_000326_678090_8D674A16)
-Subject: Re: [PATCH] mac80211: report MIC failure for truncated packets in AP mode
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:44215 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753895Ab1DIThW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Apr 2011 15:37:22 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k: fix tx status reporting issues
+Date: Sat,  9 Apr 2011 21:37:14 +0200
+Message-Id: <1302377834-87774-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 26, 2011 at 23:55, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Tue, Apr 26, 2011 at 10:27 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> MIC failure notifications for packets too short to contain a key index
->> are currently ignored in AP-mode. Fix the check to only ignore packets
->> with an existing non-zero key index.
->>
->> The wl12xx chip always truncates packets with a failed MIC and requires
->> this change to operate correctly in AP-mode.
->>
->> No such check is made in STA mode. Therefore its relatively safe to assume
->> there's no other HW that relies on the current code to avoid spurious
->> MIC failures with correct yet truncated packets.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->>  net/mac80211/rx.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> index a864890..875fc3c 100644
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -2391,7 +2391,7 @@ static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
->>        if (!ieee80211_has_protected(hdr->frame_control))
->>                return;
->>
->> -       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
->> +       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx > 0) {
->>                /*
->>                 * APs with pairwise keys should never receive Michael MIC
->>                 * errors for non-zero keyidx because these are reserved for
->> --
-> wait! Since you seem able to trigger MIC events frequently, could you
-> please test if the following patch:
->
-> <http://www.spinics.net/lists/linux-wireless/msg67571.html>
->
-> <a little more info:http://www.spinics.net/lists/linux-wireless/msg67461.html>
->
-> would help in your case as well?
->
+During normal operation, minstrel was showing suspicious EWMA probabilities
+exceeding 100%. It looks like the tx status reporting in ath5k was not
+properly clearing the rate index for rates which were never attempted.
 
-I seem to have missed this thread entirely :)
-The patch you mentioned does indeed help. I tested in STA and AP mode.
+This is caused by uninitialized stale data in the on-stack tx status
+information, which is reused when more frames are received.
 
-This bit is important for wl12xx:
+To fix this, rely on ts->ts_final_idx to select the last attempted rate,
+instead of checking whether ts->ts_rate is set.
 
-+       /*
-+        * No way to verify the MIC if the hardware stripped it or
-+        * the IV with the key index. In this case we have solely rely
-+        * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
-+        * MIC failure report.
-+        */
-+       if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
-+               if (status->flag & RX_FLAG_MMIC_ERROR)
-+                       goto mic_fail;
+Additionally, the conversion from the driver rate index back to the
+mac80211 rate index can be dropped, as the mac80211 tx status will still
+have the original rate index which was used to set up the descriptor.
 
-This prevents us from getting to the problematic check that I tried to
-remove with my patch.
+Additionally, one more inaccuracy was fixed - the final rate attempt
+count only needs to be increased by one if the transmission attempt was
+successful.
 
-Just for the record - generating a MIC failure is pretty easy. I'm
-using the (very cool) mac80211 debugfs feature that allows simulating
-a MIC failure (see ieee80211_if_parse_tkip_mic_test()).
-It works well with a rt2x00 based card and the latest compat. I'm
-simulating it from AP as well as STA.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   16 ++++++----------
+ 1 files changed, 6 insertions(+), 10 deletions(-)
 
-To summarize - either patch will work for us.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 4d7f21e..753662f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1580,21 +1580,14 @@ ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	ieee80211_tx_info_clear_status(info);
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i <= ts->ts_final_idx; i++) {
+ 		struct ieee80211_tx_rate *r =
+ 			&info->status.rates[i];
+ 
+-		if (ts->ts_rate[i]) {
+-			r->idx = ath5k_hw_to_driver_rix(sc, ts->ts_rate[i]);
+-			r->count = ts->ts_retry[i];
+-		} else {
+-			r->idx = -1;
+-			r->count = 0;
+-		}
++		r->count = ts->ts_retry[i];
+ 	}
+ 
+-	/* count the successful attempt as well */
+-	info->status.rates[ts->ts_final_idx].count++;
++	info->status.rates[ts->ts_final_idx + 1].idx = -1;
+ 
+ 	if (unlikely(ts->ts_status)) {
+ 		sc->stats.ack_fail++;
+@@ -1609,6 +1602,9 @@ ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	} else {
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 		info->status.ack_signal = ts->ts_rssi;
++
++		/* count the successful attempt as well */
++		info->status.rates[ts->ts_final_idx].count++;
+ 	}
+ 
+ 	/*
+-- 
+1.7.3.2
 
-Regards,
-Arik
