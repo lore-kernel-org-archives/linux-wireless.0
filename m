@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:43589 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab1DGWEw (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51524 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755169Ab1DIXyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 18:04:52 -0400
-Received: by gwaa18 with SMTP id a18so1024405gwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 15:04:51 -0700 (PDT)
+	Sat, 9 Apr 2011 19:54:47 -0400
+Received: by bwz15 with SMTP id 15so3668008bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2011 16:54:45 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Subject: Re: [RFT] p54: implement multicast + arp req PS filter
+Date: Sun, 10 Apr 2011 01:54:36 +0200
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <201104020058.17232.chunkeey@googlemail.com> <201104100024.30155.chunkeey@googlemail.com> <201104100334.22689.jcmvbkbc@gmail.com>
+In-Reply-To: <201104100334.22689.jcmvbkbc@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4D8EB693.5010704@users.sourceforge.net>
-References: <813132.20275.qm@web29506.mail.ird.yahoo.com>
-	<20110318085401.GB2162@redhat.com>
-	<4D8EB693.5010704@users.sourceforge.net>
-Date: Thu, 7 Apr 2011 23:04:51 +0100
-Message-ID: <BANLkTin9qc-oMNJu=TXYimqe81TcQ0g7og@mail.gmail.com>
-Subject: Re: rtl8187b throughput-related regression in 2.6.35.x fixed in 2.6.37.x
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	herton@mandriva.com.br,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104100154.37008.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 27, 2011 at 5:01 AM, Hin-Tak Leung
-<htl10@users.sourceforge.net> wrote:
-> Stanislaw Gruszka wrote:
->>
->> On Fri, Mar 18, 2011 at 05:18:25AM +0000, Hin-Tak Leung wrote:
->>>
->>> Hi Larry/Herton/John,
->>>
->>> There appears to be some kind of throughput related regression in
->>> 2.6.35.x (11-85-ish fedora, current long-term maintainance kernel) which is
->>> fixed by putting compat-wireless 2.6.37.x (4) on. I just thought I should
->>> mention this, in case somebody files a bug about rtl8187(b) being too slow,
->>> that putting compat-wireless on might help.
->>>
->>> My AP machine was out for almost a year so I have not been using my
->>> rtl8187b for a while. When I finally got that fixed, after a while I noticed
->>> the throughput between the two machines was low (60KB/s, or 0.5Mb/s,
->>> although iwconfig says rate=11Mb/s, etc). Putting compat-wireless on gets me
->>> back the throughput I expect from a year ago (400KB/s+ onwards, or a few
->>> Mb/s at least). So 2.6.31.x a year ago was okay, 2.6.37.x is okay, but there
->>> appear to be something not quite right with 2.6.35.x in the middle. There
->>> are too many changes, and it is probably not important since current-ish
->>> kernel head is okay.
->>
->> Would be nice to have this fixed in stable.
->>
->> We have already one AP mode bug opened:
->> http://bugzilla.redhat.com/show_bug.cgi?id=671514
->>
->> It was recognized that this patch is needed in .35.11 (.35.9 is ok):
->> http://git.kernel.org/linus/09a02fdb919876c01e8f05960750a418b3f7fa48
->>
->> Not sure if this is the same issue, but perhaps you could try above
->> patch. If it does not help, could you check if problem is
->> 2.6.35.x -> 2.6.35.11 regression?
->>
->> Stanislaw
->>
->
-> Just checked again, downloading and using a bunch of compat tar balls. It
-> appeared that the throughput problem I reported above was fixed between
-> 2.6.37.4 and 2.6.38-rc7. In any case, it does not appear to be the ones you
-> mentioned.
->
-> I might spend a bit more time eventually to see what fixes it. The one thing
-> interesting
-> about those two versions were Herton's house-keeping
->
-> rtl8187: restore anaparam registers after reset with 8187B
-> rtl8187: fix wrong register initialization in 8187B
->
-> and Thadeu Lima de Souza Cascardo
-> rtl8187b: do not do per packet TX AGC
->
-> And the Signal level did seem to change from about -40 dBm to -30
->
-> But these are a bit curious how I did get good throughput with 2.6.31.x-ish
+On Sunday 10 April 2011 01:34:21 Max Filippov wrote:
+> > > In the ARP case, when there's no other traffic on p54spi, all ARP requests
+> > > are dropped. But if there's some egress traffic from p54spi, filter seems
+> > > to work correctly: only ARP requests that match filter pass through.
+> > "no other traffic" sounds like a the psm filter at work, have you disabled
+> > it before starting the experiment?
+> 
+> I ran tests first without "iwconfig wlan0 power on", rebooted and re-ran them
+> with PSM. Didn't notice any difference.
+ok. but still there's something positive about the result:
+	ps no longer breaks everything ;)
+	[Michael]
 
-Down to between:
-compat-wireless-2.6.37-4-sn.tar.bz2
-compat-wireless-2.6.38-rc3-3.tar.bz2
+> And having ingress traffic only doesn't help ARPs to get through. They need egress to get in.
+> In other words: I saw ingress packets in tcpdump, but no ARPs matching filter among them.
+> But once packets start to go out of p54spi, ARPs matching filter get in. Looks very strange.
+> 
+> > > In the multicast case filter seems to work correctly, but it treats broadcast
+> > > as subject to that filtering too. By default only 01:00:5e:00:00:01 gets into
+> > > priv->mc_maclist, so we miss all broadcasts.
+> > ok, so we have to reserve a spot for ff:ff:ff:ff:ff:ff.
+> 
+> But currently that cancels ARP filtering completely.
 
-compat-wireless-2.6.38-rc3-2.tar.bz2 doesn't build.
+Ok, so we can't have both [atm] and we can't really choose between them either.
+Or do you think it's worth salvaging the multicast filter for a [PATCH]?
+> > > These two filters seem to interfere:
+> > > - if we set ARP filter and multicast filter without broadcast, we miss all
+> > > ARPs if there's no egress traffic;
+> > > - if we set ARP filter and multicast filter with broadcast, or don't set
+> > > multicast filter at all we get all ARPs.
+> > > 
+> > > This effect does not depend on filter setup order.
+> > interesting, well a unnamed [but trustworthy] source told us that ST identified
+> > a problem with the arp/multicast filter some time ago, unfortunately I haven't
+> > seen any updated p54spi firmwares lately. Maybe this sagred stuff works?
+> 
+> "sagred stuff" ?
+yeah, it was a while ago... 
+"p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)"
+http://www.spinics.net/lists/linux-wireless/msg55967.html
+
+AFAIK they have another p54spi firmware
+"phy0: FW rev 2.19.0.0.A.14 Private - Softmac protocol 5.6"
+
+Regards,
+	Chr
