@@ -1,264 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailhost.actiasodielec.fr ([217.108.146.49]:42720 "EHLO
-	mailhost.actiasodielec.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757056Ab1DNJpD convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42226 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763Ab1DIFme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 05:45:03 -0400
-Received: (from uucp@localhost)
-	by mailhost.actiasodielec.fr id p3E9W2En027121
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 11:32:02 +0200
-From: =?iso-8859-1?Q?C=E9dric_MOLINIER?= <c.molinier@actiasodielec.fr>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 14 Apr 2011 11:31:07 +0200
-Subject: Problem Mesh security with ath9k and hostap-sae: mesh points can't
- authenticate
-Message-ID: <EE97821C81277E459BEA5C6384C6F24101086A274525@srvexch01.SODIELEC.local>
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 9 Apr 2011 01:42:34 -0400
+Received: by iwn34 with SMTP id 34so4026778iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 22:42:33 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19871.62035.829719.402615@gargle.gargle.HOWL>
+Date: Sat, 9 Apr 2011 11:14:51 +0530
+To: Richard Farina <sidhayn@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: ath9k_htc oddity
+In-Reply-To: <4D9FCC70.1020805@gmail.com>
+References: <4D9FCC70.1020805@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Richard Farina wrote:
+> I've been using the ethool -i output a lot recently and have been very 
+> much enjoying it, however I've noticed some oddity.  My ath9k_htc card, 
+> Ubiquiti Wifistation-EXT, doesn't have good output while using 
+> compat-wireless stable 2.6.39-rc1.
+> 
+> flea scripts # ethtool -i wlan15
+> driver: usb
+> version: 2.6.37-pentoo-r6-grsec
+> firmware-version: N/A
+> bus-info: 2-5
+> 
+> 
+> Not only is the driver listed incorrectly, but the firmware-version is 
+> not listed at all. Is it just me?
 
-On my embedded system, I'm trying to use the tools for authenticated MESH. 
-I am using the fork of wpa_supplicant available that can authenticate mesh peers, available here:https://github.com/cozybit/hostap-sae.
-I followed what is described in the open80211s HOW page (http://o11s.org/trac/wiki/HOWTO#Testing).
+The driver name/bus-info is wrong because the wrong device pointer is used
+when registering the wireless device.
 
-But, none Mesh Point does not authenticate.
+The firmware version is N/A because, well, the FW has no version. :)
 
-So can someone tell me what is the problem, please? 
+I have a patch queued up and ethtool show this now:
+(This requires a FW update ...)
 
-Below, you can see my configuration and the output debug of wpa_supplicant (SAE).
-You can see a station (MP) is detected ("nl80211: New station 00:15:61:10:4f:7d"),
-but wpa_supplicant reject it:
-   mesh0: 0: 00:15:61:10:4f:7d ssid='' wpa_ie_len=0 rsn_ie_len=20 caps=0x0 level=-67
-   mesh0:    skip - SSID not known
+sujith@atheros-dev ~  $ ethtool -i wlan0
+driver: ath9k_htc
+version: 2.6.39-rc2-wl
+firmware-version: 1.0
+bus-info: 1-3:1.0
 
+commit d3ce084bd9ce550d80fc0e92dd91393ca02d3429
+Author: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Date:   Wed Apr 6 09:23:50 2011 +0530
 
-Thanks. 
+    ath9k_htc: Add a WMI command to get the firmware version
+    
+    Also, update the wiphy information and use the correct
+    device pointer when registering. This would fix ethtool.
+    
+    Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-C. Molinier
-
-
-
-I have two Mesh Point (MP) (with the same configuration):
-- MP(A) with MAC address 00:0B:6B:B5:EC:37
-- MP(B) with MAC address 00:15:61:10:4f:7d
-
-I use:
-- kernel 2.6.27
-- compat-wireless 2.6.39-rc1-3 for ath9k driver
-- hostapd-sae 
-
-
-The wpa_supplicant configuration (mesh.conf) is:
-ctrl_interface=/var/run/wpa_supplicant
-# Mesh network with SAE authentication
-network={
-	ssid="test"
-	mode=5
-	frequency=5180
-	proto=RSN
-	key_mgmt=SAE
-	pairwise=CCMP
-	group=CCMP
-	psk="this is a secret place"
-	sae_group_list=19 26 21 25 20
-}
-
-
-
-To start the mesh point, I do:
-
-iw dev wlan0 interface add mesh0 type mp mesh_id test
-iw dev mesh0 set channel 36
-ifconfig mesh0 up 
-ifconfig mesh0 <ip address>
-wpa_supplicant -Dnl80211 -imesh0 -c mesh.conf -dd &
-
-
-
-The output debug on MP(A) is:
-
-[    7.083217] kfifo: module license 'unspecified' taints kernel.
-[    7.142819] Compat-wireless backport release: compat-wireless-v2.6.39-rc1-3
-[    7.150047] Backport based on linux-2.6-allstable.git v2.6.39-rc1
-[    7.344937] Calling CRDA to update world regulatory domain
-[    9.460659] Registered led device: ath9k-phy0
-[    9.465220] ieee80211 phy0: Atheros AR9160 MAC/BB Rev:1 AR5133 RF Rev:b0 mem=0xd20c0000, irq=66
-wpa_supplicant v0.8.x
-Initializing interface 'mesh0' conf '/mnt/flash-config/mesh.conf' driver 'nl80211' ctrl_interface 'N/A' bridge 'N/A'
-Configuration file '/mnt/flash-config/mesh.conf' -> '/mnt/flash-config/mesh.conf'
-Reading configuration file '/mnt/flash-config/mesh.conf'
-ctrl_interface='/var/run/wpa_supplicant'
-Line: 3 - start of a new network block
-ssid - hexdump_ascii(len=4):
-     74 65 73 74                                       test            
-mode=5 (0x5)
-frequency=5180 (0x143c)
-proto: 0x2
-key_mgmt: 0x400
-pairwise: 0x10
-group: 0x10
-PSK (ASCII passphrase) - hexdump_ascii(len=22): [REMOVED]
-Priority group 0
-   id=0 ssid='test'
-nl80211: interface mesh0 in phy phy0
-rfkill: Cannot open RFKILL control device
-nl80211: RFKILL status not available
-nl80211: Failed to set interface 4 to mode 2: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Mode change succeeded while interface is down
-nl80211: Using driver-based off-channel TX
-netlink: Operstate: linkmode=1, operstate=5
-nl80211: driver param='(null)'
-mesh0: Own MAC address: 00:0b:6b:b5:ec:37
-wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=0 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=1 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=2 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=4 alg=0 addr=(nil) key_idx=3 set_tx=0 seq_len=0 key_len=0
-mesh0: RSN: flushing PMKID list in the driver
-mesh0: Setting scan request: 0 sec 100000 usec
-EAPOL: SUPP_PAE entering state DISCONNECTED
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: KEY_RX entering state NO_KEY_RECEIVE
-EAPOL: SUPP_BE entering state INITIALIZE
-EAP: EAP entering state DISABLED
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: Supplicant port status: Unauthorized
-Mesh: Looking for a mesh network config entry
-mesh0: Trying to associate with 00:00:00:00:00:00 (SSID='test' freq=5180 MHz)
-mesh0: Cancelling scan request
-mesh0: WPA: clearing own WPA/RSN IE
-mesh0: Automatic auth_alg selection: 0x1
-mesh0: RSN: using IEEE 802.11i/D9.0
-mesh0: WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 1024 proto 2
-mesh0: WPA: clearing AP WPA IE
-WPA: set AP RSN IE - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 08 00 00
-mesh0: WPA: using GTK CCMP
-mesh0: WPA: using PTK CCMP
-mesh0: WPA: using KEY_MGMT SAE
-WPA: Set own WPA IE default - hexdump(len=22): 30 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 08 00 00
-mesh0: No keys have been configured - skip key clearing
-mesh0: State: DISCONNECTED -> ASSOCIATING
-wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: linkmode=-1, operstate=5
-nl80211: Failed to set interface 4 to mode 7: -16 (Device or resource busy)
-nl80211: Try mode change after setting interface down
-nl80211: Mode change succeeded while interface is down
-nl80211: Register frame command failed (type=176): ret=-22 (Invalid argument)
-nl80211: Register frame match - hexdump(len=1): 03
-nl80211: Failed to register Auth frame processing - ignore for now
-meshd: Starting mesh with mesh id = test
-mesh0: Cancelling authentication timeout
-EAPOL: External notification - portControl=ForceAuthorized
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: External notification - EAP success=1
-EAPOL: Supplicant port status: Unauthorized
-EAP: EAP entering state DISABLED
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: External notification - EAP fail=0
-EAPOL: Supplicant port status: Unauthorized
-Mesh: Intialization completed
-mesh0: Added interface mesh0
-RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
-nl80211: Interface down
-mesh0: Event 30 received on interface mesh0
-mesh0: Interface was disabled
-mesh0: State: ASSOCIATING -> DISCONNECTED
-wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: linkmode=-1, operstate=5
-EAPOL: External notification - portEnabled=0
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: External notification - portValid=0
-EAPOL: Supplicant port status: Unauthorized
-mesh0: State: DISCONNECTED -> INTERFACE_DISABLED
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-RTM_NEWLINK: operstate=0 ifi_flags=0x1043 ([UP][RUNNING])
-nl80211: Interface up
-mesh0: Event 29 received on interface mesh0
-mesh0: Interface was enabled
-mesh0: State: INTERFACE_DISABLED -> DISCONNECTED
-wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: linkmode=-1, operstate=5
-mesh0: Setting scan request: 0 sec 0 usec
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
-nl80211: Interface down
-mesh0: Event 30 received on interface mesh0
-mesh0: Interface was disabled
-mesh0: State: DISCONNECTED -> DISCONNECTED
-wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: linkmode=-1, operstate=5
-EAPOL: External notification - portEnabled=0
-EAPOL: Supplicant port status: Unauthorized
-EAPOL: External notification - portValid=0
-EAPOL: Supplicant port status: Unauthorized
-mesh0: State: DISCONNECTED -> INTERFACE_DISABLED
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-nl80211: Interface up
-mesh0: Event 29 received on interface mesh0
-mesh0: Interface was enabled
-mesh0: State: INTERFACE_DISABLED -> DISCONNECTED
-wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
-netlink: Operstate: linkmode=-1, operstate=5
-mesh0: Setting scan request: 0 sec 0 usec
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-l2_packet_receive - recvfrom: Network is down
-mesh0: State: DISCONNECTED -> SCANNING
-mesh0: Starting AP scan for wildcard SSID
-nl80211: Scan SSID - hexdump_ascii(len=0): [NULL]
-Scan requested (ret=0) - scan timeout 10 seconds
-nl80211: Event message available
-nl80211: Scan trigger
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-EAPOL: disable timer tick
-EAPOL: Supplicant port status: Unauthorized
-nl80211: Event message available
-nl80211: New scan results available
-mesh0: Event 3 received on interface mesh0
-Received scan results (1 BSSes)
-mesh0: BSS: Start scan result update 1
-mesh0: BSS: Add new id 0 BSSID 00:15:61:10:4f:7d SSID ''
-Add randomness: count=1 entropy=0
-mesh0: New scan results available
-mesh0: Selecting BSS from priority group 0
-mesh0: 0: 00:15:61:10:4f:7d ssid='' wpa_ie_len=0 rsn_ie_len=20 caps=0x0 level=-67
-mesh0:    skip - SSID not known
-mesh0: No suitable network found
-mesh0: Setting scan request: 5 sec 0 usec
-mesh0: Checking for other virtual interfaces sharing same radio (phy0) in event_scan_results
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mesh0' added
-mesh0: Event 5 received on interface mesh0
-nl80211: Event message available
-nl80211: New station 00:15:61:10:4f:7d
-mesh0: Starting AP scan for wildcard SSID
-nl80211: Scan SSID - hexdump_ascii(len=0): [NULL]
-Scan requested (ret=0) - scan timeout 30 seconds
-nl80211: Event message available
-nl80211: Scan trigger
-nl80211: Event message available
-nl80211: New scan results available
-mesh0: Event 3 received on interface mesh0
-Received scan results (1 BSSes)
-mesh0: BSS: Start scan result update 2
-Add randomness: count=2 entropy=1
-mesh0: New scan results available
-mesh0: Selecting BSS from priority group 0
-mesh0: 0: 00:15:61:10:4f:7d ssid='' wpa_ie_len=0 rsn_ie_len=20 caps=0x0 level=-67
-mesh0:    skip - SSID not known
-mesh0: No suitable network found
-mesh0: Setting scan request: 5 sec 0 usec
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 23094b7..c81b2da 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1035,7 +1035,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 	}
+ 
+ 	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
+-				&hif_dev->udev->dev, hif_dev->device_id,
++				&interface->dev, hif_dev->device_id,
+ 				hif_dev->udev->product, id->driver_info);
+ 	if (ret) {
+ 		ret = -EINVAL;
+@@ -1153,7 +1153,7 @@ fail_resume:
+ #endif
+ 
+ static struct usb_driver ath9k_hif_usb_driver = {
+-	.name = "ath9k_hif_usb",
++	.name = KBUILD_MODNAME,
+ 	.probe = ath9k_hif_usb_probe,
+ 	.disconnect = ath9k_hif_usb_disconnect,
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index ec47be9..9544cd7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -388,6 +388,9 @@ struct ath9k_htc_priv {
+ 	struct htc_target *htc;
+ 	struct wmi *wmi;
+ 
++	u16 fw_version_major;
++	u16 fw_version_minor;
++
+ 	enum htc_endpoint_id wmi_cmd_ep;
+ 	enum htc_endpoint_id beacon_ep;
+ 	enum htc_endpoint_id cab_ep;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 8303b34..6bbfca5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -782,6 +782,32 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+ }
+ 
++static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
++{
++	struct ieee80211_hw *hw = priv->hw;
++	struct wmi_fw_version cmd_rsp;
++	int ret;
++
++	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
++
++	WMI_CMD(WMI_GET_FW_VERSION);
++	if (ret)
++		return -EINVAL;
++
++	priv->fw_version_major = be16_to_cpu(cmd_rsp.major);
++	priv->fw_version_minor = be16_to_cpu(cmd_rsp.minor);
++
++	snprintf(hw->wiphy->fw_version, ETHTOOL_BUSINFO_LEN, "%d.%d",
++		 priv->fw_version_major,
++		 priv->fw_version_minor);
++
++	dev_info(priv->dev, "ath9k_htc: FW Version: %d.%d\n",
++		 priv->fw_version_major,
++		 priv->fw_version_minor);
++
++	return 0;
++}
++
+ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 			     u16 devid, char *product, u32 drv_info)
+ {
+@@ -801,6 +827,10 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 	common = ath9k_hw_common(ah);
+ 	ath9k_set_hw_capab(priv, hw);
+ 
++	error = ath9k_init_firmware_version(priv);
++	if (error != 0)
++		goto err_fw;
++
+ 	/* Initialize regulatory */
+ 	error = ath_regd_init(&common->regulatory, priv->hw->wiphy,
+ 			      ath9k_reg_notifier);
+@@ -861,6 +891,8 @@ err_rx:
+ err_tx:
+ 	/* Nothing */
+ err_regd:
++	/* Nothing */
++err_fw:
+ 	ath9k_deinit_priv(priv);
+ err_init:
+ 	return error;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index d3d2490..267a98f 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -23,6 +23,8 @@ static const char *wmi_cmd_to_name(enum wmi_cmd_id wmi_cmd)
+ 		return "WMI_ECHO_CMDID";
+ 	case WMI_ACCESS_MEMORY_CMDID:
+ 		return "WMI_ACCESS_MEMORY_CMDID";
++	case WMI_GET_FW_VERSION:
++		return "WMI_GET_FW_VERSION";
+ 	case WMI_DISABLE_INTR_CMDID:
+ 		return "WMI_DISABLE_INTR_CMDID";
+ 	case WMI_ENABLE_INTR_CMDID:
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 4208427..6a36572 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -31,11 +31,17 @@ struct wmi_cmd_hdr {
+ 	__be16 seq_no;
+ } __packed;
+ 
++struct wmi_fw_version {
++	__be16 major;
++	__be16 minor;
++
++} __packed;
+ enum wmi_cmd_id {
+ 	WMI_ECHO_CMDID = 0x0001,
+ 	WMI_ACCESS_MEMORY_CMDID,
+ 
+ 	/* Commands to Target */
++	WMI_GET_FW_VERSION,
+ 	WMI_DISABLE_INTR_CMDID,
+ 	WMI_ENABLE_INTR_CMDID,
+ 	WMI_RX_LINK_CMDID,
 
 
