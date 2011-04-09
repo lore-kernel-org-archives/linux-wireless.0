@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52027 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754979Ab1DDWzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 18:55:07 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 15:54:42 -0700
-Date: Mon, 4 Apr 2011 15:56:43 -0700
-From: Vipin Mehta <vmehta@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vipin Mehta <Vipin.Mehta@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"greg@kroah.com" <greg@kroah.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Naveen Singh <Naveen.Singh@Atheros.com>
-Subject: Re: [PATCH 34/34] ath6kl: remove the HTC raw interface
-Message-ID: <20110404225248.GA30856@vmehta-desktop>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
- <1301446591-15236-35-git-send-email-lrodriguez@atheros.com>
- <35B17FE5076C7040809188FBE7913F984316D17DDC@SC1EXMB-MBCL.global.atheros.com>
- <AANLkTi=_T-f7e0dGC05mACjGFD86VP+MULZsfXinTXkq@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38027 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440Ab1DIADE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Apr 2011 20:03:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTi=_T-f7e0dGC05mACjGFD86VP+MULZsfXinTXkq@mail.gmail.com>
+In-Reply-To: <1302292554.1664.12.camel@Joe-Laptop>
+References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
+	<1302290881.1664.7.camel@Joe-Laptop>
+	<BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
+	<1302292554.1664.12.camel@Joe-Laptop>
+Date: Sat, 9 Apr 2011 02:03:03 +0200
+Message-ID: <BANLkTimQBAHgFaH0RVCOYBGSKuHN2Dprmw@mail.gmail.com>
+Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 31, 2011 at 11:03:50AM -0700, Luis R. Rodriguez wrote:
-> On Thu, Mar 31, 2011 at 9:50 AM, Vipin Mehta <Vipin.Mehta@atheros.com> wrote:
-> > The raw HTC support is required for the tools used on the manufacturing floor
-> > For module calibration. Without this code, the driver and the hardware
-> > cannot be shipped. I suggest we keep this code until we add the support for
-> > nl80211 test command interface and migrate the tools to use the new interface.
-> 
-> Vipin, so you NACK the patch -- that's fine. Greg please drop this
-> one. Vipin, when do you plan on adding the nl80211 test command
-> support? The API already exists. I'll remind you that this is a
-> blocker for getting this out of staging.
-> 
->   Luis
-Greg,
-  Can you apply the rest of the changes from patch 0 through 33 in
-this series if you are satisfied with them. We have more patches coming
-but are currently waiting for you to apply the existing ones.
+2011/4/8 Joe Perches <joe@perches.com>:
+> On Fri, 2011-04-08 at 21:46 +0200, Rafał Miłecki wrote:
+>> 2011/4/8 Joe Perches <joe@perches.com>:
+>> > On Fri, 2011-04-08 at 21:45 +0200, Rafał Miłecki wrote:
+>> >> diff --git a/include/linux/axi/axi.h b/include/linux/axi/axi.h
+>> > []
+>> >> +#define axi_info     pr_info
+>> >> +#ifdef CONFIG_AXI_DEBUG
+>> >> +#define axi_debug    pr_debug
+>> >> +#else
+>> >> +#define axi_debug    do { } while (0)
+>> >> +#endif
+>> >> +#define axi_err              pr_err
+>> >
+>> > I think redefining standard functionality like
+>> > this doesn't gain anything and loses some basic
+>> > grep capability.
+>>
+>> But on the other hand using:
+>> pr_info, pr_err, BUT axi_debug
+>> can easily lead to mistakes.
+>>
+>> Or is this possible to re-define pr_debug locally?
+>
+> It is, but is that CONFIG_AXI_DEBUG actually
+> worthwhile?
+>
+> If you think so, doesn't adding this to the Makefile
+> give you the same capability?
+>
+> ccflags-$(CONFIG_CONFIG_AXI_DEBUG) := -DDEBUG
 
-Thanks,
-Vipin
+But pr_debug does not depend on DEBUG define:
+http://lxr.free-electrons.com/source/tools/perf/util/include/linux/kernel.h#L94
+
+How do you expect -DDEBUG to affect pr_debug? Could you explain this
+to me, please?
+
+-- 
+Rafał
