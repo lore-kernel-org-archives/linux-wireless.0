@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:34605 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754415Ab1DNMx6 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:49605 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123Ab1DIDDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 08:53:58 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: 622753@bugs.debian.org, Gunnar Stahl <gunnar.stahl@gunnarstahl.org>
-In-Reply-To: <20110414123925.31837.14741.reportbug@noomadix>
-References: <20110414123925.31837.14741.reportbug@noomadix>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-Dy1lD+8eO7uO7nQ72byi"
-Date: Thu, 14 Apr 2011 13:53:55 +0100
-Message-ID: <1302785635.5282.690.camel@localhost>
-Mime-Version: 1.0
-Subject: ath9k: Connection over wlan slows down and dies
+	Fri, 8 Apr 2011 23:03:18 -0400
+Received: by qyk7 with SMTP id 7so237197qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 20:03:17 -0700 (PDT)
+Message-ID: <4D9FCC70.1020805@gmail.com>
+Date: Fri, 08 Apr 2011 23:03:12 -0400
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: ath9k_htc oddity
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I've been using the ethool -i output a lot recently and have been very 
+much enjoying it, however I've noticed some oddity.  My ath9k_htc card, 
+Ubiquiti Wifistation-EXT, doesn't have good output while using 
+compat-wireless stable 2.6.39-rc1.
 
---=-Dy1lD+8eO7uO7nQ72byi
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+flea scripts # ethtool -i wlan15
+driver: usb
+version: 2.6.37-pentoo-r6-grsec
+firmware-version: N/A
+bus-info: 2-5
 
-I received this bug report on ath9k:
 
-On Thu, 2011-04-14 at 14:39 +0200, Gunnar Stahl wrote:
-> Package: linux-2.6
-> Version: 2.6.38-3
-> Severity: important
->=20
-> Since linux-image-2.6.38-2-amd64 the wlan connections on this machine is =
-1)
-> slow to connection and 2) slows down to a crawl and 3) dies after some se=
-conds
-> / mintes and becomes completely unusable.
->=20
-> Connecting over standard eth0 makes no problems at all. Only the wlan is
-> affected.
->=20
-> Booting the same machine again with linux-image-2.6.32-5-amd64 turns the =
-wlan
-> back to normal again.
-[...]
-> 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9285 Wir=
-eless Network Adapter (PCI-Express) [168c:002b] (rev 01)
-> 	Subsystem: AzureWave Device [1a3b:1089]
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Step=
-ping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <TAbort=
-- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 32 bytes
-> 	Interrupt: pin A routed to IRQ 17
-> 	Region 0: Memory at feaf0000 (64-bit, non-prefetchable) [size=3D64K]
-> 	Capabilities: <access denied>
-> 	Kernel driver in use: ath9k
-[...]
+Not only is the driver listed incorrectly, but the firmware-version is 
+not listed at all. Is it just me?
 
-Further system details at <http://bugs.debian.org/622753>.
 
-Ben.
+[  861.541279] usb 2-5: new high speed USB device using ehci_hcd and 
+address 6
+[  861.976633] usb 2-5: ath9k_htc: Transferred FW: ar9271.fw, size: 51312
+[  862.244517] usb 2-5: ath9k_htc: HTC initialized with 33 credits
+[  862.661693] ath: EEPROM regdomain: 0x0
+[  862.661698] ath: EEPROM indicates default country code should be used
+[  862.661701] ath: doing EEPROM country->regdmn map search
+[  862.661705] ath: country maps to regdmn code: 0x3a
+[  862.661708] ath: Country alpha2 being used: US
+[  862.661711] ath: Regpair used: 0x3a
+...removed cfg80211 regdomain stuff...
+[  862.663179] ieee80211 phy3: Atheros AR9271 Rev:1
+[  862.664976] Registered led device: ath9k-phy3::radio
+[  862.664999] Registered led device: ath9k-phy3::assoc
+[  862.665141] Registered led device: ath9k-phy3::tx
+[  862.665163] Registered led device: ath9k-phy3::rx
+[  862.665166] usb 2-5: ath9k_htc: USB layer initialized
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
 
---=-Dy1lD+8eO7uO7nQ72byi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATabuXee/yOyVhhEJAQpm3xAAmrwmYDAq97kBKULVGWiLj+7Hgx1yUs7E
-nijPZ1kuTuIb2+ok6c/CfkzTvGajt+Hz6XESeXEj1JrQ+wHjezHjhn85Uh5W1rsz
-9Ksq6hvhIGciWhg511gXMeRYNTp6P+09KqMhF9GDlGsIi7Ha8LEbumjaaa7LM9w0
-KZbRQZXLSOCK1FK0vU11mujUxClnHSLqzTQlb5RyqA8Iosv8RRqA09/Jv52Xp8gB
-Pu/H6YAL7iLOCOjbpVpuf7sLgsRiGFDn/P/mnoUSBFnwLvjrdEGr+mTJTAVwjq73
-B+KlfmGVbfXknpYfsyHN7+NOOH6ukk/8drGLWru01rVozoghCj+80lwpUlusXfKL
-wT3BWCiZrEfDiaYN85WRCMBH1MpGuJxZNJgQiLygZtblELijjo75A2sswpKv2AW2
-N944WXNJwKiDyqtUR2PQhsZ0u8rLwfwbftyBUNY/hiYg0qVjpU6fmL5I1JTDzA2D
-qDsKRWYWANDT1oBTvylkhYODbbUut4YVLzuBrA9LjFKcNB+YLdRZyetDg+Du5yMs
-ujgi159NViWe/opfjk0p0VCloNOyLQhHgoHcVJdtqsSR8QnSw9jFLZI5CBMnsOUT
-J7pMis84xD49U2kPbe4jnX+sT9RsQcMKT3DQKyoEeHHLnvNxutnyH7nSYrQrGHvg
-+TdEtsVXyao=
-=7hHY
------END PGP SIGNATURE-----
-
---=-Dy1lD+8eO7uO7nQ72byi--
+Thanks,
+Rick Farina
