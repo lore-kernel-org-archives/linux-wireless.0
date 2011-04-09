@@ -1,98 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51229 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755493Ab1DZTSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 15:18:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: make patches apply again
-Date: Tue, 26 Apr 2011 21:17:10 +0200
-Message-Id: <1303845431-972-1-git-send-email-hauke@hauke-m.de> (sfid-20110426_211812_301918_7F24556A)
+Received: from mms2.broadcom.com ([216.31.210.18]:1681 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754180Ab1DILCA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Apr 2011 07:02:00 -0400
+To: "George Kashperko" <george@znau.edu.ua>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+ <op.vtisojsk3ri7v4@arend-laptop>
+ <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
+ <op.vtmqm7fw3ri7v4@arend-laptop>
+ <1302333026.18361.8.camel@dev.znau.edu.ua>
+Date: Sat, 9 Apr 2011 13:01:39 +0200
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vtn3k12g3ri7v4@arend-laptop>
+In-Reply-To: <1302333026.18361.8.camel@dev.znau.edu.ua>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 09 Apr 2011 09:10:26 +0200, George Kashperko <george@znau.edu.ua>  
+wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/09-threaded-irq.patch |   35 +++++++++++++++++++++++------------
- 1 files changed, 23 insertions(+), 12 deletions(-)
+>
+>> On Fri, 08 Apr 2011 18:56:13 +0200, Rafał Miłecki <zajec5@gmail.com>  
+>> wrote:
+>>
+>> > 2011/4/6 Arend van Spriel <arend@broadcom.com>:
+>> >> 3. Device identification
+>> >>
+>> >> The cores are identified by manufacturer, core id and revision in  
+>> your
+>> >> patch. I would not use the revision because 4 out of 5 times a  
+>> revision
+>> >> change does indicate a hardware change but no change in programming
+>> >> interface. The enumeration data does contain a more selective field
+>> >> indicating the core class (4 bits following the core identifier). I
+>> >> suggest
+>> >> to replace the revision field by this class field.
+>> >
+>> > Could you say something more about *class*, please? For my BCM43224 it
+>> > seems to be 0x0. WIll check BCM4313 in a moment.
+>> >
+>>
+>> In principal the manufacturer id is unique (defined/assigned by JEDEC
+>> www.jedec.org) and the chip id and chip class are defined by the
+>> manufacturer. So I can only indicate what classes Broadcom uses in
+>> combination with the manufacturer id BRCM, ARM and MIPS.
+>>
+>> /* Component Classes */
+>> #define	CC_SIM			0
+>> #define	CC_EROM			1
+>> #define	CC_CORESIGHT		9
+>> #define	CC_VERIF		0xb
+>> #define	CC_OPTIMO		0xd
+>> #define	CC_GEN			0xe
+>> #define	CC_PRIMECELL		0xf
+>>
+>> Looking at this it seems strange that you see a class value of 0x0. It  
+>> may
+>> be rarely used or for non-production chips only (for simulation, chip
+>> bringup) which may require additional (debug) functions. So question is
+>> whether you will need it, but it is specified by ARM and it is up to
+>> manufacturers to use it. So I it is better to be safe than sorry and  
+>> have
+>> this in the device id.
+>>
+>> Gr. AvS
+> When parsing bcm4716 EROM I have
+> cia & CIA_CCL_MASK equal to 0 for all 9 cores
+>
+> You mentioned ARM DMP (Device Management Plugin) several times in
+> earlier messages some time ago but I can't find anything relevant about
+> that at ARM infocenter. Any chance you can point more precise location
+> for any DMP reference?
 
-diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
-index 9822acb..0e25e21 100644
---- a/patches/09-threaded-irq.patch
-+++ b/patches/09-threaded-irq.patch
-@@ -63,28 +63,39 @@ thread in process context as well.
-  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
- --- a/drivers/net/wireless/wl12xx/spi.c
- +++ b/drivers/net/wireless/wl12xx/spi.c
--@@ -408,9 +408,20 @@ static int __devinit wl1271_probe(struct
-+@@ -405,10 +405,14 @@ static int __devinit wl1271_probe(struct
-+ 	wl->tcxo_clock = pdata->board_tcxo_clock;
-+ 	wl->platform_quirks = pdata->platform_quirks;
-+ 
-++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
-++	irqflags = IRQF_TRIGGER_RISING;
-++#else
-+ 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
-+ 		irqflags = IRQF_TRIGGER_RISING;
-+ 	else
-+ 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
-++#endif
-+ 
-+ 	wl->irq = spi->irq;
-+ 	if (wl->irq < 0) {
-+@@ -417,9 +421,16 @@ static int __devinit wl1271_probe(struct
-  		goto out_free;
-  	}
-  
- +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
- +	ret = compat_request_threaded_irq(&wl->irq_compat, wl->irq,
- +					  wl1271_hardirq, wl1271_irq,
--+					  IRQF_TRIGGER_RISING,
-++					  irqflags,
- +					  DRIVER_NAME, wl);
- +#else
-  	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
--+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
--+				   IRQF_TRIGGER_RISING,
--+#else
-- 				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
--+#endif
-+ 				   irqflags,
-  				   DRIVER_NAME, wl);
- +#endif
-  	if (ret < 0) {
-  		wl1271_error("request_irq() failed: %d", ret);
-  		goto out_free;
--@@ -431,7 +442,11 @@ static int __devinit wl1271_probe(struct
-+@@ -440,7 +451,11 @@ static int __devinit wl1271_probe(struct
-  	return 0;
-  
-   out_irq:
-@@ -96,7 +107,7 @@ thread in process context as well.
-  
-   out_free:
-  	wl1271_free_hw(wl);
--@@ -444,7 +459,12 @@ static int __devexit wl1271_remove(struc
-+@@ -453,7 +468,12 @@ static int __devexit wl1271_remove(struc
-  	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
-  
-  	wl1271_unregister_hw(wl);
-@@ -111,10 +122,10 @@ thread in process context as well.
-  	return 0;
- --- a/drivers/net/wireless/wl12xx/wl12xx.h
- +++ b/drivers/net/wireless/wl12xx/wl12xx.h
--@@ -544,6 +544,10 @@ struct wl1271 {
-+@@ -582,6 +582,10 @@ struct wl1271 {
-  
-- 	/* Quirks of specific hardware revisions */
-- 	unsigned int quirks;
-+ 	/* Platform limitations */
-+ 	unsigned int platform_quirks;
- +
- +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
- +	struct compat_threaded_irq irq_compat;
+I believe this is part of the CoreLink AMBA Designer tool, which is used  
+to design/configure a SoC. The DMP is ARM system IP and so references are  
+under ARM copyright. You need a special account with ARM to get access to  
+these references.
+
+Gr. AvS
 -- 
-1.7.1
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
