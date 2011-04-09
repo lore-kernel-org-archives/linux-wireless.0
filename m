@@ -1,177 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757105Ab1DMFxs (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35957 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754030Ab1DIKee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:53:48 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:48 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Sat, 9 Apr 2011 06:34:34 -0400
+Received: by fxm17 with SMTP id 17so2768703fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2011 03:34:33 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: consolidate MIC failure report handling
+Date: Sat, 9 Apr 2011 12:34:27 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15099.999692.819296@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:26:11 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 32/40] ath9k_htc: Drain packets on station removal
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104091234.27305.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Currently, mac80211 handles MIC failures differently
+depending on whenever they are detected by the stack's
+own software crypto or when are handed down from the
+driver.
 
-When a station entry is removed, there could still be
-pending packets destined for that station in the HIF layer.
-Sending these to the target is not necessary, so drain them
-in the driver itself.
+This patch tries to unify both by moving the special
+"driver" branch out of mac80211 rx hotpath and into
+into the software crypto part. This has also the
+advantage that we can run a few more sanity checks
+on the data and verify of example that the key type
+was indeed TKIP.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+BTW: why does the "driver" path check for _auth frames?
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c      |   35 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 +++++
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    5 +++
- drivers/net/wireless/ath/ath9k/htc_hst.h      |    2 +
- 6 files changed, 54 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 4a12c75..1d18b1c 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -363,6 +363,40 @@ static int hif_usb_send(void *hif_handle, u8 pipe_id, struct sk_buff *skb)
- 	return ret;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fc2ff78..a1bef0f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2354,47 +2354,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 	return RX_QUEUED;
  }
  
-+static inline bool check_index(struct sk_buff *skb, u8 idx)
-+{
-+	struct ath9k_htc_tx_ctl *tx_ctl;
-+
-+	tx_ctl = HTC_SKB_CB(skb);
-+
-+	if ((tx_ctl->type == ATH9K_HTC_AMPDU) &&
-+	    (tx_ctl->sta_idx == idx))
-+		return true;
-+
-+	return false;
-+}
-+
-+static void hif_usb_sta_drain(void *hif_handle, u8 idx)
-+{
-+	struct hif_device_usb *hif_dev = (struct hif_device_usb *)hif_handle;
-+	struct sk_buff *skb, *tmp;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
-+
-+	skb_queue_walk_safe(&hif_dev->tx.tx_skb_queue, skb, tmp) {
-+		if (check_index(skb, idx)) {
-+			__skb_unlink(skb, &hif_dev->tx.tx_skb_queue);
-+			ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
-+						  skb, false);
-+			hif_dev->tx.tx_skb_cnt--;
-+			TX_STAT_INC(skb_failed);
-+		}
+-static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
+-					    struct ieee80211_rx_data *rx)
+-{
+-	int keyidx;
+-	unsigned int hdrlen;
+-
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-	if (rx->skb->len >= hdrlen + 4)
+-		keyidx = rx->skb->data[hdrlen + 3] >> 6;
+-	else
+-		keyidx = -1;
+-
+-	if (!rx->sta) {
+-		/*
+-		 * Some hardware seem to generate incorrect Michael MIC
+-		 * reports; ignore them to avoid triggering countermeasures.
+-		 */
+-		return;
+-	}
+-
+-	if (!ieee80211_has_protected(hdr->frame_control))
+-		return;
+-
+-	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
+-		/*
+-		 * APs with pairwise keys should never receive Michael MIC
+-		 * errors for non-zero keyidx because these are reserved for
+-		 * group keys and only the AP is sending real multicast
+-		 * frames in the BSS.
+-		 */
+-		return;
+-	}
+-
+-	if (!ieee80211_is_data(hdr->frame_control) &&
+-	    !ieee80211_is_auth(hdr->frame_control))
+-		return;
+-
+-	mac80211_ev_michael_mic_failure(rx->sdata, keyidx, hdr, NULL,
+-					GFP_ATOMIC);
+-}
+-
+ /* TODO: use IEEE80211_RX_FRAGMENTED */
+ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 					struct ieee80211_rate *rate)
+@@ -2738,12 +2697,6 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+ 	if (!prepares)
+ 		return false;
+ 
+-	if (status->flag & RX_FLAG_MMIC_ERROR) {
+-		if (status->rx_flags & IEEE80211_RX_RA_MATCH)
+-			ieee80211_rx_michael_mic_report(hdr, rx);
+-		return false;
+-	}
+-
+ 	if (!consume) {
+ 		skb = skb_copy(skb, GFP_ATOMIC);
+ 		if (!skb) {
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index f1765de..a2c18b6 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -87,33 +87,35 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 
++	if (!ieee80211_has_protected(hdr->frame_control) ||
++	    !ieee80211_is_data_present(hdr->frame_control)) {
++		return RX_CONTINUE;
 +	}
 +
-+	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
-+}
+ 	/* No way to verify the MIC if the hardware stripped it */
+-	if (status->flag & RX_FLAG_MMIC_STRIPPED)
++	if (status->flag & RX_FLAG_MMIC_STRIPPED) {
++		if (status->flag & RX_FLAG_MMIC_ERROR)
++			goto mic_fail;
 +
- static struct ath9k_htc_hif hif_usb = {
- 	.transport = ATH9K_HIF_USB,
- 	.name = "ath9k_hif_usb",
-@@ -372,6 +406,7 @@ static struct ath9k_htc_hif hif_usb = {
+ 		return RX_CONTINUE;
++	}
  
- 	.start = hif_usb_start,
- 	.stop = hif_usb_stop,
-+	.sta_drain = hif_usb_sta_drain,
- 	.send = hif_usb_send,
- };
+-	if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_TKIP ||
+-	    !ieee80211_has_protected(hdr->frame_control) ||
+-	    !ieee80211_is_data_present(hdr->frame_control))
++	if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_TKIP)
+ 		return RX_CONTINUE;
  
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 0d2e2b1..41823fd 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -280,6 +280,7 @@ struct ath9k_htc_tx_ctl {
- 	u8 type; /* ATH9K_HTC_* */
- 	u8 epid;
- 	u8 txok;
-+	u8 sta_idx;
- };
- 
- static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index fb9ff11..ae85cc4 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1303,10 +1303,13 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 				struct ieee80211_sta *sta)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath9k_htc_sta *ista;
- 	int ret;
- 
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
-+	ista = (struct ath9k_htc_sta *) sta->drv_priv;
-+	htc_sta_drain(priv->htc, ista->index);
- 	ret = ath9k_htc_remove_station(priv, vif, sta);
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 9e0c34b..0790070 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -248,6 +248,14 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
- 		tx_hdr.vif_idx = vif_idx;
- 		tx_hdr.cookie = slot;
- 
-+		/*
-+		 * This is a bit redundant but it helps to get
-+		 * the per-packet index quickly when draining the
-+		 * TX queue in the HIF layer. Otherwise we would
-+		 * have to parse the packet contents ...
-+		 */
-+		tx_ctl->sta_idx = sta_idx;
++	if (status->flag & RX_FLAG_MMIC_ERROR)
++		goto mic_fail;
 +
- 		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
- 			tx_ctl->type = ATH9K_HTC_AMPDU;
- 			tx_hdr.data_type = ATH9K_HTC_AMPDU;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index be3385e..cee970f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -310,6 +310,11 @@ void htc_start(struct htc_target *target)
- 	target->hif->start(target->hif_dev);
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len < hdrlen + MICHAEL_MIC_LEN)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	data = skb->data + hdrlen;
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+-
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0) {
+-		if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+-			return RX_DROP_UNUSABLE;
+-
+-		mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
+-						(void *) skb->data, NULL,
+-						GFP_ATOMIC);
+-		return RX_DROP_UNUSABLE;
+-	}
++	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++		goto mic_fail;
+ 
+ 	/* remove Michael MIC from payload */
+ 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
+@@ -123,6 +125,11 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
+ 
+ 	return RX_CONTINUE;
++
++mic_fail:
++	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
++					(void *) skb->data, NULL, GFP_ATOMIC);
++	return RX_DROP_UNUSABLE;
  }
  
-+void htc_sta_drain(struct htc_target *target, u8 idx)
-+{
-+	target->hif->sta_drain(target->hif_dev, idx);
-+}
-+
- void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
- 			       struct sk_buff *skb, bool txok)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 191e3c0..cb9174a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -35,6 +35,7 @@ struct ath9k_htc_hif {
  
- 	void (*start) (void *hif_handle);
- 	void (*stop) (void *hif_handle);
-+	void (*sta_drain) (void *hif_handle, u8 idx);
- 	int (*send) (void *hif_handle, u8 pipe, struct sk_buff *buf);
- };
- 
-@@ -209,6 +210,7 @@ int htc_send_epid(struct htc_target *target, struct sk_buff *skb,
- 		  enum htc_endpoint_id epid);
- void htc_stop(struct htc_target *target);
- void htc_start(struct htc_target *target);
-+void htc_sta_drain(struct htc_target *target, u8 idx);
- 
- void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 		      struct sk_buff *skb, u32 len, u8 pipe_id);
--- 
-1.7.4.4
-
