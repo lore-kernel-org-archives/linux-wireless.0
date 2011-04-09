@@ -1,200 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:13162 "EHLO mga14.intel.com"
+Received: from nbd.name ([46.4.11.11]:52442 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751264Ab1DXRRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 13:17:55 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-Date: Sun, 24 Apr 2011 10:15:00 -0700
-Message-Id: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110424_191812_851726_8A7D5FAA)
+	id S1755660Ab1DIVKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Apr 2011 17:10:25 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 2/3] ath5k: fix SIFS time handling
+Date: Sat,  9 Apr 2011 23:10:20 +0200
+Message-Id: <1302383421-1418-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1302383421-1418-1-git-send-email-nbd@openwrt.org>
+References: <1302383421-1418-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current led blink trigger implementaion assume on/off time are equal,
-it works but not have any flexbile for different blink pattern.
+ath5k uses 8 usec as a sifs time, extracted from the initvals, whereas the
+standard requires a sifs time of 10. The difference originates from the fact
+that the SIFS register has an offset of 2 usec.
+Fix the SIFS time definition to use the standard value of 10 usec and subtract
+2 usecs when writing the SIFS register.
 
-Add "ratio" parameter in the trigger table and give driver more control
-on how the on/off blink time behavior should be.
-
- ratio = 100: blink off time = blink on time
- ratio = 80: blink off time = 80% of blink on time
- ratio = 0: blink off time = 0% of blink on time 
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/init.c   |   20 ++++++++++----------
- drivers/net/wireless/iwlegacy/iwl-led.c |   28 +++++++++++-----------------
- drivers/net/wireless/iwlwifi/iwl-led.c  |   28 +++++++++++-----------------
- include/net/mac80211.h                  |   10 +++++++---
- net/mac80211/led.c                      |    4 ++--
- 5 files changed, 41 insertions(+), 49 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h |    3 +--
+ drivers/net/wireless/ath/ath5k/qcu.c   |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1ac8318..a691992 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -143,16 +143,16 @@ static struct ieee80211_rate ath9k_legacy_rates[] = {
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 996d8af..a49aeac 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -224,8 +224,7 @@
  
- #ifdef CONFIG_MAC80211_LEDS
- static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
--	{ .throughput = 0 * 1024, .blink_time = 334 },
--	{ .throughput = 1 * 1024, .blink_time = 260 },
--	{ .throughput = 5 * 1024, .blink_time = 220 },
--	{ .throughput = 10 * 1024, .blink_time = 190 },
--	{ .throughput = 20 * 1024, .blink_time = 170 },
--	{ .throughput = 50 * 1024, .blink_time = 150 },
--	{ .throughput = 70 * 1024, .blink_time = 130 },
--	{ .throughput = 100 * 1024, .blink_time = 110 },
--	{ .throughput = 200 * 1024, .blink_time = 80 },
--	{ .throughput = 300 * 1024, .blink_time = 50 },
-+	{ .throughput = 0 * 1024, .blink_on_time = 167, .ratio = 100 },
-+	{ .throughput = 1 * 1024, .blink_on_time = 130, .ratio = 100 },
-+	{ .throughput = 5 * 1024, .blink_on_time = 110, .ratio = 100 },
-+	{ .throughput = 10 * 1024, .blink_on_time = 95, .ratio = 100 },
-+	{ .throughput = 20 * 1024, .blink_on_time = 85, .ratio = 100 },
-+	{ .throughput = 50 * 1024, .blink_on_time = 75, .ratio = 100 },
-+	{ .throughput = 70 * 1024, .blink_on_time = 65, .ratio = 100 },
-+	{ .throughput = 100 * 1024, .blink_on_time = 55, .ratio = 100 },
-+	{ .throughput = 200 * 1024, .blink_on_time = 40, .ratio = 100 },
-+	{ .throughput = 300 * 1024, .blink_on_time = 25, .ratio = 100 },
- };
- #endif
+ /* SIFS */
+ #define	AR5K_INIT_SIFS_TURBO			6
+-/* XXX: 8 from initvals 10 from standard */
+-#define	AR5K_INIT_SIFS_DEFAULT_BG		8
++#define	AR5K_INIT_SIFS_DEFAULT_BG		10
+ #define	AR5K_INIT_SIFS_DEFAULT_A		16
+ #define	AR5K_INIT_SIFS_HALF_RATE		32
+ #define AR5K_INIT_SIFS_QUARTER_RATE		64
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 93abcfa..b18c502 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -519,7 +519,7 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
+ 		return -EINVAL;
  
-diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
-index b226a3c..3ebfdae 100644
---- a/drivers/net/wireless/iwlegacy/iwl-led.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-@@ -62,17 +62,17 @@ MODULE_PARM_DESC(led_mode, "0=system default, "
-  *	<=0					SOLID ON
-  */
- static const struct ieee80211_tpt_blink iwl_blink[] = {
--	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
--	{ .throughput = 0 * 1024, .blink_time = 334 },
--	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
--	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
--	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
--	{ .throughput = 20 * 1024 - 1, .blink_time = 170 },
--	{ .throughput = 50 * 1024 - 1, .blink_time = 150 },
--	{ .throughput = 70 * 1024 - 1, .blink_time = 130 },
--	{ .throughput = 100 * 1024 - 1, .blink_time = 110 },
--	{ .throughput = 200 * 1024 - 1, .blink_time = 80 },
--	{ .throughput = 300 * 1024 - 1, .blink_time = 50 },
-+	{ .throughput = 0 * 1024 - 1, .blink_on_time = IWL_LED_SOLID, .ratio = 0 },
-+	{ .throughput = 0 * 1024, .blink_on_time = 167, .ratio = 100 },
-+	{ .throughput = 1 * 1024 - 1, .blink_on_time = 130, .ratio = 100 },
-+	{ .throughput = 5 * 1024 - 1, .blink_on_time = 110, .ratio = 100 },
-+	{ .throughput = 10 * 1024 - 1, .blink_on_time = 95, .ratio = 100 },
-+	{ .throughput = 20 * 1024 - 1, .blink_on_time = 85, .ratio = 100 },
-+	{ .throughput = 50 * 1024 - 1, .blink_on_time = 75, .ratio = 100 },
-+	{ .throughput = 70 * 1024 - 1, .blink_on_time = 65, .ratio = 100 },
-+	{ .throughput = 100 * 1024 - 1, .blink_on_time = 55, .ratio = 100 },
-+	{ .throughput = 200 * 1024 - 1, .blink_on_time = 40, .ratio = 100 },
-+	{ .throughput = 300 * 1024 - 1, .blink_on_time = 25, .ratio = 100 },
- };
+ 	sifs = ath5k_hw_get_default_sifs(ah);
+-	sifs_clock = ath5k_hw_htoclock(ah, sifs);
++	sifs_clock = ath5k_hw_htoclock(ah, sifs - 2);
  
- /*
-@@ -115,12 +115,6 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
- 	if (priv->blink_on == on && priv->blink_off == off)
- 		return 0;
- 
--	if (on == 0) {
--		/* led is SOLID_ON */
--		on = IWL_LED_SOLID;
--		off = 0;
--	}
--
- 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
- 			priv->cfg->base_params->led_compensation);
- 	led_cmd.on = iwl_legacy_blink_compensation(priv, on,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index 0dde793..efbb0fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -62,17 +62,17 @@ MODULE_PARM_DESC(led_mode, "0=system default, "
-  *	<=0					SOLID ON
-  */
- static const struct ieee80211_tpt_blink iwl_blink[] = {
--	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
--	{ .throughput = 0 * 1024, .blink_time = 334 },
--	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
--	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
--	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
--	{ .throughput = 20 * 1024 - 1, .blink_time = 170 },
--	{ .throughput = 50 * 1024 - 1, .blink_time = 150 },
--	{ .throughput = 70 * 1024 - 1, .blink_time = 130 },
--	{ .throughput = 100 * 1024 - 1, .blink_time = 110 },
--	{ .throughput = 200 * 1024 - 1, .blink_time = 80 },
--	{ .throughput = 300 * 1024 - 1, .blink_time = 50 },
-+	{ .throughput = 0 * 1024 - 1, .blink_on_time = IWL_LED_SOLID, .ratio = 0 },
-+	{ .throughput = 0 * 1024, .blink_on_time = 167, .ratio = 100 },
-+	{ .throughput = 1 * 1024 - 1, .blink_on_time = 130, .ratio = 100 },
-+	{ .throughput = 5 * 1024 - 1, .blink_on_time = 110, .ratio = 100 },
-+	{ .throughput = 10 * 1024 - 1, .blink_on_time = 95, .ratio = 100 },
-+	{ .throughput = 20 * 1024 - 1, .blink_on_time = 85, .ratio = 100 },
-+	{ .throughput = 50 * 1024 - 1, .blink_on_time = 75, .ratio = 100 },
-+	{ .throughput = 70 * 1024 - 1, .blink_on_time = 65, .ratio = 100 },
-+	{ .throughput = 100 * 1024 - 1, .blink_on_time = 55, .ratio = 100 },
-+	{ .throughput = 200 * 1024 - 1, .blink_on_time = 40, .ratio = 100 },
-+	{ .throughput = 300 * 1024 - 1, .blink_on_time = 25, .ratio = 100 },
- };
- 
- /* Set led register off */
-@@ -139,12 +139,6 @@ static int iwl_led_cmd(struct iwl_priv *priv,
- 	if (priv->blink_on == on && priv->blink_off == off)
- 		return 0;
- 
--	if (on == 0) {
--		/* led is SOLID_ON */
--		on = IWL_LED_SOLID;
--		off = 0;
--	}
--
- 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
- 			priv->cfg->base_params->led_compensation);
- 	led_cmd.on = iwl_blink_compensation(priv, on,
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d23dd6c..838c37c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1941,12 +1941,16 @@ int ieee80211_register_hw(struct ieee80211_hw *hw);
- /**
-  * struct ieee80211_tpt_blink - throughput blink description
-  * @throughput: throughput in Kbit/sec
-- * @blink_time: blink time in milliseconds
-- *	(full cycle, ie. one off + one on period)
-+ * @blink_on_time: blink on time in milliseconds
-+ * @ratio: ratio between blink on and off
-+ *	ratio = 100: blink off time = blink on time
-+ *	ratio = 80: blink off time = 80% of blink on time
-+ *	ratio = 0: blink off time = 0% of blink on time 
-  */
- struct ieee80211_tpt_blink {
- 	int throughput;
--	int blink_time;
-+	int blink_on_time;
-+	int ratio;
- };
- 
- /**
-diff --git a/net/mac80211/led.c b/net/mac80211/led.c
-index 1459033..474be05 100644
---- a/net/mac80211/led.c
-+++ b/net/mac80211/led.c
-@@ -203,8 +203,8 @@ static void tpt_trig_timer(unsigned long data)
- 	for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
- 		if (tpt_trig->blink_table[i].throughput < 0 ||
- 		    tpt > tpt_trig->blink_table[i].throughput) {
--			off = tpt_trig->blink_table[i].blink_time / 2;
--			on = tpt_trig->blink_table[i].blink_time - off;
-+			on = tpt_trig->blink_table[i].blink_on_time;
-+			off = on * tpt_trig->blink_table[i].ratio / 100;
- 			break;
- 		}
- 	}
+ 	/* EIFS
+ 	 * Txtime of ack at lowest rate + SIFS + DIFS
 -- 
-1.7.0.4
+1.7.3.2
 
