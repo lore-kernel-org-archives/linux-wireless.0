@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54964 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab1DRLWg (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:44947 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983Ab1DJQOr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:22:36 -0400
-Received: by wya21 with SMTP id 21so3803021wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:22:35 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/2] mac80211: allow low level drivers to report packet loss
-Date: Mon, 18 Apr 2011 14:22:28 +0300
-Message-Id: <1303125749-31967-1-git-send-email-arik@wizery.com>
+	Sun, 10 Apr 2011 12:14:47 -0400
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+From: George Kashperko <george@znau.edu.ua>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael B?sch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <op.vtpt6v173ri7v4@arend-laptop>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
+	 <op.vtisojsk3ri7v4@arend-laptop> <20110410080159.GB2798@ucw.cz>
+	 <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
+	 <20110410082420.GA1460@localhost.ucw.cz>
+	 <BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
+	 <op.vtpt6v173ri7v4@arend-laptop>
+Content-Type: text/plain; charset=UTF-8
+Date: Sun, 10 Apr 2011 19:11:57 +0300
+Message-Id: <1302451917.14558.13.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add API that allows low level drivers to notify mac80211 about TX
-packet loss. This is useful when there are FW triggers to notify the
-low level driver about these events.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- include/net/mac80211.h |   11 +++++++++++
- net/mac80211/status.c  |    8 ++++++++
- 2 files changed, 19 insertions(+), 0 deletions(-)
+> On Sun, 10 Apr 2011 10:30:53 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+> 
+> > 2011/4/10 Pavel Machek <pavel@ucw.cz>:
+> >>> >> >+config BCMAI_HOST_PCI_POSSIBLE
+> >>> >> >+       bool
+> >>> >> >+       depends on BCMAI && PCI = y
+> >>> >> >+       default y
+> >>> >> >+
+> >>> >> >+config BCMAI_HOST_PCI
+> >>> >> >+       bool "Support for AI on PCI-host bus"
+> >>> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
+> >>> >> >+
+> 
+> Hi Rafał,
+> 
+> Could use term AMBA AXI instead which gives enough hits on Google to hint  
+> interested people to more in depth information.
+> 
+> FYI: AXI = Advanced eXtensible Interface
+> 	High-speed interconnect for chip cores ( provides higher bursts/transfers  
+> than predecessor AHB = Advanced High-performance Bus (AHB)).
+> 
+> Gr. AvS
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cefe1b3..efbdda9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2265,6 +2265,17 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
- 				 struct sk_buff *skb);
- 
- /**
-+ * ieee80211_report_low_ack - report non-responding station
-+ *
-+ * When operating in AP-mode, call this function to report a non-responding
-+ * connected STA.
-+ *
-+ * @sta: the non-responding connected sta
-+ * @num_packets: number of packets sent to @sta without a response
-+ */
-+void ieee80211_report_low_ack(struct ieee80211_sta *sta, u32 num_packets);
-+
-+/**
-  * ieee80211_beacon_get_tim - beacon generation function
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 3ed3c83..1658efa 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -446,3 +446,11 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	dev_kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_tx_status);
-+
-+void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
-+				    num_packets, GFP_ATOMIC);
-+}
-+EXPORT_SYMBOL(ieee80211_report_low_ack);
--- 
-1.7.1
+Not sure if AXI will be relevant bus name to manage newer Broadcom IP
+cores. Yes, AMBA AXI is underlying interconnect used for communications,
+but those communications are made in regard of communication ports
+(those thingys referenced at Broadcom code as wrappers and which are
+actually master ports intermediately bound to the backplane itself).
+Pretty much sure your original bcmb is much more relevant for managing
+Broadcom hardware extensions over AXI than just axi, especially
+considering that techniques we use to identify, enumerate and control
+AXI slave ports are completely Broadcom-specific.
+
+Have nice day,
+George
+
 
