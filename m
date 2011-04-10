@@ -1,117 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38800 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750901Ab1DLNA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:00:27 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:00:02 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/22] ath9k_hw: Initialize tx and rx gain table from initvals.h for ar9340
-Date: Tue, 12 Apr 2011 18:27:08 +0530
-Message-ID: <1302613042-1754-9-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
-References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+Received: from ksp.mff.cuni.cz ([195.113.26.206]:49093 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753022Ab1DJIYd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Apr 2011 04:24:33 -0400
+Date: Sun, 10 Apr 2011 08:24:21 +0000
+From: Pavel Machek <pavel@ucw.cz>
+To: Rafa? Mi?ecki <zajec5@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael B?sch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
+Message-ID: <20110410082420.GA1460@localhost.ucw.cz>
+References: <1302033463-1846-1-git-send-email-zajec5@gmail.com> <op.vtisojsk3ri7v4@arend-laptop> <20110410080159.GB2798@ucw.cz> <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   42 ++++++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 6 deletions(-)
+> >> >+config BCMAI_HOST_PCI_POSSIBLE
+> >> >+       bool
+> >> >+       depends on BCMAI && PCI = y
+> >> >+       default y
+> >> >+
+> >> >+config BCMAI_HOST_PCI
+> >> >+       bool "Support for AI on PCI-host bus"
+> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
+> >> >+
+> >> >+config BCMAI_DEBUG
+> >> >+       bool "BCMAI debugging"
+> >> >+       depends on BCMAI
+> >> >+       help
+> >> >+         This turns on additional debugging messages.
+> >> >+
+> >> >+         If unsure, say N
+> >
+> > Totally useless  :-(. It should really explain what AI means in this context.
+> 
+> Feel free to propose sth.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 37af721..a55eddb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -220,7 +220,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485_modes_lowest_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485_modes_lowest_ob_db_tx_gain_1_1),
-@@ -232,7 +237,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 1:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_high_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_high_ob_db_tx_gain_1_1),
-@@ -244,7 +254,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 2:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_low_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_low_ob_db_tx_gain_1_1),
-@@ -256,7 +271,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 3:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_high_power_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_1),
-@@ -275,7 +295,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9340Common_rx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
-+				       2);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9485Common_wo_xlna_rx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
-@@ -287,7 +312,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 				       2);
- 		break;
- 	case 1:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9340Common_wo_xlna_rx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
-+				       2);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9485Common_wo_xlna_rx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
+AFAICT AI means "artifical inteligence". So _you_ really need to fix your kconfig.
 -- 
-1.7.0.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
