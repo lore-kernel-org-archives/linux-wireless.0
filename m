@@ -1,79 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3815 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:44264 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753885Ab1DMIQw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 04:16:52 -0400
-To: "George Kashperko" <george@znau.edu.ua>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "balbi@ti.com" <balbi@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
- <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
- <1302634039.14216.10.camel@dev.znau.edu.ua>
- <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
- <1302635550.14216.21.camel@dev.znau.edu.ua>
- <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
- <4DA4AC4B.90409@hauke-m.de>
- <BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
- <BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
- <1302640546.14216.65.camel@dev.znau.edu.ua>
- <BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
-Date: Wed, 13 Apr 2011 10:16:37 +0200
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtvalzu33ri7v4@arend-laptop>
-In-Reply-To: <BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+	id S1755091Ab1DJQcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Apr 2011 12:32:24 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 6/7] ath5k: clean up debugfs code
+Date: Sun, 10 Apr 2011 18:32:18 +0200
+Message-Id: <1302453139-11437-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1302453139-11437-5-git-send-email-nbd@openwrt.org>
+References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
+ <1302453139-11437-2-git-send-email-nbd@openwrt.org>
+ <1302453139-11437-3-git-send-email-nbd@openwrt.org>
+ <1302453139-11437-4-git-send-email-nbd@openwrt.org>
+ <1302453139-11437-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 12 Apr 2011 22:44:01 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+The pointers to the debugfs entries do not need to be saved, because they
+will be recursively removed when the wiphy is unregistered.
 
-> 2011/4/12 George Kashperko <george@znau.edu.ua>:
->>> 2011/4/12 Rafał Miłecki <zajec5@gmail.com>:
->>> That way I see really low (or not at all) relation between out
->>> (not)Broadcom bus and present AMBA bus.
->>>
->> Agree.
->
-> Ehh, sounds like one more renaming to functions, defines, prefixes.
->
-> Let's wait for Arend comments, he was the one voting for  
-> not-bcm-specific name.
->
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c  |    1 -
+ drivers/net/wireless/ath/ath5k/debug.c |   65 +++++++++----------------------
+ drivers/net/wireless/ath/ath5k/debug.h |   17 --------
+ 3 files changed, 19 insertions(+), 64 deletions(-)
 
-Hi Rafał,
-
-Still think its better to stick with a generic name even if currently you  
-only come across this in Broadcom chips right now. I do agree that the  
-term 'axi' is implying something else than what this bus driver is  
-providing. The name 'axi-dmp' I gave earlier may be more to the point.
-
-I also looked at the amba driver after receiving comments on the brcmaxi  
-library module (this is what Hauke Mehrtens referred to) and came to  
-similar conclusion as you did. It does however support PM properly so you  
-may want to get inspiration in that area. I also noticed a reference to  
-AMBA term APB which is a different bus in the AMBA family. AXI was  
-introduced later as higher performance bus (in AMBA rev3 if I remember  
-correctly).
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 1a561b8..a799d04 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2901,7 +2901,6 @@ ath5k_deinit_softc(struct ath5k_softc *sc)
+ 	 * XXX: ??? detach ath5k_hw ???
+ 	 * Other than that, it's straightforward...
+ 	 */
+-	ath5k_debug_finish_device(sc);
+ 	ieee80211_unregister_hw(hw);
+ 	ath5k_desc_free(sc);
+ 	ath5k_txq_release(sc);
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 0230f30..0bf7313 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -888,65 +888,38 @@ static const struct file_operations fops_queue = {
+ void
+ ath5k_debug_init_device(struct ath5k_softc *sc)
+ {
+-	sc->debug.level = ath5k_debug;
++	struct dentry *phydir;
+ 
+-	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
+-				sc->hw->wiphy->debugfsdir);
++	sc->debug.level = ath5k_debug;
+ 
+-	sc->debug.debugfs_debug = debugfs_create_file("debug",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_debug);
++	phydir = debugfs_create_dir("ath5k", sc->hw->wiphy->debugfsdir);
++	if (!phydir)
++	    return;
+ 
+-	sc->debug.debugfs_registers = debugfs_create_file("registers", S_IRUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_registers);
++	debugfs_create_file("debug", S_IWUSR | S_IRUSR, phydir, sc,
++			    &fops_debug);
+ 
+-	sc->debug.debugfs_beacon = debugfs_create_file("beacon",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_beacon);
++	debugfs_create_file("registers", S_IRUSR, phydir, sc, &fops_registers);
+ 
+-	sc->debug.debugfs_reset = debugfs_create_file("reset", S_IWUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_reset);
++	debugfs_create_file("beacon", S_IWUSR | S_IRUSR, phydir, sc,
++			    &fops_beacon);
+ 
+-	sc->debug.debugfs_antenna = debugfs_create_file("antenna",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_antenna);
++	debugfs_create_file("reset", S_IWUSR, phydir, sc, &fops_reset);
+ 
+-	sc->debug.debugfs_misc = debugfs_create_file("misc",
+-				S_IRUSR,
+-				sc->debug.debugfs_phydir, sc, &fops_misc);
++	debugfs_create_file("antenna", S_IWUSR | S_IRUSR, phydir, sc,
++			    &fops_antenna);
+ 
+-	sc->debug.debugfs_frameerrors = debugfs_create_file("frameerrors",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc,
+-				&fops_frameerrors);
++	debugfs_create_file("misc", S_IRUSR, phydir, sc, &fops_misc);
+ 
+-	sc->debug.debugfs_ani = debugfs_create_file("ani",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc,
+-				&fops_ani);
++	debugfs_create_file("frameerrors", S_IWUSR | S_IRUSR, phydir, sc,
++			    &fops_frameerrors);
+ 
+-	sc->debug.debugfs_queue = debugfs_create_file("queue",
+-				S_IWUSR | S_IRUSR,
+-				sc->debug.debugfs_phydir, sc,
+-				&fops_queue);
+-}
++	debugfs_create_file("ani", S_IWUSR | S_IRUSR, phydir, sc, &fops_ani);
+ 
+-void
+-ath5k_debug_finish_device(struct ath5k_softc *sc)
+-{
+-	debugfs_remove(sc->debug.debugfs_debug);
+-	debugfs_remove(sc->debug.debugfs_registers);
+-	debugfs_remove(sc->debug.debugfs_beacon);
+-	debugfs_remove(sc->debug.debugfs_reset);
+-	debugfs_remove(sc->debug.debugfs_antenna);
+-	debugfs_remove(sc->debug.debugfs_misc);
+-	debugfs_remove(sc->debug.debugfs_frameerrors);
+-	debugfs_remove(sc->debug.debugfs_ani);
+-	debugfs_remove(sc->debug.debugfs_queue);
+-	debugfs_remove(sc->debug.debugfs_phydir);
++	debugfs_create_file("queue", S_IWUSR | S_IRUSR, phydir, sc,
++			    &fops_queue);
+ }
+ 
+-
+ /* functions used in other places */
+ 
+ void
+diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
+index b0355ae..193dd2d 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.h
++++ b/drivers/net/wireless/ath/ath5k/debug.h
+@@ -68,17 +68,6 @@ struct ath5k_buf;
+ 
+ struct ath5k_dbg_info {
+ 	unsigned int		level;		/* debug level */
+-	/* debugfs entries */
+-	struct dentry		*debugfs_phydir;
+-	struct dentry		*debugfs_debug;
+-	struct dentry		*debugfs_registers;
+-	struct dentry		*debugfs_beacon;
+-	struct dentry		*debugfs_reset;
+-	struct dentry		*debugfs_antenna;
+-	struct dentry		*debugfs_misc;
+-	struct dentry		*debugfs_frameerrors;
+-	struct dentry		*debugfs_ani;
+-	struct dentry		*debugfs_queue;
+ };
+ 
+ /**
+@@ -141,9 +130,6 @@ void
+ ath5k_debug_init_device(struct ath5k_softc *sc);
+ 
+ void
+-ath5k_debug_finish_device(struct ath5k_softc *sc);
+-
+-void
+ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah);
+ 
+ void
+@@ -167,9 +153,6 @@ static inline void
+ ath5k_debug_init_device(struct ath5k_softc *sc) {}
+ 
+ static inline void
+-ath5k_debug_finish_device(struct ath5k_softc *sc) {}
+-
+-static inline void
+ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah) {}
+ 
+ static inline void
 -- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+1.7.3.2
 
