@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:62414 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756477Ab1D3Qkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 12:40:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/14] iwlagn: prefer BSS context
-Date: Sat, 30 Apr 2011 09:17:39 -0700
-Message-Id: <1304180260-13875-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184057_759929_62B369DE)
-In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37060 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab1DJAln (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Apr 2011 20:41:43 -0400
+Received: by eyx24 with SMTP id 24so1411820eyx.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2011 17:41:42 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [RFT] p54: implement multicast + arp req PS filter
+Date: Sun, 10 Apr 2011 04:41:36 +0400
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <201104020058.17232.chunkeey@googlemail.com> <201104100334.22689.jcmvbkbc@gmail.com> <201104100154.37008.chunkeey@googlemail.com>
+In-Reply-To: <201104100154.37008.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104100441.37852.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> > > > In the multicast case filter seems to work correctly, but it treats broadcast
+> > > > as subject to that filtering too. By default only 01:00:5e:00:00:01 gets into
+> > > > priv->mc_maclist, so we miss all broadcasts.
+> > > ok, so we have to reserve a spot for ff:ff:ff:ff:ff:ff.
+> > 
+> > But currently that cancels ARP filtering completely.
+> 
+> Ok, so we can't have both [atm] and we can't really choose between them either.
+> Or do you think it's worth salvaging the multicast filter for a [PATCH]?
 
-If an interface type changes from a type that is
-only supported on the PAN context (e.g. P2P GO)
-to a type that is supported on the BSS context,
-and the BSS context is not in use, then we need
-to use the BSS context instead of changing the
-device type within the context. To achieve this,
-refuse the type change, which causes a down/up
-cycle that will allocate the BSS context for the
-interface.
+Well, multicast filtering appears to work good with that additional broadcast entry. So, why not.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+> > > interesting, well a unnamed [but trustworthy] source told us that ST identified
+> > > a problem with the arp/multicast filter some time ago, unfortunately I haven't
+> > > seen any updated p54spi firmwares lately. Maybe this sagred stuff works?
+> > 
+> > "sagred stuff" ?
+> yeah, it was a while ago... 
+> "p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)"
+> http://www.spinics.net/lists/linux-wireless/msg55967.html
+> 
+> AFAIK they have another p54spi firmware
+> "phy0: FW rev 2.19.0.0.A.14 Private - Softmac protocol 5.6"
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 98cfbb6..4653dea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1765,6 +1765,7 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct iwl_priv *priv = hw->priv;
- 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
-+	struct iwl_rxon_context *bss_ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 	struct iwl_rxon_context *tmp;
- 	u32 interface_modes;
- 	int err;
-@@ -1789,6 +1790,19 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		goto out;
- 	}
- 
-+	/*
-+	 * Refuse a change that should be done by moving from the PAN
-+	 * context to the BSS context instead, if the BSS context is
-+	 * available and can support the new interface type.
-+	 */
-+	if (ctx->ctxid == IWL_RXON_CTX_PAN && !bss_ctx->vif &&
-+	    (bss_ctx->interface_modes & BIT(newtype) ||
-+	     bss_ctx->exclusive_interface_modes & BIT(newtype))) {
-+		BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	if (ctx->exclusive_interface_modes & BIT(newtype)) {
- 		for_each_context(priv, tmp) {
- 			if (ctx == tmp)
--- 
-1.7.0.4
+Ok, I'll try to test it with firmware images other than nokia's native.
 
+Thanks.
+-- Max
