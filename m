@@ -1,119 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59394 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754728Ab1D0PCk (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38177 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002Ab1DJRfx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 11:02:40 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1455241bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 08:02:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] ssb: cc: prepare clockmode support for cores rev 10+
-Date: Wed, 27 Apr 2011 17:40:11 +0200
-Message-Id: <1303918811-4949-1-git-send-email-zajec5@gmail.com> (sfid-20110427_170248_932570_DC6B4866)
+	Sun, 10 Apr 2011 13:35:53 -0400
+Received: by qwk3 with SMTP id 3so2878130qwk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 10:35:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4DA1E90A.5070902@gmail.com>
+References: <4DA1E90A.5070902@gmail.com>
+Date: Sun, 10 Apr 2011 19:35:52 +0200
+Message-ID: <BANLkTimp6h9x0JC0HzSpKzdbKLOw=ioUvw@mail.gmail.com>
+Subject: Re: Firmware files for Ralink RT28x0
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/ssb/driver_chipcommon.c |   60 ++++++++++++++++++++++++++++-----------
- 1 files changed, 43 insertions(+), 17 deletions(-)
+Hi.
 
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index b4b3733..06d15b6 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -46,40 +46,66 @@ void ssb_chipco_set_clockmode(struct ssb_chipcommon *cc,
- 	if (!ccdev)
- 		return;
- 	bus = ccdev->bus;
-+
-+	/* We support SLOW only on 6..9 */
-+	if (ccdev->id.revision >= 10 && mode == SSB_CLKMODE_SLOW)
-+		mode = SSB_CLKMODE_DYNAMIC;
-+
-+	if (cc->capabilities & SSB_CHIPCO_CAP_PMU)
-+		return; /* PMU controls clockmode, separated function needed */
-+	SSB_WARN_ON(ccdev->id.revision >= 20);
-+
- 	/* chipcommon cores prior to rev6 don't support dynamic clock control */
- 	if (ccdev->id.revision < 6)
- 		return;
--	/* chipcommon cores rev10 are a whole new ball game */
-+
-+	/* ChipCommon cores rev10+ need testing */
- 	if (ccdev->id.revision >= 10)
- 		return;
-+
- 	if (!(cc->capabilities & SSB_CHIPCO_CAP_PCTL))
- 		return;
- 
- 	switch (mode) {
--	case SSB_CLKMODE_SLOW:
-+	case SSB_CLKMODE_SLOW: /* For revs 6..9 only */
- 		tmp = chipco_read32(cc, SSB_CHIPCO_SLOWCLKCTL);
- 		tmp |= SSB_CHIPCO_SLOWCLKCTL_FSLOW;
- 		chipco_write32(cc, SSB_CHIPCO_SLOWCLKCTL, tmp);
- 		break;
- 	case SSB_CLKMODE_FAST:
--		ssb_pci_xtal(bus, SSB_GPIO_XTAL, 1); /* Force crystal on */
--		tmp = chipco_read32(cc, SSB_CHIPCO_SLOWCLKCTL);
--		tmp &= ~SSB_CHIPCO_SLOWCLKCTL_FSLOW;
--		tmp |= SSB_CHIPCO_SLOWCLKCTL_IPLL;
--		chipco_write32(cc, SSB_CHIPCO_SLOWCLKCTL, tmp);
-+		if (ccdev->id.revision < 10) {
-+			ssb_pci_xtal(bus, SSB_GPIO_XTAL, 1); /* Force crystal on */
-+			tmp = chipco_read32(cc, SSB_CHIPCO_SLOWCLKCTL);
-+			tmp &= ~SSB_CHIPCO_SLOWCLKCTL_FSLOW;
-+			tmp |= SSB_CHIPCO_SLOWCLKCTL_IPLL;
-+			chipco_write32(cc, SSB_CHIPCO_SLOWCLKCTL, tmp);
-+		} else {
-+			chipco_write32(cc, SSB_CHIPCO_SYSCLKCTL,
-+				(chipco_read32(cc, SSB_CHIPCO_SYSCLKCTL) |
-+				 SSB_CHIPCO_SYSCLKCTL_FORCEHT));
-+			/* udelay(150); TODO: not available in early init */
-+		}
- 		break;
- 	case SSB_CLKMODE_DYNAMIC:
--		tmp = chipco_read32(cc, SSB_CHIPCO_SLOWCLKCTL);
--		tmp &= ~SSB_CHIPCO_SLOWCLKCTL_FSLOW;
--		tmp &= ~SSB_CHIPCO_SLOWCLKCTL_IPLL;
--		tmp &= ~SSB_CHIPCO_SLOWCLKCTL_ENXTAL;
--		if ((tmp & SSB_CHIPCO_SLOWCLKCTL_SRC) != SSB_CHIPCO_SLOWCLKCTL_SRC_XTAL)
--			tmp |= SSB_CHIPCO_SLOWCLKCTL_ENXTAL;
--		chipco_write32(cc, SSB_CHIPCO_SLOWCLKCTL, tmp);
--
--		/* for dynamic control, we have to release our xtal_pu "force on" */
--		if (tmp & SSB_CHIPCO_SLOWCLKCTL_ENXTAL)
--			ssb_pci_xtal(bus, SSB_GPIO_XTAL, 0);
-+		if (ccdev->id.revision < 10) {
-+			tmp = chipco_read32(cc, SSB_CHIPCO_SLOWCLKCTL);
-+			tmp &= ~SSB_CHIPCO_SLOWCLKCTL_FSLOW;
-+			tmp &= ~SSB_CHIPCO_SLOWCLKCTL_IPLL;
-+			tmp &= ~SSB_CHIPCO_SLOWCLKCTL_ENXTAL;
-+			if ((tmp & SSB_CHIPCO_SLOWCLKCTL_SRC) !=
-+			    SSB_CHIPCO_SLOWCLKCTL_SRC_XTAL)
-+				tmp |= SSB_CHIPCO_SLOWCLKCTL_ENXTAL;
-+			chipco_write32(cc, SSB_CHIPCO_SLOWCLKCTL, tmp);
-+
-+			/* For dynamic control, we have to release our xtal_pu
-+			 * "force on" */
-+			if (tmp & SSB_CHIPCO_SLOWCLKCTL_ENXTAL)
-+				ssb_pci_xtal(bus, SSB_GPIO_XTAL, 0);
-+		} else {
-+			chipco_write32(cc, SSB_CHIPCO_SYSCLKCTL,
-+				(chipco_read32(cc, SSB_CHIPCO_SYSCLKCTL) &
-+				 ~SSB_CHIPCO_SYSCLKCTL_FORCEHT));
-+		}
- 		break;
- 	default:
- 		SSB_WARN_ON(1);
--- 
-1.7.3.4
+>> I notice that rt2800{pci,usb} each specify only one firmware image,
+>> regardless of the controller version.
+>>
+>> This is inconsistent with rt28{6,7}0sta and with the firmware images in
+>> linux-firmware.
+>>
+>> If you think that a single image per bus type can cover all controllers,
+>> please identify those firmware images, test them on each hardware
+>> generation, and get them into linux-firmware.
+>
+> querida:/datos/kernel/linux-2.6/drivers/net/wireless/rt2x00 $ grep "\.bin" *
+> rt2800pci.h:#define FIRMWARE_RT2860 † † † † † † † † † † "rt2860.bin"
+> rt2800usb.h:#define FIRMWARE_RT2870 † † † † † † † † † † "rt2870.bin"
+> rt61pci.h:#define FIRMWARE_RT2561 † † † † † † † † † † † "rt2561.bin"
+> rt61pci.h:#define FIRMWARE_RT2561s † † † † † † † † † † †"rt2561s.bin"
+> rt61pci.h:#define FIRMWARE_RT2661 † † † † † † † † † † † "rt2661.bin"
+> rt73usb.h:#define FIRMWARE_RT2571 † † † † † † † † † † † "rt73.bin"
+>
+> rt3070.bin rt3071.bin rt3090.bin should be deleted from linux-firmware.
+> They were only need by staging drivers.
 
+True, but the rt2860 and rt2870 firmware file are outdated in the
+linux-firmware,
+and probably don't support the rt3090 or other more recent chipsets. So before
+they can be removed, those files must be updated.
+
+Ivo
