@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:51247 "EHLO lucidpixels.com"
+Received: from mga02.intel.com ([134.134.136.20]:20751 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752897Ab1DZKWC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 06:22:02 -0400
-Date: Tue, 26 Apr 2011 06:22:01 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Roland Dreier <roland@kernel.org>
-cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-In-Reply-To: <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> (sfid-20110426_122226_401537_86A9AC5C)
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	id S1753893Ab1DJPte (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Apr 2011 11:49:34 -0400
+Subject: Re: [PATCH 03/16] iwlagn: fix radar frame rejection
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Tamrazian, GarenX" <garenx.tamrazian@intel.com>
+In-Reply-To: <1302423305.3519.3.camel@jlt3.sipsolutions.net>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1302276636-12802-4-git-send-email-wey-yi.w.guy@intel.com>
+	 <1302423305.3519.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 10 Apr 2011 08:29:37 -0700
+Message-ID: <1302449377.14995.128.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2011-04-10 at 01:15 -0700, Johannes Berg wrote:
+> On Fri, 2011-04-08 at 08:30 -0700, Wey-Yi Guy wrote:
+> > From: Garen Tamrazian <garenx.tamrazian@intel.com>
+> > 
+> > The microcode may sometimes reject TX frames when
+> > on a radar channel even after we associated as it
+> > clears information during association and needs to
+> > receive a new beacon before allowing that channel
+> > again. This manifests itself as a TX status value
+> > of TX_STATUS_FAIL_PASSIVE_NO_RX. So in this case,
+> > stop the corresponding queue and give the frame
+> > back to mac80211 for retransmission. We start the
+> > queue again when a beacon from the AP is received
+> > which will make the regulatory enforcement in the
+> > device allow transmitting again.
+> 
+> It'd be nice to have this in .39 as well
 
+Agree, John, would you like me to re-submit
 
-On Mon, 25 Apr 2011, Roland Dreier wrote:
-
-> On Mon, Apr 25, 2011 at 11:35 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->> I notice periodic kernel crashes when using wireless.
->> Has anyone seen this using the rt2800usb driver?
->>
->> When the host is on the LAN (supermicro+intel), there are zero crashes.
->> Since I don't have it in a location where I can use netdump over the
->> LAN/wire, see the picture below for the kernel crash/OOPS on the console:
->>
->> http://home.comcast.net/~jpiszcz/20110425/kernel_crash.jpg [1.2m]
->
-> Unfortunately a lot of the crash has scrolled away.  Is there any way
-> you can change your console's text mode to, say, 50 lines so more info
-> is visible?
->
-
-Hi,
-
-It crashed again:
-http://home.comcast.net/~jpiszcz/20110426/rt2800usb-crash2.jpg [1.1m]
-
-Please let me know if this is enough output as I cannot increase the
-resolution anymore on this monitor..  Also if you have any patches you would
-like me to try, let me know as this seems to happen quite often, thanks!
-
-Justin.
-
+Wey
 
