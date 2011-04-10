@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38065 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753386Ab1DEQOM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 12:14:12 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH wireless-2.6] iwlagn: override 5300 EEPROM # of chains
-Date: Tue,  5 Apr 2011 08:55:05 -0700
-Message-Id: <1302018905-19518-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:56372 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754160Ab1DJTC2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Apr 2011 15:02:28 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id DFD86540177
+	for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 15:07:06 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110410190227.11A1140EB3@repository3.orbit-lab.org>
+Date: Sun, 10 Apr 2011 15:02:27 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-At least EEPROM version 0x11A has the wrong
-number of chains programmed into it for some
-reason, so we need to override in the driver.
+compat-wireless code metrics
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-these patches are also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-5000.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 3ea31b6..22e045b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -530,6 +530,9 @@ static struct iwl_ht_params iwl5000_ht_params = {
- struct iwl_cfg iwl5300_agn_cfg = {
- 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
- 	IWL_DEVICE_5000,
-+	/* at least EEPROM 0x11A has wrong info */
-+	.valid_tx_ant = ANT_ABC,	/* .cfg overwrite */
-+	.valid_rx_ant = ANT_ABC,	/* .cfg overwrite */
- 	.ht_params = &iwl5000_ht_params,
- };
- 
--- 
-1.7.0.4
-
+    837893 - Total upstream lines of code being pulled
