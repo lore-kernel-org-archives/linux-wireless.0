@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:61664 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546Ab1DWMdm (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37740 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab1DJRMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 08:33:42 -0400
+	Sun, 10 Apr 2011 13:12:17 -0400
+Received: by wya21 with SMTP id 21so4221964wya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 10:12:16 -0700 (PDT)
+Message-ID: <4DA1E4ED.6080804@gmail.com>
+Date: Sun, 10 Apr 2011 19:12:13 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <op.vuallvn63ri7v4@arend-laptop>
-References: <1303331669-31293-1-git-send-email-arend@broadcom.com>
- <201104211612.49805.arnd@arndb.de> <op.vuallvn63ri7v4@arend-laptop>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Sat, 23 Apr 2011 14:33:21 +0200
-Message-ID: <BANLkTinUWNvkigqkOQeYsyaAKnVXOCji8w@mail.gmail.com>
-Subject: Re: [PATCH] drivers: brcmaxi: provide amba axi functionality in
- separate module
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	George Kashperko <george@znau.edu.ua>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Andy Botting <andy@andybotting.com>, Greg KH <greg@kroah.com>,
-	Michael Buesch <m@bues.ch>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 April 2011 16:38, Arend van Spriel <arend@broadcom.com> wrote:
-> Would it be possible to make chipcommon driver optional (not doing the
-> initialization)?
+Larry Finger wrote:
 
-This would need to be done on a per-device/bus basis, at least for
-embedded. Consider the following setup (which is quite common for dual
-band routers):
+> There are three USB IDs supported by staging/rt2870sta that are not in the
+> mainline driver rt2800usb.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+> 
+> Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
+>  	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Draytek */
+>  	{ USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Edimax */
+> @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
+>  	/* Planex */
+>  	{ USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Quanta */
+>  	{ USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Ralink */
 
-BCM4718
-+- Common Core <- provides flash write access, GPIOs, watchdog, ...
-+- 802.11 Core <- for 2.4Ghz wifi
-+- PCIe Core
-  + BCM43224
-    +- Common Core
-    +- 802.11 Core <- for 5Ghz wifi
-
-(I omitted any cores not relevant for the example)
-
-So eventually you want to able to drive both 802.11 cores, but can't
-exclusively claim both common cores.
-
-Regards
-Jonas
+NACK, unless they also be in the windows driver.
+They were eliminated in recent versions of ralink LiNUX drivers.
