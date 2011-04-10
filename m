@@ -1,80 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33831 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757251Ab1DAWXG (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51718 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754263Ab1DJTZf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 18:23:06 -0400
-Received: by iwn34 with SMTP id 34so3957248iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 15:23:06 -0700 (PDT)
+	Sun, 10 Apr 2011 15:25:35 -0400
+Received: by wwa36 with SMTP id 36so5899331wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 12:25:34 -0700 (PDT)
+Message-ID: <4DA2042A.3010301@gmail.com>
+Date: Sun, 10 Apr 2011 21:25:30 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1301694574.3842.6.camel@jlt3.sipsolutions.net>
-References: <1301686955-9402-1-git-send-email-lrodriguez@atheros.com>
- <1301687948.3842.0.camel@jlt3.sipsolutions.net> <AANLkTimJ8F-MFcK6raqcSFMsieGCx_gK_Ud1AF7BNPR2@mail.gmail.com>
- <1301689736.3842.4.camel@jlt3.sipsolutions.net> <AANLkTimHCgmoWvC_Ou7BsiDjwxF=YB0h4-g=_afYxsQF@mail.gmail.com>
- <1301694574.3842.6.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 1 Apr 2011 15:22:46 -0700
-Message-ID: <AANLkTi=U0PYmvTmadQu+a5OzoyxKMu_rn0wi=Wq37Spi@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] cfg80211: fix regulatory restore upon user hints
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	ben@decadent.org.uk
+Subject: Re: Firmware files for Ralink RT28x0
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 1, 2011 at 2:49 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-04-01 at 14:47 -0700, Luis R. Rodriguez wrote:
->> On Fri, Apr 1, 2011 at 1:28 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Fri, 2011-04-01 at 13:10 -0700, Luis R. Rodriguez wrote:
->> >>
->> >> The order should not matter except that we want the queue to be
->> >> cleared before processing core hints when doing restoration, otherwise
->> >> the next user hint in the queue can be bogus and it will prevent a
->> >> restore.
->> >
->> > I'm just thinking this temporary clearing could cause us to reject a
->> > reply from CRDA that's coming in at the same time that is due to a user
->> > request.
->>
->> Ah, I see, hmm well I tested this with:
->>
->> iw reg set US; iw reg set XA; iw reg set XB; iw reg set CR; iw dev
->> wlan0 disconnect; iw reg set FR;
->
-> was CRDA running though?
+Ben Hutchings wrote:
 
-Yes
+> Ralink provides multiple drivers per bus type for RT28xx and later
+> chips.  For PCI devices they split between RT2860 and RT309x; for USB
+> devices they split between RT2870 and RT307x (I think - the chip model
+> numbers don't seem to be stated consistently).
+> 
+> In addition, the USB drivers have two separate images packed together
+> and they can select different images based on the controller version:
+> 
+> #ifdef RTMP_MAC_USB
+> 		if ((Version != 0x2860) && (Version != 0x2872) && (Version != 0x3070)) 
+> 		{	// Use Firmware V2.
+> 			//printk("KH:Use New Version,part2\n");
+> 			pFirmwareImage = (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV1_LENGTH];
+> 			FileLength = FIRMWAREIMAGEV2_LENGTH;
+> 		}
+> 		else
+> 		{
+> 			//printk("KH:Use New Version,part1\n");
+> 			pFirmwareImage = FirmwareImage;
+> 			FileLength = FIRMWAREIMAGEV1_LENGTH;
+> 		}
+> #endif // RTMP_MAC_USB //
+> 
+> The firmware blobs in RT2870 version 2009-08-20 and RT3070 version
+> 2009-05-25 are all marked as version 17 (or 0.17), but *they all have
+> different contents*.
+> 
+> I attempted to maintain the same version selection logic when converting
+> the staging drivers to use the firmware loader, since I assumed there
+> was a good reason for it.
+> 
 
-> If so, it will probably reply right away
+As you can see in the ralink web[1] RT28XX/RT30XX USB devices (RT2870/RT2770/RT3572/RT3070)
+need _only_ the rt2870.bin fw-file.
 
-Except for the cases that are bogus: XA, XB
+And RT28XX/RT30XX PCI/mPCI/PCIe/CardBus devices
+(RT2760/RT2790/RT2860/RT2890/RT3060/RT3062/RT3562/RT2860/RT2760/RT2890/RT2790/RT3090)
+need _only_ the rt2860.bin fw-file.
 
-> -- I  don't think you can hit the race easily.
+> linux-firmware is supposed to have all firmware files referenced by any
+> version of Linux
 
-I'm just trying to see the entry points on the code for such a race,
-apart from the points I mentioned I cannot see any other case. Can
-you?
+That's a good joke!
+linux-firmware is *unmaintained* , a lot of firmwares are missing.
+Even the intel ones(microcode.dat, ipw2{1,2}*), zd1211, etc...
+Others are very old, really it's a mess.
+Fedora puts _forty_ patches on top of linux-firmware.
 
->> and things were still being processed in the order sent. There is a
->> small race between the unlock of the reg_mutex on
->> restore_regulatory_settings() down until where we lock the
->> regulatory_hint_core() and regulatory_hint_user(). The chances of a
->> user regulatory hint coming in between is very low, I could not do it.
->> Then there is also a small race of getting a user reg hint on
->> restore_regulatory_settings() in between the regulatory_hint_user()
->> and the lock of the reg_mutex again for processing old regulatory
->> hints, but the worst that can happen in that case is we squeeze in a
->> user regulatory hint in before the other older regulatory hints, and
->> this is fine.
->>
->> I cannot see any other cases here where we'd block a request from userspace.
->
-> No not block a request. I'm just thinking that this taking things off
-> the list temporarily might erroneously discard a crda response.
-
-Ah, but the stuff in the queue is stuff which we have not yet sent out
-to userspace. CRDA and the kernel process regulatory requests
-atomically.
-
-  Luis
+[1] http://www.ralinktech.com/support.php?s=2
