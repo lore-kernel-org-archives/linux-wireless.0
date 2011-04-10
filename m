@@ -1,266 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754023Ab1DRNfz (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45868 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754552Ab1DJS0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:35:55 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/23] rt2800usb: read TX_STA_FIFO asynchronously
-Date: Mon, 18 Apr 2011 15:29:12 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181528.28208.IvDoorn@gmail.com> <201104181528.51457.IvDoorn@gmail.com>
-In-Reply-To: <201104181528.51457.IvDoorn@gmail.com>
+	Sun, 10 Apr 2011 14:26:38 -0400
+Received: by iyb14 with SMTP id 14so4949249iyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 11:26:38 -0700 (PDT)
+Message-ID: <4DA1F655.1070909@lwfinger.net>
+Date: Sun, 10 Apr 2011 13:26:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181529.13131.IvDoorn@gmail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: Firmware files for Ralink RT28x0
+References: <4DA1E90A.5070902@gmail.com> <BANLkTimp6h9x0JC0HzSpKzdbKLOw=ioUvw@mail.gmail.com>
+In-Reply-To: <BANLkTimp6h9x0JC0HzSpKzdbKLOw=ioUvw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+On 04/10/2011 12:35 PM, Ivo Van Doorn wrote:
+> Hi.
+>
+>>> I notice that rt2800{pci,usb} each specify only one firmware image,
+>>> regardless of the controller version.
+>>>
+>>> This is inconsistent with rt28{6,7}0sta and with the firmware images in
+>>> linux-firmware.
+>>>
+>>> If you think that a single image per bus type can cover all controllers,
+>>> please identify those firmware images, test them on each hardware
+>>> generation, and get them into linux-firmware.
+>>
+>> querida:/datos/kernel/linux-2.6/drivers/net/wireless/rt2x00 $ grep "\.bin" *
+>> rt2800pci.h:#define FIRMWARE_RT2860                     "rt2860.bin"
+>> rt2800usb.h:#define FIRMWARE_RT2870                     "rt2870.bin"
+>> rt61pci.h:#define FIRMWARE_RT2561                       "rt2561.bin"
+>> rt61pci.h:#define FIRMWARE_RT2561s                      "rt2561s.bin"
+>> rt61pci.h:#define FIRMWARE_RT2661                       "rt2661.bin"
+>> rt73usb.h:#define FIRMWARE_RT2571                       "rt73.bin"
+>>
+>> rt3070.bin rt3071.bin rt3090.bin should be deleted from linux-firmware.
+>> They were only need by staging drivers.
+>
+> True, but the rt2860 and rt2870 firmware file are outdated in the
+> linux-firmware,
+> and probably don't support the rt3090 or other more recent chipsets. So before
+> they can be removed, those files must be updated.
 
-Trying to fix the "TX status report missed" warnings
-by reading the TX_STA_FIFO entries as quickly as possible.
-The TX_STA_FIFO is too small in hardware, thus reading
-it only from the workqueue is too slow and entries get lost.
+As I wrote earlier, my RT3090 is supported by rt2860.bin. I haven't tested 
+everything, but is functioned in STA and ad-hoc modes.
 
-Start an asynchronous read of the TX_STA_FIFO directly from
-the TX URB completion callback (atomic context, thus it cannot
-use the blocking rt2800_register_read()). If the async
-read returns a valid FIFO entry, it is pushed into a larger
-FIFO inside struct rt2x00_dev, until rt2800_txdone() picks
-it up.
-
-A .tx_dma_done callback is added to struct rt2x00lib_ops
-to trigger the async read from the URB completion callback.
-
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   34 ++++++--------------
- drivers/net/wireless/rt2x00/rt2800usb.c |   31 ++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00usb.c |   53 +++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00usb.h |   15 +++++++++
- 5 files changed, 110 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 0e2c006..d79c8fd 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -730,34 +730,20 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 	struct data_queue *queue;
- 	struct queue_entry *entry;
- 	u32 reg;
--	u8 pid;
--	int i;
-+	u8 qid;
- 
--	/*
--	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
--	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
--	 * flag is not set anymore.
--	 *
--	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
--	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
--	 * tx ring size for now.
--	 */
--	for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
--		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
--		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
--			break;
-+	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
- 
--		/*
--		 * Skip this entry when it contains an invalid
--		 * queue identication number.
-+		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
-+		 * qid is guaranteed to be one of the TX QIDs
- 		 */
--		pid = rt2x00_get_field32(reg, TX_STA_FIFO_PID_QUEUE);
--		if (pid >= QID_RX)
--			continue;
--
--		queue = rt2x00queue_get_tx_queue(rt2x00dev, pid);
--		if (unlikely(!queue))
-+		qid = rt2x00_get_field32(reg, TX_STA_FIFO_PID_QUEUE);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
-+		if (unlikely(!queue)) {
-+			WARNING(rt2x00dev, "Got TX status for an unavailable "
-+					   "queue %u, dropping\n", qid);
- 			continue;
-+		}
- 
- 		/*
- 		 * Inside each queue, we process each entry in a chronological
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index f3ce5e8..862430e 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -98,6 +98,35 @@ static void rt2800usb_stop_queue(struct data_queue *queue)
- 	}
- }
- 
-+static void rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
-+						 int urb_status, u32 tx_status)
-+{
-+	if (urb_status) {
-+		WARNING(rt2x00dev, "rt2x00usb_register_read_async failed: %d\n", urb_status);
-+		return;
-+	}
-+
-+	/* try to read all TX_STA_FIFO entries before scheduling txdone_work */
-+	if (rt2x00_get_field32(tx_status, TX_STA_FIFO_VALID)) {
-+		if (!kfifo_put(&rt2x00dev->txstatus_fifo, &tx_status)) {
-+			WARNING(rt2x00dev, "TX status FIFO overrun, "
-+				"drop tx status report.\n");
-+			queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
-+		} else
-+			rt2x00usb_register_read_async(rt2x00dev, TX_STA_FIFO,
-+						      rt2800usb_tx_sta_fifo_read_completed);
-+	} else if (!kfifo_is_empty(&rt2x00dev->txstatus_fifo))
-+		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
-+}
-+
-+static void rt2800usb_tx_dma_done(struct queue_entry *entry)
-+{
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+
-+	rt2x00usb_register_read_async(rt2x00dev, TX_STA_FIFO,
-+				      rt2800usb_tx_sta_fifo_read_completed);
-+}
-+
- /*
-  * Firmware functions
-  */
-@@ -565,6 +594,7 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags);
- 	__set_bit(CAPABILITY_LINK_TUNING, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags);
-+	__set_bit(REQUIRE_TXSTATUS_FIFO, &rt2x00dev->cap_flags);
- 
- 	/*
- 	 * Set the rssi offset.
-@@ -635,6 +665,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
- 	.kick_queue		= rt2x00usb_kick_queue,
- 	.stop_queue		= rt2800usb_stop_queue,
- 	.flush_queue		= rt2x00usb_flush_queue,
-+	.tx_dma_done		= rt2800usb_tx_dma_done,
- 	.write_tx_desc		= rt2800usb_write_tx_desc,
- 	.write_tx_data		= rt2800usb_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 79c385a..e3b9b51 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -571,6 +571,7 @@ struct rt2x00lib_ops {
- 	void (*kick_queue) (struct data_queue *queue);
- 	void (*stop_queue) (struct data_queue *queue);
- 	void (*flush_queue) (struct data_queue *queue);
-+	void (*tx_dma_done) (struct queue_entry *entry);
- 
- 	/*
- 	 * TX control handlers
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 0bc8dcc..5fbab6f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -165,6 +165,56 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_regbusy_read);
- 
-+
-+struct rt2x00_async_read_data {
-+	__le32 reg;
-+	struct usb_ctrlrequest cr;
-+	struct rt2x00_dev *rt2x00dev;
-+	void (*callback)(struct rt2x00_dev *,int,u32);
-+};
-+
-+static void rt2x00usb_register_read_async_cb(struct urb *urb)
-+{
-+	struct rt2x00_async_read_data *rd = urb->context;
-+	rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg));
-+	kfree(urb->context);
-+}
-+
-+void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
-+				   const unsigned int offset,
-+				   void (*callback)(struct rt2x00_dev*,int,u32))
-+{
-+	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
-+	struct urb *urb;
-+	struct rt2x00_async_read_data *rd;
-+
-+	rd = kmalloc(sizeof(*rd), GFP_ATOMIC);
-+	if (!rd)
-+		return;
-+
-+	urb = usb_alloc_urb(0, GFP_ATOMIC);
-+	if (!urb) {
-+		kfree(rd);
-+		return;
-+	}
-+
-+	rd->rt2x00dev = rt2x00dev;
-+	rd->callback = callback;
-+	rd->cr.bRequestType = USB_VENDOR_REQUEST_IN;
-+	rd->cr.bRequest = USB_MULTI_READ;
-+	rd->cr.wValue = 0;
-+	rd->cr.wIndex = cpu_to_le16(offset);
-+	rd->cr.wLength = cpu_to_le16(sizeof(u32));
-+
-+	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
-+			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
-+			     rt2x00usb_register_read_async_cb, rd);
-+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+		kfree(rd);
-+	usb_free_urb(urb);
-+}
-+EXPORT_SYMBOL_GPL(rt2x00usb_register_read_async);
-+
- /*
-  * TX data handlers.
-  */
-@@ -212,6 +262,9 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
-+	if (rt2x00dev->ops->lib->tx_dma_done)
-+		rt2x00dev->ops->lib->tx_dma_done(entry);
-+
- 	/*
- 	 * Report the frame as DMA done
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
-index 6aaf51f..e3faca6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-@@ -345,6 +345,21 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 			   const struct rt2x00_field32 field,
- 			   u32 *reg);
- 
-+/**
-+ * rt2x00usb_register_read_async - Asynchronously read 32bit register word
-+ * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
-+ * @offset: Register offset
-+ * @callback: Functon to call when read completes.
-+ *
-+ * Submit a control URB to read a 32bit register. This safe to
-+ * be called from atomic context.  The callback will be called
-+ * when the URB completes. Otherwise the function is similar
-+ * to rt2x00usb_register_read().
-+ */
-+void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
-+				   const unsigned int offset,
-+				   void (*callback)(struct rt2x00_dev*,int,u32));
-+
- /*
-  * Radio handlers
-  */
--- 
-1.7.2.3
-
+Larry
