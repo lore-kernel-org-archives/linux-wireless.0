@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:44817 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756437Ab1D0SAT (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:51285 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603Ab1DJTJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 14:00:19 -0400
-Received: by pvg12 with SMTP id 12so1310806pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 11:00:18 -0700 (PDT)
-Message-ID: <4DB859AE.7090703@lwfinger.net> (sfid-20110427_200023_081938_130D823C)
-Date: Wed, 27 Apr 2011 13:00:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 10 Apr 2011 15:09:53 -0400
+Message-ID: <4DA2007E.4000307@gmail.com>
+Date: Sun, 10 Apr 2011 21:09:50 +0200
+From: roel <roel.kluin@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 1/2] ssb: pci: separate workarounds
-References: <1303918788-4903-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1303918788-4903-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k_hw: index out of bounds
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/2011 10:39 AM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
->   drivers/ssb/driver_pcicore.c |   98 +++++++++++++++++++++++++-----------------
->   1 files changed, 58 insertions(+), 40 deletions(-)
+Check whether index is within bounds before testing the element
 
+Both spurChans arrays in modalHeader5G and modalHeader2G have 5 elements,
+AR_EEPROM_MODAL_SPURS is defined 5. So unless a break occurs, in the
+last iteration (i=5) we tried to access spurChansPtr[5] before testing
+whether i was within bounds. Fix this.
 
-ACK.
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Larry
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index eb250d6..93398de 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -401,7 +401,7 @@ static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
+ 
+ 	ar9003_hw_spur_ofdm_clear(ah);
+ 
+-	for (i = 0; spurChansPtr[i] && i < 5; i++) {
++	for (i = 0; i < AR_EEPROM_MODAL_SPURS && spurChansPtr[i]; i++) {
+ 		freq_offset = FBIN2FREQ(spurChansPtr[i], mode) - synth_freq;
+ 		if (abs(freq_offset) < range) {
+ 			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset);
