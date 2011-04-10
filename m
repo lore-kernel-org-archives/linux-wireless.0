@@ -1,86 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab1DLLmY (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:33207 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112Ab1DJXa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:42:24 -0400
-Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: aidapalapati@nvidia.com
-Cc: olofj@chromium.org, linville@tuxdriver.com, uraval@nvidia.com,
-	linux-wireless@vger.kernel.org, aritger@nvidia.com,
-	krakesh@nvidia.com
-In-Reply-To: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
-References: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 13:42:20 +0200
-Message-ID: <1302608540.3639.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 10 Apr 2011 19:30:26 -0400
+Date: Sun, 10 Apr 2011 18:30:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192ce: Fix LED initialization
+Message-ID: <4da23d8f.C5/W7DWoHsTK1/u/%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-12 at 16:55 +0530, aidapalapati@nvidia.com wrote:
-> From: Anantha Idapalapati <aidapalapati@nvidia.com>
-> 
-> Initial version of new "rfkill" driver to control BT radio.
-> A new kernel config variable CONFIG_BT_RFKILL is defined and
-> need to be used to include this driver in the kernel.
-> 
-> Three Platform resources are expected by the driver.
->  - Shutdown GPIO
->  - Reset GPIO and
->  - Reference Clock.
-> Any/All of the resources can be defined by a platform.
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-So it really is a GPIO_RFKILL driver. What's bluetooth specific in it?
+Driver rtl8192ce does not initialize the LED correctly.
 
-> BUG=none
-> TEST= tested on board using BCM4329 (ventana)
-> 
-> Change-Id: I38e6ad3a772180b7cab5cf2d59b459b21051817e
+Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> --- a/drivers/bluetooth/Kconfig
-> +++ b/drivers/bluetooth/Kconfig
-> @@ -219,4 +219,12 @@ config BT_ATH3K
->  	  Say Y here to compile support for "Atheros firmware download driver"
->  	  into the kernel or say M to compile it as module (ath3k).
->  
-> +config BT_RFKILL
-> +	bool "Bluetooth RFKILL driver"
-> +	depends on BT && RFKILL
-> +	help
-> +	  If you say yes here you get support of a generic bluetooth RFKILL
-> +	  driver for BT chipset. Platform needs to define the resources
-> +	  required.
+John,
 
-GPIO should show up in the name and description. BT should not. The
-driver should be moved to net/rfkill/ and be generic for GPIO.
+This patch should probably be in 2.6.39, but I would not force the issue.
 
-> +static int bt_rfkill_probe(struct platform_device *pdev)
-> +{
-> +	struct rfkill *bt_rfkill_dev;
-> +	struct resource *res;
-> +	int ret;
-> +	bool enable = false;  /* off */
-> +	bool default_sw_block_state;
-> +
-> +	bt_rfkill = kzalloc(sizeof(*bt_rfkill), GFP_KERNEL);
-> +	if (!bt_rfkill)
-> +		return -ENOMEM;
-> +
-> +	bt_rfkill->bt_clk = clk_get(&pdev->dev, "bt_clk");
+Larry
+---
 
-I don't think all of this is really the best way to do things. This
-hardcodes "bt_clk" for example. But that's useless for a generic driver.
-
-Please look at
-http://article.gmane.org/gmane.linux.kernel/1124137
-
-That driver requires that some specific code registers a platform device
-with the right data, but you could do that for this as well and get rid
-of all the hardcoded strings and the hard-coded assumption that it's for
-bluetooth. I think that approach is MUCH better, since then if somebody
-has a Wifi or GPS device with GPIO control they can reuse this code.
-
-johannes
-
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -251,14 +251,16 @@ void rtl_init_rfkill(struct ieee80211_hw
+ 	bool blocked;
+ 	u8 valid = 0;
+ 
+-	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
++	/*set init state to on */
++	rtlpriv->rfkill.rfkill_state = 1;
++	wiphy_rfkill_set_hw_state(hw->wiphy, 0);
+ 
+-	/*set init state to that of switch */
+-	rtlpriv->rfkill.rfkill_state = radio_state;
+-	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
+-	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
++	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+ 
+ 	if (valid) {
++		printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
++				rtlpriv->rfkill.rfkill_state ? "on" : "off");
++
+ 		rtlpriv->rfkill.rfkill_state = radio_state;
+ 
+ 		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
+@@ -32,6 +32,14 @@
+ #include "reg.h"
+ #include "led.h"
+ 
++static void _rtl92ce_init_led(struct ieee80211_hw *hw,
++			      struct rtl_led *pled, enum rtl_led_pin ledpin)
++{
++	pled->hw = hw;
++	pled->ledpin = ledpin;
++	pled->ledon = false;
++}
++
+ void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ {
+ 	u8 ledcfg;
+@@ -97,10 +105,10 @@ void rtl92ce_sw_led_off(struct ieee80211
+ 
+ void rtl92ce_init_sw_leds(struct ieee80211_hw *hw)
+ {
+-}
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+ 
+-void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw)
+-{
++	_rtl92ce_init_led(hw, &(pcipriv->ledctl.sw_led0), LED_PIN_LED0);
++	_rtl92ce_init_led(hw, &(pcipriv->ledctl.sw_led1), LED_PIN_LED1);
+ }
+ 
+ void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
+Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
+@@ -1785,7 +1785,8 @@ void rtl_pci_disconnect(struct pci_dev *
+ 
+ 	rtl_pci_deinit(hw);
+ 	rtl_deinit_core(hw);
+-	rtlpriv->cfg->ops->deinit_sw_leds(hw);
++	if (rtlpriv->cfg->ops->deinit_sw_leds)
++		rtlpriv->cfg->ops->deinit_sw_leds(hw);
+ 	_rtl_pci_io_handler_release(hw);
+ 	rtlpriv->cfg->ops->deinit_sw_vars(hw);
+ 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
+@@ -31,7 +31,6 @@
+ #define __RTL92CE_LED_H__
+ 
+ void rtl92ce_init_sw_leds(struct ieee80211_hw *hw);
+-void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw);
+ void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
+ void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
+ void rtl92ce_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -131,7 +131,6 @@ static struct rtl_hal_ops rtl8192ce_hal_
+ 	.enable_hw_sec = rtl92ce_enable_hw_security_config,
+ 	.set_key = rtl92ce_set_key,
+ 	.init_sw_leds = rtl92ce_init_sw_leds,
+-	.deinit_sw_leds = rtl92ce_deinit_sw_leds,
+ 	.get_bbreg = rtl92c_phy_query_bb_reg,
+ 	.set_bbreg = rtl92c_phy_set_bb_reg,
+ 	.get_rfreg = rtl92ce_phy_query_rf_reg,
