@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:39624 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751173Ab1DBBcw (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3565 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755268Ab1DKSkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 21:32:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: return success in set_default_key for WPA/WPA2
-Date: Fri,  1 Apr 2011 18:36:46 -0700
-Message-Id: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
+	Mon, 11 Apr 2011 14:40:16 -0400
+Message-ID: <4DA3477F.8080709@gmail.com>
+Date: Mon, 11 Apr 2011 20:25:03 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>, dwmw2@infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2800pci: rt2800usb: Firmware update
+References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net> <4DA33F3A.6090707@gmail.com> <BANLkTimJCNpTqn-uQjRLHTyGjHxd+BpJ4Q@mail.gmail.com> <20110411181303.GD2268@decadent.org.uk>
+In-Reply-To: <20110411181303.GD2268@decadent.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 04/11/11 20:13, Ben Hutchings wrote:
+> On Mon, Apr 11, 2011 at 07:57:15PM +0200, Ivo Van Doorn wrote:
+>>>> From: Shiang Tu<shiang_tu@ralinktech.com>
+>>>>
+>>>> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
+>>>> Version 29.
+>>>>
+>>>> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
+>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>>> ---
+>>>>  WHENCE     |    8 ++++----
+>>>>  rt2860.bin |  Bin 8192 ->  8192 bytes
+>>>>  rt2870.bin |  Bin 4096 ->  8192 bytes
+>>>>  3 files changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> links to rt3070.bin rt3071.bin rt3090.bin ???
+>>
+>> What do you mean? Those files should be deleted from the linux-firmware
+>> package. There is no need to keep them around, as with the removal of
+>> the staging drivers, the last users of those files are gone.
+>  
+> Stop repeating this nonsense, Ivo.  If the firmware has been bundled in
+> the Linux tree, that would be correct.  For linux-firmware the policy is
+> different.
 
-When testing wpa_supplicant with 'nl80211' driver to connect
-to an AP with WPA/WPA2 security, we notice the followings:
+It's unbelievable how much fuzz a set of binary firmware files can create.
 
-1) add_key is called firstly with the key from cfg80211
-2) set_defaut_key is called next
+To be honest, I do not care whether they stay or go, as long as it is very
+clear that rt2x00 does not need, and will never need those files. If they
+stay, I would recommend simply not touching them at all, and leave them as
+they are, so that nothing changes for the people running the staging driver
+(at least with respect to these 3 firmware files).
 
-set_default_key() is specific to WEP keys and should not be
-called in case of WPA/WPA2 security. The set_default_key()
-won't be called if wpa_supplicant uses "-Dwext" option,
-but it's been called if "-Dnl80211" option is specified.
+Larry, it might be best to update your changes to the WHENCE file to clearly
+state that these 3 files are only needed for the staging rt2860sta driver,
+up to kernel 2.6.39 (assuming that that staging driver will be removed in 2.6.40).
 
-We can fix this issue by adding a check to return from
-set_default_key() if WEP key is not configured.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 2d96800..4ac4f5a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -228,6 +228,10 @@ mwifiex_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *netdev,
- 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
- 	int ret;
- 
-+	/* Return if WEP key not configured */
-+	if (priv->sec_info.wep_status == MWIFIEX_802_11_WEP_DISABLED)
-+		return 0;
-+
- 	ret = mwifiex_set_encode(priv, NULL, 0, key_index, 0);
- 
- 	wiphy_dbg(wiphy, "info: set default Tx key index\n");
--- 
-1.7.0.2
-
+Gertjan
