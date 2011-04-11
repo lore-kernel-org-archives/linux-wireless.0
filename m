@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:57706 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751330Ab1DAJDb (ORCPT
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:48585 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751487Ab1DKGXB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 05:03:31 -0400
-Received: by mail-wy0-f172.google.com with SMTP id 29so4323367wyb.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 02:03:30 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Handle duplicate calling of remove interface
-From: Luciano Coelho <coelho@ti.com>
-To: juuso.oikarinen@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1301406230-18630-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1301406230-18630-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 12:04:07 +0300
-Message-ID: <1301648647.1988.445.camel@cumari>
-Mime-Version: 1.0
+	Mon, 11 Apr 2011 02:23:01 -0400
+Subject: Re: [PATCH] mwl8k: interrupt handling changes
+From: Nishant Sarmukadam <nishants@marvell.com>
+Reply-To: nishants@marvell.com
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110408181946.GY22881@wantstofly.org>
+References: <1302253707.3447.86.camel@localhost.localdomain>
+	 <20110408181946.GY22881@wantstofly.org>
+Content-Type: text/plain
+Date: Mon, 11 Apr 2011 11:43:25 +0530
+Message-ID: <1302502405.3447.144.camel@localhost.localdomain>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-29 at 16:43 +0300, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Because of the hardware recovery mechanism, its possible the
-> __wl1271_op_remove_interface is called twice. Currently, this leads to a
-> kernel crash even before a kernel WARNing can be issued.
-> 
-> Fix this.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
 
-Applied, thanks Juuso!
+On Fri, 2011-04-08 at 11:19 -0700, Lennert Buytenhek wrote:
+> On Fri, Apr 08, 2011 at 02:38:27PM +0530, Nishant Sarmukadam wrote:
+> 
+> > We do not need to enable all the interrupts in mwl8k_probe_hw.
+> > We need to enable only MWL8K_A2H_INT_OPC_DONE interrupt for sending
+> > commands to the firmware. Keep the other interrupts masked in
+> > mwl8k_probe_hw.
+> 
+> This part of the description matches the patch.  But..
+> 
+> 
+> > Also, in mwl8k_start, where we expect other interrupts,
+> > enable only those interrupts we are interested in.
+> 
+> ..this comment does not match the code.
+> 
+> 
+> >  	/* Enable interrupts */
+> >  	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+> > +	iowrite32(MWL8K_A2H_EVENTS,
+> > +		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+> 
+> This writes to the status register.  Why does it do that?
 
--- 
-Cheers,
-Luca.
+Here we are writing to the 'status mask' register and not the 'status'
+register. Interrupts will not be enabled until we write 1's in the
+status mask register. Earlier, we were writing 0xffffffff in this
+register, whereas enabling only interrupts specified in MWL8K_A2H_EVENTS
+should be sufficient since driver is interested in only those
+interrupts. Hence the description. 
+
 
