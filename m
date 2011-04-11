@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab1D2MjJ (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:48440 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849Ab1DKSqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 08:39:09 -0400
-Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1304080563.2931.41.camel@alex-2> (sfid-20110429_143612_006856_91560407)
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130620-109@post.gmane.org>
-	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
-	 <loom.20110428T135917-421@post.gmane.org>
-	 (sfid-20110428_141415_832084_99A2E356) <1303995368.3558.9.camel@jlt3.sipsolutions.net>
-	 <loom.20110429T084118-365@post.gmane.org>
-	 (sfid-20110429_085443_970145_470B3272)  <1304061675.3589.1.camel@jlt3.sipsolutions.net>
-	 <1304066264.2931.23.camel@alex-2>  <1304080563.2931.41.camel@alex-2>
-	 (sfid-20110429_143612_006856_91560407)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 14:39:07 +0200
-Message-ID: <1304080747.21342.1.camel@jlt3.sipsolutions.net> (sfid-20110429_143913_338536_839C9EB2)
-Mime-Version: 1.0
+	Mon, 11 Apr 2011 14:46:07 -0400
+Message-ID: <4DA34C69.1050508@lwfinger.net>
+Date: Mon, 11 Apr 2011 13:46:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Ben Hutchings <ben@decadent.org.uk>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2800pci: rt2800usb: Firmware update
+References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net> <4DA33F3A.6090707@gmail.com> <BANLkTimJCNpTqn-uQjRLHTyGjHxd+BpJ4Q@mail.gmail.com> <20110411181303.GD2268@decadent.org.uk> <4DA3477F.8080709@gmail.com>
+In-Reply-To: <4DA3477F.8080709@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-29 at 14:36 +0200, Alexander Simon wrote:
+On 04/11/2011 01:25 PM, Gertjan van Wingerde wrote:
+> On 04/11/11 20:13, Ben Hutchings wrote:
+>> On Mon, Apr 11, 2011 at 07:57:15PM +0200, Ivo Van Doorn wrote:
+>>>>> From: Shiang Tu<shiang_tu@ralinktech.com>
+>>>>>
+>>>>> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
+>>>>> Version 29.
+>>>>>
+>>>>> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
+>>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>>>> ---
+>>>>>   WHENCE     |    8 ++++----
+>>>>>   rt2860.bin |  Bin 8192 ->   8192 bytes
+>>>>>   rt2870.bin |  Bin 4096 ->   8192 bytes
+>>>>>   3 files changed, 4 insertions(+), 4 deletions(-)
+>>>>
+>>>> links to rt3070.bin rt3071.bin rt3090.bin ???
+>>>
+>>> What do you mean? Those files should be deleted from the linux-firmware
+>>> package. There is no need to keep them around, as with the removal of
+>>> the staging drivers, the last users of those files are gone.
+>>
+>> Stop repeating this nonsense, Ivo.  If the firmware has been bundled in
+>> the Linux tree, that would be correct.  For linux-firmware the policy is
+>> different.
+>
+> It's unbelievable how much fuzz a set of binary firmware files can create.
+>
+> To be honest, I do not care whether they stay or go, as long as it is very
+> clear that rt2x00 does not need, and will never need those files. If they
+> stay, I would recommend simply not touching them at all, and leave them as
+> they are, so that nothing changes for the people running the staging driver
+> (at least with respect to these 3 firmware files).
+>
+> Larry, it might be best to update your changes to the WHENCE file to clearly
+> state that these 3 files are only needed for the staging rt2860sta driver,
+> up to kernel 2.6.39 (assuming that that staging driver will be removed in 2.6.40).
 
+Agreed. I'll add that as soon as I get the requested info about what changed 
+from Ralink.
 
-> - If HT has been configured through iw and a non-HT network is to be
-> joined, iw's HT setting is used and announced.
+I can test if linking rt3090.bin to rt2860.bin works for the PCI device, but I 
+have no USB stick for testing. As a result, I'm inclined to leave those files 
+intact for the foreseeable future.
 
-This isn't possible, you might join a network on a channel that doesn't
-allow HT40+ for example.
+Off-Topic: What are some makes/models of USB sticks? If there are some 
+inexpensive models on E-bay, I could add to my collection.
 
-johannes
-
+Larry
