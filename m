@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63790 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758506Ab1DMLdF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48809 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752155Ab1DKOi7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 07:33:05 -0400
-Received: by bwz15 with SMTP id 15so479226bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 04:33:03 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Damian Lesiuk <lesiuk@gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
-Date: Wed, 13 Apr 2011 13:32:46 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <201104131214.53633.chunkeey@googlemail.com> <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
-In-Reply-To: <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104131332.47029.chunkeey@googlemail.com>
+	Mon, 11 Apr 2011 10:38:59 -0400
+Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: aidapalapati@nvidia.com
+Cc: olofj@chromium.org, linville@tuxdriver.com, uraval@nvidia.com,
+	linux-wireless@vger.kernel.org, aritger@nvidia.com,
+	krakesh@nvidia.com
+In-Reply-To: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
+References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Apr 2011 16:38:54 +0200
+Message-ID: <1302532734.6487.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 April 2011 12:51:58 Damian Lesiuk wrote:
-> It doesn't solved my problem. Still max dl speed 16 mbps.
-ok, so it could be something else... maybe it's a driver bug, maybe
-something is outdated [avoid hostapd older than 0.7,3], or maybe
-just a simple configuration problem [on either side]?
+On Mon, 2011-04-11 at 20:03 +0530, aidapalapati@nvidia.com wrote:
+> From: Anantha Idapalapati <aidapalapati@nvidia.com>
+> 
+> Initial version of new "rfkill" driver to control BT radio.
+> A new kernel config variable CONFIG_BT_RFKILL is defined and
+> need to be used to include this driver in the kernel.
 
-you can't tell that by just looking at the low throughput figure.
-Instead you probably have to capture the handshake between the
-AP+client and look who's lying about their 11n capabilities.
+That seems a little too generic, given the fact that this needs some
+specific bcm4329 chip? Or then again, does it really? It should just be
+called BT GPIO RFkill, no?
 
-Luckily, all mac80211-based driver come with a nifty feature which
-allows you to monitor any incoming/outgoing data. Just setup a
-monitor interface.
-<http://wireless.kernel.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+johannes
 
-and start a sniffer. tcpdump/whireshark is more than enough.
-
-> btw, Can I use ath9k_htc with my Atheros 9170 in N master mode.
-no, ar9170 is too old. ath9k_htc is exclusive driver for the
-ar9271,ar701x+ar928x devices, which appeared in late 2009.
-
-> What about performance?
-it's ok.
-
-Regards,
-	Chr
