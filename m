@@ -1,44 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57271 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752608Ab1DSN7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:38 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:12 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 16/22] ath9k_hw: Enable byte Tx/Rx data swap for AR9340
-Date: Tue, 19 Apr 2011 19:29:14 +0530
-Message-ID: <1303221560-25139-17-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:54622 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754947Ab1DKVgl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 17:36:41 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110411212513.GA17809@kroah.com>
+References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+	<20110411210631.GA28559@kroah.com>
+	<BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
+	<20110411212513.GA17809@kroah.com>
+Date: Mon, 11 Apr 2011 23:36:39 +0200
+Message-ID: <BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
+Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	Andy Botting <andy@andybotting.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+2011/4/11 Greg KH <greg@kroah.com>:
+> On Mon, Apr 11, 2011 at 11:19:13PM +0200, Rafał Miłecki wrote:
+>> 2011/4/11 Greg KH <greg@kroah.com>:
+>> > On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
+>> >> +static void axi_release_core_dev(struct device *dev)
+>> >> +{
+>> >> +     /* Silent lack-of-release warning */
+>> >> +}
+>> >
+>> > Ok, WTF!!!!
+>>
+>> Thank you for your kindly words. It's much more enjoyable to work on
+>> kernel that way. I definitely made that on purpose.
+>
+> I can't tell if you are kidding or not.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 08e0aa9..9df2fe8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1533,7 +1533,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 				REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
- 		}
- #ifdef __BIG_ENDIAN
--                else
-+		else if (AR_SREV_9340(ah))
-+			REG_RMW(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB, 0);
-+		else
- 			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
- #endif
- 	}
+That was 100% irony. I swear I don't enjoy publishing bad code and
+getting such a comment.
+
+
+> Please read the documentation for how to do this properly.  I find it
+> really hard to believe that you wrote that comment instead of putting in
+> the 2 lines of code required for this function.
+>
+> Especially as-it-is, your code does not work properly and leaks memory
+> badly.  Why would you do that on purpose?
+
+I tried to read some documentation about this.
+
+1) driver-mode/device.txt says only that:
+> Callback to free the device after all references have
+> gone away. This should be set by the allocator of the
+> device (i.e. the bus driver that discovered the device).
+I *really* do not know how my driver should "free" core on AXI bus.
+
+2) LDD3 says:
+> The method is called when the last reference to the device is removed; it is called
+> from the embedded kobject’s release method. All device structures registered with
+> the core must have a release method, or the kernel prints out scary complaints.
+Well, I do not register any structs for AXI core.
+
+3) Example code from LDD3:
+static void ldd_bus_release(struct device *dev)
+{
+printk(KERN_DEBUG "lddbus release\n");
+}
+Yeah, that's what I did...
+
+4) SSB in it's ssb_release_dev just calls kfree on struct that was
+allocated when registering drivers. *I do not* allocate such a struct,
+so I believe I do exactly the same memory leak as SSB does.
+
+
+Can you spend 2 more minues in addition to commenting my ideas and
+help me with writing that 2 lines I missed? Where do I leak memory in
+my driver? Which struct should I kfree?
+
 -- 
-1.7.0.4
-
+Rafał
