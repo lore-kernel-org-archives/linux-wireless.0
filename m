@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1607 "EHLO MMS3.broadcom.com"
+Received: from kroah.org ([198.145.64.141]:40967 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478Ab1DTHlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 03:41:09 -0400
-Message-ID: <4DAE8E00.8040603@broadcom.com>
-Date: Wed, 20 Apr 2011 09:40:48 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1754023Ab1DKXf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 19:35:58 -0400
+Date: Mon, 11 Apr 2011 16:35:51 -0700
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	Andy Botting <andy@andybotting.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+Message-ID: <20110411233551.GB13240@kroah.com>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] staging: brcm80211: removed #ifdef __mips__
-References: <1303197225-4263-1-git-send-email-rvossen@broadcom.com>
- <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
- <1303215002.27432.5.camel@maggie> <4DAD920A.9080500@broadcom.com>
- <1303220960.27432.11.camel@maggie>
- <1303221437.3603.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1303221437.3603.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2011 03:57 PM, Johannes Berg wrote:
-> I don't see how write flushing would be MIPS specific anyway? It's a
-> function of the bus (PCI), not the host architecture, no?
+On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
+> Cc: Michael Büsch <mb@bu3sch.de>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: George Kashperko <george@znau.edu.ua>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: Russell King <rmk@arm.linux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Andy Botting <andy@andybotting.com>
+> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> V2: Rename to axi
+>     Use DEFINE_PCI_DEVICE_TABLE in bridge
+>     Make use of pr_fmt and pr_*
+>     Store core class
+>     Rename bridge to not b43 specific
+>     Replace magic 0x1000 with BCMAI_CORE_SIZE
+>     Remove some old "ssb" names and defines
+>     Move BCMAI_ADDR_BASE def
+>     Add drvdata field
+> V3: Fix reloading (kfree issue)
+>     Add 14e4:0x4331
+>     Fix non-initialized struct issue
+>     Drop useless inline functions wrappers for pci core drv
+>     Proper pr_* usage
+> V3.1: Include forgotten changes (pr_* and include related)
+>     Explain why we dare to implement empty release function
 
-Since I am not the original author of that piece of code, I had to make 
-some inquiries, hence my non immediate response.
+Nope, still not allowed, see my other email, sorry.
 
-It turns out that the read-after-write construct was introduced in the 
-code to ensure write order for certain Broadcom chips. Those chips are: 
-bcm4706, bcm4716, bcm4717, bcm4718. All these chips contain a MIPS 
-processor.
+thanks,
 
-The #ifdef __mips__ in the code is broader than just those chips. The 
-side effect is that other broadcom chips with a mips processor also 
-execute the extra read, leading to some I/O overhead, which is acceptable.
-
-Bye, Roland.
-
+greg k-h
