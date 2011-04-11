@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40368 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752863Ab1DTVfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 17:35:31 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: update config options
-Date: Wed, 20 Apr 2011 23:35:12 +0200
-Message-Id: <1303335312-6970-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1303335312-6970-1-git-send-email-hauke@hauke-m.de>
-References: <1303335312-6970-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58922 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754058Ab1DKMVG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 08:21:06 -0400
+Received: by vxi39 with SMTP id 39so4068967vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 05:21:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1302520987.5282.568.camel@localhost>
+References: <4DA2042A.3010301@gmail.com>
+	<1302469406.5282.341.camel@localhost>
+	<4DA22545.6050209@gmail.com>
+	<4DA2312B.8080303@lwfinger.net>
+	<4DA23594.8090002@gmail.com>
+	<4DA2702B.2080305@lwfinger.net>
+	<BANLkTinM-iLEOX997VTxG+zK=8aUHXVmQA@mail.gmail.com>
+	<1302520987.5282.568.camel@localhost>
+Date: Mon, 11 Apr 2011 14:21:05 +0200
+Message-ID: <BANLkTinsJT16a4Kr+oeTbkhAtdk_Y0jyWQ@mail.gmail.com>
+Subject: Re: Firmware for rt2800pci and rt2800usb
+From: Juan Carlos Garza <juancarlosgarza@gmail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi, here the MD5...
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+On Mon, Apr 11, 2011 at 1:23 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
+> On Mon, 2011-04-11 at 13:14 +0200, Juan Carlos Garza wrote:
+>> Hi,
+>>
+>>
+>> On Mon, Apr 11, 2011 at 5:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> > Hi,
+>> >
+>> > I am in the process of updating the firmware files for rt2800pci and
+>> > rt2800usb. If you have one of the devices that use this driver, please test
+>> > the firmware file.
+>> >
+>>
+>> Tested rt2870.bin on vid=07b8 pid=3071 in AP mode using HostAPD, up to
+>> now, no problems found.
+>
+> Could people report versions or md5sums rather than just filenames,
+> please?
 
-diff --git a/config.mk b/config.mk
-index 37f32a1..f4cf832 100644
---- a/config.mk
-+++ b/config.mk
-@@ -209,9 +209,12 @@ CONFIG_MAC80211_HWSIM=m
- CONFIG_ATH5K=m
- # CONFIG_ATH5K_DEBUG=y
- # CONFIG_ATH5K_AHB=y
-+
-+CONFIG_ATH9K=m
- CONFIG_ATH9K_HW=m
- CONFIG_ATH9K_COMMON=m
- # CONFIG_ATH9K_DEBUGFS=y
-+# CONFIG_ATH9K_AHB=y
- # CONFIG_ATH9K_PKTLOG=y
- 
- # Disable this to get minstrel as default, we leave the ath9k
-@@ -226,7 +229,7 @@ CONFIG_ATH9K_RATE_CONTROL=y
- ifdef CONFIG_PCI
- 
- CONFIG_ATH5K_PCI=y
--CONFIG_ATH9K=m
-+CONFIG_ATH9K_PCI=y
- 
- CONFIG_IWLAGN=m
- # CONFIG_IWLWIFI_DEBUG=y
-@@ -540,7 +543,6 @@ CONFIG_BRCMSMAC=y
- # CONFIG_BRCMDBG=y
- 
- ifdef CONFIG_WIRELESS_EXT
--CONFIG_ATH6KL_CFG80211=y
- # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
- # CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
- # CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set
-@@ -567,7 +569,6 @@ ifeq ($(NEED_RT2X00),y)
- CONFIG_RT2X00=y
- CONFIG_RT2X00_LIB=m
- CONFIG_RT2800_LIB=m
--CONFIG_RT2X00_LIB_HT=y
- CONFIG_RT2X00_LIB_FIRMWARE=y
- CONFIG_RT2X00_LIB_CRYPTO=y
- # CONFIG_RT2X00_LIB_SOC=y
+36c944c3138125605d28c0a3a1338be9  rt2870.bin
+
+The version was not specified and I don't know how to extract it.
+
+>
+> Ben.
+>
+> --
+> Ben Hutchings
+> Once a job is fouled up, anything done to improve it makes it worse.
+>
+
+
+
 -- 
-1.7.1
-
+Juan Carlos Garza
