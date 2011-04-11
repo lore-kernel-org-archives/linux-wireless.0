@@ -1,125 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:56368 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751943Ab1DTS3y (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:45699 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753675Ab1DKJMy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 14:29:54 -0400
-Received: by mail-ew0-f53.google.com with SMTP id 8so328533ewy.12
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 11:29:51 -0700 (PDT)
-Subject: pull request: wl12xx 2011-04-20
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 21:32:20 +0300
-Message-ID: <1303324340.1988.750.camel@cumari>
-Mime-Version: 1.0
+	Mon, 11 Apr 2011 05:12:54 -0400
+Received: by qyg14 with SMTP id 14so3774076qyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 02:12:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DA2702B.2080305@lwfinger.net>
+References: <4DA2042A.3010301@gmail.com>
+	<1302469406.5282.341.camel@localhost>
+	<4DA22545.6050209@gmail.com>
+	<4DA2312B.8080303@lwfinger.net>
+	<4DA23594.8090002@gmail.com>
+	<4DA2702B.2080305@lwfinger.net>
+Date: Mon, 11 Apr 2011 11:12:53 +0200
+Message-ID: <BANLkTimdBz9iSvjfkmbRS7FfgBT-Bzdk7Q@mail.gmail.com>
+Subject: Re: Firmware for rt2800pci and rt2800usb
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello John,
+On Mon, Apr 11, 2011 at 5:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Hi,
+>
+> I am in the process of updating the firmware files for rt2800pci and
+> rt2800usb. If you have one of the devices that use this driver, please test
+> the firmware file.
+>
 
-First pull for 2.6.40.  It took some time, because I wanted to make sure
-some tricky issues were stable enough (now I hope they are!) The biggest
-change here is support for WL128x chipsets.  The rest of the patches are
-some clean-ups and small improvements.
+Cannot test these specific files right now, but Ralink does provide
+firmware files
+under these names that support all known devices supported by rt2800pci and
+rt2800usb (if they are recent enough).
+Back home I'm using slightly older versions of the firmware files on all devices
+that I have (which does span RT2860 PCI, RT3090 PCIe, RT3562 PCI (driving not
+working), RT2870, RT2070, RT3070, RT3071, RT3072, RT3370, RT3572 (driver not
+working)).
 
-Please pull or let me know if there's any problem.  This tree is based
-on wireless-next/master.
+Where did you get these specific files from?
 
-Thanks!
+I recommend using the ones that Ralink sent for inclusion in the since
+these will
+support even the newest devices (RT5370/RT5390).
 
-The following changes since commit 34a0a2025c8bddc6505b56a58ef2e7333a4e4165:
-
-  ath: Add a missing world regulatory domain 0x6C (2011-04-14 15:35:14 -0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-
-Arik Nemtsov (3):
-      wl12xx: 1281/1283 support - Use different FW file for AP mode wl127x/wl128x chips
-      wl12xx: Clamp byte mode transfers for 128x chips
-      wl12xx: configure channel/band while FW is off
-
-Eliad Peller (2):
-      wl12xx: set the actual tid instead of the ac
-      wl12xx: rearrange some ELP wake_up/sleep calls
-
-Ido Yariv (5):
-      wl12xx: Clean up and fix the 128x boot sequence
-      wl12xx: Clean up the block size alignment code
-      wl12xx: Clean up the dummy packet mechanism
-      wl12xx: Simplify TX blocks accounting
-      wl12xx: Handle platforms without level trigger interrupts
-
-Juuso Oikarinen (3):
-      wl12xx: Fix potential incorrect band in rx-status
-      wl12xx: Add mutex protection for interface list
-      wl12xx: Handle duplicate calling of remove interface
-
-Luciano Coelho (11):
-      wl12xx: add new board_tcxo_clock element to the platform data
-      wl12xx: 1281/1283 support - add block size handling for sdio and spi
-      wl12xx: use 1 spare TX block instead of two
-      wl12xx: set the skbuff priority for dummy packets
-      wl12xx: fix SG BT load value to reflect its new meaning
-      wl12xx: fix a couple of sparse warnings about undeclared functions
-      wl12xx: use a bitmask instead of list of booleans in scanned_ch
-      wl12xx: use kstrtoul functions
-      wl12xx: move hardcoded hci_io_ds value into the conf struct
-      wl12xx: remove unused conf_radio_params structure
-      wl12xx: fix sparse warning about undeclared wl12xx_alloc_dummy_packet
-
-Ohad Ben-Cohen (3):
-      wl12xx: update bet_max_consecutive
-      wl12xx: fix roaming
-      wl12xx: fix "JOIN while associated" commentary
-
-Shahar Levi (11):
-      wl12xx: 1281/1283 support - move IRQ polarity
-      wl12xx: 1281/1283 support - Add Definitions
-      wl12xx: 1281/1283 support - Add acx commands
-      wl12xx: 1281/1283 support - New radio structs and functions
-      wl12xx: 1281/1283 support - Loading FW & NVS
-      wl12xx: 1281/1283 support - New boot sequence
-      wl12xx: 1281/1283 support - use dynamic memory for the RX/TX pools
-      wl12xx: 1281/1283 support - Improve Tx & Rx path
-      wl12xx: 1281/1283 support - Add dummy packet support
-      wl12xx: 1281/1283 support - enable chip support
-      wl12xx: Add support for 11n Rx STBC one spatial stream
-
- drivers/net/wireless/wl12xx/Kconfig     |    2 +-
- drivers/net/wireless/wl12xx/acx.c       |   59 +++++-
- drivers/net/wireless/wl12xx/acx.h       |   11 +
- drivers/net/wireless/wl12xx/boot.c      |  279 +++++++++++++++++++++----
- drivers/net/wireless/wl12xx/boot.h      |   52 +++++
- drivers/net/wireless/wl12xx/cmd.c       |   97 ++++++++-
- drivers/net/wireless/wl12xx/cmd.h       |   34 +++
- drivers/net/wireless/wl12xx/conf.h      |   17 +-
- drivers/net/wireless/wl12xx/debugfs.c   |    2 +-
- drivers/net/wireless/wl12xx/event.c     |   17 +-
- drivers/net/wireless/wl12xx/event.h     |    5 +-
- drivers/net/wireless/wl12xx/ini.h       |   98 +++++++++-
- drivers/net/wireless/wl12xx/init.c      |   45 ++++-
- drivers/net/wireless/wl12xx/init.h      |    1 +
- drivers/net/wireless/wl12xx/io.c        |   11 +
- drivers/net/wireless/wl12xx/io.h        |    3 +
- drivers/net/wireless/wl12xx/main.c      |  343 +++++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/ps.c        |    3 -
- drivers/net/wireless/wl12xx/reg.h       |   15 +--
- drivers/net/wireless/wl12xx/rx.c        |   44 +++--
- drivers/net/wireless/wl12xx/scan.c      |   17 +-
- drivers/net/wireless/wl12xx/sdio.c      |   27 +++-
- drivers/net/wireless/wl12xx/sdio_test.c |   20 ++-
- drivers/net/wireless/wl12xx/spi.c       |   17 ++-
- drivers/net/wireless/wl12xx/testmode.c  |    6 +-
- drivers/net/wireless/wl12xx/tx.c        |  234 ++++++++++++++++------
- drivers/net/wireless/wl12xx/tx.h        |   60 +++++-
- drivers/net/wireless/wl12xx/wl12xx.h    |   65 +++++-
- include/linux/wl12xx.h                  |   29 +++-
- 29 files changed, 1324 insertions(+), 289 deletions(-)
-
--- 
-Cheers,
-Luca.
-
+---
+Gertjan
