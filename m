@@ -1,96 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:52720 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871Ab1DMV6O convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37756 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755054Ab1DKRuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 17:58:14 -0400
+	Mon, 11 Apr 2011 13:50:54 -0400
+Received: by vws1 with SMTP id 1so4331550vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 10:50:53 -0700 (PDT)
+Message-ID: <4DA33F78.5050305@gmail.com>
+Date: Mon, 11 Apr 2011 13:50:48 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=8HEysFXhcv5yn=ErWZkzzqPoSug@mail.gmail.com>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-	<20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-	<1302634039.14216.10.camel@dev.znau.edu.ua>
-	<BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
-	<1302635550.14216.21.camel@dev.znau.edu.ua>
-	<BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
-	<4DA4AC4B.90409@hauke-m.de>
-	<BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
-	<BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
-	<1302640546.14216.65.camel@dev.znau.edu.ua>
-	<BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
-	<op.vtvalzu33ri7v4@arend-laptop>
-	<BANLkTik6JZ-n3sVjCFK_x1yNRH3_o3_6rg@mail.gmail.com>
-	<1302726187.7911.11.camel@dev.znau.edu.ua>
-	<BANLkTi=8HEysFXhcv5yn=ErWZkzzqPoSug@mail.gmail.com>
-Date: Wed, 13 Apr 2011 23:58:12 +0200
-Message-ID: <BANLkTinXnZzF_1XkdDpuHsL-NWDd03VREw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"balbi@ti.com" <balbi@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Sujith <m.sujith@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_htc: Fix ethtool reporting
+References: <19875.14815.278751.401499@gargle.gargle.HOWL>
+In-Reply-To: <19875.14815.278751.401499@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/13 Rafał Miłecki <zajec5@gmail.com>:
-> Will comment on that later.
+On 04/11/11 13:26, Sujith wrote:
+> From: Sujith Manoharan<Sujith.Manoharan@atheros.com>
+>
+> Pass the correct module name and device interface so that
+> ethtool can display the proper values.
+>
+> The firmware version will be fixed later on when the FW
+> can actually report a version. :)
+>
+> Reported-by: Richard Farina<sidhayn@gmail.com>
+> Signed-off-by: Sujith Manoharan<Sujith.Manoharan@atheros.com>
+Tested-by: Richard Farina <sidhayn@gmail.com>
 
-Can we try to decide, how to implement our driver correctly? This
-should be main focus for now. I tried to analyze drivers/amba/, how it
-works, how it relates to our code, Broadcom.
+Sujith,
 
-AFAICS AMBA so far is mostly (always?) used for embedded devices with
-pre-defined hardware layout. Let's take as example mach-u300 (just
-some random one). One of the amba_devices it registers is uart0_device
-which has two interesting fields:
-.start = U300_UART0_BASE,
-.end   = U300_UART0_BASE + SZ_4K - 1,
-U300_UART0_BASE == (U300_SLOW_PER_PHYS_BASE+0x3000) == 0xc0013000
-So this mach-u300 is well-specified device, every mach-u300 has uart0
-at 0xc0013000.
+Thanks a lot for this patch, it does exactly what I need until the new 
+firmware stuff is official.
 
-It looks every AMBA device (like uart0) has some common fields, like:
-u32 peripherialid0, peripherialid1, peripherialid2, peripherialid3;
-u32 componentid0, componentid1, componentid2, componentid3;
+All,
 
-I believe Broadcom's *agent* AKA *wrapper* is comparable to standard
-amba device.
+Since ethtool reports the driver incorrectly without this patch is it 
+too much to ask for a stable push? At least into .39, further if anyone 
+thinks it appropriate. This seems like a pretty minor patch to me but 
+fixes a real problem (well at least it was a real problem for me).
 
-Of course agents/wrappers are not the same for every Broadcom AMBA AXI
-card, so we can not use strict .start and .end declarations and the
-same agents/wrappers for every card. Instead, we have to do scanning
-of EPROM to read info about agents/wrappers.
+Thanks,
+Rick Farina
+> ---
+>   drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> index f1b8af6..2d10239 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -1040,7 +1040,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+>   	}
+>
+>   	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
+> -				&hif_dev->udev->dev, hif_dev->device_id,
+> +				&interface->dev, hif_dev->device_id,
+>   				hif_dev->udev->product, id->driver_info);
+>   	if (ret) {
+>   		ret = -EINVAL;
+> @@ -1158,7 +1158,7 @@ fail_resume:
+>   #endif
+>
+>   static struct usb_driver ath9k_hif_usb_driver = {
+> -	.name = "ath9k_hif_usb",
+> +	.name = KBUILD_MODNAME,
+>   	.probe = ath9k_hif_usb_probe,
+>   	.disconnect = ath9k_hif_usb_disconnect,
+>   #ifdef CONFIG_PM
+> -- 1.7.4.4
 
-If someone does not know: every core on Broadcom AMBA AXI card has
-it's agent/wrapper. We access agent/wrapper registers to
-enable/disable/reset core.
-
-So we could scan EPROM for agents/wrappers, register them in AMBA
-driver using our *_core_enable as AMBA's clock management.
-
-
-Please verify if my understanding is correct. I tried to explain
-easily whole situation I just analyzed.
-
-If I'm right: is this really the right path to follow? What about real
-core, like PCIe core, or IEEE core? I guess they are not standard AMBA
-cores, so we can not simply register them. Should we look for clever
-way to connect everything we have with drivers/amba? How to connect
-"real" cores (PCIe, IEEE) with agents?
-
-Please, share how do you see this situation now.
-
--- 
-Rafał
