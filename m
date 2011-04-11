@@ -1,81 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:49201 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755773Ab1DGAye convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:63326 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab1DKQFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 20:54:34 -0400
+	Mon, 11 Apr 2011 12:05:07 -0400
+Received: by vws1 with SMTP id 1so4233322vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 09:05:05 -0700 (PDT)
+Message-ID: <4DA326A9.9060904@gmail.com>
+Date: Mon, 11 Apr 2011 12:04:57 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1302134429.27258.32.camel@dev.znau.edu.ua>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	<op.vti9ote53ri7v4@arend-laptop>
-	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	<1302123428.20093.6.camel@maggie>
-	<BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	<1302124112.20093.11.camel@maggie>
-	<BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	<1302124737.27258.7.camel@dev.znau.edu.ua>
-	<BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-	<1302134429.27258.32.camel@dev.znau.edu.ua>
-Date: Thu, 7 Apr 2011 02:54:33 +0200
-Message-ID: <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Sujith <m.sujith@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc oddity
+References: <4D9FCC70.1020805@gmail.com>	<19871.62035.829719.402615@gargle.gargle.HOWL>	<4DA311F3.6010007@gmail.com> <19875.7684.859710.807182@gargle.gargle.HOWL>
+In-Reply-To: <19875.7684.859710.807182@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
-<george@znau.edu.ua> napisał:
-> For PCI function description take a look at PCI specs or PCI
-> configuration space description (e. g.
-> http://en.wikipedia.org/wiki/PCI_configuration_space)
+On 04/11/11 11:28, Sujith wrote:
+> Richard Farina wrote:
+>> The following commit causes extreme sadness:
+>> [ 4094.241243] usb 2-5: new high speed USB device using ehci_hcd and
+>> address 3
+>> [ 4095.550452] usb 2-5: ath9k_htc: Transferred FW: ar9271.fw, size: 51312
+>> [ 4095.816072] ath9k_htc 2-5:1.0: ath9k_htc: HTC initialized with 33 credits
+>> [ 4159.812888] usb 2-5: USB disconnect, address 3
+>> [ 4159.929317] ath: Couldn't reset chip
+>> [ 4159.929321] ath: Unable to initialize hardware; initialization status: -5
+>> [ 4159.929323] ath: Unable to initialize hardware; initialization status: -5
+>> [ 4159.929340] Failed to initialize the device
+>> [ 4160.012603] ath9k_htc: probe of 2-5:1.0 failed with error -22
+>> [ 4160.012771] usbcore: registered new interface driver ath9k_htc
+>> [ 4163.595059] usb 2-5: new high speed USB device using ehci_hcd and
+>> address 4
+>> [ 4164.018920] usb 2-5: ath9k_htc: Transferred FW: ar9271.fw, size: 51312
+>> [ 4164.284420] ath9k_htc 2-5:1.0: ath9k_htc: HTC initialized with 33 credits
+>>
+>> I'm guessing because I need the mentioned firmware update? Where can I
+>> get it? Or better yet can you (this is almost laughable considering the
+>> ralink thread right now) get it into linux-firmware? Or is the needed
+>> firmware update an unstable thing?
+> The new FW has to be formally/officially tested before it is merged into
+> linux-firmware.
 >
-> Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
-> mean ssb/axi with two functional cores on same interconnect (like w11
-> +w11, not a lot of these exists I guess). Also there were some b43+b44
-> on single PCI ssb host and those where implemented as ssb interconnect
-> on multifunctional PCI host therefore providing separate access windows
-> for each function.
+>> Either way I can wait on the firmware-version fix but where can I find
+>> the patch that shows fixes the "driver: usb" issue? Your obviously shows
+>> properly :-)
+> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+Sorry for being a bit dim on this but which part of this exactly fixes 
+the ethtool driver function?  I'm guessing it is in the patchset and the 
+firmware is only required if I want to detect the firmware version? Or 
+do I really need experimental firmware to make it detect the driver 
+properly?
+
+Also, when you say experimental do you mean it's all pretty experimental 
+or just the AP stuff is? I'm guessing the firmware is based on the 
+current firmware so the station mode et al should be (approximately) as 
+stable at the released firmware and only the AP parts are experimental.
+
+Thanks,
+Rick Farina
+
+> Sujith
 >
-> Might I mussunderstood something (its late night here at my place) when
-> you where talking about using coreswitching involved for two drivers
-> therefore I remembered about those functions. Seems now you were talking
-> about chipcommon+b43 access sharing same window.
->
-> As for core switching requirments for earlier SSB interconnects on PCI
-> hosts where there were no direct chipcommon access, that one can be
-> accomplished without spin_lock/mutex for b43 or b44 cores with proper
-> bus design.
->
-> AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
-> available directly and b43 will be the only one requiring window access.
 
-Ahh, so while talking about 4 windows, I guess you counted fixes
-windows as well. That would be right, matching my knowledge.
-
-When asking question about amount of cores we may want to use
-simultaneously I didn't think about ChipCommon or PCIe. The real
-problem would be to support for example two 802.11 cores and one
-ethernet core at the same time. That gives us 3 cores while we have
-only 2 sliding windows. But I would not care for that too much for
-now.
-
-For the rest (PCI function) I have to sleep before reading specs ;)
-
--- 
-Rafał
