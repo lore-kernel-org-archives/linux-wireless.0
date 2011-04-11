@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754023Ab1DRNf7 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34799 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754739Ab1DKR4L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:35:59 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:58 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/23] rt2800usb: handle TX status timeouts
-Date: Mon, 18 Apr 2011 15:30:01 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181529.13131.IvDoorn@gmail.com> <201104181529.39237.IvDoorn@gmail.com>
-In-Reply-To: <201104181529.39237.IvDoorn@gmail.com>
+	Mon, 11 Apr 2011 13:56:11 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181530.02029.IvDoorn@gmail.com>
+In-Reply-To: <4DA33F3A.6090707@gmail.com>
+References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net> <4DA33F3A.6090707@gmail.com>
+From: Luis Correia <luis.f.correia@gmail.com>
+Date: Mon, 11 Apr 2011 18:55:30 +0100
+Message-ID: <BANLkTinKuQ7i20FxmDCT1cRMPvOxM0aygQ@mail.gmail.com>
+Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, dwmw2@infradead.org,
+	linux-kernel@vger.kernel.org, gwingerde@gmail.com,
+	ben@decadent.org.uk, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
+	Shiang Tu <shiang_tu@ralinktech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+Hi
 
-The watchdog just triggers rt2800usb_work_txdone() when it
-detects a TX status timeout, thus rt2800usb_work_txdone() needs to
-handle this case.
+On Mon, Apr 11, 2011 at 18:49, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> On 04/11/2011 04:27 PM, Larry Finger wrote:
+>
+>> From: Shiang Tu<shiang_tu@ralinktech.com>
+>>
+>> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
+>> Version 29.
+>>
+>> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> ---
+>>  WHENCE     |    8 ++++----
+>>  rt2860.bin |  Bin 8192 ->  8192 bytes
+>>  rt2870.bin |  Bin 4096 ->  8192 bytes
+>>  3 files changed, 4 insertions(+), 4 deletions(-)
+>
+> links to rt3070.bin rt3071.bin rt3090.bin ???
 
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+there are no such files in current rt2x00 drivers.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 862430e..69004b9 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -449,11 +449,14 @@ static void rt2800usb_work_txdone(struct work_struct *work)
- 		while (!rt2x00queue_empty(queue)) {
- 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 
--			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
--			    !test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
-+			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+				break;
-+			if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
-+				rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
-+			else if (rt2x00queue_status_timeout(entry))
-+				rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
-+			else
- 				break;
--
--			rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
- 		}
- 	}
- }
--- 
-1.7.2.3
+the rt2870.bin should support all USB rt2800 based chipsets with
+several firmware blocks concatenated inside the file.
+same goes for rt2860, which support all PCI rt2800 based chipsets with
+several firmware blocks concatenated inside the file.
 
+we know that this is confusing, we've had to live with it for a loooong time.
+
+
+Luis Correia
+rt2x00 project admin
