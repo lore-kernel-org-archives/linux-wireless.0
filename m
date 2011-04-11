@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38928 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754794Ab1DLNSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:53 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:18:27 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 21/22] ath9k_hw: Disable INTR_HOST1_FATAL to avoid interrupt strom with ar9430
-Date: Tue, 12 Apr 2011 18:47:52 +0530
-Message-ID: <1302614273-2063-12-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:49079 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088Ab1DKQMf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 12:12:35 -0400
+Received: by pvg12 with SMTP id 12so2037478pvg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 09:12:35 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19875.10497.371960.179673@gargle.gargle.HOWL>
+Date: Mon, 11 Apr 2011 21:44:57 +0530
+To: Richard Farina <sidhayn@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc oddity
+In-Reply-To: <4DA326A9.9060904@gmail.com>
+References: <4D9FCC70.1020805@gmail.com>
+	<19871.62035.829719.402615@gargle.gargle.HOWL>
+	<4DA311F3.6010007@gmail.com>
+	<19875.7684.859710.807182@gargle.gargle.HOWL>
+	<4DA326A9.9060904@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |    6 +++++-
- drivers/net/wireless/ath/ath9k/mac.c |   10 ++++++----
- 2 files changed, 11 insertions(+), 5 deletions(-)
+Richard Farina wrote:
+> Sorry for being a bit dim on this but which part of this exactly fixes 
+> the ethtool driver function?  I'm guessing it is in the patchset and the 
+> firmware is only required if I want to detect the firmware version? Or 
+> do I really need experimental firmware to make it detect the driver 
+> properly?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index aaf7f7a..072e0eb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -804,12 +804,16 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 					  enum nl80211_iftype opmode)
- {
-+	u32 sync_default = AR_INTR_SYNC_DEFAULT;
- 	u32 imr_reg = AR_IMR_TXERR |
- 		AR_IMR_TXURN |
- 		AR_IMR_RXERR |
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
- 
-+	if (AR_SREV_9340(ah))
-+		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
-+
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		imr_reg |= AR_IMR_RXOK_HP;
- 		if (ah->config.rx_intr_mitigation)
-@@ -840,7 +844,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 
- 	if (!AR_SREV_9100(ah)) {
- 		REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xFFFFFFFF);
--		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, AR_INTR_SYNC_DEFAULT);
-+		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
- 		REG_WRITE(ah, AR_INTR_SYNC_MASK, 0);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 6f431cb..d86b839 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -793,10 +793,14 @@ EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
- void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 sync_default = AR_INTR_SYNC_DEFAULT;
- 
- 	if (!(ah->imask & ATH9K_INT_GLOBAL))
- 		return;
- 
-+	if (AR_SREV_9340(ah))
-+		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
-+
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "enable IER\n");
- 	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
- 	if (!AR_SREV_9100(ah)) {
-@@ -805,10 +809,8 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
- 
- 
--		REG_WRITE(ah, AR_INTR_SYNC_ENABLE,
--			  AR_INTR_SYNC_DEFAULT);
--		REG_WRITE(ah, AR_INTR_SYNC_MASK,
--			  AR_INTR_SYNC_DEFAULT);
-+		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
-+		REG_WRITE(ah, AR_INTR_SYNC_MASK, sync_default);
- 	}
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
- 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
--- 
-1.7.0.4
+The ethtool fix is part of the patchset (specifically patch no. 3),
+and the new FW is required if the patchset is used.
 
+> Also, when you say experimental do you mean it's all pretty experimental 
+> or just the AP stuff is? I'm guessing the firmware is based on the 
+> current firmware so the station mode et al should be (approximately) as 
+> stable at the released firmware and only the AP parts are experimental.
+
+Yes, the new version is based on the current FW and the AP stuff is experimental.
+Station mode should ideally not have any problems, but since the firmware
+has had a fairly invasive cleanup, one can never know. :)
+
+Sujith
