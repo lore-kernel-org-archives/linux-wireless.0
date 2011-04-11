@@ -1,94 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50778 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752038Ab1D1Wgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 18:36:38 -0400
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: A race in register_netdevice()
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 29 Apr 2011 01:36:37 +0300
-Message-ID: <87y62ugg0a.fsf@purkki.adurom.net> (sfid-20110429_003643_721726_421C3BD5)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:44820 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab1DKRYe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 13:24:34 -0400
+Received: by iwn34 with SMTP id 34so5822607iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 10:24:33 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <19875.14815.278751.401499@gargle.gargle.HOWL>
+Date: Mon, 11 Apr 2011 22:56:55 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, sidhayn@gmail.com
+Subject: [PATCH] ath9k_htc: Fix ethtool reporting
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-there seems to be a race in register_netdevice(), which is reported here:
+Pass the correct module name and device interface so that
+ethtool can display the proper values.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15606
+The firmware version will be fixed later on when the FW
+can actually report a version. :)
 
-This is visible at least with flimflam and ath6kl. Basically what
-happens is this:
+Reported-by: Richard Farina <sidhayn@gmail.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Apr 29 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device() 
-Apr 29 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
-4): No such device
-Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
-0xbfefda3c len 1004
-Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
-NEWLINK len 1004 type 16 flags 0x0000 seq 0
-
-(ignore the 10 s delay, I added that to reproduce the issue easily)
-
-There are two ways to fix this, first is to move kobject registration
-after the call to list_netdevice():
-
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -5425,11 +5425,6 @@ int register_netdevice(struct net_device *dev)
-        if (ret)
-                goto err_uninit;
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index f1b8af6..2d10239 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -1040,7 +1040,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 	}
  
--       ret = netdev_register_kobject(dev);
--       if (ret)
--               goto err_uninit;
--       dev->reg_state = NETREG_REGISTERED;
--
-        netdev_update_features(dev);
+ 	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
+-				&hif_dev->udev->dev, hif_dev->device_id,
++				&interface->dev, hif_dev->device_id,
+ 				hif_dev->udev->product, id->driver_info);
+ 	if (ret) {
+ 		ret = -EINVAL;
+@@ -1158,7 +1158,7 @@ fail_resume:
+ #endif
  
-        /*
-@@ -5443,6 +5438,11 @@ int register_netdevice(struct net_device *dev)
-        dev_hold(dev);
-        list_netdevice(dev);
- 
-+       ret = netdev_register_kobject(dev);
-+       if (ret)
-+               goto err_uninit;
-+       dev->reg_state = NETREG_REGISTERED;
-+
-        /* Notify protocols, that a new device appeared. */
-        ret = call_netdevice_notifiers(NETDEV_REGISTER, dev);
-        ret = notifier_to_errno(ret);
-
-Other option, noticed by Jouni Malinen, is to take rtnl for
-SIOCGIFNAME. For some reason it's currently unprotected:
-
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -4917,8 +4917,12 @@ int dev_ioctl(struct net *net, unsigned int
-cmd, void __user *arg)
-          rtnl_unlock();
-                return ret;
-                }
--               if (cmd == SIOCGIFNAME)
--                  return dev_ifname(net, (struct ifreq __user *)arg);
-+                  if (cmd == SIOCGIFNAME) {
-+                     rtnl_lock();
-+                       ret = dev_ifname(net, (struct ifreq __user
--                  *)arg);
-+                       rtnl_unlock();
-+                               return ret;
-+                               }
- 
-        if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
-           return -EFAULT;
-
-I have confirmed that both of these patches fix the issue. Now I'm
-wondering which one is the best way forward. Or is there a better way
-to fix this?
-
+ static struct usb_driver ath9k_hif_usb_driver = {
+-	.name = "ath9k_hif_usb",
++	.name = KBUILD_MODNAME,
+ 	.probe = ath9k_hif_usb_probe,
+ 	.disconnect = ath9k_hif_usb_disconnect,
+ #ifdef CONFIG_PM
 -- 
-Kalle Valo
+1.7.4.4
+
