@@ -1,143 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:32787 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756378Ab1DLCif (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43519 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab1DKNTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 22:38:35 -0400
-Received: by iwn34 with SMTP id 34so6214981iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 19:38:34 -0700 (PDT)
+	Mon, 11 Apr 2011 09:19:46 -0400
+Received: by ywj3 with SMTP id 3so2146714ywj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 06:19:45 -0700 (PDT)
+Message-ID: <4DA2FFEE.9050808@lwfinger.net>
+Date: Mon, 11 Apr 2011 08:19:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Mon, 11 Apr 2011 22:38:34 -0400
-Message-ID: <BANLkTinFSTmCky-xm-3sMUU8pcjSjy2D-A@mail.gmail.com>
-Subject: [PATCH] rt2800usb: Add seven new USB IDs
-From: Mark Davis <marked86@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com, gwingerde@gmail.com, helmut.schaa@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Juan Carlos Garza <juancarlosgarza@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	users@rt2x00.serialmonkey.com
+Subject: Re: Firmware for rt2800pci and rt2800usb
+References: <4DA2042A.3010301@gmail.com>	 <1302469406.5282.341.camel@localhost> <4DA22545.6050209@gmail.com>	 <4DA2312B.8080303@lwfinger.net> <4DA23594.8090002@gmail.com>	 <4DA2702B.2080305@lwfinger.net>	 <BANLkTinM-iLEOX997VTxG+zK=8aUHXVmQA@mail.gmail.com> <1302520987.5282.568.camel@localhost>
+In-Reply-To: <1302520987.5282.568.camel@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds USB IDs for seven previously missing devices. Additionally, all
-instances of 'Conceptronic' have been replaced by the OEM name.
+On 04/11/2011 06:23 AM, Ben Hutchings wrote:
+> On Mon, 2011-04-11 at 13:14 +0200, Juan Carlos Garza wrote:
+>> Hi,
+>>
+>>
+>> On Mon, Apr 11, 2011 at 5:06 AM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>>> Hi,
+>>>
+>>> I am in the process of updating the firmware files for rt2800pci and
+>>> rt2800usb. If you have one of the devices that use this driver, please test
+>>> the firmware file.
+>>>
+>>
+>> Tested rt2870.bin on vid=07b8 pid=3071 in AP mode using HostAPD, up to
+>> now, no problems found.
+>
+> Could people report versions or md5sums rather than just filenames,
+> please?
 
-Devices added are..
-0411:01a2 - Buffalo WLI-UC-GNM, RT3070V
-0586:341e - ZyXEL NWD2105, RT3070
-13b1:002f - Linksys AE1000, RT3572
-13b1:0031 - Cisco / Linksys AM10, RT3072
-14b2:3c2c - Keebox W150NU / Alpha Networks WUS-N12, RT3070
-157e:3013 - TRENDnet TEW-645UB, RT2770+RT2720
-15a9:0012 - Airlink AWLL7025 / Gemtek WUBR-208N, RT2870+RT2850
+I think we can safely assume that these testing reports are on the files that I 
+sent yesterday, but for completeness the md5sums are
 
-Signed-off-by: Mark Davis <marked86@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   35 +++++++++++++++++++-----------
- 1 files changed, 22 insertions(+), 13 deletions(-)
+75a1da3caa0b1c95e81dfba207f834c6  rt2860.bin
+36c944c3138125605d28c0a3a1338be9  rt2870.bin
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 6ba31a0..db52c2b 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -710,6 +710,16 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x8516, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x8516, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x8516, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Alpha Networks */
-+        { USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c2c), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Amit */
- 	{ USB_DEVICE(0x15c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Askey */
-@@ -736,15 +746,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x00e8), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x016f), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Conceptronic */
--	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0411, 0x01a2), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -776,6 +778,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Gemtek */
-+	{ USB_DEVICE(0x15a9, 0x0012), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Gigabyte */
- 	{ USB_DEVICE(0x1044, 0x800b), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -792,6 +796,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x0031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Logitec */
-@@ -870,8 +875,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x15a9, 0x0006), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sweex */
- 	{ USB_DEVICE(0x177f, 0x0302), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* U-Media*/
-+	/* U-Media */
- 	{ USB_DEVICE(0x157e, 0x300e), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x157e, 0x3013), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* ZCOM */
- 	{ USB_DEVICE(0x0cde, 0x0022), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0cde, 0x0025), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -883,6 +889,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Zyxel */
- 	{ USB_DEVICE(0x0586, 0x3416), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0586, 0x3418), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0586, 0x341e), USB_DEVICE_DATA(&rt2800usb_ops) },
- #ifdef CONFIG_RT2800USB_RT33XX
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3370), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -901,6 +908,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x1740, 0x9801), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* I-O DATA */
- 	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sitecom */
-@@ -915,6 +924,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	 * Unclear what kind of devices these are (they aren't supported by the
- 	 * vendor linux driver).
- 	 */
-+	/* Alpha Networks */
-+        { USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
-+        { USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Amigo */
- 	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -933,9 +945,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0411, 0x0148), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x0150), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x015d), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Conceptronic */
--	{ USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
--- 
-1.7.4.1
+The version numbers are 34.00 for rt2860.bin and 29.00 for rt2870.bin.
+
+Larry
+
