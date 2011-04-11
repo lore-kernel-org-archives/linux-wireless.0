@@ -1,133 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50709 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518Ab1DRPCt convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37512 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450Ab1DKRYL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 11:02:49 -0400
-Received: by qyk7 with SMTP id 7so1099757qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 08:02:48 -0700 (PDT)
+	Mon, 11 Apr 2011 13:24:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <201104181648.43967.helmut.schaa@googlemail.com>
-References: <201104181526.01722.IvDoorn@gmail.com>
-	<BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com>
-	<BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
-	<201104181648.43967.helmut.schaa@googlemail.com>
-Date: Mon, 18 Apr 2011 17:02:48 +0200
-Message-ID: <BANLkTimE0i-8x-RSM4bhvZcV+3Bg6gDWjw@mail.gmail.com>
-Subject: Re: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
+In-Reply-To: <op.vtr9glg23ri7v4@arend-laptop>
+References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
+	<op.vtr9glg23ri7v4@arend-laptop>
+Date: Mon, 11 Apr 2011 19:24:09 +0200
+Message-ID: <BANLkTimG7JOCCe2ozJkKOdtPfZka5jZSNQ@mail.gmail.com>
+Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 18 kwietnia 2011 16:48 użytkownik Helmut Schaa
-<helmut.schaa@googlemail.com> napisał:
-> Hi,
+2011/4/11 Arend van Spriel <arend@broadcom.com>:
+> On Fri, 08 Apr 2011 21:45:00 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
 >
-> Am Montag, 18. April 2011 schrieb Ivo Van Doorn:
->> > Wouldn't this be better to create two pointers in struct rt2x00_dev.
->> > One for writing function and one for reading function? Am I right
->> > thinking calling functions by pointers is quite fast? Or is this still
->> > noticeably slower than using proper functions directly?
->>
->> We already have the pointer inside struct rt2x00_dev which references
->> the register access functions for rt2800pci/usb. These pointers are used
->> by rt2800lib to access the common registers. What this patch does, is
->> optimize the case where we exactly know which function we need, because
->> we are in the actual driver.
->>
->> As for the performance, I'll let Helmut comment on that as he created patch 20,
->> which introduced this change to rt2800pci. :)
+>> Cc: Michael Büsch <mb@bu3sch.de>
+>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: George Kashperko <george@znau.edu.ua>
+>> Cc: Arend van Spriel <arend@broadcom.com>
+>> Cc: linux-arm-kernel@lists.infradead.org
+>> <linux-arm-kernel@lists.infradead.org>
+>> Cc: Russell King <rmk@arm.linux.org.uk>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> This is second try for introducing new bus driver.
+>> V2: Rename to axi
+>>    Use DEFINE_PCI_DEVICE_TABLE in bridge
+>>    Make use of pr_fmt and pr_*
+>>    Store core class
+>>    Rename bridge to not b43 specific
+>>    Replace magic 0x1000 with BCMAI_CORE_SIZE
+>>    Remove some old "ssb" names and defines
+>>    Move BCMAI_ADDR_BASE def
+>>    Add drvdata field
+>> TODO:
+>> - Interrupts
+>> - Reloading driver
+>> ---
+>>  drivers/Kconfig                           |    2 +
+>>  drivers/Makefile                          |    1 +
+>>  include/linux/mod_devicetable.h           |   17 ++
+>>  scripts/mod/file2alias.c                  |   21 ++
 >
-> Sure, I was comparing some assembly in the rt2800pci hotpaths (on a 380Mhz
-> MIPS CPU btw). A register read/write on PCI is just a readl or writel,
-> nothing more but using the indirect wrappers we get something like this
-> (This is x86_64 as I didn't want to cross compile right now). For example
-> the register read + write in rt2800pci_enable_interrupt (which is called
-> in every tasklet invocation, which can happen for every rx'ed frame and
-> every tx'ed frame).
+> Hi Rafał,
 >
-> movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
-> leaq    -36(%rbp), %rdx #, tmp82
-> movq    %rbx, %rdi      # rt2x00dev,
-> movq    72(%rax), %rax  # D.47612_27->drv, D.47612_27->drv
-> movl    $516, %esi      #,
-> call    *(%rax) # rt2800ops_29->register_read
-> movb    %r14b, %cl      #,
-> movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
-> movq    %rbx, %rdi      # rt2x00dev,
-> movq    72(%rax), %rax  # D.47619_31->drv, D.47619_31->drv
-> movl    $516, %esi      #,
-> movl    $1, %edx        #, reg.119
-> sall    %cl, %edx       #, reg.119
-> andl    %r13d, %edx     # irq_field$bit_mask, reg.119
-> notl    %r13d   # tmp89
-> andl    -36(%rbp), %r13d        # reg, tmp89
-> orl     %r13d, %edx     # tmp89, reg.119
-> movl    %edx, -36(%rbp) # reg.119, reg
-> call    *16(%rax)       # rt2800ops_33->register_write
+> I tried to apply this patch, but it failed as well. I did the 4 files
+> above manually and applied partial patch for the new files.
 >
-> Also, this will trigger rt2x00pci_register_read
+> When I load the module it seems to have succeeded once, but every insmod
+> attempt I do now fails with following trace:
 >
-> pushq   %rbp    #
-> mov     %esi, %esi      # offset, addr.27
-> movq    %rsp, %rbp      #,
-> addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.27
-> movl    %eax, (%rdx)    # ret,* value
->
-> And rt2x00pci_register_write:
->
-> pushq   %rbp    #
-> mov     %esi, %esi      # offset, addr.26
-> movq    %rsp, %rbp      #,
-> addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.26
-> movl    %edx,(%rsi)        # value,* addr.26
->
-> And here the same when using rt2x00pci_register_read/write directly:
->
-> movq    1056(%rbx), %rax        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
-> movl    516(%rax),%eax     #, reg.119
-> movl    %r13d, %edx     # irq_field$bit_mask, tmp80
-> movb    %r14b, %cl      #,
-> notl    %edx    # tmp80
-> andl    %edx, %eax      # tmp80, reg.119
-> movl    $1, %edx        #, tmp85
-> sall    %cl, %edx       #, tmp85
-> andl    %r13d, %edx     # irq_field$bit_mask, tmp85
-> orl     %edx, %eax      # tmp85, reg.119
-> movq    1056(%rbx), %rdx        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
-> movl    %eax,516(%rdx)     # reg.119,
->
-> As you can see we save more then just one indirect function call:
->
-> 17 movs -> 7 movs
-> 2 calls -> 0 calls
-> 1 add -> 0 adds
->
-> This happens because the compiler is able to apply a number of optimizations
-> that are only possible by inlining rt2x00pci_register_read/write. When using
-> the indirect function call the compiler is not able to inline them.
->
-> So, I first thought about using direct calls only in the interrupt handler
-> and the RX/TX hotpaths but since using rt2800_register_read and
-> rt2x00pci_register_read in different locations in rt2800pci would be even
-> more confusing I just replaced every rt2800_register_read with
-> rt2x00pci_register_read in rt2800pci.
->
-> One way to keep the abstraction and still improve the register_read/write
-> operations would be to introduce a inlined rt2800pci_register_read/write
-> which directly calls rt2x00pci_register_read/write and provide that via
-> rt2800_ops to rt2800lib. That way all calls in rt2800pci can directly
-> inline rt2x00_register_read/write while rt2800lib will still use indirect
-> calls to do the same.
->
-> However, I didn't see any need for this.
+> Apr 11 16:43:43 arend-laptop kernel: [   61.249239] axi-pci-bridge
+> 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> Apr 11 16:43:43 arend-laptop kernel: [   61.249312] Core 0 found:
+> ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
+> Apr 11 16:43:43 arend-laptop kernel: [   61.249339] Core 1 found: IEEE
+> 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
+> Apr 11 16:43:43 arend-laptop kernel: [   61.249400] Core 2 found: PCIe
+> (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
+> Apr 11 16:43:43 arend-laptop kernel: [   61.279913] Modules linked in:
+> axi(+) binfmt_misc nouveau ttm drm_kms_helper drm i2c_algo_bit
+> snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec
+> snd_seq_midi snd_hwdep ppdev snd_rawmidi snd_pcm snd_seq_midi_event
+> parport_pc snd_seq snd_timer snd_seq_device lp pcmcia snd uvcvideo
+> soundcore snd_page_alloc dell_laptop videodev dell_wmi dcdbas
+> sparse_keymap intel_ips yenta_socket video pcmcia_rsrc pcmcia_core parport
+> intel_agp intel_gtt agpgart psmouse btusb bluetooth joydev serio_raw
+> usbhid hid mmc_block ahci sdhci_pci firewire_ohci sdhci e1000e
+> firewire_core mmc_core libahci crc_itu_t
+> Apr 11 16:43:43 arend-laptop kernel: [   61.280052]
+> Apr 11 16:43:43 arend-laptop kernel: [   61.280366] Pid: 2008, comm:
+> insmod Not tainted 2.6.39-rc1-staging-next-09270-gb905e26 #1 Dell Inc.
+> Latitude E6410/07XJP9
+> Apr 11 16:43:43 arend-laptop kernel: [   61.281090] EIP: 0060:[<c0213d3d>]
+> EFLAGS: 00010246 CPU: 1
+> Apr 11 16:43:43 arend-laptop kernel: [   61.281812] EIP is at
+> kfree+0x10d/0x120
 
-Huh, thanks a lot for great explanation :)
+Thank you Arend for testing.
+
+What you see is some issue with kfree I do not understand. Please take
+a look at:
+"Crash with kfree(null) on MacBook? kobject_set_name_vargs"
+https://lkml.org/lkml/2011/4/10/71
+
+When I call dev_set_name result with new name for device, internal
+implementation performs "kfree" on *old name*. Of course there was not
+old name, so kfree is being called on * char pointing to NULL. On my
+device it does not crash, but on yours and on Andy's it does.
+
+We got suggestion to enable SLUB/SLAB debugging. Andy didn't try it
+yet. Could you spend a moment trying to debug this?
 
 -- 
 Rafał
