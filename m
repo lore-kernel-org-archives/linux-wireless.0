@@ -1,21 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:34085 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756850Ab1DLJjz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 05:39:55 -0400
-Message-ID: <4DA41B77.8040104@openwrt.org>
-Date: Tue, 12 Apr 2011 11:29:27 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from msr5.hinet.net ([168.95.4.105]:57947 "EHLO msr5.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755030Ab1DKJI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 05:08:57 -0400
+Received: from interzone.internetdog.org (220-141-36-155.dynamic.hinet.net [220.141.36.155])
+	by msr5.hinet.net (8.14.2/8.14.2) with ESMTP id p3B7eABC029203
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 15:40:11 +0800 (CST)
+Received: from ab by interzone.internetdog.org with local (Exim 4.72)
+	(envelope-from <ab@internetdog.org>)
+	id 1Q9BkD-0005Tx-ST
+	for linux-wireless@vger.kernel.org; Mon, 11 Apr 2011 15:41:09 +0800
+Date: Mon, 11 Apr 2011 15:41:09 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: linux-wireless@vger.kernel.org
+Subject: Is the todo-list up-to-date?
+Message-ID: <20110411074109.GA20913@internetdog.org>
+Reply-To: ali@internetdog.org
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2 V2] ath9k: Register id table for platform device
-References: <1302592342-25154-1-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302592342-25154-1-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked-by: Gabor Juhos <juhosg@openwrt.org>
+Hi all,
 
+is 
+http://linuxwireless.org/en/developers/todo-list
+up to date? Can I plan some work on its basis?
+
+I have some time to allocate to a project, and so have scoured that
+site, and searched this list -- among others. 802.11s has a list of
+outstanding features, so it's in consideration. (Yes I know .11s has a
+different mailing list.)
+
+I have a background in embedded, and 802.11, though not specifically
+within the Linux kernel. So I'd need something which I can test/debug
+in order to slowly get to know the code structures etc.
+
+Thank you in advance for any suggestions.
+Regards,
+Ali
