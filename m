@@ -1,108 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:64408 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755154Ab1DNCAF (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59225 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232Ab1DKLOj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 22:00:05 -0400
-Date: Wed, 13 Apr 2011 21:00:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix unitialized variable warnings
-Message-ID: <4da65522.5Q2derfNcHLlWHiC%Larry.Finger@lwfinger.net>
+	Mon, 11 Apr 2011 07:14:39 -0400
+Received: by vws1 with SMTP id 1so4008535vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 04:14:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DA2702B.2080305@lwfinger.net>
+References: <4DA2042A.3010301@gmail.com>
+	<1302469406.5282.341.camel@localhost>
+	<4DA22545.6050209@gmail.com>
+	<4DA2312B.8080303@lwfinger.net>
+	<4DA23594.8090002@gmail.com>
+	<4DA2702B.2080305@lwfinger.net>
+Date: Mon, 11 Apr 2011 13:14:38 +0200
+Message-ID: <BANLkTinM-iLEOX997VTxG+zK=8aUHXVmQA@mail.gmail.com>
+Subject: Re: Firmware for rt2800pci and rt2800usb
+From: Juan Carlos Garza <juancarlosgarza@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In http://lkml.indiana.edu/hypermail/linux/kernel/1104.1/01955.html, Geerti
-Uytterhoeven reports the following warnings for the rtlwifi drivers.
+Hi,
 
-src/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c: warning:
-	 'cck_index' may be used uninitialized in this function: => 637
-src/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c: warning:
-	 'cck_index_old' may be used uninitialized in this function: => 637
-src/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: warning:
-	 'box_extreg' may be used uninitialized in this function: => 303
-src/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: warning:
-	 'box_reg' may be used uninitialized in this function: => 303
-src/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c: warning:
-	 'chnlgroup' may be used uninitialized in this function: => 205
-src/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c: warning:
-	 'u4_regvalue' may be used uninitialized in this function: => 450
-src/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c: warning:
-	 'hq_sele' may be used uninitialized in this function: => 924
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Mon, Apr 11, 2011 at 5:06 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Hi,
+>
+> I am in the process of updating the firmware files for rt2800pci and
+> rt2800usb. If you have one of the devices that use this driver, please test
+> the firmware file.
+>
 
-John,
+Tested rt2870.bin on vid=07b8 pid=3071 in AP mode using HostAPD, up to
+now, no problems found.
 
-This patch was made against wireless-testing. When applied to mainline,
-it has an offset and fuzz 1, but it applies correctly. I hope that is
-not important.
+> Thanks,
+>
+> Larry
+>
 
-Larry
----
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -634,7 +634,7 @@ static void rtl92c_dm_txpower_tracking_c
- 	u8 thermalvalue, delta, delta_lck, delta_iqk;
- 	long ele_a, ele_d, temp_cck, val_x, value32;
- 	long val_y, ele_c;
--	u8 ofdm_index[2], cck_index, ofdm_index_old[2], cck_index_old;
-+	u8 ofdm_index[2], cck_index = 0, ofdm_index_old[2], cck_index_old = 0;
- 	int i;
- 	bool is2t = IS_92C_SERIAL(rtlhal->version);
- 	u8 txpwr_level[2] = {0, 0};
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -293,7 +293,7 @@ static void _rtl92c_fill_h2c_command(str
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	u8 boxnum;
--	u16 box_reg, box_extreg;
-+	u16 box_reg = 0, box_extreg = 0;
- 	u8 u1b_tmp;
- 	bool isfw_read = false;
- 	bool bwrite_sucess = false;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-@@ -202,7 +202,7 @@ static void _rtl92c_get_txpower_writeval
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u8 i, chnlgroup, pwr_diff_limit[4];
-+	u8 i, chnlgroup = 0, pwr_diff_limit[4];
- 	u32 writeVal, customer_limit, rf;
- 
- 	for (rf = 0; rf < 2; rf++) {
-@@ -447,7 +447,7 @@ static bool _rtl92c_phy_rf6052_config_pa
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	u32 u4_regvalue;
-+	u32 u4_regvalue = 0;
- 	u8 rfpath;
- 	bool rtstatus;
- 	struct bb_reg_def *pphyreg;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -921,7 +921,7 @@ static void _rtl92cu_init_chipT_queue_pr
- 					       u8 out_ep_num,
- 					       u8 queue_sel)
- {
--	u8	hq_sele;
-+	u8 hq_sele = 0;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
- 	switch (out_ep_num) {
+
+-- 
+________________________________
+Juan Carlos Garza
