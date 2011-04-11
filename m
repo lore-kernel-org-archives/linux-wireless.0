@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4304 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580Ab1DHOtv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 10:49:51 -0400
-Date: Fri, 8 Apr 2011 07:49:38 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH 0/3] linux-firmware: Updated firmware and new
- license for brcm firmware
-Message-ID: <20110408144937.GA2460@broadcom.com>
-References: <1302015522-20601-1-git-send-email-henryp@broadcom.com>
- <20110407211521.GA3252@broadcom.com>
- <1302244866.3564.4.camel@jlt3.sipsolutions.net>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62774 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754300Ab1DKSCv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 14:02:51 -0400
 MIME-Version: 1.0
-In-Reply-To: <1302244866.3564.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <BANLkTinKYvA6+xcBtDyg5hpHst2rxwW7tA@mail.gmail.com>
+References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net>
+ <4DA33F3A.6090707@gmail.com> <BANLkTinKuQ7i20FxmDCT1cRMPvOxM0aygQ@mail.gmail.com>
+ <BANLkTinKYvA6+xcBtDyg5hpHst2rxwW7tA@mail.gmail.com>
+From: Luis Correia <luis.f.correia@gmail.com>
+Date: Mon, 11 Apr 2011 19:02:11 +0100
+Message-ID: <BANLkTikxTH-Nve=ixp=noipAnETxN9RFrg@mail.gmail.com>
+Subject: Re: [rt2x00-users] [PATCH] rt2800pci: rt2800usb: Firmware update
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, dwmw2@infradead.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-kernel@vger.kernel.org, ben@decadent.org.uk,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 07, 2011 at 11:41:06PM -0700, Johannes Berg wrote:
-> On Thu, 2011-04-07 at 14:15 -0700, Henry Ptasinski wrote:
-> 
-> > While there was some discussion about patch #2, I believe all the concerns have
-> > been addressed, so please apply all 3 patches to the linux-firmware repo.
-> 
-> Henry, I think you need Signed-off-by lines for the linux-firmware repo
-> as well.
-> 
+Hi Ivo
 
-Of coused.  I'll resend.
+On Mon, Apr 11, 2011 at 18:59, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+>
+>> On Mon, Apr 11, 2011 at 18:49, Xose Vazquez Perez
+>> <xose.vazquez@gmail.com> wrote:
+>>> On 04/11/2011 04:27 PM, Larry Finger wrote:
+>>>
+>>>> From: Shiang Tu<shiang_tu@ralinktech.com>
+>>>>
+>>>> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
+>>>> Version 29.
+>>>>
+>>>> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
+>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>>> ---
+>>>>  WHENCE     |    8 ++++----
+>>>>  rt2860.bin |  Bin 8192 ->  8192 bytes
+>>>>  rt2870.bin |  Bin 4096 ->  8192 bytes
+>>>>  3 files changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> links to rt3070.bin rt3071.bin rt3090.bin ???
+>>
+>> there are no such files in current rt2x00 drivers.
+>>
+>> the rt2870.bin should support all USB rt2800 based chipsets with
+>> several firmware blocks concatenated inside the file.
+>> same goes for rt2860, which support all PCI rt2800 based chipsets with
+>> several firmware blocks concatenated inside the file.
+>
+> Only USB uses concatenation to support multiple chipsets, for PCI
+> we have a single file that is written into the device.
+>
+> Ivo
+>
 
-Thanks,
-- Henry
+I stand corrected!
 
-
+Luis Correia
