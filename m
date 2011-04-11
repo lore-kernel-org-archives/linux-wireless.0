@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58976 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:63959 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754046Ab1DXSvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 14:51:33 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA)  <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 11:48:40 -0700
-Message-ID: <1303670920.22777.10.camel@wwguy-ubuntu> (sfid-20110424_205147_557125_1E080196)
-Mime-Version: 1.0
+	id S1752956Ab1DKOw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 10:52:28 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 07:52:03 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 1/4] ath9k_hw: Remove unused code in AR9287 eeprom
+Date: Mon, 11 Apr 2011 20:22:28 +0530
+Message-ID: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 11:38 -0700, Johannes Berg wrote:
-> On Sun, 2011-04-24 at 10:15 -0700, Wey-Yi Guy wrote:
-> > The current led blink trigger implementaion assume on/off time are equal,
-> > it works but not have any flexbile for different blink pattern.
-> > 
-> > Add "ratio" parameter in the trigger table and give driver more control
-> > on how the on/off blink time behavior should be.
-> 
-> I considered this when writing the original code, but then decided that
-> nobody needed to have unequal on/off times. Why would we need it now?
-> (FWIW, blink = 0 is always on already, no?)
-> 
-But from what I read for iwlwifi, to turn LED_SOLID_ON, on = 11, off =
-0. Did I read it wrong.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |   25 +------------------------
+ 1 files changed, 1 insertions(+), 24 deletions(-)
 
-Yes, I agree as today, "on" == "off", just thinking we should make more
-flexible.
-
-Wey
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 2f0712e..1357975 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -858,35 +858,12 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
+ {
+ 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
+ 	struct modal_eep_ar9287_header *pModal = &eep->modalHeader;
+-	u16 antWrites[AR9287_ANT_16S];
+ 	u32 regChainOffset, regval;
+ 	u8 txRxAttenLocal;
+-	int i, j, offset_num;
++	int i;
+ 
+ 	pModal = &eep->modalHeader;
+ 
+-	antWrites[0] = (u16)((pModal->antCtrlCommon >> 28) & 0xF);
+-	antWrites[1] = (u16)((pModal->antCtrlCommon >> 24) & 0xF);
+-	antWrites[2] = (u16)((pModal->antCtrlCommon >> 20) & 0xF);
+-	antWrites[3] = (u16)((pModal->antCtrlCommon >> 16) & 0xF);
+-	antWrites[4] = (u16)((pModal->antCtrlCommon >> 12) & 0xF);
+-	antWrites[5] = (u16)((pModal->antCtrlCommon >> 8) & 0xF);
+-	antWrites[6] = (u16)((pModal->antCtrlCommon >> 4)  & 0xF);
+-	antWrites[7] = (u16)(pModal->antCtrlCommon & 0xF);
+-
+-	offset_num = 8;
+-
+-	for (i = 0, j = offset_num; i < AR9287_MAX_CHAINS; i++) {
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 28) & 0xf);
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 10) & 0x3);
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 8) & 0x3);
+-		antWrites[j++] = 0;
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 6) & 0x3);
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 4) & 0x3);
+-		antWrites[j++] = (u16)((pModal->antCtrlChain[i] >> 2) & 0x3);
+-		antWrites[j++] = (u16)(pModal->antCtrlChain[i] & 0x3);
+-	}
+-
+ 	REG_WRITE(ah, AR_PHY_SWITCH_COM, pModal->antCtrlCommon);
+ 
+ 	for (i = 0; i < AR9287_MAX_CHAINS; i++)	{
+-- 
+1.7.4.4
 
