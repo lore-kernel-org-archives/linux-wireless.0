@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11717 "EHLO mga02.intel.com"
+Received: from kroah.org ([198.145.64.141]:42052 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756477Ab1D3Qkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 12:40:47 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+	id S1754258Ab1DKVZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 17:25:16 -0400
+Date: Mon, 11 Apr 2011 14:25:13 -0700
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/14] iwlagn: remove 5000 from rxon_assoc structure
-Date: Sat, 30 Apr 2011 09:17:31 -0700
-Message-Id: <1304180260-13875-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184054_748027_4F1A2DDB)
-In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	Andy Botting <andy@andybotting.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
+Message-ID: <20110411212513.GA17809@kroah.com>
+References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+ <20110411210631.GA28559@kroah.com>
+ <BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The data structure is shared by all _agn devices, remove the reference to 5000
+On Mon, Apr 11, 2011 at 11:19:13PM +0200, Rafał Miłecki wrote:
+> 2011/4/11 Greg KH <greg@kroah.com>:
+> > On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
+> >> +static void axi_release_core_dev(struct device *dev)
+> >> +{
+> >> +     /* Silent lack-of-release warning */
+> >> +}
+> >
+> > Ok, WTF!!!!
+> 
+> Thank you for your kindly words. It's much more enjoyable to work on
+> kernel that way. I definitely made that on purpose.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I can't tell if you are kidding or not.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index aba5bc9..7f52ab8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -125,7 +125,7 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
- 			   struct iwl_rxon_context *ctx)
- {
- 	int ret = 0;
--	struct iwl5000_rxon_assoc_cmd rxon_assoc;
-+	struct iwl_rxon_assoc_cmd rxon_assoc;
- 	const struct iwl_rxon_cmd *rxon1 = &ctx->staging;
- 	const struct iwl_rxon_cmd *rxon2 = &ctx->active;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index e125896..5fdad65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -661,7 +661,7 @@ struct iwl_rxon_cmd {
- /*
-  * REPLY_RXON_ASSOC = 0x11 (command, has simple generic response)
-  */
--struct iwl5000_rxon_assoc_cmd {
-+struct iwl_rxon_assoc_cmd {
- 	__le32 flags;
- 	__le32 filter_flags;
- 	u8 ofdm_basic_rates;
--- 
-1.7.0.4
+Please read the documentation for how to do this properly.  I find it
+really hard to believe that you wrote that comment instead of putting in
+the 2 lines of code required for this function.
 
+Especially as-it-is, your code does not work properly and leaks memory
+badly.  Why would you do that on purpose?
+
+thanks,
+
+greg k-h
