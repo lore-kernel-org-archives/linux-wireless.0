@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:50216 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757386Ab1DYU47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 16:56:59 -0400
-Date: Mon, 25 Apr 2011 16:56:58 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Roland Dreier <roland@kernel.org>
-cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-In-Reply-To: <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1104251655520.23304@p34.internal.lan> (sfid-20110425_225734_055867_445117D1)
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39984 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754845Ab1DKRxG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 13:53:06 -0400
+Message-ID: <4DA33FFD.5070004@gmail.com>
+Date: Mon, 11 Apr 2011 19:53:01 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: Walter Goldens <goldenstranger@yahoo.com>
+CC: dwmw2@infradead.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-kernel@vger.kernel.org, gwingerde@gmail.com,
+	ben@decadent.org.uk, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org,
+	Shiang Tu <shiang_tu@ralinktech.com>
+Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
+References: <779506.13049.qm@web161604.mail.bf1.yahoo.com>
+In-Reply-To: <779506.13049.qm@web161604.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/11/2011 05:18 PM, Walter Goldens wrote:
 
+> Are there any changelogs for these firmware files? Do they
+ > only offer support for newer chips, or are there any actual
+ > improvements and bug fixes implemented? Users should know
+ > whether updating the firmware will be of any use to them.
 
-On Mon, 25 Apr 2011, Roland Dreier wrote:
+Shiang Tu from ralink says [1] :
+"We always suggest to use latest firmware, because it's backward
+compatible and also has some enhancement, bug fix, or support of new
+chip.
 
-> On Mon, Apr 25, 2011 at 11:35 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->> I notice periodic kernel crashes when using wireless.
->> Has anyone seen this using the rt2800usb driver?
->>
->> When the host is on the LAN (supermicro+intel), there are zero crashes.
->> Since I don't have it in a location where I can use netdump over the
->> LAN/wire, see the picture below for the kernel crash/OOPS on the console:
->>
->> http://home.comcast.net/~jpiszcz/20110425/kernel_crash.jpg [1.2m]
->
-> Unfortunately a lot of the crash has scrolled away.  Is there any way
-> you can change your console's text mode to, say, 50 lines so more info
-> is visible?
->
+For rt5390 or newer chips, it shall upgrade the firmware to this
+version, or it may malfunction."
 
-Hi,
-
-I will try and fix / increase the resolution and wait for the next crash and
-update this thread with a new image when it crashes again.
-
-Thanks.
-
-Justin.
-
+[1] 
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003380.html
 
