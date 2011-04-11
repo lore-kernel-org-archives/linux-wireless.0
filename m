@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:13835 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757011Ab1DGU20 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44325 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755518Ab1DKTEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 16:28:26 -0400
-Date: Thu, 7 Apr 2011 22:28:43 +0200 (CEST)
-From: Jesper Juhl <jj@chaosbits.net>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 6/6]drivers:staging Fix typo "recieve" in various parts of
- the kernel.
-In-Reply-To: <1302192567-842-6-git-send-email-justinmattock@gmail.com>
-Message-ID: <alpine.LNX.2.00.1104072225150.1538@swampdragon.chaosbits.net>
-References: <1302192567-842-1-git-send-email-justinmattock@gmail.com> <1302192567-842-6-git-send-email-justinmattock@gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Mon, 11 Apr 2011 15:04:49 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 56A1E5401D1
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 15:09:30 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110411190448.6903D40EB3@repository3.orbit-lab.org>
+Date: Mon, 11 Apr 2011 15:04:48 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 7 Apr 2011, Justin P. Mattock wrote:
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + f8a3689...a5f3ae2 akpm-end   -> origin/akpm-end  (forced update)
+   0c3efe5..4263a2f  akpm-start -> origin/akpm-start
+   ef6aaf4..66b7101  history    -> origin/history
+ + 129f038...ee8870a master     -> origin/master  (forced update)
+   0c3efe5..4263a2f  stable     -> origin/stable
+ * [new tag]         next-20110411 -> next-20110411
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-> The patch below fixes "recieve" in various parts of the kernel.
-> Note: This is a mix of code and comments that are fixed.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> CC: Greg Kroah-Hartman <gregkh@suse.de>
-> CC: devel@driverdev.osuosl.org
-> CC: linux-wireless@vger.kernel.org
+compat-wireless code metrics
 
-Reviewed-by: Jesper Juhl <jj@chaosbits.net>
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+    837881 - Total upstream lines of code being pulled
