@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2057 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932102Ab1D0Riv convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63342 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554Ab1DKDBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 13:38:51 -0400
-From: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-To: "gregkh@suse.de" <gregkh@suse.de>
-cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Howard Harte" <hharte@broadcom.com>
-Date: Wed, 27 Apr 2011 10:38:42 -0700
-Subject: RE: [PATCH] staging: brcm80211: Change print macro for debug
- only code
-Message-ID: <400C43189542CE41BC0A5B252FC901369650C6D86F@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110427_193854_941830_12714AF1)
-References: <1303924951-30821-1-git-send-email-frankyl@broadcom.com>
-In-Reply-To: <1303924951-30821-1-git-send-email-frankyl@broadcom.com>
+	Sun, 10 Apr 2011 23:01:11 -0400
+Received: by gxk21 with SMTP id 21so2009754gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 20:01:10 -0700 (PDT)
+Message-ID: <4DA26EF3.9010605@lwfinger.net>
+Date: Sun, 10 Apr 2011 22:01:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: Ben Hutchings <ben@decadent.org.uk>, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: Firmware files for Ralink RT28x0
+References: <4DA2042A.3010301@gmail.com> <1302469406.5282.341.camel@localhost> <4DA22545.6050209@gmail.com> <4DA2312B.8080303@lwfinger.net> <4DA23594.8090002@gmail.com>
+In-Reply-To: <4DA23594.8090002@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+On 04/10/2011 05:56 PM, Xose Vazquez Perez wrote:
+> On 04/11/2011 12:37 AM, Larry Finger wrote:
+>
+>> Do you still have the patch from one year ago? I would like to see what you proposed in changes to WHENCE.
+>
+> Déjà vu
+>
+> me: http://marc.info/?l=linux-wireless&m=129798073407070&w=2
+>
+> ivo: http://marc.info/?l=linux-wireless&m=128844402626603&w=2
+>
+> ralink: http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003381.html
+>          http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003382.html
 
-Please drop this patch. We will sync internally and send the patches out again. Sorry for the inconvenience.
+I still don't see any problem with the patch that you supplied. The contribution 
+from Ivo and Ralink did not update WHENCE.
 
-Thanks
-Franky
+I pulled the binary files from the Ralink submission and have entered them into 
+my copy of linux-firmware. I need to test that 2860.bin will work with my 
+RT3090. Do you have a device that uses rt2800usb?
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Franky Lin
-> Sent: Wednesday, April 27, 2011 10:23 AM
-> To: gregkh@suse.de
-> Cc: devel@linuxdriverproject.org; linux-wireless@vger.kernel.org; Brett
-> Rudley; Henry Ptasinski; Howard Harte
-> Subject: [PATCH] staging: brcm80211: Change print macro for debug only
-> code
-> 
-> Change the debug macro from DHD_ERROR to DHD_INFO in
-> dhdsdio_sdiod_drive_strength_init to fix a compile error when
-> BCM_DEBUG is not turned on
-> 
-> Signed-off-by: Franky Lin <frankyl@broadcom.com>
-> ---
->  drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-> b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-> index 6debc1e..299efa0 100644
-> --- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-> +++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-> @@ -6363,7 +6363,7 @@ dhdsdio_sdiod_drive_strength_init(struct dhd_bus
-> *bus, u32 drivestrength) {
->  		str_shift = 11;
->  		break;
->  	default:
-> -		DHD_ERROR(("No SDIO Drive strength init"
-> +		DHD_INFO(("No SDIO Drive strength init"
->  			"done for chip %s rev %d pmurev %d\n",
->  			bcm_chipname(bus->ci->chip, chn, 8),
->  			bus->ci->chiprev, bus->ci->pmurev));
-> --
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-
-> wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Larry
