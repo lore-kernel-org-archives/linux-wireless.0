@@ -1,96 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:38381 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906Ab1DNLTk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 07:19:40 -0400
-Received: by qyg14 with SMTP id 14so964945qyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 04:19:39 -0700 (PDT)
+Received: from kroah.org ([198.145.64.141]:38957 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755910Ab1DKWmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 18:42:09 -0400
+Date: Mon, 11 Apr 2011 15:36:32 -0700
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	Andy Botting <andy@andybotting.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
+Message-ID: <20110411223632.GB31833@kroah.com>
+References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
+ <20110411210631.GA28559@kroah.com>
+ <BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
+ <20110411212513.GA17809@kroah.com>
+ <BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
+ <20110411215619.GA27943@kroah.com>
+ <BANLkTimjThXn347+=m98NsBXY84guJjNqA@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1302724606-10190-1-git-send-email-nbd@openwrt.org>
-References: <1302724606-10190-1-git-send-email-nbd@openwrt.org>
-Date: Thu, 14 Apr 2011 13:19:39 +0200
-Message-ID: <BANLkTinyONrZ2+wVRL_XiiofjGnvbSFQmg@mail.gmail.com>
-Subject: Re: [PATCH 1/5] ath5k: disable 5 GHz support if a 2.4 GHz radio is detected
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTimjThXn347+=m98NsBXY84guJjNqA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 13, 2011 at 9:56 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On a dual-radio dual-band AR5312 device, the calibration data is shared
-> between the 5 GHz and the 2.4 GHz radio/MAC.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
+On Tue, Apr 12, 2011 at 12:12:47AM +0200, Rafał Miłecki wrote:
+> 2011/4/11 Greg KH <greg@kroah.com>:
+> > On Mon, Apr 11, 2011 at 11:36:39PM +0200, Rafał Miłecki wrote:
+> >> 2011/4/11 Greg KH <greg@kroah.com>:
+> >> > Please read the documentation for how to do this properly.  I find it
+> >> > really hard to believe that you wrote that comment instead of putting in
+> >> > the 2 lines of code required for this function.
+> >> >
+> >> > Especially as-it-is, your code does not work properly and leaks memory
+> >> > badly.  Why would you do that on purpose?
+> >>
+> >> I tried to read some documentation about this.
+> >>
+> >> 1) driver-mode/device.txt says only that:
+> >> > Callback to free the device after all references have
+> >> > gone away. This should be set by the allocator of the
+> >> > device (i.e. the bus driver that discovered the device).
+> >> I *really* do not know how my driver should "free" core on AXI bus.
+> >
+> > The structure that you have created, added to the bus, is now ready to
+> > have its memory freed.  So free it.
+> >
+> > This usually means something like:
+> >        struct my_obj = to_my_obj(dev);
+> >        kfree(my_obj);
+> > in the release function.
+> 
+> I register core->dev to the bus (I set core->dev.bus and
+> core->dev.parent, is that what you mean?). This core->dev is "struct
+> dev" embedded in "struct axi_device". By embedded I mean it is *not* a
+> pointer, I do not alloc it, it's part of the "struct axi_device".
 
-Tested all 5 patches against "freaky" linux-next (next-20110414).
+That is exactly as it should be.
 
-Feel free to add:
+Then in your release function, free the struct axi_device.  It's that
+simple.  To try to free it before then would be wrong and cause
+problems.
 
-     Tested-by: Sedat Dilek <sedat.dilekłgmail.com>
+> >> 2) LDD3 says:
+> >> > The method is called when the last reference to the device is removed; it is called
+> >> > from the embedded kobject’s release method. All device structures registered with
+> >> > the core must have a release method, or the kernel prints out scary complaints.
+> >> Well, I do not register any structs for AXI core.
+> >
+> > Yes you did, otherwise you would have never seen that callback warning
+> > you that you needed a release function.
+> 
+> I was thinking about alloc, sorry, ignore this one.
+> 
+> 
+> >> 4) SSB in it's ssb_release_dev just calls kfree on struct that was
+> >> allocated when registering drivers. *I do not* allocate such a struct,
+> >> so I believe I do exactly the same memory leak as SSB does.
+> >
+> > Well someone allocated it, right?  Who did it?  If it wasn't you, where
+> > did that structure come from and why are you registering it on your bus?
+> >
+> >> Can you spend 2 more minues in addition to commenting my ideas and
+> >> help me with writing that 2 lines I missed? Where do I leak memory in
+> >> my driver? Which struct should I kfree?
+> >
+> > The structure that you wrap around 'struct device' for your bus.
+> 
+> As explained above, this I do not dynamically alloc this 'struct
+> device'. So is there really any memory leak?
 
-- Sedat -
+Yes, no one ever freed your struct axi_device that you created.
 
-P.S.: Attach dmesg and lspci outputs
+thanks,
 
-# dmesg | egrep -i 'ath|80211|wlan|crda'
-[    4.784132] cfg80211: Calling CRDA to update world regulatory domain
-[    5.004594] ath5k 0000:02:02.0: PCI INT A -> Link[LNKC] -> GSI 11
-(level, low) -> IRQ 11
-[    5.004709] ath5k 0000:02:02.0: registered as 'phy0'
-[    5.294992] ath: EEPROM regdomain: 0x61
-[    5.294996] ath: EEPROM indicates we should expect a direct regpair map
-[    5.295002] ath: Country alpha2 being used: 00
-[    5.295004] ath: Regpair used: 0x61
-[    5.506881] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-[    5.507770] Registered led device: ath5k-phy0::rx
-[    5.507800] Registered led device: ath5k-phy0::tx
-[    5.507813] ath5k phy0: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
-[    5.507857] ath5k phy0: RF5111 5GHz radio found (0x17)
-[    5.507893] ath5k phy0: RF2111 2GHz radio found (0x23)
-[    8.297097] cfg80211: World regulatory domain updated:
-[    8.297149] cfg80211:     (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[    8.299903] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[    8.299950] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
-(300 mBi, 2000 mBm)
-[    8.299997] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
-(300 mBi, 2000 mBm)
-[    8.300057] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[    8.300104] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[   12.303413] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   17.690110] wlan0: authenticate with 00:04:0e:e4:00:3d (try 1)
-[   17.691907] wlan0: authenticated
-[   17.691974] wlan0: associate with 00:04:0e:e4:00:3d (try 1)
-[   17.698281] wlan0: RX AssocResp from 00:04:0e:e4:00:3d (capab=0x411
-status=0 aid=1)
-[   17.698293] wlan0: associated
-[   17.700380] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[   28.424062] wlan0: no IPv6 routers present
-
-# lspci -nnvv -s 02:02.0
-02:02.0 Ethernet controller [0200]: Atheros Communications Inc. AR5212
-802.11abg NIC [168c:1014] (rev 01)
-        Subsystem: Phillips Components Device [17ab:8331]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 168 (2500ns min, 7000ns max), Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 11
-        Region 0: Memory at c0210000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=2 PME-
-        Kernel driver in use: ath5k
-
-- EOT -
+greg k-h
