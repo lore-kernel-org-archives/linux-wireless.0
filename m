@@ -1,48 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360Ab1DTII5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 04:08:57 -0400
-Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet
- loss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <BANLkTik81g3NOwHcQk2eqOcMjaubCLdk+w@mail.gmail.com>
-References: <1303125749-31967-1-git-send-email-arik@wizery.com>
-	 <1303129610.3588.7.camel@jlt3.sipsolutions.net>
-	 <BANLkTikc9wrZ__8URZ3ASQ6F=rUHix2iGA@mail.gmail.com>
-	 <1303216566.3603.6.camel@jlt3.sipsolutions.net>
-	 <BANLkTik81g3NOwHcQk2eqOcMjaubCLdk+w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 10:08:53 +0200
-Message-ID: <1303286933.3619.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:45726 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754232Ab1DKLMZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 07:12:25 -0400
+Received: by wwk4 with SMTP id 4so2858077wwk.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 04:12:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1302113612.2366.34.camel@pimenta>
+References: <1301900860-19337-1-git-send-email-shahar_levi@ti.com>
+	<1302113612.2366.34.camel@pimenta>
+Date: Mon, 11 Apr 2011 14:12:23 +0300
+Message-ID: <BANLkTikLAdB7cpZmJPYDzHJ21aks=tuyZA@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: FM WLAN coexistence
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-20 at 00:54 +0300, Arik Nemtsov wrote:
+On Wed, Apr 6, 2011 at 9:13 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2011-04-04 at 10:07 +0300, Shahar Levi wrote:
+>> Add support to FM WLAN coexistence (STA only).
+>> Few WiFi harmonics may interfere FM operation, to
+>> avoid this problem special coexistence techniques are
+>> activated around some FM frequencies.
+>>
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
+>
+> Some comments.
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+>> index e005aa4..5f5afbe 100644
+>> --- a/drivers/net/wireless/wl12xx/acx.c
+>> +++ b/drivers/net/wireless/wl12xx/acx.c
+>> @@ -1604,3 +1604,45 @@ out:
+>>       kfree(acx);
+>>       return ret;
+>>  }
+>> +
+>> +int wl1271_acx_fm_coex(struct wl1271 *wl)
+>> +{
+>> +     struct wl1271_acx_fm_coex *acx;
+>> +     int ret;
+>> +
+>> +     wl1271_debug(DEBUG_ACX, "acx fm coex setting");
+>> +
+>> +     acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+>> +     if (!acx) {
+>> +             ret = -ENOMEM;
+>> +             goto out;
+>> +     }
+>> +
+>> +     acx->enable = wl->conf.fm_coex.enable;
+>> +     acx->swallow_period = wl->conf.fm_coex.swallow_period;
+>> +     acx->n_divider_fref_set_1 = wl->conf.fm_coex.n_divider_fref_set_1;
+>> +     acx->n_divider_fref_set_2 = wl->conf.fm_coex.n_divider_fref_set_2;
+>> +     acx->m_divider_fref_set_1 =
+>> +             cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_1);
+>> +     acx->m_divider_fref_set_2 =
+>> +             cpu_to_le16(wl->conf.fm_coex.m_divider_fref_set_2);
+>> +     acx->coex_pll_stabilization_time =
+>> +             cpu_to_le32(wl->conf.fm_coex.coex_pll_stabilization_time);
+>
+>> +     acx->ldo_stabilization_timwl12xx-fm-coex-v2/e =
+>> +             cpu_to_le16(wl->conf.fm_coex.ldo_stabilization_time);
+>
+> What's this? There is some garbage pasted into this statement here!
+How that get in? This is a typo of copy&paste of "wl12xx-fm-coex-v2/"
+Will be fix.
 
-> > That's your choice, but I wouldn't do it. You'll have to support TX
-> > status when requested, otherwise AP operation won't work, so you need
-> > the code anyway.
-> 
-> Can you elaborate why?
-> 
-> I'm assuming you mean the removal of
-> IEEE80211_HW_REPORTS_TX_ACK_STATUS (in the second patch of this
-> series). Note that it was only added recently, and AP/STA modes seemed
-> to work fine without it.
-> From a look in the code it seems this flag helps with connection
-> monitoring in STA mode. The other use is determining the current PS
-> mode when IEEE80211_HW_PS_NULLFUNC_STACK is enabled. These two are
-> done by HW in wl12xx cards.
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+>> index 0a40cae..45242db 100644
+>> --- a/drivers/net/wireless/wl12xx/acx.h
+>> +++ b/drivers/net/wireless/wl12xx/acx.h
+>> @@ -1172,6 +1172,65 @@ struct wl1271_acx_inconnection_sta {
+>>       u8 padding1[2];
+>>  } __packed;
+>>
+>> +/*
+>> + * ACX_FM_COEX_CFG
+>> + * set the FM co-existence parameters.
+>> + */
+>> +struct wl1271_acx_fm_coex {
+>> +     struct acx_header header;
+>> +     /* enable(1) / disable(0) the FM Coex feature */
+>> +     u8 enable;
+>> +     /*
+>> +      * Swallow period used in COEX PLL swallowing mechanism.
+>> +      * 0xFF = use FW default
+>> +      */
+>> +     u8 swallow_period;
+>> +     /*
+>> +      * The N divider used in COEX PLL swallowing mechanism for Fref of
+>> +      * 38.4/19.2 Mhz. 0xFF = use FW default
+>> +      */
+>> +     u8 n_divider_fref_set_1;
+>> +     /*
+>> +      * The N divider used in COEX PLL swallowing mechanism for Fref of
+>> +      * 26/52 Mhz. 0xFF = use FW default
+>> +      */
+>> +     u8 n_divider_fref_set_2;
+>> +     /*
+>> +      * The M divider used in COEX PLL swallowing mechanism for Fref of
+>> +      * 38.4/19.2 Mhz. 0xFFFF = use FW default
+>> +      */
+>> +     u16 m_divider_fref_set_1;
+>
+> This must be __le16.
+Will be fix
 
-Well, there's the flag saying "you can rely on it", but there's also the
-fact that AP mode relies on status for (some) frames anyway. So if you
-just want to remove the flag I guess that's OK, but if you want to
-remove all status processing .. that'll cause issues with AP mode.
+>
+>
+>> +     /*
+>> +      * The M divider used in COEX PLL swallowing mechanism for Fref of
+>> +      * 26/52 Mhz. 0xFFFF = use FW default
+>> +      */
+>> +     u16 m_divider_fref_set_2;
+>
+> Same here.
+Will be fix
 
-johannes
+>
+>
+>> +     /*
+>> +      * The time duration in uSec required for COEX PLL to stabilize.
+>> +      * 0xFFFFFFFF = use FW default
+>> +      */
+>> +     u32 coex_pll_stabilization_time;
+>
+> __le32
+Will be fix
 
+>
+>
+>> +     /*
+>> +      * The time duration in uSec required for LDO to stabilize.
+>> +      * 0xFFFFFFFF = use FW default
+>> +      */
+>> +     u16 ldo_stabilization_time;
+>
+> __le16
+Will be fix
+
+>
+>
+> --
+> Cheers,
+> Luca.
+
+-- 
+All the best,
+Shahar
