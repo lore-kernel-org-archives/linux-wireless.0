@@ -1,91 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm15-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.254]:36144 "HELO
-	nm15-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756088Ab1DHMVS (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53177
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755718Ab1DKT4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 08:21:18 -0400
-Message-ID: <888400.56093.qm@web161618.mail.bf1.yahoo.com>
-Date: Fri, 8 Apr 2011 05:21:17 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Questions about rt2800usb
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Steev Klimaszewski <steev@genesi-usa.com>,
-	Jett Chen <jett_chen@ralinktech.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <699128.18071.qm@web161601.mail.bf1.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 11 Apr 2011 15:56:43 -0400
+Date: Mon, 11 Apr 2011 12:56:07 -0700 (PDT)
+Message-Id: <20110411.125607.193710585.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2011-04-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110411193443.GD2511@tuxdriver.com>
+References: <20110411193443.GD2511@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Try:
-> > 
-> > iwconfig wlan0 power off
-> > 
-> > to disable powersaving.
-> > 
-> > Ivo
-> 
-> Hi Ivo,
-> 
-> Disabling power decreased latency substantially to a normal
-> level, however it paved the way for myriad duplicate
-> packets.
-> 
-> rt2800usb:
-> 
-> PING gmail.com (209.85.229.19) 56(84) bytes of data.
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=1 ttl=53 time=52.9 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=2 ttl=53 time=50.2 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=3 ttl=53 time=51.6 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=4 ttl=53 time=52.8 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=5 ttl=53 time=53.3 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=6 ttl=53 time=51.4 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=6 ttl=53 time=52.4 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=6 ttl=53 time=52.5 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=51.8 ms
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=54.8 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=56.5 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=58.2 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=59.9 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=61.3 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=62.9 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=7 ttl=53 time=63.3 ms (DUP!)
-> 64 bytes from ww-in-f19.1e100.net (209.85.229.19):
-> icmp_req=8 ttl=53 time=51.4 ms
-> ^C
-> --- gmail.com ping statistics ---
-> 8 packets transmitted, 8 received, +9 duplicates, 0% packet
-> loss, time 7011ms
-> rtt min/avg/max/mdev = 50.285/55.181/63.304/4.219 ms
-> 
-> Without these, the rt2800usb is looking to be pretty
-> stellar driver.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 11 Apr 2011 15:34:43 -0400
 
-Further investigation suggests the DUP! packets stem from one specific AP. Different APs seem to have less duplicate packets and overall packet-loss. Its puzzling to me however that the said AP does not produce DUP! packs at all with rt2870sta.
+> Here is another batch intended for 2.6.39.  Included is an mwl8k fix
+> to avoid freeing an irq that we never requested, an ath common code
+> fix to add a regulatory domain mapping code, an ath9k fix to avoid some
+> crashes on MIPS boards and fix some radio stability issues on AR9285, a
+> p54 fix to avoid a device lock-up caused by an uninitialized variable,
+> an iwlagn fix to correct for an incorrect antenna configuration value
+> in EEPROM on iwl5300 hardware, and an Kconfig fix for iwlegacy to
+> keep old kernel build configurations still building iwl3945 and/or
+> iwl4965 after the iwlagn/iwlegacy split.
+> 
+> Please let me know if there are problems!
 
-I think the problem may be originating from the device's retransmission pattern. The device thinks that certain package(s) were not transmitted correctly and attempts to re-send them again which in essence results in duplicates.
-
-Network tests completed with staging and rt2800usb indicate staging slightly outperforms rt2800usb. Also it appears some throughput is lost with rt2800usb.
-
-My verdict nevertheless: Drop the staging driver and leave rt2800usb as primary. 
-I'm sure improvements will be made. Plus, having both drivers load together, clash with each other and confuse users isn't desirable, either.
-
-Walter
+Pulled, thanks a lot John.
