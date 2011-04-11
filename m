@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36248 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750696Ab1D2EUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 00:20:49 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 21:20:21 -0700
-Date: Fri, 29 Apr 2011 09:50:18 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:8292 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673Ab1DKOqN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2011 10:46:13 -0400
+From: Anantha Idapalapati <aidapalapati@nvidia.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "olofj@chromium.org" <olofj@chromium.org>,
 	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
-Subject: Re: [RFC/RFT 3/9] ath9k_hw: define registers/macros to support
-	Antenna diversity
-Message-ID: <20110429042018.GB26690@vasanth-laptop> (sfid-20110429_062103_830629_6A6AF36C)
-References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <1304000579-5784-4-git-send-email-mshajakhan@atheros.com>
+	Uday Raval <uraval@nvidia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Andy Ritger <ARitger@nvidia.com>,
+	Rakesh Kumar <krakesh@nvidia.com>
+Date: Mon, 11 Apr 2011 20:15:03 +0530
+Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+Message-ID: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
+References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
+ <1302532734.6487.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302532734.6487.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1304000579-5784-4-git-send-email-mshajakhan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 28, 2011 at 07:52:53PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> define few registers and macros to configure/enable Antenna diversity
-> parameters in AR9485
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.h |   31 ++++++++++++++++++++++++--
->  drivers/net/wireless/ath/ath9k/hw.h         |    3 ++
->  2 files changed, 31 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> index 2a0d5cb..c4f409f 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> @@ -245,6 +245,9 @@
->   */
->  #define AR_BBB_BASE	0x9d00
->  
-> +#define AR_BBB_SIG_DETECT_ANT_FAST_DIV			0x00002000
-> +#define AR_BBB_SIG_DETECT_ANT_FAST_DIV_S		13
-> +
->  /*
->   * AGC Register Map
->   */
-> @@ -261,12 +264,37 @@
->  #define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
->  #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
->  
-> +/*
-> + * Antenna Diversity  settings
-> + */
->  #define AR_PHY_MC_GAIN_CTRL     (AR_AGC_BASE + 0x28)
->  #define AR_ANT_DIV_CTRL_ALL	0x7e000000
->  #define AR_ANT_DIV_CTRL_ALL_S	25
->  #define AR_ANT_DIV_ENABLE	0x1000000
->  #define AR_ANT_DIV_ENABLE_S	24
->  
-> +#define AR_PHY_CCK_DETECT       (AR_AGC_BASE + 0x1c0)
-> +#define AR_FAST_DIV_ENABLE	0x2000
-> +#define AR_FAST_DIV_ENABLE_S	13
-
-This can be in the original place as it is in order with the
-register offset. This way we can avoid any possible duplication/bug
-in register definition.
-
-Vasanth
+SW5pdGlhbGx5IGl0IHdhcyB3cml0dGVuIHNwZWNpZmljIHRvIEJDTTQzMjkuIEJ1dCBiZWNhdXNl
+IG9mIHRoZSByZWFzb24gbW9zdCBvZiB0aGUgQlQgY2hpcHMgaGF2ZSBzaW1pbGFyIHN3aXRjaCBv
+bi9vZmYgc2VxdWVuY2UsIHRoaXMgZHJpdmVyIGlzIG1hZGUgZ2VuZXJpYy4gSWYgdGhlcmUgaXMg
+YW55IHNwZWNpZmljIGNoYW5nZXMgcmVxdWlyZWQgZm9yIGEgcGFydGljdWxhciBwbGF0Zm9ybSwg
+dGhpcyBkcml2ZXIgY2FuIGJlIHRha2VuIGFzIHJlZmVyZW5jZS4NCg0KUGxlYXNlIGNoZWNrIHRo
+ZSBoaXN0b3J5IG9mIGNvbW1lbnRzIGF0IGh0dHA6Ly9jb2RlcmV2aWV3LmNocm9taXVtLm9yZy82
+Mjk1MDA5Lw0KDQotQW5hbnRoYQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
+Sm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDog
+TW9uZGF5LCBBcHJpbCAxMSwgMjAxMSA4OjA5IFBNDQpUbzogQW5hbnRoYSBJZGFwYWxhcGF0aQ0K
+Q2M6IG9sb2ZqQGNocm9taXVtLm9yZzsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgVWRheSBSYXZh
+bDsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBBbmR5IFJpdGdlcjsgUmFrZXNoIEt1
+bWFyDQpTdWJqZWN0OiBSZTogW1BBVENIXSBDSFJPTUlVTTogY29uZmlnOiBibHVldG9vdGg6IHJm
+a2lsbCBkcml2ZXINCg0KT24gTW9uLCAyMDExLTA0LTExIGF0IDIwOjAzICswNTMwLCBhaWRhcGFs
+YXBhdGlAbnZpZGlhLmNvbSB3cm90ZToNCj4gRnJvbTogQW5hbnRoYSBJZGFwYWxhcGF0aSA8YWlk
+YXBhbGFwYXRpQG52aWRpYS5jb20+DQo+IA0KPiBJbml0aWFsIHZlcnNpb24gb2YgbmV3ICJyZmtp
+bGwiIGRyaXZlciB0byBjb250cm9sIEJUIHJhZGlvLg0KPiBBIG5ldyBrZXJuZWwgY29uZmlnIHZh
+cmlhYmxlIENPTkZJR19CVF9SRktJTEwgaXMgZGVmaW5lZCBhbmQNCj4gbmVlZCB0byBiZSB1c2Vk
+IHRvIGluY2x1ZGUgdGhpcyBkcml2ZXIgaW4gdGhlIGtlcm5lbC4NCg0KVGhhdCBzZWVtcyBhIGxp
+dHRsZSB0b28gZ2VuZXJpYywgZ2l2ZW4gdGhlIGZhY3QgdGhhdCB0aGlzIG5lZWRzIHNvbWUNCnNw
+ZWNpZmljIGJjbTQzMjkgY2hpcD8gT3IgdGhlbiBhZ2FpbiwgZG9lcyBpdCByZWFsbHk/IEl0IHNo
+b3VsZCBqdXN0IGJlDQpjYWxsZWQgQlQgR1BJTyBSRmtpbGwsIG5vPw0KDQpqb2hhbm5lcw0KDQoN
+Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpUaGlzIGVtYWlsIG1lc3NhZ2UgaXMgZm9yIHRo
+ZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpIGFuZCBtYXkgY29udGFpbg0K
+Y29uZmlkZW50aWFsIGluZm9ybWF0aW9uLiAgQW55IHVuYXV0aG9yaXplZCByZXZpZXcsIHVzZSwg
+ZGlzY2xvc3VyZSBvciBkaXN0cmlidXRpb24NCmlzIHByb2hpYml0ZWQuICBJZiB5b3UgYXJlIG5v
+dCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGJ5DQpy
+ZXBseSBlbWFpbCBhbmQgZGVzdHJveSBhbGwgY29waWVzIG9mIHRoZSBvcmlnaW5hbCBtZXNzYWdl
+Lg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg==
