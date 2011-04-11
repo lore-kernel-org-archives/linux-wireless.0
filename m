@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39218 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758613Ab1D0L2C (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40034 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755520Ab1DKTAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 07:28:02 -0400
-Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
- IEEE80211_HW_CRYPTO_ENABLED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <20110427110303.GA18370@hertz.marvell.com>
-References: <20110415045321.GA11504@hertz.marvell.com>
-	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
-	 <20110415084005.GC11576@hertz.marvell.com>
-	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
-	 <20110415105140.GD11576@hertz.marvell.com>
-	 <1302865304.3572.15.camel@jlt3.sipsolutions.net>
-	 <20110421121513.GC27527@hertz.marvell.com>
-	 <1303389236.3597.8.camel@jlt3.sipsolutions.net>
-	 <20110421124624.GA29211@hertz.marvell.com>
-	 <1303390788.3597.10.camel@jlt3.sipsolutions.net>
-	 <20110427110303.GA18370@hertz.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 27 Apr 2011 13:27:56 +0200
-Message-ID: <1303903676.3542.2.camel@jlt3.sipsolutions.net> (sfid-20110427_132807_124359_F3C8890A)
-Mime-Version: 1.0
+	Mon, 11 Apr 2011 15:00:25 -0400
+Date: Mon, 11 Apr 2011 14:58:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Airlie <airlied@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH] iwlegacy: make iwl3945 and iwl4965 select IWLWIFI_LEGACY
+Message-ID: <20110411185807.GC2511@tuxdriver.com>
+References: <BANLkTimoDVMcvFdoUedyfw4Thv8=DsV-5A@mail.gmail.com>
+ <1302541599-15383-1-git-send-email-linville@tuxdriver.com>
+ <1302547162.5663.2.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1302547162.5663.2.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-27 at 16:33 +0530, Yogesh Ashok Powar wrote:
-> On Thu, Apr 21, 2011 at 05:59:48AM -0700, Johannes Berg wrote:
-> > Well, it kinda goes like this:
+On Mon, Apr 11, 2011 at 11:39:22AM -0700, wwguy wrote:
+> On Mon, 2011-04-11 at 10:06 -0700, John W. Linville wrote:
+> > Otherwise, IWLWIFI_LEGACY has to be selected independently before the
+> > drivers are made available.
 > > 
-> > key added           -> need tailroom code
-> > key put into HW     -> no longer need tailroom code
-> > key removed from HW -> need tailroom code again
-> > key deleted         -> no longer need tailroom code
+> > Reported-by: Dave Airlie <airlied@gmail.com>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> > Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > ---
+> >  drivers/net/wireless/iwlegacy/Kconfig |    9 +++++----
+> >  1 files changed, 5 insertions(+), 4 deletions(-)
 > > 
-> Following patch takes care of these four states. Kindly review.
+> > diff --git a/drivers/net/wireless/iwlegacy/Kconfig b/drivers/net/wireless/iwlegacy/Kconfig
+> > index 2a45dd4..aef65cd 100644
+> > --- a/drivers/net/wireless/iwlegacy/Kconfig
+> > +++ b/drivers/net/wireless/iwlegacy/Kconfig
+> > @@ -1,6 +1,5 @@
+> >  config IWLWIFI_LEGACY
+> > -	tristate "Intel Wireless Wifi legacy devices"
+> > -	depends on PCI && MAC80211
+> > +	tristate
+> >  	select FW_LOADER
+> >  	select NEW_LEDS
+> >  	select LEDS_CLASS
+> 
+> Should we add some ---help--- here?, or not..
 
-Looks fine, but still I think it might get out of sync when HW restart
-happens?
+Why would you need it?  This is now automatically selected by the
+driver -- the user doesn't see it.
 
-johannes
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
