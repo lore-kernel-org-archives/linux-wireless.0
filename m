@@ -1,117 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:41988 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932499Ab1D0QOV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 12:14:21 -0400
-Received: by iwn34 with SMTP id 34so1485961iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 09:14:21 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:38768 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720Ab1DLM50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 08:57:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 05:57:00 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/22] ath9k_hw: Define devid and mac version for AR9340
+Date: Tue, 12 Apr 2011 18:27:01 +0530
+Message-ID: <1302613042-1754-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <197612.83637.qm@web161606.mail.bf1.yahoo.com>
-References: <197612.83637.qm@web161606.mail.bf1.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Apr 2011 09:14:00 -0700
-Message-ID: <BANLkTin9RPZipOuN5ZKNdhFpjEStAEJEVA@mail.gmail.com> (sfid-20110427_181433_233838_AB7BC93E)
-Subject: Re: [PATCH 1/2 re-send] compat-wireless: enable default RT33XX support
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=bcaec52e6157b3fd9604a1e8bbb5
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---bcaec52e6157b3fd9604a1e8bbb5
-Content-Type: text/plain; charset=UTF-8
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h |    4 ++++
+ 3 files changed, 6 insertions(+), 1 deletions(-)
 
-On Wed, Apr 27, 2011 at 2:01 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> Enable rt2x00 support for rt33xx devices
->
-> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3a8c41c..d98b4c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -552,7 +552,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (AR_SREV_9271(ah) || AR_SREV_9100(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah))
+ 		ah->is_pciexpress = false;
+ 
+ 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index a778b66..afdb006 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -43,6 +43,7 @@
+ #define AR9287_DEVID_PCI	0x002d
+ #define AR9287_DEVID_PCIE	0x002e
+ #define AR9300_DEVID_PCIE	0x0030
++#define AR9300_DEVID_AR9340	0x0031
+ #define AR9300_DEVID_AR9485_PCIE 0x0032
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 4b08e89..69d75d5 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -790,6 +790,7 @@
+ #define AR_SREV_VERSION_9485		0x240
+ #define AR_SREV_REVISION_9485_10	0
+ #define AR_SREV_REVISION_9485_11        1
++#define AR_SREV_VERSION_9340		0x300
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -871,6 +872,9 @@
+ 	(AR_SREV_9485(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_11))
+ 
++#define AR_SREV_9340(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9340))
++
+ #define AR_SREV_9285E_20(_ah) \
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+-- 
+1.7.0.4
 
-Nope, can you try again? Attached is what I got.
-
- Luis
-
---bcaec52e6157b3fd9604a1e8bbb5
-Content-Type: text/plain; charset=US-ASCII; name="foo.txt"
-Content-Disposition: attachment; filename="foo.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gn0gslgf0
-
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgCkRlbGl2ZXJlZC1UbzogbWNncm9mQGdtYWlsLmNv
-bQpSZWNlaXZlZDogYnkgMTAuNDIuMjAxLjIxMiB3aXRoIFNNVFAgaWQgZmIyMGNzMTYzMDQ1aWNi
-OwogICAgICAgIFdlZCwgMjcgQXByIDIwMTEgMDI6MDE6MDQgLTA3MDAgKFBEVCkKUmVjZWl2ZWQ6
-IGJ5IDEwLjUyLjkyLjE5IHdpdGggU01UUCBpZCBjaTE5bXIxMDU1OTk1dmRiLjE1OC4xMzAzODk0
-ODYzODE3OwogICAgICAgIFdlZCwgMjcgQXByIDIwMTEgMDI6MDE6MDMgLTA3MDAgKFBEVCkKUmV0
-dXJuLVBhdGg6IDxnb2xkZW5zdHJhbmdlckB5YWhvby5jb20+ClJlY2VpdmVkOiBmcm9tIG5tNy5i
-dWxsZXQubWFpbC5iZjEueWFob28uY29tIChubTcuYnVsbGV0Lm1haWwuYmYxLnlhaG9vLmNvbSBb
-OTguMTM5LjIxMi4xNjZdKQogICAgICAgIGJ5IG14Lmdvb2dsZS5jb20gd2l0aCBTTVRQIGlkIGsx
-OHNpNzA4ODQ2dmR1LjYyLjIwMTEuMDQuMjcuMDIuMDEuMDM7CiAgICAgICAgV2VkLCAyNyBBcHIg
-MjAxMSAwMjowMTowMyAtMDcwMCAoUERUKQpSZWNlaXZlZC1TUEY6IHBhc3MgKGdvb2dsZS5jb206
-IGJlc3QgZ3Vlc3MgcmVjb3JkIGZvciBkb21haW4gb2YgZ29sZGVuc3RyYW5nZXJAeWFob28uY29t
-IGRlc2lnbmF0ZXMgOTguMTM5LjIxMi4xNjYgYXMgcGVybWl0dGVkIHNlbmRlcikgY2xpZW50LWlw
-PTk4LjEzOS4yMTIuMTY2OwpBdXRoZW50aWNhdGlvbi1SZXN1bHRzOiBteC5nb29nbGUuY29tOyBz
-cGY9cGFzcyAoZ29vZ2xlLmNvbTogYmVzdCBndWVzcyByZWNvcmQgZm9yIGRvbWFpbiBvZiBnb2xk
-ZW5zdHJhbmdlckB5YWhvby5jb20gZGVzaWduYXRlcyA5OC4xMzkuMjEyLjE2NiBhcyBwZXJtaXR0
-ZWQgc2VuZGVyKSBzbXRwLm1haWw9Z29sZGVuc3RyYW5nZXJAeWFob28uY29tOyBka2ltPXBhc3Mg
-KHRlc3QgbW9kZSkgaGVhZGVyLmk9QHlhaG9vLmNvbQpSZWNlaXZlZDogZnJvbSBbOTguMTM5LjIx
-Mi4xNTBdIGJ5IG5tNy5idWxsZXQubWFpbC5iZjEueWFob28uY29tIHdpdGggTk5GTVA7IDI3IEFw
-ciAyMDExIDA5OjAxOjAzIC0wMDAwClJlY2VpdmVkOiBmcm9tIFs5OC4xMzkuMjEyLjIzN10gYnkg
-dG03LmJ1bGxldC5tYWlsLmJmMS55YWhvby5jb20gd2l0aCBOTkZNUDsgMjcgQXByIDIwMTEgMDk6
-MDE6MDMgLTAwMDAKUmVjZWl2ZWQ6IGZyb20gWzEyNy4wLjAuMV0gYnkgb21wMTA0Ni5tYWlsLmJm
-MS55YWhvby5jb20gd2l0aCBOTkZNUDsgMjcgQXByIDIwMTEgMDk6MDE6MDMgLTAwMDAKWC1ZYWhv
-by1OZXdtYW4tUHJvcGVydHk6IHltYWlsLTMKWC1ZYWhvby1OZXdtYW4tSWQ6IDM0NTE0MC40MTEw
-Ny5ibUBvbXAxMDQ2Lm1haWwuYmYxLnlhaG9vLmNvbQpSZWNlaXZlZDogKHFtYWlsIDg0NjYwIGlu
-dm9rZWQgYnkgdWlkIDYwMDAxKTsgMjcgQXByIDIwMTEgMDk6MDE6MDMgLTAwMDAKREtJTS1TaWdu
-YXR1cmU6IHY9MTsgYT1yc2Etc2hhMjU2OyBjPXJlbGF4ZWQvcmVsYXhlZDsgZD15YWhvby5jb207
-IHM9czEwMjQ7IHQ9MTMwMzg5NDg2MzsgYmg9c3RNcDhoWlo5dVFCV1hUdlZnN3lIZEhCZFFqcFdt
-VTNTZkhuOSt2L2wxcz07IGg9TWVzc2FnZS1JRDpYLVlNYWlsLU9TRzpSZWNlaXZlZDpYLU1haWxl
-cjpEYXRlOkZyb206UmVwbHktVG86U3ViamVjdDpUbzpDYzpNSU1FLVZlcnNpb246Q29udGVudC1U
-eXBlOkNvbnRlbnQtVHJhbnNmZXItRW5jb2Rpbmc7IGI9cGliOUpPZVpmZlhtYUdDblJxTHQybUxx
-ek5VVWF4UFVJRTdXWDJncjBBYkhpK2E4QUJubjd4UEQvR0JiUzBYRjhtd0J2SW9iYTJ3cUZ2cEdl
-Z0Z2UjhOSC8xNS93MU1qWkRWQVNjQkI4OU1OcDNwY1VxS0plbXRkUGR2TXJLdjZTZnQ2SWNESlEz
-MUZLSC9xdVlHa3VQWEdDMHJoR3dWNGw4TXV5MEtXU0x3PQpEb21haW5LZXktU2lnbmF0dXJlOmE9
-cnNhLXNoYTE7IHE9ZG5zOyBjPW5vZndzOwogIHM9czEwMjQ7IGQ9eWFob28uY29tOwogIGg9TWVz
-c2FnZS1JRDpYLVlNYWlsLU9TRzpSZWNlaXZlZDpYLU1haWxlcjpEYXRlOkZyb206UmVwbHktVG86
-U3ViamVjdDpUbzpDYzpNSU1FLVZlcnNpb246Q29udGVudC1UeXBlOkNvbnRlbnQtVHJhbnNmZXIt
-RW5jb2Rpbmc7CiAgYj1zZGtXb3RkMXJvT2cxNTVPa1crWGxiVG9UZ1NESXcvWENKbzFTUGF2ajRx
-YjFxR1A5aWZxNTVLNlZUV3MyYkhVMExjSnplbElzMlFOSTl3UWJCSVNabFJxb29FdFhRZThiVzJ6
-NjBONkdoQ0VVeEhFSVBjMHg2Z04wOE1NajFLTjFiQjQvNEtLMmdhV1d4UnEyUWhxd0NhTVF3TU5t
-Vk82NzAwRGNrTi85Qk09OwpNZXNzYWdlLUlEOiA8MTk3NjEyLjgzNjM3LnFtQHdlYjE2MTYwNi5t
-YWlsLmJmMS55YWhvby5jb20+ClgtWU1haWwtT1NHOiBRNUU0R25NVk0xbTc1WWlQZFkuUy51bG9Y
-dnZxekdfdE5PTmVsNy5QMnNKSTAxYQogVWxIOWdub3lBdDVLbWllbTlnZGh3eHNYc05SbVppbjB4
-M01FQUZIZFJMQzlwNDlKQ1doVy5jaGM2RUluCiBZQnFHcU50MG9HNHNBaXhrbXp4VlhaNGhmQjMz
-S1g4R0pYWHQ0SVpRZDlGOVlhbWFIalpTcEJTVGVkRnEKIHp2TWFyZHlRTmY2NWR6TVNpUnFuQ3Zh
-MlM2UDk0NjJwWnBlLkxjUHhETFF3VnAzTDF3VVFaMHpwS3o5NwogVElCUHd3c19tYzVGY3ZaTkFF
-YjFtRkgwbHdxT0dSU1hxZG0yTzJwREdPZUVVb0FIYVoxb0txOWJzT2o2CiBrR3pYcnBZOERQZUlF
-Q1dwRW9VaktncGc0dTdCQ01ZeEpOSmJwVnJjeG10cDV4aURNMTVYOFlPLmUuUTMKIGJZTUJzdlY3
-eHBmUjZJVENGMllZd04uWW5wTnlxQXcuMktqakVBTVN0UjlxYU5MWU1iV2o5ClJlY2VpdmVkOiBm
-cm9tIFs4My4xNDguOTMuMTA3XSBieSB3ZWIxNjE2MDYubWFpbC5iZjEueWFob28uY29tIHZpYSBI
-VFRQOyBXZWQsIDI3IEFwciAyMDExIDAyOjAxOjAzIFBEVApYLU1haWxlcjogWWFob29NYWlsV2Vi
-U2VydmljZS8wLjguMTEwLjI5OTkwMApEYXRlOiBXZWQsIDI3IEFwciAyMDExIDAyOjAxOjAzIC0w
-NzAwIChQRFQpCkZyb206IFdhbHRlciBHb2xkZW5zIDxnb2xkZW5zdHJhbmdlckB5YWhvby5jb20+
-ClJlcGx5LVRvOiBXYWx0ZXIgR29sZGVucyA8Z29sZGVuc3RyYW5nZXJAeWFob28uY29tPgpTdWJq
-ZWN0OiBbUEFUQ0ggMS8yIHJlLXNlbmRdIGNvbXBhdC13aXJlbGVzczogZW5hYmxlIGRlZmF1bHQg
-UlQzM1hYIHN1cHBvcnQKVG86ICJMdWlzIFIuIFJvZHJpZ3VleiIgPG1jZ3JvZkBnbWFpbC5jb20+
-CkNjOiAibGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnIiA8bGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnPgpNSU1FLVZlcnNpb246IDEuMApDb250ZW50LVR5cGU6IHRleHQvcGxhaW47
-IGNoYXJzZXQ9aXNvLTg4NTktMQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBxdW90ZWQtcHJp
-bnRhYmxlCgpFbmFibGUgcnQyeDAwIHN1cHBvcnQgZm9yIHJ0MzN4eCBkZXZpY2VzID0wQT0wQVNp
-Z25lZC1vZmYtYnk6IFdhbHRlciBHb2xkZW49CnMgPGdvbGRlbnN0cmFuZ2VyQHlhaG9vLmNvbT49
-MEEtLS09MEE9MEEtLS0gYS9jb25maWcubWs9MEErKysgYi9jb25maWcubWs9Cj0wQUBAIC0zMjYs
-NyArMzI2LDcgQEAgQ09ORklHX1JUMjQwMFBDST0zRG09MEE9QTBDT05GSUdfUlQyNTAwUENJPTNE
-bT0wQT1BMD0KaWZkZWYgQ09ORklHX0NSQ19DQ0lUVD0wQT1BMENPTkZJR19SVDI4MDBQQ0k9M0Rt
-PTBBLSMgQ09ORklHX1JUMjgwMFBDSV9SVDMzPQpYWD0zRHk9MEErQ09ORklHX1JUMjgwMFBDSV9S
-VDMzWFg9M0R5PTBBPUEwIyBDT05GSUdfUlQyODAwUENJX1JUMzVYWD0zRHk9MEE9Cj1BMCMgQ09O
-RklHX1JUMjgwMFBDSV9SVDUzWFg9M0R5PTBBPUEwZW5kaWYgI0NPTkZJR19DUkNfQ0NJVFQ9MEFA
-QCAtNDUwLDcgKz0KNDUwLDcgQEAgQ09ORklHX0FUSDlLX0hUQz0zRG09MEE9QTBDT05GSUdfUlQy
-NTAwVVNCPTNEbT0wQT1BMGlmZGVmIENPTkZJR19DPQpSQ19DQ0lUVD0wQT1BMENPTkZJR19SVDI4
-MDBVU0I9M0RtPTBBLSMgQ09ORklHX1JUMjgwMFVTQl9SVDMzWFg9M0R5PTBBK0NPTkY9CklHX1JU
-MjgwMFVTQl9SVDMzWFg9M0R5PTBBPUEwIyBDT05GSUdfUlQyODAwVVNCX1JUMzVYWD0zRHk9MEE9
-QTBDT05GSUdfUlQyOD0KMDBVU0JfVU5LTk9XTj0zRHk9MEE9QTBlbmRpZiAjQ09ORklHX0NSQ19D
-Q0lUVD0wQQo=
---bcaec52e6157b3fd9604a1e8bbb5--
