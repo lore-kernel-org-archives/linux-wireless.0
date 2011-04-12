@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59437 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317Ab1DHXQI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 19:16:08 -0400
-Received: by qwk3 with SMTP id 3so2373914qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 16:16:06 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:11673 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756854Ab1DLKlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 06:41:44 -0400
+Date: Tue, 12 Apr 2011 12:41:39 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 10/16] iwlagn: remove un-needed configuration
+Message-ID: <20110412104139.GC2804@redhat.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1302276636-12802-11-git-send-email-wey-yi.w.guy@intel.com>
+ <20110412103905.GB2804@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1302299890.28673.1.camel@maggie>
-References: <1302267632-2326-1-git-send-email-zajec5@gmail.com>
-	<1302299890.28673.1.camel@maggie>
-Date: Sat, 9 Apr 2011 01:16:06 +0200
-Message-ID: <BANLkTi=7OZ40Tn-=8KCX_ReNsUQ3euwTfQ@mail.gmail.com>
-Subject: Re: [PATCH][2.6.39?] b43: trivial: update module info about firmware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110412103905.GB2804@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 8 kwietnia 2011 23:58 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Fri, 2011-04-08 at 15:00 +0200, Rafał Miłecki wrote:
->> We do not use ucode9,
->
-> Well, but we should.
-> There are only minor differences between r5 and r9 firmware.
-> r9 basically is a r5 firmware with workarounds added that are
-> needed for r9 devices.
->
-> So I think we should start using r9 instead of removing it here.
-
-I meant to add support for loading ucode 9 later and the re-add info
-about this. But OK, I'll make V2 which only adds 16_mimo. For normal
-development cycle (wireless-testing) I'll add ucode9 loading support.
-
--- 
-Rafał
+On Tue, Apr 12, 2011 at 12:39:05PM +0200, Stanislaw Gruszka wrote:
+> On Fri, Apr 08, 2011 at 08:30:30AM -0700, Wey-Yi Guy wrote:
+> > +	lctl = iwl_pcie_link_ctl(priv);
+> > +	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+> > +				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
+> > +		/* L1-ASPM enabled; disable(!) L0S  */
+> > +		iwl_set_bit(priv, CSR_GIO_REG,
+> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
+> > +		IWL_DEBUG_POWER(priv, "L1 Enabled; Disabling L0S\n");
+> > +	} else {
+> > +		/* L1-ASPM disabled; enable(!) L0S */
+We claim to enable L0S,
+> > +		iwl_clear_bit(priv, CSR_GIO_REG,
+> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
+but we clear CSR_GIO_REG_VAL_L0S_ENABLED bit, hmm ...
