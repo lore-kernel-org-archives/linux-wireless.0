@@ -1,80 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44592 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757588Ab1DXQL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 12:11:26 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: do not include kstrto* for kernel >= 2.6.38.4
-Date: Sun, 24 Apr 2011 18:11:14 +0200
-Message-Id: <1303661475-26632-1-git-send-email-hauke@hauke-m.de> (sfid-20110424_181138_015570_9D84331E)
+Received: from he.sipsolutions.net ([78.46.109.217]:37875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706Ab1DLLmY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 07:42:24 -0400
+Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: aidapalapati@nvidia.com
+Cc: olofj@chromium.org, linville@tuxdriver.com, uraval@nvidia.com,
+	linux-wireless@vger.kernel.org, aritger@nvidia.com,
+	krakesh@nvidia.com
+In-Reply-To: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
+References: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Apr 2011 13:42:20 +0200
+Message-ID: <1302608540.3639.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kstrto* went into kernel 2.6.38.4 and causes conflicts with the version
-included in compat-wireless. We use strict_strtol to check if kstrto*
-is already available.
-kstrto* was not moved to compat-2.6.38.h because kernel version <=
-2.6.38.3 needs this backport and some distributions like Ubuntu still
-ship an older version of this kernel.
+On Tue, 2011-04-12 at 16:55 +0530, aidapalapati@nvidia.com wrote:
+> From: Anantha Idapalapati <aidapalapati@nvidia.com>
+> 
+> Initial version of new "rfkill" driver to control BT radio.
+> A new kernel config variable CONFIG_BT_RFKILL is defined and
+> need to be used to include this driver in the kernel.
+> 
+> Three Platform resources are expected by the driver.
+>  - Shutdown GPIO
+>  - Reset GPIO and
+>  - Reference Clock.
+> Any/All of the resources can be defined by a platform.
 
-Reported-by: Andreas Hartmann <andihartmann@01019freenet.de>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/kstrtox.c              |    9 +++++++++
- include/linux/compat-2.6.39.h |    7 +++++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
+So it really is a GPIO_RFKILL driver. What's bluetooth specific in it?
 
-diff --git a/compat/kstrtox.c b/compat/kstrtox.c
-index 05672e8..10aa91b 100644
---- a/compat/kstrtox.c
-+++ b/compat/kstrtox.c
-@@ -11,6 +11,14 @@
-  *
-  * If -E is returned, result is not touched.
-  */
-+#include <linux/kernel.h>
-+/* 
-+ * kstrto* was included in kernel 2.6.38.4 and causes conflicts with the
-+ * version included in compat-wireless. We use strict_strtol to check if
-+ * kstrto* is already available.
-+ */
-+#ifndef strict_strtol
-+
- #include <linux/ctype.h>
- #include <linux/errno.h>
- #include <linux/kernel.h>
-@@ -225,3 +233,4 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
- 	return 0;
- }
- EXPORT_SYMBOL(kstrtos8);
-+#endif /* #ifndef strict_strtol */
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-index 3a366e2..b4d85fd 100644
---- a/include/linux/compat-2.6.39.h
-+++ b/include/linux/compat-2.6.39.h
-@@ -94,6 +94,12 @@ static inline struct msi_desc *irq_desc_get_msi_desc(struct irq_desc *desc)
- }
- #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29)) */
- 
-+/* 
-+ * kstrto* was included in kernel 2.6.38.4 and causes conflicts with the
-+ * version included in compat-wireless. We use strict_strtol to check if
-+ * kstrto* is already available.
-+ */
-+#ifndef strict_strtol
- /* Internal, do not use. */
- int __must_check _kstrtoul(const char *s, unsigned int base, unsigned long *res);
- int __must_check _kstrtol(const char *s, unsigned int base, long *res);
-@@ -153,6 +159,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
- int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
- int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
- int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
-+#endif /* ifndef strict_strtol */
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
- 
--- 
-1.7.1
+> BUG=none
+> TEST= tested on board using BCM4329 (ventana)
+> 
+> Change-Id: I38e6ad3a772180b7cab5cf2d59b459b21051817e
+
+> --- a/drivers/bluetooth/Kconfig
+> +++ b/drivers/bluetooth/Kconfig
+> @@ -219,4 +219,12 @@ config BT_ATH3K
+>  	  Say Y here to compile support for "Atheros firmware download driver"
+>  	  into the kernel or say M to compile it as module (ath3k).
+>  
+> +config BT_RFKILL
+> +	bool "Bluetooth RFKILL driver"
+> +	depends on BT && RFKILL
+> +	help
+> +	  If you say yes here you get support of a generic bluetooth RFKILL
+> +	  driver for BT chipset. Platform needs to define the resources
+> +	  required.
+
+GPIO should show up in the name and description. BT should not. The
+driver should be moved to net/rfkill/ and be generic for GPIO.
+
+> +static int bt_rfkill_probe(struct platform_device *pdev)
+> +{
+> +	struct rfkill *bt_rfkill_dev;
+> +	struct resource *res;
+> +	int ret;
+> +	bool enable = false;  /* off */
+> +	bool default_sw_block_state;
+> +
+> +	bt_rfkill = kzalloc(sizeof(*bt_rfkill), GFP_KERNEL);
+> +	if (!bt_rfkill)
+> +		return -ENOMEM;
+> +
+> +	bt_rfkill->bt_clk = clk_get(&pdev->dev, "bt_clk");
+
+I don't think all of this is really the best way to do things. This
+hardcodes "bt_clk" for example. But that's useless for a generic driver.
+
+Please look at
+http://article.gmane.org/gmane.linux.kernel/1124137
+
+That driver requires that some specific code registers a platform device
+with the right data, but you could do that for this as well and get rid
+of all the hardcoded strings and the hard-coded assumption that it's for
+bluetooth. I think that approach is MUCH better, since then if somebody
+has a Wifi or GPS device with GPIO control they can reuse this code.
+
+johannes
 
