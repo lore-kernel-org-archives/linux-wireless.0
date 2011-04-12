@@ -1,71 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45919 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754387Ab1DZUao (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51129 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881Ab1DLETL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 16:30:44 -0400
-Date: Tue, 26 Apr 2011 16:27:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [PATCH 2.6.39 v2] iwlegacy: led stay solid on when no traffic
-Message-ID: <20110426202721.GN2804@tuxdriver.com> (sfid-20110426_223047_648249_19C39239)
-References: <1303755177-28781-1-git-send-email-wey-yi.w.guy@intel.com>
- <20110426190816.GH2804@tuxdriver.com>
- <1303845011.14995.204.camel@wwguy-huron>
+	Tue, 12 Apr 2011 00:19:11 -0400
+Received: by iyb14 with SMTP id 14so6259974iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 21:19:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303845011.14995.204.camel@wwguy-huron>
+Date: Tue, 12 Apr 2011 00:19:10 -0400
+Message-ID: <BANLkTini_B7Y-e7fZz2xy4BFtn=Wu827NQ@mail.gmail.com>
+Subject: [PATCH v2] rt2800usb: Add seven new USB IDs
+From: Mark Davis <marked86@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com, helmut.schaa@googlemail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 26, 2011 at 12:10:11PM -0700, Guy, Wey-Yi wrote:
-> On Tue, 2011-04-26 at 12:08 -0700, John W. Linville wrote:
-> > On Mon, Apr 25, 2011 at 11:12:57AM -0700, Wey-Yi Guy wrote:
-> > > commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc change the led behavior
-> > > for iwlwifi driver; the side effect cause led blink all the time.
-> > > 
-> > > Modify the led blink table to fix this problem
-> > > 
-> > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > 
-> > Patch seems fine, but I can't find the listed commit ID that caused this issue?
-> > 
-> it is in wireless-testing
+Adds USB IDs for seven previously missing devices. Additionally, all
+instances of 'Conceptronic' have been replaced by the OEM name.
 
-/home/linville/git/wireless-testing
-[linville-8530p.local]:> git show 843f26f06a41c5797f19e843c23ca4ed2a71a0bc
-fatal: bad object 843f26f06a41c5797f19e843c23ca4ed2a71a0bc
+Devices added are..
+0411:01a2 - Buffalo WLI-UC-GNM, RT3070V
+0586:341e - ZyXEL NWD2105, RT3070
+13b1:002f - Linksys AE1000, RT3572
+13b1:0031 - Cisco / Linksys AM10, RT3072
+14b2:3c2c - Keebox W150NU / Alpha Networks WUS-N12, RT3070
+157e:3013 - TRENDnet TEW-645UB, RT2770+RT2720
+15a9:0012 - Airlink AWLL7025 / Gemtek WUBR-208N, RT2870+RT2850
 
-Must be your local tree?
+Patch now uses tabs (sorry about that).
 
-> commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Wed Dec 15 07:30:01 2010 -0800
-> 
->     iwlwifi: use mac80211 throughput trigger
->     
->     Instead of keeping track of LED blink speed
->     in the driver, use the new mac80211 trigger
->     and link it up with an LED classdev that we
->     now register. This also allows users more
->     flexibility in how they want to have the LED
->     blink or not.
->     
->     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> 
-> 
-> 
-> for wireless-next-2.6, it is
-> commit#commit 5ed540aecc2aae92d5c97b9a9306a5bf88ad5574
+Signed-off-by: Mark Davis <marked86@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   35 +++++++++++++++++++-----------
+ 1 files changed, 22 insertions(+), 13 deletions(-)
 
-Thanks -- please cite the commit IDs from the public trees or just
-use the subject.
-
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
+b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6ba31a0..d2f5c87 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -710,6 +710,16 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x8516, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x8516, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x8516, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Alpha Networks */
++	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c2c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Amit */
+ 	{ USB_DEVICE(0x15c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Askey */
+@@ -736,15 +746,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x00e8), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x016f), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* Conceptronic */
+-	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0411, 0x01a2), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Corega */
+ 	{ USB_DEVICE(0x07aa, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07aa, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -776,6 +778,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Gemtek */
++	{ USB_DEVICE(0x15a9, 0x0012), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Gigabyte */
+ 	{ USB_DEVICE(0x1044, 0x800b), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -792,6 +796,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Linksys */
++	{ USB_DEVICE(0x13b1, 0x0031), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Logitec */
+@@ -870,8 +875,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x15a9, 0x0006), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sweex */
+ 	{ USB_DEVICE(0x177f, 0x0302), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* U-Media*/
++	/* U-Media */
+ 	{ USB_DEVICE(0x157e, 0x300e), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x157e, 0x3013), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* ZCOM */
+ 	{ USB_DEVICE(0x0cde, 0x0022), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0cde, 0x0025), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -883,6 +889,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Zyxel */
+ 	{ USB_DEVICE(0x0586, 0x3416), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0586, 0x3418), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0586, 0x341e), USB_DEVICE_DATA(&rt2800usb_ops) },
+ #ifdef CONFIG_RT2800USB_RT33XX
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3370), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -901,6 +908,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x1740, 0x9801), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* I-O DATA */
+ 	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Linksys */
++	{ USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sitecom */
+@@ -915,6 +924,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	 * Unclear what kind of devices these are (they aren't supported by the
+ 	 * vendor linux driver).
+ 	 */
++	/* Alpha Networks */
++	{ USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Amigo */
+ 	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -933,9 +945,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0411, 0x0148), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x0150), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0411, 0x015d), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* Conceptronic */
+-	{ USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Corega */
+ 	{ USB_DEVICE(0x07aa, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07aa, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
