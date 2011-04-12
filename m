@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:54223 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756065Ab1DSVyk (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:42002 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751777Ab1DLTEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 17:54:40 -0400
-Received: by iyb14 with SMTP id 14so98457iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 14:54:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1303216566.3603.6.camel@jlt3.sipsolutions.net>
-References: <1303125749-31967-1-git-send-email-arik@wizery.com>
- <1303129610.3588.7.camel@jlt3.sipsolutions.net> <BANLkTikc9wrZ__8URZ3ASQ6F=rUHix2iGA@mail.gmail.com>
- <1303216566.3603.6.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 20 Apr 2011 00:54:25 +0300
-Message-ID: <BANLkTik81g3NOwHcQk2eqOcMjaubCLdk+w@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet loss
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 Apr 2011 15:04:10 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 04A2D540446
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 15:08:52 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-12 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110412190409.1469B40EB3@repository3.orbit-lab.org>
+Date: Tue, 12 Apr 2011 15:04:08 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 19, 2011 at 15:36, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2011-04-18 at 23:44 +0300, Arik Nemtsov wrote:
->
->> Well in a wl12xx chip we just configure some thresholds to the FW and
->> it triggers the event for us. Using TX status doesn't really make
->> sense since the FW has automatic rate control (so 50 tries are more
->> like 50 * 8).
->
-> Yeah same for the mac80211 approach, since we take packets, not retries.
->
->> > Also, are you sure? Do you really not get _any_ TX status?
->>
->> Currently we do get TX status, but there are plans to remove it later on.
->
-> That's your choice, but I wouldn't do it. You'll have to support TX
-> status when requested, otherwise AP operation won't work, so you need
-> the code anyway.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + a5f3ae2...bc2e31b akpm-end   -> origin/akpm-end  (forced update)
+   4263a2f..a6360dd  akpm-start -> origin/akpm-start
+   66b7101..fdab1e2  history    -> origin/history
+ + ee8870a...611af9e master     -> origin/master  (forced update)
+   4263a2f..a6360dd  stable     -> origin/stable
+ * [new tag]         next-20110412 -> next-20110412
+ * [new tag]         v2.6.39-rc3 -> v2.6.39-rc3
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Can you elaborate why?
+compat-wireless code metrics
 
-I'm assuming you mean the removal of
-IEEE80211_HW_REPORTS_TX_ACK_STATUS (in the second patch of this
-series). Note that it was only added recently, and AP/STA modes seemed
-to work fine without it.
->From a look in the code it seems this flag helps with connection
-monitoring in STA mode. The other use is determining the current PS
-mode when IEEE80211_HW_PS_NULLFUNC_STACK is enabled. These two are
-done by HW in wl12xx cards.
-
-Regards,
-Arik
+    837874 - Total upstream lines of code being pulled
