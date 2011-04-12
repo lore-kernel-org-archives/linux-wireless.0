@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54095 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751602Ab1DRL11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:27:27 -0400
-Message-ID: <4DAC2016.3000008@openwrt.org>
-Date: Mon, 18 Apr 2011 13:27:18 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61217 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720Ab1DLNVp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:21:45 -0400
 MIME-Version: 1.0
-To: Sujith <m.sujith@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, jouni.malinen@atheros.com
-Subject: Re: [PATCH 1/2] ath9k: fix powersave frame filtering/buffering in
- AP mode
-References: <1303075690-53804-1-git-send-email-nbd@openwrt.org>	<19883.48525.986878.991570@gargle.gargle.HOWL>	<4DABFC54.8030502@openwrt.org> <19884.7222.186200.867910@gargle.gargle.HOWL>
-In-Reply-To: <19884.7222.186200.867910@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <op.vtttxt083ri7v4@arend-laptop>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	<BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
+	<op.vtttxt083ri7v4@arend-laptop>
+Date: Tue, 12 Apr 2011 15:21:44 +0200
+Message-ID: <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-04-18 1:10 PM, Sujith wrote:
-> Felix Fietkau wrote:
->>  The driver calls ieee80211_sta_set_tim on STA_NOTIFY_SLEEP whenever it
->>  still has some buffered frames that it intends to keep until the client
->>  wakes up again (i.e. frames that will not be returned to mac80211 as
->>  filtered).
+2011/4/12 Arend van Spriel <arend@broadcom.com>:
+> On Tue, 12 Apr 2011 15:04:48 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
 >
-> Why should ieee80211_sta_set_tim() be called from complete_aggr() ?
-I should probably add an extra check that tests for tid->buf_q being 
-empty - and some comments.
-This handles a race condition that occurs if an A-MPDU completes (with 
-some pending frames) after the station entered PS and 
-ieee80211_sta_set_tim was not called because the buffer queue was empty.
+>> There is one more change I started to consider. Is "core" correct name
+>> for AXI's device? Almost everywhere we can read about *components* on
+>> the AXI interconnect.
+>>
+>> Maybe it'd make sense to s/core/comp/? Arend?
+>
+> I have no strong preference on this. I tried the latest patch and it does
+> not crash anymore with load/unload.
 
-- Felix
+Could you post dmesg? Probably nothing exciting, just my curiosity :)
+
+-- 
+Rafał
