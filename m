@@ -1,92 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58115 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854Ab1DWMku (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 08:40:50 -0400
-Received: by wya21 with SMTP id 21so832603wya.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 05:40:49 -0700 (PDT)
-Subject: Re: [PATCH 4/4] iwlwifi: split the drivers for agn and legacy
- devices 3945/4965
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-In-Reply-To: <1303558517.8537.7.camel@maxim-laptop>
-References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1298315209-17986-5-git-send-email-wey-yi.w.guy@intel.com>
-	 <1303558517.8537.7.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 23 Apr 2011 15:40:44 +0300
-Message-ID: <1303562444.11751.6.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48372 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756803Ab1DLTrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 15:47:33 -0400
+Message-ID: <4DA4AC4B.90409@hauke-m.de>
+Date: Tue, 12 Apr 2011 21:47:23 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: George Kashperko <george@znau.edu.ua>, balbi@ti.com,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>	<20110412133633.GR15130@legolas.emea.dhcp.ti.com>	<1302634039.14216.10.camel@dev.znau.edu.ua>	<BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>	<1302635550.14216.21.camel@dev.znau.edu.ua> <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+In-Reply-To: <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-04-23 at 14:35 +0300, Maxim Levitsky wrote:
-> On Mon, 2011-02-21 at 11:06 -0800, Wey-Yi Guy wrote:
-> > From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-> > 
-> > Intel WiFi devices 3945 and 4965 now have their own driver in the folder
-> > 
-> > 	drivers/net/wireless/iwlegacy
-> > 
-> > Add support to build these drivers independently of the driver for
-> > AGN devices. Selecting the 3945 builds iwl3945.ko and iwl_legacy.ko,
-> > and selecting the 4965 builds iwl4965.ko and iwl_legacy.ko. iwl-legacy.ko
-> > contains code shared between both devices.
-> > 
-> > The 3945 is an ABG/BG device, with no support for 802.11n. The 4965 is a 2x3
-> > ABGN device.
+Hi Rafał,
+
+On 04/12/2011 09:27 PM, Rafał Miłecki wrote:
+> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+>>
+>>> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+>>>>
+>>>>> Hi,
+>>>>>
+>>>>> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
+>>>>>> Cc: Michael Büsch <mb@bu3sch.de>
+>>>>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>>> Cc: George Kashperko <george@znau.edu.ua>
+>>>>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>>>>> Cc: linux-arm-kernel@lists.infradead.org
+>>>>>> Cc: Russell King <rmk@arm.linux.org.uk>
+>>>>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>>>>> Cc: Andy Botting <andy@andybotting.com>
+>>>>>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+>>>>>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>>>>> ---
+>>>>>> V2: Rename to axi
+>>>>>>     Use DEFINE_PCI_DEVICE_TABLE in bridge
+>>>>>>     Make use of pr_fmt and pr_*
+>>>>>>     Store core class
+>>>>>>     Rename bridge to not b43 specific
+>>>>>>     Replace magic 0x1000 with BCMAI_CORE_SIZE
+>>>>>>     Remove some old "ssb" names and defines
+>>>>>>     Move BCMAI_ADDR_BASE def
+>>>>>>     Add drvdata field
+>>>>>> V3: Fix reloading (kfree issue)
+>>>>>>     Add 14e4:0x4331
+>>>>>>     Fix non-initialized struct issue
+>>>>>>     Drop useless inline functions wrappers for pci core drv
+>>>>>>     Proper pr_* usage
+>>>>>> V3.1: Include forgotten changes (pr_* and include related)
+>>>>>>     Explain why we dare to implement empty release function
+>>>>>
+>>>>> I'm not sure we need this. If you have an IP Core which talks AXI and
+>>>>> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
+>>>>> that IP Core, so you should go and let the kernel know about that. See
+>>>>> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
+>>>>>
+>>>>> Besides, if you introduce this bus layer, it'll be more difficult for
+>>>>> other licensees of the same core to re-use the same driver, since it's
+>>>>> now talking a PCI emulated on top of AXI. The same can be achieved with
+>>>>> the platform_bus which is more widely used, specially on ARM SoCs.
+>>>>>
+>>>>> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
+>>>>> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
+>>>>>
+>>>>
+>>>> Already noticed earlier that AXI isnt really good name for
+>>>> Broadcom-specific axi bus customization. As of tech docs available from
+>>>> arm, corelink AXI cores use own identification registers which feature
+>>>> different format and layout comparing to that we use for Broadcom cores.
+>>>>
+>>>> Maybe there is something "standartized" by the DMP specs? If so I'm
+>>>> curious if that DMP is obligatory for every axi bus ?
+>>>>
+>>>> Naming particular Broadcom's implementation just axi limits other
+>>>> licensees in reusing axi bus name/code or will require hacks/workarounds
+>>>> from them to fit Broadcom-like core scanning/identificating techniques.
+>>>> You use bus named AXI to group and manage Broadcom cores, while never
+>>>> even publish device records for native axi cores Broadcom use to talk to
+>>>> the interconnect through. Yet again, something like bcmb/bcmai looks
+>>>> like better name for this bus.
+>>>
+>>> I don't know, I'm really tired of this. Earlier I was told to not use
+>>> anything like bcmai, because it is not Broadcom specific. Now it seems
+>>> (and I'm afraid I agree) there is quite a lot of Broadcom specific
+>>> stuff.
+>> Well, _if_ that "magic" EROM core layout is arm's "standard" for axi
+>> ports identification _and_ _if_ that EROM core is obligatory axi
+>> component then sure axi name is good one as soon as you consider
+>> registering master port (agent) cores with device subsystem as well.
+>> I have no clue here about how resolve those _if_'s, hopefully Broadcom
+>> guys can enlighten us on the subject.
 > 
-> This one came to me as a surprise, I updated the kernel, and whoops, the
-> wireless led, blinks all the time!
-> It turns out that in splitted driver iwl3945 doesn't have any led
-> support, and indeed the light on my notebook doesn't change state often.
-> It ether doesn't light up at all, or just blinks at constant rate.
-OK, found the cause, it is dead simple, and in fact affects all intel
-wireless card.
-I wonder how such bug could escape unnoticed.
-Nobody uses linux these days I guess.... :-(
+> Do you think that in my code only scanning is Broadcom specific? In
+> such a case we could keep it "axi", and just s/scan/bcmscan/. This is
+> only correct choice if the rest (addressing, core enabling, host
+> management) is AXI specific.
 
+The specification for the AMBA AXI Interface is available for free
+download from ARM if you register to their website and accept their license:
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.set.amba/index.html
+I got it from there without any problems and the license does not look
+too bad for me, by having a quick look at it. I do not know if it will
+help you in any way or if it is completely unrelated.
 
-The problem is in iwl-led.c in both drivers.
-It defines a blink table for new generi rate based blink support (yay!)
-but first entry is negative, and code in mac layer uses it.
-Why? Beats me.
+Why is the existing support for the amba bus not extended or used in any
+way for this? It exists for some time in drivers/amba/. There already
+was a discussion about this in https://lkml.org/lkml/2011/3/30/186 , but
+with no result as I see.
 
-The code in mac does this:
+>>>> Also can't figure out how is this implementation supposed to manage
+>>>> multicore devices.
+>>>
+>>> We have got ideas, but let's first find (wait for) such a device ;)
+>> bcm4716 usb host ? Don't really know if there are any other multicores.
+> 
+> This is SoC, we do not have any problems supporting multiple cores on
+> SoCs. All cores are available at the same time, without any sliding
+> windows.
+> 
 
-	on = 1;
-	off = 0;
-
-	for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
-		if (tpt_trig->blink_table[i].throughput < 0 ||
-		    tpt > tpt_trig->blink_table[i].throughput) {
-			off = tpt_trig->blink_table[i].blink_time / 2;
-			on = tpt_trig->blink_table[i].blink_time - off;
-			break;
-		}
-	}
-
-
-So it takes ether entry that is smaller that current one or negative,
-and iterates from end to start.
-
-
-
-
-I am note sure why you have the X - 1 pattern in the iwl-led.c
-Not sending a patch because not sure what were the intentions of this
-code.
-For me removing -1s works fine.
-
-
--- 
-Best regards,
-        Maxim Levitsky
-
-Visit my blog: http://maximlevitsky.wordpress.com
-Warning: Above blog contains rants.
-
+Hauke
