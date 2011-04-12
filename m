@@ -1,58 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:40550 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752472Ab1DAJIH (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:16563 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699Ab1DLTAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 05:08:07 -0400
-Received: by wyj26 with SMTP id 26so4098064wyj.39
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 02:08:03 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: fix roaming
-From: Luciano Coelho <coelho@ti.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1301495759-22507-1-git-send-email-ohad@wizery.com>
-References: <1301495759-22507-1-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 12:08:39 +0300
-Message-ID: <1301648919.1988.446.camel@cumari>
+	Tue, 12 Apr 2011 15:00:05 -0400
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: George Kashperko <george@znau.edu.ua>
+To: balbi@ti.com
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+In-Reply-To: <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 12 Apr 2011 21:47:19 +0300
+Message-Id: <1302634039.14216.10.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-30 at 16:35 +0200, Ohad Ben-Cohen wrote:
-> The wl12xx device normally drops all frames coming from BSSID
-> it is not joined with.
-> 
-> This behavior is configured today by the wl12xx driver in response
-> to a handful of ieee80211_bss_change and ieee80211_conf_changed
-> notification flags, such as BSS_CHANGED_ASSOC, BSS_CHANGED_BSSID,
-> IEEE80211_CONF_CHANGE_IDLE, etc..
-> 
-> This breaks when we roam to a new BSSID, where authentication frames
-> are sent before any BSS_CHANGED/CONF_CHANGED flags are received.
-> When this happens the hardware silently drops the authentication
-> responses, and the roaming fails.
-> 
-> Ideally this aggressive filtering behavior of the device should be disabled
-> upon a notification from mac80211. Such notification will take place
-> after multi-channel support will be added: mac80211 will likely send a
-> remain-on-channel notification to drivers when entering sensitive
-> states (like authentication), otherwise the firmware might jump to
-> different channels (to serve a different role).
-> 
-> Until those notifications materialize, disable the hw BSSID filter
-> when authentication requests are sent, so roaming would work.
-> 
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> ---
 
-Looks good!
+> Hi,
+> 
+> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
+> > Cc: Michael Büsch <mb@bu3sch.de>
+> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> > Cc: George Kashperko <george@znau.edu.ua>
+> > Cc: Arend van Spriel <arend@broadcom.com>
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: Russell King <rmk@arm.linux.org.uk>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Andy Botting <andy@andybotting.com>
+> > Cc: linuxdriverproject <devel@linuxdriverproject.org>
+> > Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > ---
+> > V2: Rename to axi
+> >     Use DEFINE_PCI_DEVICE_TABLE in bridge
+> >     Make use of pr_fmt and pr_*
+> >     Store core class
+> >     Rename bridge to not b43 specific
+> >     Replace magic 0x1000 with BCMAI_CORE_SIZE
+> >     Remove some old "ssb" names and defines
+> >     Move BCMAI_ADDR_BASE def
+> >     Add drvdata field
+> > V3: Fix reloading (kfree issue)
+> >     Add 14e4:0x4331
+> >     Fix non-initialized struct issue
+> >     Drop useless inline functions wrappers for pci core drv
+> >     Proper pr_* usage
+> > V3.1: Include forgotten changes (pr_* and include related)
+> >     Explain why we dare to implement empty release function
+> 
+> I'm not sure we need this. If you have an IP Core which talks AXI and
+> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
+> that IP Core, so you should go and let the kernel know about that. See
+> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
+> 
+> Besides, if you introduce this bus layer, it'll be more difficult for
+> other licensees of the same core to re-use the same driver, since it's
+> now talking a PCI emulated on top of AXI. The same can be achieved with
+> the platform_bus which is more widely used, specially on ARM SoCs.
+> 
+> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
+> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
+> 
 
-Reviewed-by: Luciano Coelho <coelho@ti.com>
+Already noticed earlier that AXI isnt really good name for
+Broadcom-specific axi bus customization. As of tech docs available from
+arm, corelink AXI cores use own identification registers which feature
+different format and layout comparing to that we use for Broadcom cores.
 
-Applied to wl12xx.git.  Thanks!
+Maybe there is something "standartized" by the DMP specs? If so I'm
+curious if that DMP is obligatory for every axi bus ?
 
--- 
-Cheers,
-Luca.
+Naming particular Broadcom's implementation just axi limits other
+licensees in reusing axi bus name/code or will require hacks/workarounds
+from them to fit Broadcom-like core scanning/identificating techniques.
+You use bus named AXI to group and manage Broadcom cores, while never
+even publish device records for native axi cores Broadcom use to talk to
+the interconnect through. Yet again, something like bcmb/bcmai looks
+like better name for this bus.
+
+Also can't figure out how is this implementation supposed to manage
+multicore devices.
+
+Any plans on embeddables' support ?
+
+Have nice day,
+George
+
 
