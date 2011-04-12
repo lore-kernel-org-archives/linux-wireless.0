@@ -1,91 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:51454 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752303Ab1DGHzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 03:55:01 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+Received: from mail.academy.zt.ua ([82.207.120.245]:21603 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757188Ab1DLU0g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 16:26:36 -0400
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: George Kashperko <george@znau.edu.ua>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: balbi@ti.com, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
 	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
 	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com> (sfid-20110406_205435_519066_856A6627)
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 <1302123428.20093.6.camel@maggie>
-	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	 <1302124112.20093.11.camel@maggie>
-	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	 <1302124737.27258.7.camel@dev.znau.edu.ua>
-	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-	 <1302134429.27258.32.camel@dev.znau.edu.ua>
-	 <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
-	 (sfid-20110406_205435_519066_856A6627)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Apr 2011 09:54:46 +0200
-Message-ID: <1302162886.10725.4.camel@maggie>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <4DA4AC4B.90409@hauke-m.de>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+	 <1302634039.14216.10.camel@dev.znau.edu.ua>
+	 <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+	 <1302635550.14216.21.camel@dev.znau.edu.ua>
+	 <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+	 <4DA4AC4B.90409@hauke-m.de>
+Content-Type: text/plain
+Date: Tue, 12 Apr 2011 23:23:30 +0300
+Message-Id: <1302639810.14216.57.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-07 at 02:54 +0200, Rafał Miłecki wrote: 
-> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
-> <george@znau.edu.ua> napisał:
-> > For PCI function description take a look at PCI specs or PCI
-> > configuration space description (e. g.
-> > http://en.wikipedia.org/wiki/PCI_configuration_space)
-> >
-> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
-> > mean ssb/axi with two functional cores on same interconnect (like w11
-> > +w11, not a lot of these exists I guess). Also there were some b43+b44
-> > on single PCI ssb host and those where implemented as ssb interconnect
-> > on multifunctional PCI host therefore providing separate access windows
-> > for each function.
-> >
-> > Might I mussunderstood something (its late night here at my place) when
-> > you where talking about using coreswitching involved for two drivers
-> > therefore I remembered about those functions. Seems now you were talking
-> > about chipcommon+b43 access sharing same window.
-> >
-> > As for core switching requirments for earlier SSB interconnects on PCI
-> > hosts where there were no direct chipcommon access, that one can be
-> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
-> > bus design.
-> >
-> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
-> > available directly and b43 will be the only one requiring window access.
+
+> The specification for the AMBA AXI Interface is available for free
+> download from ARM if you register to their website and accept their license:
+> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.set.amba/index.html
+> I got it from there without any problems and the license does not look
+> too bad for me, by having a quick look at it. I do not know if it will
+> help you in any way or if it is completely unrelated.
 > 
-> Ahh, so while talking about 4 windows, I guess you counted fixes
-> windows as well. That would be right, matching my knowledge.
+> Why is the existing support for the amba bus not extended or used in any
+> way for this? It exists for some time in drivers/amba/. There already
+> was a discussion about this in https://lkml.org/lkml/2011/3/30/186 , but
+> with no result as I see.
+Existing AMBA bus might is the proper place to publish axi master port
+cores but Rafal's implementation manage those internally. Rafal
+introduces separate Broadcom-specific bus intended exclusively for
+Broadcom-specific devices management. Those devices share common
+identification/management techniques which are completely different from
+those implemented by other existant kernel buses and amba bus (at least
+at it current state) as well. Might be there are good and proper ways to
+extend amba bus driver to support axi as well but its a field for guys
+and girls confident with closed proprietary arm docs.
+Therefore IMHO the bus introduced by Rafal deserves its own driver and
+name. But I'm sure that the "axi" tag isn't good one for this bus.
+
 > 
-> When asking question about amount of cores we may want to use
-> simultaneously I didn't think about ChipCommon or PCIe. The real
-> problem would be to support for example two 802.11 cores and one
-> ethernet core at the same time. That gives us 3 cores while we have
-> only 2 sliding windows.
+> >>>> Also can't figure out how is this implementation supposed to manage
+> >>>> multicore devices.
+> >>>
+> >>> We have got ideas, but let's first find (wait for) such a device ;)
+> >> bcm4716 usb host ? Don't really know if there are any other multicores.
+> > 
+> > This is SoC, we do not have any problems supporting multiple cores on
+> > SoCs. All cores are available at the same time, without any sliding
+> > windows.
+> > 
+> 
+> Hauke
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Would that really be a problem? Think of it. This combination 
-will only be available on embedded devices. But do we have windows
-on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
-of all cores will always be mapped. So accesses can be done
-without switch or lock.
+Have nice day,
+George
 
-I do really think that engineers at broadcom are clever enough
-to design a hardware that does not require expensive window sliding
-all the time while operating.
-
--- 
-Greetings Michael.
 
