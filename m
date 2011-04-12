@@ -1,97 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53405 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:38916 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754808Ab1DFLUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 07:20:38 -0400
+	id S1753621Ab1DLNSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:18:02 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 04:20:13 -0700
-Date: Wed, 6 Apr 2011 16:50:44 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Fix instable target power control b/w CCK/OFDM
-Message-ID: <20110406112044.GA7982@vmraj-lnx.users.atheros.com>
-References: <1302008756-4757-1-git-send-email-rmanoharan@atheros.com>
- <4D9B1BB6.1090507@openwrt.org>
- <20110405151006.GA4837@vmraj-lnx.users.atheros.com>
- <4D9B333F.9060106@openwrt.org>
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:37 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/22] ath9k_hw: Configure pll control register accordingly for AR9340
+Date: Tue, 12 Apr 2011 18:47:42 +0530
+Message-ID: <1302614273-2063-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D9B333F.9060106@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 05, 2011 at 08:50:31PM +0530, Felix Fietkau wrote:
-> On 2011-04-05 5:10 PM, Rajkumar Manoharan wrote:
-> > On Tue, Apr 05, 2011 at 07:10:06PM +0530, Felix Fietkau wrote:
-> >>  On 2011-04-05 3:05 PM, Rajkumar Manoharan wrote:
-> >>  >  The problem is that when the attenuation is increased,
-> >>  >  the rate will start to drop from MCS7 ->   MCS6, and finally
-> >>  >  will see MCS1 ->   CCK_11Mbps. When the rate is changed b/w
-> >>  >  CCK and OFDM, it will use register desired_scale to calculate
-> >>  >  how much tx gain need to change.
-> >>  >
-> >>  >  The output power with the same tx gain for CCK and OFDM modulated
-> >>  >  signals are different. This difference is constant for AR9280
-> >>  >  but not AR9285/AR9271. It has different PA architecture
-> >>  >  a constant. So it should be calibrated against this PA
-> >>  >  characteristic.
-> >>  >
-> >>  >  The driver has to read the calibrated values from EEPROM and set
-> >>  >  the tx power registers accordingly.
-> >>  >
-> >>  >  Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
-> >>  >  ---
-> >>  >  diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> >>  >  index bc77a30..8f0cd0e 100644
-> >>  >  --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> >>  >  +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> >>  >  @@ -781,6 +781,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
-> >>  >    {
-> >>  >    	struct modal_eep_4k_header *pModal;
-> >>  >    	struct ar5416_eeprom_4k *eep =&ah->eeprom.map4k;
-> >>  >  +	struct base_eep_header_4k *pBase =&eep->baseEepHeader;
-> >>  >    	u8 txRxAttenLocal;
-> >>  >    	u8 ob[5], db1[5], db2[5];
-> >>  >    	u8 ant_div_control1, ant_div_control2;
-> >>  >  @@ -1003,6 +1004,56 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
-> >>  >    				AR_PHY_SETTLING_SWITCH,
-> >>  >    				pModal->swSettleHt40);
-> >>  >    	}
-> >>  >  +	if (AR_SREV_9271(ah) || AR_SREV_9285(ah)) {
-> >>  >  +		u8 bb_desired_scale = (pModal->bb_scale_smrt_antenna&
-> >>  >  +				EEP_4K_BB_DESIRED_SCALE_MASK);
-> >>  >  +		if ((pBase->txGainType == 0)&&   (bb_desired_scale != 0)) {
-> >>  >  +			u32 pwrctrl, pwrctrl_n;
-> >>  >  +
-> >>  >  +			/* AR_PHY_TX_PWRCTRL8 */
-> >>  >  +			pwrctrl_n = REG_READ(ah, AR_PHY_TX_PWRCTRL8);
-> >>  >  +			pwrctrl = (u32) bb_desired_scale;
-> >>  >  +			NSO(pwrctrl, 5, bb_desired_scale, 5);
-> >>  I think the NSO macro is somewhat confusing. How about something like
-> >>  this instead, to make it more readable:
-> >>
-> >>  u32 mask;
-> >>  mask = BIT(0) | BIT(5) | BIT(10) | BIT(15) | BIT(20);
-> >>  pwrctl = mask * bb_desired_scale;
-> >>
-> > NSO - N times Shift and OR. Sounds reasonable. isn't it?
-> The name may be reasonable, but it's not really obvious, and IMHO the 
-> macro is not really necessary either.
-> I'm not sure if the compiler can always optimize away the for loop - and 
-> even if it can, I still think think the bitmask + multiplication 
-> approach is somewhat more readable and does not require introducing yet 
-> another magic macro.
-> 
-Nice..
-> You could also make the code more efficient and smaller by using REG_RMW 
-> instead of masking pwrctl_n vs pwrctl manually.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   52 ++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h  |    2 +-
+ drivers/net/wireless/ath/ath9k/phy.h |    3 ++
+ drivers/net/wireless/ath/ath9k/reg.h |    4 ++-
+ 4 files changed, 56 insertions(+), 5 deletions(-)
 
-Yeah..We can avoid magic macros and unneccesary loops. Thanks a lot for
-your comments. Will send the updated patch.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b90b9c..9e8a9c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -725,15 +725,48 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x0);
+ 		udelay(1000);
+ 
+-		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
+-			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
++	} else if (AR_SREV_9340(ah)) {
++		u32 regval, pll2_divint, pll2_divfrac, refdiv;
++
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
++		udelay(1000);
++
++		REG_SET_BIT(ah, AR_PHY_PLL_MODE, 0x1 << 16);
++		udelay(100);
++
++		if (ah->is_clk_25mhz) {
++			pll2_divint = 0x54;
++			pll2_divfrac = 0x1eb85;
++			refdiv = 3;
++		} else {
++			pll2_divint = 88;
++			pll2_divfrac = 0;
++			refdiv = 5;
++		}
++
++		regval = REG_READ(ah, AR_PHY_PLL_MODE);
++		regval |= (0x1 << 16);
++		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
++		udelay(100);
++
++		REG_WRITE(ah, AR_PHY_PLL_CONTROL, (refdiv << 27) |
++			  (pll2_divint << 18) | pll2_divfrac);
++		udelay(100);
++
++		regval = REG_READ(ah, AR_PHY_PLL_MODE);
++		regval = (regval & 0x80071fff) | (0x1 << 30) | (0x1 << 13) |
++			 (0x4 << 26) | (0x18 << 19);
++		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
++		REG_WRITE(ah, AR_PHY_PLL_MODE,
++			  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
++		udelay(1000);
+ 	}
+ 
+ 	pll = ath9k_hw_compute_pll_control(ah, chan);
+ 
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+-	if (AR_SREV_9485(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
+ 		udelay(1000);
+ 
+ 	/* Switch the core clock for ar9271 to 117Mhz */
+@@ -745,6 +778,19 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 	udelay(RTC_PLL_SETTLE_DELAY);
+ 
+ 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
++
++	if (AR_SREV_9340(ah)) {
++		if (ah->is_clk_25mhz) {
++			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
++			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
++			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
++		} else {
++			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
++			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
++			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
++		}
++		udelay(100);
++	}
+ }
+ 
+ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 721eb27..7837a83 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -122,7 +122,7 @@
+ #define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
+ 
+ #define BASE_ACTIVATE_DELAY         100
+-#define RTC_PLL_SETTLE_DELAY        100
++#define RTC_PLL_SETTLE_DELAY        (AR_SREV_9340(ah) ? 1000 : 100)
+ #define COEF_SCALE_S                24
+ #define HT40_CHANNEL_CENTER_SHIFT   10
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index 8e5fe9d..9441bf8 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -45,4 +45,7 @@
+ #define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
+ #define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
+ 
++#define AR_PHY_PLL_CONTROL 0x16180
++#define AR_PHY_PLL_MODE 0x16184
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 53285a1..fbc18d3 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1182,6 +1182,7 @@ enum {
+ #define AR_RTC_PLL_REFDIV_5     0x000000c0
+ #define AR_RTC_PLL_CLKSEL       0x00000300
+ #define AR_RTC_PLL_CLKSEL_S     8
++#define AR_RTC_PLL_BYPASS	0x00010000
+ 
+ #define PLL3 0x16188
+ #define PLL3_DO_MEAS_MASK 0x40000000
+@@ -1228,7 +1229,8 @@ enum {
+ 
+ /* RTC_DERIVED_* - only for AR9100 */
+ 
+-#define AR_RTC_DERIVED_CLK           (AR_RTC_BASE + 0x0038)
++#define AR_RTC_DERIVED_CLK \
++	(AR_SREV_9100(ah) ? (AR_RTC_BASE + 0x0038) : 0x7038)
+ #define AR_RTC_DERIVED_CLK_PERIOD    0x0000fffe
+ #define AR_RTC_DERIVED_CLK_PERIOD_S  1
+ 
+-- 
+1.7.0.4
 
---
-Rajkumar
