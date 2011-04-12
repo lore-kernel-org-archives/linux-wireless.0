@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230Ab1DXSia (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 14:38:30 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110424_191812_851726_8A7D5FAA)
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 20:38:26 +0200
-Message-ID: <1303670306.3603.5.camel@jlt3.sipsolutions.net> (sfid-20110424_203843_826122_30CBA42E)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:56629 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932520Ab1DLVzw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 17:55:52 -0400
+Message-ID: <4DA4CA66.501@openwrt.org>
+Date: Tue, 12 Apr 2011 23:55:50 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 1/7] ath5k: optimize tx descriptor setup
+References: <1302453139-11437-1-git-send-email-nbd@openwrt.org> <87fwppmhbr.fsf@purkki.adurom.net>
+In-Reply-To: <87fwppmhbr.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 10:15 -0700, Wey-Yi Guy wrote:
-> The current led blink trigger implementaion assume on/off time are equal,
-> it works but not have any flexbile for different blink pattern.
-> 
-> Add "ratio" parameter in the trigger table and give driver more control
-> on how the on/off blink time behavior should be.
+On 2011-04-11 8:29 AM, Kalle Valo wrote:
+> Felix Fietkau<nbd@openwrt.org>  writes:
+>
+>>  Use local variables to reduce the number of load/store operations on uncached
+>>  memory.
+>
+> A comment in the code would be nice as well. Otherwise later on
+> someone decides to "optimise" and remove the local variables :)
+Makes sense.
 
-I considered this when writing the original code, but then decided that
-nobody needed to have unequal on/off times. Why would we need it now?
-(FWIW, blink = 0 is always on already, no?)
+>>   	/* Clear descriptor */
+>>  -	memset(&desc->ud.ds_tx5212, 0, sizeof(struct ath5k_hw_5212_tx_desc));
+>>  +	memset(&desc->ud.ds_tx5212.tx_stat, 0,
+>>  +	       sizeof(desc->ud.ds_tx5212.tx_stat));
+>
+> Is this an unrelated change? Or maybe I just missed something.
+This is related. After my change, all the control fields of the 
+descriptor are properly written to, so the memset only needs to cover 
+the status area.
 
-johannes
-
+- Felix
