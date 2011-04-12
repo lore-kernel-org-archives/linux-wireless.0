@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32823 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:38914 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756015Ab1DRRFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 13:05:41 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/10] iwlagn: remove legacy ops
-Date: Mon, 18 Apr 2011 09:44:16 -0700
-Message-Id: <1303145057-6545-10-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753307Ab1DLNR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:17:56 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:31 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/22] ath9k_hw: Introduce a bool for 25mhz clock and populate it
+Date: Tue, 12 Apr 2011 18:47:41 +0530
+Message-ID: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No longer used by _agn devices, remove it
+pll configuration will differ for 25mhz clock.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.h |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |   11 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h |    2 ++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 0049790..99a91bd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -195,21 +195,11 @@ struct iwl_nic_ops {
- 	void (*additional_nic_config)(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d98b4c6..8b90b9c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -481,6 +481,9 @@ static void ath9k_hw_attach_ops(struct ath_hw *ah)
+ /* Called for all hardware families */
+ static int __ath9k_hw_init(struct ath_hw *ah)
+ {
++#define AR9340_SOC_SEL_25M_40M 0xB80600B0
++#define AR9340_REF_CLK_40 (1 << 4) /* 0 - 25MHz   1 - 40 MHz */
++
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int r = 0;
+ 
+@@ -508,6 +511,14 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 
+ 	ath9k_hw_attach_ops(ah);
+ 
++	if (AR_SREV_9340(ah)) {
++		if (*((volatile u32 *) AR9340_SOC_SEL_25M_40M) &
++		    AR9340_REF_CLK_40)
++			ah->is_clk_25mhz = false;
++		else
++			ah->is_clk_25mhz = true;
++	}
++
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
+ 		ath_err(common, "Couldn't wakeup chip\n");
+ 		return -EIO;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index afdb006..721eb27 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -845,6 +845,8 @@ struct ath_hw {
+ 
+ 	/* Enterprise mode cap */
+ 	u32 ent_mode;
++
++	bool is_clk_25mhz;
  };
  
--struct iwl_legacy_ops {
--	void (*post_associate)(struct iwl_priv *priv);
--	void (*config_ap)(struct iwl_priv *priv);
--	/* station management */
--	int (*update_bcast_stations)(struct iwl_priv *priv);
--	int (*manage_ibss_station)(struct iwl_priv *priv,
--				   struct ieee80211_vif *vif, bool add);
--};
--
- struct iwl_ops {
- 	const struct iwl_lib_ops *lib;
- 	const struct iwl_hcmd_ops *hcmd;
- 	const struct iwl_hcmd_utils_ops *utils;
- 	const struct iwl_nic_ops *nic;
--	const struct iwl_legacy_ops *legacy;
- };
- 
- struct iwl_mod_params {
+ static inline struct ath_common *ath9k_hw_common(struct ath_hw *ah)
 -- 
 1.7.0.4
 
