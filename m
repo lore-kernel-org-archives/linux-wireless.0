@@ -1,111 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53334 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab1DOGX3 convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:54933 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759Ab1DLOe2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 02:23:29 -0400
-Received: by bwz15 with SMTP id 15so1947068bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 23:23:28 -0700 (PDT)
+	Tue, 12 Apr 2011 10:34:28 -0400
+Received: by vws1 with SMTP id 1so5086548vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 07:34:27 -0700 (PDT)
+Message-ID: <4DA462F0.6090105@lwfinger.net>
+Date: Tue, 12 Apr 2011 09:34:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <201104142251.10881.chunkeey@googlemail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
- <201104142251.10881.chunkeey@googlemail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Fri, 15 Apr 2011 08:22:48 +0200
-Message-ID: <BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
+References: <4DA1E4ED.6080804@gmail.com> <20110411175810.GB2511@tuxdriver.com> <4DA43D3F.60204@gmail.com>
+In-Reply-To: <4DA43D3F.60204@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have debug USE flag disabled, I recompiled hostapd with that flag
-and now I can see log like your.
-You are right it's BSSs.
+On 04/12/2011 06:53 AM, Xose Vazquez Perez wrote:
+> On 04/11/2011 07:58 PM, John W. Linville wrote:
+>
+>> On Sun, Apr 10, 2011 at 07:12:13PM +0200, Xose Vazquez Perez wrote:
+>>> Larry Finger wrote:
+>>>
+>>>> There are three USB IDs supported by staging/rt2870sta that are not in the
+>>>> mainline driver rt2800usb.
+>>>>
+>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>>> Cc: Stable<stable@vger.kernel.org>
+>>>> ---
+>>>>
+>>>> Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> ===================================================================
+>>>> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
+>>>> { USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> { USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> { USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> + { USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> + { USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> /* Draytek */
+>>>> { USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> /* Edimax */
+>>>> @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
+>>>> /* Planex */
+>>>> { USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> { USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> + { USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> /* Quanta */
+>>>> { USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> /* Ralink */
+>>>
+>>> NACK, unless they also be in the windows driver.
+>>> They were eliminated in recent versions of ralink LiNUX drivers.
+>>
+>> OK, I already had this merged since Ivo and Gertjan had ACKed it.
+>>
+>> I need to rebase wireless-2.6 anyway, so I'll drop this one too
+>> for now. Please come to a consensus on whether or not these should
+>> be included and let me know...
+>
+> I did a search of 0x2001,0x3c09 0x2001,0x3c0a and 0x2019,0xed14 in
+> latest windows drivers:
+> USB (RT2870 /RT2770 /RT307X /RT2070 /RT357X /RT3370 /RT8070 /RT5370) 12/31/2010
+> 3.1.8.0
+> IS_AP_STA_RT2870_D-3.1.8.0_VA-3.1.8.0_W7-3.1.8.0_RU-4.0.4.0_AU-4.0.4.0_123110_1.5.11.0WP_Free.exe
+>
+> and I didn't find any of them
+>
+> Also I checked latest linux drivers:
+> 2010_0709_RT2870_Linux_STA_v2.4.0.1.tar.bz2
+> 2010_1215_RT3572_Linux_STA_v2.5.0.0.DPO.bz2
+> 2011_0107_RT3070_RT3370_Linux_STA_v2.5.0.1_DPO.tar.bz2
+> and there is no vestige of any of them.
+>
+> NACK.
 
-Is there option to do not scan for overlapping BSSs?
-I know that it'll break some standards but that other networks are
-very week. I can't see them from my laptop.
+John,
 
+Kill the patch. It appears these are phantom devices, or their original 
+inclusion was a mistake.
 
-2011/4/14 Christian Lamparter <chunkeey@googlemail.com>:
-> On Thursday 14 April 2011 21:36:05 Damian Lesiuk wrote:
->> I don't have any more log.
->> I dumped it by hostapd -dd /config/file &> log_file
->
-> sure, this is what it looks like, your output is clearly "mangled".
->
-> --- cut ---
-> # hostapd -dd /etc/hostapd/hostapd.conf.2ghz
-> Configuration file: /etc/hostapd/hostapd.conf.2ghz
-> ctrl_interface_group=0
-> nl80211: Add own interface ifindex 7
-> nl80211: New interface mon.wlanap created: ifindex=9
-> nl80211: Add own interface ifindex 9
-> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-> nl80211: Added 802.11b mode based on 802.11g information
-> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=20 dBm
-> RATE[0] rate=10 flags=0x1
-> RATE[1] rate=20 flags=0x1
-> RATE[2] rate=55 flags=0x1
-> RATE[3] rate=110 flags=0x1
-> RATE[4] rate=60 flags=0x0
-> RATE[5] rate=90 flags=0x0
-> RATE[6] rate=120 flags=0x0
-> RATE[7] rate=180 flags=0x0
-> RATE[8] rate=240 flags=0x0
-> RATE[9] rate=360 flags=0x0
-> RATE[10] rate=480 flags=0x0
-> RATE[11] rate=540 flags=0x0
-> Scan for neighboring BSSes prior to enabling 40 MHz channel
-> Scan requested (ret=0) - scan timeout 10 seconds
-> Interface initialization will be completed in a callback
-> nl80211: Event message available
-> nl80211: Scan trigger
-> RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
-> RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlanap' added
-> Unknown event 5
-> RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-> RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlanap' added
-> Unknown event 5
-> RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlanap' added
-> Unknown event 5
-> nl80211: Event message available
-> nl80211: New scan results available
-> Received scan results (2 BSSes)
-> 40 MHz affected channel range: [2427,2477] MHz
-> Neighboring BSS: d8:5d:4c:c0:f8:e3 freq=2412 pri=1 sec=5
-> 40 MHz pri/sec mismatch with BSS d8:5d:4c:c0:f8:e3 <2412,2432> (chan=1+) vs. <2462,2442> <====
-> 20/40 MHz operation not permitted on channel pri=11 sec=7 based on overlapping BSSes <=========
-> Completing interface initialization
->
-> --- cut ---
->
-> Regards,
->        Chr
->
+Thanks,
+
+Larry
