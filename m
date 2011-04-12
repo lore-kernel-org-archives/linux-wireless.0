@@ -1,186 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from panicking.kicks-ass.org ([95.141.38.207]:53589 "EHLO
-	panicking.kicks-ass.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab1DHKX3 (ORCPT
+Received: from smtp.ralinktech.com.tw ([211.75.121.152]:43849 "HELO
+	smtp.ralinktech.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753122Ab1DLFhP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 06:23:29 -0400
-Subject: Re: [PATCH RFC 2/3] libertas: add set_power callback for iface
- subdrivers
-From: Alberto Panizzo <alberto@amarulasolutions.com>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <201104081236.54157.anarsoul@gmail.com>
-References: <1302207960-28536-1-git-send-email-anarsoul@gmail.com>
-	 <1302207960-28536-3-git-send-email-anarsoul@gmail.com>
-	 <1302253853.2649.28.camel@realization>
-	 <201104081236.54157.anarsoul@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Apr 2011 12:23:14 +0200
-Message-ID: <1302258194.2649.94.camel@realization>
-Mime-Version: 1.0
+	Tue, 12 Apr 2011 01:37:15 -0400
+From: RA-Shiang Tu <Shiang_Tu@ralinktech.com>
+To: Walter Goldens <goldenstranger@yahoo.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: "dwmw2@infradead.org" <dwmw2@infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"gwingerde@gmail.com" <gwingerde@gmail.com>,
+	"ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] rt2800pci: rt2800usb: Firmware update
+Date: Tue, 12 Apr 2011 05:23:35 +0000
+Message-ID: <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
+References: <4DA33FFD.5070004@gmail.com>
+ <312743.30438.qm@web161611.mail.bf1.yahoo.com>
+In-Reply-To: <312743.30438.qm@web161611.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-08 at 12:36 +0300, Vasily Khoruzhick wrote:
-> On Friday 08 April 2011 12:10:53 Alberto Panizzo wrote:
-> > > +	} else {
-> > > +		/* Copy addr back to hw */
-> > > +		memcpy(priv->current_addr, priv->dev->dev_addr, ETH_ALEN);
-> > > +		hw_addr_cmd.hdr.size = cpu_to_le16(sizeof(hw_addr_cmd));
-> > > +		hw_addr_cmd.action = cpu_to_le16(CMD_ACT_SET);
-> > > +		memcpy(hw_addr_cmd.macadd, priv->current_addr, ETH_ALEN);
-> > > +
-> > > +		ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS,
-> > > +			&hw_addr_cmd);
-> > > +		if (ret)
-> > > +			lbs_deb_net("set MAC address failed\n");
-> > 
-> > Does this be really related to the subject of the patch?
-> 
-> Yep, this function is called right after power on, and we have to copy mac 
-> address back to hardware (in case it was changed).
-
-So, are you assuming that someone can change the wifi card while this 
-is powered off? 
-
-> 
-> > > -	lbs_cmd_async(priv, CMD_MAC_CONTROL, &cmd.hdr, sizeof(cmd));
-> > > +	ret = lbs_cmd_with_response(priv, CMD_MAC_CONTROL, &cmd);
-> > > +	if (ret)
-> > > +		lbs_deb_net("set MAC control failed\n");
-> > 
-> > Same here.
-> 
-> I changed cmd to be sync to be sure that there's no host<->card activity 
-> during power down. Otherwise this command timedout.
-> 
-> > > +/**
-> > > + * @brief This function gets the HW spec from the firmware and sets
-> > > + *        some basic parameters.
-> > > + *
-> > > + *  @param priv    A pointer to struct lbs_private structure
-> > > + *  @return        0 or -1
-> > > + */
-> > > +static int lbs_setup_firmware(struct lbs_private *priv)
-> > > +{
-> > > +	int ret = -1;
-> > > +	s16 curlevel = 0, minlevel = 0, maxlevel = 0;
-> > > +
-> > > +	lbs_deb_enter(LBS_DEB_FW);
-> > > +
-> > > +	/* Read MAC address from firmware */
-> > > +	memset(priv->current_addr, 0xff, ETH_ALEN);
-> > > +	ret = lbs_update_hw_spec(priv);
-> > > +	if (ret)
-> > > +		goto done;
-> > > +
-> > > +	/* Read power levels if available */
-> > > +	ret = lbs_get_tx_power(priv, &curlevel, &minlevel, &maxlevel);
-> > > +	if (ret == 0) {
-> > > +		priv->txpower_cur = curlevel;
-> > > +		priv->txpower_min = minlevel;
-> > > +		priv->txpower_max = maxlevel;
-> > > +	}
-> > > +
-> > > +	/* Send cmd to FW to enable 11D function */
-> > > +	ret = lbs_set_snmp_mib(priv, SNMP_MIB_OID_11D_ENABLE, 1);
-> > > +
-> > > +	lbs_set_mac_control(priv);
-> > > +done:
-> > > +	lbs_deb_leave_args(LBS_DEB_FW, "ret %d", ret);
-> > > +	return ret;
-> > > +
-> > 
-> > Same for this function
-> 
-> Moved it to avoid forward declatation.
-
-Mmm, personally I like more the forward declaration.. the moving do not
-allow readers if you have modified something in the function.
-
->  
-> > > +static void lbs_power_on(struct lbs_private *priv)
-> > > +{
-> > > +	if (priv->set_power) {
-> > > +		priv->power_on_cnt++;
-> > > +		if (priv->power_on_cnt == 1) {
-> > 
-> > Here you have room for race conditions. power_on_cnt should be
-> > protected by a mutex.
-> 
-> I'm pretty sure that iface open/close (up/down?) is protected with mutex. So 
-> why bother here? 
->  
-> > > +			priv->set_power(priv, 1);
-> > > +			lbs_setup_firmware(priv);
-> > 
-> > Do you think that all users needs 8002.11D?
-> 
-> It does nothing if mesh is not enabled in config.
-> 
-> > > @@ -201,15 +271,16 @@ int lbs_set_mac_address(struct net_device *dev,
-> > > void *addr)
-> > > 
-> > >  	/* In case it was called from the mesh device */
-> > >  	dev = priv->dev;
-> > > 
-> > > +	if (priv->power_on_cnt) {
-> > 
-> > Same here, you need at least a read lock.
-> 
-> In this place there's no iface yet (we're still in probe callback of driver).
-> 
-> lbs_power_on/lbs_power_off are called only on iface up/down and in 
-> suspend/resume handlers (at least, for now), so we can't get race condition 
-> here.
-
-Ok, I understand what you are doing. It's the same as removing the 
-module when the interface is not used..
-
-I think this driver needs a good documentation of software flows: You 
-are adding a mechanism that is really useful for saving power while the
-wlan interface is not used. But this should not be the same as the 
-policy this driver use through suspensions.
-
-I know that at this moment, this driver is not managing Power Save very
-well and ok, this allow you to give up and turn off the card during 
-suspension.
-
->  
-> > >  int lbs_suspend(struct lbs_private *priv)
-> > >  {
-> > > 
-> > > -	int ret;
-> > > +	int ret = 0;
-> > > 
-> > >  	lbs_deb_enter(LBS_DEB_FW);
-> > > 
-> > > -	if (priv->is_deep_sleep) {
-> > > -		ret = lbs_set_deep_sleep(priv, 0);
-> > > -		if (ret) {
-> > > -			lbs_pr_err("deep sleep cancellation failed: %d\n", ret);
-> > > -			return ret;
-> > > +	if (priv->set_power)
-> > > +		lbs_power_off(priv);
-> > 
-> > Do you really want to power off the chip on suspend only because
-> > set_power exist?
-> > Is this something that should be driven by userspace?
+Hi,
+> > > Are there any changelogs for these firmware files? Do
+> > they
+> > > only offer support for newer chips, or are there any
+> > actual
+> > > improvements and bug fixes implemented? Users should
+> > know
+> > > whether updating the firmware will be of any use to
+> > them.
 > >
-> > And don't you want to setup any wake conditions?
-> 
-> Unfortunately there's no datasheet on libertas chip. And looks like there was 
-> no WOL support in driver, so why keep it enabled?
+> > Shiang Tu from ralink says [1] :
+> > "We always suggest to use latest firmware, because it's backward
+> > compatible and also has some enhancement, bug fix, or
+> support of new
+> > chip.
+>
+> Sorry, but how very ... Microsoft-y of Ralink.
+> Something has changed, a bug, an improvement, but we are to
+> guess what it is?
+> Maybe if people knew how these firmware files affect
+> different generations of chips, they'd knew how to maintain
+> them better. I think this contributes to the mess here.
+>
 
-Look for "CMD_802_11_HOST_SLEEP_CFG pdf" in google, you will be excited 
-on the results..!
+First of all, thanks for all for the great help to make Ralink chipset can
+work well in Linux.
 
->  
-> Thanks for review!
-> 
-> Regards
-> Vasily
+In deed, restricted by the limited resources, Ralink didn't involve in the
+rt2x00 project development closely for long time and the rt2x00 project
+developers and free contributors only can get limited information from
+Ralink's open source code. I think that' why make the situation becomes
+a little bit complicate. Sorry for that.
 
+Now we try to work closely with rt2x00 project, we also will sumbit latest
+frimware to linux-firmware once have any updates. We are newbie to work
+with open source community, if we have any problem, your kindly help will
+be highly appreciated.
 
+Thanks very much.
+
+Best Regards
+Shiang
+CONFIDENTIALITY STATEMENT : The information, attachments and any rights attaching in this e-mail are confidential and privileged; it is intended only for the individual or entity named as the recipient hereof.Any disclosure, copying, distribution, dissemination or use of the contents of this e-mail by persons other than the intended recipient is STRICTLY PROHIBITED and may violate applicable laws.If you have received this e-mail in error, please delete the original message and notify us by return email or collect call immediately. Thank you.
