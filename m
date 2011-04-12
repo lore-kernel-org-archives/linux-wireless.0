@@ -1,154 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26671 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797Ab1DTE4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 00:56:05 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 21:55:39 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V3 04/22] ath9k_hw: Configure pll control register accordingly for AR9340
-Date: Wed, 20 Apr 2011 10:26:15 +0530
-Message-ID: <1303275375-28238-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.academy.zt.ua ([82.207.120.245]:18525 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755245Ab1DLTZF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 15:25:05 -0400
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: balbi@ti.com, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+	 <1302634039.14216.10.camel@dev.znau.edu.ua>
+	 <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 12 Apr 2011 22:12:29 +0300
+Message-Id: <1302635550.14216.21.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
-V3 - Remove AR9485 specific pll change, that should be in different patch
 
+> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+> >
+> >> Hi,
+> >>
+> >> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
+> >> > Cc: Michael Büsch <mb@bu3sch.de>
+> >> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> >> > Cc: George Kashperko <george@znau.edu.ua>
+> >> > Cc: Arend van Spriel <arend@broadcom.com>
+> >> > Cc: linux-arm-kernel@lists.infradead.org
+> >> > Cc: Russell King <rmk@arm.linux.org.uk>
+> >> > Cc: Arnd Bergmann <arnd@arndb.de>
+> >> > Cc: Andy Botting <andy@andybotting.com>
+> >> > Cc: linuxdriverproject <devel@linuxdriverproject.org>
+> >> > Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+> >> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> >> > ---
+> >> > V2: Rename to axi
+> >> >     Use DEFINE_PCI_DEVICE_TABLE in bridge
+> >> >     Make use of pr_fmt and pr_*
+> >> >     Store core class
+> >> >     Rename bridge to not b43 specific
+> >> >     Replace magic 0x1000 with BCMAI_CORE_SIZE
+> >> >     Remove some old "ssb" names and defines
+> >> >     Move BCMAI_ADDR_BASE def
+> >> >     Add drvdata field
+> >> > V3: Fix reloading (kfree issue)
+> >> >     Add 14e4:0x4331
+> >> >     Fix non-initialized struct issue
+> >> >     Drop useless inline functions wrappers for pci core drv
+> >> >     Proper pr_* usage
+> >> > V3.1: Include forgotten changes (pr_* and include related)
+> >> >     Explain why we dare to implement empty release function
+> >>
+> >> I'm not sure we need this. If you have an IP Core which talks AXI and
+> >> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
+> >> that IP Core, so you should go and let the kernel know about that. See
+> >> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
+> >>
+> >> Besides, if you introduce this bus layer, it'll be more difficult for
+> >> other licensees of the same core to re-use the same driver, since it's
+> >> now talking a PCI emulated on top of AXI. The same can be achieved with
+> >> the platform_bus which is more widely used, specially on ARM SoCs.
+> >>
+> >> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
+> >> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
+> >>
+> >
+> > Already noticed earlier that AXI isnt really good name for
+> > Broadcom-specific axi bus customization. As of tech docs available from
+> > arm, corelink AXI cores use own identification registers which feature
+> > different format and layout comparing to that we use for Broadcom cores.
+> >
+> > Maybe there is something "standartized" by the DMP specs? If so I'm
+> > curious if that DMP is obligatory for every axi bus ?
+> >
+> > Naming particular Broadcom's implementation just axi limits other
+> > licensees in reusing axi bus name/code or will require hacks/workarounds
+> > from them to fit Broadcom-like core scanning/identificating techniques.
+> > You use bus named AXI to group and manage Broadcom cores, while never
+> > even publish device records for native axi cores Broadcom use to talk to
+> > the interconnect through. Yet again, something like bcmb/bcmai looks
+> > like better name for this bus.
+> 
+> I don't know, I'm really tired of this. Earlier I was told to not use
+> anything like bcmai, because it is not Broadcom specific. Now it seems
+> (and I'm afraid I agree) there is quite a lot of Broadcom specific
+> stuff.
+Well, _if_ that "magic" EROM core layout is arm's "standard" for axi
+ports identification _and_ _if_ that EROM core is obligatory axi
+component then sure axi name is good one as soon as you consider
+registering master port (agent) cores with device subsystem as well.
+I have no clue here about how resolve those _if_'s, hopefully Broadcom
+guys can enlighten us on the subject.
 
- drivers/net/wireless/ath/ath9k/hw.c  |   50 +++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.h  |    2 +-
- drivers/net/wireless/ath/ath9k/phy.h |    3 ++
- drivers/net/wireless/ath/ath9k/reg.h |    4 ++-
- 4 files changed, 56 insertions(+), 3 deletions(-)
+> 
+> 
+> > Also can't figure out how is this implementation supposed to manage
+> > multicore devices.
+> 
+> We have got ideas, but let's first find (wait for) such a device ;)
+bcm4716 usb host ? Don't really know if there are any other multicores.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8c0364f..5a648e7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -716,13 +716,48 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 
- 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
- 			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
-+	} else if (AR_SREV_9340(ah)) {
-+		u32 regval, pll2_divint, pll2_divfrac, refdiv;
-+
-+		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
-+		udelay(1000);
-+
-+		REG_SET_BIT(ah, AR_PHY_PLL_MODE, 0x1 << 16);
-+		udelay(100);
-+
-+		if (ah->is_clk_25mhz) {
-+			pll2_divint = 0x54;
-+			pll2_divfrac = 0x1eb85;
-+			refdiv = 3;
-+		} else {
-+			pll2_divint = 88;
-+			pll2_divfrac = 0;
-+			refdiv = 5;
-+		}
-+
-+		regval = REG_READ(ah, AR_PHY_PLL_MODE);
-+		regval |= (0x1 << 16);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
-+		udelay(100);
-+
-+		REG_WRITE(ah, AR_PHY_PLL_CONTROL, (refdiv << 27) |
-+			  (pll2_divint << 18) | pll2_divfrac);
-+		udelay(100);
-+
-+		regval = REG_READ(ah, AR_PHY_PLL_MODE);
-+		regval = (regval & 0x80071fff) | (0x1 << 30) | (0x1 << 13) |
-+			 (0x4 << 26) | (0x18 << 19);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE,
-+			  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
-+		udelay(1000);
- 	}
- 
- 	pll = ath9k_hw_compute_pll_control(ah, chan);
- 
- 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
- 		udelay(1000);
- 
- 	/* Switch the core clock for ar9271 to 117Mhz */
-@@ -734,6 +769,19 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 	udelay(RTC_PLL_SETTLE_DELAY);
- 
- 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
-+
-+	if (AR_SREV_9340(ah)) {
-+		if (ah->is_clk_25mhz) {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
-+			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
-+		} else {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
-+			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
-+		}
-+		udelay(100);
-+	}
- }
- 
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 8e3618a..b08df20 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -122,7 +122,7 @@
- #define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
- 
- #define BASE_ACTIVATE_DELAY         100
--#define RTC_PLL_SETTLE_DELAY        100
-+#define RTC_PLL_SETTLE_DELAY        (AR_SREV_9340(ah) ? 1000 : 100)
- #define COEF_SCALE_S                24
- #define HT40_CHANNEL_CENTER_SHIFT   10
- 
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 8e5fe9d..9441bf8 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -45,4 +45,7 @@
- #define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
- #define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
- 
-+#define AR_PHY_PLL_CONTROL 0x16180
-+#define AR_PHY_PLL_MODE 0x16184
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 42d9f1b..b42e36c 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1180,6 +1180,7 @@ enum {
- #define AR_RTC_PLL_REFDIV_5     0x000000c0
- #define AR_RTC_PLL_CLKSEL       0x00000300
- #define AR_RTC_PLL_CLKSEL_S     8
-+#define AR_RTC_PLL_BYPASS	0x00010000
- 
- #define PLL3 0x16188
- #define PLL3_DO_MEAS_MASK 0x40000000
-@@ -1226,7 +1227,8 @@ enum {
- 
- /* RTC_DERIVED_* - only for AR9100 */
- 
--#define AR_RTC_DERIVED_CLK           (AR_RTC_BASE + 0x0038)
-+#define AR_RTC_DERIVED_CLK \
-+	(AR_SREV_9100(ah) ? (AR_RTC_BASE + 0x0038) : 0x7038)
- #define AR_RTC_DERIVED_CLK_PERIOD    0x0000fffe
- #define AR_RTC_DERIVED_CLK_PERIOD_S  1
- 
--- 
-1.7.0.4
+> 
+> 
+> > Any plans on embeddables' support ?
+> 
+> Sure, if noone will come before me, I'll try to provide support for
+> embedded devices. However basic support for PCI host in higher on my
+> priority list. First I want to know it is working at all ;)
+> 
+
+Have nice day,
+George
+
 
