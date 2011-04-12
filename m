@@ -1,62 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55017 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753649Ab1DTOCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 10:02:43 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH wireless-2.6] iwl4965: fix skb usage after free
-Date: Wed, 20 Apr 2011 16:01:46 +0200
-Message-Id: <1303308106-5263-1-git-send-email-sgruszka@redhat.com>
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:9030 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755069Ab1DLOUH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 10:20:07 -0400
+From: Anantha Idapalapati <aidapalapati@nvidia.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "olofj@chromium.org" <olofj@chromium.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Uday Raval <uraval@nvidia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Andy Ritger <ARitger@nvidia.com>,
+	Rakesh Kumar <krakesh@nvidia.com>
+Date: Tue, 12 Apr 2011 19:49:45 +0530
+Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+Message-ID: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A5513A@BGMAIL02.nvidia.com>
+References: <1302607528-8773-1-git-send-email-aidapalapati@nvidia.com>
+ <1302608540.3639.16.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302608540.3639.16.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since
-
-commit a120e912eb51e347f36c71b60a1d13af74d30e83
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Fri Feb 19 15:47:33 2010 -0800
-
-    iwlwifi: sanity check before counting number of tfds can be free
-
-we use skb->data after calling ieee80211_tx_status_irqsafe(), which
-could free skb instantly.
-
-On current kernels I do not observe practical problems related with
-bug, but on 2.6.35.y it cause random system hangs when stressing
-wireless link, making bisection of other problems impossible.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-index 5c40502..fbec88d 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-@@ -1127,12 +1127,16 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd)) {
- 
- 		tx_info = &txq->txb[txq->q.read_ptr];
--		iwl4965_tx_status(priv, tx_info,
--				 txq_id >= IWL4965_FIRST_AMPDU_QUEUE);
-+
-+		if (WARN_ON_ONCE(tx_info->skb == NULL))
-+			continue;
- 
- 		hdr = (struct ieee80211_hdr *)tx_info->skb->data;
--		if (hdr && ieee80211_is_data_qos(hdr->frame_control))
-+		if (ieee80211_is_data_qos(hdr->frame_control))
- 			nfreed++;
-+
-+		iwl4965_tx_status(priv, tx_info,
-+				 txq_id >= IWL4965_FIRST_AMPDU_QUEUE);
- 		tx_info->skb = NULL;
- 
- 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
--- 
-1.7.1
-
+Sm9oYW5uZXMsDQoNClNvIGl0IHJlYWxseSBpcyBhIEdQSU9fUkZLSUxMIGRyaXZlci4gV2hhdCdz
+IGJsdWV0b290aCBzcGVjaWZpYyBpbiBpdD8NCjxBbmFudGhhPiBNYWluIGFpbSBvZiB0aGUgZHJp
+dmVyIGlzIHRvIHByb3ZpZGUgYSBzaW5nbGUgcG9pbnQgb2YgZW50cnkgDQpmb3IgYWxsIHJlcXVp
+cmVtZW50cyB0byBzd2l0Y2ggb24gQlQgQ2hpcC4gTm90IG9ubHkgR1BJT3MgYXJlIEhhbmRsZXMg
+DQppbiB0aGlzIGRyaXZlciwgT3RoZXIgcmVzb3VyY2VzIGxpa2UgInJlZmVyZW5jZSBjbG9jayIg
+cmVxdWlyZW1lbnRzIA0KYXJlIGFsc28gaGFuZGxlZC4gSWYgcmVxdWlyZWQgbmVlZCB0byBhZGQg
+YW55IHJlZ3VsYXRvciBvcGVyYXRpb25zIA0KcmVxdWlyZWQgYnkgQlQgY2hpcC4gUGxlYXNlIGxl
+dCBtZSBrbm93IGlmIGl0IHN0aWxsIG1ha2Ugc2Vuc2UgdG8gb25seQ0KaGF2ZSBHUElPIG9wZXJh
+dGlvbnMgaW4gdGhpcyBkcml2ZXI/DQoNCg0KR1BJTyBzaG91bGQgc2hvdyB1cCBpbiB0aGUgbmFt
+ZSBhbmQgZGVzY3JpcHRpb24uIEJUIHNob3VsZCBub3QuIFRoZSANCmRyaXZlciBzaG91bGQgYmUg
+bW92ZWQgdG8gbmV0L3Jma2lsbC8gYW5kIGJlIGdlbmVyaWMgZm9yIEdQSU8uDQo8QW5hbnRoYT4g
+SSBjYW4gbW92ZSB0byBuZXQvcmZraWxsLy4NCg0KSSBkb24ndCB0aGluayBhbGwgb2YgdGhpcyBp
+cyByZWFsbHkgdGhlIGJlc3Qgd2F5IHRvIGRvIHRoaW5ncy4gVGhpcw0KaGFyZGNvZGVzICJidF9j
+bGsiIGZvciBleGFtcGxlLiBCdXQgdGhhdCdzIHVzZWxlc3MgZm9yIGEgZ2VuZXJpYyBkcml2ZXIu
+DQo8QW5hbnRoYT4gVGhpcyByZXF1aXJlcyBjcmVhdGlvbiBvZiBhIG5ldyBoZWFkZXIgZmlsZSB0
+aGF0IGlzIHNoYXJlZCANCmJldHdlZW4gZHJpdmVyIGFuZCBwbGF0Zm9ybS4gSSB3YXMgdHJ5aW5n
+IHRvIGVsaW1pbmF0ZSB0aGUgcmVxdWlyZW1lbnQNCm9mIGEgbmV3IGhlYWRlciBmaWxlIGJ5IGNy
+ZWF0aW5nIGdlbmVyaWMgcGxhdGZvcm0gcmVzb3VyY2VzLiBXaWxsIGFkZCANCm5ldyBoZWFkZXIg
+ZmlsZS4NCg0KLUFuYW50aGENCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpv
+aGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFR1
+ZXNkYXksIEFwcmlsIDEyLCAyMDExIDU6MTIgUE0NClRvOiBBbmFudGhhIElkYXBhbGFwYXRpDQpD
+Yzogb2xvZmpAY2hyb21pdW0ub3JnOyBsaW52aWxsZUB0dXhkcml2ZXIuY29tOyBVZGF5IFJhdmFs
+OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFuZHkgUml0Z2VyOyBSYWtlc2ggS3Vt
+YXINClN1YmplY3Q6IFJlOiBbUEFUQ0hdIENIUk9NSVVNOiBjb25maWc6IGJsdWV0b290aDogcmZr
+aWxsIGRyaXZlcg0KDQpPbiBUdWUsIDIwMTEtMDQtMTIgYXQgMTY6NTUgKzA1MzAsIGFpZGFwYWxh
+cGF0aUBudmlkaWEuY29tIHdyb3RlOg0KPiBGcm9tOiBBbmFudGhhIElkYXBhbGFwYXRpIDxhaWRh
+cGFsYXBhdGlAbnZpZGlhLmNvbT4NCj4gDQo+IEluaXRpYWwgdmVyc2lvbiBvZiBuZXcgInJma2ls
+bCIgZHJpdmVyIHRvIGNvbnRyb2wgQlQgcmFkaW8uDQo+IEEgbmV3IGtlcm5lbCBjb25maWcgdmFy
+aWFibGUgQ09ORklHX0JUX1JGS0lMTCBpcyBkZWZpbmVkIGFuZA0KPiBuZWVkIHRvIGJlIHVzZWQg
+dG8gaW5jbHVkZSB0aGlzIGRyaXZlciBpbiB0aGUga2VybmVsLg0KPiANCj4gVGhyZWUgUGxhdGZv
+cm0gcmVzb3VyY2VzIGFyZSBleHBlY3RlZCBieSB0aGUgZHJpdmVyLg0KPiAgLSBTaHV0ZG93biBH
+UElPDQo+ICAtIFJlc2V0IEdQSU8gYW5kDQo+ICAtIFJlZmVyZW5jZSBDbG9jay4NCj4gQW55L0Fs
+bCBvZiB0aGUgcmVzb3VyY2VzIGNhbiBiZSBkZWZpbmVkIGJ5IGEgcGxhdGZvcm0uDQoNClNvIGl0
+IHJlYWxseSBpcyBhIEdQSU9fUkZLSUxMIGRyaXZlci4gV2hhdCdzIGJsdWV0b290aCBzcGVjaWZp
+YyBpbiBpdD8NCg0KPiBCVUc9bm9uZQ0KPiBURVNUPSB0ZXN0ZWQgb24gYm9hcmQgdXNpbmcgQkNN
+NDMyOSAodmVudGFuYSkNCj4gDQo+IENoYW5nZS1JZDogSTM4ZTZhZDNhNzcyMTgwYjdjYWI1Y2Yy
+ZDU5YjQ1OWIyMTA1MTgxN2UNCg0KPiAtLS0gYS9kcml2ZXJzL2JsdWV0b290aC9LY29uZmlnDQo+
+ICsrKyBiL2RyaXZlcnMvYmx1ZXRvb3RoL0tjb25maWcNCj4gQEAgLTIxOSw0ICsyMTksMTIgQEAg
+Y29uZmlnIEJUX0FUSDNLDQo+ICAJICBTYXkgWSBoZXJlIHRvIGNvbXBpbGUgc3VwcG9ydCBmb3Ig
+IkF0aGVyb3MgZmlybXdhcmUgZG93bmxvYWQgZHJpdmVyIg0KPiAgCSAgaW50byB0aGUga2VybmVs
+IG9yIHNheSBNIHRvIGNvbXBpbGUgaXQgYXMgbW9kdWxlIChhdGgzaykuDQo+ICANCj4gK2NvbmZp
+ZyBCVF9SRktJTEwNCj4gKwlib29sICJCbHVldG9vdGggUkZLSUxMIGRyaXZlciINCj4gKwlkZXBl
+bmRzIG9uIEJUICYmIFJGS0lMTA0KPiArCWhlbHANCj4gKwkgIElmIHlvdSBzYXkgeWVzIGhlcmUg
+eW91IGdldCBzdXBwb3J0IG9mIGEgZ2VuZXJpYyBibHVldG9vdGggUkZLSUxMDQo+ICsJICBkcml2
+ZXIgZm9yIEJUIGNoaXBzZXQuIFBsYXRmb3JtIG5lZWRzIHRvIGRlZmluZSB0aGUgcmVzb3VyY2Vz
+DQo+ICsJICByZXF1aXJlZC4NCg0KR1BJTyBzaG91bGQgc2hvdyB1cCBpbiB0aGUgbmFtZSBhbmQg
+ZGVzY3JpcHRpb24uIEJUIHNob3VsZCBub3QuIFRoZQ0KZHJpdmVyIHNob3VsZCBiZSBtb3ZlZCB0
+byBuZXQvcmZraWxsLyBhbmQgYmUgZ2VuZXJpYyBmb3IgR1BJTy4NCg0KPiArc3RhdGljIGludCBi
+dF9yZmtpbGxfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gK3sNCj4gKwlz
+dHJ1Y3QgcmZraWxsICpidF9yZmtpbGxfZGV2Ow0KPiArCXN0cnVjdCByZXNvdXJjZSAqcmVzOw0K
+PiArCWludCByZXQ7DQo+ICsJYm9vbCBlbmFibGUgPSBmYWxzZTsgIC8qIG9mZiAqLw0KPiArCWJv
+b2wgZGVmYXVsdF9zd19ibG9ja19zdGF0ZTsNCj4gKw0KPiArCWJ0X3Jma2lsbCA9IGt6YWxsb2Mo
+c2l6ZW9mKCpidF9yZmtpbGwpLCBHRlBfS0VSTkVMKTsNCj4gKwlpZiAoIWJ0X3Jma2lsbCkNCj4g
+KwkJcmV0dXJuIC1FTk9NRU07DQo+ICsNCj4gKwlidF9yZmtpbGwtPmJ0X2NsayA9IGNsa19nZXQo
+JnBkZXYtPmRldiwgImJ0X2NsayIpOw0KDQpJIGRvbid0IHRoaW5rIGFsbCBvZiB0aGlzIGlzIHJl
+YWxseSB0aGUgYmVzdCB3YXkgdG8gZG8gdGhpbmdzLiBUaGlzDQpoYXJkY29kZXMgImJ0X2NsayIg
+Zm9yIGV4YW1wbGUuIEJ1dCB0aGF0J3MgdXNlbGVzcyBmb3IgYSBnZW5lcmljIGRyaXZlci4NCg0K
+UGxlYXNlIGxvb2sgYXQNCmh0dHA6Ly9hcnRpY2xlLmdtYW5lLm9yZy9nbWFuZS5saW51eC5rZXJu
+ZWwvMTEyNDEzNw0KDQpUaGF0IGRyaXZlciByZXF1aXJlcyB0aGF0IHNvbWUgc3BlY2lmaWMgY29k
+ZSByZWdpc3RlcnMgYSBwbGF0Zm9ybSBkZXZpY2UNCndpdGggdGhlIHJpZ2h0IGRhdGEsIGJ1dCB5
+b3UgY291bGQgZG8gdGhhdCBmb3IgdGhpcyBhcyB3ZWxsIGFuZCBnZXQgcmlkDQpvZiBhbGwgdGhl
+IGhhcmRjb2RlZCBzdHJpbmdzIGFuZCB0aGUgaGFyZC1jb2RlZCBhc3N1bXB0aW9uIHRoYXQgaXQn
+cyBmb3INCmJsdWV0b290aC4gSSB0aGluayB0aGF0IGFwcHJvYWNoIGlzIE1VQ0ggYmV0dGVyLCBz
+aW5jZSB0aGVuIGlmIHNvbWVib2R5DQpoYXMgYSBXaWZpIG9yIEdQUyBkZXZpY2Ugd2l0aCBHUElP
+IGNvbnRyb2wgdGhleSBjYW4gcmV1c2UgdGhpcyBjb2RlLg0KDQpqb2hhbm5lcw0KDQoNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpUaGlzIGVtYWlsIG1lc3NhZ2UgaXMgZm9yIHRoZSBzb2xl
+IHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpIGFuZCBtYXkgY29udGFpbg0KY29uZmlk
+ZW50aWFsIGluZm9ybWF0aW9uLiAgQW55IHVuYXV0aG9yaXplZCByZXZpZXcsIHVzZSwgZGlzY2xv
+c3VyZSBvciBkaXN0cmlidXRpb24NCmlzIHByb2hpYml0ZWQuICBJZiB5b3UgYXJlIG5vdCB0aGUg
+aW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGJ5DQpyZXBseSBl
+bWFpbCBhbmQgZGVzdHJveSBhbGwgY29waWVzIG9mIHRoZSBvcmlnaW5hbCBtZXNzYWdlLg0KLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCg==
