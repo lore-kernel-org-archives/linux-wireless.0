@@ -1,38 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4873 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.19.149.2]:38800 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754527Ab1DUROC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 13:14:02 -0400
-Subject: Re: [PATCH v3 1/3] staging: brcm80211: replaced WL_NONE with
- no_printk
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <op.vuasnofu3ri7v4@arend-laptop>
-References: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
-	 <1303383725-1440-2-git-send-email-rvossen@broadcom.com>
-	 <1303403680.24766.55.camel@Joe-Laptop>  <op.vuasnofu3ri7v4@arend-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Apr 2011 10:14:00 -0700
-Message-ID: <1303406040.24766.65.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S1750901Ab1DLNA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:00:27 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:00:02 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/22] ath9k_hw: Initialize tx and rx gain table from initvals.h for ar9340
+Date: Tue, 12 Apr 2011 18:27:08 +0530
+Message-ID: <1302613042-1754-9-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-21 at 19:10 +0200, Arend van Spriel wrote:
-> If you want to debug a specific source file you could do following in that  
-> particular source file:
-> #undef no_printk
-> #define no_printk  printk
-> Not sure whether that is the intended use here.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |   42 ++++++++++++++++++++++++----
+ 1 files changed, 36 insertions(+), 6 deletions(-)
 
-True, but that's entirely backwards
-and not very sensible either.
-
-For that you use pr_debug/dev_dbg/etc
-and then add #define DEBUG.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 37af721..a55eddb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -220,7 +220,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
++				       5);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       ar9485_modes_lowest_ob_db_tx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485_modes_lowest_ob_db_tx_gain_1_1),
+@@ -232,7 +237,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 				       5);
+ 		break;
+ 	case 1:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
++				       5);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       ar9485Modes_high_ob_db_tx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485Modes_high_ob_db_tx_gain_1_1),
+@@ -244,7 +254,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 				       5);
+ 		break;
+ 	case 2:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
++				       5);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       ar9485Modes_low_ob_db_tx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485Modes_low_ob_db_tx_gain_1_1),
+@@ -256,7 +271,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 				       5);
+ 		break;
+ 	case 3:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
++				       5);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       ar9485Modes_high_power_tx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_1),
+@@ -275,7 +295,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9340Common_rx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
++				       2);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				       ar9485Common_wo_xlna_rx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
+@@ -287,7 +312,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
+ 				       2);
+ 		break;
+ 	case 1:
+-		if (AR_SREV_9485_11(ah))
++		if (AR_SREV_9340(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9340Common_wo_xlna_rx_gain_table_1p0,
++				       ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
++				       2);
++		else if (AR_SREV_9485_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				       ar9485Common_wo_xlna_rx_gain_1_1,
+ 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
+-- 
+1.7.0.4
 
