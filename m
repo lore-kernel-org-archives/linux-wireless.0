@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:32971 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754097Ab1D2WfX (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61401 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753457Ab1DLLW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 18:35:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Date: Fri, 29 Apr 2011 15:32:47 -0700
-Subject: RE: [PATCH] mwifiex: fix copy-n-paste 'thinko' for tsf_val
-Message-ID: <477F20668A386D41ADCC57781B1F704307FCE850F6@SC-VEXCH1.marvell.com> (sfid-20110430_003526_010246_34D72F85)
-References: <1304104067-29124-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1304104067-29124-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 12 Apr 2011 07:22:27 -0400
+Received: by fxm17 with SMTP id 17so4196296fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 04:22:25 -0700 (PDT)
+Subject: Re: [PATCH 3/4] mac80211: Add function to build HT caps
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1302607008.3639.6.camel@jlt3.sipsolutions.net>
+References: <1302604964.2139.5.camel@alex-2>
+	 <loom.20110412T130449-831@post.gmane.org>
+	 <1302607008.3639.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Apr 2011 13:22:22 +0200
+Message-ID: <1302607342.8929.1.camel@alex-2>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9obiwNCg0KPiBTdWJqZWN0OiBbUEFUQ0hdIG13aWZpZXg6IGZpeCBjb3B5LW4tcGFzdGUg
-J3RoaW5rbycgZm9yIHRzZl92YWwNCj4gDQo+ICAgQ0MgW01dICBkcml2ZXJzL25ldC93aXJlbGVz
-cy9td2lmaWV4L2pvaW4ubw0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2pvaW4uYzog
-SW4gZnVuY3Rpb24g4oCYbXdpZmlleF9jbWRfODAyXzExX2Fzc29jaWF0ZeKAmToNCj4gZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9qb2luLmM6MTE5Ojg6IHdhcm5pbmc6IOKAmHRzZl92YWzi
-gJkgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBpbiB0aGlzDQo+IGZ1bmN0aW9uDQo+IGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvam9pbi5jOjEwMzoxMjogbm90ZTog4oCYdHNmX3ZhbOKA
-mSB3YXMgZGVjbGFyZWQgaGVyZQ0KDQpUaGFua3MgZm9yIHNwb3R0aW5nIHRoaXMgZXJyb3IuIEkg
-d2lsbCB1cGRhdGUgbXkgZ2NjIGFzIG15IGN1cnJlbnQgdmVyc2lvbiA0LjQuMSAyMDA5MDcyNSBj
-YW5ub3QgZmluZCB0aGlzIHdhcm5pbmcuIA0KDQo+IA0KPiBMb29rcyBsaWtlIGEgY29weS1uLXBh
-c3RlIGVycm9yLCBpZGVudGljYWwgbGluZXMgYXJlIGEgZmV3IGxpbmVzIGJlbG93DQo+IHRoZSBv
-bmVzIHJlbW92ZWQsIHdpdGggYW4gYWN0dWFsIG1lbWNweSB0byB0c2ZfdmFsIGluIGJldHdlZW4u
-Li4NCg0KSXQncyBub3QgYSBjb3B5LW4tcGFzdGUgZXJyb3IsIGJ1dCB5b3UgaGl0IGEgYnVnIGhl
-cmUuDQoNCkFjdHVhbGx5IHR3byBzZXRzIG9mIHRzZl92YWwgYXJlIGNvcGllZCB0byB0aGUgYnVm
-ZmVyLiBJIG1pc3NlZCB0aGUgaW5pdGlhbGl6YXRpb24gY29kZSBmb3IgdGhlIGZpcnN0IHRzZl92
-YWwuDQoNCkkgd2lsbCBzZW5kIGEgcGF0Y2ggdG8gZml4IGl0Lg0KDQpUaGFua3MsDQoNCkJpbmcN
-Cg0KDQo=
+Am Dienstag, den 12.04.2011, 13:16 +0200 schrieb Johannes Berg:
+> On Tue, 2011-04-12 at 11:06 +0000, Alexander Simon wrote:
+> 
+> > +u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
+> > +                              u16 cap)
+> 
+> It makes no sense to pass cap as an argument since it's taken from the
+> sband.
+> 
+> johannes
+> 
+Not true, in ieee80211_add_ht_ie in work.c cap is modified before.
+
+Alex
+
