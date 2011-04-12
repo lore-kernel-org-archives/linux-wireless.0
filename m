@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:25356 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823Ab1DEPF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 11:05:59 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:05:34 -0700
-Message-ID: <4D9B2FD2.7020208@atheros.com>
-Date: Tue, 5 Apr 2011 20:35:54 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:10911 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794Ab1DLLaD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 07:30:03 -0400
+From: Anantha Idapalapati <aidapalapati@nvidia.com>
+To: Olof Johansson <olofj@chromium.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Uday Raval <uraval@nvidia.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: Add station uptime in debugfs
-References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <201104051604.16143.helmut.schaa@googlemail.com>
-In-Reply-To: <201104051604.16143.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Andy Ritger <ARitger@nvidia.com>,
+	Rakesh Kumar <krakesh@nvidia.com>
+Date: Tue, 12 Apr 2011 16:59:44 +0530
+Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+Message-ID: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A55103@BGMAIL02.nvidia.com>
+References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
+	<1302532734.6487.12.camel@jlt3.sipsolutions.net>
+	<108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
+	<1302533629.6487.14.camel@jlt3.sipsolutions.net>
+ <BANLkTi=LT7u8d6dVDWkQ-xp-BZMYZgS_vQ@mail.gmail.com>
+In-Reply-To: <BANLkTi=LT7u8d6dVDWkQ-xp-BZMYZgS_vQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 April 2011 07:34 PM, Helmut Schaa wrote:
-> Am Dienstag, 5. April 2011 schrieb Mohammed Shafi Shajakhan:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> Add station uptime parameter in debugfs. This will be helpful to get a
->> measure of stability of connection and also during stress testing.
->>      
-> It might even make sense to make this available through nl80211. At least
-> in AP mode it would be interesting to see how long each STA is already
-> connected.
->    
-did a quick check with only one station connected to AP and this seems 
-to work fine. Need to test with many other stations connecting at 
-different time and may be even with ibss.
-> Helmut
-> .
+Olof and all,
+
+I made mistake while creating the patch after pushing the change to chromium review site. Now I send the correct file. Please review the latest patch I just send.
+
+Thanks
+Anantha
+
+-----Original Message-----
+From: olofj@google.com [mailto:olofj@google.com] On Behalf Of Olof Johansson
+Sent: Monday, April 11, 2011 8:51 PM
+To: Johannes Berg
+Cc: Anantha Idapalapati; linville@tuxdriver.com; Uday Raval; linux-wireless@vger.kernel.org; Andy Ritger; Rakesh Kumar
+Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+
+[gah, this gmail account has html formatting on by default. repost in
+plain text]
+
+On Mon, Apr 11, 2011 at 7:53 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
->    
+> On Mon, 2011-04-11 at 20:15 +0530, Anantha Idapalapati wrote:
+> > Initially it was written specific to BCM4329. But because of the
+> > reason most of the BT chips have similar switch on/off sequence, this
+> > driver is made generic. If there is any specific changes required for
+> > a particular platform, this driver can be taken as reference.
+>
+> Well, so, it still has bcm4329 all over the code, so you should get rid
+> of that and just call it rfkill_gpio or something. Also, if it's all
+> this generic, then how about you make an rfkill GPIO driver that works
+> like the rfkill regulator driver we recently got?
+
+Anantha,
+
+This doesn't seem to be the same version of the driver as the last one
+you uploaded to the Chromium OS code review system, which had all the
+brcm4329 references renamed and moved out of the driver.
+
+Any reason you wouldn't start out with the cleanest version before you submit?
+
+The version I'm referring to is at:   http://codereview.chromium.org/6295009/
+
+
+-Olof
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
