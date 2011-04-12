@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:42098 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754916Ab1DOA4n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 20:56:43 -0400
-Received: by qwk3 with SMTP id 3so1207466qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 17:56:42 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:38773 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753590Ab1DLM5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 08:57:43 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 05:57:18 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/22] ath9k_hw: Don't configure AR_CH0_THERM for AR9340
+Date: Tue, 12 Apr 2011 18:27:13 +0530
+Message-ID: <1302613042-1754-14-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1302187158-15298-3-git-send-email-hauke@hauke-m.de>
-References: <1302187158-15298-1-git-send-email-hauke@hauke-m.de> <1302187158-15298-3-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Apr 2011 17:56:22 -0700
-Message-ID: <BANLkTi=5S2Cc_rBF4nyE5C9JZBrJ+s4iHg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] compat: remove sdio_set_host_pm_flags
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 7, 2011 at 7:39 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Applied all 3 and pushed, sorry for the delay.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 4a92718..685ce91 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3448,9 +3448,13 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+ 	else {
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+-		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB,
+-			      bias >> 2);
+-		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
++		if (!AR_SREV_9340(ah)) {
++			REG_RMW_FIELD(ah, AR_CH0_THERM,
++				      AR_CH0_THERM_XPABIASLVL_MSB,
++				      bias >> 2);
++			REG_RMW_FIELD(ah, AR_CH0_THERM,
++				      AR_CH0_THERM_XPASHORT2GND, 1);
++		}
+ 	}
+ }
+ 
+-- 
+1.7.0.4
 
-  Luis
