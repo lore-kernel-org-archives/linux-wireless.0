@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34799 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754739Ab1DKR4L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 13:56:11 -0400
+Received: from mail.atheros.com ([12.19.149.2]:38926 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720Ab1DLNSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:18:49 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:18:23 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 18/22] ath9k_hw: Read iq calibration data only for active chains
+Date: Tue, 12 Apr 2011 18:47:51 +0530
+Message-ID: <1302614273-2063-11-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4DA33F3A.6090707@gmail.com>
-References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net> <4DA33F3A.6090707@gmail.com>
-From: Luis Correia <luis.f.correia@gmail.com>
-Date: Mon, 11 Apr 2011 18:55:30 +0100
-Message-ID: <BANLkTinKuQ7i20FxmDCT1cRMPvOxM0aygQ@mail.gmail.com>
-Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, dwmw2@infradead.org,
-	linux-kernel@vger.kernel.org, gwingerde@gmail.com,
-	ben@decadent.org.uk, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org,
-	Shiang Tu <shiang_tu@ralinktech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
 
-On Mon, Apr 11, 2011 at 18:49, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> On 04/11/2011 04:27 PM, Larry Finger wrote:
->
->> From: Shiang Tu<shiang_tu@ralinktech.com>
->>
->> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
->> Version 29.
->>
->> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->> ---
->>  WHENCE     |    8 ++++----
->>  rt2860.bin |  Bin 8192 ->  8192 bytes
->>  rt2870.bin |  Bin 4096 ->  8192 bytes
->>  3 files changed, 4 insertions(+), 4 deletions(-)
->
-> links to rt3070.bin rt3071.bin rt3090.bin ???
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 09f3aa7..bceff49 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -185,17 +185,19 @@ static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
+ 
+ 	/* Accumulate IQ cal measures for active chains */
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		ah->totalPowerMeasI[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
+-		ah->totalPowerMeasQ[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
+-		ah->totalIqCorrMeas[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
+-		ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+-			"%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
+-			ah->cal_samples, i, ah->totalPowerMeasI[i],
+-			ah->totalPowerMeasQ[i],
+-			ah->totalIqCorrMeas[i]);
++		if (ah->txchainmask & BIT(i)) {
++			ah->totalPowerMeasI[i] +=
++				REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
++			ah->totalPowerMeasQ[i] +=
++				REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
++			ah->totalIqCorrMeas[i] +=
++				(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
++			ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++				"%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
++				ah->cal_samples, i, ah->totalPowerMeasI[i],
++				ah->totalPowerMeasQ[i],
++				ah->totalIqCorrMeas[i]);
++		}
+ 	}
+ }
+ 
+-- 
+1.7.0.4
 
-there are no such files in current rt2x00 drivers.
-
-the rt2870.bin should support all USB rt2800 based chipsets with
-several firmware blocks concatenated inside the file.
-same goes for rt2860, which support all PCI rt2800 based chipsets with
-several firmware blocks concatenated inside the file.
-
-we know that this is confusing, we've had to live with it for a loooong time.
-
-
-Luis Correia
-rt2x00 project admin
