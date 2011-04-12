@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53483 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755116Ab1DAUKv (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:1990 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720Ab1DLN2S convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 16:10:51 -0400
-Received: by iwn34 with SMTP id 34so3858996iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 13:10:51 -0700 (PDT)
+	Tue, 12 Apr 2011 09:28:18 -0400
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	"Andy Botting" <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+ <BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
+ <op.vtttxt083ri7v4@arend-laptop>
+ <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
+Date: Tue, 12 Apr 2011 15:27:59 +0200
 MIME-Version: 1.0
-In-Reply-To: <1301687948.3842.0.camel@jlt3.sipsolutions.net>
-References: <1301686955-9402-1-git-send-email-lrodriguez@atheros.com> <1301687948.3842.0.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 1 Apr 2011 13:10:30 -0700
-Message-ID: <AANLkTimJ8F-MFcK6raqcSFMsieGCx_gK_Ud1AF7BNPR2@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] cfg80211: fix regulatory restore upon user hints
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vttucxh73ri7v4@arend-laptop>
+In-Reply-To: <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 1, 2011 at 12:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-04-01 at 12:42 -0700, Luis R. Rodriguez wrote:
->> When we restore regulatory settings its possible CRDA
->> will not reply because of a bogus user entry. In this
->> case the bogus entry will prevent any further processing
->> on cfg80211 for regulatory domains even if we restore
->> regulatory settings.
+On Tue, 12 Apr 2011 15:21:44 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+
+> 2011/4/12 Arend van Spriel <arend@broadcom.com>:
+>> On Tue, 12 Apr 2011 15:04:48 +0200, Rafał Miłecki <zajec5@gmail.com>  
+>> wrote:
 >>
->> To prevent this we suck out all pending requests when
->> restoring regulatory settings and add them back into the
->> queue after we have queued up the reset work.
+>>> There is one more change I started to consider. Is "core" correct name
+>>> for AXI's device? Almost everywhere we can read about *components* on
+>>> the AXI interconnect.
+>>>
+>>> Maybe it'd make sense to s/core/comp/? Arend?
+>>
+>> I have no strong preference on this. I tried the latest patch and it  
+>> does
+>> not crash anymore with load/unload.
 >
-> What if CRDA replies in order, i.e. replies to the user requested one
-> first instead of the disassoc requested one?
+> Could you post dmesg? Probably nothing exciting, just my curiosity :)
+>
+Apr 12 11:56:52 arend-laptop kernel: [ 6615.077417] axi-pci-bridge  
+0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+Apr 12 11:56:52 arend-laptop kernel: [ 6615.078690] axi: Core 0 found:  
+ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
+Apr 12 11:56:52 arend-laptop kernel: [ 6615.079215] axi: Core 1 found:  
+IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
+Apr 12 11:56:52 arend-laptop kernel: [ 6615.079777] axi: Core 2 found:  
+PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
+Apr 12 11:56:52 arend-laptop kernel: [ 6615.111608] axi: AXI registered
+Apr 12 11:57:25 arend-laptop kernel: [ 6648.556024] axi-pci-bridge  
+0000:03:00.0: PCI INT A disabled
 
-Are you questioning the order of udev events and how CRDA processes them?
+Happy to satisfy your curiosity.
 
-If CRDA is present it should get the udev event for any valid request
-and process it accordingly. If the request is bogus it'll prevent any
-further processing on cfg80211 given that we simply bail out of
-processing requests until last_request->processed is true. The fix for
-that lies in the timeout on patch 2. This patch just ensures that we
-make sure to clear out any pending requests prior to doing a restore
-of regulatory settings.
+Gr. AvS
+-- 
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
-> Why do we even require crda to reply to the first in list, rather than
-> any one?
-
-The order should not matter except that we want the queue to be
-cleared before processing core hints when doing restoration, otherwise
-the next user hint in the queue can be bogus and it will prevent a
-restore.
-
-  Luis
