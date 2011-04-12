@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61269 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996Ab1DEP3A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 11:29:00 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53235 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756893Ab1DLKjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 06:39:14 -0400
+Date: Tue, 12 Apr 2011 12:39:05 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 10/16] iwlagn: remove un-needed configuration
+Message-ID: <20110412103905.GB2804@redhat.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1302276636-12802-11-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1302015561-21047-20-git-send-email-mmarek@suse.cz>
-References: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
-	<1302015561-21047-20-git-send-email-mmarek@suse.cz>
-Date: Tue, 5 Apr 2011 17:28:59 +0200
-Message-ID: <BANLkTikK+sYFOE4iCL7N8iZLO5bbx4K4FQ@mail.gmail.com>
-Subject: Re: [PATCH 19/34] rt2x00: Drop __TIME__ usage
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Michal Marek <mmarek@suse.cz>
-Cc: linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1302276636-12802-11-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 5, 2011 at 4:59 PM, Michal Marek <mmarek@suse.cz> wrote:
-> The kernel already prints its build timestamp during boot, no need to
-> repeat it in random drivers and produce different object files each
-> time.
->
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Michal Marek <mmarek@suse.cz>
+On Fri, Apr 08, 2011 at 08:30:30AM -0700, Wey-Yi Guy wrote:
+> +	lctl = iwl_pcie_link_ctl(priv);
+> +	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+> +				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
+> +		/* L1-ASPM enabled; disable(!) L0S  */
+> +		iwl_set_bit(priv, CSR_GIO_REG,
+> +				CSR_GIO_REG_VAL_L0S_ENABLED);
+> +		IWL_DEBUG_POWER(priv, "L1 Enabled; Disabling L0S\n");
+> +	} else {
+> +		/* L1-ASPM disabled; enable(!) L0S */
+> +		iwl_clear_bit(priv, CSR_GIO_REG,
+> +				CSR_GIO_REG_VAL_L0S_ENABLED);
+> +		IWL_DEBUG_POWER(priv, "L1 Disabled; Enabling L0S\n");
+>  	}
 
-Note that this timestamp is not in the kernel log, but in a special
-debug file in debugfs.
-However, I cannot see how a timestamp is actually useful for debugging
-the driver, so
+In
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+commit 1a7123cdd9f49cf1c908fb2c16d26f279c88d8c9
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Thu Aug 5 14:39:31 2010 -0400
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> index c92db32..66166ef 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> @@ -568,7 +568,6 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
->        blob->data = data;
->        data += sprintf(data, "driver:\t%s\n", intf->rt2x00dev->ops->name);
->        data += sprintf(data, "version:\t%s\n", DRV_VERSION);
-> -       data += sprintf(data, "compiled:\t%s %s\n", __DATE__, __TIME__);
->        blob->size = strlen(blob->data);
->
->        return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
-> --
-> 1.7.4.1
->
->
+    iwlwifi: disable aspm by default
 
+we claim to disable ASPM (including L0S), but here we
+enable L0S anyway. Perhaps this is the reason why we
+still get reports about device disappear:
+https://bugzilla.redhat.com/show_bug.cgi?id=642966
 
+We also have code from:
 
--- 
----
-Gertjan
+commit e7cad69cdab4d6f0caadbcdd58b54214243ba98a
+Author: Grumbach, Emmanuel <emmanuel.grumbach@intel.com>
+Date:   Thu Nov 18 03:47:38 2010 -0800
+
+    iwlagn: Enable PCI L1 ACTIVE state after uCode has been loaded
+
+that seems to enable L1 ASPM as well.
+
+I think these bits should be removed from iwlagn driver, or better
+root cause of device disappear from bus should be identified and fixed
+(not sure if this is iwlagn driver/firmware problem or bios or
+pci driver problem, however) to allow to use ASPM.
+
+Stanislaw
