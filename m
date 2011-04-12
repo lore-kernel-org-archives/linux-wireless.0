@@ -1,128 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:49558 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759217Ab1D0NTG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 09:19:06 -0400
-Date: Wed, 27 Apr 2011 18:40:29 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: Skip tailroom reservation for full HW-crypto
- devices
-Message-ID: <20110427131017.GA19537@hertz.marvell.com> (sfid-20110427_151910_715151_A6E95433)
+Received: from mail.atheros.com ([12.19.149.2]:36234 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755131Ab1DLHM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 03:12:27 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 00:12:01 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/2 V2] ath9k: Register id table for platform device
+Date: Tue, 12 Apr 2011 12:42:22 +0530
+Message-ID: <1302592342-25154-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In xmit path, devices that do full hardware crypto (including
-TKIP MMIC) need no tailroom. For such devices, tailroom
-reservation can be skipped if all the keys are programmed into
-the hardware (i.e software crypto is not used for any of the
-keys) and none of the keys wants software to generate Michael
-MIC.
+Currently the device id in the platform driver is hardcoded to an id
+which is specific to AR9130/AR9132 SOCs as it supports only wmac (wireless mac)
+of these SOCs. But this needs to be dynamic when we want to support different
+wmac of SOCs. So add id_table to driver to make it extendable to more SOCs.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/key.c         |   19 +++++++++++++++++--
- net/mac80211/tx.c          |    7 +------
- 3 files changed, 21 insertions(+), 8 deletions(-)
+V2 
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a778499..027c046 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -766,6 +766,9 @@ struct ieee80211_local {
+- Verbose to commit log
+- Rename platform name to ath9k to avoid breaking existing board support
+
  
- 	int tx_headroom; /* required headroom for hardware/radiotap */
+ drivers/net/wireless/ath/ath9k/ahb.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 9cb0efa..5193ed5 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -21,6 +21,14 @@
+ #include <linux/ath9k_platform.h>
+ #include "ath9k.h"
  
-+	/* count for keys needing tailroom space allocation */
-+	int crypto_tx_tailroom_needed_cnt;
++const struct platform_device_id ath9k_platform_id_table[] = {
++	{
++		.name = "ath9k",
++		.driver_data = AR5416_AR9100_DEVID,
++	},
++	{},
++};
 +
- 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
- 	 * added to skb_queue will be processed, but frames in
- 	 * skb_queue_unreliable may be dropped if the total length of these
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index af3c564..ca3c626 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -101,6 +101,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 
- 	if (!ret) {
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-+
-+		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
-+			key->local->crypto_tx_tailroom_needed_cnt--;
-+
- 		return 0;
+ /* return bus cachesize in 4B word units */
+ static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
+ {
+@@ -57,6 +65,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	struct ath_softc *sc;
+ 	struct ieee80211_hw *hw;
+ 	struct resource *res;
++	const struct platform_device_id *id = platform_get_device_id(pdev);
+ 	int irq;
+ 	int ret = 0;
+ 	struct ath_hw *ah;
+@@ -116,7 +125,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 		goto err_free_hw;
  	}
  
-@@ -156,6 +160,9 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+-	ret = ath9k_init_device(AR5416_AR9100_DEVID, sc, 0x0, &ath_ahb_bus_ops);
++	ret = ath9k_init_device(id->driver_data, sc, 0x0, &ath_ahb_bus_ops);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize device\n");
+ 		goto err_irq;
+@@ -165,8 +174,11 @@ static struct platform_driver ath_ahb_driver = {
+ 		.name	= "ath9k",
+ 		.owner	= THIS_MODULE,
+ 	},
++	.id_table    = ath9k_platform_id_table,
+ };
  
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++MODULE_DEVICE_TABLE(platform, ath9k_platform_id_table);
 +
-+	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
-+		key->local->crypto_tx_tailroom_needed_cnt++;
- }
- 
- void ieee80211_key_removed(struct ieee80211_key_conf *key_conf)
-@@ -388,8 +395,10 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
- 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
- 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
--	if (key->local)
-+	if (key->local) {
- 		ieee80211_debugfs_key_remove(key);
-+		key->local->crypto_tx_tailroom_needed_cnt--;
-+	}
- 
- 	kfree(key);
- }
-@@ -451,6 +460,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 
- 	ieee80211_debugfs_key_add(key);
- 
-+	key->local->crypto_tx_tailroom_needed_cnt++;
-+
- 	ret = ieee80211_key_enable_hw_accel(key);
- 
- 	mutex_unlock(&sdata->local->key_mtx);
-@@ -492,8 +503,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
- 
- 	mutex_lock(&sdata->local->key_mtx);
- 
--	list_for_each_entry(key, &sdata->key_list, list)
-+	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
-+
-+	list_for_each_entry(key, &sdata->key_list, list) {
-+		sdata->local->crypto_tx_tailroom_needed_cnt++;
- 		ieee80211_key_enable_hw_accel(key);
-+	}
- 
- 	mutex_unlock(&sdata->local->key_mtx);
- }
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index a2043e4..e3e3aa1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1476,12 +1476,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ int ath_ahb_init(void)
  {
- 	int tail_need = 0;
- 
--	/*
--	 * This could be optimised, devices that do full hardware
--	 * crypto (including TKIP MMIC) need no tailroom... But we
--	 * have no drivers for such devices currently.
--	 */
--	if (may_encrypt) {
-+	if (may_encrypt && local->crypto_tx_tailroom_needed_cnt) {
- 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
- 		tail_need -= skb_tailroom(skb);
- 		tail_need = max_t(int, tail_need, 0);
+ 	return platform_driver_register(&ath_ahb_driver);
 -- 
-1.5.4.1
+1.7.0.4
 
