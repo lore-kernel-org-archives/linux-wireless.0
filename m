@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33412 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309Ab1D1MJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:09:20 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kyle McMartin <kmcmartin@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.38 2/4] iwl3945: do not deprecate software scan
-Date: Thu, 28 Apr 2011 14:08:13 +0200
-Message-Id: <1303992495-7337-3-git-send-email-sgruszka@redhat.com> (sfid-20110428_140924_532581_5CB3B150)
-In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
-References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41251 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab1DLLxl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 07:53:41 -0400
+Received: by wya21 with SMTP id 21so5609501wya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 04:53:40 -0700 (PDT)
+Message-ID: <4DA43D3F.60204@gmail.com>
+Date: Tue, 12 Apr 2011 13:53:35 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
+References: <4DA1E4ED.6080804@gmail.com> <20110411175810.GB2511@tuxdriver.com>
+In-Reply-To: <20110411175810.GB2511@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 3bda50e3eaf58a4b9c4ce34204e5faa15c8b1b97 upstream.
+On 04/11/2011 07:58 PM, John W. Linville wrote:
 
-Software scanning can be used for workaround some performance problems,
-so do not deprecate it.
+> On Sun, Apr 10, 2011 at 07:12:13PM +0200, Xose Vazquez Perez wrote:
+>> Larry Finger wrote:
+>>
+>>> There are three USB IDs supported by staging/rt2870sta that are not in the
+>>> mainline driver rt2800usb.
+>>>
+>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>> Cc: Stable<stable@vger.kernel.org>
+>>> ---
+>>>
+>>> Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>> ===================================================================
+>>> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
+>>> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>> @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
+>>>   	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	{ USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>> +	{ USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>> +	{ USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	/* Draytek */
+>>>   	{ USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	/* Edimax */
+>>> @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
+>>>   	/* Planex */
+>>>   	{ USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	{ USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>> +	{ USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	/* Quanta */
+>>>   	{ USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>   	/* Ralink */
+>>
+>> NACK, unless they also be in the windows driver.
+>> They were eliminated in recent versions of ralink LiNUX drivers.
+>
+> OK, I already had this merged since Ivo and Gertjan had ACKed it.
+>
+> I need to rebase wireless-2.6 anyway, so I'll drop this one too
+> for now.  Please come to a consensus on whether or not these should
+> be included and let me know...
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+I did a search of 0x2001,0x3c09 0x2001,0x3c0a and 0x2019,0xed14 in
+latest windows drivers:
+USB (RT2870 /RT2770 /RT307X /RT2070 /RT357X /RT3370 /RT8070 /RT5370) 
+12/31/2010 3.1.8.0
+IS_AP_STA_RT2870_D-3.1.8.0_VA-3.1.8.0_W7-3.1.8.0_RU-4.0.4.0_AU-4.0.4.0_123110_1.5.11.0WP_Free.exe
+and I didn't find any of them
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 371abbf..cf0699a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3995,8 +3995,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	 * "the hard way", rather than using device's scan.
- 	 */
- 	if (iwl3945_mod_params.disable_hw_scan) {
--		dev_printk(KERN_DEBUG, &(pdev->dev),
--			"sw scan support is deprecated\n");
-+		IWL_DEBUG_INFO(priv, "Disabling hw_scan\n");
- 		iwl3945_hw_ops.hw_scan = NULL;
- 	}
- 
-@@ -4318,8 +4317,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
- 		   int, S_IRUGO);
--MODULE_PARM_DESC(disable_hw_scan,
--		 "disable hardware scanning (default 0) (deprecated)");
-+MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
- module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
- MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
- 
--- 
-1.7.1
+Also I checked latest linux drivers:
+2010_0709_RT2870_Linux_STA_v2.4.0.1.tar.bz2
+2010_1215_RT3572_Linux_STA_v2.5.0.0.DPO.bz2
+2011_0107_RT3070_RT3370_Linux_STA_v2.5.0.1_DPO.tar.bz2
+and there is no vestige of any of them.
 
+NACK.
+
+-thanks-
