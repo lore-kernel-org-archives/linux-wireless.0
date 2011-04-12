@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37748 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757824Ab1DAVtj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:49:39 -0400
-Subject: Re: [PATCH v3 1/2] cfg80211: fix regulatory restore upon user hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimHCgmoWvC_Ou7BsiDjwxF=YB0h4-g=_afYxsQF@mail.gmail.com>
-References: <1301686955-9402-1-git-send-email-lrodriguez@atheros.com>
-	 <1301687948.3842.0.camel@jlt3.sipsolutions.net>
-	 <AANLkTimJ8F-MFcK6raqcSFMsieGCx_gK_Ud1AF7BNPR2@mail.gmail.com>
-	 <1301689736.3842.4.camel@jlt3.sipsolutions.net>
-	 <AANLkTimHCgmoWvC_Ou7BsiDjwxF=YB0h4-g=_afYxsQF@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:43779 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932210Ab1DLOmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 10:42:37 -0400
+Subject: Re: [PATCH 10/16] iwlagn: remove un-needed configuration
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20110412103905.GB2804@redhat.com>
+References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1302276636-12802-11-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110412103905.GB2804@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 23:49:34 +0200
-Message-ID: <1301694574.3842.6.camel@jlt3.sipsolutions.net>
+Date: Tue, 12 Apr 2011 07:39:55 -0700
+Message-ID: <1302619195.22178.1.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 14:47 -0700, Luis R. Rodriguez wrote:
-> On Fri, Apr 1, 2011 at 1:28 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Fri, 2011-04-01 at 13:10 -0700, Luis R. Rodriguez wrote:
-> >>
-> >> The order should not matter except that we want the queue to be
-> >> cleared before processing core hints when doing restoration, otherwise
-> >> the next user hint in the queue can be bogus and it will prevent a
-> >> restore.
-> >
-> > I'm just thinking this temporary clearing could cause us to reject a
-> > reply from CRDA that's coming in at the same time that is due to a user
-> > request.
+On Tue, 2011-04-12 at 03:39 -0700, Stanislaw Gruszka wrote:
+> On Fri, Apr 08, 2011 at 08:30:30AM -0700, Wey-Yi Guy wrote:
+> > +	lctl = iwl_pcie_link_ctl(priv);
+> > +	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+> > +				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
+> > +		/* L1-ASPM enabled; disable(!) L0S  */
+> > +		iwl_set_bit(priv, CSR_GIO_REG,
+> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
+> > +		IWL_DEBUG_POWER(priv, "L1 Enabled; Disabling L0S\n");
+> > +	} else {
+> > +		/* L1-ASPM disabled; enable(!) L0S */
+> > +		iwl_clear_bit(priv, CSR_GIO_REG,
+> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
+> > +		IWL_DEBUG_POWER(priv, "L1 Disabled; Enabling L0S\n");
+> >  	}
 > 
-> Ah, I see, hmm well I tested this with:
+> In
 > 
-> iw reg set US; iw reg set XA; iw reg set XB; iw reg set CR; iw dev
-> wlan0 disconnect; iw reg set FR;
-
-was CRDA running though? If so, it will probably reply right away -- I
-don't think you can hit the race easily.
-
-> and things were still being processed in the order sent. There is a
-> small race between the unlock of the reg_mutex on
-> restore_regulatory_settings() down until where we lock the
-> regulatory_hint_core() and regulatory_hint_user(). The chances of a
-> user regulatory hint coming in between is very low, I could not do it.
-> Then there is also a small race of getting a user reg hint on
-> restore_regulatory_settings() in between the regulatory_hint_user()
-> and the lock of the reg_mutex again for processing old regulatory
-> hints, but the worst that can happen in that case is we squeeze in a
-> user regulatory hint in before the other older regulatory hints, and
-> this is fine.
+> commit 1a7123cdd9f49cf1c908fb2c16d26f279c88d8c9
+> Author: John W. Linville <linville@tuxdriver.com>
+> Date:   Thu Aug 5 14:39:31 2010 -0400
 > 
-> I cannot see any other cases here where we'd block a request from userspace.
+>     iwlwifi: disable aspm by default
+> 
+> we claim to disable ASPM (including L0S), but here we
+> enable L0S anyway. Perhaps this is the reason why we
+> still get reports about device disappear:
+> https://bugzilla.redhat.com/show_bug.cgi?id=642966
+> 
+> We also have code from:
+> 
+> commit e7cad69cdab4d6f0caadbcdd58b54214243ba98a
+> Author: Grumbach, Emmanuel <emmanuel.grumbach@intel.com>
+> Date:   Thu Nov 18 03:47:38 2010 -0800
+> 
+>     iwlagn: Enable PCI L1 ACTIVE state after uCode has been loaded
+> 
+> that seems to enable L1 ASPM as well.
+> 
+> I think these bits should be removed from iwlagn driver, or better
+> root cause of device disappear from bus should be identified and fixed
+> (not sure if this is iwlagn driver/firmware problem or bios or
+> pci driver problem, however) to allow to use ASPM.
+> 
 
-No not block a request. I'm just thinking that this taking things off
-the list temporarily might erroneously discard a crda response.
+I also like to remove this bits, but since we still not be able to root
+cause the PCI-e bus disappear problem, I will like to keep the code here
+for now.
 
-johannes
+One of the issue is we just can not re-produce the problem here, any
+help will be greatly appreciated.
+
+Thanks
+Wey
+
 
