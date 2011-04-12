@@ -1,97 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:10037 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155Ab1DOTpr (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.212.179]:53727 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757477Ab1DLSHC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 15:45:47 -0400
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
-	 <1302781431.21145.6.camel@dev.znau.edu.ua>
-	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-	 <4DA6E9BD.3090404@hauke-m.de>
-	 <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
-	 <1302786900.21965.52.camel@dev.znau.edu.ua>
-	 <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
-	 <1302892585.30441.12.camel@dev.znau.edu.ua>
-	 <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 15 Apr 2011 22:42:21 +0300
-Message-Id: <1302896541.30441.33.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Tue, 12 Apr 2011 14:07:02 -0400
+Received: by pxi2 with SMTP id 2so3655027pxi.10
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 11:07:02 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org, buytenh@wantstofly.org
+Cc: Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH] mwl8k: use traffic threshold to decide when to start ampdu
+Date: Tue, 12 Apr 2011 11:06:28 -0700
+Message-Id: <1302631588-8455-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, ampdu stream is created on the first qos packet to an
+HT sta. The overhead of setting up the BA session may not be
+justified if the outgoing packet rate is minimal (e.g., ping). So
+we only allow ampdu streams after seeing a critical number of
+packets in an arbitrary one-second interval.
 
-> W dniu 15 kwietnia 2011 20:36 użytkownik George Kashperko
-> <george@znau.edu.ua> napisał:
-> >> >> Arnd: I found you saying:
-> >> >> > I believe the one thing we really want from this driver is the bus
-> >> >> > scan code, which is not present in the amba bus implementation,
-> >> >> I explained how it works, I believe scanning (EPROM in this case) it
-> >> >> Broadcom specific, not really AMBA standard. How do you see it?
-> >> >>
-> >> > It might not Broadcom specific as EPROM core seems to be CoreLink one
-> >> > core and maybe is arm-developed. But it isn't documented publicly and we
-> >> > don't know yet if it is obligatory for all amba (or at least axi)
-> >> > interconnects or not.
-> >>
-> >> Maybe EPROM is not Broadcom specific, but I suspect the content we
-> >> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
-> >> manuf/id/rev/class we deal with. So I guess everything *we* (out
-> >> driver) read from EPROM is Bcm specific.
-> >>
-> >
-> > Played around amba registers on bcm4716. For all amba cores present
-> > (under all I mean broadcom ip core agents, oob router core, erom core,
-> > and other I-dont-know-what-for cores present at 0x18100000). All those
-> > feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
-> > PrimeCell PeripheralIDs:
-> > * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
-> > * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
-> > is this please);
-> > * vendor 0xBB, part_number 0x366 for EROM core;
-> >
-> > ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
-> > no evidence for that with google.
-> 
-> Yeah, as I suspected, everything except Broadcom specific cores
-> matches AMBA standards quite nicely. Still, I don't see anything in it
-> we could use for driver.
-> 
-> Let's wait for Russell and Arnd to comment.
+Based on work by Nishant Sarmukadam <nishants@marvell.com>
 
-Summarising the differences and similarities in broadcom core management
-for ssb and amba I think on another possibility on making bus-related
-things.
-SSB-attached cores were OCP-compliant ones. This resulted in OCP device
-identification with 16-bit vendor id, 12-bit core id with all IDs
-starting with 0x800. 4-bit revision code. Also seems this implied
-status/control registers.
-AMBA-attached broadcom cores seems to follow this reusing their
-OCP-compliant cores on axi.
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/mwl8k.c |   45 +++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 44 insertions(+), 1 deletions(-)
 
-So, we could start with introducing virtual "ocp" bus (which could be of
-some use for other vendors utilising ocp model) with additional
-library/module for broadcom-specific extensions (accounting for
-buscommon/buscore/etc.).
-
-On other hand just broadcom-specific bus looks like good alternative too
-but here I just fail to decide on relevant naming.
-
-Have nice day,
-George
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ae56d2f..ce2fd66 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -288,10 +288,17 @@ struct mwl8k_vif {
+ #define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
+ #define IEEE80211_KEY_CONF(_u8) ((struct ieee80211_key_conf *)(_u8))
+ 
++struct tx_traffic_info {
++	u32 start_time;
++	u32 pkts;
++};
++
++#define MWL8K_MAX_TID 8
+ struct mwl8k_sta {
+ 	/* Index into station database. Returned by UPDATE_STADB.  */
+ 	u8 peer_id;
+ 	u8 is_ampdu_allowed;
++	struct tx_traffic_info tx_stats[MWL8K_MAX_TID];
+ };
+ #define MWL8K_STA(_sta) ((struct mwl8k_sta *)&((_sta)->drv_priv))
+ 
+@@ -1754,6 +1761,41 @@ mwl8k_lookup_stream(struct ieee80211_hw *hw, u8 *addr, u8 tid)
+ 	return NULL;
+ }
+ 
++#define MWL8K_AMPDU_PACKET_THRESHOLD 64
++static inline bool mwl8k_ampdu_allowed(struct ieee80211_sta *sta, u8 tid)
++{
++	struct mwl8k_sta *sta_info = MWL8K_STA(sta);
++	struct tx_traffic_info *tx_stats;
++
++	BUG_ON(tid >= MWL8K_MAX_TID);
++	tx_stats = &sta_info->tx_stats[tid];
++
++	return sta_info->is_ampdu_allowed &&
++		tx_stats->pkts > MWL8K_AMPDU_PACKET_THRESHOLD;
++}
++
++static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
++{
++	struct mwl8k_sta *sta_info = MWL8K_STA(sta);
++	struct tx_traffic_info *tx_stats;
++
++	BUG_ON(tid >= MWL8K_MAX_TID);
++	tx_stats = &sta_info->tx_stats[tid];
++
++	if (tx_stats->start_time == 0)
++		tx_stats->start_time = jiffies;
++
++	/* reset the packet count after each second elapses.  If the number of
++	 * packets ever exceeds the ampdu_min_traffic threshold, we will allow
++	 * an ampdu stream to be started.
++	 */
++	if (jiffies - tx_stats->start_time > HZ) {
++		tx_stats->pkts = 0;
++		tx_stats->start_time = 0;
++	} else
++		tx_stats->pkts++;
++}
++
+ static void
+ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ {
+@@ -1840,6 +1882,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	    skb->protocol != cpu_to_be16(ETH_P_PAE) &&
+ 	    sta->ht_cap.ht_supported && priv->ap_fw) {
+ 		tid = qos & 0xf;
++		mwl8k_tx_count_packet(sta, tid);
+ 		spin_lock(&priv->stream_lock);
+ 		stream = mwl8k_lookup_stream(hw, sta->addr, tid);
+ 		if (stream != NULL) {
+@@ -1880,7 +1923,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 			 * prevents sequence number mismatch at the recepient
+ 			 * as described above.
+ 			 */
+-			if (MWL8K_STA(sta)->is_ampdu_allowed) {
++			if (mwl8k_ampdu_allowed(sta, tid)) {
+ 				stream = mwl8k_add_stream(hw, sta, tid);
+ 				if (stream != NULL)
+ 					start_ba_session = true;
+-- 
+1.7.1.1
 
