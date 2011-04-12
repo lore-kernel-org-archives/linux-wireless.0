@@ -1,71 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36723 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756962Ab1DHSAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 14:00:46 -0400
-Message-ID: <4D9F4D49.5060300@openwrt.org>
-Date: Fri, 08 Apr 2011 20:00:41 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:56858 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078Ab1DLFDV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 01:03:21 -0400
+Received: by vxi39 with SMTP id 39so4623488vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 22:03:20 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH 2.6.39 v2] ath9k_hw: fix stopping rx DMA during resets
-References: <4D9EFA5F.3040900@openwrt.org> <20110408171747.GA2550@tuxdriver.com>
-In-Reply-To: <20110408171747.GA2550@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1302284338.2031.21.camel@pimenta>
+References: <1301834245-16679-1-git-send-email-guy@wizery.com>
+	<1302284338.2031.21.camel@pimenta>
+Date: Tue, 12 Apr 2011 08:03:20 +0300
+Message-ID: <BANLkTimtZaGTcouKvKS+cEfU=G6c6b775w@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: use 2 spare TX blocks for GEM cipher
+From: Guy Eilam <guy@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-04-08 7:17 PM, John W. Linville wrote:
-> On Fri, Apr 08, 2011 at 02:06:55PM +0200, Felix Fietkau wrote:
->>  During PHY errors, the MAC can sometimes fail to enter an idle state on older
->>  hardware (before AR9380) after an rx stop has been requested.
+On Fri, Apr 8, 2011 at 8:38 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Sun, 2011-04-03 at 15:37 +0300, Guy Eilam wrote:
+>> Add tx_spare_blocks member to the wl1271 struct
+>> for more generic configuration of the amount
+>> of spare TX blocks that should be used.
+>> The default value is 1.
+>> in case GEM cipher is used by the STA, we need
+>> 2 spare TX blocks instead of just 1.
 >>
->>  This typically shows up in the kernel log with messages like these:
->>
->>  ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
->>  ------------[ cut here ]------------
->>  WARNING: at drivers/net/wireless/ath/ath9k/recv.c:504 ath_stoprecv+0xcc/0xf0 [ath9k]()
->>  Call Trace:
->>  [<8023f0e8>] dump_stack+0x8/0x34
->>  [<80075050>] warn_slowpath_common+0x78/0xa4
->>  [<80075094>] warn_slowpath_null+0x18/0x24
->>  [<80d66d60>] ath_stoprecv+0xcc/0xf0 [ath9k]
->>  [<80d642cc>] ath_set_channel+0xbc/0x270 [ath9k]
->>  [<80d65254>] ath_radio_disable+0x4a4/0x7fc [ath9k]
->>
->>  When this happens, the state that the MAC enters is easy to identify and
->>  does not result in bogus DMA traffic, however to ensure a working state
->>  after a channel change, the hardware should still be reset.
->>
->>  This patch adds detection for this specific MAC state, after which the above
->>  warnings completely disappear in my tests.
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  Cc: stable@kernel.org
->>  Cc: Kyungwan Nam<Kyungwan.Nam@Atheros.com>
->>
->>  ---
->>  v2: remove a redundant ath9k_hw_stopdmarecv call, print the MAC DMA state when the error still occurs
->>
->>   drivers/net/wireless/ath/ath9k/hw.c   |    9 ---------
->>   drivers/net/wireless/ath/ath9k/mac.c  |   25 ++++++++++++++++++++++---
->>   drivers/net/wireless/ath/ath9k/mac.h  |    2 +-
->>   drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
->>   4 files changed, 26 insertions(+), 16 deletions(-)
->>
->>  diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->>  index 1b5bd13..c8a2d0d 100644
->>  --- a/drivers/net/wireless/ath/ath9k/hw.c
->>  +++ b/drivers/net/wireless/ath/ath9k/hw.c
->>  @@ -1249,15 +1249,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
->>   	ah->txchainmask = common->tx_chainmask;
->>   	ah->rxchainmask = common->rx_chainmask;
->>   -	if ((common->bus_ops->ath_bus_type != ATH_USB)&&  !ah->chip_fullsleep) {
+>> Signed-off-by: Guy Eilam <guy@wizery.com>
+>> ---
 >
-> This patch seems a bit busted...?  I tried to fix it up manually but
-> the errors just keep coming...
-Hm, you're right. No idea what my email client did there. I'll resend...
+> Looks good, but I have a couple of comments.
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+>> index 85cb4da..f962e43 100644
+>> --- a/drivers/net/wireless/wl12xx/main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>
+> [..]
+>
+>> @@ -2039,6 +2043,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+>>                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+>>               };
+>>
+>> +             /*
+>> +              * A STA set to GEM cipher requires 2 tx spare blocks.
+>> +              * Return to default value when GEM cipher key is removed
+>> +              */
+>> +             if (key_type == KEY_GEM) {
+>> +                     if (action == KEY_ADD_OR_REPLACE)
+>> +                             wl->tx_spare_blocks = 2;
+>> +                     else
+>> +                             wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+>> +             }
+>> +
+>
+> This won't make a real difference in the code flow, but wouldn't it be
+> better to make it explicit that the "else" case is KEY_REMOVE? There is
+> also KEY_SET_ID, which is only used with WEP, so it doesn't matter now.
+> But I think it's more consistent to be clear about it.
+>
 
-- Felix
+I can add a more explicit "else if" case for KEY_REMOVE.
+
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+>> index db9e47e..2c79b6e 100644
+>> --- a/drivers/net/wireless/wl12xx/tx.c
+>> +++ b/drivers/net/wireless/wl12xx/tx.c
+>> @@ -135,12 +135,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+>>       u32 len;
+>>       u32 total_blocks;
+>>       int id, ret = -EBUSY;
+>> -     u32 spare_blocks;
+>> +     u32 spare_blocks = wl->tx_spare_blocks;
+>>
+>>       if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
+>>               spare_blocks = 2;
+>> -     else
+>> -             spare_blocks = 1;
+>
+> Do we still need the quirk now? Wouldn't it be nicer to change the
+> wl->tx_spare_blocks value directly instead?
+>
+
+We still need the quirk because if we change the tx_spare_blocks
+directly, then the
+we also need to have a tx_spare_blocks_previously member so that the KEY_GEM
+code will know the value to set in KEY_REMOVAL.
+Do you really think that it is better?
+
+>
+> --
+> Cheers,
+> Luca.
+>
+>
