@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:45397 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757094Ab1DFXmu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34273 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756357Ab1DLPXH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 19:42:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: fix cmd_skb headroom decreasing issue
-Date: Wed,  6 Apr 2011 16:46:55 -0700
-Message-Id: <1302133616-6595-1-git-send-email-bzhao@marvell.com>
+	Tue, 12 Apr 2011 11:23:07 -0400
+Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: Antonio Ospite <ospite@studenti.unina.it>,
+	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <20110412151554.GA20710@opensource.wolfsonmicro.com>
+References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
+	 <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
+	 <1302608488.3639.15.camel@jlt3.sipsolutions.net>
+	 <1302608642.3639.17.camel@jlt3.sipsolutions.net>
+	 <20110412151554.GA20710@opensource.wolfsonmicro.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Apr 2011 17:23:01 +0200
+Message-ID: <1302621781.3639.18.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before calling host_to_card() to send the cmd to firmware,
-we use skb_push() to add 4 bytes SDIO interface header at
-the start of the data buffer. Since cmd_skb data structure
-will be re-used at a later time, we need to restore its
-headroom by removing the 4 bytes header.
+On Tue, 2011-04-12 at 08:15 -0700, Mark Brown wrote:
+> On Tue, Apr 12, 2011 at 01:44:02PM +0200, Johannes Berg wrote:
+> > On Tue, 2011-04-12 at 13:41 +0200, Johannes Berg wrote:
+> 
+> > > > +	if (pdata->name == NULL || pdata->type == 0) {
+> > > > +		dev_err(&pdev->dev, "invalid name or type in platform data\n");
+> > > > +		return -EINVAL;
+> > > > +	}
+> 
+> > > > +	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
+> 
+> > > Wasn't that supposed to use pdata->supply? Actually, there's no member
+> > > "supply" in the struct?
+> 
+> No, if you're passing supply names through platform data something has
+> gone wrong - that's a big no no.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Ok. The comment seems a little wrong still though, maybe leftover bits
+from an older version?
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index a9aeb31..8676480 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -206,6 +206,8 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 					     cmd_node->cmd_skb->data,
- 					     cmd_node->cmd_skb->len, NULL);
- 
-+	skb_pull(cmd_node->cmd_skb, INTF_HEADER_LEN);
-+
- 	if (ret == -1) {
- 		dev_err(adapter->dev, "DNLD_CMD: host to card failed\n");
- 		if (wait_queue)
--- 
-1.7.0.2
+> > Oh wait, I think I just misunderstood how this works. But if the name is
+> > "vrfkill" how does that really work with multiple instances?
+> 
+> That's what the struct device is there for.  The names are mapped into
+> physical regulators relative to the device.
+
+Oh ok, makes sense, thanks for the clarification.
+
+johannes
 
