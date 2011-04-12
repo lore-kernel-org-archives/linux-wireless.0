@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:39230 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755983Ab1D2VRM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 17:17:12 -0400
-Received: by eya28 with SMTP id 28so1714575eya.21
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 14:17:09 -0700 (PDT)
-Subject: Re: [PATCH 01/10] wl12xx: add BT-coexistance for AP
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1304107365.12586.157.camel@cumari>
-References: <1303125329-27214-1-git-send-email-arik@wizery.com>
-	 <1304107365.12586.157.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 30 Apr 2011 00:17:06 +0300
-Message-ID: <1304111826.12586.203.camel@cumari> (sfid-20110429_231715_217180_547BA55E)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:38923 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754455Ab1DLNSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:18:38 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:18:12 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 15/22] ath9k_hw: Configure tuning capacitance value for AR9340 as well
+Date: Tue, 12 Apr 2011 18:47:49 +0530
+Message-ID: <1302614273-2063-9-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-29 at 23:02 +0300, Luciano Coelho wrote:
-> On Mon, 2011-04-18 at 14:15 +0300, Arik Nemtsov wrote:
-> > Initialize AP specific BT coexitance parameters to default values and
-> > enable them in AP mode.
-> > 
-> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> > ---
-> 
-> Applied the whole series, thanks Arik!
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Ooops, these didn't go in yet.  There were some conflicts and I have
-mistakenly kept them out.  I'll merge them and add them soon.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 6e5baa7..262fb62 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3755,7 +3755,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	if (!AR_SREV_9340(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+-	if (AR_SREV_9485(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
+ }
+ 
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
