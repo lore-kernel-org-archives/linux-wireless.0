@@ -1,58 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42514 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753505Ab1DXT33 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:43851 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755168Ab1DLNT5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 15:29:29 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303670920.22777.10.camel@wwguy-ubuntu>
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA)  <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-	 <1303670920.22777.10.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 21:29:20 +0200
-Message-ID: <1303673360.3603.7.camel@jlt3.sipsolutions.net> (sfid-20110424_212935_595413_358747C9)
-Mime-Version: 1.0
+	Tue, 12 Apr 2011 09:19:57 -0400
+Received: by qyk7 with SMTP id 7so1970830qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:19:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DA43D3F.60204@gmail.com>
+References: <4DA1E4ED.6080804@gmail.com>
+	<20110411175810.GB2511@tuxdriver.com>
+	<4DA43D3F.60204@gmail.com>
+Date: Tue, 12 Apr 2011 15:19:56 +0200
+Message-ID: <BANLkTi=5yMj++U06oMuW1Hihmf-nKiPEWA@mail.gmail.com>
+Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 11:48 -0700, wwguy wrote:
-> On Sun, 2011-04-24 at 11:38 -0700, Johannes Berg wrote:
-> > On Sun, 2011-04-24 at 10:15 -0700, Wey-Yi Guy wrote:
-> > > The current led blink trigger implementaion assume on/off time are equal,
-> > > it works but not have any flexbile for different blink pattern.
-> > > 
-> > > Add "ratio" parameter in the trigger table and give driver more control
-> > > on how the on/off blink time behavior should be.
-> > 
-> > I considered this when writing the original code, but then decided that
-> > nobody needed to have unequal on/off times. Why would we need it now?
-> > (FWIW, blink = 0 is always on already, no?)
-> > 
-> But from what I read for iwlwifi, to turn LED_SOLID_ON, on = 11, off =
-> 0. Did I read it wrong.
+On Tue, Apr 12, 2011 at 1:53 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> On 04/11/2011 07:58 PM, John W. Linville wrote:
+>
+>> On Sun, Apr 10, 2011 at 07:12:13PM +0200, Xose Vazquez Perez wrote:
+>>>
+>>> Larry Finger wrote:
+>>>
+>>>> There are three USB IDs supported by staging/rt2870sta that are not in
+>>>> the
+>>>> mainline driver rt2800usb.
+>>>>
+>>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>>> Cc: Stable<stable@vger.kernel.org>
+>>>> ---
+>>>>
+>>>> Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> ===================================================================
+>>>> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
+>>>> @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
+>>>>        { USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        { USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        { USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> +       { USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> +       { USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        /* Draytek */
+>>>>        { USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        /* Edimax */
+>>>> @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
+>>>>        /* Planex */
+>>>>        { USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        { USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>> +       { USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        /* Quanta */
+>>>>        { USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
+>>>>        /* Ralink */
+>>>
+>>> NACK, unless they also be in the windows driver.
+>>> They were eliminated in recent versions of ralink LiNUX drivers.
+>>
+>> OK, I already had this merged since Ivo and Gertjan had ACKed it.
+>>
+>> I need to rebase wireless-2.6 anyway, so I'll drop this one too
+>> for now.  Please come to a consensus on whether or not these should
+>> be included and let me know...
+>
+> I did a search of 0x2001,0x3c09 0x2001,0x3c0a and 0x2019,0xed14 in
+> latest windows drivers:
+> USB (RT2870 /RT2770 /RT307X /RT2070 /RT357X /RT3370 /RT8070 /RT5370)
+> 12/31/2010 3.1.8.0
+> IS_AP_STA_RT2870_D-3.1.8.0_VA-3.1.8.0_W7-3.1.8.0_RU-4.0.4.0_AU-4.0.4.0_123110_1.5.11.0WP_Free.exe
+> and I didn't find any of them
+>
+> Also I checked latest linux drivers:
+> 2010_0709_RT2870_Linux_STA_v2.4.0.1.tar.bz2
+> 2010_1215_RT3572_Linux_STA_v2.5.0.0.DPO.bz2
+> 2011_0107_RT3070_RT3370_Linux_STA_v2.5.0.1_DPO.tar.bz2
+> and there is no vestige of any of them.
+>
+> NACK.
+>
 
-Ah, well, mac80211 has:
+OK. I hadn't imagined that Ralink would remove hardware ID's from
+later versions of their drivers.
+If these devices are not supported anymore by any of the later Ralink
+drivers (neither Linux drivers nor Windows drivers),
+as seems to be the case, then I have to agree that there is no point
+in adding these USB IDs to
+rt2800usb.
 
-        /* default to just solid on */
-        on = 1;
-        off = 0;
-
-So if you want "solid on" by default for 0 tpt, you simply don't specify
-the -1 value, ie. just remove the -1 line from the table completely.
-IOW, instead of the patch you posted before, a simple patch just
-removing the first line from the table should be sufficient.
-
-> Yes, I agree as today, "on" == "off", just thinking we should make more
-> flexible.
-
-I just don't see the point since we don't really need it.
-
-johannes
-
+---
+Gertjan
