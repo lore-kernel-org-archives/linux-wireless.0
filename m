@@ -1,98 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:33686 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750829Ab1DUTew (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 15:34:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 21 Apr 2011 12:34:27 -0700
-Subject: RE: [PATCH] cfg80211: module_param to disable HT40 in 2.4GHz band
-Message-ID: <477F20668A386D41ADCC57781B1F704307FAAC2C53@SC-VEXCH1.marvell.com>
-References: <1303344002-4542-1-git-send-email-bzhao@marvell.com>
- <1303368617.3597.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1303368617.3597.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.atheros.com ([12.19.149.2]:20759 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757067Ab1DLUZ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 16:25:59 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 13:25:34 -0700
+Date: Tue, 12 Apr 2011 13:28:53 -0700
+From: Vipin Mehta <vmehta@atheros.com>
+To: Naveen Singh <nsingh@atheros.cm>
+CC: "greg@kroah.com" <greg@kroah.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Vipin Mehta <Vipin.Mehta@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Naveen Singh <Naveen.Singh@Atheros.com>
+Subject: Re: [PATCH 0/5] staging:ath6kl:patches for supporting 2.1.1 and
+ bug fixes
+Message-ID: <20110412202853.GA20598@vmehta-desktop>
+References: <1302148341-1783-1-git-send-email-nsingh@atheros.cm>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1302148341-1783-1-git-send-email-nsingh@atheros.cm>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBJbiBzZW5kX3dpcGh5PyBZb3UncmUga2lkZGluZywgcmlnaHQ/IE5BQ0suIFBsZWFzZSB0cnkg
-dG8gdW5kZXJzdGFuZCBob3cNCj4gdGhlIGNvZGUgaW4gbWFjODAyMTEgd29ya2VkLg0KDQpIaSBK
-b2hhbm5lcywNCg0KU29ycnksIG15IGJhZC4gQ291bGQgeW91IHBsZWFzZSByZXZpZXcgdGhlIHYy
-IGJlbG93Pw0KDQotLS0NCkZyb20gMDUwMmJiYjNhZGI1YjdmYmY3M2ZkYzQwMmFmY2JkNGFkMThj
-ZjQyYSBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCkZyb206IEFtaXRrdW1hciBLYXJ3YXIgPGFr
-YXJ3YXJAbWFydmVsbC5jb20+DQpEYXRlOiBUaHUsIDIxIEFwciAyMDExIDEyOjIwOjA5IC0wNzAw
-DQpTdWJqZWN0OiBbUEFUQ0ggdjJdIGNmZzgwMjExOiBtb2R1bGVfcGFyYW0gdG8gZGlzYWJsZSBI
-VDQwIGluIDIuNEdIeiBiYW5kDQoNCkN1cnJlbnRseSBtYWM4MDIxMSB1c2VzIGllZWU4MDIxMV9k
-aXNhYmxlXzQwbWh6XzI0Z2h6IG1vZHVsZQ0KcGFyYW1ldGVyIHRvIGFsbG93IGRpc2FibGluZyA0
-ME1IeiBvcGVyYXRpb24gaW4gdGhlIDIuNEdIeiBiYW5kLg0KTW92ZSB0aGlzIGhhbmRsaW5nIGZy
-b20gbWFjODAyMTEgdG8gY2ZnODAyMTEgc28gdGhhdCB0aGUgZmVhdHVyZQ0Kd2lsbCBiZSBtb3Jl
-IGdlbmVyaWMuDQoNClNpZ25lZC1vZmYtYnk6IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFy
-dmVsbC5jb20+DQpTaWduZWQtb2ZmLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPg0K
-LS0tDQp2MjogdGhlIGNoZWNrIGZvciBkaXNhYmxpbmcgSFQ0MCB3YXMgd3JvbmcgaW4gdjEuIHYy
-IGZpeGVzIHRoYXQuDQogICAgTm8gbmVlZCB0byBleHBvcnQgdGhlIHN5bWJvbCBhcyBzYmFuZC0+
-aHRfY2FwIGFscmVhZHkgaGFzIGl0Lg0KdjE6IG1vdmUgZGlzYWJsZV80MG1oel8yNGdoeiBtb2R1
-bGUgcGFyYW1ldGVyIGZyb20gbWFjODAyMTEgdG8gY2ZnODAyMTENCg0KIG5ldC9tYWM4MDIxMS9t
-YWluLmMgfCAgIDE4IC0tLS0tLS0tLS0tLS0tLS0tLQ0KIG5ldC93aXJlbGVzcy9jb3JlLmMgfCAg
-IDE3ICsrKysrKysrKysrKysrKysrDQogMiBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCsp
-LCAxOCBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tYWluLmMgYi9u
-ZXQvbWFjODAyMTEvbWFpbi5jDQppbmRleCAwYWIyYThkLi42MTg3NzY2IDEwMDY0NA0KLS0tIGEv
-bmV0L21hYzgwMjExL21haW4uYw0KKysrIGIvbmV0L21hYzgwMjExL21haW4uYw0KQEAgLTMzLDEy
-ICszMyw2IEBADQogI2luY2x1ZGUgImNmZy5oIg0KICNpbmNsdWRlICJkZWJ1Z2ZzLmgiDQoNCi0N
-Ci1zdGF0aWMgYm9vbCBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCi1tb2R1bGVfcGFy
-YW0oaWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosIGJvb2wsIDA2NDQpOw0KLU1PRFVMRV9Q
-QVJNX0RFU0MoaWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosDQotICAgICAgICAgICAgICAg
-ICJEaXNhYmxlIDQwTUh6IHN1cHBvcnQgaW4gdGhlIDIuNEdIeiBiYW5kIik7DQotDQogc3RhdGlj
-IHN0cnVjdCBsb2NrX2NsYXNzX2tleSBpZWVlODAyMTFfcnhfc2tiX3F1ZXVlX2NsYXNzOw0KDQog
-dm9pZCBpZWVlODAyMTFfY29uZmlndXJlX2ZpbHRlcihzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICps
-b2NhbCkNCkBAIC03MjgsMTggKzcyMiw2IEBAIGludCBpZWVlODAyMTFfcmVnaXN0ZXJfaHcoc3Ry
-dWN0IGllZWU4MDIxMV9odyAqaHcpDQogICAgICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAg
-IGNoYW5uZWxzICs9IHNiYW5kLT5uX2NoYW5uZWxzOw0KDQotICAgICAgICAgICAgICAgLyoNCi0g
-ICAgICAgICAgICAgICAgKiBTaW5jZSBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiBpcyBn
-bG9iYWwsIHdlIGNhbg0KLSAgICAgICAgICAgICAgICAqIG1vZGlmeSB0aGUgc2JhbmQncyBodCBk
-YXRhIGV2ZW4gaWYgdGhlIGRyaXZlciB1c2VzIGENCi0gICAgICAgICAgICAgICAgKiBnbG9iYWwg
-c3RydWN0dXJlIGZvciB0aGF0Lg0KLSAgICAgICAgICAgICAgICAqLw0KLSAgICAgICAgICAgICAg
-IGlmIChpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KLSAgICAgICAgICAgICAgICAg
-ICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCi0gICAgICAgICAgICAgICAgICAgc2Jh
-bmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQpIHsNCi0gICAgICAgICAgICAgICAgICAgICAgIHNiYW5k
-LT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsNCi0gICAg
-ICAgICAgICAgICAgICAgICAgIHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQ
-X1NHSV80MDsNCi0gICAgICAgICAgICAgICB9DQotDQogICAgICAgICAgICAgICAgaWYgKG1heF9i
-aXRyYXRlcyA8IHNiYW5kLT5uX2JpdHJhdGVzKQ0KICAgICAgICAgICAgICAgICAgICAgICAgbWF4
-X2JpdHJhdGVzID0gc2JhbmQtPm5fYml0cmF0ZXM7DQogICAgICAgICAgICAgICAgc3VwcF9odCA9
-IHN1cHBfaHQgfHwgc2JhbmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQ7DQpkaWZmIC0tZ2l0IGEvbmV0
-L3dpcmVsZXNzL2NvcmUuYyBiL25ldC93aXJlbGVzcy9jb3JlLmMNCmluZGV4IGZlMDFkZTIuLmJi
-ZjFmYTEgMTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3MvY29yZS5jDQorKysgYi9uZXQvd2lyZWxl
-c3MvY29yZS5jDQpAQCAtNDYsNiArNDYsMTEgQEAgc3RhdGljIHN0cnVjdCBkZW50cnkgKmllZWU4
-MDIxMV9kZWJ1Z2ZzX2RpcjsNCiAvKiBmb3IgdGhlIGNsZWFudXAsIHNjYW4gYW5kIGV2ZW50IHdv
-cmtzICovDQogc3RydWN0IHdvcmtxdWV1ZV9zdHJ1Y3QgKmNmZzgwMjExX3dxOw0KDQorc3RhdGlj
-IGJvb2wgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCittb2R1bGVfcGFyYW0oY2ZnODAy
-MTFfZGlzYWJsZV80MG1oel8yNGdoeiwgYm9vbCwgMDY0NCk7DQorTU9EVUxFX1BBUk1fREVTQyhj
-Zmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KKyAgICAgICAgICAgICAgICAiRGlzYWJsZSA0
-ME1IeiBzdXBwb3J0IGluIHRoZSAyLjRHSHogYmFuZCIpOw0KKw0KIC8qIHJlcXVpcmVzIGNmZzgw
-MjExX211dGV4IHRvIGJlIGhlbGQhICovDQogc3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2
-aWNlICpjZmc4MDIxMV9yZGV2X2J5X3dpcGh5X2lkeChpbnQgd2lwaHlfaWR4KQ0KIHsNCkBAIC00
-NTEsNiArNDU2LDE4IEBAIGludCB3aXBoeV9yZWdpc3RlcihzdHJ1Y3Qgd2lwaHkgKndpcGh5KQ0K
-ICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQoNCiAgICAgICAgICAgICAg
-ICAvKg0KKyAgICAgICAgICAgICAgICAqIFNpbmNlIGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRn
-aHogaXMgZ2xvYmFsLCB3ZSBjYW4NCisgICAgICAgICAgICAgICAgKiBtb2RpZnkgdGhlIHNiYW5k
-J3MgaHQgZGF0YSBldmVuIGlmIHRoZSBkcml2ZXIgdXNlcyBhDQorICAgICAgICAgICAgICAgICog
-Z2xvYmFsIHN0cnVjdHVyZSBmb3IgdGhhdC4NCisgICAgICAgICAgICAgICAgKi8NCisgICAgICAg
-ICAgICAgICBpZiAoY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KKyAgICAgICAgICAg
-ICAgICAgICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCisgICAgICAgICAgICAgICAg
-ICAgc2JhbmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQpIHsNCisgICAgICAgICAgICAgICAgICAgICAg
-IHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsN
-CisgICAgICAgICAgICAgICAgICAgICAgIHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFf
-SFRfQ0FQX1NHSV80MDsNCisgICAgICAgICAgICAgICB9DQorDQorICAgICAgICAgICAgICAgLyoN
-CiAgICAgICAgICAgICAgICAgKiBTaW5jZSB3ZSB1c2UgYSB1MzIgZm9yIHJhdGUgYml0bWFwcyBp
-bg0KICAgICAgICAgICAgICAgICAqIGllZWU4MDIxMV9nZXRfcmVzcG9uc2VfcmF0ZSwgd2UgY2Fu
-bm90DQogICAgICAgICAgICAgICAgICogaGF2ZSBtb3JlIHRoYW4gMzIgbGVnYWN5IHJhdGVzLg0K
-LS0NCjEuNy4wLjINCg0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
+On Wed, Apr 06, 2011 at 08:52:16PM -0700, Naveen Singh wrote:
+> From: Naveen Singh <nsingh@atheros.com>
+> 
+> Greg,
+> 
+> These are set of 5 patches for ath6kl. These patches are related
+> to the correct functionality of driver as well as providing the
+> support of 2.1.1 silicon in the upstream driver.
+> 
+> I have tested each and every patch.With each and every patch I was
+> able to compile the kernel, load the kernel, and do a basic connectivity
+> test with an external AP.These patches are tested on wireless-testing
+> as compared to staging-next because top of staging-next compilation
+> was broken. To do this I applied all the patches related to ath6k from 
+> staging-next tree to the wireless-testing tree and then I applied these
+> patches.
+> 
+> These should apply cleanly to staging-next tree as well. Let me know if
+> you have any issues.
+> 
+> Naveen Singh (5):
+>   staging:at6kl:Support for V2.1.1 Silicon
+>   staging:ath6kl: Introduction of new CMD/EVT ID
+>   staging:ath6kl:DEV ID in the DATA/CMD Packet
+>   staging:ath6kl:Scan operation while disconnect
+>   staging:ath6kl:cfg ops for power management
+> 
+>  drivers/staging/ath6kl/include/common/targaddrs.h  |  224 +++++++++++++++++---
+>  drivers/staging/ath6kl/include/common/wmi.h        |  117 +++++++++--
+>  drivers/staging/ath6kl/os/linux/ar6000_drv.c       |  125 +++++++++---
+>  drivers/staging/ath6kl/os/linux/cfg80211.c         |    8 +-
+>  .../staging/ath6kl/os/linux/include/ar6000_drv.h   |   57 +++++-
+>  drivers/staging/ath6kl/wmi/wmi.c                   |   23 +--
+>  6 files changed, 446 insertions(+), 108 deletions(-)
+> 
+
+Greg,
+  Did you get a chance to review these patches? Pls provide us your feedback.
+
+Vipin
