@@ -1,85 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44271 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755092Ab1DJQcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 12:32:24 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH 2/7] ath5k: remove ts_rate from ath5k_tx_status
-Date: Sun, 10 Apr 2011 18:32:14 +0200
-Message-Id: <1302453139-11437-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
+Received: from mail.academy.zt.ua ([82.207.120.245]:21758 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757198Ab1DLUjm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 16:39:42 -0400
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: balbi@ti.com, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+	 <1302634039.14216.10.camel@dev.znau.edu.ua>
+	 <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+	 <1302635550.14216.21.camel@dev.znau.edu.ua>
+	 <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+	 <4DA4AC4B.90409@hauke-m.de>
+	 <BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
+	 <BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 12 Apr 2011 23:35:46 +0300
+Message-Id: <1302640546.14216.65.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is no longer necessary for preparing mac80211 tx status
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    1 -
- drivers/net/wireless/ath/ath5k/desc.c  |   13 -------------
- 2 files changed, 0 insertions(+), 14 deletions(-)
+> 2011/4/12 Rafał Miłecki <zajec5@gmail.com>:
+> > 2011/4/12 Hauke Mehrtens <hauke@hauke-m.de>:
+> >> Hi Rafał,
+> >>
+> >> On 04/12/2011 09:27 PM, Rafał Miłecki wrote:
+> >>> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+> >>>>
+> >>>>> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+> >>>>>>
+> >>>>>>> Hi,
+> >>>>>>>
+> >>>>>>> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
+> >>>>>>>> Cc: Michael Büsch <mb@bu3sch.de>
+> >>>>>>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> >>>>>>>> Cc: George Kashperko <george@znau.edu.ua>
+> >>>>>>>> Cc: Arend van Spriel <arend@broadcom.com>
+> >>>>>>>> Cc: linux-arm-kernel@lists.infradead.org
+> >>>>>>>> Cc: Russell King <rmk@arm.linux.org.uk>
+> >>>>>>>> Cc: Arnd Bergmann <arnd@arndb.de>
+> >>>>>>>> Cc: Andy Botting <andy@andybotting.com>
+> >>>>>>>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+> >>>>>>>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+> >>>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> >>>>>>>> ---
+> >>>>>>>> V2: Rename to axi
+> >>>>>>>>     Use DEFINE_PCI_DEVICE_TABLE in bridge
+> >>>>>>>>     Make use of pr_fmt and pr_*
+> >>>>>>>>     Store core class
+> >>>>>>>>     Rename bridge to not b43 specific
+> >>>>>>>>     Replace magic 0x1000 with BCMAI_CORE_SIZE
+> >>>>>>>>     Remove some old "ssb" names and defines
+> >>>>>>>>     Move BCMAI_ADDR_BASE def
+> >>>>>>>>     Add drvdata field
+> >>>>>>>> V3: Fix reloading (kfree issue)
+> >>>>>>>>     Add 14e4:0x4331
+> >>>>>>>>     Fix non-initialized struct issue
+> >>>>>>>>     Drop useless inline functions wrappers for pci core drv
+> >>>>>>>>     Proper pr_* usage
+> >>>>>>>> V3.1: Include forgotten changes (pr_* and include related)
+> >>>>>>>>     Explain why we dare to implement empty release function
+> >>>>>>>
+> >>>>>>> I'm not sure we need this. If you have an IP Core which talks AXI and
+> >>>>>>> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
+> >>>>>>> that IP Core, so you should go and let the kernel know about that. See
+> >>>>>>> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
+> >>>>>>>
+> >>>>>>> Besides, if you introduce this bus layer, it'll be more difficult for
+> >>>>>>> other licensees of the same core to re-use the same driver, since it's
+> >>>>>>> now talking a PCI emulated on top of AXI. The same can be achieved with
+> >>>>>>> the platform_bus which is more widely used, specially on ARM SoCs.
+> >>>>>>>
+> >>>>>>> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
+> >>>>>>> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
+> >>>>>>>
+> >>>>>>
+> >>>>>> Already noticed earlier that AXI isnt really good name for
+> >>>>>> Broadcom-specific axi bus customization. As of tech docs available from
+> >>>>>> arm, corelink AXI cores use own identification registers which feature
+> >>>>>> different format and layout comparing to that we use for Broadcom cores.
+> >>>>>>
+> >>>>>> Maybe there is something "standartized" by the DMP specs? If so I'm
+> >>>>>> curious if that DMP is obligatory for every axi bus ?
+> >>>>>>
+> >>>>>> Naming particular Broadcom's implementation just axi limits other
+> >>>>>> licensees in reusing axi bus name/code or will require hacks/workarounds
+> >>>>>> from them to fit Broadcom-like core scanning/identificating techniques.
+> >>>>>> You use bus named AXI to group and manage Broadcom cores, while never
+> >>>>>> even publish device records for native axi cores Broadcom use to talk to
+> >>>>>> the interconnect through. Yet again, something like bcmb/bcmai looks
+> >>>>>> like better name for this bus.
+> >>>>>
+> >>>>> I don't know, I'm really tired of this. Earlier I was told to not use
+> >>>>> anything like bcmai, because it is not Broadcom specific. Now it seems
+> >>>>> (and I'm afraid I agree) there is quite a lot of Broadcom specific
+> >>>>> stuff.
+> >>>> Well, _if_ that "magic" EROM core layout is arm's "standard" for axi
+> >>>> ports identification _and_ _if_ that EROM core is obligatory axi
+> >>>> component then sure axi name is good one as soon as you consider
+> >>>> registering master port (agent) cores with device subsystem as well.
+> >>>> I have no clue here about how resolve those _if_'s, hopefully Broadcom
+> >>>> guys can enlighten us on the subject.
+> >>>
+> >>> Do you think that in my code only scanning is Broadcom specific? In
+> >>> such a case we could keep it "axi", and just s/scan/bcmscan/. This is
+> >>> only correct choice if the rest (addressing, core enabling, host
+> >>> management) is AXI specific.
+> >>
+> >> The specification for the AMBA AXI Interface is available for free
+> >> download from ARM if you register to their website and accept their license:
+> >> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.set.amba/index.html
+> >> I got it from there without any problems and the license does not look
+> >> too bad for me, by having a quick look at it. I do not know if it will
+> >> help you in any way or if it is completely unrelated.
+> >>
+> >> Why is the existing support for the amba bus not extended or used in any
+> >> way for this? It exists for some time in drivers/amba/. There already
+> >> was a discussion about this in https://lkml.org/lkml/2011/3/30/186 , but
+> >> with no result as I see.
+> >
+> > I can see exactly nothing I could use from whatever driver/amba is.
+> > What does it do from things we need? How do you imagine using that
+> > with out (non)Broadcom buses?
+> 
+> 1) I checked for amba_device_register:
+> http://lxr.free-electrons.com/ident?i=amba_device_register
+> and do not understand that. There are a lot of drivers registering
+> some pre-defined devices. I could not find any driver scanning for
+> amba devices and registering them. Are we going to be the first driver
+> registering devices dynamically or do I get this totally wrong
+> 
+> 2) amba_id contains only some interesting "id". How can we relate this
+> with our core id/rev/manuf/class?
+I guess that id corresponds to corelink-compatible peripheral/component
+4x8bit registers' layout.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 4bb381c..aa588a0 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -452,7 +452,6 @@ struct ath5k_tx_status {
- 	u16	ts_seqnum;
- 	u16	ts_tstamp;
- 	u8	ts_status;
--	u8	ts_rate[4];
- 	u8	ts_retry[4];
- 	u8	ts_final_idx;
- 	s8	ts_rssi;
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index 0a8a9ef..990a3b4 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -375,8 +375,6 @@ static int ath5k_hw_proc_2word_tx_status(struct ath5k_hw *ah,
- 		AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH);
- 	ts->ts_antenna = 1;
- 	ts->ts_status = 0;
--	ts->ts_rate[0] = AR5K_REG_MS(tx_ctl->tx_control_0,
--		AR5K_2W_TX_DESC_CTL0_XMIT_RATE);
- 	ts->ts_retry[0] = ts->ts_longretry;
- 	ts->ts_final_idx = 0;
- 
-@@ -439,32 +437,21 @@ static int ath5k_hw_proc_4word_tx_status(struct ath5k_hw *ah,
- 	ts->ts_retry[ts->ts_final_idx] = ts->ts_longretry;
- 	switch (ts->ts_final_idx) {
- 	case 3:
--		ts->ts_rate[3] = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
--
- 		ts->ts_retry[2] = AR5K_REG_MS(tx_ctl->tx_control_2,
- 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
- 		ts->ts_longretry += ts->ts_retry[2];
- 		/* fall through */
- 	case 2:
--		ts->ts_rate[2] = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
--
- 		ts->ts_retry[1] = AR5K_REG_MS(tx_ctl->tx_control_2,
- 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
- 		ts->ts_longretry += ts->ts_retry[1];
- 		/* fall through */
- 	case 1:
--		ts->ts_rate[1] = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE1);
--
- 		ts->ts_retry[0] = AR5K_REG_MS(tx_ctl->tx_control_2,
- 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
- 		ts->ts_longretry += ts->ts_retry[0];
- 		/* fall through */
- 	case 0:
--		ts->ts_rate[0] = tx_ctl->tx_control_3 &
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
- 		break;
- 	}
- 
--- 
-1.7.3.2
+> 3) There is no code for managing AMBA cores (enable, checking status,
+> disabling, resetting)...
+These could be of interest for DMP core driver if someone decide to
+publish agent cores on amba_bustype.
+
+> 
+> That way I see really low (or not at all) relation between out
+> (not)Broadcom bus and present AMBA bus.
+> 
+Agree.
+
+Have nice day,
+
 
