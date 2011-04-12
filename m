@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42948 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807Ab1DFMjC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 08:39:02 -0400
-Received: by fxm17 with SMTP id 17so950396fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 05:39:00 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Kimmo Huoso <kimmo.huoso@saunalahti.fi>
-Subject: Re: 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB Adapter(rev.A) [Atheros AR9001U-(2)NG] Invalid misc and Tx excessive retries
-Date: Wed, 6 Apr 2011 14:38:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4D9B077E.3090106@saunalahti.fi>
-In-Reply-To: <4D9B077E.3090106@saunalahti.fi>
+Received: from nbd.name ([46.4.11.11]:36728 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755717Ab1DLNui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:50:38 -0400
+Message-ID: <4DA458A8.5030205@openwrt.org>
+Date: Tue, 12 Apr 2011 15:50:32 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104061438.43678.chunkeey@googlemail.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 03/22] ath9k_hw: Introduce a bool for 25mhz clock and
+ populate it
+References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 April 2011 14:13:50 Kimmo Huoso wrote:
-> Im having vast amount of  Invalid misc, Tx excessive retries. my 
-> hardware is 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB 
-> Adapter(rev.A) [Atheros AR9001U-(2)NG].
-There are two "rev A", hope you got the second revision.
+On 2011-04-12 3:17 PM, Vasanthakumar Thiagarajan wrote:
+> pll configuration will differ for 25mhz clock.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan<vasanth@atheros.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/hw.c |   11 +++++++++++
+>   drivers/net/wireless/ath/ath9k/hw.h |    2 ++
+>   2 files changed, 13 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index d98b4c6..8b90b9c 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -481,6 +481,9 @@ static void ath9k_hw_attach_ops(struct ath_hw *ah)
+>   /* Called for all hardware families */
+>   static int __ath9k_hw_init(struct ath_hw *ah)
+>   {
+> +#define AR9340_SOC_SEL_25M_40M 0xB80600B0
+> +#define AR9340_REF_CLK_40 (1<<  4) /* 0 - 25MHz   1 - 40 MHz */
+> +
+>   	struct ath_common *common = ath9k_hw_common(ah);
+>   	int r = 0;
+>
+> @@ -508,6 +511,14 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+>
+>   	ath9k_hw_attach_ops(ah);
+>
+> +	if (AR_SREV_9340(ah)) {
+> +		if (*((volatile u32 *) AR9340_SOC_SEL_25M_40M)&
+> +		    AR9340_REF_CLK_40)
+> +			ah->is_clk_25mhz = false;
+> +		else
+> +			ah->is_clk_25mhz = true;
+> +	}
+> +
+>   	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
+>   		ath_err(common, "Couldn't wakeup chip\n");
+>   		return -EIO;
+I think this flag should be passed down from the arch code through 
+platform data instead. Also, dereferencing volatile u32 pointers for 
+reading registers is somewhat hackish, readl or ioread32 would be better.
 
-But back to the topic: these softmac numbers/statistics are bogus...
-It might sound a bit weird, but in fact they are not high enough.
-
-To make a fair comparison you would have to check the hardware
-counters [RX_PHY_MISC_ERROR & friends] instead. carl9170 already
-has a debugfs interface for this reason [hw_[r|t]x_tally], but
-ar9170usb lacks this feature.
-
-Regards,
-	Chr
+- Felix
