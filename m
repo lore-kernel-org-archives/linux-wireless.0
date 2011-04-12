@@ -1,83 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:35102 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167Ab1DSGJC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 02:09:02 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 1/4] mwl8k: Do not stop tx queues
-Date: Tue, 19 Apr 2011 11:12:49 +0530
-Message-Id: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:38918 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753756Ab1DLNSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 09:18:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:46 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/22] ath9k_hw: Don't do ani initialization for AR9340
+Date: Tue, 12 Apr 2011 18:47:44 +0530
+Message-ID: <1302614273-2063-4-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pradeep Nemavat <pnemavat@marvell.com>
-
-This is in preparation to support life time expiry of packets in the
-hardware to avoid head-of-line blocking where a slow client can
-hog a tx queue and affect the traffic to a faster client from the same
-queue. Time stamp the packets in driver to allow dropping them in the
-hardware if they are queued for more than 500ms.
-
-Since queues are not being stopped now, we need to be prepared for
-a situation where packets hit the driver after the queues are full.
-Drop all such packets in the driver itself.
-
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/mwl8k.c |   20 +++++++-------------
- 1 files changed, 7 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ebaae35..7968301 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1666,10 +1666,6 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 		processed++;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9e8a9c6..d154c5c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -462,7 +462,7 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 		return ecode;
  	}
  
--	if (index < MWL8K_TX_WMM_QUEUES && processed && priv->radio_on &&
--	    !mutex_is_locked(&priv->fw_mutex))
--		ieee80211_wake_queue(hw, index);
--
- 	return processed;
- }
- 
-@@ -1951,13 +1947,14 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 
- 	txq = priv->txq + index;
- 
--	if (index >= MWL8K_TX_WMM_QUEUES && txq->len >= MWL8K_TX_DESCS) {
--		/* This is the case in which the tx packet is destined for an
--		 * AMPDU queue and that AMPDU queue is full.  Because we don't
--		 * start and stop the AMPDU queues, we must drop these packets.
--		 */
--		dev_kfree_skb(skb);
-+	if (txq->len >= MWL8K_TX_DESCS) {
-+		if (start_ba_session) {
-+			spin_lock(&priv->stream_lock);
-+			mwl8k_remove_stream(hw, stream);
-+			spin_unlock(&priv->stream_lock);
-+		}
- 		spin_unlock_bh(&priv->tx_lock);
-+		dev_kfree_skb(skb);
- 		return;
+-	if (!AR_SREV_9100(ah)) {
++	if (!AR_SREV_9100(ah) && !AR_SREV_9340(ah)) {
+ 		ath9k_hw_ani_setup(ah);
+ 		ath9k_hw_ani_init(ah);
  	}
- 
-@@ -1985,9 +1982,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	if (txq->tail == MWL8K_TX_DESCS)
- 		txq->tail = 0;
- 
--	if (txq->head == txq->tail && index < MWL8K_TX_WMM_QUEUES)
--		ieee80211_stop_queue(hw, index);
--
- 	mwl8k_tx_start(priv);
- 
- 	spin_unlock_bh(&priv->tx_lock);
 -- 
-1.6.0.3
+1.7.0.4
 
