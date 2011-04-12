@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:43680 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754618Ab1DEQNf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 12:13:35 -0400
-Received: by wwk4 with SMTP id 4so2927329wwk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 09:13:34 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: avoid redundant join on interface reconfiguration
-Date: Tue,  5 Apr 2011 19:13:28 +0300
-Message-Id: <1302020008-28018-1-git-send-email-eliad@wizery.com>
+Received: from lo.gmane.org ([80.91.229.12]:35120 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932076Ab1DLLEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 07:04:33 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Q9bOZ-0005oZ-CT
+	for linux-wireless@vger.kernel.org; Tue, 12 Apr 2011 13:04:31 +0200
+Received: from 89.204.153.111 ([89.204.153.111])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 13:04:31 +0200
+Received: from alexander.simon by 89.204.153.111 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 13:04:31 +0200
+To: linux-wireless@vger.kernel.org
+From: Alexander Simon <alexander.simon@saxnet.de>
+Subject: Re: [PATCH 2/4] nl80211: Add =?utf-8?b?Tkw4MDIxMV9BVFRSX1dJUEhZX0NIQU5ORUxfVFlQRQ==?= for IBSS
+Date: Tue, 12 Apr 2011 11:04:16 +0000 (UTC)
+Message-ID: <loom.20110412T130245-14@post.gmane.org>
+References: <1302604964.2139.5.camel@alex-2>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_reconfig() sets most of the "changed" flags regardless
-of the actual change (e.g. BSS_CHANGED_ASSOC will be set even if
-the interface is still not associated). in this case the driver
-will issue some unneeded commands.
+Needed for IBSS IEEE802.11N operation
 
-Since the driver relies solely on the BSS_CHANGED_ASSOC flag,
-without checking if there was an actual change, it will end up
-issuing unjoin() and dummy_join() commands, although it was
-never associated and should just remain idle.
+* Add a new attribute NL80211_ATTR_WIPHY_CHANNEL_TYPE to specify
+    a HT channel type for IBSS
 
-Avoid it by checking the actual state change, in addition to the
-"changed" flag.
-
-(there seem to be more redundant configuration commands being
-issued, but they shouldn't harm)
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 ---
- drivers/net/wireless/wl12xx/main.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ nl80211.c |   20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7126506..9d0cde3 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2692,8 +2692,10 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			}
- 		} else {
- 			/* use defaults when not associated */
-+			bool was_assoc =
-+			    !!test_and_clear_bit(WL1271_FLAG_STA_ASSOCIATED,
-+						 &wl->flags);
- 			clear_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags);
--			clear_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
- 			wl->aid = 0;
- 
- 			/* free probe-request template */
-@@ -2719,8 +2721,10 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 				goto out;
- 
- 			/* restore the bssid filter and go to dummy bssid */
--			wl1271_unjoin(wl);
--			wl1271_dummy_join(wl);
-+			if (was_assoc) {
-+				wl1271_unjoin(wl);
-+				wl1271_dummy_join(wl);
-+			}
- 		}
+diff -Nrup a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+--- a/net/wireless/nl80211.c	2011-03-31 21:04:02.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-04-12 08:49:19.000000000 +0200
+@@ -3927,8 +3927,24 @@ static int nl80211_join_ibss(struct sk_b
+ 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
  	}
  
--- 
-1.7.0.4
+-	ibss.channel = ieee80211_get_channel(wiphy,
+-		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
++	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
++		enum nl80211_channel_type channel_type;
++
++		channel_type = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
++		if (channel_type != NL80211_CHAN_NO_HT &&
++				channel_type != NL80211_CHAN_HT20 &&
++				channel_type != NL80211_CHAN_HT40PLUS &&
++				channel_type != NL80211_CHAN_HT40MINUS)
++			return -EINVAL;
++		ibss.channel_type = channel_type;
++	} else {
++		ibss.channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	ibss.channel = rdev_freq_to_chan(rdev,
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++		ibss.channel_type);
+ 	if (!ibss.channel ||
+ 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+ 	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
+
+
 
