@@ -1,54 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15096 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754849Ab1DKSmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 14:42:03 -0400
-Subject: Re: [PATCH] iwlegacy: make iwl3945 and iwl4965 select
- IWLWIFI_LEGACY
-From: wwguy <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:59400 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907Ab1DLFe2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2011 01:34:28 -0400
+Message-ID: <4DA3E45E.3040005@lwfinger.net>
+Date: Tue, 12 Apr 2011 00:34:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: RA-Shiang Tu <Shiang_Tu@ralinktech.com>
+CC: Walter Goldens <goldenstranger@yahoo.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Airlie <airlied@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-In-Reply-To: <1302541599-15383-1-git-send-email-linville@tuxdriver.com>
-References: <BANLkTimoDVMcvFdoUedyfw4Thv8=DsV-5A@mail.gmail.com>
-	 <1302541599-15383-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Apr 2011 11:39:22 -0700
-Message-ID: <1302547162.5663.2.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	"gwingerde@gmail.com" <gwingerde@gmail.com>,
+	"ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
+References: <4DA33FFD.5070004@gmail.com> <312743.30438.qm@web161611.mail.bf1.yahoo.com> <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
+In-Reply-To: <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-11 at 10:06 -0700, John W. Linville wrote:
-> Otherwise, IWLWIFI_LEGACY has to be selected independently before the
-> drivers are made available.
-> 
-> Reported-by: Dave Airlie <airlied@gmail.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlegacy/Kconfig |    9 +++++----
->  1 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlegacy/Kconfig b/drivers/net/wireless/iwlegacy/Kconfig
-> index 2a45dd4..aef65cd 100644
-> --- a/drivers/net/wireless/iwlegacy/Kconfig
-> +++ b/drivers/net/wireless/iwlegacy/Kconfig
-> @@ -1,6 +1,5 @@
->  config IWLWIFI_LEGACY
-> -	tristate "Intel Wireless Wifi legacy devices"
-> -	depends on PCI && MAC80211
-> +	tristate
->  	select FW_LOADER
->  	select NEW_LEDS
->  	select LEDS_CLASS
+On 04/12/2011 12:23 AM, RA-Shiang Tu wrote:
+> Hi,
+>>>> Are there any changelogs for these firmware files? Do
+>>> they
+>>>> only offer support for newer chips, or are there any
+>>> actual
+>>>> improvements and bug fixes implemented? Users should
+>>> know
+>>>> whether updating the firmware will be of any use to
+>>> them.
+>>>
+>>> Shiang Tu from ralink says [1] :
+>>> "We always suggest to use latest firmware, because it's backward
+>>> compatible and also has some enhancement, bug fix, or
+>> support of new
+>>> chip.
+>>
+>> Sorry, but how very ... Microsoft-y of Ralink.
+>> Something has changed, a bug, an improvement, but we are to
+>> guess what it is?
+>> Maybe if people knew how these firmware files affect
+>> different generations of chips, they'd knew how to maintain
+>> them better. I think this contributes to the mess here.
+>>
+>
+> First of all, thanks for all for the great help to make Ralink chipset can
+> work well in Linux.
+>
+> In deed, restricted by the limited resources, Ralink didn't involve in the
+> rt2x00 project development closely for long time and the rt2x00 project
+> developers and free contributors only can get limited information from
+> Ralink's open source code. I think that' why make the situation becomes
+> a little bit complicate. Sorry for that.
+>
+> Now we try to work closely with rt2x00 project, we also will sumbit latest
+> frimware to linux-firmware once have any updates. We are newbie to work
+> with open source community, if we have any problem, your kindly help will
+> be highly appreciated.
 
-Should we add some ---help--- here?, or not..
+Shiang,
 
-Wey 
+We greatly appreciate the help you have given. We certainly understand the 
+problems of limited resources.
 
+Does Ralink have any documentation that you can share regarding the changes in 
+rt2860.bin from revision 11, which is now in linux-firmware, to the current 
+revision 34. The same information on the changes from revision 12 to revision 29 
+of rt2870.bin would also be useful. As you have seen in the E-mails, the details 
+are requested for the acceptance of the new versions in linux-firmware.
 
+Thanks,
+
+Larry
 
