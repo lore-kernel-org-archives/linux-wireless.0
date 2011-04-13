@@ -1,71 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:62414 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751144Ab1D3Qko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 12:40:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48067 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455Ab1DMFuf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 01:50:35 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so274186iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:35 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.14907.856518.900271@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:22:59 +0530
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/14]  update for 2.6.40
-Date: Sat, 30 Apr 2011 09:17:26 -0700
-Message-Id: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184047_427637_26ECDEFB)
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 04/40] ath9k_htc: Fix WMI and beacon header
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We refactor the firmware reload procedure 
-We continue to clean up the _agn driver after driver split
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Don Fry (2):
-  iwlagn: mod param cleanup
-  iwlagn: semaphore and calib cleanup
+Match the beacon header with that of the firmware.
+Also, the firmware reports the TSF for an SWBA, so
+store it.
 
-Johannes Berg (7):
-  iwlagn: avoid hangs when restarting device
-  iwlagn: introduce silent grabbing of NIC access
-  iwlagn: refactor restart
-  iwlagn: use proper good CRC threshold behaviour
-  iwlagn: remove spectrum measurement header
-  iwlagn: improve RXON checking
-  iwlagn: prefer BSS context
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h |    2 +-
+ drivers/net/wireless/ath/ath9k/wmi.c |    7 ++++++-
+ drivers/net/wireless/ath/ath9k/wmi.h |    6 ++++++
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-Wey-Yi Guy (5):
-  iwlagn: make rxon_assoc static function
-  iwlagn: remove 5000 from rxon_assoc structure
-  iwlagn: connect and disconnect sequence for RXON
-  iwlagn: new 105 series device
-  iwlagn: remove un-necessary debugfs callback
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/Makefile          |    1 -
- drivers/net/wireless/iwlwifi/iwl-1000.c        |   19 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c        |   79 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c        |   36 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c        |   37 +-
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c | 1025 ------------------------
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h |   70 --
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c  |   41 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |   50 --
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |   35 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c    |  246 ++++--
- drivers/net/wireless/iwlwifi/iwl-agn.c         |  107 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h         |   12 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c        |   63 +-
- drivers/net/wireless/iwlwifi/iwl-core.h        |   23 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     | 1006 ++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-dev.h         |    7 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c      |   43 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h      |    3 -
- drivers/net/wireless/iwlwifi/iwl-io.c          |   18 +-
- drivers/net/wireless/iwlwifi/iwl-io.h          |    1 +
- drivers/net/wireless/iwlwifi/iwl-rx.c          |    7 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h    |   92 ---
- 24 files changed, 1380 insertions(+), 1643 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-spectrum.h
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 9544cd7..cf7909e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -96,8 +96,8 @@ struct tx_mgmt_hdr {
+ } __packed;
+ 
+ struct tx_beacon_header {
+-	u8 len_changed;
+ 	u8 vif_index;
++	u8 len_changed;
+ 	u16 rev;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 267a98f..96171a2 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -156,6 +156,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 	struct wmi_cmd_hdr *hdr;
+ 	u16 cmd_id;
+ 	void *wmi_event;
++	struct wmi_event_swba *swba;
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+ 	__be32 txrate;
+ #endif
+@@ -170,7 +171,11 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 		wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
+ 		switch (cmd_id) {
+ 		case WMI_SWBA_EVENTID:
+-			wmi->beacon_pending = *(u8 *)wmi_event;
++			swba = (struct wmi_event_swba *) wmi_event;
++
++			wmi->tsf = be64_to_cpu(swba->tsf);
++			wmi->beacon_pending = swba->beacon_pending;
++
+ 			tasklet_schedule(&wmi->drv_priv->swba_tasklet);
+ 			break;
+ 		case WMI_FATAL_EVENTID:
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 6a36572..2fa91a9 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -36,6 +36,11 @@ struct wmi_fw_version {
+ 	__be16 minor;
+ 
+ } __packed;
++
++struct wmi_event_swba {
++	__be64 tsf;
++	u8 beacon_pending;
++};
+ enum wmi_cmd_id {
+ 	WMI_ECHO_CMDID = 0x0001,
+ 	WMI_ACCESS_MEMORY_CMDID,
+@@ -106,6 +111,7 @@ struct wmi {
+ 	u32 cmd_rsp_len;
+ 	bool stopped;
+ 
++	u64 tsf;
+ 	u8 beacon_pending;
+ 	spinlock_t wmi_lock;
+ 
+-- 
+1.7.4.4
 
