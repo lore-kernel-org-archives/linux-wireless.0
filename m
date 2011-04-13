@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57296 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751749Ab1DSODV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 10:03:21 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 07:02:55 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 20/22] ath9k_hw: Assign macversion based on devid for built-in wmac
-Date: Tue, 19 Apr 2011 19:33:23 +0530
-Message-ID: <1303221803-25230-5-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
-References: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:56384 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932420Ab1DMP7K convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 11:59:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
+Date: Wed, 13 Apr 2011 17:59:07 +0200
+Message-ID: <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++---
- 1 files changed, 11 insertions(+), 3 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9df2fe8..c725640 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -247,6 +247,17 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- {
- 	u32 val;
- 
-+	switch (ah->hw_version.devid) {
-+	case AR5416_AR9100_DEVID:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
-+		break;
-+	case AR9300_DEVID_AR9340:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
-+		val = REG_READ(ah, AR_SREV);
-+		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-+		return;
-+	}
-+
- 	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
- 
- 	if (val == 0xFF) {
-@@ -484,9 +495,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
--		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
--
- 	ath9k_hw_read_revisions(ah);
- 
- 	/*
--- 
-1.7.0.4
+> I recall using this driver in staging and it crashing my machine, now thats
+> its no longer in staging, I thought I'd give it another try..  Using the
 
+The rt2800usb was not in staging but has been inside the main kernel
+tree for quite
+some time already, the alternative rt2870sta was in staging and will
+be removed very soon.
+
+> following wireless usb adapter, I'm seeing very high latency when using
+> the device in Linux, (with Windows, there are no problems).  Using Debian
+> Testing + wpa_supplicant, using the following USB adapter:
+
+Can you try disabling powersaving?
+iwconfig wlan0 power off
+
+Ivo
