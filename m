@@ -1,151 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54253 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759095Ab1DNPLA convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757105Ab1DMFxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 11:11:00 -0400
-Received: by bwz15 with SMTP id 15so1454897bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 08:10:59 -0700 (PDT)
+	Wed, 13 Apr 2011 01:53:35 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:35 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTin9Xp0oNkLANM0pkr7dyOCpEwow+g@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
- <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
- <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
- <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com> <BANLkTin9Xp0oNkLANM0pkr7dyOCpEwow+g@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Thu, 14 Apr 2011 17:10:19 +0200
-Message-ID: <BANLkTi=ZyhsQDnhKBCfPbfqdYsqHXYpxtg@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15087.911814.545439@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:25:59 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 30/40] ath9k_htc: Drain pending TX frames properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Btw I have that in dmesg.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-------------[ cut here ]------------
-WARNING: at /home/lesiuk/carl9170/compat-wireless-2011-03-31/drivers/net/wireless/ath/carl9170/tx.c:1301
-carl9170_op_tx+0x4b2/0x663 [carl9170]()
-Hardware name: hp t5000 series
-Modules linked in: ipv6 iptable_filter ipt_MASQUERADE iptable_nat
-nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 ipt_addrtype xt_dscp xt_string
-xt_multiport xt_hashlimit xt_conntrack xt_DSCP xt_NFQUEUE xt_mark
-xt_connmark nf_conntrack ip_tables x_tables aes_i586 aes_generic arc4
-ecb snd_intel8x0 ar9170usb snd_ac97_codec ac97_bus tpm_tis snd_pcm
-carl9170 mac80211 ath cfg80211 sis_agp rfkill tpm snd_timer thermal
-via_rhine tpm_bios ppdev rtc_cmos shpchp i2c_sis96x snd processor fan
-i2c_core rtc_core thermal_sys parport_pc pcspkr snd_page_alloc
-serio_raw pci_hotplug mii agpgart rtc_lib button tg3 libphy e1000 fuse
-xfs exportfs nfs auth_rpcgss nfs_acl lockd sunrpc jfs raid10
-dm_snapshot dm_crypt dm_mirror dm_region_hash dm_log dm_mod
-scsi_wait_scan sl811_hcd usbhid ohci_hcd ssb mmc_core uhci_hcd
-usb_storage ehci_hcd usbcore aic94xx libsas lpfc qla2xxx megaraid_sas
-megaraid_mbox megaraid_mm megaraid aacraid sx8 DAC960 cciss 3w_9xxx
-3w_xxxx mptsas scsi_transport_sas mptfc scsi_transport_fc scsi_tgt
-mptspi mptscsih mptbase atp870u dc395x qla1280 imm parport dmx3191d
-sym53c8xx qlogicfas408 gdth advansys initio BusLogic arcmsr aic7xxx
-aic79xx scsi_transport_spi sg pdc_adma sata_inic162x sata_mv ata_piix
-ahci libahci sata_qstor sata_vsc sata_uli sata_sis sata_sx4 sata_nv
-sata_via sata_svw sata_sil24 sata_sil sata_promise pata_pcmcia pcmcia
-pcmcia_core
-Pid: 12166, comm: rtorrent Not tainted 2.6.38-gentoo-r1 #1
-Call Trace:
- [<c012ee27>] ? warn_slowpath_common+0x65/0x7a
- [<cf8e7197>] ? carl9170_op_tx+0x4b2/0x663 [carl9170]
- [<c012ee4b>] ? warn_slowpath_null+0xf/0x13
- [<cf8e7197>] ? carl9170_op_tx+0x4b2/0x663 [carl9170]
- [<cfb059ff>] ? __ieee80211_tx+0x140/0x184 [mac80211]
- [<cfb05aa3>] ? ieee80211_tx+0x60/0x6d [mac80211]
- [<cfb065b0>] ? ieee80211_tx_pending+0xe0/0x1a3 [mac80211]
- [<c013321f>] ? tasklet_action+0x67/0xcd
- [<c0133fee>] ? __do_softirq+0x9c/0x146
- [<c0133f52>] ? __do_softirq+0x0/0x146
- <IRQ>  [<c0133c16>] ? irq_exit+0x29/0x2b
- [<c01037cf>] ? do_IRQ+0x7c/0x90
- [<c0102d69>] ? common_interrupt+0x29/0x30
----[ end trace 44624f1ffb767c43 ]---
-------------[ cut here ]------------
-WARNING: at /home/lesiuk/carl9170/compat-wireless-2011-03-31/drivers/net/wireless/ath/carl9170/tx.c:1305
-carl9170_op_tx+0x4f2/0x663 [carl9170]()
-Hardware name: hp t5000 series
-Modules linked in: ipv6 iptable_filter ipt_MASQUERADE iptable_nat
-nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 ipt_addrtype xt_dscp xt_string
-xt_multiport xt_hashlimit xt_conntrack xt_DSCP xt_NFQUEUE xt_mark
-xt_connmark nf_conntrack ip_tables x_tables aes_i586 aes_generic arc4
-ecb snd_intel8x0 ar9170usb snd_ac97_codec ac97_bus tpm_tis snd_pcm
-carl9170 mac80211 ath cfg80211 sis_agp rfkill tpm snd_timer thermal
-via_rhine tpm_bios ppdev rtc_cmos shpchp i2c_sis96x snd processor fan
-i2c_core rtc_core thermal_sys parport_pc pcspkr snd_page_alloc
-serio_raw pci_hotplug mii agpgart rtc_lib button tg3 libphy e1000 fuse
-xfs exportfs nfs auth_rpcgss nfs_acl lockd sunrpc jfs raid10
-dm_snapshot dm_crypt dm_mirror dm_region_hash dm_log dm_mod
-scsi_wait_scan sl811_hcd usbhid ohci_hcd ssb mmc_core uhci_hcd
-usb_storage ehci_hcd usbcore aic94xx libsas lpfc qla2xxx megaraid_sas
-megaraid_mbox megaraid_mm megaraid aacraid sx8 DAC960 cciss 3w_9xxx
-3w_xxxx mptsas scsi_transport_sas mptfc scsi_transport_fc scsi_tgt
-mptspi mptscsih mptbase atp870u dc395x qla1280 imm parport dmx3191d
-sym53c8xx qlogicfas408 gdth advansys initio BusLogic arcmsr aic7xxx
-aic79xx scsi_transport_spi sg pdc_adma sata_inic162x sata_mv ata_piix
-ahci libahci sata_qstor sata_vsc sata_uli sata_sis sata_sx4 sata_nv
-sata_via sata_svw sata_sil24 sata_sil sata_promise pata_pcmcia pcmcia
-pcmcia_core
-Pid: 12166, comm: rtorrent Tainted: G        W   2.6.38-gentoo-r1 #1
-Call Trace:
- [<c012ee27>] ? warn_slowpath_common+0x65/0x7a
- [<cf8e71d7>] ? carl9170_op_tx+0x4f2/0x663 [carl9170]
- [<c012ee4b>] ? warn_slowpath_null+0xf/0x13
- [<cf8e71d7>] ? carl9170_op_tx+0x4f2/0x663 [carl9170]
- [<cfb059ff>] ? __ieee80211_tx+0x140/0x184 [mac80211]
- [<cfb05aa3>] ? ieee80211_tx+0x60/0x6d [mac80211]
- [<cfb065b0>] ? ieee80211_tx_pending+0xe0/0x1a3 [mac80211]
- [<c013321f>] ? tasklet_action+0x67/0xcd
- [<c0133fee>] ? __do_softirq+0x9c/0x146
- [<c0133f52>] ? __do_softirq+0x0/0x146
- <IRQ>  [<c0133c16>] ? irq_exit+0x29/0x2b
- [<c01037cf>] ? do_IRQ+0x7c/0x90
- [<c0102d69>] ? common_interrupt+0x29/0x30
----[ end trace 44624f1ffb767c44 ]---
+When doing a channel set or a reset operation the pending
+frames queued up for transmission have to be flushed and
+sent to mac80211. Fixing this has to be done in two separate
+steps:
 
-2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
-> I have draft N router next to that device.
-> He is working at 1 channel. I can easily reach 100 mbps with him.
->
-> I changed channel to 11 and I have MSC 5.
->
-> I have Azurewave NB290 in my notebook.
-> But I tested it also with Atheros 9280 and connection here was very
-> bad (8 mbps).
->
-> 2011/4/14 Helmut Schaa <helmut.schaa@googlemail.com>:
->> On Thu, Apr 14, 2011 at 4:40 PM, Damian Lesiuk <lesiuk@gmail.com> wrote:
->>> uniwersytecka-server ~ # iw wlan0 station dump
->>> Station 74:f0:6d:33:ea:00 (on wlan0)
->>>       inactive time:  20 ms
->>>       rx bytes:       5043668
->>>       rx packets:     9305
->>>       tx bytes:       13762256
->>>       tx packets:     11634
->>>       signal:         -31 dBm
->>>       tx bitrate:     65.0 MBit/s MCS 7
->>>
->>> So it helped in some way.
->>> Why that network isn't 300 mbps?
->>
->> 300mbps is only possible in HT40 mode. However, hostapd will disable
->> HT40 if it detects
->> an other HT40 AP on an overlapping channel (in your case anything
->> !=7). This is also
->> in accordance with 802.11n-2009.
->>
->> Hostapd will print "40 MHz pri/sec mismatch with BSS ..." in that case.
->>
->> Furthermore, it seems that the station 74:f0:6d:33:ea:00 isn't capable
->> of using multiple
->> spacial streams and thus is limited to MCS7. What client device is this?
->>
->> Helmut
->>
->
+  * Flush queued frames and kill the URB TX completion handler.
+  * Complete all the frames that in the TX pending queue.
+
+This patch adds proper support for draining and all the callsites
+namely, channel change/reset/idle/stop are fixed. A separate queue
+is used for handling failed frames.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c       |   55 +++++++++---------------
+ drivers/net/wireless/ath/ath9k/htc.h           |    6 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    8 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   15 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   31 +++++++++++++-
+ 6 files changed, 69 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 09b416a..a98b146 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -131,7 +131,19 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+ 
+ 	while ((skb = __skb_dequeue(list)) != NULL) {
+ 		dev_kfree_skb_any(skb);
+-		TX_STAT_INC(skb_dropped);
++	}
++}
++
++static inline void ath9k_skb_queue_complete(struct hif_device_usb *hif_dev,
++					    struct sk_buff_head *queue,
++					    bool txok)
++{
++	struct sk_buff *skb;
++
++	while ((skb = __skb_dequeue(queue)) != NULL) {
++		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
++					  skb, txok);
++		(txok) ? TX_STAT_INC(skb_success) : TX_STAT_INC(skb_failed);
+ 	}
+ }
+ 
+@@ -139,7 +151,7 @@ static void hif_usb_tx_cb(struct urb *urb)
+ {
+ 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
+ 	struct hif_device_usb *hif_dev;
+-	struct sk_buff *skb;
++	bool txok = true;
+ 
+ 	if (!tx_buf || !tx_buf->hif_dev)
+ 		return;
+@@ -153,10 +165,7 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 	case -ECONNRESET:
+ 	case -ENODEV:
+ 	case -ESHUTDOWN:
+-		/*
+-		 * The URB has been killed, free the SKBs.
+-		 */
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
++		txok = false;
+ 
+ 		/*
+ 		 * If the URBs are being flushed, no need to add this
+@@ -165,41 +174,19 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 		spin_lock(&hif_dev->tx.tx_lock);
+ 		if (hif_dev->tx.flags & HIF_USB_TX_FLUSH) {
+ 			spin_unlock(&hif_dev->tx.tx_lock);
++			ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+ 			return;
+ 		}
+ 		spin_unlock(&hif_dev->tx.tx_lock);
+ 
+-		/*
+-		 * In the stop() case, this URB has to be added to
+-		 * the free list.
+-		 */
+-		goto add_free;
++		break;
+ 	default:
++		txok = false;
+ 		break;
+ 	}
+ 
+-	/*
+-	 * Check if TX has been stopped, this is needed because
+-	 * this CB could have been invoked just after the TX lock
+-	 * was released in hif_stop() and kill_urb() hasn't been
+-	 * called yet.
+-	 */
+-	spin_lock(&hif_dev->tx.tx_lock);
+-	if (hif_dev->tx.flags & HIF_USB_TX_STOP) {
+-		spin_unlock(&hif_dev->tx.tx_lock);
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+-		goto add_free;
+-	}
+-	spin_unlock(&hif_dev->tx.tx_lock);
+-
+-	/* Complete the queued SKBs. */
+-	while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
+-		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
+-					  skb, 1);
+-		TX_STAT_INC(skb_completed);
+-	}
++	ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, txok);
+ 
+-add_free:
+ 	/* Re-initialize the SKB queue */
+ 	tx_buf->len = tx_buf->offset = 0;
+ 	__skb_queue_head_init(&tx_buf->skb_queue);
+@@ -272,7 +259,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+ 	ret = usb_submit_urb(tx_buf->urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		tx_buf->len = tx_buf->offset = 0;
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
++		ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, false);
+ 		__skb_queue_head_init(&tx_buf->skb_queue);
+ 		list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
+ 		hif_dev->tx.tx_buf_cnt++;
+@@ -342,7 +329,7 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+-	ath9k_skb_queue_purge(hif_dev, &hif_dev->tx.tx_skb_queue);
++	ath9k_skb_queue_complete(hif_dev, &hif_dev->tx.tx_skb_queue, false);
+ 	hif_dev->tx.tx_skb_cnt = 0;
+ 	hif_dev->tx.flags |= HIF_USB_TX_STOP;
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 45cf755..0d2e2b1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -271,6 +271,7 @@ struct ath9k_htc_tx {
+ 	u8 flags;
+ 	int queued_cnt;
+ 	struct sk_buff_head tx_queue;
++	struct sk_buff_head tx_failed;
+ 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
+ 	spinlock_t tx_lock;
+ };
+@@ -305,8 +306,8 @@ struct ath_tx_stats {
+ 	u32 buf_queued;
+ 	u32 buf_completed;
+ 	u32 skb_queued;
+-	u32 skb_completed;
+-	u32 skb_dropped;
++	u32 skb_success;
++	u32 skb_failed;
+ 	u32 cab_queued;
+ 	u32 queue_stats[WME_NUM_AC];
+ };
+@@ -544,6 +545,7 @@ void ath9k_htc_check_stop_queues(struct ath9k_htc_priv *priv);
+ void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv);
+ int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv);
+ void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
++void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+ void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 6fc6cb7..91a486c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -88,11 +88,11 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 			"%20s : %10u\n", "SKBs queued",
+ 			priv->debug.tx_stats.skb_queued);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs completed",
+-			priv->debug.tx_stats.skb_completed);
++			"%20s : %10u\n", "SKBs success",
++			priv->debug.tx_stats.skb_success);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs dropped",
+-			priv->debug.tx_stats.skb_dropped);
++			"%20s : %10u\n", "SKBs failed",
++			priv->debug.tx_stats.skb_failed);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "CAB queued",
+ 			priv->debug.tx_stats.cab_queued);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 92e4b31..dc0b33d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -429,9 +429,8 @@ void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+ 
+ 	/* Stop TX */
+ 	ieee80211_stop_queues(hw);
+-	htc_stop(priv->htc);
++	ath9k_htc_tx_drain(priv);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+-	skb_queue_purge(&priv->tx.tx_queue);
+ 
+ 	/* Stop RX */
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c7e056b..fb9ff11 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -193,7 +193,9 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 
+ 	ath9k_htc_stop_ani(priv);
+ 	ieee80211_stop_queues(priv->hw);
+-	htc_stop(priv->htc);
++
++	ath9k_htc_tx_drain(priv);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+@@ -248,7 +250,9 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+-	htc_stop(priv->htc);
++
++	ath9k_htc_tx_drain(priv);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+@@ -263,6 +267,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 
+ 	if (!fastcc)
+ 		caldata = &priv->caldata;
++
+ 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_err(common,
+@@ -960,16 +965,14 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+-	htc_stop(priv->htc);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+ 
+ 	tasklet_kill(&priv->rx_tasklet);
+-	tasklet_kill(&priv->tx_tasklet);
+-
+-	skb_queue_purge(&priv->tx.tx_queue);
+ 
++	ath9k_htc_tx_drain(priv);
+ 	ath9k_wmi_event_drain(priv);
+ 
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 944440c..9e0c34b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -423,6 +423,26 @@ send_mac80211:
+ 	ieee80211_tx_status(priv->hw, skb);
+ }
+ 
++void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
++{
++	struct sk_buff *skb = NULL;
++
++	/*
++	 * Ensure that all pending TX frames are flushed,
++	 * and that the TX completion tasklet is killed.
++	 */
++	htc_stop(priv->htc);
++	tasklet_kill(&priv->tx_tasklet);
++
++	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++
++	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++}
++
+ void ath9k_tx_tasklet(unsigned long data)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+@@ -432,6 +452,10 @@ void ath9k_tx_tasklet(unsigned long data)
+ 		ath9k_htc_tx_process(priv, skb);
+ 	}
+ 
++	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++
+ 	/* Wake TX queues if needed */
+ 	ath9k_htc_check_wake_queues(priv);
+ }
+@@ -445,13 +469,18 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+ 	tx_ctl = HTC_SKB_CB(skb);
+ 	tx_ctl->txok = txok;
+ 
+-	skb_queue_tail(&priv->tx.tx_queue, skb);
++	if (txok)
++		skb_queue_tail(&priv->tx.tx_queue, skb);
++	else
++		skb_queue_tail(&priv->tx.tx_failed, skb);
++
+ 	tasklet_schedule(&priv->tx_tasklet);
+ }
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv)
+ {
+ 	skb_queue_head_init(&priv->tx.tx_queue);
++	skb_queue_head_init(&priv->tx.tx_failed);
+ 	return 0;
+ }
+ 
+-- 
+1.7.4.4
+
