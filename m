@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40932 "EHLO mail.atheros.com"
+Received: from lucidpixels.com ([75.144.35.66]:36422 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755375Ab1DXQCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 12:02:30 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 09:02:03 -0700
-Date: Sun, 24 Apr 2011 21:32:26 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Sam Leffler <sleffler@google.com>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath9k_hw: Fix Tx IQ Calibration hang issue in AR9003
- chips
-Message-ID: <20110424160226.GA3062@vmraj-lnx.users.atheros.com> (sfid-20110424_180241_345412_421469F0)
-References: <1303464039-11574-1-git-send-email-rmanoharan@atheros.com>
- <BANLkTimGAg4nYcW=SW_T-1b06nZbyBvNJA@mail.gmail.com>
+	id S1756932Ab1DMPrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 11:47:25 -0400
+Date: Wed, 13 Apr 2011 11:47:23 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: 2.6.38: rt2800usb: high latency (1000ms)?
+Message-ID: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <BANLkTimGAg4nYcW=SW_T-1b06nZbyBvNJA@mail.gmail.com>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 22, 2011 at 10:30:59PM +0530, Sam Leffler wrote:
-> On Fri, Apr 22, 2011 at 2:20 AM, Rajkumar Manoharan
-> <rmanoharan@atheros.com> wrote:
-> > On AR9003 chips, doing three IQ calibrations will possibly cause chip
-> > in stuck state. In noisy environment, chip could receive
-> > a packet during the middle of three calibrations and it causes
-> > the conflict of HW access and the eventual failure. It also
-> > causes IQ calibration outliers which results in poor Tx EVM.
-> > During the issue kernel log was filled with following message
-> >
-> > ath: timeout (100000 us) on reg 0xa640: 0x00000001 & 0x00000001 != 0x00000000
-> > ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
-> > ath: Unable to reset channel (2412 MHz), reset status -5
-> > ath: Unable to set channel
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> 
-> Please indicate the specific parts where this issue has been seen.  Is
-> this specific to 9485 or has it been observed on 93xx devices too?
->
-The IQ Cal procedure is after resetting the chip, run IQ cal 3 times 
-per each cal cycle and find the two closest readings and average of two.
-The advantage of running Tx IQ cal more than once is that we can compare
-calibration results for the same gain setting over multiple iterations.
-Most of the cases the IQ failures were observed after first pass.
+Hello,
 
-For the AR9485 and later chips, Tx IQ Calibration is performed along
-with AGC cal. But for pre-AR9485 chips, Tx IQ cal HW has to be separated
-from the rest of calibration HW to avoid chip hang. After all calibrations
-are done in HW, we can start SW post-processing. By doing this way, we
-minimize the SW difference among all chips. 
+I recall using this driver in staging and it crashing my machine, now 
+thats its no longer in staging, I thought I'd give it another try..  Using 
+the following wireless usb adapter, I'm seeing very high latency when using
+the device in Linux, (with Windows, there are no problems).  Using Debian 
+Testing + wpa_supplicant, using the following USB adapter:
 
-The order of calibration (run IQ cal before other calibration) is also
-needed to avoid chip hang for chips before AR9485. This issue was originally
-observed with AR9382. Will send v2 patch with updated commit log.
+Bus 001 Device 004: ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 
+Wireless Adapter
 
-Rajkumar
+$ ping wireless-host
+PING wireless-host (192.168.1.2) 56(84) bytes of data.
+64 bytes from wireless-host (192.168.1.2): icmp_req=1 ttl=64 time=1002 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=2 ttl=64 time=3.84 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3 ttl=64 time=23.3 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=4 ttl=64 time=40.1 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=5 ttl=64 time=991 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=6 ttl=64 time=0.583 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=7 ttl=64 time=1033 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=8 ttl=64 time=33.2 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=9 ttl=64 time=991 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=10 ttl=64 time=2.66 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=11 ttl=64 time=1029 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=12 ttl=64 time=31.3 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=14 ttl=64 time=997 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=15 ttl=64 time=0.884 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=16 ttl=64 time=1049 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=17 ttl=64 time=49.6 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=18 ttl=64 time=989 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=19 ttl=64 time=1.62 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=20 ttl=64 time=1047 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=21 ttl=64 time=47.6 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=22 ttl=64 time=982 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=23 ttl=64 time=0.607 ms
+
+--- wireless-host ping statistics ---
+24 packets transmitted, 22 received, 8% packet loss, time 23009ms
+rtt min/avg/max/mdev = 0.583/470.533/1049.181/494.399 ms, pipe 2
+
+I am using the following ralink firmware:
+ii  firmware-ralink                     0.29                        Binary firmware for Ralink wireless cards
+
+$ dpkg -L firmware-ralink
+/.
+/lib
+/lib/firmware
+/lib/firmware/rt3090.bin
+/lib/firmware/rt2860.bin
+/lib/firmware/rt73.bin
+/lib/firmware/rt3071.bin
+/lib/firmware/rt2561.bin
+/lib/firmware/rt3070.bin
+/lib/firmware/rt2661.bin
+/lib/firmware/rt2870.bin
+/lib/firmware/rt2561s.bin
+/usr
+/usr/share
+/usr/share/bug
+/usr/share/bug/firmware-ralink
+/usr/share/bug/firmware-ralink/presubj
+/usr/share/doc
+/usr/share/doc/firmware-ralink
+/usr/share/doc/firmware-ralink/changelog.gz
+/usr/share/doc/firmware-ralink/copyright
+
+Is there a certain firmware or other driver I should be using for this
+USB wireless device so I do not get spouts of 1 second latency?
+
+Justin.
