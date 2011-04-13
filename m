@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:65473 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932883Ab1DMVdI convert rfc822-to-8bit (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:47968 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758303Ab1DMUVh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 17:33:08 -0400
+	Wed, 13 Apr 2011 16:21:37 -0400
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Apr 2011 23:21:30 +0300
+Subject: RE: [compat 1/1] compat: add license and other module params to
+ kfifo
+Message-ID: <6F5C1D715B2DA5498A628E6B9C124F0401A7BB311D@hasmsx504.ger.corp.intel.com>
+References: <1302530175-24451-1-git-send-email-tomas.winkler@intel.com>
+ <4DA60515.6000004@hauke-m.de>
+In-Reply-To: <4DA60515.6000004@hauke-m.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1302729850.8479.7.camel@dev.znau.edu.ua>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	<20110413163113.GA24015@kroah.com>
-	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-	<1302726703.8015.1.camel@dev.znau.edu.ua>
-	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
-	<1302727516.8015.9.camel@dev.znau.edu.ua>
-	<BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
-	<1302729243.8479.1.camel@dev.znau.edu.ua>
-	<BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
-	<1302729850.8479.7.camel@dev.znau.edu.ua>
-Date: Wed, 13 Apr 2011 23:33:07 +0200
-Message-ID: <BANLkTimsuGy0kRoP2xmApof=j-WnPYse9w@mail.gmail.com>
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/13 George Kashperko <george@znau.edu.ua>:
->> 2011/4/13 George Kashperko <george@znau.edu.ua>:
->> >> I had no idea what you were referring to. We do not dig into PCIe
->> >> functions yet, so I believe for now we need this "if".
->> > You are already deep inside. Your host code drives pci function.
->>
->> But I don't use multiple PCIe functions, do not focus on that at all.
->>
-> Don't see anything in the host driver code preventing it to be bound to
-> functions other than 0. But anyways if you sure your host will be used
-> by several cores then why don't you spinlock window accesses ?
 
-I should, it was discussed, please let's leave it for now.
 
-Lets first focus on how to correctly implement this driver.
+> -----Original Message-----
+> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
+> Sent: Wednesday, April 13, 2011 11:18 PM
+> To: Winkler, Tomas
+> Cc: mcgrof@gmail.com; lrodriguez@atheros.com; linux-wireless@vger.kernel.org
+> Subject: Re: [compat 1/1] compat: add license and other module params to
+> kfifo
+> 
+> Hi Tomas,
+> 
+> On 04/11/2011 03:56 PM, Tomas Winkler wrote:
+> > The module taints the kernel if the license is not specified
+> >
+> > Add also module description
+> >
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> I send a patch including kfifo.ko into compat.ko some days ago [0], but
+> it was not yet apply. If kfifo is integrated in compat.ko this patch
+> will cause problems. As kifo.ko is small I think it is better to get rid
+> of this extra module and integrate it into compat.ko.
+> 
+> [0]: https://patchwork.kernel.org/patch/692651/
 
--- 
-Rafał
+Sounds reasonable.
+Thanks
+Tomas
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
