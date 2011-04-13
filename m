@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42053 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab1DEHHS (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:50057 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757738Ab1DMIwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 03:07:18 -0400
-Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own
- stack.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-In-Reply-To: <1301969218-9878-1-git-send-email-javier@cozybit.com>
-References: <1301969218-9878-1-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Apr 2011 09:07:14 +0200
-Message-ID: <1301987234.3831.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 13 Apr 2011 04:52:21 -0400
+Received: by bwz15 with SMTP id 15so384587bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 01:52:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Wed, 13 Apr 2011 10:51:40 +0200
+Message-ID: <BANLkTinWu6+-i5y7KSJp3r=WG-JMAiNx6w@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-04 at 19:06 -0700, Javier Cardona wrote:
-> This is useful for implementing frame protection in userspace. The kernel may
-> request a userspace daemon to verify a frame (sent to userspace via
-> cfg80211_rx_mgmt()).  The userspace daemon can then pass back the
-> verified/unprotected frame to the stack for further processing (via a
-> self-addressed frame sent with cfg80211_mlme_mgmt_tx())
-> 
-> We are using this for our implementation authenticated peering.  11s defines
-> two versions of mesh peering, the non-secure mesh peering management (MPM) and
-> the Authenticated Mesh Peering Exchange (AMPE).  The latter is based on the
-> exact same state machine as MPM.  It is really convenient to use the in-kernel
-> MPM with a minimal userspace daemon to add the security bits introduced by
-> AMPE.  This way both secured and open mesh networks can use exact same peering
-> code.
-> 
-> What do you think... will this fly?
+	* Supports High Throughput/802.11n up to PHY speeds
+	  of 300Mbits (~ RL performance of max. 100Mbit/s tcp,
+	  udp goes to 130 and beyond)
 
-Seems very strange to me. I guess if you're after unification in my mind
-it makes more sense to declare the in-kernel state machine legacy, copy
-it into the userspace tool and use it even for unprotected MPM?
+Huh so it's not normal.
+What I am doing wrong?
 
-johannes
-
+2011/4/13 Damian Lesiuk <lesiuk@gmail.com>:
+> I have very low connection speeds. Is it normal for that device/driver?
+>
+> My hostapd.conf:
+> interface=wlan0
+> driver=nl80211
+> ssid=lesiuk
+> channel=7
+> hw_mode=g
+> ieee80211n=1
+> ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
+>
+> macaddr_acl=0
+> auth_algs=1
+> ignore_broadcast_ssid=0
+> wpa=3
+> wpa_passphrase=password
+> wpa_key_mgmt=WPA-PSK
+> wpa_pairwise=TKIP
+> rsn_pairwise=CCMP
+>
+> beacon_int=100
+>
+> dtim_period=2
+>
