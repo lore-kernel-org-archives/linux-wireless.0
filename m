@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3122 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752891Ab1DDLux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 07:50:53 -0400
-Date: Mon, 4 Apr 2011 13:50:32 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2x00: fix cancelling uninitialized work
-Message-ID: <20110404115000.GA9707@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48067 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413Ab1DMFuS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 01:50:18 -0400
+Received: by iyb14 with SMTP id 14so274186iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:18 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.14890.766362.879019@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:22:42 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 02/40] ath9k_htc: Rename firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-{rx,tx}done_work's are only initialized for usb devices.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Since the new FW requires backward incompatible host driver changes,
+rename the FW to allow older driver versions to work with the
+older FW.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 9de9dbe..84eb6ad 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1062,8 +1062,10 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	 * Stop all work.
- 	 */
- 	cancel_work_sync(&rt2x00dev->intf_work);
--	cancel_work_sync(&rt2x00dev->rxdone_work);
--	cancel_work_sync(&rt2x00dev->txdone_work);
-+	if (rt2x00_is_usb(rt2x00dev)) {
-+		cancel_work_sync(&rt2x00dev->rxdone_work);
-+		cancel_work_sync(&rt2x00dev->txdone_work);
-+	}
- 	destroy_workqueue(rt2x00dev->workqueue);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index dc05820..c81b2da 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -17,8 +17,8 @@
+ #include "htc.h"
  
- 	/*
+ /* identify firmware images */
+-#define FIRMWARE_AR7010_1_1	"ar7010_1_1.fw"
+-#define FIRMWARE_AR9271		"ar9271.fw"
++#define FIRMWARE_AR7010_1_1     "htc_7010.fw"
++#define FIRMWARE_AR9271         "htc_9271.fw"
+ 
+ MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
+ MODULE_FIRMWARE(FIRMWARE_AR9271);
 -- 
-1.7.1
+1.7.4.4
 
