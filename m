@@ -1,42 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63059 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab1D2E7A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 00:59:00 -0400
-Received: by wya21 with SMTP id 21so2588790wya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 21:58:59 -0700 (PDT)
+Received: from lucidpixels.com ([75.144.35.66]:49685 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932114Ab1DMQBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 12:01:34 -0400
+Date: Wed, 13 Apr 2011 12:01:33 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+In-Reply-To: <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan>
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <19898.4633.920683.992470@gargle.gargle.HOWL>
-References: <19897.11321.556139.837633@gargle.gargle.HOWL>
-	<201104290116.26355.chunkeey@googlemail.com>
-	<19898.4633.920683.992470@gargle.gargle.HOWL>
-Date: Fri, 29 Apr 2011 12:58:59 +0800
-Message-ID: <BANLkTimid2tcH5nNHYkU6UPHhnxvgnJJYQ@mail.gmail.com> (sfid-20110429_065904_866365_32965179)
-Subject: Re: [PATCH 1/2] ath9k_htc: Dump base eeprom header for UB91/94/95
-From: Adrian Chadd <adrian@freebsd.org>
-To: Sujith <m.sujith@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: MULTIPART/MIXED; BOUNDARY="655872-245785011-1302710493=:2954"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 April 2011 09:19, Sujith <m.sujith@gmail.com> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> And BSD ? BSD is dead. Adrian is just deluded. :-)
-
-I know. There's even a commit to ath9k from me that obviously indicates that. :)
-
-But in all seriousness, I just wrote a few tools for BSD that:
-
-* take a dump of the EEPROM via the HAL diag API and write it to a
-text file, so it can be copied around as needed;
-* take a text dump of an EEPROM and decode it, for v14/v4k EEPROM
-formats. I'm about to do one up for the AR9287 when I drop in support
-for that.
+--655872-245785011-1302710493=:2954
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
 
-Adrian
+On Wed, 13 Apr 2011, Ivo Van Doorn wrote:
+
+> Hi,
+>
+>> I recall using this driver in staging and it crashing my machine, now th=
+ats
+>> its no longer in staging, I thought I'd give it another try.. =A0Using t=
+he
+>
+> The rt2800usb was not in staging but has been inside the main kernel
+> tree for quite
+> some time already, the alternative rt2870sta was in staging and will
+> be removed very soon.
+>
+>> following wireless usb adapter, I'm seeing very high latency when using
+>> the device in Linux, (with Windows, there are no problems). =A0Using Deb=
+ian
+>> Testing + wpa_supplicant, using the following USB adapter:
+>
+> Can you try disabling powersaving?
+> iwconfig wlan0 power off
+>
+> Ivo
+>
+
+Hi,
+
+Wow! That was it, now its interactive again.
+
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D1 ttl=3D64 time=3D0.5=
+81 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D2 ttl=3D64 time=3D0.6=
+47 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D3 ttl=3D64 time=3D0.5=
+69 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D4 ttl=3D64 time=3D0.6=
+86 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D5 ttl=3D64 time=3D0.6=
+74 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D6 ttl=3D64 time=3D1.1=
+8 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D7 ttl=3D64 time=3D1.7=
+7 ms
+64 bytes from wireless-host (192.168.1.2): icmp_req=3D8 ttl=3D64 time=3D0.6=
+54 ms
+
+Thanks, so its recommend to keep this off then, can that be set as the=20
+driver default?
+
+Justin.
+
+
+--655872-245785011-1302710493=:2954--
