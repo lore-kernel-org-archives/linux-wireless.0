@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19638 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754929Ab1D2QPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 12:15:13 -0400
-Subject: Re: [PATCH wireless-2.6 v2] iwlagn: fix "Received BA when not
- expected"
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1304092853.21342.2.camel@jlt3.sipsolutions.net>
-References: <20110429155105.GB5537@redhat.com>
-	 <1304092853.21342.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 09:12:15 -0700
-Message-ID: <1304093535.1808.3.camel@wwguy-ubuntu> (sfid-20110429_181516_946275_31A4CE06)
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63790 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758506Ab1DMLdF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 07:33:05 -0400
+Received: by bwz15 with SMTP id 15so479226bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 04:33:03 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Damian Lesiuk <lesiuk@gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
+Date: Wed, 13 Apr 2011 13:32:46 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <201104131214.53633.chunkeey@googlemail.com> <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
+In-Reply-To: <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104131332.47029.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-29 at 09:00 -0700, Johannes Berg wrote:
-> On Fri, 2011-04-29 at 17:51 +0200, Stanislaw Gruszka wrote:
-> > Need to use broadcast sta_id for management frames, otherwise we broke
-> > BA session in the firmware and get messages like that:
-> > 
-> > "Received BA when not expected"
-> > 
-> > or (on older kernels):
-> > 
-> > "BA scd_flow 0 does not match txq_id 10"
-> > 
-> > This fix regression introduced in 2.6.35 during station management
-> > code rewrite by:
-> > 
-> > commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
-> > Author: Johannes Berg <johannes.berg@intel.com>
-> > Date:   Fri Apr 30 11:30:45 2010 -0700
-> > 
-> >     iwlwifi: use iwl_find_station less
-> > 
-> > Patch partially resolve:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=16691
-> > However, there are still 11n performance problems on 4965 and 5xxx
-> > devices that need to be investigated.
-> > 
-> > Cc: stable@kernel.org # 2.6.35+
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> 
-> Clearly, the behaviour here was modified by me.That wasn't intentional,
-> but I still want to find out why it breaks anything. But that'll have to
-> wait, I have too much other stuff to fix up right now :(
-> 
-> Thanks.
-> 
-> johannes
-> 
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   17 +++++++++++------
-> >  1 files changed, 11 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > index 494de0e..4afae14 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > @@ -582,12 +582,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
-> >  
-> >  	hdr_len = ieee80211_hdrlen(fc);
-> >  
-> > -	/* Find index into station table for destination station */
-> > -	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-> > -	if (sta_id == IWL_INVALID_STATION) {
-> > -		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
-> > -			       hdr->addr1);
-> > -		goto drop_unlock;
-> > +	/* For management frames use broadcast id to do not break aggregation */
-> > +	if (!ieee80211_is_data(fc))
-> > +		sta_id = ctx->bcast_sta_id;
-> > +	else {
-> > +		/* Find index into station table for destination station */
-> > +		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-> > +		if (sta_id == IWL_INVALID_STATION) {
-> > +			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
-> > +				       hdr->addr1);
-> > +			goto drop_unlock;
-> > +		}
-> >  	}
-> >  
-> >  	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
-> 
-> 
+On Wednesday 13 April 2011 12:51:58 Damian Lesiuk wrote:
+> It doesn't solved my problem. Still max dl speed 16 mbps.
+ok, so it could be something else... maybe it's a driver bug, maybe
+something is outdated [avoid hostapd older than 0.7,3], or maybe
+just a simple configuration problem [on either side]?
 
+you can't tell that by just looking at the low throughput figure.
+Instead you probably have to capture the handshake between the
+AP+client and look who's lying about their 11n capabilities.
 
+Luckily, all mac80211-based driver come with a nifty feature which
+allows you to monitor any incoming/outgoing data. Just setup a
+monitor interface.
+<http://wireless.kernel.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+
+and start a sniffer. tcpdump/whireshark is more than enough.
+
+> btw, Can I use ath9k_htc with my Atheros 9170 in N master mode.
+no, ar9170 is too old. ath9k_htc is exclusive driver for the
+ar9271,ar701x+ar928x devices, which appeared in late 2009.
+
+> What about performance?
+it's ok.
+
+Regards,
+	Chr
