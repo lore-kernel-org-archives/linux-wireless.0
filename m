@@ -1,35 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35631 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab1DFKpb (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62387 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757074Ab1DMFx3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 06:45:31 -0400
-Subject: Re: [Patch] wireless: remove obsolete ar9170usb driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amerigo Wang <amwang@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1302086160-9158-1-git-send-email-amwang@redhat.com>
-References: <1302086160-9158-1-git-send-email-amwang@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 12:45:29 +0200
-Message-ID: <1302086729.3811.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 13 Apr 2011 01:53:29 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so275754iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:29 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15082.5614.262428@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:25:54 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 29/40] ath9k_htc: Use helper functions for TX processing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-06 at 18:36 +0800, Amerigo Wang wrote:
-> AR9170USB is scheduled to be removed in 2.6.40.
-> 
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Christian already submitted this patch, and I believe it was merged.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  137 +++++++++++++------------
+ 1 files changed, 73 insertions(+), 64 deletions(-)
 
-What tree are you working against? You seem to be missing a bunch of
-wireless things that _should_ be in linux-next (I was going to check but
-git.kernel.org is really slow right now)?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index ee5b3e2..944440c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -325,8 +325,8 @@ send:
+ 	return htc_send(priv->htc, skb);
+ }
+ 
+-static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+-				    struct ath9k_htc_sta *ista, u8 tid)
++static inline bool __ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
++					     struct ath9k_htc_sta *ista, u8 tid)
+ {
+ 	bool ret = false;
+ 
+@@ -338,89 +338,98 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+ 	return ret;
+ }
+ 
+-void ath9k_tx_tasklet(unsigned long data)
++static void ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
++				    struct ieee80211_vif *vif,
++				    struct sk_buff *skb)
+ {
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+-	struct ath9k_htc_tx_ctl *tx_ctl;
+-	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
+ 	struct ieee80211_hdr *hdr;
+-	struct ieee80211_tx_info *tx_info;
+-	struct sk_buff *skb = NULL;
+ 	__le16 fc;
+-	bool txok;
+-	int slot;
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++	hdr = (struct ieee80211_hdr *) skb->data;
++	fc = hdr->frame_control;
+ 
+-		slot = strip_drv_header(priv, skb);
+-		if (slot < 0) {
+-			dev_kfree_skb_any(skb);
+-			continue;
+-		}
++	rcu_read_lock();
+ 
+-		tx_ctl = HTC_SKB_CB(skb);
+-		hdr = (struct ieee80211_hdr *) skb->data;
+-		fc = hdr->frame_control;
+-		tx_info = IEEE80211_SKB_CB(skb);
+-		vif = tx_info->control.vif;
+-		txok = tx_ctl->txok;
++	sta = ieee80211_find_sta(vif, hdr->addr1);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
+ 
+-		memset(&tx_info->status, 0, sizeof(tx_info->status));
++	if (sta && conf_is_ht(&priv->hw->conf) &&
++	    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
++		if (ieee80211_is_data_qos(fc)) {
++			u8 *qc, tid;
++			struct ath9k_htc_sta *ista;
+ 
+-		/*
+-		 * URB submission failed for this frame, it never reached
+-		 * the target.
+-		 */
+-		if (!txok)
+-			goto send_mac80211;
++			qc = ieee80211_get_qos_ctl(hdr);
++			tid = qc[0] & 0xf;
++			ista = (struct ath9k_htc_sta *)sta->drv_priv;
++			if (__ath9k_htc_check_tx_aggr(priv, ista, tid)) {
++				ieee80211_start_tx_ba_session(sta, tid, 0);
++				spin_lock_bh(&priv->tx.tx_lock);
++				ista->tid_state[tid] = AGGR_PROGRESS;
++				spin_unlock_bh(&priv->tx.tx_lock);
++			}
++		}
++	}
+ 
+-		tx_info->flags |= IEEE80211_TX_STAT_ACK;
++	rcu_read_unlock();
++}
+ 
+-		if (!vif)
+-			goto send_mac80211;
++static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
++				 struct sk_buff *skb)
++{
++	struct ieee80211_vif *vif;
++	struct ath9k_htc_tx_ctl *tx_ctl;
++	struct ieee80211_tx_info *tx_info;
++	bool txok;
++	int slot;
+ 
+-		rcu_read_lock();
++	slot = strip_drv_header(priv, skb);
++	if (slot < 0) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 
+-		sta = ieee80211_find_sta(vif, hdr->addr1);
+-		if (!sta) {
+-			rcu_read_unlock();
+-			goto send_mac80211;
+-		}
++	tx_ctl = HTC_SKB_CB(skb);
++	txok = tx_ctl->txok;
++	tx_info = IEEE80211_SKB_CB(skb);
++	vif = tx_info->control.vif;
+ 
+-		/* Check if we need to start aggregation */
++	memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 
+-		if (sta && conf_is_ht(&priv->hw->conf) &&
+-		    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+-			if (ieee80211_is_data_qos(fc)) {
+-				u8 *qc, tid;
+-				struct ath9k_htc_sta *ista;
++	/*
++	 * URB submission failed for this frame, it never reached
++	 * the target.
++	 */
++	if (!txok || !vif)
++		goto send_mac80211;
+ 
+-				qc = ieee80211_get_qos_ctl(hdr);
+-				tid = qc[0] & 0xf;
+-				ista = (struct ath9k_htc_sta *)sta->drv_priv;
++	tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 
+-				if (ath9k_htc_check_tx_aggr(priv, ista, tid)) {
+-					ieee80211_start_tx_ba_session(sta, tid, 0);
+-					spin_lock_bh(&priv->tx.tx_lock);
+-					ista->tid_state[tid] = AGGR_PROGRESS;
+-					spin_unlock_bh(&priv->tx.tx_lock);
+-				}
+-			}
+-		}
++	ath9k_htc_check_tx_aggr(priv, vif, skb);
+ 
+-		rcu_read_unlock();
++send_mac80211:
++	spin_lock_bh(&priv->tx.tx_lock);
++	if (WARN_ON(--priv->tx.queued_cnt < 0))
++		priv->tx.queued_cnt = 0;
++	spin_unlock_bh(&priv->tx.tx_lock);
+ 
+-	send_mac80211:
+-		spin_lock_bh(&priv->tx.tx_lock);
+-		if (WARN_ON(--priv->tx.queued_cnt < 0))
+-			priv->tx.queued_cnt = 0;
+-		spin_unlock_bh(&priv->tx.tx_lock);
++	ath9k_htc_tx_clear_slot(priv, slot);
++
++	/* Send status to mac80211 */
++	ieee80211_tx_status(priv->hw, skb);
++}
+ 
+-		ath9k_htc_tx_clear_slot(priv, slot);
++void ath9k_tx_tasklet(unsigned long data)
++{
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
++	struct sk_buff *skb = NULL;
+ 
+-		/* Send status to mac80211 */
+-		ieee80211_tx_status(priv->hw, skb);
++	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
+ 	}
+ 
+ 	/* Wake TX queues if needed */
+-- 
+1.7.4.4
 
