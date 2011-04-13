@@ -1,94 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57439 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622Ab1DSNrh (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39448 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932476Ab1DMUkH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:47:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-Date: Tue, 19 Apr 2011 15:46:49 +0200
-Cc: George Kashperko <george@znau.edu.ua>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <201104181619.35115.arnd@arndb.de> <BANLkTinB-9h=bZg9zg219i2wi3zUCA6mcw@mail.gmail.com>
-In-Reply-To: <BANLkTinB-9h=bZg9zg219i2wi3zUCA6mcw@mail.gmail.com>
+	Wed, 13 Apr 2011 16:40:07 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104191546.49632.arnd@arndb.de>
+In-Reply-To: <1302726703.8015.1.camel@dev.znau.edu.ua>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+	<20110413163113.GA24015@kroah.com>
+	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+	<1302726703.8015.1.camel@dev.znau.edu.ua>
+Date: Wed, 13 Apr 2011 22:40:05 +0200
+Message-ID: <BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 18 April 2011, Rafał Miłecki wrote:
-> W dniu 18 kwietnia 2011 16:19 użytkownik Arnd Bergmann <arnd@arndb.de> napisał:
-> > You mean the hardware has two sets of registers containing the same
-> > information, one of them the standard registers, and one with broadcom
-> > specific ones?
-> >
-> > Why don't you just use the standard ones then?
-> 
-> No. Did you read my first mail in this thread?
+2011/4/13 George Kashperko <george@znau.edu.ua>:
+>
+> В Срд, 13/04/2011 в 21:39 +0200, Rafał Miłecki пишет:
+>> 2011/4/13 Greg KH <greg@kroah.com>:
+>> >> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
+>> >> new file mode 100644
+>> >> index 0000000..17e882c
+>> >> --- /dev/null
+>> >> +++ b/drivers/axi/axi_pci_bridge.c
+>> >> @@ -0,0 +1,33 @@
+>> >> +/*
+>> >> + * AXI PCI bridge module
+>> >> + *
+>> >> + * Licensed under the GNU/GPL. See COPYING for details.
+>> >> + */
+>> >> +
+>> >> +#include "axi_private.h"
+>> >> +
+>> >> +#include <linux/axi/axi.h>
+>> >> +#include <linux/pci.h>
+>> >> +
+>> >> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
+>> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+>> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+>> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+>> >> +     { 0, },
+>> >> +};
+>> >> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
+>> >> +
+>> >> +static struct pci_driver axi_pci_bridge_driver = {
+>> >> +     .name = "axi-pci-bridge",
+>> >> +     .id_table = axi_pci_bridge_tbl,
+>> >> +};
+>> >> +
+>> >> +int __init axi_pci_bridge_init(void)
+>> >> +{
+>> >> +     return axi_host_pci_register(&axi_pci_bridge_driver);
+>> >> +}
+>> >> +
+>> >> +void __exit axi_pci_bridge_exit(void)
+>> >> +{
+>> >> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
+>> >> +}
+>> >
+>> > You register a pci driver that does nothing?  That's not right, you need
+>> > to then base your axi bus off of that pci device, so it is hooked up
+>> > correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
+>> > the virtual location for your axi bus, right?
+>>
+>> Please take a look at:
+>> driver->probe = axi_host_pci_probe;
+>> driver->remove = axi_host_pci_remove;
+>> return pci_register_driver(driver);
+>>
+>>
+>> >> +bool axi_core_is_enabled(struct axi_device *core)
+>> >> +{
+>> >> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
+>> >> +         != AXI_IOCTL_CLK)
+>> >> +             return false;
+>> >> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
+>> >> +             return false;
+>> >> +     return true;
+>> >> +}
+>> >> +EXPORT_SYMBOL(axi_core_is_enabled);
+>> >
+>> > EXPORT_SYMBOL_GPL()?
+>> >
+>> > What module uses this?  And why would it care?
+>> >
+>> >> +EXPORT_SYMBOL(axi_core_enable);
+>> >
+>> > EXPORT_SYMBOL_GPL()?
+>> >
+>> > Same goes for your other exports, just want you to be sure here.
+>>
+>> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
+>> drivers from using our bus driver, right? I'm don't have preferences
+>> on this, if you prefer us to force GPL, I can.
+>>
+>>
+>> >> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
+>> >> +{
+>> >> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
+>> >> +}
+>> >> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
+>> >
+>> > "xaxi"?  Shouldn't that be consistant with the other exports and start
+>> > with "axi"?
+>>
+>> Left from old tests/rewrites/splitting. Thanks.
+>>
+>>
+>> >> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
+>> >> +{
+>> >> +     if (unlikely(core->bus->mapped_core != core))
+>> >
+>> > Are you sure about the use of unlikely in this, and other functions?
+>> > The compiler almost always does a better job than we do for these types
+>> > of calls, just let it do it's job.
+>> >
+>> >> +             axi_host_pci_switch_core(core);
+>> >> +     return ioread8(core->bus->mmio + offset);
+>> >
+>> > I think because of that unlikely, you just slowed down all pci devices,
+>> > right?  That's not very nice :)
+>>
+>> Hm, my logic suggests it is alright, but please consider this once
+>> more with me ;)
+>>
+>> For the most of the time mapped_core (active core) do not change. We
+>> perform few hundreds of operations on one core in a row. This way
+>> mapped_core points to passed core for most of the time. Condition
+>> (mapped_core != core) is unlikely to happen.
+>>
+>> Is there anything wrong in my logic?
+>>
+> Yes, there is. You don't need that "if" at all.
 
-I'm sorry, but I found the information in this thread and the related ones
-highly confusing and sometimes contradictory. Thanks for clarifying it
-once more.
+Damn, WHY do you make me ask why, why, why, all the time?! Can't you
+just write word of explanation without being asked for?
 
-> There is pair of cores for every device. First is AMBA-specific called
-> agent/wrapper and second one is Broadcom-specific.
-> 
-> AMBA specific core called agent/wrapper has AMBA specific registers:
-> CID and PID. However we do not ever read that in Broadcom driver,
-> because that are useless for us. On AMBA specific core we use only
-> some Broadcom specific registers to manage (enable/disable) second
-> (Broadcom-specific) core.
-
-Ideally, we should model the devices along the IP blocks and how they
-fit together. If I understand correctly what you are saying, your hardware
-looks like
-
-pci_dev
-  |
-  +---------+-----------+ ...
-  |         |           |
- amba_dev   amba_dev   amba_dev
-   |           |           |
- bcm_dev     bcm_dev     bcm_dev
-
-In that case, you would need three bus types (pci_bus, amba_bus and
-your own bcm_bus) and at least seven devices to represent all of it
-using the device model. This is possible, but it seems you are also
-saying that you don't need the complexity of this, e.g. because you
-don't care about the amba device at all.
-
-The easiest shortcut would be to not represent the AMBA devices
-at all, and I guess that is fine. Introducing your own bus_type
-for the broadcom devices sounds like a correct way to use the
-linux driver model, especially if the devices on that bus are
-totally independent from one another. I think you should do that
-if you have e.g. a PCI card containing a single PCI function with
-multiple IP blocks that do completely unrelated things (wifi,
-bluetooth, ethernet, ...).
-
-You could also just use platform_devices if you don't want to
-introduce your own bus, and there is not much commonality between
-the devices in terms of probing them.
-
-However, I would not use the device model if the IP blocks in your
-device are just responsible for different aspects of one logical
-device, e.g. PHY, power management and DMA within a single network
-adapter. If that is what you have, don't use a Linux device for
-each of those blocks at all, but instead do a "library" module
-for each block: export some interfaces from the module that can
-be used by multiple drivers, and create the data structure from
-the main driver, filled out with the data describing the IP
-block (memory ranges, interrupts, etc).
-
-	Arnd
+-- 
+Rafał
