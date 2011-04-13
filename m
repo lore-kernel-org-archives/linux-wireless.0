@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55738 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755986Ab1DFOYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 10:24:14 -0400
-Date: Wed, 6 Apr 2011 16:18:49 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: wwguy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] iwlwifi: fix enqueue hcmd race conditions
-Message-ID: <20110406141848.GA8979@redhat.com>
-References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
- <E9954878DD1FB34FAE5187FB88C58A3501428BA47D@orsmsx506.amr.corp.intel.com>
- <20110401072206.GA2790@redhat.com>
- <1301670445.22383.11.camel@wwguy-ubuntu>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:55834 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757391Ab1DMXb2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 19:31:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301670445.22383.11.camel@wwguy-ubuntu>
+In-Reply-To: <1302726187.7911.11.camel@dev.znau.edu.ua>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	<20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+	<1302634039.14216.10.camel@dev.znau.edu.ua>
+	<BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+	<1302635550.14216.21.camel@dev.znau.edu.ua>
+	<BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+	<4DA4AC4B.90409@hauke-m.de>
+	<BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
+	<BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
+	<1302640546.14216.65.camel@dev.znau.edu.ua>
+	<BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
+	<op.vtvalzu33ri7v4@arend-laptop>
+	<BANLkTik6JZ-n3sVjCFK_x1yNRH3_o3_6rg@mail.gmail.com>
+	<1302726187.7911.11.camel@dev.znau.edu.ua>
+Date: Thu, 14 Apr 2011 01:31:25 +0200
+Message-ID: <BANLkTikR+Y=FwqO15iHhaA57NdfFi6-ykA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"balbi@ti.com" <balbi@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 01, 2011 at 08:07:25AM -0700, wwguy wrote:
-> > > Do you have a bug# against this?
-> > No, I was fixing problems happened on my local system.
-> > 
-> fair enough :-), thanks for the update
+2011/4/13 George Kashperko <george@znau.edu.ua>:
+> Look brcm80211/inclue/aidmp.h for those.
 
-So we could consider patch as acked.
+Interesting, I found some register defines that hopefully should be
+common/general:
+http://infocenter.arm.com/help/topic/com.arm.doc.ddi0344c/Bgbhedeg.html
+http://infocenter.arm.com/help/topic/com.arm.doc.ddi0344c/Cfacacha.html
 
-Stanislaw
+-- 
+Rafał
