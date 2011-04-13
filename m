@@ -1,81 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59278 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599Ab1DUMeB (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62387 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863Ab1DMFyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 08:34:01 -0400
-Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
- IEEE80211_HW_CRYPTO_ENABLED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <20110421121513.GC27527@hertz.marvell.com>
-References: <20110415045321.GA11504@hertz.marvell.com>
-	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
-	 <20110415084005.GC11576@hertz.marvell.com>
-	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
-	 <20110415105140.GD11576@hertz.marvell.com>
-	 <1302865304.3572.15.camel@jlt3.sipsolutions.net>
-	 <20110421121513.GC27527@hertz.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Apr 2011 14:33:56 +0200
-Message-ID: <1303389236.3597.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 13 Apr 2011 01:54:01 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so275754iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:54:01 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15114.129438.59097@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:26:26 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 34/40] ath9k_htc: Add a debugfs file to dump TX slot
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-21 at 17:45 +0530, Yogesh Ashok Powar wrote:
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+ information
 
-> @@ -101,6 +101,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
->  
->  	if (!ret) {
->  		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-> +		if (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
-> +			key->local->crypto_tx_tailroom_needed_cnt++;
-> +
->  		return 0;
->  	}
->  
-> @@ -117,6 +120,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
->  	case WLAN_CIPHER_SUITE_CCMP:
->  	case WLAN_CIPHER_SUITE_AES_CMAC:
->  		/* all of these we can do in software */
-> +
-> +		/* SW encryption need tailroom reservation */
-> +		BUG_ON(!key->local);
+Location: ath9k_htc/phy#/slot
 
-BUG_ON? Seriously? It was already dereferenced about 10 times here... In
-any case, this isn't right.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h           |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   42 ++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+), 0 deletions(-)
 
-> @@ -156,6 +164,11 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
->  			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
->  
->  	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-> +
-> +	if ((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
-> +				&& key->local->crypto_tx_tailroom_needed_cnt)
-> +		key->local->crypto_tx_tailroom_needed_cnt--;
-
-And that if (cnt) can't be right either.
-
-
-> +	if (key_sw_programmed && local->crypto_tx_tailroom_needed_cnt)
-> +		local->crypto_tx_tailroom_needed_cnt--;
-
-So you're putting if (needed_cnt) everywhere because you have
-refcounting bugs? Better fix those bugs ....
-
-
-> +	local->crypto_tx_tailroom_needed_cnt = 0;
-
-Not necessary, it's already 0.
-
-
-I don't think you understood what I said how it should work. You must
-increase the counter when the key is created, and then you can reduce it
-again when the key is uploaded and no mmic is needed.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 6c103ed..b9c7bec 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -338,6 +338,7 @@ struct ath9k_debug {
+ 	struct dentry *debugfs_tgt_stats;
+ 	struct dentry *debugfs_xmit;
+ 	struct dentry *debugfs_recv;
++	struct dentry *debugfs_slot;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ 	u32 txrate;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 91a486c..119cc54 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -244,6 +244,41 @@ static const struct file_operations fops_recv = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t read_file_slot(struct file *file, char __user *user_buf,
++			      size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
++
++	spin_lock_bh(&priv->tx.tx_lock);
++
++	len += snprintf(buf + len, sizeof(buf) - len, "TX slot bitmap : ");
++
++	len += bitmap_scnprintf(buf + len, sizeof(buf) - len,
++			       priv->tx.tx_slot, MAX_TX_BUF_NUM);
++
++	len += snprintf(buf + len, sizeof(buf) - len, "\n");
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"Used slots     : %d\n",
++			bitmap_weight(priv->tx.tx_slot, MAX_TX_BUF_NUM));
++
++	spin_unlock_bh(&priv->tx.tx_lock);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_slot = {
++	.read = read_file_slot,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath9k_htc_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -276,6 +311,12 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	if (!priv->debug.debugfs_recv)
+ 		goto err;
+ 
++	priv->debug.debugfs_slot = debugfs_create_file("slot", S_IRUSR,
++						       priv->debug.debugfs_phy,
++						       priv, &fops_slot);
++	if (!priv->debug.debugfs_slot)
++		goto err;
++
+ 	return 0;
+ 
+ err:
+@@ -288,6 +329,7 @@ void ath9k_htc_exit_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+ 
++	debugfs_remove(priv->debug.debugfs_slot);
+ 	debugfs_remove(priv->debug.debugfs_recv);
+ 	debugfs_remove(priv->debug.debugfs_xmit);
+ 	debugfs_remove(priv->debug.debugfs_tgt_stats);
+-- 
+1.7.4.4
 
