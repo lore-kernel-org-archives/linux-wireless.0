@@ -1,46 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47097 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753993Ab1D2Spx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45218 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413Ab1DMFu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 14:45:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, mickflemm@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: fix uninitialized var warning for txf2txs
-Date: Fri, 29 Apr 2011 14:36:43 -0400
-Message-Id: <1304102203-27321-1-git-send-email-linville@tuxdriver.com> (sfid-20110429_204600_675576_A1E786E9)
+	Wed, 13 Apr 2011 01:50:27 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so275635iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:27 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.14899.114710.799408@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:22:51 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 03/40] ath9k_htc: Add a WMI command to get the firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  drivers/net/wireless/ath/ath5k/reset.o
-drivers/net/wireless/ath/ath5k/reset.c: In function ‘ath5k_hw_init_core_clock’:
-drivers/net/wireless/ath/ath5k/reset.c:100:51: warning: ‘txf2txs’ may be used uninitialized in this function
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+ version
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Also, update the wiphy information and use the correct
+device pointer when registering. This would fix ethtool.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/reset.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    3 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   32 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/wmi.c          |    2 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |    6 ++++
+ 4 files changed, 43 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 8420689..3510de2 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -159,6 +159,11 @@ static void ath5k_hw_init_core_clock(struct ath5k_hw *ah)
- 	rxlat = AR5K_REG_MS(usec_reg, AR5K_USEC_RX_LATENCY_5211);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index ec47be9..9544cd7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -388,6 +388,9 @@ struct ath9k_htc_priv {
+ 	struct htc_target *htc;
+ 	struct wmi *wmi;
  
- 	/*
-+	 * Set default Tx frame to Tx data start delay
-+	 */
-+	txf2txs = AR5K_INIT_TXF2TXD_START_DEFAULT;
++	u16 fw_version_major;
++	u16 fw_version_minor;
 +
-+	/*
- 	 * 5210 initvals don't include usec settings
- 	 * so we need to use magic values here for
- 	 * tx/rx latencies
+ 	enum htc_endpoint_id wmi_cmd_ep;
+ 	enum htc_endpoint_id beacon_ep;
+ 	enum htc_endpoint_id cab_ep;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 8303b34..6bbfca5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -782,6 +782,32 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+ }
+ 
++static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
++{
++	struct ieee80211_hw *hw = priv->hw;
++	struct wmi_fw_version cmd_rsp;
++	int ret;
++
++	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
++
++	WMI_CMD(WMI_GET_FW_VERSION);
++	if (ret)
++		return -EINVAL;
++
++	priv->fw_version_major = be16_to_cpu(cmd_rsp.major);
++	priv->fw_version_minor = be16_to_cpu(cmd_rsp.minor);
++
++	snprintf(hw->wiphy->fw_version, ETHTOOL_BUSINFO_LEN, "%d.%d",
++		 priv->fw_version_major,
++		 priv->fw_version_minor);
++
++	dev_info(priv->dev, "ath9k_htc: FW Version: %d.%d\n",
++		 priv->fw_version_major,
++		 priv->fw_version_minor);
++
++	return 0;
++}
++
+ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 			     u16 devid, char *product, u32 drv_info)
+ {
+@@ -801,6 +827,10 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 	common = ath9k_hw_common(ah);
+ 	ath9k_set_hw_capab(priv, hw);
+ 
++	error = ath9k_init_firmware_version(priv);
++	if (error != 0)
++		goto err_fw;
++
+ 	/* Initialize regulatory */
+ 	error = ath_regd_init(&common->regulatory, priv->hw->wiphy,
+ 			      ath9k_reg_notifier);
+@@ -861,6 +891,8 @@ err_rx:
+ err_tx:
+ 	/* Nothing */
+ err_regd:
++	/* Nothing */
++err_fw:
+ 	ath9k_deinit_priv(priv);
+ err_init:
+ 	return error;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index d3d2490..267a98f 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -23,6 +23,8 @@ static const char *wmi_cmd_to_name(enum wmi_cmd_id wmi_cmd)
+ 		return "WMI_ECHO_CMDID";
+ 	case WMI_ACCESS_MEMORY_CMDID:
+ 		return "WMI_ACCESS_MEMORY_CMDID";
++	case WMI_GET_FW_VERSION:
++		return "WMI_GET_FW_VERSION";
+ 	case WMI_DISABLE_INTR_CMDID:
+ 		return "WMI_DISABLE_INTR_CMDID";
+ 	case WMI_ENABLE_INTR_CMDID:
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 4208427..6a36572 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -31,11 +31,17 @@ struct wmi_cmd_hdr {
+ 	__be16 seq_no;
+ } __packed;
+ 
++struct wmi_fw_version {
++	__be16 major;
++	__be16 minor;
++
++} __packed;
+ enum wmi_cmd_id {
+ 	WMI_ECHO_CMDID = 0x0001,
+ 	WMI_ACCESS_MEMORY_CMDID,
+ 
+ 	/* Commands to Target */
++	WMI_GET_FW_VERSION,
+ 	WMI_DISABLE_INTR_CMDID,
+ 	WMI_ENABLE_INTR_CMDID,
+ 	WMI_RX_LINK_CMDID,
 -- 
 1.7.4.4
 
