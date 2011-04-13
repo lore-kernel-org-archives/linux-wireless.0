@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4422 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751877Ab1DSNqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:46:15 -0400
-Message-ID: <4DAD920A.9080500@broadcom.com>
-Date: Tue, 19 Apr 2011 15:45:46 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58850 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756293Ab1DMOYH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 10:24:07 -0400
+Received: by bwz15 with SMTP id 15so615180bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 07:24:06 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	"gregkh@suse.de" <gregkh@suse.de>
-cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] staging: brcm80211: removed #ifdef __mips__
-References: <1303197225-4263-1-git-send-email-rvossen@broadcom.com>
- <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
- <1303215002.27432.5.camel@maggie>
-In-Reply-To: <1303215002.27432.5.camel@maggie>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <201104131332.47029.chunkeey@googlemail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <201104131214.53633.chunkeey@googlemail.com> <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
+ <201104131332.47029.chunkeey@googlemail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Wed, 13 Apr 2011 16:23:26 +0200
+Message-ID: <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello guys,
+tcpdump file
+http://uniwersytecka.dyndns.biz/~lesiuk/dump
 
-Greg, please drop this patch set. Rest of this email is FYI only.
+I had hostapd older than 0.7.3 but after upgrade there is the same problem.
+There is only one change. Windows 7 is displaying it as 75 mbps
+connection not 150 mbps (with the same config as with the older
+version) but I have still 16 mbps dl rate.
 
-Michael:
+I am using gentoo linux and I didn't compiled that driver manually. I
+have that driver from 3.6.38 kernel.
+I really want to make it work.
 
-> Are you sure? __mips__ is automagically defined by GCC, if compiling
-> for MIPS. Maybe it should be converted to some CONFIG_... symbol.
-> But removal seems wrong.
+What should I do? Will OS change help?
 
-You are right. The majority of the removed #ifdef __mips__ code has to 
-do with write flushing. To accomplish this, it performs a R_REG after a 
-W_REG. I assumed that writeb() and friends guarantee ordering and write 
-flushing, but after some reading I learned that this is not the case.
-
-I will rework the code and submit a new patch set.
-
-For some background info: this patch was a reaction on an email from 
-John Linville to us. John wrote:
-
-<quote>
-I took a quick run through a pull of staging from today.  I made a few
-notes, but a lot of them would seem to relate to the utils stuff you
-mention above.  One general comment would be that there still seems
-to be a lot of MIPS-specific stuff buried in the code, in particular
-a lot of "#ifdef __mips__" stuff that if necessary should at least
-be hidden inside the W_REG macro.
-</quote>
-
-Thanks, Roland.
-
+2011/4/13 Christian Lamparter <chunkeey@googlemail.com>:
+> On Wednesday 13 April 2011 12:51:58 Damian Lesiuk wrote:
+>> It doesn't solved my problem. Still max dl speed 16 mbps.
+> ok, so it could be something else... maybe it's a driver bug, maybe
+> something is outdated [avoid hostapd older than 0.7,3], or maybe
+> just a simple configuration problem [on either side]?
+>
+> you can't tell that by just looking at the low throughput figure.
+> Instead you probably have to capture the handshake between the
+> AP+client and look who's lying about their 11n capabilities.
+>
+> Luckily, all mac80211-based driver come with a nifty feature which
+> allows you to monitor any incoming/outgoing data. Just setup a
+> monitor interface.
+> <http://wireless.kernel.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+>
+> and start a sniffer. tcpdump/whireshark is more than enough.
+>
+>> btw, Can I use ath9k_htc with my Atheros 9170 in N master mode.
+> no, ar9170 is too old. ath9k_htc is exclusive driver for the
+> ar9271,ar701x+ar928x devices, which appeared in late 2009.
+>
+>> What about performance?
+> it's ok.
+>
+> Regards,
+>        Chr
+>
