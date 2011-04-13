@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39139 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824Ab1DCIhL (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58319 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317Ab1DMVTu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2011 04:37:11 -0400
-Subject: Re: [PATCH 1/2] mwifiex: return success in set_default_key for
- WPA/WPA2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
+	Wed, 13 Apr 2011 17:19:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <1302729243.8479.1.camel@dev.znau.edu.ua>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+	<20110413163113.GA24015@kroah.com>
+	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+	<1302726703.8015.1.camel@dev.znau.edu.ua>
+	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
+	<1302727516.8015.9.camel@dev.znau.edu.ua>
+	<BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
+	<1302729243.8479.1.camel@dev.znau.edu.ua>
+Date: Wed, 13 Apr 2011 23:19:48 +0200
+Message-ID: <BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1301817775.3984.3.camel@jlt3.sipsolutions.net>
-References: <1301708207-16265-1-git-send-email-bzhao@marvell.com>
-	 <1301817775.3984.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 03 Apr 2011 10:37:06 +0200
-Message-ID: <1301819826.3984.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-03 at 10:02 +0200, Johannes Berg wrote:
-> On Fri, 2011-04-01 at 18:36 -0700, Bing Zhao wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> > 
-> > When testing wpa_supplicant with 'nl80211' driver to connect
-> > to an AP with WPA/WPA2 security, we notice the followings:
-> > 
-> > 1) add_key is called firstly with the key from cfg80211
-> > 2) set_defaut_key is called next
-> > 
-> > set_default_key() is specific to WEP keys and should not be
-> > called in case of WPA/WPA2 security. The set_default_key()
-> > won't be called if wpa_supplicant uses "-Dwext" option,
-> > but it's been called if "-Dnl80211" option is specified.
-> > 
-> > We can fix this issue by adding a check to return from
-> > set_default_key() if WEP key is not configured.
-> 
-> Hmmm. Yeah this seems like it shouldn't be happening, but maybe checking
-> should be in cfg80211 and it should reject the supplicant's call?
+2011/4/13 George Kashperko <george@znau.edu.ua>:
+>> I had no idea what you were referring to. We do not dig into PCIe
+>> functions yet, so I believe for now we need this "if".
+> You are already deep inside. Your host code drives pci function.
 
-Ok Jouni and I just discussed this briefly, and it looks like there is
-indeed a special case where the GTK is also set as the default TX key:
-this case is when the station requested "no pairwise" or when the AP did
-the same thing in the configuration.
+But I don't use multiple PCIe functions, do not focus on that at all.
 
-Is it possible that this just happens to be the case in your tests? It
-looks like that would be rather strange, but that's a corner case where
-the supplicant would possibly set the GTK as the default key.
-
-In any case, this patch seems wrong in that you should never return
-success if the operation actually failed.
-
-johannes
-
+-- 
+Rafał
