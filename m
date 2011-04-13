@@ -1,126 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45773 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab1DROum (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 10:50:42 -0400
-Received: by fxm17 with SMTP id 17so2856188fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 07:50:40 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
-Date: Mon, 18 Apr 2011 16:48:43 +0200
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com> <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
-In-Reply-To: <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201104181648.43967.helmut.schaa@googlemail.com>
+Received: from smtp205.alice.it ([82.57.200.101]:56174 "EHLO smtp205.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757107Ab1DMIof (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 04:44:35 -0400
+Date: Wed, 13 Apr 2011 10:44:02 +0200
+From: Antonio Ospite <ospite@studenti.unina.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
+Message-Id: <20110413104402.d0115659.ospite@studenti.unina.it>
+In-Reply-To: <1302608642.3639.17.camel@jlt3.sipsolutions.net>
+References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
+	<1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
+	<1302608488.3639.15.camel@jlt3.sipsolutions.net>
+	<1302608642.3639.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__13_Apr_2011_10_44_02_+0200_3ahMGlXs2nCEJT5K"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--Signature=_Wed__13_Apr_2011_10_44_02_+0200_3ahMGlXs2nCEJT5K
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Am Montag, 18. April 2011 schrieb Ivo Van Doorn:
-> > Wouldn't this be better to create two pointers in struct rt2x00_dev.
-> > One for writing function and one for reading function? Am I right
-> > thinking calling functions by pointers is quite fast? Or is this still
-> > noticeably slower than using proper functions directly?
-> 
-> We already have the pointer inside struct rt2x00_dev which references
-> the register access functions for rt2800pci/usb. These pointers are used
-> by rt2800lib to access the common registers. What this patch does, is
-> optimize the case where we exactly know which function we need, because
-> we are in the actual driver.
-> 
-> As for the performance, I'll let Helmut comment on that as he created patch 20,
-> which introduced this change to rt2800pci. :)
+On Tue, 12 Apr 2011 13:44:02 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Sure, I was comparing some assembly in the rt2800pci hotpaths (on a 380Mhz
-MIPS CPU btw). A register read/write on PCI is just a readl or writel,
-nothing more but using the indirect wrappers we get something like this
-(This is x86_64 as I didn't want to cross compile right now). For example
-the register read + write in rt2800pci_enable_interrupt (which is called
-in every tasklet invocation, which can happen for every rx'ed frame and
-every tx'ed frame).
+> On Tue, 2011-04-12 at 13:41 +0200, Johannes Berg wrote:
+>=20
+> > > + * static struct regulator_consumer_supply pcap_regulator_V6_consume=
+rs [] =3D {
+> > > + * 	{ .dev_name =3D "rfkill-regulator.0", supply =3D "vrfkill" },
+> > > + * };
+> >=20
+> > It's a comment, but it should be .supply =3D (missing the .)
+> >
 
-movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
-leaq    -36(%rbp), %rdx #, tmp82
-movq    %rbx, %rdi      # rt2x00dev,
-movq    72(%rax), %rax  # D.47612_27->drv, D.47612_27->drv
-movl    $516, %esi      #,
-call    *(%rax) # rt2800ops_29->register_read
-movb    %r14b, %cl      #,
-movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
-movq    %rbx, %rdi      # rt2x00dev,
-movq    72(%rax), %rax  # D.47619_31->drv, D.47619_31->drv
-movl    $516, %esi      #,
-movl    $1, %edx        #, reg.119
-sall    %cl, %edx       #, reg.119
-andl    %r13d, %edx     # irq_field$bit_mask, reg.119
-notl    %r13d   # tmp89
-andl    -36(%rbp), %r13d        # reg, tmp89
-orl     %r13d, %edx     # tmp89, reg.119
-movl    %edx, -36(%rbp) # reg.119, reg
-call    *16(%rax)       # rt2800ops_33->register_write
+well spotted, I'll fix this.
 
-Also, this will trigger rt2x00pci_register_read
+> > > +	if (pdata->name =3D=3D NULL || pdata->type =3D=3D 0) {
+> > > +		dev_err(&pdev->dev, "invalid name or type in platform data\n");
+> > > +		return -EINVAL;
+> > > +	}
+> > > +
+> > > +	vcc =3D regulator_get_exclusive(&pdev->dev, "vrfkill");
+> >=20
+> > Wasn't that supposed to use pdata->supply? Actually, there's no member
+> > "supply" in the struct?
+>=20
+> Oh wait, I think I just misunderstood how this works. But if the name is
+> "vrfkill" how does that really work with multiple instances?
+>
 
-pushq   %rbp    #
-mov     %esi, %esi      # offset, addr.27
-movq    %rsp, %rbp      #,
-addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.27
-movl    %eax, (%rdx)    # ret,* value
+That's how the regulator framework works, I know Mark already replied to
+you but I try to elaborate more for the records and to organize my=20
+thoughts about that:
 
-And rt2x00pci_register_write:
+ - In the consumers for the regulator we choose the virtual supply,
+   "vrfkill" in this case, and which driver is going to use it.
 
-pushq   %rbp    #
-mov     %esi, %esi      # offset, addr.26
-movq    %rsp, %rbp      #,
-addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.26
-movl 	%edx,(%rsi)        # value,* addr.26
+ - Wrt. to multiple instances, they are distinguished using device ids.
 
-And here the same when using rt2x00pci_register_read/write directly:
+   When we set consumers for a physical regulator we can tell: device
+   "rfkill-regulator.1" will call this regulator "vrfkill" and we
+   declare the relative rfkill-regulator platform device with .id=3D1,
+   this way the regulator framework knows what physical regulator to
+   return when asked for vrfkill _from_ a rfkill-regulator platform
+   device instance with .id=3D=3D1
 
-movq    1056(%rbx), %rax        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
-movl 	516(%rax),%eax     #, reg.119
-movl    %r13d, %edx     # irq_field$bit_mask, tmp80
-movb    %r14b, %cl      #,
-notl    %edx    # tmp80
-andl    %edx, %eax      # tmp80, reg.119
-movl    $1, %edx        #, tmp85
-sall    %cl, %edx       #, tmp85
-andl    %r13d, %edx     # irq_field$bit_mask, tmp85
-orl     %edx, %eax      # tmp85, reg.119
-movq    1056(%rbx), %rdx        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
-movl 	%eax,516(%rdx)     # reg.119,
+I hope I am not introducing any inaccuracies :)
 
-As you can see we save more then just one indirect function call:
+A v3 of the patch is on its way.
 
-17 movs -> 7 movs
-2 calls -> 0 calls
-1 add -> 0 adds
+Thanks,
+   Antonio
 
-This happens because the compiler is able to apply a number of optimizations
-that are only possible by inlining rt2x00pci_register_read/write. When using
-the indirect function call the compiler is not able to inline them.
+--=20
+Antonio Ospite
+http://ao2.it
 
-So, I first thought about using direct calls only in the interrupt handler
-and the RX/TX hotpaths but since using rt2800_register_read and
-rt2x00pci_register_read in different locations in rt2800pci would be even
-more confusing I just replaced every rt2800_register_read with
-rt2x00pci_register_read in rt2800pci.
+PGP public key ID: 0x4553B001
 
-One way to keep the abstraction and still improve the register_read/write
-operations would be to introduce a inlined rt2800pci_register_read/write
-which directly calls rt2x00pci_register_read/write and provide that via
-rt2800_ops to rt2800lib. That way all calls in rt2800pci can directly
-inline rt2x00_register_read/write while rt2800lib will still use indirect
-calls to do the same.
+A: Because it messes up the order in which people normally read text.
+   See http://en.wikipedia.org/wiki/Posting_style
+Q: Why is top-posting such a bad thing?
 
-However, I didn't see any need for this.
+--Signature=_Wed__13_Apr_2011_10_44_02_+0200_3ahMGlXs2nCEJT5K
+Content-Type: application/pgp-signature
 
-Helmut
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2lYlIACgkQ5xr2akVTsAEHgwCeLoQn+4pdfzjNybhGqkO/UQsZ
+2roAn30ToYZp7oaoPNBIotE9FXiybPpv
+=AUSS
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__13_Apr_2011_10_44_02_+0200_3ahMGlXs2nCEJT5K--
