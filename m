@@ -1,212 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34280 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754305Ab1DLO0C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 10:26:02 -0400
-Date: Tue, 12 Apr 2011 16:26:05 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Robin Dong <hao.bigrat@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Robin Dong <sanbai@taobao.com>
-Subject: Re: [PATCH] fix iwl3945 tx power setting in iwl3945_init_drv
-Message-ID: <20110412142604.GA5260@redhat.com>
-References: <1302433562-4078-1-git-send-email-hao.bigrat@gmail.com>
- <20110411182531.GA5344@redhat.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863Ab1DMFxz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 01:53:55 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:55 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110411182531.GA5344@redhat.com>
+Message-ID: <19877.15106.914901.75458@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:26:18 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 33/40] ath9k_htc: Add support for TX completion
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 08:25:31PM +0200, Stanislaw Gruszka wrote:
-> > When I build and run the kernel-2.6.39-rc2 on my laptop, my intel-3945-a/b/g wireless
-> > card will not work and the dmesg is:
-> > 
-> > [   58.597834] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [   58.597839] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [   58.598276] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [   58.598279] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [   94.064147] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [   94.064152] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [   94.064529] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [   94.064533] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [  133.892160] sky2 0000:02:00.0: eth1: disabling interface
-> > [  473.313935] sky2 0000:02:00.0: eth1: enabling interface
-> > [  473.314238] ADDRCONF(NETDEV_UP): eth1: link is not ready
-> > [  473.383740] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [  473.383748] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [  473.384146] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [  473.384153] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [  473.455655] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [  473.455663] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > [  473.456128] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> > [  473.456134] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> > 
-> > It is weird the iwl3945 set txpower 15 above limit 14.
-> > So I checked iwl4965 and iwl3945 driver and found out it will set 
-> > tx_power_next to 0 in "iwl4965_init_drv" but to 15 in "iwl3945_init_drv"
-> > I change tx_power_next=0 in "iwl3945_init_drv", and my wireless card works.
-> 
-> Thanks for catching this. I wonder if this is a problem of bad
-> tx_power_device_lmt value instead of default setting, because on older
-> kernel default tx_power value 15 worked, right? I would like to avoid
-> changing default setting is possible.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-I think I found reason of the problem, that tx_power_next is not
-initialized to max power (eg. tx_power_device_lmt) like tx_power_user_lmt is.
-Please check below patch:
+Now that the infrastructure is in place, process WMI
+TX status events and complete packets.
 
->From 0ab6465255442331cc9c214d7f26b11a7c61032a Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Tue, 12 Apr 2011 15:34:43 +0200
-Subject: [PATCH] iwlegacy: fix tx_power initialization
-
-priv->tx_power_next is not initialized to max supported power, but
-instead default value 15 is used, what cause errors like
-
-[   58.597834] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-[   58.597839] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-
-if maximum tx power read from eeprom is smaller than default.
-Fix the problem and cleanup a bit tx power initialization.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/iwlegacy/iwl-3945-hw.h  |    2 --
- drivers/net/wireless/iwlegacy/iwl-4965-hw.h  |    3 ---
- drivers/net/wireless/iwlegacy/iwl-core.c     |   17 +++++++++++------
- drivers/net/wireless/iwlegacy/iwl-eeprom.c   |    7 -------
- drivers/net/wireless/iwlegacy/iwl3945-base.c |    4 ----
- drivers/net/wireless/iwlegacy/iwl4965-base.c |    6 ------
- 6 files changed, 11 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |   14 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  208 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/wmi.c          |   10 ++
+ drivers/net/wireless/ath/ath9k/wmi.h          |    4 +-
+ 5 files changed, 207 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-hw.h b/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-index 779d3cb..5c3a68d 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-hw.h
-@@ -74,8 +74,6 @@
- /* RSSI to dBm */
- #define IWL39_RSSI_OFFSET	95
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 41823fd..6c103ed 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -266,11 +266,17 @@ struct ath9k_htc_rx {
+ #define ATH9K_HTC_TX_THRESHOLD (MAX_TX_BUF_NUM - ATH9K_HTC_TX_RESERVE)
  
--#define IWL_DEFAULT_TX_POWER	0x0F
--
- /*
-  * EEPROM related constants, enums, and structures.
-  */
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-hw.h b/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-index 08b189c..fc6fa28 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-hw.h
-@@ -804,9 +804,6 @@ struct iwl4965_scd_bc_tbl {
+ #define ATH9K_HTC_OP_TX_QUEUES_STOP BIT(0)
++#define ATH9K_HTC_OP_TX_DRAIN       BIT(1)
  
- #define IWL4965_DEFAULT_TX_RETRY  15
+ struct ath9k_htc_tx {
+ 	u8 flags;
+ 	int queued_cnt;
+-	struct sk_buff_head tx_queue;
++	struct sk_buff_head mgmt_ep_queue;
++	struct sk_buff_head cab_ep_queue;
++	struct sk_buff_head data_be_queue;
++	struct sk_buff_head data_bk_queue;
++	struct sk_buff_head data_vi_queue;
++	struct sk_buff_head data_vo_queue;
+ 	struct sk_buff_head tx_failed;
+ 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
+ 	spinlock_t tx_lock;
+@@ -465,8 +471,8 @@ struct ath9k_htc_priv {
  
--/* Limit range of txpower output target to be between these values */
--#define IWL4965_TX_POWER_TARGET_POWER_MIN	(0)	/* 0 dBm: 1 milliwatt */
--
- /* EEPROM */
- #define IWL4965_FIRST_AMPDU_QUEUE	10
+ 	struct tasklet_struct swba_tasklet;
+ 	struct tasklet_struct rx_tasklet;
+-	struct tasklet_struct tx_tasklet;
+ 	struct delayed_work ani_work;
++	struct tasklet_struct tx_failed_tasklet;
+ 	struct work_struct ps_work;
+ 	struct work_struct fatal_work;
  
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 7007d61..c1511b1 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -160,6 +160,7 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
- 	struct ieee80211_channel *geo_ch;
- 	struct ieee80211_rate *rates;
- 	int i = 0;
-+	s8 max_tx_power = 0;
+@@ -533,7 +539,6 @@ void ath9k_htc_start_ani(struct ath9k_htc_priv *priv);
+ void ath9k_htc_stop_ani(struct ath9k_htc_priv *priv);
  
- 	if (priv->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
- 	    priv->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
-@@ -235,8 +236,8 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
+ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+-void ath9k_tx_tasklet(unsigned long data);
+ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
+ 		       struct sk_buff *skb, u8 slot, bool is_cab);
+ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
+@@ -547,6 +552,9 @@ void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv);
+ int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv);
+ void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
+ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
++void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event);
++void ath9k_htc_tx_failed(struct ath9k_htc_priv *priv);
++void ath9k_tx_failed_tasklet(unsigned long data);
  
- 			geo_ch->flags |= ch->ht40_extension_channel;
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+ void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index c270da7..afceeaa 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -678,7 +678,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	mutex_init(&priv->htc_pm_lock);
+ 	tasklet_init(&priv->rx_tasklet, ath9k_rx_tasklet,
+ 		     (unsigned long)priv);
+-	tasklet_init(&priv->tx_tasklet, ath9k_tx_tasklet,
++	tasklet_init(&priv->tx_failed_tasklet, ath9k_tx_failed_tasklet,
+ 		     (unsigned long)priv);
+ 	INIT_DELAYED_WORK(&priv->ani_work, ath9k_htc_ani_work);
+ 	INIT_WORK(&priv->ps_work, ath9k_ps_work);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 0790070..a9b6bb1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -99,8 +99,8 @@ void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot)
+ 	spin_unlock_bh(&priv->tx.tx_lock);
+ }
  
--			if (ch->max_power_avg > priv->tx_power_device_lmt)
--				priv->tx_power_device_lmt = ch->max_power_avg;
-+			if (ch->max_power_avg > max_tx_power)
-+				max_tx_power = ch->max_power_avg;
- 		} else {
- 			geo_ch->flags |= IEEE80211_CHAN_DISABLED;
- 		}
-@@ -249,6 +250,10 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
- 				 geo_ch->flags);
- 	}
+-static enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
+-					 u16 qnum)
++static inline enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
++						u16 qnum)
+ {
+ 	enum htc_endpoint_id epid;
  
-+	priv->tx_power_device_lmt = max_tx_power;
-+	priv->tx_power_user_lmt = max_tx_power;
-+	priv->tx_power_next = max_tx_power;
+@@ -127,6 +127,30 @@ static enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
+ 	return epid;
+ }
+ 
++static inline struct sk_buff_head*
++get_htc_epid_queue(struct ath9k_htc_priv *priv, u8 epid)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct sk_buff_head *epid_queue = NULL;
 +
- 	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
- 	     priv->cfg->sku & IWL_SKU_A) {
- 		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
-@@ -1124,11 +1129,11 @@ int iwl_legacy_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 	if (!priv->cfg->ops->lib->send_tx_power)
- 		return -EOPNOTSUPP;
++	if (epid == priv->mgmt_ep)
++		epid_queue = &priv->tx.mgmt_ep_queue;
++	else if (epid == priv->cab_ep)
++		epid_queue = &priv->tx.cab_ep_queue;
++	else if (epid == priv->data_be_ep)
++		epid_queue = &priv->tx.data_be_queue;
++	else if (epid == priv->data_bk_ep)
++		epid_queue = &priv->tx.data_bk_queue;
++	else if (epid == priv->data_vi_ep)
++		epid_queue = &priv->tx.data_vi_queue;
++	else if (epid == priv->data_vo_ep)
++		epid_queue = &priv->tx.data_vo_queue;
++	else
++		ath_err(common, "Invalid EPID: %d\n", epid);
++
++	return epid_queue;
++}
++
+ /*
+  * Removes the driver header and returns the TX slot number
+  */
+@@ -387,11 +411,15 @@ static void ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+ }
  
--	if (tx_power < IWL4965_TX_POWER_TARGET_POWER_MIN) {
-+	/* 0 dBm mean 1 milliwatt */
-+	if (tx_power < 0) {
- 		IWL_WARN(priv,
--			 "Requested user TXPOWER %d below lower limit %d.\n",
--			 tx_power,
--			 IWL4965_TX_POWER_TARGET_POWER_MIN);
-+			 "Requested user TXPOWER %d below 1 mW.\n",
-+			 tx_power);
- 		return -EINVAL;
+ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+-				 struct sk_buff *skb)
++				 struct sk_buff *skb,
++				 struct __wmi_event_txstatus *txs)
+ {
+ 	struct ieee80211_vif *vif;
+ 	struct ath9k_htc_tx_ctl *tx_ctl;
+ 	struct ieee80211_tx_info *tx_info;
++	struct ieee80211_tx_rate *rate;
++	struct ieee80211_conf *cur_conf = &priv->hw->conf;
++	struct ieee80211_supported_band *sband;
+ 	bool txok;
+ 	int slot;
+ 
+@@ -405,6 +433,8 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+ 	txok = tx_ctl->txok;
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 	vif = tx_info->control.vif;
++	rate = &tx_info->status.rates[0];
++	sband = priv->hw->wiphy->bands[cur_conf->channel->band];
+ 
+ 	memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 
+@@ -412,10 +442,32 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+ 	 * URB submission failed for this frame, it never reached
+ 	 * the target.
+ 	 */
+-	if (!txok || !vif)
++	if (!txok || !vif || !txs)
+ 		goto send_mac80211;
+ 
+-	tx_info->flags |= IEEE80211_TX_STAT_ACK;
++	if (txs->ts_flags & ATH9K_HTC_TXSTAT_ACK)
++		tx_info->flags |= IEEE80211_TX_STAT_ACK;
++
++	if (txs->ts_flags & ATH9K_HTC_TXSTAT_FILT)
++		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++
++	if (txs->ts_flags & ATH9K_HTC_TXSTAT_RTC_CTS)
++		rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
++
++	rate->count = 1;
++	rate->idx = MS(txs->ts_rate, ATH9K_HTC_TXSTAT_RATE);
++
++	if (txs->ts_flags & ATH9K_HTC_TXSTAT_MCS) {
++		rate->flags |= IEEE80211_TX_RC_MCS;
++
++		if (txs->ts_flags & ATH9K_HTC_TXSTAT_CW40)
++			rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
++		if (txs->ts_flags & ATH9K_HTC_TXSTAT_SGI)
++			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
++	} else {
++		if (cur_conf->channel->band == IEEE80211_BAND_5GHZ)
++			rate->idx += 4; /* No CCK rates */
++	}
+ 
+ 	ath9k_htc_check_tx_aggr(priv, vif, skb);
+ 
+@@ -431,37 +483,130 @@ send_mac80211:
+ 	ieee80211_tx_status(priv->hw, skb);
+ }
+ 
++static inline void ath9k_htc_tx_drainq(struct ath9k_htc_priv *priv,
++				       struct sk_buff_head *queue)
++{
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(queue)) != NULL) {
++		ath9k_htc_tx_process(priv, skb, NULL);
++	}
++}
++
+ void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
+ {
+-	struct sk_buff *skb = NULL;
++	spin_lock_bh(&priv->tx.tx_lock);
++	priv->tx.flags |= ATH9K_HTC_OP_TX_DRAIN;
++	spin_unlock_bh(&priv->tx.tx_lock);
+ 
+ 	/*
+ 	 * Ensure that all pending TX frames are flushed,
+-	 * and that the TX completion tasklet is killed.
++	 * and that the TX completion/failed tasklets is killed.
+ 	 */
+ 	htc_stop(priv->htc);
+-	tasklet_kill(&priv->tx_tasklet);
++	tasklet_kill(&priv->wmi->wmi_event_tasklet);
++	tasklet_kill(&priv->tx_failed_tasklet);
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
+-		ath9k_htc_tx_process(priv, skb);
+-	}
++	ath9k_htc_tx_drainq(priv, &priv->tx.mgmt_ep_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.cab_ep_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.data_be_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.data_bk_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.data_vi_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.data_vo_queue);
++	ath9k_htc_tx_drainq(priv, &priv->tx.tx_failed);
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
+-		ath9k_htc_tx_process(priv, skb);
+-	}
++	spin_lock_bh(&priv->tx.tx_lock);
++	priv->tx.flags &= ~ATH9K_HTC_OP_TX_DRAIN;
++	spin_unlock_bh(&priv->tx.tx_lock);
+ }
+ 
+-void ath9k_tx_tasklet(unsigned long data)
++void ath9k_tx_failed_tasklet(unsigned long data)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+-	struct sk_buff *skb = NULL;
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
+-		ath9k_htc_tx_process(priv, skb);
++	spin_lock_bh(&priv->tx.tx_lock);
++	if (priv->tx.flags & ATH9K_HTC_OP_TX_DRAIN) {
++		spin_unlock_bh(&priv->tx.tx_lock);
++		return;
+ 	}
++	spin_unlock_bh(&priv->tx.tx_lock);
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
+-		ath9k_htc_tx_process(priv, skb);
++	ath9k_htc_tx_drainq(priv, &priv->tx.tx_failed);
++}
++
++static inline bool check_cookie(struct ath9k_htc_priv *priv,
++				struct sk_buff *skb,
++				u8 cookie, u8 epid)
++{
++	u8 fcookie = 0;
++
++	if (epid == priv->mgmt_ep) {
++		struct tx_mgmt_hdr *hdr;
++		hdr = (struct tx_mgmt_hdr *) skb->data;
++		fcookie = hdr->cookie;
++	} else if ((epid == priv->data_bk_ep) ||
++		   (epid == priv->data_be_ep) ||
++		   (epid == priv->data_vi_ep) ||
++		   (epid == priv->data_vo_ep) ||
++		   (epid == priv->cab_ep)) {
++		struct tx_frame_hdr *hdr;
++		hdr = (struct tx_frame_hdr *) skb->data;
++		fcookie = hdr->cookie;
++	}
++
++	if (fcookie == cookie)
++		return true;
++
++	return false;
++}
++
++static struct sk_buff* ath9k_htc_tx_get_packet(struct ath9k_htc_priv *priv,
++					       struct __wmi_event_txstatus *txs)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct sk_buff_head *epid_queue;
++	struct sk_buff *skb, *tmp;
++	unsigned long flags;
++	u8 epid = MS(txs->ts_rate, ATH9K_HTC_TXSTAT_EPID);
++
++	epid_queue = get_htc_epid_queue(priv, epid);
++	if (!epid_queue)
++		return NULL;
++
++	spin_lock_irqsave(&epid_queue->lock, flags);
++	skb_queue_walk_safe(epid_queue, skb, tmp) {
++		if (check_cookie(priv, skb, txs->cookie, epid)) {
++			__skb_unlink(skb, epid_queue);
++			spin_unlock_irqrestore(&epid_queue->lock, flags);
++			return skb;
++		}
++	}
++	spin_unlock_irqrestore(&epid_queue->lock, flags);
++
++	ath_dbg(common, ATH_DBG_XMIT,
++		"No matching packet for cookie: %d, epid: %d\n",
++		txs->cookie, epid);
++
++	return NULL;
++}
++
++void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event)
++{
++	struct wmi_event_txstatus *txs = (struct wmi_event_txstatus *)wmi_event;
++	struct __wmi_event_txstatus *__txs;
++	struct sk_buff *skb;
++	int i;
++
++	for (i = 0; i < txs->cnt; i++) {
++		WARN_ON(txs->cnt > HTC_MAX_TX_STATUS);
++
++		__txs = &txs->txstatus[i];
++
++		skb = ath9k_htc_tx_get_packet(priv, __txs);
++		if (!skb)
++			continue;
++
++		ath9k_htc_tx_process(priv, skb, __txs);
  	}
  
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-index 04c5648..cb346d1 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-@@ -471,13 +471,6 @@ int iwl_legacy_init_channel_map(struct iwl_priv *priv)
- 					     flags & EEPROM_CHANNEL_RADAR))
- 				       ? "" : "not ");
+ 	/* Wake TX queues if needed */
+@@ -473,21 +618,34 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) drv_priv;
+ 	struct ath9k_htc_tx_ctl *tx_ctl;
++	struct sk_buff_head *epid_queue;
  
--			/* Set the tx_power_user_lmt to the highest power
--			 * supported by any channel */
--			if (eeprom_ch_info[ch].max_power_avg >
--						priv->tx_power_user_lmt)
--				priv->tx_power_user_lmt =
--				    eeprom_ch_info[ch].max_power_avg;
--
- 			ch_info++;
+ 	tx_ctl = HTC_SKB_CB(skb);
+ 	tx_ctl->txok = txok;
+ 
+-	if (txok)
+-		skb_queue_tail(&priv->tx.tx_queue, skb);
+-	else
++	if (!txok) {
+ 		skb_queue_tail(&priv->tx.tx_failed, skb);
++		tasklet_schedule(&priv->tx_failed_tasklet);
++		return;
++	}
++
++	epid_queue = get_htc_epid_queue(priv, ep_id);
++	if (!epid_queue) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 
+-	tasklet_schedule(&priv->tx_tasklet);
++	skb_queue_tail(epid_queue, skb);
+ }
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv)
+ {
+-	skb_queue_head_init(&priv->tx.tx_queue);
++	skb_queue_head_init(&priv->tx.mgmt_ep_queue);
++	skb_queue_head_init(&priv->tx.cab_ep_queue);
++	skb_queue_head_init(&priv->tx.data_be_queue);
++	skb_queue_head_init(&priv->tx.data_bk_queue);
++	skb_queue_head_init(&priv->tx.data_vi_queue);
++	skb_queue_head_init(&priv->tx.data_vo_queue);
+ 	skb_queue_head_init(&priv->tx.tx_failed);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index e66f6c3..3f5a4d1 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -163,6 +163,16 @@ void ath9k_wmi_event_tasklet(unsigned long data)
+ 			wmi->drv_priv->debug.txrate = be32_to_cpu(txrate);
+ #endif
+ 			break;
++		case WMI_TXSTATUS_EVENTID:
++			spin_lock_bh(&priv->tx.tx_lock);
++			if (priv->tx.flags & ATH9K_HTC_OP_TX_DRAIN) {
++				spin_unlock_bh(&priv->tx.tx_lock);
++				break;
++			}
++			spin_unlock_bh(&priv->tx.tx_lock);
++
++			ath9k_htc_txstatus(priv, wmi_event);
++			break;
+ 		default:
+ 			break;
  		}
- 	}
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index 28eb3d8..cc7ebce 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -3825,10 +3825,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
- 	priv->force_reset[IWL_FW_RESET].reset_duration =
- 		IWL_DELAY_NEXT_FORCE_FW_RELOAD;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 8c877dc..44b1738 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -45,9 +45,9 @@ struct wmi_event_swba {
+ /*
+  * 64 - HTC header - WMI header - 1 / txstatus
+  * And some other hdr. space is also accounted for.
+- * 13 seems to be the magic number.
++ * 12 seems to be the magic number.
+  */
+-#define HTC_MAX_TX_STATUS 13
++#define HTC_MAX_TX_STATUS 12
  
--
--	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
--	priv->tx_power_next = IWL_DEFAULT_TX_POWER;
--
- 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
- 		IWL_WARN(priv, "Unsupported EEPROM version: 0x%04X\n",
- 			 eeprom->version);
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 91b3d8b..d484c36 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -3140,12 +3140,6 @@ static int iwl4965_init_drv(struct iwl_priv *priv)
- 
- 	iwl_legacy_init_scan_params(priv);
- 
--	/* Set the tx_power_user_lmt to the lowest power level
--	 * this value will get overwritten by channel max power avg
--	 * from eeprom */
--	priv->tx_power_user_lmt = IWL4965_TX_POWER_TARGET_POWER_MIN;
--	priv->tx_power_next = IWL4965_TX_POWER_TARGET_POWER_MIN;
--
- 	ret = iwl_legacy_init_channel_map(priv);
- 	if (ret) {
- 		IWL_ERR(priv, "initializing regulatory failed: %d\n", ret);
+ #define ATH9K_HTC_TXSTAT_ACK        BIT(0)
+ #define ATH9K_HTC_TXSTAT_FILT       BIT(1)
 -- 
-1.7.1
-
+1.7.4.4
 
