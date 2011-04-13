@@ -1,70 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57258 "EHLO mail.atheros.com"
+Received: from kroah.org ([198.145.64.141]:59884 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751011Ab1DSN7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:13 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:58:46 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 00/22] Add support for AR9340
-Date: Tue, 19 Apr 2011 19:28:58 +0530
-Message-ID: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+	id S932935Ab1DMVDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 17:03:15 -0400
+Date: Wed, 13 Apr 2011 14:02:38 -0700
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+Message-ID: <20110413210238.GB7523@kroah.com>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+ <20110413163113.GA24015@kroah.com>
+ <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Wed, Apr 13, 2011 at 09:39:54PM +0200, Rafał Miłecki wrote:
+> 2011/4/13 Greg KH <greg@kroah.com>:
+> >> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
+> >> new file mode 100644
+> >> index 0000000..17e882c
+> >> --- /dev/null
+> >> +++ b/drivers/axi/axi_pci_bridge.c
+> >> @@ -0,0 +1,33 @@
+> >> +/*
+> >> + * AXI PCI bridge module
+> >> + *
+> >> + * Licensed under the GNU/GPL. See COPYING for details.
+> >> + */
+> >> +
+> >> +#include "axi_private.h"
+> >> +
+> >> +#include <linux/axi/axi.h>
+> >> +#include <linux/pci.h>
+> >> +
+> >> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
+> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+> >> +     { 0, },
+> >> +};
+> >> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
+> >> +
+> >> +static struct pci_driver axi_pci_bridge_driver = {
+> >> +     .name = "axi-pci-bridge",
+> >> +     .id_table = axi_pci_bridge_tbl,
+> >> +};
+> >> +
+> >> +int __init axi_pci_bridge_init(void)
+> >> +{
+> >> +     return axi_host_pci_register(&axi_pci_bridge_driver);
+> >> +}
+> >> +
+> >> +void __exit axi_pci_bridge_exit(void)
+> >> +{
+> >> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
+> >> +}
+> >
+> > You register a pci driver that does nothing?  That's not right, you need
+> > to then base your axi bus off of that pci device, so it is hooked up
+> > correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
+> > the virtual location for your axi bus, right?
+> 
+> Please take a look at:
+> driver->probe = axi_host_pci_probe;
+> driver->remove = axi_host_pci_remove;
+> return pci_register_driver(driver);
 
-This patch set mainly adds support for AR9340 which is a built in
-wireless mac in ar934x SOCs. It is 2x2, 2.4Ghz only in ar9341 SOC and
-dual band in ar9342/ar9344 SOCs. This V2 has updated patch 03/22.
+Odd, why not just set up those functions in that file?  Or move all of
+this to that file and do it there?  This seems like a very small file :)
 
-Vasanth
+> >> +bool axi_core_is_enabled(struct axi_device *core)
+> >> +{
+> >> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
+> >> +         != AXI_IOCTL_CLK)
+> >> +             return false;
+> >> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
+> >> +             return false;
+> >> +     return true;
+> >> +}
+> >> +EXPORT_SYMBOL(axi_core_is_enabled);
+> >
+> > EXPORT_SYMBOL_GPL()?
+> >
+> > What module uses this?  And why would it care?
+> >
+> >> +EXPORT_SYMBOL(axi_core_enable);
+> >
+> > EXPORT_SYMBOL_GPL()?
+> >
+> > Same goes for your other exports, just want you to be sure here.
+> 
+> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
+> drivers from using our bus driver, right? I'm don't have preferences
+> on this, if you prefer us to force GPL, I can.
 
-Vasanthakumar Thiagarajan (22):
-  ath9k_hw: Define devid and mac version for AR9340
-  ath9k_hw: Take care of few host interface register changes for AR9340
-  ath9k_hw: Get AHB clock information from ath9k_platform_data
-  ath9k_hw: Configure pll control register accordingly for AR9340
-  ath9k_hw: Add initvals.h for ar9340
-  ath9k_hw: Initialize mode registers from initvals.h for AR9340
-  ath9k_hw: Don't do ani initialization for AR9340
-  ath9k_hw: Initialize tx and rx gain table from initvals.h for ar9340
-  ath9k_hw: Read spur frequency information from eeprom for AR9340
-  ath9k_hw: Configure RF channel freqency for AR9340
-  ath9k_hw: Clean up rx/tx chain configuration before AGC/IQ cal
-  ath9k_hw: Fix register offset AR_PHY_65NM_CH0_THERM for AR9340
-  ath9k_hw: Don't configure AR_CH0_THERM for AR9340
-  ath9k_hw: Skip internal regulator configuration for AR9340
-  ath9k_hw: Configure tuning capacitance value for AR9340 as well
-  ath9k_hw: Enable byte Tx/Rx data swap for AR9340
-  ath9k_hw: Configure chain switch table and attenuation control only
-    for active chains
-  ath9k_hw: Read iq calibration data only for active chains
-  ath9k: Add AR9340 platform id to id table
-  ath9k_hw: Assign macversion based on devid for built-in wmac
-  ath9k_hw: Disable INTR_HOST1_FATAL to avoid interrupt strom with
-    ar9430
-  ath9k_hw: Enable AR9340 support
+It's totally up to you, it's your code, not mine.  Just wanted to remind
+you of the option.
 
- drivers/net/wireless/ath/ath9k/ahb.c             |    4 +
- drivers/net/wireless/ath/ath9k/ar9003_calib.c    |   37 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   59 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  101 ++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   30 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h      |    2 +-
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 1525 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c              |   82 +-
- drivers/net/wireless/ath/ath9k/hw.h              |    6 +-
- drivers/net/wireless/ath/ath9k/init.c            |    1 +
- drivers/net/wireless/ath/ath9k/mac.c             |   10 +-
- drivers/net/wireless/ath/ath9k/phy.h             |    3 +
- drivers/net/wireless/ath/ath9k/reg.h             |   81 +-
- include/linux/ath9k_platform.h                   |    2 +
- 14 files changed, 1842 insertions(+), 101 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+> >> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
+> >> +{
+> >> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
+> >> +}
+> >> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
+> >
+> > "xaxi"?  Shouldn't that be consistant with the other exports and start
+> > with "axi"?
+> 
+> Left from old tests/rewrites/splitting. Thanks.
+> 
+> 
+> >> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
+> >> +{
+> >> +     if (unlikely(core->bus->mapped_core != core))
+> >
+> > Are you sure about the use of unlikely in this, and other functions?
+> > The compiler almost always does a better job than we do for these types
+> > of calls, just let it do it's job.
+> >
+> >> +             axi_host_pci_switch_core(core);
+> >> +     return ioread8(core->bus->mmio + offset);
+> >
+> > I think because of that unlikely, you just slowed down all pci devices,
+> > right?  That's not very nice :)
+> 
+> Hm, my logic suggests it is alright, but please consider this once
+> more with me ;)
+> 
+> For the most of the time mapped_core (active core) do not change. We
+> perform few hundreds of operations on one core in a row. This way
+> mapped_core points to passed core for most of the time. Condition
+> (mapped_core != core) is unlikely to happen.
+> 
+> Is there anything wrong in my logic?
 
+Drivers almost _never_ need to use likely or unlikely in their code.
+The CPU can schedule things better and so can the compiler, so I would
+just drop them, _unless_ you can show a benchmark where it matters.
+
+thanks,
+
+greg k-h
