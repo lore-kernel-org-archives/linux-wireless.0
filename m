@@ -1,158 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:38142 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932335Ab1DLSVX (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:57682 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842Ab1DMFuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 14:21:23 -0400
-Received: by eyx24 with SMTP id 24so2107317eyx.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 11:21:21 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [TESTING ONLY][PATCH V2] b43: subscribe to axi
-Date: Tue, 12 Apr 2011 20:58:43 +0200
-Message-Id: <1302634723-3079-1-git-send-email-zajec5@gmail.com>
+	Wed, 13 Apr 2011 01:50:54 -0400
+Received: by yia27 with SMTP id 27so128812yia.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:53 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.14925.243648.521314@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:23:17 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 06/40] ath9k_htc: Add TSF adjust capability
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-V2: axi_info was dropped, use pr_info
----
- drivers/net/wireless/b43/b43.h  |    1 +
- drivers/net/wireless/b43/main.c |   72 ++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 72 insertions(+), 1 deletions(-)
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index bd4cb75..991a08d 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -6,6 +6,7 @@
- #include <linux/interrupt.h>
- #include <linux/hw_random.h>
- #include <linux/ssb/ssb.h>
-+#include <linux/axi/axi.h>
- #include <net/mac80211.h>
- 
- #include "debugfs.h"
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 57eb5b6..6be170f 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -125,9 +125,15 @@ static const struct ssb_device_id b43_ssb_tbl[] = {
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 16),
- 	SSB_DEVTABLE_END
+In multi-interface mode, beacons/probe responses that are
+sent out must have their timestamp field updated. Calculate
+the TSF adjustment value for each beaconing interface and set it
+in the frame properly.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |    3 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   36 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    5 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   12 +++++++-
+ 4 files changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 31c6496..87e4ca9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -245,6 +245,7 @@ struct ath9k_htc_vif {
+ 	u16 seq_no;
+ 	bool beacon_configured;
+ 	int bslot;
++	__le64 tsfadjust;
  };
--
- MODULE_DEVICE_TABLE(ssb, b43_ssb_tbl);
  
-+static const struct axi_device_id b43_axi_tbl[] = {
-+	AXI_CORE(AXI_MANUF_BCM, AXI_CORE_80211, 0x17, AXI_ANY_CLASS),
-+	AXI_CORE(AXI_MANUF_BCM, AXI_CORE_80211, 0x18, AXI_ANY_CLASS),
-+	AXI_CORETABLE_END
-+};
-+MODULE_DEVICE_TABLE(axi, b43_axi_tbl);
-+
- /* Channel and ratetables are shared for all devices.
-  * They can't be const, because ieee80211 puts some precalculated
-  * data in there. This data is the same for all devices, so we don't
-@@ -5069,6 +5075,57 @@ static void b43_remove(struct ssb_device *dev)
+ struct ath9k_vif_iter_data {
+@@ -480,6 +481,8 @@ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
+ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif);
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index b561f70..2fad613 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -234,6 +234,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 	struct tx_beacon_header beacon_hdr;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_mgmt *mgmt;
+ 	struct sk_buff *beacon;
+ 	u8 *tx_fhdr;
+ 
+@@ -257,6 +258,13 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 		return;
  	}
+ 
++	/*
++	 * Update the TSF adjust value here, the HW will
++	 * add this value for every beacon.
++	 */
++	mgmt = (struct ieee80211_mgmt *)beacon->data;
++	mgmt->u.beacon.timestamp = avp->tsfadjust;
++
+ 	info = IEEE80211_SKB_CB(beacon);
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+ 		struct ieee80211_hdr *hdr =
+@@ -406,6 +414,34 @@ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 		"Removed interface at beacon slot: %d\n", avp->bslot);
  }
  
-+static int b43_axi_probe(struct axi_device *core)
++/*
++ * Calculate the TSF adjustment value for all slots
++ * other than zero.
++ */
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif)
 +{
-+	printk(KERN_INFO "Success! Hello world! :)\n");
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	u64 tsfadjust;
 +
-+	axi_core_enable(core, 0x4);
++	if (avp->bslot == 0)
++		return;
 +
-+	u16 tmp = axi_read16(core, B43_MMIO_PHY_VER);
-+	u16 analog_type = (tmp & B43_PHYVER_ANALOG) >> B43_PHYVER_ANALOG_SHIFT;
-+	u16 phy_type = (tmp & B43_PHYVER_TYPE) >> B43_PHYVER_TYPE_SHIFT;
-+	u16 phy_rev = (tmp & B43_PHYVER_VERSION);
++	/*
++	 * The beacon interval cannot be different for multi-AP mode,
++	 * and we reach here only for VIF slots greater than zero,
++	 * so beacon_interval is guaranteed to be set in cur_conf.
++	 */
++	tsfadjust = cur_conf->beacon_interval * avp->bslot / ATH9K_HTC_MAX_BCN_VIF;
++	avp->tsfadjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
 +
-+	pr_info("PHY (Analog %u, Type %u, Revision %u)\n",
-+		analog_type, phy_type, phy_rev);
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"tsfadjust is: %llu for bslot: %d\n",
++		(unsigned long long)tsfadjust, avp->bslot);
++}
 +
-+	u16 radio_manuf = 0, radio_ver = 0, radio_rev, radio_id;
-+	if (core->id.rev >= 24) {
-+		axi_write16(core, 0x3D8, 0);
-+		u16 r0 = axi_read16(core, 0x3DA);
-+
-+		axi_write16(core, 0x3D8, 1);
-+		u16 r1 = axi_read16(core, 0x3DA);
-+
-+		axi_write16(core, 0x3D8, 2);
-+		u16 r2 = axi_read16(core, 0x3DA);
-+
-+		radio_ver = (r0 & 0xF0) >> 4;
-+		radio_id = (r2 << 8) | r1;
-+		radio_rev = (r0 & 0xF);
-+
-+
-+	} else {
-+		axi_write16(core, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
-+		u32 tmpx = axi_read16(core, B43_MMIO_RADIO_DATA_LOW);
-+		axi_write16(core, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
-+		tmpx |= (u32)axi_read16(core, B43_MMIO_RADIO_DATA_HIGH) << 16;
-+
-+		radio_manuf = (tmpx & 0x00000FFF);
-+		radio_id = (tmpx & 0x0FFFF000) >> 12;
-+		radio_rev = (tmpx & 0xF0000000) >> 28;
+ static void ath9k_htc_beacon_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ {
+ 	bool *beacon_configured = (bool *)data;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 293a9b3..6926ac0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1291,8 +1291,10 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	ath9k_htc_set_opmode(priv);
+ 
+ 	if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
+-	    !(priv->op_flags & OP_ANI_RUNNING))
++	    !(priv->op_flags & OP_ANI_RUNNING)) {
++		ath9k_hw_set_tsfadjust(priv->ah, 1);
+ 		ath9k_htc_start_ani(priv);
 +	}
-+	pr_info("RADIO (Manuf 0x%X, Version 0x%X, Id 0x%X, Revision %u)\n",
-+		radio_manuf, radio_ver, radio_id, radio_rev);
-+
-+	return 0;
-+}
-+
-+static void b43_axi_remove(struct axi_device *core)
-+{
-+	printk(KERN_INFO "Success! Bye :)\n");
-+}
-+
- /* Perform a hardware reset. This can be called from any context. */
- void b43_controller_restart(struct b43_wldev *dev, const char *reason)
- {
-@@ -5086,6 +5143,13 @@ static struct ssb_driver b43_ssb_driver = {
- 	.remove		= b43_remove,
- };
  
-+static struct axi_driver b43_axi_driver = {
-+	.name		= KBUILD_MODNAME,
-+	.id_table	= b43_axi_tbl,
-+	.probe		= b43_axi_probe,
-+	.remove		= b43_axi_remove,
-+};
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
+@@ -1652,6 +1654,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Beacon enabled for BSS: %pM\n", bss_conf->bssid);
++		ath9k_htc_set_tsfadjust(priv, vif);
+ 		priv->op_flags |= OP_ENABLE_BEACON;
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 4a4f27b..b3f9485 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -82,11 +82,12 @@ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_mgmt *mgmt;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = tx_info->control.sta;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+ 	struct ath9k_htc_sta *ista;
+-	struct ath9k_htc_vif *avp;
++	struct ath9k_htc_vif *avp = NULL;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	enum htc_endpoint_id epid;
+ 	u16 qnum;
+@@ -195,6 +196,15 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 
+ 		memset(&mgmt_hdr, 0, sizeof(struct tx_mgmt_hdr));
+ 
++		/*
++		 * Set the TSF adjust value for probe response
++		 * frame also.
++		 */
++		if (avp && unlikely(ieee80211_is_probe_resp(fc))) {
++			mgmt = (struct ieee80211_mgmt *)skb->data;
++			mgmt->u.probe_resp.timestamp = avp->tsfadjust;
++		}
 +
- static void b43_print_driverinfo(void)
- {
- 	const char *feat_pci = "", *feat_pcmcia = "", *feat_nphy = "",
-@@ -5127,6 +5191,9 @@ static int __init b43_init(void)
- 	err = ssb_driver_register(&b43_ssb_driver);
- 	if (err)
- 		goto err_sdio_exit;
-+	err = axi_driver_register(&b43_axi_driver);
-+	if (err)
-+		goto err_ssb_driver_exit;
- 	b43_print_driverinfo();
+ 		tx_ctl.type = ATH9K_HTC_NORMAL;
  
- 	return err;
-@@ -5137,11 +5204,14 @@ err_pcmcia_exit:
- 	b43_pcmcia_exit();
- err_dfs_exit:
- 	b43_debugfs_exit();
-+err_ssb_driver_exit:
-+	ssb_driver_unregister(&b43_ssb_driver);
- 	return err;
- }
- 
- static void __exit b43_exit(void)
- {
-+	axi_driver_unregister(&b43_axi_driver);
- 	ssb_driver_unregister(&b43_ssb_driver);
- 	b43_sdio_exit();
- 	b43_pcmcia_exit();
+ 		mgmt_hdr.node_idx = sta_idx;
 -- 
-1.7.3.4
+1.7.4.4
 
