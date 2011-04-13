@@ -1,181 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41741 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab1DRLPp (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37037 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296Ab1DMUiF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:15:45 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 36so5506533wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:15:44 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 02/10] wl12xx: use wiphy values for setting rts, frag thresholds on init
-Date: Mon, 18 Apr 2011 14:15:21 +0300
-Message-Id: <1303125329-27214-2-git-send-email-arik@wizery.com>
-In-Reply-To: <1303125329-27214-1-git-send-email-arik@wizery.com>
-References: <1303125329-27214-1-git-send-email-arik@wizery.com>
+	Wed, 13 Apr 2011 16:38:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+ <20110413163113.GA24015@kroah.com> <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 13 Apr 2011 22:37:44 +0200
+Message-ID: <BANLkTimBZK8i3EgihB85HqTJ+wOz89uwTw@mail.gmail.com>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wiphy RTS and fragmentation thresholds for initializing the FW
-when possible. This mitigates a bug where previously set values are
-forgotten after interface down/up.
+On Wed, Apr 13, 2011 at 9:39 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> 2011/4/13 Greg KH <greg@kroah.com>:
+>>> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
+>>> new file mode 100644
+>>> index 0000000..17e882c
+>>> --- /dev/null
+>>> +++ b/drivers/axi/axi_pci_bridge.c
+>>> @@ -0,0 +1,33 @@
+>>> +/*
+>>> + * AXI PCI bridge module
+>>> + *
+>>> + * Licensed under the GNU/GPL. See COPYING for details.
+>>> + */
+>>> +
+>>> +#include "axi_private.h"
+>>> +
+>>> +#include <linux/axi/axi.h>
+>>> +#include <linux/pci.h>
+>>> +
+>>> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
+>>> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+>>> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+>>> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+>>> +     { 0, },
+>>> +};
+>>> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
+>>> +
+>>> +static struct pci_driver axi_pci_bridge_driver = {
+>>> +     .name = "axi-pci-bridge",
+>>> +     .id_table = axi_pci_bridge_tbl,
+>>> +};
+>>> +
+>>> +int __init axi_pci_bridge_init(void)
+>>> +{
+>>> +     return axi_host_pci_register(&axi_pci_bridge_driver);
+>>> +}
+>>> +
+>>> +void __exit axi_pci_bridge_exit(void)
+>>> +{
+>>> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
+>>> +}
+>>
+>> You register a pci driver that does nothing?  That's not right, you need
+>> to then base your axi bus off of that pci device, so it is hooked up
+>> correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
+>> the virtual location for your axi bus, right?
+>
+> Please take a look at:
+> driver->probe = axi_host_pci_probe;
+> driver->remove = axi_host_pci_remove;
+> return pci_register_driver(driver);
+>
+>
+>>> +bool axi_core_is_enabled(struct axi_device *core)
+>>> +{
+>>> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
+>>> +         != AXI_IOCTL_CLK)
+>>> +             return false;
+>>> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
+>>> +             return false;
+>>> +     return true;
+>>> +}
+>>> +EXPORT_SYMBOL(axi_core_is_enabled);
+>>
+>> EXPORT_SYMBOL_GPL()?
+>>
+>> What module uses this?  And why would it care?
+>>
+>>> +EXPORT_SYMBOL(axi_core_enable);
+>>
+>> EXPORT_SYMBOL_GPL()?
+>>
+>> Same goes for your other exports, just want you to be sure here.
+>
+> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
+> drivers from using our bus driver, right? I'm don't have preferences
+> on this, if you prefer us to force GPL, I can.
 
-Add checks before settings these values to ensure they are valid. Use
-default values when invalid thresholds are configured.
+Isn't EXPORT_SYMBOL_GPL for symbols that are considered to form a
+tight coupling between the kernel and users of the symbol? Using _GPL
+just because you are against proprietary drivers in general and want
+to force GPL on HW vendors is wrong.
 
-Update the default RTS threshold to the maximum value given by the
-specification.
+>
+>
+>>> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
+>>> +{
+>>> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
+>>> +}
+>>> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
+>>
+>> "xaxi"?  Shouldn't that be consistant with the other exports and start
+>> with "axi"?
+>
+> Left from old tests/rewrites/splitting. Thanks.
+>
+>
+>>> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
+>>> +{
+>>> +     if (unlikely(core->bus->mapped_core != core))
+>>
+>> Are you sure about the use of unlikely in this, and other functions?
+>> The compiler almost always does a better job than we do for these types
+>> of calls, just let it do it's job.
+>>
+>>> +             axi_host_pci_switch_core(core);
+>>> +     return ioread8(core->bus->mmio + offset);
+>>
+>> I think because of that unlikely, you just slowed down all pci devices,
+>> right?  That's not very nice :)
+>
+> Hm, my logic suggests it is alright, but please consider this once
+> more with me ;)
+>
+> For the most of the time mapped_core (active core) do not change. We
+> perform few hundreds of operations on one core in a row. This way
+> mapped_core points to passed core for most of the time. Condition
+> (mapped_core != core) is unlikely to happen.
+>
+> Is there anything wrong in my logic?
+>
+> --
+> Rafał
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |   26 ++++++++++++++++++++------
- drivers/net/wireless/wl12xx/acx.h  |    4 ++--
- drivers/net/wireless/wl12xx/init.c |    4 ++--
- drivers/net/wireless/wl12xx/main.c |    6 +++---
- 4 files changed, 27 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index cda546b..6a0fd18 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -325,12 +325,19 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold)
-+int wl1271_acx_rts_threshold(struct wl1271 *wl, u32 rts_threshold)
- {
- 	struct acx_rts_threshold *rts;
- 	int ret;
- 
--	wl1271_debug(DEBUG_ACX, "acx rts threshold");
-+	/*
-+	 * If the RTS threshold is not configured or out of range, use the
-+	 * default value.
-+	 */
-+	if (rts_threshold > IEEE80211_MAX_RTS_THRESHOLD)
-+		rts_threshold = wl->conf.rx.rts_threshold;
-+
-+	wl1271_debug(DEBUG_ACX, "acx rts threshold: %d", rts_threshold);
- 
- 	rts = kzalloc(sizeof(*rts), GFP_KERNEL);
- 	if (!rts) {
-@@ -338,7 +345,7 @@ int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold)
- 		goto out;
- 	}
- 
--	rts->threshold = cpu_to_le16(rts_threshold);
-+	rts->threshold = cpu_to_le16((u16)rts_threshold);
- 
- 	ret = wl1271_cmd_configure(wl, DOT11_RTS_THRESHOLD, rts, sizeof(*rts));
- 	if (ret < 0) {
-@@ -928,12 +935,19 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold)
-+int wl1271_acx_frag_threshold(struct wl1271 *wl, u32 frag_threshold)
- {
- 	struct acx_frag_threshold *acx;
- 	int ret = 0;
- 
--	wl1271_debug(DEBUG_ACX, "acx frag threshold");
-+	/*
-+	 * If the fragmentation is not configured or out of range, use the
-+	 * default value.
-+	 */
-+	if (frag_threshold > IEEE80211_MAX_FRAG_THRESHOLD)
-+		frag_threshold = wl->conf.tx.frag_threshold;
-+
-+	wl1271_debug(DEBUG_ACX, "acx frag threshold: %d", frag_threshold);
- 
- 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
- 
-@@ -942,7 +956,7 @@ int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold)
- 		goto out;
- 	}
- 
--	acx->frag_threshold = cpu_to_le16(frag_threshold);
-+	acx->frag_threshold = cpu_to_le16((u16)frag_threshold);
- 	ret = wl1271_cmd_configure(wl, ACX_FRAG_CFG, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("Setting of frag threshold failed: %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index b35ebf5..31cb8c2 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1266,7 +1266,7 @@ int wl1271_acx_slot(struct wl1271 *wl, enum acx_slot_type slot_time);
- int wl1271_acx_group_address_tbl(struct wl1271 *wl, bool enable,
- 				 void *mc_list, u32 mc_list_len);
- int wl1271_acx_service_period_timeout(struct wl1271 *wl);
--int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold);
-+int wl1271_acx_rts_threshold(struct wl1271 *wl, u32 rts_threshold);
- int wl1271_acx_dco_itrim_params(struct wl1271 *wl);
- int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter);
- int wl1271_acx_beacon_filter_table(struct wl1271 *wl);
-@@ -1290,7 +1290,7 @@ int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
- int wl1271_acx_tid_cfg(struct wl1271 *wl, u8 queue_id, u8 channel_type,
- 		       u8 tsid, u8 ps_scheme, u8 ack_policy,
- 		       u32 apsd_conf0, u32 apsd_conf1);
--int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold);
-+int wl1271_acx_frag_threshold(struct wl1271 *wl, u32 frag_threshold);
- int wl1271_acx_tx_config_options(struct wl1271 *wl);
- int wl1271_acx_ap_mem_cfg(struct wl1271 *wl);
- int wl1271_acx_sta_mem_cfg(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
-index e8c979d..40015d0 100644
---- a/drivers/net/wireless/wl12xx/init.c
-+++ b/drivers/net/wireless/wl12xx/init.c
-@@ -258,7 +258,7 @@ int wl1271_init_phy_config(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wl1271_acx_rts_threshold(wl, wl->conf.rx.rts_threshold);
-+	ret = wl1271_acx_rts_threshold(wl, wl->hw->wiphy->rts_threshold);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -605,7 +605,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Default fragmentation threshold */
--	ret = wl1271_acx_frag_threshold(wl, wl->conf.tx.frag_threshold);
-+	ret = wl1271_acx_frag_threshold(wl, wl->hw->wiphy->frag_threshold);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 1c206ae..a2a26df 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -163,7 +163,7 @@ static struct conf_drv_settings default_conf = {
- 		.packet_detection_threshold  = 0,
- 		.ps_poll_timeout             = 15,
- 		.upsd_timeout                = 15,
--		.rts_threshold               = 2347,
-+		.rts_threshold               = IEEE80211_MAX_RTS_THRESHOLD,
- 		.rx_cca_threshold            = 0,
- 		.irq_blk_threshold           = 0xFFFF,
- 		.irq_pkt_threshold           = 0,
-@@ -2337,7 +2337,7 @@ static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 	if (ret < 0)
- 		goto out;
- 
--	ret = wl1271_acx_frag_threshold(wl, (u16)value);
-+	ret = wl1271_acx_frag_threshold(wl, value);
- 	if (ret < 0)
- 		wl1271_warning("wl1271_op_set_frag_threshold failed: %d", ret);
- 
-@@ -2365,7 +2365,7 @@ static int wl1271_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 	if (ret < 0)
- 		goto out;
- 
--	ret = wl1271_acx_rts_threshold(wl, (u16) value);
-+	ret = wl1271_acx_rts_threshold(wl, value);
- 	if (ret < 0)
- 		wl1271_warning("wl1271_op_set_rts_threshold failed: %d", ret);
- 
+
 -- 
-1.7.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
