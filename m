@@ -1,97 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52893 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750945Ab1DUNDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 09:03:16 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 06:02:49 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ath9k: Fix bug in configuring hw timer
-Date: Thu, 21 Apr 2011 18:33:27 +0530
-Message-ID: <1303391008-4794-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:52720 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871Ab1DMV6O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 17:58:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTi=8HEysFXhcv5yn=ErWZkzzqPoSug@mail.gmail.com>
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+	<20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+	<1302634039.14216.10.camel@dev.znau.edu.ua>
+	<BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+	<1302635550.14216.21.camel@dev.znau.edu.ua>
+	<BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+	<4DA4AC4B.90409@hauke-m.de>
+	<BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
+	<BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
+	<1302640546.14216.65.camel@dev.znau.edu.ua>
+	<BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
+	<op.vtvalzu33ri7v4@arend-laptop>
+	<BANLkTik6JZ-n3sVjCFK_x1yNRH3_o3_6rg@mail.gmail.com>
+	<1302726187.7911.11.camel@dev.znau.edu.ua>
+	<BANLkTi=8HEysFXhcv5yn=ErWZkzzqPoSug@mail.gmail.com>
+Date: Wed, 13 Apr 2011 23:58:12 +0200
+Message-ID: <BANLkTinXnZzF_1XkdDpuHsL-NWDd03VREw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"balbi@ti.com" <balbi@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hw next tigger time is configured as current_tsf + (timer_period * 10) which
-is wrong, it should be current_tsf + timer_period. The wrong hw timer configuration
-would cause btcoex related issues.
+2011/4/13 Rafał Miłecki <zajec5@gmail.com>:
+> Will comment on that later.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c |    6 +++---
- drivers/net/wireless/ath/ath9k/hw.c   |   13 ++++---------
- 2 files changed, 7 insertions(+), 12 deletions(-)
+Can we try to decide, how to implement our driver correctly? This
+should be main focus for now. I tried to analyze drivers/amba/, how it
+works, how it relates to our code, Broadcom.
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 44a0a88..cc5fad6 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -138,10 +138,10 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
- 
- static void ath9k_gen_timer_start(struct ath_hw *ah,
- 				  struct ath_gen_timer *timer,
--				  u32 timer_next,
-+				  u32 trig_timeout,
- 				  u32 timer_period)
- {
--	ath9k_hw_gen_timer_start(ah, timer, timer_next, timer_period);
-+	ath9k_hw_gen_timer_start(ah, timer, trig_timeout, timer_period);
- 
- 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
- 		ath9k_hw_disable_interrupts(ah);
-@@ -195,7 +195,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 		timer_period = is_btscan ? btcoex->btscan_no_stomp :
- 					   btcoex->btcoex_no_stomp;
--		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, 0,
-+		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, timer_period,
- 				      timer_period * 10);
- 		btcoex->hw_timer_enabled = true;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9a89855..3e1b85e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2423,11 +2423,11 @@ EXPORT_SYMBOL(ath_gen_timer_alloc);
- 
- void ath9k_hw_gen_timer_start(struct ath_hw *ah,
- 			      struct ath_gen_timer *timer,
--			      u32 timer_next,
-+			      u32 trig_timeout,
- 			      u32 timer_period)
- {
- 	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
--	u32 tsf;
-+	u32 tsf, timer_next;
- 
- 	BUG_ON(!timer_period);
- 
-@@ -2435,18 +2435,13 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
- 
- 	tsf = ath9k_hw_gettsf32(ah);
- 
-+	timer_next = tsf + trig_timeout;
-+
- 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_HWTIMER,
- 		"current tsf %x period %x timer_next %x\n",
- 		tsf, timer_period, timer_next);
- 
- 	/*
--	 * Pull timer_next forward if the current TSF already passed it
--	 * because of software latency
--	 */
--	if (timer_next < tsf)
--		timer_next = tsf + timer_period;
--
--	/*
- 	 * Program generic timer registers
- 	 */
- 	REG_WRITE(ah, gen_tmr_configuration[timer->index].next_addr,
+AFAICS AMBA so far is mostly (always?) used for embedded devices with
+pre-defined hardware layout. Let's take as example mach-u300 (just
+some random one). One of the amba_devices it registers is uart0_device
+which has two interesting fields:
+.start = U300_UART0_BASE,
+.end   = U300_UART0_BASE + SZ_4K - 1,
+U300_UART0_BASE == (U300_SLOW_PER_PHYS_BASE+0x3000) == 0xc0013000
+So this mach-u300 is well-specified device, every mach-u300 has uart0
+at 0xc0013000.
+
+It looks every AMBA device (like uart0) has some common fields, like:
+u32 peripherialid0, peripherialid1, peripherialid2, peripherialid3;
+u32 componentid0, componentid1, componentid2, componentid3;
+
+I believe Broadcom's *agent* AKA *wrapper* is comparable to standard
+amba device.
+
+Of course agents/wrappers are not the same for every Broadcom AMBA AXI
+card, so we can not use strict .start and .end declarations and the
+same agents/wrappers for every card. Instead, we have to do scanning
+of EPROM to read info about agents/wrappers.
+
+If someone does not know: every core on Broadcom AMBA AXI card has
+it's agent/wrapper. We access agent/wrapper registers to
+enable/disable/reset core.
+
+So we could scan EPROM for agents/wrappers, register them in AMBA
+driver using our *_core_enable as AMBA's clock management.
+
+
+Please verify if my understanding is correct. I tried to explain
+easily whole situation I just analyzed.
+
+If I'm right: is this really the right path to follow? What about real
+core, like PCIe core, or IEEE core? I guess they are not standard AMBA
+cores, so we can not simply register them. Should we look for clever
+way to connect everything we have with drivers/amba? How to connect
+"real" cores (PCIe, IEEE) with agents?
+
+Please, share how do you see this situation now.
+
 -- 
-1.7.0.4
-
+Rafał
