@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33431 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755345Ab1DAKIm (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51063 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab1DMUcE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 06:08:42 -0400
-Received: by wya21 with SMTP id 21so2793239wya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 03:08:41 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] ssb: pci: implement mdio reading
-Date: Fri,  1 Apr 2011 12:07:34 +0200
-Message-Id: <1301652454-11251-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1301652454-11251-1-git-send-email-zajec5@gmail.com>
-References: <1301652454-11251-1-git-send-email-zajec5@gmail.com>
+	Wed, 13 Apr 2011 16:32:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <alpine.DEB.2.02.1104131605010.10727@p34.internal.lan>
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
+ <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com> <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan>
+ <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com> <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
+ <alpine.DEB.2.02.1104131348530.16793@p34.internal.lan> <BANLkTinLRVyKwBA7ZbEXKqa18V=+a6+cZg@mail.gmail.com>
+ <alpine.DEB.2.02.1104131605010.10727@p34.internal.lan>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Wed, 13 Apr 2011 13:31:40 -0700
+Message-ID: <BANLkTin5VwUryoMK=jYpbNTudPLufZ+RDw@mail.gmail.com>
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/ssb/driver_pcicore.c |   43 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 43 insertions(+), 0 deletions(-)
+On Wed, Apr 13, 2011 at 1:13 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> (1) What is the AP's beacon period and DTIM? Typical values are 100
+>> TUs for beacons (102.4 ms) and 2 for DTIM (2 beacons per power-save
+>> wakeup) which should imply a mean of 100 and max of 200 ms delay even
+>> on pings.
+>
+> I am using a WNDR3700 with default settings in terms of beacons/etc. †No
+> issues with any device (laptop, computer, etc (in windows)), I have two
+> wireless USB adapters (bought two) and in Windows, no problems, I don't
+> think
+> it is the WNDR3700. †As far as linux/wpa-supplicant, using default settings.
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 08fa6fd..76cbf96 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -467,6 +467,49 @@ static void ssb_pcie_mdio_set_phy(struct ssb_pcicore *pc, u8 phy)
- 	}
- }
- 
-+#if 0
-+//done but not used yet
-+static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address)
-+{
-+	const u16 mdio_control = 0x128;
-+	const u16 mdio_data = 0x12C;
-+	int max_retries = 10;
-+	u16 ret = 0;
-+	u32 v;
-+	int i;
-+
-+	v = 0x80; /* Enable Preamble Sequence */
-+	v |= 0x2; /* MDIO Clock Divisor */
-+	pcicore_write32(pc, mdio_control, v);
-+
-+	if (pc->dev->id.revision >= 10) {
-+		max_retries = 200;
-+		ssb_pcie_mdio_set_phy(pc, device);
-+	}
-+
-+	v = (1 << 30); /* Start of Transaction */
-+	v |= (1 << 29); /* Read Transaction */
-+	v |= (1 << 17); /* Turnaround */
-+	if (pc->dev->id.revision < 10)
-+		v |= (u32)device << 22;
-+	v |= (u32)address << 18;
-+	pcicore_write32(pc, mdio_data, v);
-+	/* Wait for the device to complete the transaction */
-+	udelay(10);
-+	for (i = 0; i < 200; i++) {
-+		v = pcicore_read32(pc, mdio_control);
-+		if (v & 0x100 /* Trans complete */) {
-+			udelay(10);
-+			ret = pcicore_read32(pc, mdio_data);
-+			break;
-+		}
-+		msleep(1);
-+	}
-+	pcicore_write32(pc, mdio_control, 0);
-+	return ret;
-+}
-+#endif
-+
- static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
- 				u8 address, u16 data)
- {
--- 
-1.7.1
+Not enough info. What does "iw dev wlan1 scan dump"  (it might not be
+wlan1 for you) say for "beacon interval"?
 
+Does anyone know how to get the DTIM period out of iw?
+
+>> (2) How long does the client wait after waking up to go back to sleep?
+>> It should be at least a few seconds. For ssh, then, you should see
+>> something like a 100-200 ms delay for the first key and then nothing
+>> at all unless you stop typing for a bit.
+>
+> It lags with each word I type, it is terrible. †If I run something like
+> dmesg or ps auxww, the entire session freezes for 5-10 seconds before it
+> comes back.
+
+Sorry; I meant what is the software stack configured to do? Do some
+looking around.
+
+>> I'm SSHing over a Wi-Fi link that uses power save right this second,
+>> and have for years. It's not generally an issue, I suspect something
+>> worse is going on.
+>
+> Maybe the wireless usb adapters do not function well in Linux with power
+> save
+> on.
+>
+> I bought them awhile ago, they had the highest reviews, and in Windows,
+> they did do 10-15MiB/s, in Linux, I see ~4.6MiB/s (but that was with power
+> save on) about the same, 4.5MiB/s.
+> http://www.amazon.com/Medialink-Wireless-Adapter-802-11n-Compatible/dp/B002RM08RE
+
+Yeah, these might indicate a fairly sizable problem in the Linux drivers IMO.
+
+Dan
