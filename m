@@ -1,55 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65507 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402Ab1DEShy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 14:37:54 -0400
+Received: from purkki.adurom.net ([80.68.90.206]:49535 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754362Ab1DMLFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 07:05:22 -0400
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 02/22] ath9k_hw: Take care of few host interface register changes for AR9340
+References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
+	<1302613042-1754-3-git-send-email-vasanth@atheros.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 13 Apr 2011 14:05:19 +0300
+In-Reply-To: <1302613042-1754-3-git-send-email-vasanth@atheros.com> (Vasanthakumar Thiagarajan's message of "Tue\, 12 Apr 2011 18\:27\:02 +0530")
+Message-ID: <87sjtml8cw.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1302015561-21047-20-git-send-email-mmarek@suse.cz>
-References: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
-	<1302015561-21047-20-git-send-email-mmarek@suse.cz>
-Date: Tue, 5 Apr 2011 20:37:53 +0200
-Message-ID: <BANLkTimVbujtDnF7uJNgfT-oPYGBfR7WLA@mail.gmail.com>
-Subject: Re: [PATCH 19/34] rt2x00: Drop __TIME__ usage
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Michal Marek <mmarek@suse.cz>
-Cc: linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 5, 2011 at 4:59 PM, Michal Marek <mmarek@suse.cz> wrote:
-> The kernel already prints its build timestamp during boot, no need to
-> repeat it in random drivers and produce different object files each
-> time.
->
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Michal Marek <mmarek@suse.cz>
+Vasanthakumar Thiagarajan <vasanth@atheros.com> writes:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> -#define AR_WA                		0x4004
+> +#define AR_WA			(AR_SREV_9340(ah) ? 0x40c4 : 0x4004)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> index c92db32..66166ef 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> @@ -568,7 +568,6 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
->        blob->data = data;
->        data += sprintf(data, "driver:\t%s\n", intf->rt2x00dev->ops->name);
->        data += sprintf(data, "version:\t%s\n", DRV_VERSION);
-> -       data += sprintf(data, "compiled:\t%s %s\n", __DATE__, __TIME__);
->        blob->size = strlen(blob->data);
->
->        return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
-> --
-> 1.7.4.1
->
->
+So now allthe macros require this ah variable? That's confusing as
+that's not visible when using the macro.
+
+-- 
+Kalle Valo
