@@ -1,357 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:59314 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753692Ab1DKDG2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 23:06:28 -0400
-Received: by yxs7 with SMTP id 7so2009974yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 20:06:27 -0700 (PDT)
-Message-ID: <4DA2702B.2080305@lwfinger.net>
-Date: Sun, 10 Apr 2011 22:06:19 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
+Received: from smtp208.alice.it ([82.57.200.104]:60927 "EHLO smtp208.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932159Ab1DMTlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 15:41:49 -0400
+From: Antonio Ospite <ospite@studenti.unina.it>
 To: linux-wireless@vger.kernel.org
-CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	users@rt2x00.serialmonkey.com
-Subject: Firmware for rt2800pci and rt2800usb
-References: <4DA2042A.3010301@gmail.com> <1302469406.5282.341.camel@localhost> <4DA22545.6050209@gmail.com> <4DA2312B.8080303@lwfinger.net> <4DA23594.8090002@gmail.com>
-In-Reply-To: <4DA23594.8090002@gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------020705040604050302060100"
+Cc: Antonio Ospite <ospite@studenti.unina.it>,
+	openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: [PATCH v3] rfkill: Regulator consumer driver for rfkill
+Date: Wed, 13 Apr 2011 21:40:45 +0200
+Message-Id: <1302723645-5286-1-git-send-email-ospite@studenti.unina.it>
+In-Reply-To: <1302686356.3731.1.camel@jlt3.sipsolutions.net>
+References: <1302686356.3731.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020705040604050302060100
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Add a regulator consumer driver for rfkill to enable controlling radio
+transmitters connected to voltage regulators using the regulator
+framework.
 
-Hi,
+A new "vrfkill" virtual supply is provided to use in platform code.
 
-I am in the process of updating the firmware files for rt2800pci and rt2800usb. 
-If you have one of the devices that use this driver, please test the firmware file.
+Signed-off-by: Guiming Zhuo <gmzhuo@gmail.com>
+Signed-off-by: Antonio Ospite <ospite@studenti.unina.it>
+---
 
-Thanks,
+Changes since v2:
+  - Fix struct field initializer syntax in example code from 
+    include/linux/rfkill-regulator.h
+    This will make copying and pasting the code more straightforward.
+  
+  - print the rfkill switch name in the info message when driver is 
+    loaded successfully
 
-Larry
 
---------------020705040604050302060100
-Content-Type: application/octet-stream;
- name="rt2860.bin"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rt2860.bin"
+Changes since v1:
 
-AgLsAgJbIv////8CASz//////wIAHv//////AgDdwODA8MCDwILA0HXQGMKvMEUDEhAJkAQW
-4DDjA3QI8JAEFOAg5wMCAMt0gPCQcBLg9WCQBATgJM9gMBRgQiTiYEcUYFUkIXBg5VUk/mAH
-FGAIJAJwCH0BgCh9AoAkkHAQ4PVQhWBA0gGAPuVVZANgBOVVcAR9AoAJhWBB0gKAKa1Vr2AS
-AjeAIJBwEOD1R5BwEeD1RBIQJYAGkHAQ4PVF5P2vYBICN9IEkHAT5PCQcBPk8NKv0NDQgtCD
-0PDQ4DLA4MDwwIPAgsDQ6MDg6cDg6sDg68Dg7MDg7cDg7sDg78Dgwq8wRQMSEBLSr9Dg/9Dg
-/tDg/dDg/NDg+9Dg+tDg+dDg+NDQ0ILQg9Dw0OAywODA8MCDwILA0HXQEMKvMEUDEhAMMFgK
-5VRgBBVUgALCWDBZCuVQYAQVUIACwlnVUwcwYAQVRtIEMEUDEhAPwo3Sr9DQ0ILQg9Dw0OAy
-EgJ9MEUDEhADMAEGIAkDEhAcMAIGIAoDEhAfMAMGIAsDEhAfMAQGIAwDEhAiIBMJIBEG5StF
-LGAD04ABw5KpEgKtgL/CQ9JF5PUg9SH1U/VG9Sv1LMJC9VH1UvVVkAQYdIDwkAQadAjwwhnC
-GMIaIsjvyOb6COZKYAzI78gI5hYYcAEWwyLtJP/97DT/yO/I9gjG7cbTItCD0IL45JNwEnQB
-k3ANo6OT+HQBk/WCiIPkc3QCk2hg76Ojo4Df7/RgH+T+EgMc4LT/EhIDHO/wdBwu9YLkNHD1
-g+3wIg6+BOMiwODA8MCDwILA0HXQCMKvMEUDEhAG0q/Q0NCC0IPQ8NDgMsKvEgAGEgG+EgKW
-5PUi9UeQBAB0gPDSryJ1iQLk9Yz1ivWI9bj16HWQGNKMdagFIjBFAxIQFeUgcAMgEAMwEQND
-hwEizu/O7mAIf/8SAvgegPUiyO/I5mADFsMi7RT20yLI78jmYAYW5iT/syLDInh/5PbY/XWB
-YwIBeu9gAx+A+iL/wCZ0A8DgwILAg3UmCiLAJnQDwODAgsCDdSYYInQULvWC5DRw9YMi75AD
-MJOQAwBzChj/////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////wIQKAIQ
-OwIQPAIVOAIVOQIWYgIWY8Mi//8CG0ICHM4CF48CFsowBQYgDQMSHgEwBgYgDgMSHk0iIpAE
-FOAg5wMCFTeQcBLg9VaQBATgEgIREQcwEN4xEJ8zEK00EMA1ELc2ERRAEStBEUJQEYdREZBS
-EZBTEZBUEcxVEilWEnxkEpdwEr1xEuZyE5lzE710FKuAFRuDFNKRAAAVN9IY0mF1Myp1MAt1
-MbgiwhiQARTgVP3wIpBwEeD1PAIVMeVVtAIP5Vgw4AaQAQ10CPB9AYACfQKvVhICNwIVMSAC
-AzADCn0Cr1YSAjcCFTHlMtOUAUAMkAEM4EQC8KPgRATwhVZB0gIikHAR4LRaA8JPItJPIuUy
-05QBUAMCFTeQAQzgRALwo+BEBPAi5TLTlAFQAwIVN5ABDOBU/fCj4FT78CLlMtOUAUAH5VVg
-AwIVN5BwEOBUf/+/Cg2QcBHgtAgGdU4BdU+EkHAQ4FR//78CEpBwEeBkCGAE4LQgBnVOA3VP
-IOT1JyKQcBHgJP+SRyLlMtOUAUAH5VVgAwITpJAEBOAl4CRd9VeQcBDg/3RHJVf4xu/GkHAR
-4P90SCVX+MbvxuT9r1YSAjcCFTHlMtOUAUAH5VVgAwITpOVHZAdgHeVHZAhgF+VHZAlgEeVH
-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
---------------020705040604050302060100
-Content-Type: application/octet-stream;
- name="rt2870.bin"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rt2870.bin"
+  - changed "voltage regulator" to "voltage regulators" in the commit
+    message
 
-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
-o3QF8JBwIuCQEyvwgBGQEyjgRA/wo+BED/Cj4EQF8JASBHQD8OVYMOMWkAUAdOLwo3QI8KN0
-AfB0A/B/ARINSJACouBEwPCQEATgRAzw5PVS9VUwAgnCAn0Br0ESHRwwAwLCA+SQAZbw0q8i
-7/RgLeT+dBQu9YLkNHD1g+C0/xl0FC71guQ0cPWD7/B0HC71guQ0cPWD7fAiDr4E1SIiIpBw
-KuAw4U3Cr5BwKOCQEBzwkHAp4JAQHfCQcCrgkBAe8JAQHOD1YpAQHuAg4fOQEBzgkHAo8JAQ
-HeCQcCnwkBAe4JBwKvAwSgeQcCTgRAHwwgXSryIiIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdhMI=
---------------020705040604050302060100--
+  - drop rfkill_init_sw_state() as requested by Johannes Berg
+
+  - moved assignment fields of rfkill_data _before_ rfkill_register(),
+    as the latter will call .set_block (via schedule_work()) which would
+    find NULL pointers for the .vcc and .rf_kill fields otherwise.
+
+    This issue was masked when I was using rfkill_init_sw_state() which
+    was setting the persistent flag: rfkill_register() does not call
+    schedule_work() immediately when the persistent flag is set.
+
+    So please take another look at this part of rfkill_regulator_probe().
+
+ include/linux/rfkill-regulator.h |   48 +++++++++++
+ net/rfkill/Kconfig               |   11 +++
+ net/rfkill/Makefile              |    1 +
+ net/rfkill/rfkill-regulator.c    |  164 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 224 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/rfkill-regulator.h
+ create mode 100644 net/rfkill/rfkill-regulator.c
+
+diff --git a/include/linux/rfkill-regulator.h b/include/linux/rfkill-regulator.h
+new file mode 100644
+index 0000000..aca36bc
+--- /dev/null
++++ b/include/linux/rfkill-regulator.h
+@@ -0,0 +1,48 @@
++/*
++ * rfkill-regulator.c - Regulator consumer driver for rfkill
++ *
++ * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
++ * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#ifndef __LINUX_RFKILL_REGULATOR_H
++#define __LINUX_RFKILL_REGULATOR_H
++
++/*
++ * Use "vrfkill" as supply id when declaring the regulator consumer:
++ *
++ * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
++ * 	{ .dev_name = "rfkill-regulator.0", .supply = "vrfkill" },
++ * };
++ *
++ * If you have several regulator driven rfkill, you can append a numerical id to
++ * .dev_name as done above, and use the same id when declaring the platform
++ * device:
++ *
++ * static struct rfkill_regulator_platform_data ezx_rfkill_bt_data = {
++ * 	.name  = "ezx-bluetooth",
++ * 	.type  = RFKILL_TYPE_BLUETOOTH,
++ * };
++ *
++ * static struct platform_device a910_rfkill = {
++ * 	.name  = "rfkill-regulator",
++ * 	.id    = 0,
++ * 	.dev   = {
++ * 		.platform_data = &ezx_rfkill_bt_data,
++ * 	},
++ * };
++ */
++
++#include <linux/rfkill.h>
++
++struct rfkill_regulator_platform_data {
++	char *name;             /* the name for the rfkill switch */
++	enum rfkill_type type;  /* the type as specified in rfkill.h */
++};
++
++#endif /* __LINUX_RFKILL_REGULATOR_H */
+diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
+index 7fce6df..48464ca 100644
+--- a/net/rfkill/Kconfig
++++ b/net/rfkill/Kconfig
+@@ -22,3 +22,14 @@ config RFKILL_INPUT
+ 	depends on RFKILL
+ 	depends on INPUT = y || RFKILL = INPUT
+ 	default y if !EXPERT
++
++config RFKILL_REGULATOR
++	tristate "Generic rfkill regulator driver"
++	depends on RFKILL || !RFKILL
++	depends on REGULATOR
++	help
++          This options enable controlling radio transmitters connected to
++          voltage regulator using the regulator framework.
++
++          To compile this driver as a module, choose M here: the module will
++          be called rfkill-regulator.
+diff --git a/net/rfkill/Makefile b/net/rfkill/Makefile
+index 6621053..d9a5a58 100644
+--- a/net/rfkill/Makefile
++++ b/net/rfkill/Makefile
+@@ -5,3 +5,4 @@
+ rfkill-y			+= core.o
+ rfkill-$(CONFIG_RFKILL_INPUT)	+= input.o
+ obj-$(CONFIG_RFKILL)		+= rfkill.o
++obj-$(CONFIG_RFKILL_REGULATOR)	+= rfkill-regulator.o
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+new file mode 100644
+index 0000000..18dc512
+--- /dev/null
++++ b/net/rfkill/rfkill-regulator.c
+@@ -0,0 +1,164 @@
++/*
++ * rfkill-regulator.c - Regulator consumer driver for rfkill
++ *
++ * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
++ * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
++ *
++ * Implementation inspired by leds-regulator driver.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/err.h>
++#include <linux/slab.h>
++#include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
++#include <linux/rfkill.h>
++#include <linux/rfkill-regulator.h>
++
++struct rfkill_regulator_data {
++	struct rfkill *rf_kill;
++	bool reg_enabled;
++
++	struct regulator *vcc;
++};
++
++static int rfkill_regulator_set_block(void *data, bool blocked)
++{
++	struct rfkill_regulator_data *rfkill_data = data;
++
++	pr_debug("%s: blocked: %d\n", __func__, blocked);
++
++	if (blocked) {
++		if (rfkill_data->reg_enabled) {
++			regulator_disable(rfkill_data->vcc);
++			rfkill_data->reg_enabled = 0;
++		}
++	} else {
++		if (!rfkill_data->reg_enabled) {
++			regulator_enable(rfkill_data->vcc);
++			rfkill_data->reg_enabled = 1;
++		}
++	}
++
++	pr_debug("%s: regulator_is_enabled after set_block: %d\n", __func__,
++		regulator_is_enabled(rfkill_data->vcc));
++
++	return 0;
++}
++
++struct rfkill_ops rfkill_regulator_ops = {
++	.set_block = rfkill_regulator_set_block,
++};
++
++static int __devinit rfkill_regulator_probe(struct platform_device *pdev)
++{
++	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
++	struct rfkill_regulator_data *rfkill_data;
++	struct regulator *vcc;
++	struct rfkill *rf_kill;
++	int ret = 0;
++
++	if (pdata == NULL) {
++		dev_err(&pdev->dev, "no platform data\n");
++		return -ENODEV;
++	}
++
++	if (pdata->name == NULL || pdata->type == 0) {
++		dev_err(&pdev->dev, "invalid name or type in platform data\n");
++		return -EINVAL;
++	}
++
++	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
++	if (IS_ERR(vcc)) {
++		dev_err(&pdev->dev, "Cannot get vcc for %s\n", pdata->name);
++		ret = PTR_ERR(vcc);
++		goto out;
++	}
++
++	rfkill_data = kzalloc(sizeof(*rfkill_data), GFP_KERNEL);
++	if (rfkill_data == NULL) {
++		ret = -ENOMEM;
++		goto err_data_alloc;
++	}
++
++	rf_kill = rfkill_alloc(pdata->name, &pdev->dev,
++				pdata->type,
++				&rfkill_regulator_ops, rfkill_data);
++	if (rf_kill == NULL) {
++		dev_err(&pdev->dev, "Cannot alloc rfkill device\n");
++		ret = -ENOMEM;
++		goto err_rfkill_alloc;
++	}
++
++	if (regulator_is_enabled(vcc)) {
++		dev_dbg(&pdev->dev, "Regulator already enabled\n");
++		rfkill_data->reg_enabled = 1;
++	}
++	rfkill_data->vcc = vcc;
++	rfkill_data->rf_kill = rf_kill;
++
++	ret = rfkill_register(rf_kill);
++	if (ret) {
++		dev_err(&pdev->dev, "Cannot register rfkill device\n");
++		goto err_rfkill_register;
++	}
++
++	platform_set_drvdata(pdev, rfkill_data);
++	dev_info(&pdev->dev, "%s initialized\n", pdata->name);
++
++	return 0;
++
++err_rfkill_register:
++	rfkill_destroy(rf_kill);
++err_rfkill_alloc:
++	kfree(rfkill_data);
++err_data_alloc:
++	regulator_put(vcc);
++out:
++	return ret;
++}
++
++static int __devexit rfkill_regulator_remove(struct platform_device *pdev)
++{
++	struct rfkill_regulator_data *rfkill_data = platform_get_drvdata(pdev);
++	struct rfkill *rf_kill = rfkill_data->rf_kill;
++
++	rfkill_unregister(rf_kill);
++	rfkill_destroy(rf_kill);
++	regulator_put(rfkill_data->vcc);
++	kfree(rfkill_data);
++
++	return 0;
++}
++
++static struct platform_driver rfkill_regulator_driver = {
++	.probe = rfkill_regulator_probe,
++	.remove = __devexit_p(rfkill_regulator_remove),
++	.driver = {
++		.name = "rfkill-regulator",
++		.owner = THIS_MODULE,
++	},
++};
++
++static int __init rfkill_regulator_init(void)
++{
++	return platform_driver_register(&rfkill_regulator_driver);
++}
++module_init(rfkill_regulator_init);
++
++static void __exit rfkill_regulator_exit(void)
++{
++	platform_driver_unregister(&rfkill_regulator_driver);
++}
++module_exit(rfkill_regulator_exit);
++
++MODULE_AUTHOR("Guiming Zhuo <gmzhuo@gmail.com>");
++MODULE_AUTHOR("Antonio Ospite <ospite@studenti.unina.it>");
++MODULE_DESCRIPTION("Regulator consumer driver for rfkill");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:rfkill-regulator");
+-- 
+1.7.4.1
+
