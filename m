@@ -1,424 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61445 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754127Ab1DRNgS (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756932Ab1DMFyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:36:18 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833934fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:17 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 20/23] rt2x00: Optimize register access in rt2800pci
-Date: Mon, 18 Apr 2011 15:34:01 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181533.21229.IvDoorn@gmail.com> <201104181533.42494.IvDoorn@gmail.com>
-In-Reply-To: <201104181533.42494.IvDoorn@gmail.com>
+	Wed, 13 Apr 2011 01:54:08 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:54:08 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181534.02553.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15119.906565.930041@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:26:31 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 35/40] ath9k_htc: Add a debugfs file showing endpoint status
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-All register reads/writes in rt2800pci were previously done with
-rt2800_register_read/rt2800_register_write. These however indirectly
-call rt2x00pci_register_read/rt2x00pci_register_write which adds an
-additional overhead of at least one call and several move instructions
-to each register access.
+Location: ath9k_htc/phy#/queue
 
-Replacing the calls to rt2800_register_read/rt2800_register_write with
-direct calls to rt2x00pci_register_read/rt2x00pci_register_write gets
-rid of quite a number of instructions in the drivers hotpaths (IRQ
-handling and txdone handling).
-
-For consistency replace all references to rt2800_register_read/write
-with the rt2x00pci_register_read/write variants.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |  158 ++++++++++++++++--------------
- 1 files changed, 84 insertions(+), 74 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h           |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   54 ++++++++++++++++++++++++
+ 2 files changed, 55 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 6f91a9a..b0c729b 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -66,7 +66,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index b9c7bec..b40753c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -339,6 +339,7 @@ struct ath9k_debug {
+ 	struct dentry *debugfs_xmit;
+ 	struct dentry *debugfs_recv;
+ 	struct dentry *debugfs_slot;
++	struct dentry *debugfs_queue;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ 	u32 txrate;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 119cc54..961bec2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -279,6 +279,53 @@ static const struct file_operations fops_slot = {
+ 	.llseek = default_llseek,
+ };
  
- 	for (i = 0; i < 200; i++) {
--		rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
-+		rt2x00pci_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
- 
- 		if ((rt2x00_get_field32(reg, H2M_MAILBOX_CID_CMD0) == token) ||
- 		    (rt2x00_get_field32(reg, H2M_MAILBOX_CID_CMD1) == token) ||
-@@ -80,8 +80,8 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- 	if (i == 200)
- 		ERROR(rt2x00dev, "MCU request failed, no response from hardware\n");
- 
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
-+	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
-+	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
- }
- 
- #if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
-@@ -105,7 +105,7 @@ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
- 	struct rt2x00_dev *rt2x00dev = eeprom->data;
- 	u32 reg;
- 
--	rt2800_register_read(rt2x00dev, E2PROM_CSR, &reg);
-+	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
- 
- 	eeprom->reg_data_in = !!rt2x00_get_field32(reg, E2PROM_CSR_DATA_IN);
- 	eeprom->reg_data_out = !!rt2x00_get_field32(reg, E2PROM_CSR_DATA_OUT);
-@@ -127,7 +127,7 @@ static void rt2800pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
- 	rt2x00_set_field32(&reg, E2PROM_CSR_CHIP_SELECT,
- 			   !!eeprom->reg_chip_select);
- 
--	rt2800_register_write(rt2x00dev, E2PROM_CSR, reg);
-+	rt2x00pci_register_write(rt2x00dev, E2PROM_CSR, reg);
- }
- 
- static void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
-@@ -135,7 +135,7 @@ static void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
- 	struct eeprom_93cx6 eeprom;
- 	u32 reg;
- 
--	rt2800_register_read(rt2x00dev, E2PROM_CSR, &reg);
-+	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
- 
- 	eeprom.data = rt2x00dev;
- 	eeprom.register_read = rt2800pci_eepromregister_read;
-@@ -195,9 +195,9 @@ static void rt2800pci_start_queue(struct data_queue *queue)
- 
- 	switch (queue->qid) {
- 	case QID_RX:
--		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+		rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 1);
--		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+		rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 		break;
- 	case QID_BEACON:
- 		/*
-@@ -207,15 +207,15 @@ static void rt2800pci_start_queue(struct data_queue *queue)
- 		tasklet_enable(&rt2x00dev->tbtt_tasklet);
- 		tasklet_enable(&rt2x00dev->pretbtt_tasklet);
- 
--		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
-+		rt2x00pci_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
--		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+		rt2x00pci_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
--		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
-+		rt2x00pci_register_read(rt2x00dev, INT_TIMER_EN, &reg);
- 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 1);
--		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
-+		rt2x00pci_register_write(rt2x00dev, INT_TIMER_EN, reg);
- 		break;
- 	default:
- 		break;
-@@ -233,11 +233,13 @@ static void rt2800pci_kick_queue(struct data_queue *queue)
- 	case QID_AC_BE:
- 	case QID_AC_BK:
- 		entry = rt2x00queue_get_entry(queue, Q_INDEX);
--		rt2800_register_write(rt2x00dev, TX_CTX_IDX(queue->qid), entry->entry_idx);
-+		rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX(queue->qid),
-+					 entry->entry_idx);
- 		break;
- 	case QID_MGMT:
- 		entry = rt2x00queue_get_entry(queue, Q_INDEX);
--		rt2800_register_write(rt2x00dev, TX_CTX_IDX(5), entry->entry_idx);
-+		rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX(5),
-+					 entry->entry_idx);
- 		break;
- 	default:
- 		break;
-@@ -251,20 +253,20 @@ static void rt2800pci_stop_queue(struct data_queue *queue)
- 
- 	switch (queue->qid) {
- 	case QID_RX:
--		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+		rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 0);
--		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+		rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 		break;
- 	case QID_BEACON:
--		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
-+		rt2x00pci_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 0);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 0);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
--		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+		rt2x00pci_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
--		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
-+		rt2x00pci_register_read(rt2x00dev, INT_TIMER_EN, &reg);
- 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 0);
--		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
-+		rt2x00pci_register_write(rt2x00dev, INT_TIMER_EN, reg);
- 
- 		/*
- 		 * Wait for tbtt tasklets to finish.
-@@ -295,7 +297,7 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	 */
- 	reg = 0;
- 	rt2x00_set_field32(&reg, PBF_SYS_CTRL_HOST_RAM_WRITE, 1);
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
-+	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
- 
- 	/*
- 	 * Write firmware to device.
-@@ -303,11 +305,11 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
- 				   data, len);
- 
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
-+	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
-+	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
- 
--	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
-+	rt2x00pci_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
-+	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
- 
- 	return 0;
- }
-@@ -351,7 +353,7 @@ static void rt2800pci_clear_entry(struct queue_entry *entry)
- 		 * Set RX IDX in register to inform hardware that we have
- 		 * handled this entry and it is available for reuse again.
- 		 */
--		rt2800_register_write(rt2x00dev, RX_CRX_IDX,
-+		rt2x00pci_register_write(rt2x00dev, RX_CRX_IDX,
- 				      entry->entry_idx);
- 	} else {
- 		rt2x00_desc_read(entry_priv->desc, 1, &word);
-@@ -369,45 +371,51 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
- 	 * Initialize registers.
- 	 */
- 	entry_priv = rt2x00dev->tx[0].entries[0].priv_data;
--	rt2800_register_write(rt2x00dev, TX_BASE_PTR0, entry_priv->desc_dma);
--	rt2800_register_write(rt2x00dev, TX_MAX_CNT0, rt2x00dev->tx[0].limit);
--	rt2800_register_write(rt2x00dev, TX_CTX_IDX0, 0);
--	rt2800_register_write(rt2x00dev, TX_DTX_IDX0, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR0, entry_priv->desc_dma);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT0,
-+				 rt2x00dev->tx[0].limit);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX0, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX0, 0);
- 
- 	entry_priv = rt2x00dev->tx[1].entries[0].priv_data;
--	rt2800_register_write(rt2x00dev, TX_BASE_PTR1, entry_priv->desc_dma);
--	rt2800_register_write(rt2x00dev, TX_MAX_CNT1, rt2x00dev->tx[1].limit);
--	rt2800_register_write(rt2x00dev, TX_CTX_IDX1, 0);
--	rt2800_register_write(rt2x00dev, TX_DTX_IDX1, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR1, entry_priv->desc_dma);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT1,
-+				 rt2x00dev->tx[1].limit);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX1, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX1, 0);
- 
- 	entry_priv = rt2x00dev->tx[2].entries[0].priv_data;
--	rt2800_register_write(rt2x00dev, TX_BASE_PTR2, entry_priv->desc_dma);
--	rt2800_register_write(rt2x00dev, TX_MAX_CNT2, rt2x00dev->tx[2].limit);
--	rt2800_register_write(rt2x00dev, TX_CTX_IDX2, 0);
--	rt2800_register_write(rt2x00dev, TX_DTX_IDX2, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR2, entry_priv->desc_dma);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT2,
-+				 rt2x00dev->tx[2].limit);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX2, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX2, 0);
- 
- 	entry_priv = rt2x00dev->tx[3].entries[0].priv_data;
--	rt2800_register_write(rt2x00dev, TX_BASE_PTR3, entry_priv->desc_dma);
--	rt2800_register_write(rt2x00dev, TX_MAX_CNT3, rt2x00dev->tx[3].limit);
--	rt2800_register_write(rt2x00dev, TX_CTX_IDX3, 0);
--	rt2800_register_write(rt2x00dev, TX_DTX_IDX3, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR3, entry_priv->desc_dma);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT3,
-+				 rt2x00dev->tx[3].limit);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX3, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX3, 0);
- 
- 	entry_priv = rt2x00dev->rx->entries[0].priv_data;
--	rt2800_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
--	rt2800_register_write(rt2x00dev, RX_MAX_CNT, rt2x00dev->rx[0].limit);
--	rt2800_register_write(rt2x00dev, RX_CRX_IDX, rt2x00dev->rx[0].limit - 1);
--	rt2800_register_write(rt2x00dev, RX_DRX_IDX, 0);
-+	rt2x00pci_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
-+	rt2x00pci_register_write(rt2x00dev, RX_MAX_CNT,
-+				 rt2x00dev->rx[0].limit);
-+	rt2x00pci_register_write(rt2x00dev, RX_CRX_IDX,
-+				 rt2x00dev->rx[0].limit - 1);
-+	rt2x00pci_register_write(rt2x00dev, RX_DRX_IDX, 0);
- 
- 	/*
- 	 * Enable global DMA configuration
- 	 */
--	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-+	rt2x00pci_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
--	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-+	rt2x00pci_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
- 
--	rt2800_register_write(rt2x00dev, DELAY_INT_CFG, 0);
-+	rt2x00pci_register_write(rt2x00dev, DELAY_INT_CFG, 0);
- 
- 	return 0;
- }
-@@ -427,8 +435,8 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	 * should clear the register to assure a clean state.
- 	 */
- 	if (state == STATE_RADIO_IRQ_ON) {
--		rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
--		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
-+		rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
-+		rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
- 
- 		/*
- 		 * Enable tasklets. The beacon related tasklets are
-@@ -440,7 +448,7 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
--	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-+	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
-@@ -459,7 +467,7 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
--	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
-+	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
- 
- 	if (state == STATE_RADIO_IRQ_OFF) {
-@@ -480,7 +488,7 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Reset DMA indexes
- 	 */
--	rt2800_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
-+	rt2x00pci_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX0, 1);
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX1, 1);
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX2, 1);
-@@ -488,26 +496,26 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX4, 1);
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX5, 1);
- 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DRX_IDX0, 1);
--	rt2800_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
-+	rt2x00pci_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
- 
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
-+	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
-+	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
- 
- 	if (rt2x00_rt(rt2x00dev, RT5390)) {
--		rt2800_register_read(rt2x00dev, AUX_CTRL, &reg);
-+		rt2x00pci_register_read(rt2x00dev, AUX_CTRL, &reg);
- 		rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
- 		rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
--		rt2800_register_write(rt2x00dev, AUX_CTRL, reg);
-+		rt2x00pci_register_write(rt2x00dev, AUX_CTRL, reg);
- 	}
- 
--	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
-+	rt2x00pci_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
- 
--	rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
-+	rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_BBP, 1);
--	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
-+	rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 
--	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
-+	rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
- 
- 	return 0;
- }
-@@ -525,8 +533,8 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
++static ssize_t read_file_queue(struct file *file, char __user *user_buf,
++			       size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Mgmt endpoint", skb_queue_len(&priv->tx.mgmt_ep_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Cab endpoint", skb_queue_len(&priv->tx.cab_ep_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Data BE endpoint", skb_queue_len(&priv->tx.data_be_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Data BK endpoint", skb_queue_len(&priv->tx.data_bk_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Data VI endpoint", skb_queue_len(&priv->tx.data_vi_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Data VO endpoint", skb_queue_len(&priv->tx.data_vo_queue));
++
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Failed queue", skb_queue_len(&priv->tx.tx_failed));
++
++	spin_lock_bh(&priv->tx.tx_lock);
++	len += snprintf(buf + len, sizeof(buf) - len, "%16s : %3d\n",
++			"Queued count", priv->tx.queued_cnt);
++	spin_unlock_bh(&priv->tx.tx_lock);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++
++}
++
++static const struct file_operations fops_queue = {
++	.read = read_file_queue,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath9k_htc_init_debug(struct ath_hw *ah)
  {
- 	if (rt2x00_is_soc(rt2x00dev)) {
- 		rt2800_disable_radio(rt2x00dev);
--		rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0);
--		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0);
-+		rt2x00pci_register_write(rt2x00dev, PWR_PIN_CFG, 0);
-+		rt2x00pci_register_write(rt2x00dev, TX_PIN_CFG, 0);
- 	}
- }
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -317,6 +364,12 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	if (!priv->debug.debugfs_slot)
+ 		goto err;
  
-@@ -537,8 +545,10 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
- 		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
- 		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
- 	} else if (state == STATE_SLEEP) {
--		rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, 0xffffffff);
--		rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, 0xffffffff);
-+		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
-+					 0xffffffff);
-+		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
-+					 0xffffffff);
- 		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
- 	}
++	priv->debug.debugfs_queue = debugfs_create_file("queue", S_IRUSR,
++							priv->debug.debugfs_phy,
++							priv, &fops_queue);
++	if (!priv->debug.debugfs_queue)
++		goto err;
++
+ 	return 0;
  
-@@ -778,9 +788,9 @@ static inline void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
- 	 * access needs locking.
- 	 */
- 	spin_lock_irq(&rt2x00dev->irqmask_lock);
--	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-+	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, irq_field, 1);
--	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
-+	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 	spin_unlock_irq(&rt2x00dev->irqmask_lock);
- }
+ err:
+@@ -329,6 +382,7 @@ void ath9k_htc_exit_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
  
-@@ -851,7 +861,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
- 	 * need to lock the kfifo.
- 	 */
- 	for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
--		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &status);
-+		rt2x00pci_register_read(rt2x00dev, TX_STA_FIFO, &status);
- 
- 		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
- 			break;
-@@ -873,8 +883,8 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	u32 reg, mask;
- 
- 	/* Read status and ACK all interrupts */
--	rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
--	rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
-+	rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
-+	rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
- 
- 	if (!reg)
- 		return IRQ_NONE;
-@@ -914,9 +924,9 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	 * the tasklet will reenable the appropriate interrupts.
- 	 */
- 	spin_lock(&rt2x00dev->irqmask_lock);
--	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-+	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	reg &= mask;
--	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
-+	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 	spin_unlock(&rt2x00dev->irqmask_lock);
- 
- 	return IRQ_HANDLED;
++	debugfs_remove(priv->debug.debugfs_queue);
+ 	debugfs_remove(priv->debug.debugfs_slot);
+ 	debugfs_remove(priv->debug.debugfs_recv);
+ 	debugfs_remove(priv->debug.debugfs_xmit);
 -- 
-1.7.2.3
+1.7.4.4
 
