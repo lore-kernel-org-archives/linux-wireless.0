@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:65304 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756952Ab1DHPqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 11:46:53 -0400
-Received: by gyd10 with SMTP id 10so1472265gyd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 08:46:53 -0700 (PDT)
-Message-ID: <4D9F2DEA.9080200@lwfinger.net>
-Date: Fri, 08 Apr 2011 10:46:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nm4-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.129]:41394 "HELO
+	nm4-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932194Ab1DMQLk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 12:11:40 -0400
+Message-ID: <677552.47001.qm@web161601.mail.bf1.yahoo.com>
+Date: Wed, 13 Apr 2011 09:11:39 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+To: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
 MIME-Version: 1.0
-To: Igor Plyatov <plyatov@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	George <george0505@realtek.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: net/wireless/rtlwifi: problem with D-link DWA-131 USB adapter
-References: <4D9F0DAE.30809@gmail.com> <4D9F14FE.8060905@lwfinger.net> <4D9F2462.60600@gmail.com>
-In-Reply-To: <4D9F2462.60600@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2011 10:06 AM, Igor Plyatov wrote:
-> Dear Larry,
->
->> The driver rtl8192cu is for the RTL8192CU/RTL8188CU chips. The DWA-131
->> contains an RTL8192SU chip. It cannot be driven by rtl8192cu - it will never
->> work.
->>
->> On my TODO list is the preparation of a driver named rtl8192su, but since
->> r8712u works, the priority is low. I'm much more interested in getting the
->> drivers for the RTL8192SE and RTL8192DE chips into the kernel. Note that
->> rtl8192su will share a lot of code with rtl8192se in the same fashion that
->> rtl8192ce and rtl8192cu share routines.
->>
->> When I prepared the r8712u driver for staging, I did not worry about the LED,
->> which is why it doesn't blink. What kind of LED action do you prefer. Some
->> users only want the LED on when the interface is active and complain when it
->> blinks. Others want it to blink when transmitting.
->>
->> Larry
->
-> Thank you for descriptive answer!
->
-> Is there any way to detect Realtek chipset type by some means like lsusb or else?
 
-For my DWA-130, lsusb outputs the following
+> > I recall using this driver in staging and it crashing
+> my machine, now thats
+> > its no longer in staging, I thought I'd give it
+> another try..  Using the
+> 
+> The rt2800usb was not in staging but has been inside the
+> main kernel
+> tree for quite
+> some time already, the alternative rt2870sta was in staging
+> and will
+> be removed very soon.
+> 
+> > following wireless usb adapter, I'm seeing very high
+> latency when using
+> > the device in Linux, (with Windows, there are no
+> problems).  Using Debian
+> > Testing + wpa_supplicant, using the following USB
+> adapter:
+> 
+> Can you try disabling powersaving?
+> iwconfig wlan0 power off
+> 
+> Ivo
 
-Bus 001 Device 003: ID 07d1:3300 D-Link System DWA-130 802.11n Wireless N 
-Adapter(rev.E) [Realtek RTL8192SU]
+Hi,
 
-The descriptive info is in file /usr/share/usb.ids and available on-line at 
-http://www.linux-usb.org/usb.ids.
+I have exactly the same device /VID/. Ivo's suggestion fixed the problem, to some extent. Latency is fine now but every now and then I'd get (DUP!) duplicated packets and I've isolated the problem only to 54G capable APs. APs with 11n work fine without duplicate packets (or high latency).
 
-Larry
+My request is, will you please try pinging both G and N APs to see if duplicate packs are occurring at your end.
 
+Walter
