@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46942 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754138Ab1DJP4I (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51994 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758249Ab1DMTti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 11:56:08 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-PYFvHR0wWVqAeTatDkwk"
-Date: Sun, 10 Apr 2011 16:56:02 +0100
-Message-ID: <1302450962.5282.129.camel@localhost>
+	Wed, 13 Apr 2011 15:49:38 -0400
+Subject: Re: Google Summer of Code 2011 - Wireless application
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4DA5FAF9.3090309@gmail.com>
+References: <4DA5FAF9.3090309@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Apr 2011 21:49:35 +0200
+Message-ID: <1302724175.3731.17.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Subject: Firmware files for Ralink RT28x0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2011-04-13 at 21:35 +0200, Till Kamppeter wrote:
 
---=-PYFvHR0wWVqAeTatDkwk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> If you are not interested at all, please tell me ASAP so that I can 
+> simply reject the applications on your behalf.
 
-I notice that rt2800{pci,usb} each specify only one firmware image,
-regardless of the controller version.
+I won't have time to mentor anyone this year.
 
-This is inconsistent with rt28{6,7}0sta and with the firmware images in
-linux-firmware.
 
-If you think that a single image per bus type can cover all controllers,
-please identify those firmware images, test them on each hardware
-generation, and get them into linux-firmware.
+I do note, however, that the projects aren't really very well thought
+out.
 
-Ben.
+The IBSS one is concerned with TPT but somebody else is working on 11n
+support anyway, for instance. Also multiple IBSS per HW, which is really
+tricky and can only work in corner cases. Overall, I'm not convinced
+this is a suitable project.
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
+The second one is just totally useless.
 
---=-PYFvHR0wWVqAeTatDkwk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+The last one looks a bit like some googling around the problem space of
+a basic idea ("improve roaming"), but offers no reasonable indication as
+to actually achieving any type of solution, and any actual roaming
+improvements wouldn't be in the kernel anyway.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Even if I had time to mentor, I think I'd reject these applications
+anyway.
 
-iQIVAwUATaHTDOe/yOyVhhEJAQq+hA/+JsthgtyRo2IVPexweXGuTIuoTekGcsaX
-G9HEIFBMk24z0rKn7fIDxqI4b2cMZCfjdOMFbHjmhj5e4aw1nWmwF/f8c9iU7Q16
-hAmlcpOUS55lVSh3Ef7h6ZFB9fQwn7xYaovn7VbeBH9xfOtIsW6jkqkytSk9Q3F5
-xE6SCYOjCao6PNsl7rO1VldSwWcmqCuKi704NqumeDR5YM+w3o8zYcDv6bJbyVjz
-dPVthpgm/xxMOFqKPpx8a7gldrGrsnLkNw88KjMO42uf+xNSyhSZRYVkOAoTUT0L
-+nnGIBnc2h8dHY7lVfyUTVNzW9egvgLkuS1xIUQYcQvk+S/1MjFnqKpST/wkoUG+
-4pIwJI9KilfG2U8Ar/STBHvBRL4a0ujL978zDmgoItXrHbD/w2SA5wXcNJS96XTE
-Uy9L1lZajRBsmOg9Bbrnp+tweoe6vVFh7Jz9wAYcvzxHFWOpQ5HsZM1JPLiUJXjk
-gdoLXJmzattFpillu1rtf6GwlKQJwJ2AOGhdyaczwbbPthzVphgTYfC1huS3OVbr
-moSwkST/JLDMmFmFlU6zp40HoE2HF/I9WMLdV0zJhSAjUkWrlGdN34i1NmdWcytl
-LJbjCwPNdCWevaSh0ghV9EhBjsA/iEMZPFkj3hB7XflVMk+Je0n2ZfXxf0e1ano+
-t9FOX+yQPwc=
-=3iDJ
------END PGP SIGNATURE-----
+johannes
 
---=-PYFvHR0wWVqAeTatDkwk--
