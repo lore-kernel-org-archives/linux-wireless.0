@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63899 "EHLO mail.atheros.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3815 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751569Ab1DDR0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 13:26:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 10:25:46 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 1/5] ath9k: deny new interface addtion on IBSS mode
-Date: Mon, 4 Apr 2011 22:56:16 +0530
-Message-ID: <1301937979-14770-1-git-send-email-rmanoharan@atheros.com>
+	id S1753885Ab1DMIQw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 04:16:52 -0400
+To: "George Kashperko" <george@znau.edu.ua>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "balbi@ti.com" <balbi@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	"Andy Botting" <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC][PATCH] axi: add AXI bus driver
+References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
+ <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
+ <1302634039.14216.10.camel@dev.znau.edu.ua>
+ <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
+ <1302635550.14216.21.camel@dev.znau.edu.ua>
+ <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
+ <4DA4AC4B.90409@hauke-m.de>
+ <BANLkTiknRYWaDM1ThAxgXcdGqK8jeFaBPA@mail.gmail.com>
+ <BANLkTikqKtJuDS17mfFvxzMoXuBtJvCgTA@mail.gmail.com>
+ <1302640546.14216.65.camel@dev.znau.edu.ua>
+ <BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
+Date: Wed, 13 Apr 2011 10:16:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vtvalzu33ri7v4@arend-laptop>
+In-Reply-To: <BANLkTim8dmTL-BVK3fcWHNBU9Eyz1k_T+Q@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The present check denies the IBSS interface addtion if we
-already have any other vifs. But it fails to deny interface
-addition if IBSS was already present.
+On Tue, 12 Apr 2011 22:44:01 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> 2011/4/12 George Kashperko <george@znau.edu.ua>:
+>>> 2011/4/12 Rafał Miłecki <zajec5@gmail.com>:
+>>> That way I see really low (or not at all) relation between out
+>>> (not)Broadcom bus and present AMBA bus.
+>>>
+>> Agree.
+>
+> Ehh, sounds like one more renaming to functions, defines, prefixes.
+>
+> Let's wait for Arend comments, he was the one voting for  
+> not-bcm-specific name.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6a41302..67b0eea 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1483,8 +1483,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if ((vif->type == NL80211_IFTYPE_ADHOC) &&
--	    sc->nvifs > 0) {
-+	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+	    ((vif->type == NL80211_IFTYPE_ADHOC) &&
-+	     sc->nvifs > 0)) {
- 		ath_err(common, "Cannot create ADHOC interface when other"
- 			" interfaces already exist.\n");
- 		ret = -EINVAL;
+Hi Rafał,
+
+Still think its better to stick with a generic name even if currently you  
+only come across this in Broadcom chips right now. I do agree that the  
+term 'axi' is implying something else than what this bus driver is  
+providing. The name 'axi-dmp' I gave earlier may be more to the point.
+
+I also looked at the amba driver after receiving comments on the brcmaxi  
+library module (this is what Hauke Mehrtens referred to) and came to  
+similar conclusion as you did. It does however support PM properly so you  
+may want to get inspiration in that area. I also noticed a reference to  
+AMBA term APB which is a different bus in the AMBA family. AXI was  
+introduced later as higher performance bus (in AMBA rev3 if I remember  
+correctly).
+
+Gr. AvS
 -- 
-1.7.4.2
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
