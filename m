@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65393 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35900 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758160Ab1DMKPL (ORCPT
+	with ESMTP id S1757209Ab1DMH4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 06:15:11 -0400
-Received: by fxm17 with SMTP id 17so333047fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 03:15:10 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Damian Lesiuk <lesiuk@gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
-Date: Wed, 13 Apr 2011 12:14:53 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
-In-Reply-To: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+	Wed, 13 Apr 2011 03:56:05 -0400
+Received: by fxm17 with SMTP id 17so269994fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 00:56:04 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: rt2800usb: page allocation failure
+Date: Wed, 13 Apr 2011 09:54:06 +0200
+Cc: Johannes Stezenbach <js@sig21.net>,
+	Igor Plyatov <plyatov@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <4DA471DC.7080308@gmail.com> <20110412212236.GA8877@sig21.net> <4DA4FE7C.8070807@lwfinger.net>
+In-Reply-To: <4DA4FE7C.8070807@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104131214.53633.chunkeey@googlemail.com>
+  charset="us-ascii"
+Message-Id: <201104130954.07178.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 April 2011 10:33:38 Damian Lesiuk wrote:
-> I have very low connection speeds. Is it normal for that device/driver?
+Am Mittwoch, 13. April 2011 schrieb Larry Finger:
+> @Igor: The buffer size is set in the define for AGGREGATION_SIZE located in 
+> drivers/net/wireless/rt2x00/rt2x00queue.h. Reducing that will cut the buffer 
+> size request, but might not help the problem.
 
-depends, mostly on the client and maybe interference/link quality.
-<http://wireless.kernel.org/en/users/Drivers/carl9170#A802.11n_Compatibility>
+... and will break reception of AMSDUs.
 
+However, there are some references that the hardware might be able to support
+something like scatter gather DMA (WPDMA_GLO_CFG.HDR_SEG_LEN) but I haven't
+investigated in that direction yet.
 
-you probably have to enable wmm [see hostapd docs], but because of the
-compatibility issues anyone should refrain from
-
-however, Atheros has just released a patchset+fw which brings AP
-support to ath9k_htc.
+Helmut
