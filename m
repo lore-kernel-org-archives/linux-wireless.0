@@ -1,27 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52957 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754914Ab1DWTCq (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752652Ab1DMFwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 15:02:46 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0C85E540177
-	for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 15:07:51 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-23 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110423190245.0656A40EB7@repository3.orbit-lab.org>
-Date: Sat, 23 Apr 2011 15:02:44 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 13 Apr 2011 01:52:30 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:52:30 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15023.163966.25556@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:24:55 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 19/40] ath9k_htc: Remove unused WMI_WLAN_TXCOMP_EVENTID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-compat-wireless code metrics
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/wmi.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-    840807 - Total upstream lines of code being pulled
-      2331 - backport code changes
-      2027 - backport code additions
-       304 - backport code deletions
-      7994 - backport from compat module
-     10325 - total backport code
-    1.2280 - % of code consists of backport work
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 3ab9604..a81d554 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -80,7 +80,6 @@ enum wmi_event_id {
+ 	WMI_FATAL_EVENTID,
+ 	WMI_TXTO_EVENTID,
+ 	WMI_BMISS_EVENTID,
+-	WMI_WLAN_TXCOMP_EVENTID,
+ 	WMI_DELBA_EVENTID,
+ 	WMI_TXRATE_EVENTID,
+ };
+-- 
+1.7.4.4
+
