@@ -1,52 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57277 "EHLO mail.atheros.com"
+Received: from lucidpixels.com ([75.144.35.66]:34505 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148Ab1DSN7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:48 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:22 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 22/22] ath9k_hw: Enable AR9340 support
-Date: Tue, 19 Apr 2011 19:29:20 +0530
-Message-ID: <1303221560-25139-23-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+	id S1754959Ab1DMR5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 13:57:54 -0400
+Date: Wed, 13 Apr 2011 13:57:52 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+In-Reply-To: <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1104131348530.16793@p34.internal.lan>
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com> <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan> <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com>
+ <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: MULTIPART/MIXED; BOUNDARY="655872-826444373-1302717472=:16793"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9340 is a AR9003 family built-in 2x2 wmac of ar934x SOCs. It is single band
-in ar9341 SOC and dual band in ar9344/ar9342 SOCs.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+--655872-826444373-1302717472=:16793
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index b780f6f..2bf487b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -552,6 +552,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9271:
- 	case AR_SREV_VERSION_9300:
- 	case AR_SREV_VERSION_9485:
-+	case AR_SREV_VERSION_9340:
- 		break;
- 	default:
- 		ath_err(common,
-@@ -629,6 +630,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR2427_DEVID_PCIE:
- 	case AR9300_DEVID_PCIE:
- 	case AR9300_DEVID_AR9485_PCIE:
-+	case AR9300_DEVID_AR9340:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
--- 
-1.7.0.4
 
+
+On Wed, 13 Apr 2011, Daniel Halperin wrote:
+
+> Ugh! Couldn't you configure the stupid mailing list filter to only
+> drop rich text mails that have [PATCH or [RFC or [RFT in the subject,
+> e.g.? Original mail below.
+>
+> (sorry for the resend, Justin and Ivo).
+>
+> Dan
+>
+> On Wed, Apr 13, 2011 at 9:23 AM, Daniel Halperin
+> <dhalperi@cs.washington.edu> wrote:
+>>
+>> On Wed, Apr 13, 2011 at 9:01 AM, Justin Piszcz <jpiszcz@lucidpixels.com>=
+ wrote:
+>>>>
+>>>> Can you try disabling powersaving?
+>>>> iwconfig wlan0 power off
+>>>>
+>>> Wow! That was it, now its interactive again.
+>>>
+>>> 64 bytes from wireless-host (192.168.1.2): icmp_req=3D1 ttl=3D64 time=
+=3D0.581 ms
+>>> 64 bytes from wireless-host (192.168.1.2): icmp_req=3D2 ttl=3D64 time=
+=3D0.647 ms
+>>>
+>>> Thanks, so its recommend to keep this off then, can that be set as the =
+driver default?
+>>>
+>>
+>> That's a bad idea, what you're seeing is likely completely a red herring=
+=2E=A0Wi-Fi power saving mode saves energy by putting the RF hardware most =
+of the time. This is a Good Thing.
+>> Power save is designed to kick in only when the load is very slow; the c=
+lient's network stack should automatically disable power save during times =
+of high load, e.g., during a download or a VoIP call. You should run some t=
+ests to see if this is actually occurring; there may be a bug in the rtl im=
+plementation.
+>> The real problem here is that your ping test has invalid assumptions. On=
+e packet/second is not enough load to disable Wi-Fi power save, so you shou=
+ld not see interactive ping times. Again, this is a good thing and somethin=
+g I doubt you want to disable! (Assuming that RTL's implementation isn't fu=
+ndamentally broken elsewhere) It certainly should NOT be the driver default=
+=2E
+>> Try again with sudo ping -i 0.01 -s 1400 (e.g., to ping with large packe=
+ts every 10 ms); this should probably trigger the logic that automatically =
+disables the power saving mode. Or try pinging while doing a 1 Mbit UDP tra=
+nsfer (e.g., with iperf).
+>> Dan
+>
+
+Hi,
+
+When powersave is enabled, it is very jumpy, I've used satellite comms befo=
+re
+and (~600ms-1200ms was more smooth) as it did not jump around as much.  The
+application is just a standalone desktop with minimal activity for the majo=
+rity
+of the time, maybe thats why..
+
+With powersave disabled, I now see 0% packet loss (802.11n) and low ping
+times, this looks like the proper solution for the wireless USB device I
+am using.  By the way, is it possible/are there wireless USB devices out th=
+ere
+that support wake on wireless lan (WOWL?
+
+Your ping command with power off:
+1408 bytes from server (192.168.1.2): icmp_req=3D539 ttl=3D64 time=3D1.07 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D540 ttl=3D64 time=3D1.31 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D541 ttl=3D64 time=3D1.07 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D542 ttl=3D64 time=3D1.26 m=
+s
+
+Your ping command with power on:
+1408 bytes from server (192.168.1.2): icmp_req=3D649 ttl=3D64 time=3D1.80 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D650 ttl=3D64 time=3D1.85 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D651 ttl=3D64 time=3D2.86 m=
+s
+1408 bytes from server (192.168.1.2): icmp_req=3D652 ttl=3D64 time=3D1.46 m=
+s
+
+You are correct, if there is a lot of traffic, its good, but if the system
+is relatively idle and all that's going on is an SSH session, there is horr=
+ible
+latency.
+
+So the fix/workaround, for Debian-based distributions (if you come across=
+=20
+this problem):
+
+File: /etc/network/interfaces
+
+-- snip --
+
+# Wireless
+auto wlan0
+iface wlan0 inet dhcp
+   wpa-ssid your-ssid
+   wpa-psk your-private-key
+   post-up /sbin/iwconfig wlan0 power off
+
+-- snip --
+
+Justin.
+
+--655872-826444373-1302717472=:16793--
