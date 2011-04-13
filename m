@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:54704 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751011Ab1DSF4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 01:56:39 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 22:56:13 -0700
-Date: Tue, 19 Apr 2011 11:26:20 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Kalle Valo <kvalo@adurom.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 02/22] ath9k_hw: Take care of few host interface
-	register changes for AR9340
-Message-ID: <20110419055620.GC21802@vasanth-laptop>
-References: <1302613042-1754-1-git-send-email-vasanth@atheros.com> <1302613042-1754-3-git-send-email-vasanth@atheros.com> <87sjtml8cw.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87sjtml8cw.fsf@purkki.adurom.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:55692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757966Ab1DMJTX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 05:19:23 -0400
+Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Ospite <ospite@studenti.unina.it>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+In-Reply-To: <20110413104402.d0115659.ospite@studenti.unina.it>
+References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
+	 <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
+	 <1302608488.3639.15.camel@jlt3.sipsolutions.net>
+	 <1302608642.3639.17.camel@jlt3.sipsolutions.net>
+	 <20110413104402.d0115659.ospite@studenti.unina.it>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Apr 2011 11:19:16 +0200
+Message-ID: <1302686356.3731.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 13, 2011 at 04:35:19PM +0530, Kalle Valo wrote:
-> Vasanthakumar Thiagarajan <vasanth@atheros.com> writes:
+On Wed, 2011-04-13 at 10:44 +0200, Antonio Ospite wrote:
+> On Tue, 12 Apr 2011 13:44:02 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
 > 
-> > -#define AR_WA                		0x4004
-> > +#define AR_WA			(AR_SREV_9340(ah) ? 0x40c4 : 0x4004)
+> > On Tue, 2011-04-12 at 13:41 +0200, Johannes Berg wrote:
+> > 
+> > > > + * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
+> > > > + * 	{ .dev_name = "rfkill-regulator.0", supply = "vrfkill" },
+> > > > + * };
+> > > 
+> > > It's a comment, but it should be .supply = (missing the .)
+> > >
 > 
-> So now allthe macros require this ah variable? That's confusing as
-> that's not visible when using the macro.
+> well spotted, I'll fix this.
 
-All register read/write functions require ath9k hw structure (ah) to
-be available anyway, so it is reasonable to assume that ah will be available to
-determine that register offset as well.
+This is the comment I was referring to -- I got confused and thought
+this was a struct rfkill_regulator_platform_data.
 
-Vasanth
+> That's how the regulator framework works, I know Mark already replied to
+> you but I try to elaborate more for the records and to organize my 
+> thoughts about that:
+[snip explanation]
+
+Thanks, ok, I'm just not familiar with the regulator framework and got
+confused about the various structs involved.
+
+So the only thing I see wrong is the missing . above, not sure if you
+care enough to resend :-)
+
+johannes
+
