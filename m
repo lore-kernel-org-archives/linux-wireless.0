@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:44399 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757939Ab1DAPnk (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60442 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932713Ab1DMQo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 11:43:40 -0400
-Received: by eyd9 with SMTP id 9so1083728eyd.28
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 08:43:38 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: use kstrtoul functions
-Date: Fri,  1 Apr 2011 18:44:13 +0300
-Message-Id: <1301672653-29946-1-git-send-email-coelho@ti.com>
+	Wed, 13 Apr 2011 12:44:29 -0400
+Received: by fxm17 with SMTP id 17so585940fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 09:44:28 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Damian Lesiuk <lesiuk@gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
+Date: Wed, 13 Apr 2011 18:43:57 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+In-Reply-To: <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104131843.57676.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the new kstrtoul functions instead of the deprecated strict_strtoul().
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |    2 +-
- drivers/net/wireless/wl12xx/main.c    |    3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 8e75b09..70ab198 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -267,7 +267,7 @@ static ssize_t gpio_power_write(struct file *file,
- 	}
- 	buf[len] = '\0';
+On Wednesday 13 April 2011 18:11:48 Damian Lesiuk wrote:
+> When I turned off N i have this in log.
+> http://pastebin.com/raw.php?i=q0zKxUZn
  
--	ret = strict_strtoul(buf, 0, &value);
-+	ret = kstrtoul(buf, 0, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value in gpio_power");
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7126506..a5a5d01 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3397,8 +3397,7 @@ static ssize_t wl1271_sysfs_store_bt_coex_state(struct device *dev,
- 	unsigned long res;
- 	int ret;
- 
--	ret = strict_strtoul(buf, 10, &res);
--
-+	ret = kstrtoul(buf, 10, &res);
- 	if (ret < 0) {
- 		wl1271_warning("incorrect value written to bt_coex_mode");
- 		return count;
--- 
-1.7.1
+That's an assert to catch unwanted calls into the driver by
+the stack or from userspace. In this case the driver WARNED
+that it received an update to the bss_conf after all virtual
+interfaces have been removed. (This makes no sense, since
+*vif might not point to an old/gone ieee80211_vif.)
 
+But it's simple to fix: get compat-wireless.
+<http://wireless.kernel.org/en/users/Download>
+
+Regards,
+	Chr
+
+P.S.: where's that hostapd from 2011-04-20 coming from?
+AFAIK it's still the 13/14th of April on Earth :D
