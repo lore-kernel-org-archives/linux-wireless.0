@@ -1,39 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57323 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587Ab1D2MuY (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58841 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab1DMFwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 08:50:24 -0400
-Received: by fxm17 with SMTP id 17so2466631fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 05:50:23 -0700 (PDT)
-Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1304080747.21342.1.camel@jlt3.sipsolutions.net>
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130620-109@post.gmane.org>
-	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
-	 <loom.20110428T135917-421@post.gmane.org>
-	 (sfid-20110428_141415_832084_99A2E356) <1303995368.3558.9.camel@jlt3.sipsolutions.net>
-	 <loom.20110429T084118-365@post.gmane.org>
-	 (sfid-20110429_085443_970145_470B3272)  <1304061675.3589.1.camel@jlt3.sipsolutions.net>
-	 <1304066264.2931.23.camel@alex-2>  <1304080563.2931.41.camel@alex-2>
-	 (sfid-20110429_143612_006856_91560407)  <1304080747.21342.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 14:50:21 +0200
-Message-ID: <1304081421.2931.47.camel@alex-2> (sfid-20110429_145028_319231_DD336FE8)
-Mime-Version: 1.0
+	Wed, 13 Apr 2011 01:52:18 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 14so275049iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:52:18 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19877.15011.484382.666651@gargle.gargle.HOWL>
+Date: Wed, 13 Apr 2011 11:24:43 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 17/40] ath9k_htc: Sync struct ath9k_htc_target_vif with FW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > - If HT has been configured through iw and a non-HT network is to be
-> > joined, iw's HT setting is used and announced.
-> 
-> This isn't possible, you might join a network on a channel that doesn't
-> allow HT40+ for example.
-Of course it must be checked.
-It has to be checked even when joining HT networks.
-E.g. a european user travels to America and opens an HT+ Network on
-channel 9. The american card should disable HT40+.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   12 +++---------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++++----
+ 2 files changed, 7 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index e096624..f74f45f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -117,17 +117,11 @@ struct ath9k_htc_cap_target {
+ 
+ struct ath9k_htc_target_vif {
+ 	u8 index;
+-	u8 des_bssid[ETH_ALEN];
+-	__be32 opmode;
++	u8 opmode;
+ 	u8 myaddr[ETH_ALEN];
+-	u8 bssid[ETH_ALEN];
+-	u32 flags;
+-	u32 flags_ext;
+-	u16 ps_sta;
+-	__be16 rtsthreshold;
+ 	u8 ath_cap;
+-	u8 node;
+-	s8 mcast_rate;
++	__be16 rtsthreshold;
++	u8 pad;
+ } __packed;
+ 
+ #define ATH_HTC_STA_AUTH  0x0001
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 9bb20f3..4002267 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -349,7 +349,7 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+ 	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
+ 
+-	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
++	hvif.opmode = HTC_M_MONITOR;
+ 	hvif.index = ffz(priv->vif_slot);
+ 
+ 	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
+@@ -1039,13 +1039,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+-		hvif.opmode = cpu_to_be32(HTC_M_STA);
++		hvif.opmode = HTC_M_STA;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
++		hvif.opmode = HTC_M_IBSS;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
++		hvif.opmode = HTC_M_HOSTAP;
+ 		break;
+ 	default:
+ 		ath_err(common,
+-- 
+1.7.4.4
 
