@@ -1,54 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47333 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755883Ab1DAQBM (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42302 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296Ab1DMUzS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:01:12 -0400
-Received: by bwz15 with SMTP id 15so2631216bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:01:10 -0700 (PDT)
+	Wed, 13 Apr 2011 16:55:18 -0400
 MIME-Version: 1.0
-Date: Fri, 1 Apr 2011 12:01:09 -0400
-Message-ID: <AANLkTimERiSQcFp2-F5OTM6KyQHEMsGvJaWsV4w4Rsed@mail.gmail.com>
-Subject: products with Atheros AR9002U (UB94) ?
-From: George Nychis <gnychis@cmu.edu>
-To: linux-wireless@vger.kernel.org
-Cc: Stephen.Chen@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1302727516.8015.9.camel@dev.znau.edu.ua>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+	<20110413163113.GA24015@kroah.com>
+	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+	<1302726703.8015.1.camel@dev.znau.edu.ua>
+	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
+	<1302727516.8015.9.camel@dev.znau.edu.ua>
+Date: Wed, 13 Apr 2011 22:55:16 +0200
+Message-ID: <BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am searching for a dual-band 802.11n USB wireless adapter with an
-Atheros chipset for Linux use.  I have checked the Linux Wireless
-products page, etc.  After doing some searching, I found that some
-older 802.11n devices use the UB81/82/83 Atheros hardware with the
-AR9001U, and some of the newer 802.11n Atheros hardware supports
-AR9002U with the UB94.  Correct me if I'm wrong, but I think the main
-difference is the AR9001U was 11n-draft, and the AR9002U is
-11n-standard.  Other than that, both are dual-band and seem to support
-most of the same?
-http://www.atheros.com/media/product/product_78_file1.pdf
+2011/4/13 George Kashperko <george@znau.edu.ua>:
+>
+>> 2011/4/13 George Kashperko <george@znau.edu.ua>:
+>> >
+>> > В Срд, 13/04/2011 в 21:39 +0200, Rafał Miłecki пишет:
+>> >> 2011/4/13 Greg KH <greg@kroah.com>:
+>> >> >> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
+>> >> >> new file mode 100644
+>> >> >> index 0000000..17e882c
+>> >> >> --- /dev/null
+>> >> >> +++ b/drivers/axi/axi_pci_bridge.c
+>> >> >> @@ -0,0 +1,33 @@
+>> >> >> +/*
+>> >> >> + * AXI PCI bridge module
+>> >> >> + *
+>> >> >> + * Licensed under the GNU/GPL. See COPYING for details.
+>> >> >> + */
+>> >> >> +
+>> >> >> +#include "axi_private.h"
+>> >> >> +
+>> >> >> +#include <linux/axi/axi.h>
+>> >> >> +#include <linux/pci.h>
+>> >> >> +
+>> >> >> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
+>> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
+>> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
+>> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+>> >> >> +     { 0, },
+>> >> >> +};
+>> >> >> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
+>> >> >> +
+>> >> >> +static struct pci_driver axi_pci_bridge_driver = {
+>> >> >> +     .name = "axi-pci-bridge",
+>> >> >> +     .id_table = axi_pci_bridge_tbl,
+>> >> >> +};
+>> >> >> +
+>> >> >> +int __init axi_pci_bridge_init(void)
+>> >> >> +{
+>> >> >> +     return axi_host_pci_register(&axi_pci_bridge_driver);
+>> >> >> +}
+>> >> >> +
+>> >> >> +void __exit axi_pci_bridge_exit(void)
+>> >> >> +{
+>> >> >> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
+>> >> >> +}
+>> >> >
+>> >> > You register a pci driver that does nothing?  That's not right, you need
+>> >> > to then base your axi bus off of that pci device, so it is hooked up
+>> >> > correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
+>> >> > the virtual location for your axi bus, right?
+>> >>
+>> >> Please take a look at:
+>> >> driver->probe = axi_host_pci_probe;
+>> >> driver->remove = axi_host_pci_remove;
+>> >> return pci_register_driver(driver);
+>> >>
+>> >>
+>> >> >> +bool axi_core_is_enabled(struct axi_device *core)
+>> >> >> +{
+>> >> >> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
+>> >> >> +         != AXI_IOCTL_CLK)
+>> >> >> +             return false;
+>> >> >> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
+>> >> >> +             return false;
+>> >> >> +     return true;
+>> >> >> +}
+>> >> >> +EXPORT_SYMBOL(axi_core_is_enabled);
+>> >> >
+>> >> > EXPORT_SYMBOL_GPL()?
+>> >> >
+>> >> > What module uses this?  And why would it care?
+>> >> >
+>> >> >> +EXPORT_SYMBOL(axi_core_enable);
+>> >> >
+>> >> > EXPORT_SYMBOL_GPL()?
+>> >> >
+>> >> > Same goes for your other exports, just want you to be sure here.
+>> >>
+>> >> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
+>> >> drivers from using our bus driver, right? I'm don't have preferences
+>> >> on this, if you prefer us to force GPL, I can.
+>> >>
+>> >>
+>> >> >> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
+>> >> >> +{
+>> >> >> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
+>> >> >> +}
+>> >> >> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
+>> >> >
+>> >> > "xaxi"?  Shouldn't that be consistant with the other exports and start
+>> >> > with "axi"?
+>> >>
+>> >> Left from old tests/rewrites/splitting. Thanks.
+>> >>
+>> >>
+>> >> >> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
+>> >> >> +{
+>> >> >> +     if (unlikely(core->bus->mapped_core != core))
+>> >> >
+>> >> > Are you sure about the use of unlikely in this, and other functions?
+>> >> > The compiler almost always does a better job than we do for these types
+>> >> > of calls, just let it do it's job.
+>> >> >
+>> >> >> +             axi_host_pci_switch_core(core);
+>> >> >> +     return ioread8(core->bus->mmio + offset);
+>> >> >
+>> >> > I think because of that unlikely, you just slowed down all pci devices,
+>> >> > right?  That's not very nice :)
+>> >>
+>> >> Hm, my logic suggests it is alright, but please consider this once
+>> >> more with me ;)
+>> >>
+>> >> For the most of the time mapped_core (active core) do not change. We
+>> >> perform few hundreds of operations on one core in a row. This way
+>> >> mapped_core points to passed core for most of the time. Condition
+>> >> (mapped_core != core) is unlikely to happen.
+>> >>
+>> >> Is there anything wrong in my logic?
+>> >>
+>> > Yes, there is. You don't need that "if" at all.
+>>
+>> Damn, WHY do you make me ask why, why, why, all the time?! Can't you
+>> just write word of explanation without being asked for?
+>>
+> Errm... Sorry, but I've already explained PCIE host behaviour _several_
+> times several days ago. Personally I like to ask questions. Have
+> absolutely nothing agains anyone else asking good questions. Never try
+> to make people ask me questions I know they would ask anyway. Really you
+> might missed some my messages earlier or maybe my english is too awful ?
+>
+> Yet again, for PCIE cores (not only for them, for some PCI cores as
+> well) buscommon, buscore and function core are all available
+> simultaneously. You dont need window sliding when access them.
 
-I did a bunch of searching for products with the AR9001U and AR9002U,
-and found some with the AR9001U such as the Netgear WNDA3100 and
-D-Link DWA-160.  However, I think that Rev.B of the DWA-160 actually
-uses Ralink now.  I'd be hesitant to purchase one someone and end up
-with Rev.B.
+I had no idea what you were referring to. We do not dig into PCIe
+functions yet, so I believe for now we need this "if".
 
-In terms of AR9002U, I am not finding much of anything.  Just
-reference designs for the UB94, which I can't find any products that
-use it.  Apparently, Luis and others asked this question a little
-while back, and the response was sometime in Q3 2010 from Stephen
-Chen:
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/51660
+I'm getting totally frustrated with that whole situation :|
 
-Now that we're on Q2 of 2011, are there any products on the market
-with the AR9002U/UB94 that anyone has seen?  If an AR9002U/UB94 is
-available, I'd go for it over the AR9001U.  It seems like ath9k has
-the needed support for the AR9280.
-
-Any feedback would be really helpful.  If I can't find anything with
-the AR9002U, I'll pull the trigger on the WNDA3100 unless after some
-more searching I find something better.
-
-Thanks!
-George
+-- 
+Rafał
