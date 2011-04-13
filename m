@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:52724 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab1DSHpR (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64341 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932554Ab1DMQMa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 03:45:17 -0400
-Date: Tue, 19 Apr 2011 09:48:09 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Nishant Sarmukadam <nishants@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Pradeep Nemavat <pnemavat@marvell.com>
-Subject: Re: [PATCH 1/4] mwl8k: Do not stop tx queues
-Message-ID: <20110419074809.GJ1897@wantstofly.org>
-References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+	Wed, 13 Apr 2011 12:12:30 -0400
+Received: by bwz15 with SMTP id 15so703857bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 09:12:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+In-Reply-To: <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <201104131214.53633.chunkeey@googlemail.com> <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
+ <201104131332.47029.chunkeey@googlemail.com> <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Wed, 13 Apr 2011 18:11:48 +0200
+Message-ID: <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 19, 2011 at 11:12:49AM +0530, Nishant Sarmukadam wrote:
+When I turned off N i have this in log.
+http://pastebin.com/raw.php?i=q0zKxUZn
 
-> From: Pradeep Nemavat <pnemavat@marvell.com>
-> 
-> This is in preparation to support life time expiry of packets in the
-> hardware to avoid head-of-line blocking where a slow client can
-> hog a tx queue and affect the traffic to a faster client from the same
-> queue. Time stamp the packets in driver to allow dropping them in the
-> hardware if they are queued for more than 500ms.
-> 
-> Since queues are not being stopped now, we need to be prepared for
-> a situation where packets hit the driver after the queues are full.
-> Drop all such packets in the driver itself.
 
-What this patch seems to do is: don't propagate queue start/stop
-indications to mac80211, and if a packet is handed to mwl8k for
-transmission while a TX queue is full, just drop it in the driver.
-(This doesn't seem to correspond with the commit message.)
+And still 16 mbps.
 
-But since the driver still has an accurate idea of TX queue fullness
-(i.e. it's not as if at transmit time, you go and transparently reclaim
-TX queue entries), why do you need to start/stop mac80211 TX queues at
-all?  Won't it still work fine without deleting that logic?
+2011/4/13 Damian Lesiuk <lesiuk@gmail.com>:
+> tcpdump file
+> http://uniwersytecka.dyndns.biz/~lesiuk/dump
+>
+> I had hostapd older than 0.7.3 but after upgrade there is the same problem.
+> There is only one change. Windows 7 is displaying it as 75 mbps
+> connection not 150 mbps (with the same config as with the older
+> version) but I have still 16 mbps dl rate.
+>
+> I am using gentoo linux and I didn't compiled that driver manually. I
+> have that driver from 3.6.38 kernel.
+> I really want to make it work.
+>
+> What should I do? Will OS change help?
+>
+> 2011/4/13 Christian Lamparter <chunkeey@googlemail.com>:
+>> On Wednesday 13 April 2011 12:51:58 Damian Lesiuk wrote:
+>>> It doesn't solved my problem. Still max dl speed 16 mbps.
+>> ok, so it could be something else... maybe it's a driver bug, maybe
+>> something is outdated [avoid hostapd older than 0.7,3], or maybe
+>> just a simple configuration problem [on either side]?
+>>
+>> you can't tell that by just looking at the low throughput figure.
+>> Instead you probably have to capture the handshake between the
+>> AP+client and look who's lying about their 11n capabilities.
+>>
+>> Luckily, all mac80211-based driver come with a nifty feature which
+>> allows you to monitor any incoming/outgoing data. Just setup a
+>> monitor interface.
+>> <http://wireless.kernel.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+>>
+>> and start a sniffer. tcpdump/whireshark is more than enough.
+>>
+>>> btw, Can I use ath9k_htc with my Atheros 9170 in N master mode.
+>> no, ar9170 is too old. ath9k_htc is exclusive driver for the
+>> ar9271,ar701x+ar928x devices, which appeared in late 2009.
+>>
+>>> What about performance?
+>> it's ok.
+>>
+>> Regards,
+>>        Chr
+>>
+>
