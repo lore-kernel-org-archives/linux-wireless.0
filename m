@@ -1,85 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51559 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751495Ab1DZGdV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 02:33:21 -0400
-Date: Tue, 26 Apr 2011 08:32:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [IWL4965] TX Power requested while scanning!
-Message-ID: <20110426063211.GA2419@redhat.com> (sfid-20110426_083339_345155_6FA47EE2)
-References: <1303498582.2103.15.camel@x61.thuisdomein>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51865 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757975Ab1DNOLh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 10:11:37 -0400
+Received: by iyb14 with SMTP id 14so1464160iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 07:11:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303498582.2103.15.camel@x61.thuisdomein>
+In-Reply-To: <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+	<BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com>
+	<BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+	<201104131843.57676.chunkeey@googlemail.com>
+	<BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+Date: Thu, 14 Apr 2011 16:11:36 +0200
+Message-ID: <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Damian Lesiuk <lesiuk@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 22, 2011 at 08:56:22PM +0200, Paul Bolle wrote:
-> 0) Running v2.6.39-rc4 I ran into this (after a resume):
-> 
-> WARNING: at drivers/net/wireless/iwlegacy/iwl-4965.c:1128 iwl4965_send_tx_power+0x61/0x102 [iwl4965]()
-> Hardware name: [...]
-> TX Power requested while scanning!
-> Modules linked in: tcp_lp fuse cpufreq_ondemand acpi_cpufreq freq_table mperf ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 kvm_intel kvm uinput btusb arc4 snd_hda_codec_analog bluetooth ecb snd_hda_intel snd_hda_codec iwl4965 snd_hwdep snd_seq iwl_legacy snd_seq_device thinkpad_acpi mac80211 cfg80211 rfkill snd_pcm snd_timer iTCO_wdt snd i2c_i801 snd_page_alloc iTCO_vendor_support soundcore e1000e pcspkr microcode sdhci_pci sdhci firewire_ohci mmc_core firewire_core yenta_socket crc_itu_t i915 drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: scsi_wait_scan]
-> Pid: 5723, comm: kworker/u:28 Not tainted 2.6.39-0.rc4.4.fc14.x86_64 #1
-> Call Trace:
->  [<ffffffff8104e27b>] warn_slowpath_common+0x85/0x9d
->  [<ffffffffa02782e0>] ? iwl4965_show_temperature+0x49/0x49 [iwl4965]
->  [<ffffffff8104e336>] warn_slowpath_fmt+0x46/0x48
->  [<ffffffffa027712f>] iwl4965_send_tx_power+0x61/0x102 [iwl4965]
->  [<ffffffff81477e05>] ? mutex_lock+0x36/0x50
->  [<ffffffffa0278337>] iwl4965_bg_txpower_work+0x57/0x73 [iwl4965]
->  [<ffffffff810647f3>] process_one_work+0x18d/0x286
->  [<ffffffff81065a5e>] worker_thread+0xfd/0x181
->  [<ffffffff81065961>] ? manage_workers.clone.16+0x172/0x172
->  [<ffffffff81069036>] kthread+0x82/0x8a
->  [<ffffffff81480524>] kernel_thread_helper+0x4/0x10
->  [<ffffffff81068fb4>] ? kthread_worker_fn+0x14b/0x14b
->  [<ffffffff81480520>] ? gs_change+0x13/0x13
-> 
-> (2.6.39-0.rc4.4.fc14.x86_64 is not a Fedora blessed kernel, but a self
-> compiled "vanilla" kernel.) I have similar WARNINGs for rc2 and rc3 in
-> my log too.
-> 
-> 1) The thing is that this triggers Fedora's "Automatic Bug Reporting
-> Tool", and is a bit noisy in dmesg and friends too, but everything seems
-> to be running just fine after that. I'm posting this from the session
-> that just triggered this! So why is this warning needed?
+On Thu, Apr 14, 2011 at 1:53 PM, Damian Lesiuk <lesiuk@gmail.com> wrote:
 
-Warning correctly indicate a bug. Please try below patch.
+> ieee80211 phy0: Selected rate control algorithm 'minstrel'
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 58a2e63..46966e9 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -2988,15 +2988,15 @@ static void iwl4965_bg_txpower_work(struct work_struct *work)
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv,
- 			txpower_work);
- 
-+	mutex_lock(&priv->mutex);
-+
- 	/* If a scan happened to start before we got here
- 	 * then just return; the statistics notification will
- 	 * kick off another scheduled work to compensate for
- 	 * any temperature delta we missed here. */
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
- 	    test_bit(STATUS_SCANNING, &priv->status))
--		return;
--
--	mutex_lock(&priv->mutex);
-+		goto out;
- 
- 	/* Regardless of if we are associated, we must reconfigure the
- 	 * TX power since frames can be sent on non-radar channels while
-@@ -3006,7 +3006,7 @@ static void iwl4965_bg_txpower_work(struct work_struct *work)
- 	/* Update last_temperature to keep is_calib_needed from running
- 	 * when it isn't needed... */
- 	priv->last_temperature = priv->temperature;
--
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
+That's the ticket!
+
+you see minstrel does not know about ht frames at all! You need to
+have minstrel_ht for it
+to work properly. The weird thing is that minstrel_ht should be the
+default rate control
+[e.g. config.mk in compat-wireless should have:
+CONFIG_MAC80211_RC_DEFAULT=minstrel_ht ]
+algorithm, so the question is: who or what changed the default?
+
+do you have a module option for mac80211 to overwrite ieee80211_default_rc_algo?
+(check /sys/module/mac80211/parameters/ieee80211_default_rc_algo it should say
+minstrel_ht)
+
+Regards,
+    Chr
