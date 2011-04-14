@@ -1,359 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48067 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752455Ab1DMFuo (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53003 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366Ab1DNFjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:50:44 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 14so274186iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:44 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 14 Apr 2011 01:39:02 -0400
+Message-ID: <4DA68870.7090109@gmail.com>
+Date: Thu, 14 Apr 2011 09:38:56 +0400
+From: Igor Plyatov <plyatov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.14916.468216.662458@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:23:08 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 05/40] ath9k_htc: Add beacon slots
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com> <alpine.DEB.2.02.1104131200220.2954@p34.internal.lan> <BANLkTinxkXi6WnAyXoZLDR+uyL+TmevuPw@mail.gmail.com> <BANLkTin6mgFqrGQJz=zNG_buRiLKHOU_BA@mail.gmail.com> <alpine.DEB.2.02.1104131348530.16793@p34.internal.lan> <BANLkTinLRVyKwBA7ZbEXKqa18V=+a6+cZg@mail.gmail.com> <alpine.DEB.2.02.1104131605010.10727@p34.internal.lan> <BANLkTin5VwUryoMK=jYpbNTudPLufZ+RDw@mail.gmail.com>
+In-Reply-To: <BANLkTin5VwUryoMK=jYpbNTudPLufZ+RDw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Dear Daniel,
+> On Wed, Apr 13, 2011 at 1:13 PM, Justin Piszcz<jpiszcz@lucidpixels.com>  wrote:
+>>> (1) What is the AP's beacon period and DTIM? Typical values are 100
+>>> TUs for beacons (102.4 ms) and 2 for DTIM (2 beacons per power-save
+>>> wakeup) which should imply a mean of 100 and max of 200 ms delay even
+>>> on pings.
+>> I am using a WNDR3700 with default settings in terms of beacons/etc.  No
+>> issues with any device (laptop, computer, etc (in windows)), I have two
+>> wireless USB adapters (bought two) and in Windows, no problems, I don't
+>> think
+>> it is the WNDR3700.  As far as linux/wpa-supplicant, using default settings.
+> Not enough info. What does "iw dev wlan1 scan dump"  (it might not be
+> wlan1 for you) say for "beacon interval"?
+>
+> Does anyone know how to get the DTIM period out of iw?
+>
+# iw dev wlan0 scan dump
+BSS 74:ea:3a:e4:fa:6e (on wlan0) -- associated
+     TSF: 499843461 usec (0d, 00:08:19)
+     freq: 2442
+     beacon interval: 100
+     capability: ESS Privacy ShortPreamble ShortSlotTime (0x0431)
+     signal: -51.00 dBm
+     last seen: 510 ms ago
+     Information elements from Probe Response frame:
+     SSID: mynet2
+     Supported rates: 1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0
+     DS Parameter set: channel 7
+     RSN:     * Version: 1
+          * Group cipher: CCMP
+          * Pairwise ciphers: CCMP
+          * Authentication suites: PSK
+          * Capabilities: (0x0000)
+     ERP: <no flags>
+     Extended supported rates: 24.0 36.0 48.0 54.0
+     WMM:     * Parameter version 1
+          * u-APSD
+          * BE: CW 15-1023, AIFSN 3
+          * BK: CW 15-1023, AIFSN 7
+          * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
+          * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
+     HT capabilities:
+         Capabilities: 0x104e
+             HT20/HT40
+             SM Power Save disabled
+             RX HT40 SGI
+             No RX STBC
+             Max AMSDU length: 3839 bytes
+             DSSS/CCK HT40
+         Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+         Minimum RX AMPDU time spacing: 8 usec (0x06)
+         HT RX MCS rate indexes supported: 0-15
+         HT TX MCS rate indexes are undefined
+     WPS:     * Version: 1.0
+          * Wi-Fi Protected Setup State: 2 (Configured)
+          * Response Type: 3 (AP)
+          * Unknown TLV (0x1047, 16 bytes): 00 00 00 00 00 00 10 00 00 
+00 74 ea 3a e4 fa 6e
+          * Manufacturer: TP-LINK
+          * Model: TL-WR1043N
+          * Model Number: 1.0
+          * Serial Number: 1.0
+          * Primary Device Type: 6-0050f204-1
+          * Device name: Wireless Router TL-WR1043N
+          * Config methods: Ethernet, Label, PBC
+          * RF Bands: 0x1
 
-Beacon transmission is now handled through a slot mechanism.
-This allows multiple beaconing interfaces to be be present.
+>>> (2) How long does the client wait after waking up to go back to sleep?
+>>> It should be at least a few seconds. For ssh, then, you should see
+>>> something like a 100-200 ms delay for the first key and then nothing
+>>> at all unless you stop typing for a bit.
+>> It lags with each word I type, it is terrible.  If I run something like
+>> dmesg or ps auxww, the entire session freezes for 5-10 seconds before it
+>> comes back.
+> Sorry; I meant what is the software stack configured to do? Do some
+> looking around.
+What do you mean here?
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h            |   13 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |  123 ++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    5 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   12 ++-
- drivers/net/wireless/ath/ath9k/wmi.c            |    4 +-
- 5 files changed, 138 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index cf7909e..31c6496 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -244,6 +244,7 @@ struct ath9k_htc_vif {
- 	u8 index;
- 	u16 seq_no;
- 	bool beacon_configured;
-+	int bslot;
- };
- 
- struct ath9k_vif_iter_data {
-@@ -351,10 +352,14 @@ struct ath_led {
- 	int brightness;
- };
- 
-+#define BSTUCK_THRESHOLD 10
-+
- struct htc_beacon_config {
-+	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
- 	u16 beacon_interval;
- 	u16 dtim_period;
- 	u16 bmiss_timeout;
-+	u32 bmiss_cnt;
- };
- 
- struct ath_btcoex {
-@@ -414,7 +419,6 @@ struct ath9k_htc_priv {
- 	u16 txpowlimit;
- 	u16 nvifs;
- 	u16 nstations;
--	u32 bmiss_cnt;
- 	bool rearm_ani;
- 	bool reconfig_beacon;
- 
-@@ -425,7 +429,6 @@ struct ath9k_htc_priv {
- 	bool tx_queues_stop;
- 	spinlock_t tx_lock;
- 
--	struct ieee80211_vif *vif;
- 	struct htc_beacon_config cur_beacon_conf;
- 	unsigned int rxfilter;
- 	struct tasklet_struct swba_tasklet;
-@@ -473,11 +476,15 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- 
- void ath9k_htc_reset(struct ath9k_htc_priv *priv);
- 
-+void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
-+			    struct ieee80211_vif *vif);
-+void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
-+			    struct ieee80211_vif *vif);
- void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
- void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
- 			     struct ieee80211_vif *vif);
- void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv);
--void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending);
-+void ath9k_htc_swba(struct ath9k_htc_priv *priv);
- 
- void ath9k_htc_rxep(void *priv, struct sk_buff *skb,
- 		    enum htc_endpoint_id ep_id);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 8f56158..b561f70 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -172,12 +172,13 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 		imask |= ATH9K_INT_SWBA;
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
--		"AP Beacon config, intval: %d, nexttbtt: %u imask: 0x%x\n",
-+		"AP Beacon config, intval: %d, nexttbtt: %u "
-+		"imask: 0x%x\n",
- 		bss_conf->beacon_interval, nexttbtt, imask);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
--	priv->bmiss_cnt = 0;
-+	priv->cur_beacon_conf.bmiss_cnt = 0;
- 	htc_imask = cpu_to_be32(imask);
- 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
- }
-@@ -214,7 +215,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
--	priv->bmiss_cnt = 0;
-+	priv->cur_beacon_conf.bmiss_cnt = 0;
- 	htc_imask = cpu_to_be32(imask);
- 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
- }
-@@ -225,9 +226,11 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
- 	dev_kfree_skb_any(skb);
- }
- 
--void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
-+static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
-+				  int slot)
- {
--	struct ath9k_htc_vif *avp = (void *)priv->vif->drv_priv;
-+	struct ieee80211_vif *vif;
-+	struct ath9k_htc_vif *avp;
- 	struct tx_beacon_header beacon_hdr;
- 	struct ath9k_htc_tx_ctl tx_ctl;
- 	struct ieee80211_tx_info *info;
-@@ -237,21 +240,18 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
- 	memset(&beacon_hdr, 0, sizeof(struct tx_beacon_header));
- 	memset(&tx_ctl, 0, sizeof(struct ath9k_htc_tx_ctl));
- 
--	/* FIXME: Handle BMISS */
--	if (beacon_pending != 0) {
--		priv->bmiss_cnt++;
--		return;
--	}
--
- 	spin_lock_bh(&priv->beacon_lock);
- 
-+	vif = priv->cur_beacon_conf.bslot[slot];
-+	avp = (struct ath9k_htc_vif *)vif->drv_priv;
-+
- 	if (unlikely(priv->op_flags & OP_SCANNING)) {
- 		spin_unlock_bh(&priv->beacon_lock);
- 		return;
- 	}
- 
- 	/* Get a new beacon */
--	beacon = ieee80211_beacon_get(priv->hw, priv->vif);
-+	beacon = ieee80211_beacon_get(priv->hw, vif);
- 	if (!beacon) {
- 		spin_unlock_bh(&priv->beacon_lock);
- 		return;
-@@ -276,6 +276,69 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
- 	spin_unlock_bh(&priv->beacon_lock);
- }
- 
-+static int ath9k_htc_choose_bslot(struct ath9k_htc_priv *priv)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	unsigned long flags;
-+	u64 tsf;
-+	u32 tsftu;
-+	u16 intval;
-+	int slot;
-+
-+	intval = priv->cur_beacon_conf.beacon_interval & ATH9K_BEACON_PERIOD;
-+
-+	spin_lock_irqsave(&priv->wmi->wmi_lock, flags);
-+	tsf = priv->wmi->tsf;
-+	spin_unlock_irqrestore(&priv->wmi->wmi_lock, flags);
-+
-+	tsftu = TSF_TO_TU(tsf >> 32, tsf);
-+	slot = ((tsftu % intval) * ATH9K_HTC_MAX_BCN_VIF) / intval;
-+	slot = ATH9K_HTC_MAX_BCN_VIF - slot - 1;
-+
-+	ath_dbg(common, ATH_DBG_BEACON,
-+		"Choose slot: %d, tsf: %llu, tsftu: %u, intval: %u\n",
-+		slot, tsf, tsftu, intval);
-+
-+	return slot;
-+}
-+
-+void ath9k_htc_swba(struct ath9k_htc_priv *priv)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	unsigned long flags;
-+	int slot;
-+
-+	spin_lock_irqsave(&priv->wmi->wmi_lock, flags);
-+	if (priv->wmi->beacon_pending != 0) {
-+		spin_unlock_irqrestore(&priv->wmi->wmi_lock, flags);
-+		priv->cur_beacon_conf.bmiss_cnt++;
-+		if (priv->cur_beacon_conf.bmiss_cnt > BSTUCK_THRESHOLD) {
-+			ath_dbg(common, ATH_DBG_BEACON,
-+				"Beacon stuck, HW reset\n");
-+			ath9k_htc_reset(priv);
-+		}
-+		return;
-+	}
-+	spin_unlock_irqrestore(&priv->wmi->wmi_lock, flags);
-+
-+	if (priv->cur_beacon_conf.bmiss_cnt) {
-+		ath_dbg(common, ATH_DBG_BEACON,
-+			"Resuming beacon xmit after %u misses\n",
-+			priv->cur_beacon_conf.bmiss_cnt);
-+		priv->cur_beacon_conf.bmiss_cnt = 0;
-+	}
-+
-+	slot = ath9k_htc_choose_bslot(priv);
-+	spin_lock_bh(&priv->beacon_lock);
-+	if (priv->cur_beacon_conf.bslot[slot] == NULL) {
-+		spin_unlock_bh(&priv->beacon_lock);
-+		return;
-+	}
-+	spin_unlock_bh(&priv->beacon_lock);
-+
-+	ath9k_htc_send_beacon(priv, slot);
-+}
-+
- /* Currently, only for IBSS */
- void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- {
-@@ -307,6 +370,42 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
- 	}
- }
- 
-+void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
-+			    struct ieee80211_vif *vif)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
-+	int i = 0;
-+
-+	spin_lock_bh(&priv->beacon_lock);
-+	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++) {
-+		if (priv->cur_beacon_conf.bslot[i] == NULL) {
-+			avp->bslot = i;
-+			break;
-+		}
-+	}
-+
-+	priv->cur_beacon_conf.bslot[avp->bslot] = vif;
-+	spin_unlock_bh(&priv->beacon_lock);
-+
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"Added interface at beacon slot: %d\n", avp->bslot);
-+}
-+
-+void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
-+			    struct ieee80211_vif *vif)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
-+
-+	spin_lock_bh(&priv->beacon_lock);
-+	priv->cur_beacon_conf.bslot[avp->bslot] = NULL;
-+	spin_unlock_bh(&priv->beacon_lock);
-+
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"Removed interface at beacon slot: %d\n", avp->bslot);
-+}
-+
- static void ath9k_htc_beacon_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- {
- 	bool *beacon_configured = (bool *)data;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 6bbfca5..9405e0a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -643,7 +643,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- {
- 	struct ath_hw *ah = NULL;
- 	struct ath_common *common;
--	int ret = 0, csz = 0;
-+	int i, ret = 0, csz = 0;
- 
- 	priv->op_flags |= OP_INVALID;
- 
-@@ -711,6 +711,9 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 	if (ret)
- 		goto err_queues;
- 
-+	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++)
-+		priv->cur_beacon_conf.bslot[i] = NULL;
-+
- 	ath9k_init_crypto(priv);
- 	ath9k_init_channels_rates(priv);
- 	ath9k_init_misc(priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index db8c0c0..293a9b3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1281,9 +1281,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->nvifs++;
--	priv->vif = vif;
- 
- 	INC_VIF(priv, vif->type);
-+
-+	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_ADHOC))
-+		ath9k_htc_assign_bslot(priv, vif);
-+
- 	ath9k_htc_set_opmode(priv);
- 
- 	if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
-@@ -1321,9 +1325,13 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	priv->vif_slot &= ~(1 << avp->index);
- 
- 	ath9k_htc_remove_station(priv, vif, NULL);
--	priv->vif = NULL;
- 
- 	DEC_VIF(priv, vif->type);
-+
-+	if ((vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_ADHOC))
-+		ath9k_htc_remove_bslot(priv, vif);
-+
- 	ath9k_htc_set_opmode(priv);
- 
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 96171a2..a39552b 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -126,7 +126,7 @@ void ath9k_swba_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
- 
--	ath9k_htc_swba(priv, priv->wmi->beacon_pending);
-+	ath9k_htc_swba(priv);
- }
- 
- void ath9k_fatal_work(struct work_struct *work)
-@@ -173,8 +173,10 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
- 		case WMI_SWBA_EVENTID:
- 			swba = (struct wmi_event_swba *) wmi_event;
- 
-+			spin_lock(&wmi->wmi_lock);
- 			wmi->tsf = be64_to_cpu(swba->tsf);
- 			wmi->beacon_pending = swba->beacon_pending;
-+			spin_unlock(&wmi->wmi_lock);
- 
- 			tasklet_schedule(&wmi->drv_priv->swba_tasklet);
- 			break;
--- 
-1.7.4.4
-
+Best regards!
+--
+Igor Plyatov
