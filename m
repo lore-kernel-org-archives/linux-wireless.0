@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:33504 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525Ab1DHOX6 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44744 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab1DNJPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 10:23:58 -0400
-Date: Fri, 08 Apr 2011 09:23:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, IvDoorn@gmail.com,
-	gwingerde@gmail.com, helmut.schaa@googlemail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2800usb: Add three new USB IDs
-Message-ID: <4d9f1a7c.6indLlUpd9nUfsN8%Larry.Finger@lwfinger.net>
+	Thu, 14 Apr 2011 05:15:14 -0400
+Received: by wya21 with SMTP id 21so1203734wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 02:15:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 14 Apr 2011 11:15:12 +0200
+Message-ID: <BANLkTimnQ92mgOzXMWXuF54tUs+M1ZbR1A@mail.gmail.com>
+Subject: iwlagn / wpa_supplicant issue
+From: Fabio Coatti <fabio.coatti@gmail.com>
+To: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are three USB IDs supported by staging/rt2870sta that are not in the
-mainline driver rt2800usb.
+Hi all,
+sorry for crossposting but I'm not sure where the problem, if any,
+could possibly be.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
+Basically, I'm facing a weird issue with wpa_supplicant 0.7.3 / 0.8
+snapshot compiled 06/04/2011 , here the
+description and the environment:
 
-Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
- 	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Draytek */
- 	{ USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Edimax */
-@@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
- 	/* Planex */
- 	{ USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Quanta */
- 	{ USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ralink */
+wpa supplicant 0.7.3 (gentoo package wpa_supplicant-0.7.3-r1)
+linux 2.6.36.1
+
+Tested also with wpa_supplicant 0.8 snapshot and kernels 2.6.37 - 2.6.38.2
+hardware: HP elitebook 8440p
+iwlagn 0000:44:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
+iwlagn 0000:44:00.0: loaded firmware version 9.221.4.1 build 25532
+
+Description:
+basically, when wpa_supplicant starts it is unable to speak with hardware, no
+commands have effect (i.e. scan) and the only message I get is the
+usual
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+(of course rfkill is off)
+
+the scan window (wpa_gui) or scan result (wpa_cli) is empty, no matter
+how many scans I request.
+
+but if I issue a
+
+iwlist wlan0 scan
+
+I get all networks active in my area and after some second all
+networks appears on wpa_gui and suddenly wpa_supplicant completes the
+authentication and I'm able to get the ip address.
+
+I don't know if the problem is wpa not issuing the right commands or
+drivers/kernel acting in a strange way or something else, my knowledge
+on this is really low.
+
+I've tried to debug this issue without success and also googling
+didn't helped me; I will be grateful if someone gives me some hint, at
+least where to look; of course I'm available to do any test/debug that
+could be needed.
+
+Thanks,
+
+
+-- 
+Fabio
