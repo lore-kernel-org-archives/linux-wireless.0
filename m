@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3390 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756100Ab1DZCeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 22:34:22 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
-Subject: [PATCH 3/5] staging: brcm80211: Add dhdsdio_chip_detach in
- dhd_sdio.c
-Date: Mon, 25 Apr 2011 19:34:06 -0700
-Message-ID: <1303785248-27420-4-git-send-email-frankyl@broadcom.com> (sfid-20110426_043437_983972_D310F950)
-In-Reply-To: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
-References: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58540 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758844Ab1DNOvM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 10:51:12 -0400
+Received: by bwz15 with SMTP id 15so1439743bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 07:51:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+ <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+ <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 16:50:31 +0200
+Message-ID: <BANLkTik2F_6w5jacYw+2-=7Jken6aF_RBQ@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: linux-wireless@vger.kernel.org
+Cc: chunkeey@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add dhdsdio_chip_detach to replace si_detach for si/sb utils removal
+btw I have 40 mbps now WOW!! :)
+But my windows 7 laptop still shows it as 75 mbps connection.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index e2d5aa5..74d7935 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -487,6 +487,7 @@ static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
- static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
- static void dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus,
- 					u32 drivestrength);
-+static void dhdsdio_chip_detach(struct dhd_bus *bus);
- 
- static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
- {
-@@ -5484,10 +5485,8 @@ static void dhdsdio_release(dhd_bus_t *bus)
- 		bcmsdh_intr_dereg(bus->sdh);
- 
- 		if (bus->dhd) {
--
--			dhdsdio_release_dongle(bus);
--
- 			dhd_detach(bus->dhd);
-+			dhdsdio_release_dongle(bus);
- 			bus->dhd = NULL;
- 		}
- 
-@@ -5530,6 +5529,7 @@ static void dhdsdio_release_dongle(dhd_bus_t *bus)
- #endif				/* !defined(BCMLXSDMMC) */
- 		dhdsdio_clkctl(bus, CLK_NONE, false);
- 		si_detach(bus->sih);
-+		dhdsdio_chip_detach(bus);
- 		if (bus->vars && bus->varsz)
- 			kfree(bus->vars);
- 		bus->vars = NULL;
-@@ -6426,3 +6426,12 @@ dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus, u32 drivestrength) {
- 			drivestrength, cc_data_temp));
- 	}
- }
-+
-+static void
-+dhdsdio_chip_detach(struct dhd_bus *bus)
-+{
-+	DHD_TRACE(("%s: Enter\n", __func__));
-+
-+	kfree(bus->ci);
-+	bus->ci = NULL;
-+}
--- 
-1.7.1
-
-
+2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+> uniwersytecka-server ~ # iw wlan0 station dump
+> Station 74:f0:6d:33:ea:00 (on wlan0)
+>       inactive time:  20 ms
+>       rx bytes:       5043668
+>       rx packets:     9305
+>       tx bytes:       13762256
+>       tx packets:     11634
+>       signal:         -31 dBm
+>       tx bitrate:     65.0 MBit/s MCS 7
+>
+> So it helped in some way.
+> Why that network isn't 300 mbps?
+>
+> My config is:
+> interface=wlan0
+> driver=nl80211
+> ssid=lesiuk
+> channel=7
+> hw_mode=g
+> ieee80211n=1
+> wme_enabled=1
+> ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
+>
