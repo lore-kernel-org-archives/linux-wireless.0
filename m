@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12162 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751144Ab1DHKB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 06:01:29 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 03:01:04 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 2/2] ath9k: Update gain table for AR9485
-Date: Fri, 8 Apr 2011 15:30:35 +0530
-Message-ID: <1302256836-4647-2-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1302256836-4647-1-git-send-email-senthilkumar@atheros.com>
-References: <1302256836-4647-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33920 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931Ab1DNRoE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 13:44:04 -0400
+Received: by bwz15 with SMTP id 15so1571423bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 10:44:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTi=xPfpanErB8HqA6R6i3UJW+H=iyg@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+ <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+ <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
+ <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com> <BANLkTin9Xp0oNkLANM0pkr7dyOCpEwow+g@mail.gmail.com>
+ <BANLkTi=ZyhsQDnhKBCfPbfqdYsqHXYpxtg@mail.gmail.com> <BANLkTimjb6RYN_GLU23VMH_MyruL=be7qQ@mail.gmail.com>
+ <BANLkTimRG+bXbU5WJ+AZoEsfVRB=4+8u_A@mail.gmail.com> <BANLkTi=xPfpanErB8HqA6R6i3UJW+H=iyg@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 19:43:22 +0200
+Message-ID: <BANLkTinwtCc-k+ei9cn_aFXJzhF0OLHPaA@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Tx gain 23 for all tx gain table.
+btw, I have also this in log:
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ieee80211 phy0: invalid plcp cck rate (0).
+ieee80211 phy0: invalid plcp cck rate (0).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-index f91f73e..fbdde29 100644
---- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-@@ -396,7 +396,7 @@ static const u32 ar9485Modes_high_ob_db_tx_gain_1_1[][5] = {
- 	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
- 	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
- 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001eeb, 0x5a001eeb},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
- 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
-@@ -469,7 +469,7 @@ static const u32 ar9485_modes_lowest_ob_db_tx_gain_1_1[][5] = {
- 	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
- 	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
- 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001eeb, 0x5a001eeb},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
- 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
-@@ -635,7 +635,7 @@ static const u32 ar9485Modes_high_power_tx_gain_1_1[][5] = {
- 	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
- 	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
- 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001eeb, 0x5a001eeb},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
- 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
-@@ -728,7 +728,7 @@ static const u32 ar9485_modes_green_ob_db_tx_gain_1_1[][5] = {
- 	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
- 	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
- 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001eeb, 0x5a001eeb},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
- 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
-@@ -827,7 +827,7 @@ static const u32 ar9485Modes_low_ob_db_tx_gain_1_1[][5] = {
- 	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
- 	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
- 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001eeb, 0x5a001eeb},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
- 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
- 	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
--- 
-1.7.0.4
-
+2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+> When I switched to Linux on my laptop it was working with 130.00 mbps
+> speed but was ultra unstable. (was disconnecting every minute and I
+> can't get that bitrate). My friend has that isue with his atheros too.
+>
+> So I think it's no client wireless card related.
+>
+> What can I do?
+>
+> 2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+>> I checked it with wifi analyzer for android and that other network is
+>> on 1-5 channels and that carl9170 network is on 5-9 channels, there is
+>> no other networks, so it should work with better speed?
+>>
+>> 2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+>>> Sorry.
+>>> My wireless card is on AR9285. (that Azurewave NB290)
+>>>
+>>
+>
