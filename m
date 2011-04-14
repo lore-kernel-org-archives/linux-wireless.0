@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:46559 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755894Ab1CNAtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Mar 2011 20:49:45 -0400
-Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: "ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
-References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
-	 <1299831238.5082.185.camel@wwguy-huron>
-	 <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 13 Mar 2011 17:47:27 -0700
-Message-ID: <1300063647.24333.7.camel@wwguy-ubuntu>
+Received: from mail.academy.zt.ua ([82.207.120.245]:28350 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780Ab1DNNST (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 09:18:19 -0400
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	 <1302781431.21145.6.camel@dev.znau.edu.ua>
+	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
+	 <4DA6E9BD.3090404@hauke-m.de>
+	 <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Thu, 14 Apr 2011 16:15:00 +0300
+Message-Id: <1302786900.21965.52.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-03-13 at 12:59 -0700, Daniel Halperin wrote:
-> On Fri, Mar 11, 2011 at 12:13 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> >> (1) Why does iwlwifi default to an aggregation frame limit of 31? I
-> >> didn't see any negative effects from 63 frame limit and performance
-> >> improved dramatically
-> > if I remember correctly, we change from 63 to 31 while we have some 11n
-> > performance issue. even later we found out frame limit is not the main
-> > reason of low tpt, but we did not change it back since at the time we
-> > did not see any performance different, I believe we can use different
-> > frame limit, but I will prefer make it more flexible, maybe something
-> > could be change by either module parameter or debugfs. Also I am not
-> > sure are there any behavior differences between different devices and
-> > different versions of ucode.
-> 
-> 63 hasn't hurt me yet, though the scheduler still does occasionally
-> send a 64th frame that shifts the reorder buffer's window.  Is there a
-> chance that 64 will work as a max?  63 seems an odd choice.
 
-it is limited by uCode, did not have chance to look at what the reason
-is yet. my initial guess without look at the code, 63 = 0x3F which use 6
-bits and 64=0x40 is 7 bits, but I am not sure, I will check
+> W dniu 14 kwietnia 2011 14:34 użytkownik Hauke Mehrtens
+> <hauke@hauke-m.de> napisał:
+> > On 04/14/2011 02:04 PM, Rafał Miłecki wrote:
+> >> Hauke: you were proposing integrating with drivers/amba. I really
+> >> expect you to comment on this, please tell us how do you see this now,
+> >> when we have better overview. I took your proposal seriously, you can
+> >> see the results above.
+> >
+> > I had no closer look at drivers/amba and this bus driver, I just saw
+> > that there was a discussion about drivers/amba and this implementation
+> > with no result. When the Bradcom cores are not directly connected to
+> > AMBA, but are using some sort of wrapper and there are no benefits in
+> > using drivers/amba, just leave it.
+> >
+> > As the implementation of the Braodcom AIX Bus contains some Broadcom
+> > extensions and there seams to be no normal AMBA device being connected
+> > to some Broadcom devices with this special interface number 3) "Broadcom
+> > specific bus (bcmai)" seams to the the best approach in my opinion.
+> 
+> Thanks for commenting.
+> 
+> Russell: you were asking:
+> > What does this do which the 'amba' bus support doesn't?
+> I believe I explained it well in this thread. Do you still think about
+> using amba/driver? Do you think we should use it?
+> 
+> Arnd: I found you saying:
+> > I believe the one thing we really want from this driver is the bus
+> > scan code, which is not present in the amba bus implementation,
+> I explained how it works, I believe scanning (EPROM in this case) it
+> Broadcom specific, not really AMBA standard. How do you see it?
+> 
+It might not Broadcom specific as EPROM core seems to be CoreLink one
+core and maybe is arm-developed. But it isn't documented publicly and we
+don't know yet if it is obligatory for all amba (or at least axi)
+interconnects or not.
 
-Thanks
-
-> 
-> >> (3) mac80211's reorder buffer code could probably also be relaxed.  It
-> >> probably wouldn't hurt to have the buffer be twice the transmitter's
-> >> advertised buffer, and might compensate for devices that don't
-> >> properly honor frame limits.  Also, mac80211 only flushes the reorder
-> >> buffer every 100 ms.  That seems like a LONG time given that batches
-> >> are limited to 4ms -- 100ms is room for at least 10, maybe 20
-> >> retransmissions to attempt to fill in the holes(!).
-> 
-> Removing the check here
-> <https://github.com/mirrors/linux-2.6/blob/master/net/mac80211/agg-rx.c#L231>
-> essentially forces the receive buffer to be 64 frames long.  This
-> works just fine for me (iwl5300 TXer and RXer) and would seem to be
-> appropriate for any transmitter window. If the transmitter uses a
-> window of, say, 31 frames and also honors its limit, then I think the
-> only wasted space would be 33 pointers to skb's at the transmitter
-> side. I didn't see any degradation using an ath9k+minstrel_ht
-> transmitter with this change.
-> 
-> Dan
+Have nice day,
+George
 
 
