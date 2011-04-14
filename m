@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:33301 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932637Ab1D2TFS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43664 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758918Ab1DNOpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 15:05:18 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0F4CD540154
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 15:10:35 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110429190516.B683440EBB@repository3.orbit-lab.org> (sfid-20110429_210527_031400_EBC14E9C)
-Date: Fri, 29 Apr 2011 15:05:16 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 14 Apr 2011 10:45:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: avoid using trinary operator w/ TX_STAT_INC
+Date: Thu, 14 Apr 2011 10:41:34 -0400
+Message-Id: <1302792094-13770-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 9b64b93...a6ae3dc akpm-end   -> origin/akpm-end  (forced update)
-   e8dad69..fafc992  akpm-start -> origin/akpm-start
-   f21600e..2fa539f  history    -> origin/history
- + bfb7306...97380d4 master     -> origin/master  (forced update)
-   e8dad69..fafc992  stable     -> origin/stable
- * [new tag]         next-20110429 -> next-20110429
+Otherwise, you get this:
 
-compat-wireless code metrics
+  CC [M]  drivers/net/wireless/ath/ath9k/hif_usb.o
+drivers/net/wireless/ath/ath9k/hif_usb.c: In function ‘ath9k_skb_queue_complete’:
+drivers/net/wireless/ath/ath9k/hif_usb.c:230:12: error: expected expression before ‘do’
+make[2]: *** [drivers/net/wireless/ath/ath9k/hif_usb.o] Error 1
+make[1]: *** [drivers/net/wireless/ath/ath9k] Error 2
+make: *** [drivers/net/wireless/ath/] Error 2
 
-    846440 - Total upstream lines of code being pulled
-      2355 - backport code changes
-      2048 - backport code additions
-       307 - backport code deletions
-      8033 - backport from compat module
-     10388 - total backport code
-    1.2273 - % of code consists of backport work
+The TX_STAT_INC macro should probably be changed to accomodate such
+usage, although using a trinary operator in place of an if-else seems
+questionable to me anyway.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 5686711..2e3a33a 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -227,7 +227,10 @@ static inline void ath9k_skb_queue_complete(struct hif_device_usb *hif_dev,
+ 	while ((skb = __skb_dequeue(queue)) != NULL) {
+ 		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
+ 					  skb, txok);
+-		(txok) ? TX_STAT_INC(skb_success) : TX_STAT_INC(skb_failed);
++		if (txok)
++			TX_STAT_INC(skb_success);
++		else
++			TX_STAT_INC(skb_failed);
+ 	}
+ }
+ 
+-- 
+1.7.4.2
+
