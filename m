@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38293 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751079Ab1DYMvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 08:51:52 -0400
-Message-ID: <4DB56E5B.4090101@hauke-m.de> (sfid-20110425_145155_819786_9458A18A)
-Date: Mon, 25 Apr 2011 14:51:39 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33041 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757643Ab1DNT1X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 15:27:23 -0400
+Received: by bwz15 with SMTP id 15so1644344bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 12:27:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>
-CC: ath9k-devel@lists.ath9k.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k: Regression in 2.6.38 (30% package losses, ~20KBit/s throughput)
- with AR9285
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201104142106.48549.chunkeey@googlemail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com> <BANLkTik2F_6w5jacYw+2-=7Jken6aF_RBQ@mail.gmail.com>
+ <201104142106.48549.chunkeey@googlemail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 21:26:42 +0200
+Message-ID: <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hostapd log with -dd option.
 
-with kernel 2.6.38 the wifi connection with my Atheros AR9285 is
-unusable when the distance from the AP is more that 3 meters. (30%
-package losses, ~20K/s throughput compared to ~3M/s) Tested with two
-cards on different devices. With kernel 2.6.35 or kernel 2.6.38 +
-compat-wireless 15 meters distance is no problem. The problem only
-occurs in 2.6.38-rc1 to 2.6.38.4 but not in any more recent versions. I
-did a git bisect and found the commit fixing the problem.
+I dont see any operation not permitted.
 
-commit 115dad7a7f42e68840392767323ceb9306dbdb36
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Fri Jan 14 00:06:27 2011 +0100
-
-    ath9k_hw: partially revert "fix dma descriptor rx error bit parsing"
-
-http://www.spinics.net/lists/linux-wireless/msg62742.html
-
-Please send this commit to the stable series for 2.6.38.
-
-The problem is also described at the Ubuntu launchpad:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/735431
-
-Hauke
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.11: authentication OK (open system)
+wlan0: STA 74:f0:6d:33:ea:00 MLME:
+MLME-AUTHENTICATE.indication(74:f0:6d:33:ea:00, OPEN_SYSTEM)
+wlan0: STA 74:f0:6d:33:ea:00 MLME: MLME-DELETEKEYS.request(74:f0:6d:33:ea:00)
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.11: authenticated
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.11: association OK (aid 1)
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.11: associated (aid 1)
+wlan0: STA 74:f0:6d:33:ea:00 MLME: MLME-ASSOCIATE.indication(74:f0:6d:33:ea:00)
+wlan0: STA 74:f0:6d:33:ea:00 MLME: MLME-DELETEKEYS.request(74:f0:6d:33:ea:00)
+wlan0: STA 74:f0:6d:33:ea:00 WPA: event 1 notification
+wlan0: STA 74:f0:6d:33:ea:00 WPA: start authentication
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.1X: unauthorizing port
+wlan0: STA 74:f0:6d:33:ea:00 WPA: sending 1/4 msg of 4-Way Handshake
+wlan0: STA 74:f0:6d:33:ea:00 WPA: received EAPOL-Key frame (2/4 Pairwise)
+wlan0: STA 74:f0:6d:33:ea:00 WPA: sending 3/4 msg of 4-Way Handshake
+wlan0: STA 74:f0:6d:33:ea:00 WPA: received EAPOL-Key frame (4/4 Pairwise)
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.1X: authorizing port
+wlan0: STA 74:f0:6d:33:ea:00 RADIUS: starting accounting session
+4DB05FB9-00000000
+wlan0: STA 74:f0:6d:33:ea:00 WPA: pairwise key handshake completed (RSN)
+wlan0: STA 74:f0:6d:33:ea:00 IEEE 802.11: handle_action - unknown
+action category 4 or invalid frame
+wlan0: STA 74:f0:6d:33:ea:00 MLME:
+MLME-DEAUTHENTICATE.indication(74:f0:6d:33:ea:00, 1)
+wlan0: STA 74:f0:6d:33:ea:00 MLME: MLME-DELETEKEYS.request(74:f0:6d:33:ea:00)
