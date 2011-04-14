@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59441 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770Ab1DZMHN (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:4235 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681Ab1DNLrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 08:07:13 -0400
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: Lito Kriara <L.Kriara@sms.ed.ac.uk>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4DB6B48D.6080508@atheros.com>
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
-	 <1303652185.3603.0.camel@jlt3.sipsolutions.net>
-	 <4DB4318F.6070801@atheros.com>
-	 <1303657150.3603.1.camel@jlt3.sipsolutions.net>
-	 <4DB4415F.2070707@atheros.com>
-	 <1303659120.3603.3.camel@jlt3.sipsolutions.net>
-	 <4DB4F8D5.1060108@atheros.com>
-	 <20110426125801.q89ma5n6cgkwog80@www.sms.ed.ac.uk>
-	 <4DB6B48D.6080508@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Apr 2011 14:07:02 +0200
-Message-ID: <1303819622.4784.3.camel@jlt3.sipsolutions.net> (sfid-20110426_140717_077051_C12B719A)
+	Thu, 14 Apr 2011 07:47:10 -0400
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, b43-dev@lists.infradead.org,
+	Greg KH <greg@kroah.com>, Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 14 Apr 2011 14:43:51 +0300
+Message-Id: <1302781431.21145.6.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-26 at 17:33 +0530, Mohammed Shafi wrote:
-> On Tuesday 26 April 2011 05:28 PM, Lito Kriara wrote:
-> > Hello,
-> > I was away the last couple of days and just saw these e-mails. It
-> > seems really interesting and helpful, but what if we need to know at
-> > runtime the number of stations connected to the AP?
-> > Is the first patch sent good to use? Should I do some modification to it?
-> >    
-> Yes this will be fine.
 
-Or you can use what I wrote without patching:
+> 
+> We have slightly improved our knowledge of new Broadcom's bus. It
+> appears Broadcom took standard AMBA bus and put on it two cores for
+> every device:
+> 1) First core from each pair is real AMBA device, it has CID and PID.
+> Broadcom called it wrapper, it is used to control second core
+> (enabling second, disabling second, resetting second, setting flags of
+> second).
+> 2) Second core from each pair is Broadcom specific device. It can
+> *not* be treated as standard AMBA core - attempting to read it's CID
+> on PID leads to machine hang. Instead it is identified by MANUF, ID,
+> REV and CLASS. Example can be 80211 core.
+> 
+> One of the idea is to integrate with current AMBA driver:
+> 1) First driver read info about all cores in Broadcom specific way. It
+> registers all *wrapper* (AMBA type) cores as amba_device(s).
+> 2) Second driver registers for cores with PID 0x103BB369 (Broadcom
+> specific I believe). It receives wrappers (from AMBA bus) and exposes
+> wrapper-related Broadcom specific core in the system.
+> 
+> Problem: how to expose Broadcom specific cores in the system? Remember
+> we can not use amba_device, because Broadcom specific cores are
+> programmed and identified differently.
+> 
+> Could we register some virtual bcm_amba bus in the system and register
+> Broadcom specific cores with it? Or is there something better for this
+> case? In summary everything I need is to make driver (for example b43)
+> able to register for Broadcom specific core with Broadcom specific
+> identifiers. For example:
+> static const struct axi_device_id b43_axi_tbl[] = {
+> 	AXI_CORE(AXI_MANUF_BCM, AXI_CORE_80211, 0x17, AXI_ANY_CLASS),
+> 	AXI_CORETABLE_END
+> };
+> MODULE_DEVICE_TABLE(axi, b43_axi_tbl);
+> 
+> We have problems deciding architecture, the whole proposed layout is
+> not approved as final yet. Right now I try to check possibilities.
+> 
+If you beleive you do need to register broadcom ip core devices on amba
+bus then I would suggest you to introduce class driver for broadcom
+cores rather than breaking into bus_type layout. But to be honest I
+think it is bad idea and your original approach where you managed agents
+internally and registered _broadcom_ devices on dedicated _broadcom_ bus
+have much more sense. Going your original way you still can also
+register agents on amba thus registering two buses per host but honestly
+registering them just for the sake of registering makes no sense at all.
 
-> >>> iw wlan0 station dump | grep '^Station ' | wc -l
+Have nice day,
+George
 
-FWIW, I wouldn't mind adding the num_sta to debugfs, but as we discussed
-in this thread it's a different number.
-
-johannes
 
