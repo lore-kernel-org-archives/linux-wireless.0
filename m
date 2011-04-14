@@ -1,313 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp207.alice.it ([82.57.200.103]:55269 "EHLO smtp207.alice.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754808Ab1DFJ2S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 05:28:18 -0400
-From: Antonio Ospite <ospite@studenti.unina.it>
+Received: from dakia2.marvell.com ([65.219.4.35]:44815 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434Ab1DNAW6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2011 20:22:58 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Antonio Ospite <ospite@studenti.unina.it>,
-	openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-Subject: [PATCH] rfkill: Regulator consumer driver for rfkill
-Date: Wed,  6 Apr 2011 11:21:19 +0200
-Message-Id: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: rename function mwifiex_is_ba_stream_avail
+Date: Wed, 13 Apr 2011 17:27:09 -0700
+Message-Id: <1302740829-21315-4-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1302740829-21315-1-git-send-email-bzhao@marvell.com>
+References: <1302740829-21315-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a regulator consumer driver for rfkill to enable controlling radio
-transmitters connected to voltage regulator using the regulator
-framework.
+The old function name sounds like checking for existing BA
+stream. The function actually checks if we have room for
+creating new BA stream or not.
 
-A new "vrfkill" virtual supply is provided to use in platform code.
-
-Signed-off-by: Guiming Zhuo <gmzhuo@gmail.com>
-Signed-off-by: Antonio Ospite <ospite@studenti.unina.it>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/11n.h |    5 +++--
+ drivers/net/wireless/mwifiex/wmm.c |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Hi,
-
-a first implementation of the driver which handled only bluetooth was 
-from Guiming Zhuo, I then made it more generic and tried to put it in 
-shape for mainline inclusion; that's why the SOB line of Guiming Zhuo 
-comes first.
-
-Any comment is appreciated.
-
-We are using this driver for blocking/unblocking power to the bluetooth 
-module on some EZX phones (Motorola A1200/A910/E6/E2) in the openezx.org 
-project.
-
-Thanks,
-   Antonio Ospite
-   http://ao2.it
-
- include/linux/rfkill-regulator.h |   48 +++++++++++
- net/rfkill/Kconfig               |   11 +++
- net/rfkill/Makefile              |    1 +
- net/rfkill/rfkill-regulator.c    |  166 ++++++++++++++++++++++++++++++++++++++
- 4 files changed, 226 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/rfkill-regulator.h
- create mode 100644 net/rfkill/rfkill-regulator.c
-
-diff --git a/include/linux/rfkill-regulator.h b/include/linux/rfkill-regulator.h
-new file mode 100644
-index 0000000..4aaef9c
---- /dev/null
-+++ b/include/linux/rfkill-regulator.h
-@@ -0,0 +1,48 @@
-+/*
-+ * rfkill-regulator.c - Regulator consumer driver for rfkill
-+ *
-+ * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
-+ * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ */
-+
-+#ifndef __LINUX_RFKILL_REGULATOR_H
-+#define __LINUX_RFKILL_REGULATOR_H
-+
-+/*
-+ * Use "vrfkill" as supply id when declaring the regulator consumer:
-+ *
-+ * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
-+ * 	{ .dev_name = "rfkill-regulator.0", supply = "vrfkill" },
-+ * };
-+ *
-+ * If you have several regulator driven rfkill, you can append a numerical id to
-+ * .dev_name as done above, and use the same id when declaring the platform
-+ * device:
-+ *
-+ * static struct rfkill_regulator_platform_data ezx_rfkill_bt_data = {
-+ * 	.name  = "ezx-bluetooth",
-+ * 	.type  = RFKILL_TYPE_BLUETOOTH,
-+ * };
-+ *
-+ * static struct platform_device a910_rfkill = {
-+ * 	.name  = "rfkill-regulator",
-+ * 	.id    = 0,
-+ * 	.dev   = {
-+ * 		.platform_data = &ezx_rfkill_bt_data,
-+ * 	},
-+ * };
-+ */
-+
-+#include <linux/rfkill.h>
-+
-+struct rfkill_regulator_platform_data {
-+	char *name;             /* the name for the rfkill switch */
-+	enum rfkill_type type;  /* the type as specified in rfkill.h */
-+};
-+
-+#endif /* __LINUX_RFKILL_REGULATOR_H */
-diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-index 7fce6df..48464ca 100644
---- a/net/rfkill/Kconfig
-+++ b/net/rfkill/Kconfig
-@@ -22,3 +22,14 @@ config RFKILL_INPUT
- 	depends on RFKILL
- 	depends on INPUT = y || RFKILL = INPUT
- 	default y if !EXPERT
-+
-+config RFKILL_REGULATOR
-+	tristate "Generic rfkill regulator driver"
-+	depends on RFKILL || !RFKILL
-+	depends on REGULATOR
-+	help
-+          This options enable controlling radio transmitters connected to
-+          voltage regulator using the regulator framework.
-+
-+          To compile this driver as a module, choose M here: the module will
-+          be called rfkill-regulator.
-diff --git a/net/rfkill/Makefile b/net/rfkill/Makefile
-index 6621053..d9a5a58 100644
---- a/net/rfkill/Makefile
-+++ b/net/rfkill/Makefile
-@@ -5,3 +5,4 @@
- rfkill-y			+= core.o
- rfkill-$(CONFIG_RFKILL_INPUT)	+= input.o
- obj-$(CONFIG_RFKILL)		+= rfkill.o
-+obj-$(CONFIG_RFKILL_REGULATOR)	+= rfkill-regulator.o
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-new file mode 100644
-index 0000000..448a1bf
---- /dev/null
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -0,0 +1,166 @@
-+/*
-+ * rfkill-regulator.c - Regulator consumer driver for rfkill
-+ *
-+ * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
-+ * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
-+ *
-+ * Implementation inspired by leds-regulator driver.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/err.h>
-+#include <linux/slab.h>
-+#include <linux/platform_device.h>
-+#include <linux/regulator/consumer.h>
-+#include <linux/rfkill.h>
-+#include <linux/rfkill-regulator.h>
-+
-+struct rfkill_regulator_data {
-+	struct rfkill *rf_kill;
-+	bool reg_enabled;
-+
-+	struct regulator *vcc;
-+};
-+
-+static int rfkill_regulator_set_block(void *data, bool blocked)
-+{
-+	struct rfkill_regulator_data *rfkill_data = data;
-+
-+	pr_debug("%s: blocked: %d\n", __func__, blocked);
-+
-+	if (blocked) {
-+		if (rfkill_data->reg_enabled) {
-+			regulator_disable(rfkill_data->vcc);
-+			rfkill_data->reg_enabled = 0;
-+		}
-+	} else {
-+		if (!rfkill_data->reg_enabled) {
-+			regulator_enable(rfkill_data->vcc);
-+			rfkill_data->reg_enabled = 1;
-+		}
-+	}
-+
-+	pr_debug("%s: regulator_is_enabled after set_block: %d\n", __func__,
-+		regulator_is_enabled(rfkill_data->vcc));
-+
-+	return 0;
-+}
-+
-+struct rfkill_ops rfkill_regulator_ops = {
-+	.set_block = rfkill_regulator_set_block,
-+};
-+
-+static int __devinit rfkill_regulator_probe(struct platform_device *pdev)
-+{
-+	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
-+	struct rfkill_regulator_data *rfkill_data;
-+	struct regulator *vcc;
-+	struct rfkill *rf_kill;
-+	int ret = 0;
-+
-+	if (pdata == NULL) {
-+		dev_err(&pdev->dev, "no platform data\n");
-+		return -ENODEV;
-+	}
-+
-+	if (pdata->name == NULL || pdata->type == 0) {
-+		dev_err(&pdev->dev, "invalid name or type in platform data\n");
-+		return -EINVAL;
-+	}
-+
-+	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
-+	if (IS_ERR(vcc)) {
-+		dev_err(&pdev->dev, "Cannot get vcc for %s\n", pdata->name);
-+		ret = PTR_ERR(vcc);
-+		goto out;
-+	}
-+
-+	rfkill_data = kzalloc(sizeof(*rfkill_data), GFP_KERNEL);
-+	if (rfkill_data == NULL) {
-+		ret = -ENOMEM;
-+		goto err_data_alloc;
-+	}
-+
-+	rf_kill = rfkill_alloc(pdata->name, &pdev->dev,
-+				pdata->type,
-+				&rfkill_regulator_ops, rfkill_data);
-+	if (rf_kill == NULL) {
-+		dev_err(&pdev->dev, "Cannot alloc rfkill device\n");
-+		ret = -ENOMEM;
-+		goto err_rfkill_alloc;
-+	}
-+
-+	if (regulator_is_enabled(vcc)) {
-+		dev_dbg(&pdev->dev, "Regulator already enabled\n");
-+		rfkill_data->reg_enabled = 1;
-+	}
-+	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
-+
-+	ret = rfkill_register(rf_kill);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Cannot register rfkill device\n");
-+		goto err_rfkill_register;
-+	}
-+
-+	rfkill_data->rf_kill = rf_kill;
-+	rfkill_data->vcc = vcc;
-+
-+	platform_set_drvdata(pdev, rfkill_data);
-+	dev_info(&pdev->dev, "initialized\n");
-+
-+	return 0;
-+
-+err_rfkill_register:
-+	rfkill_destroy(rf_kill);
-+err_rfkill_alloc:
-+	kfree(rfkill_data);
-+err_data_alloc:
-+	regulator_put(vcc);
-+out:
-+	return ret;
-+}
-+
-+static int __devexit rfkill_regulator_remove(struct platform_device *pdev)
-+{
-+	struct rfkill_regulator_data *rfkill_data = platform_get_drvdata(pdev);
-+	struct rfkill *rf_kill = rfkill_data->rf_kill;
-+
-+	rfkill_unregister(rf_kill);
-+	rfkill_destroy(rf_kill);
-+	regulator_put(rfkill_data->vcc);
-+	kfree(rfkill_data);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver rfkill_regulator_driver = {
-+	.probe = rfkill_regulator_probe,
-+	.remove = __devexit_p(rfkill_regulator_remove),
-+	.driver = {
-+		.name = "rfkill-regulator",
-+		.owner = THIS_MODULE,
-+	},
-+};
-+
-+static int __init rfkill_regulator_init(void)
-+{
-+	return platform_driver_register(&rfkill_regulator_driver);
-+}
-+module_init(rfkill_regulator_init);
-+
-+static void __exit rfkill_regulator_exit(void)
-+{
-+	platform_driver_unregister(&rfkill_regulator_driver);
-+}
-+module_exit(rfkill_regulator_exit);
-+
-+MODULE_AUTHOR("Guiming Zhuo <gmzhuo@gmail.com>");
-+MODULE_AUTHOR("Antonio Ospite <ospite@studenti.unina.it>");
-+MODULE_DESCRIPTION("Regulator consumer driver for rfkill");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:rfkill-regulator");
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 9128d2c..02602ff 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -92,9 +92,10 @@ mwifiex_is_amsdu_allowed(struct mwifiex_private *priv, int tid)
+ }
+ 
+ /*
+- * This function checks whether a BA stream is available or not.
++ * This function checks whether a space is available for new BA stream or not.
+  */
+-static inline u8 mwifiex_is_ba_stream_avail(struct mwifiex_adapter *adapter)
++static inline u8 mwifiex_space_avail_for_new_ba_stream(
++					struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv;
+ 	u8 i;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 57b98c5..99e8431 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1186,7 +1186,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 		   mwifiex_send_single_packet() */
+ 	} else {
+ 		if (mwifiex_is_ampdu_allowed(priv, tid)) {
+-			if (mwifiex_is_ba_stream_avail(adapter)) {
++			if (mwifiex_space_avail_for_new_ba_stream(adapter)) {
+ 				mwifiex_11n_create_tx_ba_stream_tbl(priv,
+ 						ptr->ra, tid,
+ 						BA_STREAM_SETUP_INPROGRESS);
 -- 
-1.7.4.1
+1.7.0.2
 
