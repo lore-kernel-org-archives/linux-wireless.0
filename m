@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38921 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753716Ab1DLNS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:18:03 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/22] ath9k_hw: Clean up rx/tx chain configuration before AGC/IQ cal
-Date: Tue, 12 Apr 2011 18:47:47 +0530
-Message-ID: <1302614273-2063-7-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41340 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756502Ab1DNM4A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 08:56:00 -0400
+Received: by qwk3 with SMTP id 3so853610qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 05:56:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <BANLkTi=M+EfZqYqojkFxVnLWBgpHuEk4+w@mail.gmail.com>
+References: <BANLkTimnQ92mgOzXMWXuF54tUs+M1ZbR1A@mail.gmail.com>
+	<BANLkTin9KAQtYg0qWOPxw2HVq4MeXdhY3Q@mail.gmail.com>
+	<BANLkTi=M+EfZqYqojkFxVnLWBgpHuEk4+w@mail.gmail.com>
+Date: Thu, 14 Apr 2011 14:55:58 +0200
+Message-ID: <BANLkTi=Ae8azoPghKCP_yQpsP0z+UqvM_A@mail.gmail.com>
+Subject: Re: iwlagn / wpa_supplicant issue
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Fabio Coatti <fabio.coatti@gmail.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use hw supported chains instead of hard coded values.
+On Thu, Apr 14, 2011 at 2:34 PM, Fabio Coatti <fabio.coatti@gmail.com> wrote:
+> 2011/4/14 Sedat Dilek <sedat.dilek@googlemail.com>:
+>> Sorry for the top-post:
+>>
+>> Not sure if I have the same problem like you.
+>> I was not lucky with the wpasupplicant (0.7.3-X) packaged in
+>> Debian/sid, I downgraded to (0.6.10-2.1).
+>>
+>> IIRC last time I investigated the issue:
+>> Replacing /etc/wpa_supplicant/functions.sh file from 0.7.x package
+>> with the one from 0.6.x helped.
+>> So... it could be a packaging problem?
+>>
+>> ( BTW, I am running systemd and resolvconf package and using a /e/n/i
+>> with static-IPADDR setup, might be related to them, too. Busy with
+>> other stuff and need a stable "working" Internet connection. And NO, I
+>> did not write a bug-report. )
+>
+>
+> Could you send to my mailbox  the two functions.sh scritps, so I can
+> have a look if this can provide me any hint? Right now I've no debian
+> available; I can check whatever changed and see what happens on my
+> setup. It could be worth a try.
+>
+> Thanks.
+>
+>
+>
+>
+> --
+> Fabio
+>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=622757
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 4a4cd88..09f3aa7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -940,21 +940,18 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			       struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int val;
- 
- 	val = REG_READ(ah, AR_ENT_OTP);
- 	ath_dbg(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
- 
--	if (AR_SREV_9485(ah))
--		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
--	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
-+	/* Configure rx/tx chains before running AGC/TxiQ cals */
-+	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
- 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
- 	else
--		/*
--		 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain
--		 * mode before running AGC/TxIQ cals
--		 */
--		ar9003_hw_set_chain_masks(ah, 0x7, 0x7);
-+		ar9003_hw_set_chain_masks(ah, pCap->rx_chainmask,
-+					  pCap->tx_chainmask);
- 
- 	/* Do Tx IQ Calibration */
- 	if (AR_SREV_9485(ah))
--- 
-1.7.0.4
-
+- Sedat -
