@@ -1,51 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63964 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047Ab1DZU1a (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34455 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754249Ab1DNJec convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 16:27:30 -0400
-Received: by wwa36 with SMTP id 36so1147917wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 13:27:29 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: report MIC failure for truncated packets in AP mode
-Date: Tue, 26 Apr 2011 23:27:22 +0300
-Message-Id: <1303849642-9014-1-git-send-email-arik@wizery.com> (sfid-20110426_222733_585236_1FDE31FD)
+	Thu, 14 Apr 2011 05:34:32 -0400
+Received: by qwk3 with SMTP id 3so770271qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 02:34:31 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <BANLkTimnQ92mgOzXMWXuF54tUs+M1ZbR1A@mail.gmail.com>
+References: <BANLkTimnQ92mgOzXMWXuF54tUs+M1ZbR1A@mail.gmail.com>
+Date: Thu, 14 Apr 2011 11:34:31 +0200
+Message-ID: <BANLkTin9KAQtYg0qWOPxw2HVq4MeXdhY3Q@mail.gmail.com>
+Subject: Re: iwlagn / wpa_supplicant issue
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Fabio Coatti <fabio.coatti@gmail.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MIC failure notifications for packets too short to contain a key index
-are currently ignored in AP-mode. Fix the check to only ignore packets
-with an existing non-zero key index.
+Sorry for the top-post:
 
-The wl12xx chip always truncates packets with a failed MIC and requires
-this change to operate correctly in AP-mode.
+Not sure if I have the same problem like you.
+I was not lucky with the wpasupplicant (0.7.3-X) packaged in
+Debian/sid, I downgraded to (0.6.10-2.1).
 
-No such check is made in STA mode. Therefore its relatively safe to assume
-there's no other HW that relies on the current code to avoid spurious
-MIC failures with correct yet truncated packets.
+IIRC last time I investigated the issue:
+Replacing /etc/wpa_supplicant/functions.sh file from 0.7.x package
+with the one from 0.6.x helped.
+So... it could be a packaging problem?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+( BTW, I am running systemd and resolvconf package and using a /e/n/i
+with static-IPADDR setup, might be related to them, too. Busy with
+other stuff and need a stable "working" Internet connection. And NO, I
+did not write a bug-report. )
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a864890..875fc3c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2391,7 +2391,7 @@ static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
- 	if (!ieee80211_has_protected(hdr->frame_control))
- 		return;
- 
--	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
-+	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx > 0) {
- 		/*
- 		 * APs with pairwise keys should never receive Michael MIC
- 		 * errors for non-zero keyidx because these are reserved for
--- 
-1.7.1
+- Sedat -
 
+On Thu, Apr 14, 2011 at 11:15 AM, Fabio Coatti <fabio.coatti@gmail.com> wrote:
+> Hi all,
+> sorry for crossposting but I'm not sure where the problem, if any,
+> could possibly be.
+>
+> Basically, I'm facing a weird issue with wpa_supplicant 0.7.3 / 0.8
+> snapshot compiled 06/04/2011 , here the
+> description and the environment:
+>
+> wpa supplicant 0.7.3 (gentoo package wpa_supplicant-0.7.3-r1)
+> linux 2.6.36.1
+>
+> Tested also with wpa_supplicant 0.8 snapshot and kernels 2.6.37 - 2.6.38.2
+> hardware: HP elitebook 8440p
+> iwlagn 0000:44:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
+> iwlagn 0000:44:00.0: loaded firmware version 9.221.4.1 build 25532
+>
+> Description:
+> basically, when wpa_supplicant starts it is unable to speak with hardware, no
+> commands have effect (i.e. scan) and the only message I get is the
+> usual
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>
+> (of course rfkill is off)
+>
+> the scan window (wpa_gui) or scan result (wpa_cli) is empty, no matter
+> how many scans I request.
+>
+> but if I issue a
+>
+> iwlist wlan0 scan
+>
+> I get all networks active in my area and after some second all
+> networks appears on wpa_gui and suddenly wpa_supplicant completes the
+> authentication and I'm able to get the ip address.
+>
+> I don't know if the problem is wpa not issuing the right commands or
+> drivers/kernel acting in a strange way or something else, my knowledge
+> on this is really low.
+>
+> I've tried to debug this issue without success and also googling
+> didn't helped me; I will be grateful if someone gives me some hint, at
+> least where to look; of course I'm available to do any test/debug that
+> could be needed.
+>
+> Thanks,
+>
+>
+> --
+> Fabio
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
