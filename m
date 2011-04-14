@@ -1,114 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60075 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751986Ab1DKV6b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 17:58:31 -0400
-Date: Mon, 11 Apr 2011 14:56:19 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-Message-ID: <20110411215619.GA27943@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
- <20110411210631.GA28559@kroah.com>
- <BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
- <20110411212513.GA17809@kroah.com>
- <BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:58931 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932485Ab1DNTEY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 15:04:24 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id AC9A65400DD
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 15:09:10 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110414190422.B1AA640EB5@repository3.orbit-lab.org>
+Date: Thu, 14 Apr 2011 15:04:22 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 11:36:39PM +0200, Rafał Miłecki wrote:
-> 2011/4/11 Greg KH <greg@kroah.com>:
-> > On Mon, Apr 11, 2011 at 11:19:13PM +0200, Rafał Miłecki wrote:
-> >> 2011/4/11 Greg KH <greg@kroah.com>:
-> >> > On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
-> >> >> +static void axi_release_core_dev(struct device *dev)
-> >> >> +{
-> >> >> +     /* Silent lack-of-release warning */
-> >> >> +}
-> >> >
-> >> > Ok, WTF!!!!
-> >>
-> >> Thank you for your kindly words. It's much more enjoyable to work on
-> >> kernel that way. I definitely made that on purpose.
-> >
-> > I can't tell if you are kidding or not.
-> 
-> That was 100% irony. I swear I don't enjoy publishing bad code and
-> getting such a comment.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 75a9436...73fa655 akpm-end   -> origin/akpm-end  (forced update)
+   aaa119a..85f2e68  akpm-start -> origin/akpm-start
+   f093e8a..f7cc2f6  history    -> origin/history
+ + 13ceff9...9e06a6e master     -> origin/master  (forced update)
+   aaa119a..85f2e68  stable     -> origin/stable
+ * [new tag]         69a07f0b117a40fcc1a479358d8e1f41793617f2 -> 69a07f0b117a40fcc1a479358d8e1f41793617f2
+ * [new tag]         next-20110414 -> next-20110414
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Ok, you forgot the ':)' then...
+compat-wireless code metrics
 
-> > Please read the documentation for how to do this properly.  I find it
-> > really hard to believe that you wrote that comment instead of putting in
-> > the 2 lines of code required for this function.
-> >
-> > Especially as-it-is, your code does not work properly and leaks memory
-> > badly.  Why would you do that on purpose?
-> 
-> I tried to read some documentation about this.
-> 
-> 1) driver-mode/device.txt says only that:
-> > Callback to free the device after all references have
-> > gone away. This should be set by the allocator of the
-> > device (i.e. the bus driver that discovered the device).
-> I *really* do not know how my driver should "free" core on AXI bus.
-
-The structure that you have created, added to the bus, is now ready to
-have its memory freed.  So free it.
-
-This usually means something like:
-	struct my_obj = to_my_obj(dev);
-	kfree(my_obj);
-in the release function.
-
-> 2) LDD3 says:
-> > The method is called when the last reference to the device is removed; it is called
-> > from the embedded kobject’s release method. All device structures registered with
-> > the core must have a release method, or the kernel prints out scary complaints.
-> Well, I do not register any structs for AXI core.
-
-Yes you did, otherwise you would have never seen that callback warning
-you that you needed a release function.
-
-> 3) Example code from LDD3:
-> static void ldd_bus_release(struct device *dev)
-> {
-> printk(KERN_DEBUG "lddbus release\n");
-> }
-> Yeah, that's what I did...
-
-Wow that's old, sorry.  See the kobject documentation for much more
-detail about what you need here.
-
-> 4) SSB in it's ssb_release_dev just calls kfree on struct that was
-> allocated when registering drivers. *I do not* allocate such a struct,
-> so I believe I do exactly the same memory leak as SSB does.
-
-Well someone allocated it, right?  Who did it?  If it wasn't you, where
-did that structure come from and why are you registering it on your bus?
-
-> Can you spend 2 more minues in addition to commenting my ideas and
-> help me with writing that 2 lines I missed? Where do I leak memory in
-> my driver? Which struct should I kfree?
-
-The structure that you wrap around 'struct device' for your bus.
-
-hope this helps,
-
-greg k-h
+    839618 - Total upstream lines of code being pulled
