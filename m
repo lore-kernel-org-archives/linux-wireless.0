@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56384 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932420Ab1DMP7K convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45893 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758837Ab1DNO0p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 11:59:10 -0400
+	Thu, 14 Apr 2011 10:26:45 -0400
+Received: by bwz15 with SMTP id 15so1419756bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 07:26:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan>
-Date: Wed, 13 Apr 2011 17:59:07 +0200
-Message-ID: <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
-Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+ <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+ <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 16:26:04 +0200
+Message-ID: <BANLkTi=HkWv--fUiJA_5nOB=Wj5zGcyHmQ@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I changed it yesterday because of that problem. I thought It will help
+and I forgot about that.
+I have now:
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
 
-> I recall using this driver in staging and it crashing my machine, now thats
-> its no longer in staging, I thought I'd give it another try..  Using the
+And It's still the same.
 
-The rt2800usb was not in staging but has been inside the main kernel
-tree for quite
-some time already, the alternative rt2870sta was in staging and will
-be removed very soon.
+Do you have other idea?
+I am open to suggestions.
 
-> following wireless usb adapter, I'm seeing very high latency when using
-> the device in Linux, (with Windows, there are no problems).  Using Debian
-> Testing + wpa_supplicant, using the following USB adapter:
-
-Can you try disabling powersaving?
-iwconfig wlan0 power off
-
-Ivo
+2011/4/14 Christian Lamparter <chunkeey@googlemail.com>:
+> On Thu, Apr 14, 2011 at 1:53 PM, Damian Lesiuk <lesiuk@gmail.com> wrote:
+>
+>> ieee80211 phy0: Selected rate control algorithm 'minstrel'
+>
+> That's the ticket!
+>
+> you see minstrel does not know about ht frames at all! You need to
+> have minstrel_ht for it
+> to work properly. The weird thing is that minstrel_ht should be the
+> default rate control
+> [e.g. config.mk in compat-wireless should have:
+> CONFIG_MAC80211_RC_DEFAULT=minstrel_ht ]
+> algorithm, so the question is: who or what changed the default?
+>
+> do you have a module option for mac80211 to overwrite ieee80211_default_rc_algo?
+> (check /sys/module/mac80211/parameters/ieee80211_default_rc_algo it should say
+> minstrel_ht)
+>
+> Regards,
+> Â  Â Chr
+>
