@@ -1,30 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867Ab1DLLQu (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:58461 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192Ab1DNL2L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:16:50 -0400
-Subject: Re: [PATCH 3/4] mac80211: Add function to build HT caps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110412T130449-831@post.gmane.org>
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130449-831@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 13:16:48 +0200
-Message-ID: <1302607008.3639.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 14 Apr 2011 07:28:11 -0400
+MIME-Version: 1.0
+Date: Thu, 14 Apr 2011 13:28:10 +0200
+Message-ID: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+Subject: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-12 at 11:06 +0000, Alexander Simon wrote:
+Hello,
 
-> +u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-> +                              u16 cap)
+We have slightly improved our knowledge of new Broadcom's bus. It
+appears Broadcom took standard AMBA bus and put on it two cores for
+every device:
+1) First core from each pair is real AMBA device, it has CID and PID.
+Broadcom called it wrapper, it is used to control second core
+(enabling second, disabling second, resetting second, setting flags of
+second).
+2) Second core from each pair is Broadcom specific device. It can
+*not* be treated as standard AMBA core - attempting to read it's CID
+on PID leads to machine hang. Instead it is identified by MANUF, ID,
+REV and CLASS. Example can be 80211 core.
 
-It makes no sense to pass cap as an argument since it's taken from the
-sband.
+One of the idea is to integrate with current AMBA driver:
+1) First driver read info about all cores in Broadcom specific way. It
+registers all *wrapper* (AMBA type) cores as amba_device(s).
+2) Second driver registers for cores with PID 0x103BB369 (Broadcom
+specific I believe). It receives wrappers (from AMBA bus) and exposes
+wrapper-related Broadcom specific core in the system.
 
-johannes
+Problem: how to expose Broadcom specific cores in the system? Remember
+we can not use amba_device, because Broadcom specific cores are
+programmed and identified differently.
 
+Could we register some virtual bcm_amba bus in the system and register
+Broadcom specific cores with it? Or is there something better for this
+case? In summary everything I need is to make driver (for example b43)
+able to register for Broadcom specific core with Broadcom specific
+identifiers. For example:
+static const struct axi_device_id b43_axi_tbl[] = {
+	AXI_CORE(AXI_MANUF_BCM, AXI_CORE_80211, 0x17, AXI_ANY_CLASS),
+	AXI_CORETABLE_END
+};
+MODULE_DEVICE_TABLE(axi, b43_axi_tbl);
+
+We have problems deciding architecture, the whole proposed layout is
+not approved as final yet. Right now I try to check possibilities.
+
+-- 
+Rafał
