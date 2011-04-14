@@ -1,49 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60938 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858Ab1DGKd4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 06:33:56 -0400
-Subject: Re: [RFC PATCH 1/2] mac80211: Check for queued frames before
- entering power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
-References: <1301658324-11530-1-git-send-email-vnatarajan@atheros.com>
-	 <1301658705.3832.21.camel@jlt3.sipsolutions.net>
-	 <AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Apr 2011 12:33:55 +0200
-Message-ID: <1302172435.3779.2.camel@jlt3.sipsolutions.net>
+Received: from smtp205.alice.it ([82.57.200.101]:50568 "EHLO smtp205.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932734Ab1DNKjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 06:39:31 -0400
+Date: Thu, 14 Apr 2011 12:39:12 +0200
+From: Antonio Ospite <ospite@studenti.unina.it>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
+	Guiming Zhuo <gmzhuo@gmail.com>
+Subject: Re: [PATCH v3] rfkill: Regulator consumer driver for rfkill
+Message-Id: <20110414123912.71e4bd52.ospite@studenti.unina.it>
+In-Reply-To: <1302724383.3731.19.camel@jlt3.sipsolutions.net>
+References: <1302686356.3731.1.camel@jlt3.sipsolutions.net>
+	<1302723645-5286-1-git-send-email-ospite@studenti.unina.it>
+	<1302724383.3731.19.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__14_Apr_2011_12_39_12_+0200_L80X_2yOHb.gfFab"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 17:42 +0530, Vivek Natarajan wrote:
+--Signature=_Thu__14_Apr_2011_12_39_12_+0200_L80X_2yOHb.gfFab
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Ideally the driver should enter power save only when there is no tx
-> frame. When there are about 10 APs in the environment the tx rate of
-> the driver drops and the application slows down since it has not yet
-> received ACKs for the frames already queued in the hardware. Since
-> this ACK may take more than 100ms, stopping the dev queues for
-> entering PS at this stage breaks applications, WMM test case in my
-> testing. If there are tx_frames already pending in the queue,
-> postponing the PS logic helps to avoid redundant queue stops. Since, I
-> could not find any other way in mac80211 to see if the driver has not
-> completed the transmission of any frame, a new API to check for
-> pending frames is used. When power save is enabled by default and in a
-> noisy environment, this API certainly helps in improving the average
-> throughput. Any other idea?
+On Wed, 13 Apr 2011 21:53:03 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-I'm not sure I understand. Where does the 100ms come from? This code
-flushes the TX queues, which can take as much time as it wants, no? How
-does it break applications?
+> On Wed, 2011-04-13 at 21:40 +0200, Antonio Ospite wrote:
+>=20
+> > +static int __devinit rfkill_regulator_probe(struct platform_device *pd=
+ev)
+>=20
+> ...
+>=20
+> > +	platform_set_drvdata(pdev, rfkill_data);
+>=20
+> > +static int __devexit rfkill_regulator_remove(struct platform_device *p=
+dev)
+> > +{
+> > +	struct rfkill_regulator_data *rfkill_data =3D platform_get_drvdata(pd=
+ev);
+> > +	struct rfkill *rf_kill =3D rfkill_data->rf_kill;
+> > +
+> > +	rfkill_unregister(rf_kill);
+> > +	rfkill_destroy(rf_kill);
+> > +	regulator_put(rfkill_data->vcc);
+> > +	kfree(rfkill_data);
+> > +
+> > +	return 0;
+> > +}
+>=20
+> Should remove do platform_set_drvdata(pdev, NULL)?
+>
 
-I'll agree that entering powersave is pointless if that means you won't
-be able to transmit all frames. It seems to me that maybe instead we
-should give flush() a timeout, and if it can't complete in that time, we
-can postpone the powersave then?
+AFAICS this is not strictly necessary because we never check for NULL
+here and we are setting drvdata again in _probe() each time the module
+is loaded anyways. If it is considered a good practice for symmetry
+reasons then I'll add it, no problem. Does anyone has comments on that?
 
-johannes
+> In any case, that's the only thing I see now and I did read the code
+> carefully, so if that's not necessary:
+>=20
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> Otherwise, feel free to include that in v4.
+>=20
+> johannes
+>=20
 
+Thanks for taking the time to look at the code Johannes.
+
+Regards,
+   Antonio
+
+--=20
+Antonio Ospite
+http://ao2.it
+
+PGP public key ID: 0x4553B001
+
+A: Because it messes up the order in which people normally read text.
+   See http://en.wikipedia.org/wiki/Posting_style
+Q: Why is top-posting such a bad thing?
+
+--Signature=_Thu__14_Apr_2011_12_39_12_+0200_L80X_2yOHb.gfFab
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2mztAACgkQ5xr2akVTsAHD4wCfU3uRGqi81k+JSR45pHapfyW2
+u00AnjTt0UdYFp0W+Esg+XOpA8v/rNqm
+=rVRz
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__14_Apr_2011_12_39_12_+0200_L80X_2yOHb.gfFab--
