@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:55163 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756818Ab1DNPi4 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35658 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932079Ab1DNJv4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 11:38:56 -0400
-Received: by qyk7 with SMTP id 7so3448923qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 08:38:56 -0700 (PDT)
+	Thu, 14 Apr 2011 05:51:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <77733.17144.qm@web161604.mail.bf1.yahoo.com>
-References: <4DA606CC.9040609@hauke-m.de> <77733.17144.qm@web161604.mail.bf1.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Apr 2011 08:38:36 -0700
-Message-ID: <BANLkTimFpfiufv09raZNOLX30Ot6fdZV1Q@mail.gmail.com>
-Subject: Re: Compat-wireless release for 2011-04-07 is baked
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTimcy16ggC0C66V-fbuaJwg4Sna4Qw@mail.gmail.com>
+References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
+	<20110413163113.GA24015@kroah.com>
+	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
+	<1302726703.8015.1.camel@dev.znau.edu.ua>
+	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
+	<1302727516.8015.9.camel@dev.znau.edu.ua>
+	<BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
+	<1302729243.8479.1.camel@dev.znau.edu.ua>
+	<BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
+	<BANLkTimcy16ggC0C66V-fbuaJwg4Sna4Qw@mail.gmail.com>
+Date: Thu, 14 Apr 2011 11:51:55 +0200
+Message-ID: <BANLkTika3oprbxqYJTq=Fzms+LMdnxtwYg@mail.gmail.com>
+Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Jonas Gorski <jonas.gorski@gmail.com>
+Cc: George Kashperko <george@znau.edu.ua>, Greg KH <greg@kroah.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 14, 2011 at 8:32 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
->> The cron job generating compat-wireless places it to a
->> location, so it
->> is available for download on orbit, the cron job is running
->> on a server
->> at orbit. Now some other cron job copies it to
->> wireless.kernel.org.
+2011/4/14 Jonas Gorski <jonas.gorski@gmail.com>:
+> On 13 April 2011 23:19, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> 2011/4/13 George Kashperko <george@znau.edu.ua>:
+>>>> I had no idea what you were referring to. We do not dig into PCIe
+>>>> functions yet, so I believe for now we need this "if".
+>>> You are already deep inside. Your host code drives pci function.
 >>
->> The scripts generating compat-wireless can be found here:
->> http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-user.git;a=tree
+>> But I don't use multiple PCIe functions, do not focus on that at all.
 >
->
-> Thanks for clearing this up, Hauke. There hasn't been one single compat-wireless tar ball for the month of April.
->
->
->> > PS, I guess this CW bot "baker" needs a little
->> fine-tuning
->> Yes that's true. Are you willing to improve it so it
->> generated better
->> messages on failure?
->
-> I'm willing, but I've got my hands full right now. Luis is maintaining this, isn't he? I think he's away now. Maybe he'd like to check with his own creations.
+> I think what George meant is the following (please correct me if I
+> understood you wrong) and has nothing to do with PCIe functions:
+> <http://lxr.free-electrons.com/source/drivers/staging/brcm80211/util/aiutils.c#L522>
 
-I'm not away, just doing other things. Will check this out today.
+Ahh, thanks, I though PCIe functions are something different, that we
+have to register for pci device differently to access them or sth.
 
-  Luis
+-- 
+Rafał
