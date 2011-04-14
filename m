@@ -1,79 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44215 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753895Ab1DIThW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Apr 2011 15:37:22 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k: fix tx status reporting issues
-Date: Sat,  9 Apr 2011 21:37:14 +0200
-Message-Id: <1302377834-87774-1-git-send-email-nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40892 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933783Ab1DNSCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2011 14:02:34 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 15so1584407bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 11:02:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+ <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+ <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
+ <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 20:01:53 +0200
+Message-ID: <BANLkTikX2b+0m23JZTKWuFzzr3rNmWdnqg@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During normal operation, minstrel was showing suspicious EWMA probabilities
-exceeding 100%. It looks like the tx status reporting in ath5k was not
-properly clearing the rate index for rates which were never attempted.
+With hostapd 0.6.9 I have:
 
-This is caused by uninitialized stale data in the on-stack tx status
-information, which is reused when more frames are received.
+Station 74:f0:6d:33:ea:00 (on wlan0)
+       inactive time:  10 ms
+       rx bytes:       1563761
+       rx packets:     18910
+       tx bytes:       52327665
+       tx packets:     34780
+       signal:         -34 dBm
+       tx bitrate:     135.0 MBit/s MCS 6 40Mhz short GI
 
-To fix this, rely on ts->ts_final_idx to select the last attempted rate,
-instead of checking whether ts->ts_rate is set.
-
-Additionally, the conversion from the driver rate index back to the
-mac80211 rate index can be dropped, as the mac80211 tx status will still
-have the original rate index which was used to set up the descriptor.
-
-Additionally, one more inaccuracy was fixed - the final rate attempt
-count only needs to be increased by one if the transmission attempt was
-successful.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 4d7f21e..753662f 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1580,21 +1580,14 @@ ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
- 	info = IEEE80211_SKB_CB(skb);
- 
- 	ieee80211_tx_info_clear_status(info);
--	for (i = 0; i < 4; i++) {
-+	for (i = 0; i <= ts->ts_final_idx; i++) {
- 		struct ieee80211_tx_rate *r =
- 			&info->status.rates[i];
- 
--		if (ts->ts_rate[i]) {
--			r->idx = ath5k_hw_to_driver_rix(sc, ts->ts_rate[i]);
--			r->count = ts->ts_retry[i];
--		} else {
--			r->idx = -1;
--			r->count = 0;
--		}
-+		r->count = ts->ts_retry[i];
- 	}
- 
--	/* count the successful attempt as well */
--	info->status.rates[ts->ts_final_idx].count++;
-+	info->status.rates[ts->ts_final_idx + 1].idx = -1;
- 
- 	if (unlikely(ts->ts_status)) {
- 		sc->stats.ack_fail++;
-@@ -1609,6 +1602,9 @@ ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
- 	} else {
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 		info->status.ack_signal = ts->ts_rssi;
-+
-+		/* count the successful attempt as well */
-+		info->status.rates[ts->ts_final_idx].count++;
- 	}
- 
- 	/*
--- 
-1.7.3.2
-
+But I can only get 16 mbps max.
