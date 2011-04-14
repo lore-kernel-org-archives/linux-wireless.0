@@ -1,109 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:54687 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753384Ab1D0GQc (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:64408 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154Ab1DNCAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 02:16:32 -0400
-Received: by ewy22 with SMTP id 22so430279ewy.7
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 23:16:29 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: report MIC failure for truncated packets in
- AP mode
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <BANLkTikMMMck78MhFuFNqc+CrUBGpG+TxQ@mail.gmail.com>
-References: <1303849642-9014-1-git-send-email-arik@wizery.com>
-	 <BANLkTim45NHT3o2mB7Ofb9KvqBDrGjJcaw@mail.gmail.com>
-	 <BANLkTikMMMck78MhFuFNqc+CrUBGpG+TxQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 27 Apr 2011 09:16:23 +0300
-Message-ID: <1303884983.2336.46.camel@cumari> (sfid-20110427_081635_545110_831A7ACA)
-Mime-Version: 1.0
+	Wed, 13 Apr 2011 22:00:05 -0400
+Date: Wed, 13 Apr 2011 21:00:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix unitialized variable warnings
+Message-ID: <4da65522.5Q2derfNcHLlWHiC%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-27 at 01:03 +0300, Arik Nemtsov wrote:
-> On Tue, Apr 26, 2011 at 23:55, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Tue, Apr 26, 2011 at 10:27 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> >> MIC failure notifications for packets too short to contain a key index
-> >> are currently ignored in AP-mode. Fix the check to only ignore packets
-> >> with an existing non-zero key index.
-> >>
-> >> The wl12xx chip always truncates packets with a failed MIC and requires
-> >> this change to operate correctly in AP-mode.
-> >>
-> >> No such check is made in STA mode. Therefore its relatively safe to assume
-> >> there's no other HW that relies on the current code to avoid spurious
-> >> MIC failures with correct yet truncated packets.
-> >>
-> >> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> >> ---
-> >>  net/mac80211/rx.c |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> >> index a864890..875fc3c 100644
-> >> --- a/net/mac80211/rx.c
-> >> +++ b/net/mac80211/rx.c
-> >> @@ -2391,7 +2391,7 @@ static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
-> >>        if (!ieee80211_has_protected(hdr->frame_control))
-> >>                return;
-> >>
-> >> -       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
-> >> +       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx > 0) {
-> >>                /*
-> >>                 * APs with pairwise keys should never receive Michael MIC
-> >>                 * errors for non-zero keyidx because these are reserved for
-> >> --
-> > wait! Since you seem able to trigger MIC events frequently, could you
-> > please test if the following patch:
-> >
-> > <http://www.spinics.net/lists/linux-wireless/msg67571.html>
-> >
-> > <a little more info:http://www.spinics.net/lists/linux-wireless/msg67461.html>
-> >
-> > would help in your case as well?
-> >
-> 
-> I seem to have missed this thread entirely :)
-> The patch you mentioned does indeed help. I tested in STA and AP mode.
-> 
-> This bit is important for wl12xx:
-> 
-> +       /*
-> +        * No way to verify the MIC if the hardware stripped it or
-> +        * the IV with the key index. In this case we have solely rely
-> +        * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
-> +        * MIC failure report.
-> +        */
-> +       if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
-> +               if (status->flag & RX_FLAG_MMIC_ERROR)
-> +                       goto mic_fail;
-> 
-> This prevents us from getting to the problematic check that I tried to
-> remove with my patch.
-> 
-> Just for the record - generating a MIC failure is pretty easy. I'm
-> using the (very cool) mac80211 debugfs feature that allows simulating
-> a MIC failure (see ieee80211_if_parse_tkip_mic_test()).
-> It works well with a rt2x00 based card and the latest compat. I'm
-> simulating it from AP as well as STA.
-> 
-> To summarize - either patch will work for us.
+In http://lkml.indiana.edu/hypermail/linux/kernel/1104.1/01955.html, Geerti
+Uytterhoeven reports the following warnings for the rtlwifi drivers.
 
-Great! If this can be solved in a generic way in mac80211, I'd prefer if
-that one is used.
+src/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c: warning:
+	 'cck_index' may be used uninitialized in this function: => 637
+src/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c: warning:
+	 'cck_index_old' may be used uninitialized in this function: => 637
+src/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: warning:
+	 'box_extreg' may be used uninitialized in this function: => 303
+src/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: warning:
+	 'box_reg' may be used uninitialized in this function: => 303
+src/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c: warning:
+	 'chnlgroup' may be used uninitialized in this function: => 205
+src/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c: warning:
+	 'u4_regvalue' may be used uninitialized in this function: => 450
+src/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c: warning:
+	 'hq_sele' may be used uninitialized in this function: => 924
 
-Christian, are you planning to submit this patch again any time soon? If
-not, we could include the wl12xx patch for now and revert it later when
-the proper fix in mac80211 is applied.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-What do you guys think?
+John,
 
--- 
-Cheers,
-Luca.
+This patch was made against wireless-testing. When applied to mainline,
+it has an offset and fuzz 1, but it applies correctly. I hope that is
+not important.
 
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -634,7 +634,7 @@ static void rtl92c_dm_txpower_tracking_c
+ 	u8 thermalvalue, delta, delta_lck, delta_iqk;
+ 	long ele_a, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c;
+-	u8 ofdm_index[2], cck_index, ofdm_index_old[2], cck_index_old;
++	u8 ofdm_index[2], cck_index = 0, ofdm_index_old[2], cck_index_old = 0;
+ 	int i;
+ 	bool is2t = IS_92C_SERIAL(rtlhal->version);
+ 	u8 txpwr_level[2] = {0, 0};
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -293,7 +293,7 @@ static void _rtl92c_fill_h2c_command(str
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	u8 boxnum;
+-	u16 box_reg, box_extreg;
++	u16 box_reg = 0, box_extreg = 0;
+ 	u8 u1b_tmp;
+ 	bool isfw_read = false;
+ 	bool bwrite_sucess = false;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
+@@ -202,7 +202,7 @@ static void _rtl92c_get_txpower_writeval
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+-	u8 i, chnlgroup, pwr_diff_limit[4];
++	u8 i, chnlgroup = 0, pwr_diff_limit[4];
+ 	u32 writeVal, customer_limit, rf;
+ 
+ 	for (rf = 0; rf < 2; rf++) {
+@@ -447,7 +447,7 @@ static bool _rtl92c_phy_rf6052_config_pa
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+-	u32 u4_regvalue;
++	u32 u4_regvalue = 0;
+ 	u8 rfpath;
+ 	bool rtstatus;
+ 	struct bb_reg_def *pphyreg;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -921,7 +921,7 @@ static void _rtl92cu_init_chipT_queue_pr
+ 					       u8 out_ep_num,
+ 					       u8 queue_sel)
+ {
+-	u8	hq_sele;
++	u8 hq_sele = 0;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	switch (out_ep_num) {
