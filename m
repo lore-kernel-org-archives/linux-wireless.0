@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276Ab1D2HLr (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46596 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933441Ab1DNRvv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 03:11:47 -0400
-Subject: Re: [PATCH 1/2] wireless: Make struct ieee80211_channel const
- where possible
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <b953f08a496209fe0fb69166c5175ff270b7efc5.1304054543.git.joe@perches.com>
-References: <cover.1304054543.git.joe@perches.com>
-	 <b953f08a496209fe0fb69166c5175ff270b7efc5.1304054543.git.joe@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 09:11:38 +0200
-Message-ID: <1304061098.3589.0.camel@jlt3.sipsolutions.net> (sfid-20110429_091208_235817_410C9D4A)
-Mime-Version: 1.0
+	Thu, 14 Apr 2011 13:51:51 -0400
+Received: by bwz15 with SMTP id 15so1576962bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 10:51:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinwtCc-k+ei9cn_aFXJzhF0OLHPaA@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
+ <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
+ <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
+ <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com> <BANLkTin9Xp0oNkLANM0pkr7dyOCpEwow+g@mail.gmail.com>
+ <BANLkTi=ZyhsQDnhKBCfPbfqdYsqHXYpxtg@mail.gmail.com> <BANLkTimjb6RYN_GLU23VMH_MyruL=be7qQ@mail.gmail.com>
+ <BANLkTimRG+bXbU5WJ+AZoEsfVRB=4+8u_A@mail.gmail.com> <BANLkTi=xPfpanErB8HqA6R6i3UJW+H=iyg@mail.gmail.com>
+ <BANLkTinwtCc-k+ei9cn_aFXJzhF0OLHPaA@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Thu, 14 Apr 2011 19:51:10 +0200
+Message-ID: <BANLkTikgmodoyUx9fVAWbpeVoP3_OvaVQw@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-28 at 22:25 -0700, Joe Perches wrote:
-> Useful for declarations of static const.
+I tested i with 3 another N wireless cards and it's always working at
+20 MHz channel 400 ns GI.
+Why?
 
-I don't mind marking lots of places const, but it isn't actually as
-useful as you think since you can't declare any channels const as they
-are modified at runtime for regulatory enforcement.
-
-johannes
-
-
+2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+> btw, I have also this in log:
+>
+> ieee80211 phy0: invalid plcp cck rate (0).
+> ieee80211 phy0: invalid plcp cck rate (0).
+>
+> 2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+>> When I switched to Linux on my laptop it was working with 130.00 mbps
+>> speed but was ultra unstable. (was disconnecting every minute and I
+>> can't get that bitrate). My friend has that isue with his atheros too.
+>>
+>> So I think it's no client wireless card related.
+>>
+>> What can I do?
+>>
+>> 2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+>>> I checked it with wifi analyzer for android and that other network is
+>>> on 1-5 channels and that carl9170 network is on 5-9 channels, there is
+>>> no other networks, so it should work with better speed?
+>>>
+>>> 2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
+>>>> Sorry.
+>>>> My wireless card is on AR9285. (that Azurewave NB290)
+>>>>
+>>>
+>>
+>
