@@ -1,104 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757421Ab1DAVg4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:56 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:56 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 09/10] mac80211: send notification on new peer candidate for our secure mesh
-Date: Fri,  1 Apr 2011 13:35:50 -0700
-Message-Id: <1301690151-14979-10-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:28025 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754775Ab1DOG6y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 02:58:54 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 23:58:28 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH v2 1/2] ath9k_htc: Add debugfs support to change debug mask
+Date: Fri, 15 Apr 2011 12:28:52 +0530
+Message-ID: <1302850733-23388-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- net/mac80211/mesh.c       |    4 +---
- net/mac80211/mesh.h       |    3 ++-
- net/mac80211/mesh_plink.c |   18 +++++++++++++-----
- 3 files changed, 16 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h           |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   49 ++++++++++++++++++++++++
+ 2 files changed, 50 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 47a26c0..1120797 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -590,9 +590,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (elems.mesh_id && elems.mesh_config &&
- 	    mesh_matches_local(&elems, sdata)) {
- 		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
--
--		mesh_neighbour_update(mgmt->sa, supp_rates, sdata,
--				      mesh_peer_accepts_plinks(&elems));
-+		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
- 	}
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index cc5d0a4..852cdcf 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -366,6 +366,7 @@ struct ath9k_debug {
+ 	struct dentry *debugfs_recv;
+ 	struct dentry *debugfs_slot;
+ 	struct dentry *debugfs_queue;
++	struct dentry *debugfs_debug;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 8d0de60..7394a1b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -435,6 +435,47 @@ static const struct file_operations fops_queue = {
+ 	.llseek = default_llseek,
+ };
  
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index b99e230..10acf1c 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -226,7 +226,8 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata);
- /* Mesh plinks */
- void mesh_neighbour_update(u8 *hw_addr, u32 rates,
--		struct ieee80211_sub_if_data *sdata, bool add);
-+		struct ieee80211_sub_if_data *sdata,
-+		struct ieee802_11_elems *ie);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
- void mesh_plink_broken(struct sta_info *sta);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index b327e0e..84e5b05 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -237,8 +237,9 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data *sdata,
--			   bool peer_accepting_plinks)
-+void mesh_neighbour_update(u8 *hw_addr, u32 rates,
-+		struct ieee80211_sub_if_data *sdata,
-+		struct ieee802_11_elems *elems)
++static ssize_t read_file_debug(struct file *file, char __user *user_buf,
++			       size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	char buf[32];
++	unsigned int len;
++
++	len = sprintf(buf, "0x%08x\n", common->debug_mask);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
++				size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	unsigned long mask;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++	if (strict_strtoul(buf, 0, &mask))
++		return -EINVAL;
++
++	common->debug_mask = mask;
++	return count;
++}
++
++static const struct file_operations fops_debug = {
++	.read = read_file_debug,
++	.write = write_file_debug,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath9k_htc_init_debug(struct ath_hw *ah)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -248,8 +249,14 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
- 	sta = sta_info_get(sdata, hw_addr);
- 	if (!sta) {
- 		rcu_read_unlock();
--
--		sta = mesh_plink_alloc(sdata, hw_addr, rates);
-+		/* Userspace handles peer allocation when security is enabled
-+		 * */
-+		if (sdata->u.mesh.is_secure)
-+			cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-+					elems->ie_start, elems->total_len,
-+					GFP_KERNEL);
-+		else
-+			sta = mesh_plink_alloc(sdata, hw_addr, rates);
- 		if (!sta)
- 			return;
- 		if (sta_info_insert_rcu(sta)) {
-@@ -260,7 +267,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -493,6 +534,13 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	if (!priv->debug.debugfs_queue)
+ 		goto err;
  
- 	sta->last_rx = jiffies;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
--	if (peer_accepting_plinks && sta->plink_state == PLINK_LISTEN &&
-+	if (mesh_peer_accepts_plinks(elems) &&
-+			sta->plink_state == PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
- 			sdata->u.mesh.mshcfg.auto_open_plinks)
- 		mesh_plink_open(sta);
++	priv->debug.debugfs_debug = debugfs_create_file("debug",
++							S_IRUSR | S_IWUSR,
++							priv->debug.debugfs_phy,
++							priv, &fops_debug);
++	if (!priv->debug.debugfs_debug)
++		goto err;
++
+ 	return 0;
+ 
+ err:
+@@ -512,6 +560,7 @@ void ath9k_htc_exit_debug(struct ath_hw *ah)
+ 	debugfs_remove(priv->debug.debugfs_tgt_int_stats);
+ 	debugfs_remove(priv->debug.debugfs_tgt_tx_stats);
+ 	debugfs_remove(priv->debug.debugfs_tgt_rx_stats);
++	debugfs_remove(priv->debug.debugfs_debug);
+ 	debugfs_remove(priv->debug.debugfs_phy);
+ }
+ 
 -- 
-1.7.4.1
+1.7.4.4
 
