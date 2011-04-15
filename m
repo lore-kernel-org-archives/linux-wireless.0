@@ -1,79 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2579 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab1DHRYv convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42098 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754916Ab1DOA4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 13:24:51 -0400
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
- <op.vtisojsk3ri7v4@arend-laptop>
- <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-Date: Fri, 8 Apr 2011 19:24:33 +0200
+	Thu, 14 Apr 2011 20:56:43 -0400
+Received: by qwk3 with SMTP id 3so1207466qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 17:56:42 -0700 (PDT)
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtmqm7fw3ri7v4@arend-laptop>
-In-Reply-To: <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+In-Reply-To: <1302187158-15298-3-git-send-email-hauke@hauke-m.de>
+References: <1302187158-15298-1-git-send-email-hauke@hauke-m.de> <1302187158-15298-3-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Apr 2011 17:56:22 -0700
+Message-ID: <BANLkTi=5S2Cc_rBF4nyE5C9JZBrJ+s4iHg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] compat: remove sdio_set_host_pm_flags
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 08 Apr 2011 18:56:13 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
-
-> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
->> 3. Device identification
->>
->> The cores are identified by manufacturer, core id and revision in your
->> patch. I would not use the revision because 4 out of 5 times a revision
->> change does indicate a hardware change but no change in programming
->> interface. The enumeration data does contain a more selective field
->> indicating the core class (4 bits following the core identifier). I  
->> suggest
->> to replace the revision field by this class field.
+On Thu, Apr 7, 2011 at 7:39 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 >
-> Could you say something more about *class*, please? For my BCM43224 it
-> seems to be 0x0. WIll check BCM4313 in a moment.
->
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-In principal the manufacturer id is unique (defined/assigned by JEDEC  
-www.jedec.org) and the chip id and chip class are defined by the  
-manufacturer. So I can only indicate what classes Broadcom uses in  
-combination with the manufacturer id BRCM, ARM and MIPS.
+Applied all 3 and pushed, sorry for the delay.
 
-/* Component Classes */
-#define	CC_SIM			0
-#define	CC_EROM			1
-#define	CC_CORESIGHT		9
-#define	CC_VERIF		0xb
-#define	CC_OPTIMO		0xd
-#define	CC_GEN			0xe
-#define	CC_PRIMECELL		0xf
-
-Looking at this it seems strange that you see a class value of 0x0. It may  
-be rarely used or for non-production chips only (for simulation, chip  
-bringup) which may require additional (debug) functions. So question is  
-whether you will need it, but it is specified by ARM and it is up to  
-manufacturers to use it. So I it is better to be safe than sorry and have  
-this in the device id.
-
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
-
+  Luis
