@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31124 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751450Ab1DDRVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 13:21:19 -0400
-Subject: Re: [PATCH] iwlwifi: accept EEPROM version 0x423 for iwl6000
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-In-Reply-To: <1301937524-6860-1-git-send-email-linville@tuxdriver.com>
-References: <1301937524-6860-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Apr 2011 10:02:24 -0700
-Message-ID: <1301936544.14995.102.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53201 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769Ab1DOGh3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 02:37:29 -0400
+Received: by bwz15 with SMTP id 15so1953663bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 23:37:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
+ <201104142251.10881.chunkeey@googlemail.com> <BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
+ <BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Fri, 15 Apr 2011 08:36:47 +0200
+Message-ID: <BANLkTimmdRi_CmwgH14aJbQJecYav-4r8Q@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-04 at 10:18 -0700, John W. Linville wrote:
-> A number of these devices have appeared "in the wild", and apparently
-> the Windows driver is perfectly happy to support this EEPROM version.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Cc: stable@kernel.org
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-> index 98aa8af..20b6646 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-> @@ -241,7 +241,7 @@ struct iwl_eeprom_enhanced_txpwr {
->  
->  /* 6x00 Specific */
->  #define EEPROM_6000_TX_POWER_VERSION    (4)
-> -#define EEPROM_6000_EEPROM_VERSION	(0x434)
-> +#define EEPROM_6000_EEPROM_VERSION	(0x423)
->  
->  /* 6x50 Specific */
->  #define EEPROM_6050_TX_POWER_VERSION    (4)
+Openwrt have noscan option with mac80211
+(https://dev.openwrt.org/browser/branches/backfire/package/mac80211/files/lib/wifi/mac80211.sh?rev=22356)
+They patched code?
 
+Where can I find that patch?
 
+2011/4/15 Helmut Schaa <helmut.schaa@googlemail.com>:
+> On Fri, Apr 15, 2011 at 8:22 AM, Damian Lesiuk <lesiuk@gmail.com> wrote:
+>> Is there option to do not scan for overlapping BSSs?
+>
+> AFAIK not without patching the code.
+>
+> Helmut
+>
