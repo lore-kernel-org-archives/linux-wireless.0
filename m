@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059Ab1DGKJv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 06:09:51 -0400
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302170472.21251.9.camel@thorin>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
-	 <1302099669.4090.1.camel@jlt3.sipsolutions.net>
-	 <1302113542.22852.7.camel@x61.thuisdomein>
-	 <1302115597.4090.11.camel@jlt3.sipsolutions.net>
-	 <1302170472.21251.9.camel@thorin>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Apr 2011 12:09:38 +0200
-Message-ID: <1302170978.3779.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:42986 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753178Ab1DOHA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 03:00:58 -0400
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH 2/2] mwl8k: setting IEEE80211_HW_CRYPTO_ENABLED for AP mode
+References: <20110415045430.GA11530@hertz.marvell.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 15 Apr 2011 10:00:53 +0300
+In-Reply-To: <20110415045430.GA11530@hertz.marvell.com> (Yogesh Ashok Powar's message of "Fri\, 15 Apr 2011 10\:24\:38 +0530")
+Message-ID: <87mxjshuca.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-07 at 12:01 +0200, Bernd Petrovitsch wrote:
-> On Mit, 2011-04-06 at 20:46 +0200, Johannes Berg wrote: 
-> > On Wed, 2011-04-06 at 20:12 +0200, Paul Bolle wrote:
-> [...] 
-> > > But doesn't
-> > > 	depends on RFKILL || !RFKILL
-> > > 
-> > > always evaluate to true when running "make *config"? (Even if RFKILL is
-> > > an unknown symbol when that expression is parsed!)
-> > 
-> > No, it will not, you're forgetting that these things are tristate.
-> 
-> Boolean operators for tristate logic isn't intuitive at all IMHO.
+Yogesh Ashok Powar <yogeshp@marvell.com> writes:
 
-*shrug*. You're free to propose patches to the kconfig system to make it
-more intuitive. :-)
+> For AP mode, driver sets IEEE80211_HW_CRYPTO_ENABLED hardware flag to avoid
+> mac80211 reserving tail room space for crypto suite.
 
-johannes
+A small style issue:
 
+> +	/* This is needed to avoid tailroom calculations */
+> +	hw->flags |= priv->ap_fw ? IEEE80211_HW_CRYPTO_ENABLED : 0;
+
+Why not just:
+
+if (priv->ap_fw)
+   hw->flags |= IEEE80211_HW_CRYPTO_ENABLED
+
+A lot easier to read.
+
+-- 
+Kalle Valo
