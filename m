@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54926 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438Ab1D1MAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:00:38 -0400
-Date: Thu, 28 Apr 2011 13:59:48 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-2.6] iwlagn: fix "Received BA when not expected"
-Message-ID: <20110428115947.GB7030@redhat.com> (sfid-20110428_140041_841578_3358F093)
-References: <20110428111011.GA6967@redhat.com>
- <1303990661.3558.3.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303990661.3558.3.camel@jlt3.sipsolutions.net>
+Received: from external1.orbit-lab.org ([128.6.192.131]:44363 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756482Ab1DOTEc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 15:04:32 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 5C5E15400DD
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 15:09:20 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110415190430.5629740EB7@repository3.orbit-lab.org>
+Date: Fri, 15 Apr 2011 15:04:30 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 28, 2011 at 01:37:41PM +0200, Johannes Berg wrote:
-> On Thu, 2011-04-28 at 13:10 +0200, Stanislaw Gruszka wrote:
-> > Need to use broadcast sta_id for management and multicast frames,
-> > otherwise we broke BA session and get messages like that:
-> > 
-> > "Received BA when not expected"
-> > 
-> > or (on older kernels):
-> > 
-> > "BA scd_flow 0 does not match txq_id 10"
-> 
-> Hmm. Interesting. I believe you, but it's hard.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   98123fc..4642bc7  master     -> origin/master
+ * [new tag]         compat-wireless-2011-04-14 -> compat-wireless-2011-04-14
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 73fa655...29e3397 akpm-end   -> origin/akpm-end  (forced update)
+   f7cc2f6..735ce72  history    -> origin/history
+ + 9e06a6e...8198b6a master     -> origin/master  (forced update)
+ * [new tag]         next-20110415 -> next-20110415
 
-To be honest, I expected to get explanations from you (perhaps
-with better fix) :-) However this one is intended to work on older
-kernels, and is tested by me and one other user.
+compat-wireless code metrics
 
-> > -	/* Find index into station table for destination station */
-> > -	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-> 
-> info->control.sta should be NULL here, at least for multicast frames
-> (which never really happen in practise unless you use AP mode). And then
-> this should return ctx->bcast_sta_id, just like you use below:
-> 
-> > +	/* If this frame is broadcast or management, use broadcast station id */
-> > +	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
-> > +		sta_id = ctx->bcast_sta_id;
-> 
-> So the reason has to be management frames. But why would those be
-> affecting it? They aren't QoS frames, so there should be no influence on
-> BA handling at all. This is a bit odd.
->
-> 
-> Maybe we should make it clear here that it's about non-data frames and
-> remove the multicast check since that ought to be handled in the other
-> path?
-
-We call iwl_sta_modify_sleep_tx_count(priv, sta_id, 1); for any frame
-as long as some other conditions are true.
-
-Also multicast frames are important. When we send data and multicast
-frame we probably modify 
-
-priv->stations[sta_id].tid[tid]
-
-with wrong sta_id (other station with unicast address), what make related
-aggregation data wrong for that other station.
-
-Stanislaw
+    838656 - Total upstream lines of code being pulled
+      2232 - backport code changes
+      1934 - backport code additions
+       298 - backport code deletions
+      7869 - backport from compat module
+     10101 - total backport code
+    1.2044 - % of code consists of backport work
