@@ -1,47 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53593 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755167Ab1DXTpB (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:38773 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368Ab1DOHEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 15:45:01 -0400
-Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303673834.22777.15.camel@wwguy-ubuntu>
-References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110424_191812_851726_8A7D5FAA) <1303670306.3603.5.camel@jlt3.sipsolutions.net>
-	 <1303670920.22777.10.camel@wwguy-ubuntu>
-	 <1303673360.3603.7.camel@jlt3.sipsolutions.net>
-	 <1303673834.22777.15.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 21:44:58 +0200
-Message-ID: <1303674298.3603.9.camel@jlt3.sipsolutions.net> (sfid-20110424_214505_479283_232E7A58)
-Mime-Version: 1.0
+	Fri, 15 Apr 2011 03:04:45 -0400
+Received: by pzk9 with SMTP id 9so823235pzk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 00:04:44 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19879.61084.376771.7406@gargle.gargle.HOWL>
+Date: Fri, 15 Apr 2011 12:37:08 +0530
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/2] ath9k_htc: Add debugfs support to change debug mask
+In-Reply-To: <1302850733-23388-1-git-send-email-rmanoharan@atheros.com>
+References: <1302850733-23388-1-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 12:37 -0700, wwguy wrote:
+Rajkumar Manoharan wrote:
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 
-> > So if you want "solid on" by default for 0 tpt, you simply don't specify
-> > the -1 value, ie. just remove the -1 line from the table completely.
-> > IOW, instead of the patch you posted before, a simple patch just
-> > removing the first line from the table should be sufficient.
-> > 
-> > > Yes, I agree as today, "on" == "off", just thinking we should make more
-> > > flexible.
-> > 
-> > I just don't see the point since we don't really need it.
-> 
-> Just thinking give more control to the driver, but it is ok don't have
-> it
+Acked-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-I wouldn't really mind, I just don't think it's useful before some
-driver actually needs it, and all the current ones want symmetric
-blinking (and also I think asymmetric would look odd).
-
-johannes
-
+Sujith
