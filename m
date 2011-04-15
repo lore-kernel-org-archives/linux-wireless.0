@@ -1,223 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751596Ab1DKQQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 12:16:33 -0400
-Received: by bwz15 with SMTP id 15so4625742bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 09:16:31 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC v2] mac80211: consolidate MIC failure report handling
-Date: Mon, 11 Apr 2011 18:16:22 +0200
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-References: <201104091234.27305.chunkeey@googlemail.com> <1302529173.6487.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1302529173.6487.8.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:28880 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921Ab1DOKM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 06:12:29 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 03:12:03 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH v3 2/2] ath9k_htc: Cleanup HTC debugfs
+Date: Fri, 15 Apr 2011 15:42:24 +0530
+Message-ID: <1302862344-24589-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104111816.22932.chunkeey@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 April 2011 15:39:33 Johannes Berg wrote:
-> On Sat, 2011-04-09 at 12:34 +0200, Christian Lamparter wrote:
-> > diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-> > index f1765de..a2c18b6 100644
-> > --- a/net/mac80211/wpa.c
-> > +++ b/net/mac80211/wpa.c
-> > @@ -87,33 +87,35 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
-> >  	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-> >  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> >  
-> > +	if (!ieee80211_has_protected(hdr->frame_control) ||
-> > +	    !ieee80211_is_data_present(hdr->frame_control)) {
-> > +		return RX_CONTINUE;
-> > +	}
-> 
-> But is this check correct? What if the driver _completely_ pretends that the
-> frame wasn't encrypted? Do we strictly require that it leaves the protected
-> bit set?
+Move the ath9k_htc debugfs under ieee80211 to be inline
+with ath9k driver and it also helps to simplify debug code.
 
-OnT: It looks like this patch might also help to relieve ath9k & ath9k_htc of
-some workarounds. see: 56363ddeeed "ath9k: fix spurious MIC failure reports".
-(ath5k seems to be fine though?!)
-
-BTW: what to do about this?
--       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
--               /*
--                * APs with pairwise keys should never receive Michael MIC
--                * errors for non-zero keyidx because these are reserved for
--                * group keys and only the AP is sending real multicast
--                * frames in the BSS.
--                */
--               return; [Drop Unusable]
--       }
-for now, I've kept the code. But I'm not quite sure why, at least
-I couldn't find the passage in the spec that says "GTK MIC failures in AP mode
-can be ignored" [Although, 8.5.1 (see "196 hole")& 8.3.2.3 (last sentence)
-hint in this direction]?
-
-Regards,
-	Christian
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fc2ff78..a1bef0f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2354,47 +2354,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- 	return RX_QUEUED;
- }
+ drivers/net/wireless/ath/ath9k/htc.h           |   14 ---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |  113 ++++--------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c  |   37 ++------
+ 3 files changed, 27 insertions(+), 137 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 852cdcf..48a8855 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -359,14 +359,6 @@ struct ath_rx_stats {
  
--static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
--					    struct ieee80211_rx_data *rx)
--{
--	int keyidx;
--	unsigned int hdrlen;
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
+-	struct dentry *debugfs_tgt_int_stats;
+-	struct dentry *debugfs_tgt_tx_stats;
+-	struct dentry *debugfs_tgt_rx_stats;
+-	struct dentry *debugfs_xmit;
+-	struct dentry *debugfs_recv;
+-	struct dentry *debugfs_slot;
+-	struct dentry *debugfs_queue;
+-	struct dentry *debugfs_debug;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ };
+@@ -613,15 +605,9 @@ void ath9k_htc_suspend(struct htc_target *htc_handle);
+ int ath9k_htc_resume(struct htc_target *htc_handle);
+ #endif
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-int ath9k_htc_debug_create_root(void);
+-void ath9k_htc_debug_remove_root(void);
+ int ath9k_htc_init_debug(struct ath_hw *ah);
+-void ath9k_htc_exit_debug(struct ath_hw *ah);
+ #else
+-static inline int ath9k_htc_debug_create_root(void) { return 0; };
+-static inline void ath9k_htc_debug_remove_root(void) {};
+ static inline int ath9k_htc_init_debug(struct ath_hw *ah) { return 0; };
+-static inline void ath9k_htc_exit_debug(struct ath_hw *ah) {};
+ #endif /* CONFIG_ATH9K_HTC_DEBUGFS */
+ 
+ #endif /* HTC_H */
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 7394a1b..eca7774 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -16,8 +16,6 @@
+ 
+ #include "htc.h"
+ 
+-static struct dentry *ath9k_debugfs_root;
 -
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--	if (rx->skb->len >= hdrlen + 4)
--		keyidx = rx->skb->data[hdrlen + 3] >> 6;
--	else
--		keyidx = -1;
+ static int ath9k_debugfs_open(struct inode *inode, struct file *file)
+ {
+ 	file->private_data = inode->i_private;
+@@ -481,100 +479,27 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+ 
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
 -
--	if (!rx->sta) {
--		/*
--		 * Some hardware seem to generate incorrect Michael MIC
--		 * reports; ignore them to avoid triggering countermeasures.
--		 */
--		return;
--	}
+-	priv->debug.debugfs_phy = debugfs_create_dir(wiphy_name(priv->hw->wiphy),
+-						     ath9k_debugfs_root);
++	priv->debug.debugfs_phy = debugfs_create_dir(KBUILD_MODNAME,
++					     priv->hw->wiphy->debugfsdir);
+ 	if (!priv->debug.debugfs_phy)
+-		goto err;
 -
--	if (!ieee80211_has_protected(hdr->frame_control))
--		return;
+-	priv->debug.debugfs_tgt_int_stats = debugfs_create_file("tgt_int_stats",
+-							S_IRUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_tgt_int_stats);
+-	if (!priv->debug.debugfs_tgt_int_stats)
+-		goto err;
 -
--	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
--		/*
--		 * APs with pairwise keys should never receive Michael MIC
--		 * errors for non-zero keyidx because these are reserved for
--		 * group keys and only the AP is sending real multicast
--		 * frames in the BSS.
--		 */
--		return;
--	}
+-	priv->debug.debugfs_tgt_tx_stats = debugfs_create_file("tgt_tx_stats",
+-						       S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_tgt_tx_stats);
+-	if (!priv->debug.debugfs_tgt_tx_stats)
+-		goto err;
 -
--	if (!ieee80211_is_data(hdr->frame_control) &&
--	    !ieee80211_is_auth(hdr->frame_control))
--		return;
+-	priv->debug.debugfs_tgt_rx_stats = debugfs_create_file("tgt_rx_stats",
+-						       S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_tgt_rx_stats);
+-	if (!priv->debug.debugfs_tgt_rx_stats)
+-		goto err;
 -
--	mac80211_ev_michael_mic_failure(rx->sdata, keyidx, hdr, NULL,
--					GFP_ATOMIC);
+-	priv->debug.debugfs_xmit = debugfs_create_file("xmit", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_xmit);
+-	if (!priv->debug.debugfs_xmit)
+-		goto err;
+-
+-	priv->debug.debugfs_recv = debugfs_create_file("recv", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_recv);
+-	if (!priv->debug.debugfs_recv)
+-		goto err;
+-
+-	priv->debug.debugfs_slot = debugfs_create_file("slot", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_slot);
+-	if (!priv->debug.debugfs_slot)
+-		goto err;
+-
+-	priv->debug.debugfs_queue = debugfs_create_file("queue", S_IRUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_queue);
+-	if (!priv->debug.debugfs_queue)
+-		goto err;
+-
+-	priv->debug.debugfs_debug = debugfs_create_file("debug",
+-							S_IRUSR | S_IWUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_debug);
+-	if (!priv->debug.debugfs_debug)
+-		goto err;
+-
+-	return 0;
+-
+-err:
+-	ath9k_htc_exit_debug(ah);
+-	return -ENOMEM;
 -}
 -
- /* TODO: use IEEE80211_RX_FRAGMENTED */
- static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 					struct ieee80211_rate *rate)
-@@ -2738,12 +2697,6 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 	if (!prepares)
- 		return false;
- 
--	if (status->flag & RX_FLAG_MMIC_ERROR) {
--		if (status->rx_flags & IEEE80211_RX_RA_MATCH)
--			ieee80211_rx_michael_mic_report(hdr, rx);
--		return false;
--	}
+-void ath9k_htc_exit_debug(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
 -
- 	if (!consume) {
- 		skb = skb_copy(skb, GFP_ATOMIC);
- 		if (!skb) {
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index f1765de..9dc3b5f 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -87,42 +87,76 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	debugfs_remove(priv->debug.debugfs_queue);
+-	debugfs_remove(priv->debug.debugfs_slot);
+-	debugfs_remove(priv->debug.debugfs_recv);
+-	debugfs_remove(priv->debug.debugfs_xmit);
+-	debugfs_remove(priv->debug.debugfs_tgt_int_stats);
+-	debugfs_remove(priv->debug.debugfs_tgt_tx_stats);
+-	debugfs_remove(priv->debug.debugfs_tgt_rx_stats);
+-	debugfs_remove(priv->debug.debugfs_debug);
+-	debugfs_remove(priv->debug.debugfs_phy);
+-}
++		return -ENOMEM;
  
--	/* No way to verify the MIC if the hardware stripped it */
--	if (status->flag & RX_FLAG_MMIC_STRIPPED)
-+	/*
-+	 * it makes no sense to check for MIC errors on anything other
-+	 * than data frames.
-+	 */
-+	if (!ieee80211_is_data_present(hdr->frame_control))
-+		return RX_CONTINUE;
-+
-+	/*
-+	 * No way to verify the MIC if the hardware stripped it or
-+	 * the IV with the key index. In this case we have solely rely
-+	 * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
-+	 * MIC failure report.
-+	 */
-+	if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
-+		if (status->flag & RX_FLAG_MMIC_ERROR)
-+			goto mic_fail;
-+
-+		if (!(status->flag & RX_FLAG_IV_STRIPPED))
-+			goto update_iv;
-+
- 		return RX_CONTINUE;
-+	}
+-int ath9k_htc_debug_create_root(void)
+-{
+-	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
++	debugfs_create_file("tgt_int_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_int_stats);
++	debugfs_create_file("tgt_tx_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_tx_stats);
++	debugfs_create_file("tgt_rx_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_rx_stats);
++	debugfs_create_file("xmit", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_xmit);
++	debugfs_create_file("recv", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_recv);
++	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_slot);
++	debugfs_create_file("queue", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_queue);
++	debugfs_create_file("debug", S_IRUSR | S_IWUSR, priv->debug.debugfs_phy,
++				priv, &fops_debug);
  
-+	/*
-+	 * Some hardware seems to generate Michael MIC failure reports; even
-+	 * though, the frame was not encrypted with TKIP and therefore has no
-+	 * MIC. Ignore the flag them to avoid triggering countermeasures.
-+	 */
- 	if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_TKIP ||
--	    !ieee80211_has_protected(hdr->frame_control) ||
--	    !ieee80211_is_data_present(hdr->frame_control))
-+	    !(status->flag & RX_FLAG_DECRYPTED))
- 		return RX_CONTINUE;
- 
-+	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && rx->key->conf.keyidx) {
-+		/*
-+		 * APs with pairwise keys should never receive Michael MIC
-+		 * errors for non-zero keyidx because these are reserved for
-+		 * group keys and only the AP is sending real multicast
-+		 * frames in the BSS. (
-+		 */
-+		return RX_DROP_UNUSABLE;
-+	}
-+
-+	if (status->flag & RX_FLAG_MMIC_ERROR)
-+		goto mic_fail;
-+
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (skb->len < hdrlen + MICHAEL_MIC_LEN)
- 		return RX_DROP_UNUSABLE;
- 
- 	data = skb->data + hdrlen;
- 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
--
- 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
- 	michael_mic(key, hdr, data, data_len, mic);
--	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0) {
--		if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
--			return RX_DROP_UNUSABLE;
--
--		mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
--						(void *) skb->data, NULL,
--						GFP_ATOMIC);
--		return RX_DROP_UNUSABLE;
--	}
-+	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
-+		goto mic_fail;
- 
- 	/* remove Michael MIC from payload */
- 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
- 
-+update_iv:
- 	/* update IV in key information to be able to detect replays */
- 	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
- 	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
- 
- 	return RX_CONTINUE;
-+
-+mic_fail:
-+	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
-+					(void *) skb->data, NULL, GFP_ATOMIC);
-+	return RX_DROP_UNUSABLE;
+ 	return 0;
  }
+-
+-void ath9k_htc_debug_remove_root(void)
+-{
+-	debugfs_remove(ath9k_debugfs_root);
+-	ath9k_debugfs_root = NULL;
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 22736eb..06e043b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -140,7 +140,6 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
  
+ static void ath9k_deinit_priv(struct ath9k_htc_priv *priv)
+ {
+-	ath9k_htc_exit_debug(priv->ah);
+ 	ath9k_hw_deinit(priv->ah);
+ 	kfree(priv->ah);
+ 	priv->ah = NULL;
+@@ -700,12 +699,6 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 		goto err_hw;
+ 	}
  
+-	ret = ath9k_htc_init_debug(ah);
+-	if (ret) {
+-		ath_err(common, "Unable to create debugfs files\n");
+-		goto err_debug;
+-	}
+-
+ 	ret = ath9k_init_queues(priv);
+ 	if (ret)
+ 		goto err_queues;
+@@ -725,8 +718,6 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	return 0;
+ 
+ err_queues:
+-	ath9k_htc_exit_debug(ah);
+-err_debug:
+ 	ath9k_hw_deinit(ah);
+ err_hw:
+ 
+@@ -867,6 +858,12 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 			goto err_world;
+ 	}
+ 
++	error = ath9k_htc_init_debug(priv->ah);
++	if (error) {
++		ath_err(common, "Unable to create debugfs files\n");
++		goto err_world;
++	}
++
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"WMI:%d, BCN:%d, CAB:%d, UAPSD:%d, MGMT:%d, "
+ 		"BE:%d, BK:%d, VI:%d, VO:%d\n",
+@@ -987,38 +984,20 @@ int ath9k_htc_resume(struct htc_target *htc_handle)
+ 
+ static int __init ath9k_htc_init(void)
+ {
+-	int error;
+-
+-	error = ath9k_htc_debug_create_root();
+-	if (error < 0) {
+-		printk(KERN_ERR
+-			"ath9k_htc: Unable to create debugfs root: %d\n",
+-			error);
+-		goto err_dbg;
+-	}
+-
+-	error = ath9k_hif_usb_init();
+-	if (error < 0) {
++	if (ath9k_hif_usb_init() < 0) {
+ 		printk(KERN_ERR
+ 			"ath9k_htc: No USB devices found,"
+ 			" driver not installed.\n");
+-		error = -ENODEV;
+-		goto err_usb;
++		return -ENODEV;
+ 	}
+ 
+ 	return 0;
+-
+-err_usb:
+-	ath9k_htc_debug_remove_root();
+-err_dbg:
+-	return error;
+ }
+ module_init(ath9k_htc_init);
+ 
+ static void __exit ath9k_htc_exit(void)
+ {
+ 	ath9k_hif_usb_exit();
+-	ath9k_htc_debug_remove_root();
+ 	printk(KERN_INFO "ath9k_htc: Driver unloaded\n");
+ }
+ module_exit(ath9k_htc_exit);
+-- 
+1.7.4.4
+
