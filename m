@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63182 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab1DWQxJ (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:59729 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701Ab1DOIsC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 12:53:09 -0400
-Received: by bwz15 with SMTP id 15so920863bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 09:53:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: mark bus as powered up earlier
-Date: Sat, 23 Apr 2011 19:30:28 +0200
-Message-Id: <1303579829-2478-1-git-send-email-zajec5@gmail.com>
+	Fri, 15 Apr 2011 04:48:02 -0400
+Date: Fri, 15 Apr 2011 14:10:06 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+Message-ID: <20110415084005.GC11576@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+ <1302850527.3572.2.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1302850527.3572.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb_chipco_set_clockmode may want to touch CC registers to control power of the
-bus. However touching registers without powered_up set causes warnings.
+On Thu, Apr 14, 2011 at 11:55:27PM -0700, Johannes Berg wrote:
+> On Fri, 2011-04-15 at 10:23 +0530, Yogesh Ashok Powar wrote:
+> > When drivers use HW crypto, reservation for tail room is not needed for
+> > any crypto suite. Do not reserve tail room in such cases, this helps in
+> > optimizing the transmit path.
+> > 
+> > Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> 
+> NACK.
+> 
+> >  	/*
+> > -	 * This could be optimised, devices that do full hardware
+> > -	 * crypto (including TKIP MMIC) need no tailroom... But we
+> > -	 * have no drivers for such devices currently.
+> > +	 * When full HW crypto is being used by the driver,
+> > +	 * no tail room is needed. Hence do not ask for tail room
+> > +	 * in such cases. This will avoid copying the skb in
+> > +	 * pskb_expand_head.
+> >  	 */
+> > -	if (may_encrypt) {
+> > +	if (!(local->hw.flags & IEEE80211_HW_CRYPTO_ENABLED) && may_encrypt) {
+> 
+> There's no need for this as a HW flag, and in its present form it is
+> EXTREMELY likely to be misused completely. And realise that even drivers
+> that implement HW crypto may need the extra tailroom for TKIP MMIC, so
+> your description of the flag is completely bogus.
+> 
+> You can implement the performance feature, but only by keeping track of
+> which keys need tailroom and skipping the code here once they are all
+> programmed into the device which will handle them including MMIC.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/main.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Thanks for the information. 
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index e05ba6e..74aa2cc 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1309,20 +1309,20 @@ EXPORT_SYMBOL(ssb_bus_may_powerdown);
- 
- int ssb_bus_powerup(struct ssb_bus *bus, bool dynamic_pctl)
- {
--	struct ssb_chipcommon *cc;
- 	int err;
- 	enum ssb_clkmode mode;
- 
- 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 1);
- 	if (err)
- 		goto error;
--	cc = &bus->chipco;
--	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
--	ssb_chipco_set_clockmode(cc, mode);
- 
- #ifdef CONFIG_SSB_DEBUG
- 	bus->powered_up = 1;
- #endif
-+
-+	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
-+	ssb_chipco_set_clockmode(&bus->chipco, mode);
-+
- 	return 0;
- error:
- 	ssb_printk(KERN_ERR PFX "Bus powerup failed\n");
--- 
-1.7.3.4
+Just for my understanding before I attempt patch set V2, please let me
+know if the approach given below makes sense.
 
+Define a flag say IEEE80211_CRYPTO_NO_TAILROOM_NEEDED per key. Drivers
+need to set this flag in set_key handler for the keys which requires no
+extra tailroom. Then Skip the code which expands the skb iff
+IEEE80211_CRYPTO_NO_TAILROOM_NEEDED is set and the key is programmed
+into the hardware (checking KEY_FLAG_UPLOADED_TO_HARDWARE).
+
+Thanks
+Yogesh 
+> 
+> johannes
+> 
