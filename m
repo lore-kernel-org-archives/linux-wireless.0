@@ -1,103 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33263 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753024Ab1D1FeF (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37919 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923Ab1DOWhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 01:34:05 -0400
-Subject: Re: [RFT/PATCH] mwl8k: replace rateinfo bitfields with mask and
-	shift macros
-From: Nishant Sarmukadam <nishants@marvell.com>
-Reply-To: <nishants@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pradeep Nemavat <pnemavat@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <1303931068-5922-1-git-send-email-linville@tuxdriver.com>
-References: <1303931068-5922-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 28 Apr 2011 10:58:45 +0530
-Message-ID: <1303968525.10316.5.camel@localhost.localdomain> (sfid-20110428_073409_144930_C364AB22)
+	Fri, 15 Apr 2011 18:37:32 -0400
+Received: by fxm17 with SMTP id 17so2094822fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 15:37:30 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Damian Lesiuk <lesiuk@gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
+Date: Sat, 16 Apr 2011 00:37:23 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+References: <BANLkTik7Sd0fB94pPjeBNJ-u5zyTVX0oiw@mail.gmail.com> <BANLkTinf6+p4kKfDyKYhuwSewwJ7dsvaqQ@mail.gmail.com> <BANLkTinN0ezj2HUJTijwfZprJrCjznf-5g@mail.gmail.com>
+In-Reply-To: <BANLkTinN0ezj2HUJTijwfZprJrCjznf-5g@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104160037.24248.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Friday 15 April 2011 21:01:43 Damian Lesiuk wrote:
+> It seems that I have a very crowded band. But, 6 MB / s is for me
+> entirely sufficient.
+> 
+come to think of it, there is a way to get a more throughput and
+stability by disabling the flakey hw crypto engine.
+This can be done by setting nohwcrypt=1 [module parameter].
 
-Thanks for looking into this. I have tested this patch and it is working
-fine.  
+Furthermore, you could get a MIMO replacement for your client's
+cost-reduced SISO ar9285 card. This way, ar9170 [or future devices]
+are not limited to use only a single stream/chain [MCS0-7].
+
+<http://linuxwireless.org/en/developers/Documentation/ieee80211/802.11n#MCS_Rates>
 
 Regards,
-Nishant
-
-On Wed, 2011-04-27 at 12:04 -0700, John W. Linville wrote:
-> AFAICT, this driver is claiming that 24 bits of rate info fit into a
-> 16-bit field in the Tx descriptor.  Anyway, the use of bitfields is
-> frowned-upon for a variety of well-documented reasons...
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> These masks could be backwards -- someone with the hardware please let
-> me know if that is the case or if this version works?
-> 
->  drivers/net/wireless/mwl8k.c |   25 +++++--------------------
->  1 files changed, 5 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> index b8f2b12..8a1b262 100644
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -1562,24 +1562,11 @@ static int mwl8k_tid_queue_mapping(u8 tid)
->  
->  /* The firmware will fill in the rate information
->   * for each packet that gets queued in the hardware
-> - * in this structure
-> + * and these macros will interpret that info.
->   */
->  
-> -struct rateinfo {
-> -	__le16  format:1;
-> -	__le16  short_gi:1;
-> -	__le16  band_width:1;
-> -	__le16  rate_id_mcs:6;
-> -	__le16  adv_coding:2;
-> -	__le16  antenna:2;
-> -	__le16  act_sub_chan:2;
-> -	__le16  preamble_type:1;
-> -	__le16  power_id:4;
-> -	__le16  antenna2:1;
-> -	__le16  reserved:1;
-> -	__le16  tx_bf_frame:1;
-> -	__le16  green_field:1;
-> -} __packed;
-> +#define RI_FORMAT(a)		  (a & 0x0001)
-> +#define RI_RATE_ID_MCS(a)	 ((a & 0x01f8) >> 3)
->  
->  static int
->  mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
-> @@ -1600,7 +1587,6 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
->  		struct ieee80211_sta *sta;
->  		struct mwl8k_sta *sta_info = NULL;
->  		u16 rate_info;
-> -		struct rateinfo *rate;
->  		struct ieee80211_hdr *wh;
->  
->  		tx = txq->head;
-> @@ -1643,14 +1629,13 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
->  				sta_info = MWL8K_STA(sta);
->  				BUG_ON(sta_info == NULL);
->  				rate_info = le16_to_cpu(tx_desc->rate_info);
-> -				rate = (struct rateinfo *)&rate_info;
->  				/* If rate is < 6.5 Mpbs for an ht station
->  				 * do not form an ampdu. If the station is a
->  				 * legacy station (format = 0), do not form an
->  				 * ampdu
->  				 */
-> -				if (rate->rate_id_mcs < 1 ||
-> -				    rate->format == 0) {
-> +				if (RI_RATE_ID_MCS(rate_info) < 1 ||
-> +				    RI_FORMAT(rate_info) == 0) {
->  					sta_info->is_ampdu_allowed = false;
->  				} else {
->  					sta_info->is_ampdu_allowed = true;
-
+	Chr
