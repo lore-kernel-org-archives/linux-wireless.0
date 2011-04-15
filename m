@@ -1,42 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout9.freenet.de ([195.4.92.99]:45112 "EHLO mout9.freenet.de"
+Received: from mail.atheros.com ([12.19.149.2]:27788 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751060Ab1DZSe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 14:34:59 -0400
-Received: from [195.4.92.28] (helo=18.mx.freenet.de)
-	by mout9.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
-	id 1QEn69-0000Lv-BS
-	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:57 +0200
-Received: from p54a183c6.dip0.t-ipconnect.de ([84.161.131.198]:39982 helo=mail.maya.org)
-	by 18.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
-	id 1QEn69-0004gn-5j
-	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:57 +0200
-Message-ID: <4DB710BF.6040700@01019freenet.de> (sfid-20110426_203501_829761_B33C8E0A)
-Date: Tue, 26 Apr 2011 20:36:47 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1752769Ab1DOGN7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 02:13:59 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 23:13:33 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 2/2] ath9k_htc: Cleanup HTC debugfs
+Date: Fri, 15 Apr 2011 11:43:53 +0530
+Message-ID: <1302848033-7072-2-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1302848033-7072-1-git-send-email-rmanoharan@atheros.com>
+References: <1302848033-7072-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Mark Davis <marked86@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Searching for a good hardware for an AP with hostapd
-References: <4DB54A1D.9030501@01019freenet.de> <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
-In-Reply-To: <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mark Davis wrote:
-> OxfordTec (http://www.oxfordtec.com/) stocks the SparkLAN WPEA-127N
-> full-size Mini PCIe card which sports an AR9380.
-> 
-> Unex also has an AR9390 full-size Mini PCIe card
-> (http://www.unex.com.tw/product/dnxa-h1).
-> 
-> -mark
+Move the ath9k_htc debugfs under ieee80211 to be inline
+with ath9k driver and it also helps to simplify debug code.
 
-Thanks for your advice - I will have a closer look to it.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h           |   14 ---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |  112 ++++--------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c  |   41 +++------
+ 3 files changed, 31 insertions(+), 136 deletions(-)
 
-I found an interesting site, which lists a lot of wlan devices and there
-chipsets and vice verse: http://www.wikidevi.com/wiki/Main_Page
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 852cdcf..48a8855 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -359,14 +359,6 @@ struct ath_rx_stats {
+ 
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
+-	struct dentry *debugfs_tgt_int_stats;
+-	struct dentry *debugfs_tgt_tx_stats;
+-	struct dentry *debugfs_tgt_rx_stats;
+-	struct dentry *debugfs_xmit;
+-	struct dentry *debugfs_recv;
+-	struct dentry *debugfs_slot;
+-	struct dentry *debugfs_queue;
+-	struct dentry *debugfs_debug;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ };
+@@ -613,15 +605,9 @@ void ath9k_htc_suspend(struct htc_target *htc_handle);
+ int ath9k_htc_resume(struct htc_target *htc_handle);
+ #endif
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-int ath9k_htc_debug_create_root(void);
+-void ath9k_htc_debug_remove_root(void);
+ int ath9k_htc_init_debug(struct ath_hw *ah);
+-void ath9k_htc_exit_debug(struct ath_hw *ah);
+ #else
+-static inline int ath9k_htc_debug_create_root(void) { return 0; };
+-static inline void ath9k_htc_debug_remove_root(void) {};
+ static inline int ath9k_htc_init_debug(struct ath_hw *ah) { return 0; };
+-static inline void ath9k_htc_exit_debug(struct ath_hw *ah) {};
+ #endif /* CONFIG_ATH9K_HTC_DEBUGFS */
+ 
+ #endif /* HTC_H */
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 3899eaa..19b30e4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -16,8 +16,6 @@
+ 
+ #include "htc.h"
+ 
+-static struct dentry *ath9k_debugfs_root;
+-
+ static int ath9k_debugfs_open(struct inode *inode, struct file *file)
+ {
+ 	file->private_data = inode->i_private;
+@@ -481,99 +479,27 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+ 
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
+-
+-	priv->debug.debugfs_phy = debugfs_create_dir(wiphy_name(priv->hw->wiphy),
+-						     ath9k_debugfs_root);
++	priv->debug.debugfs_phy = debugfs_create_dir("ath9k_htc",
++					     priv->hw->wiphy->debugfsdir);
+ 	if (!priv->debug.debugfs_phy)
+-		goto err;
+-
+-	priv->debug.debugfs_tgt_int_stats = debugfs_create_file("tgt_int_stats",
+-							S_IRUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_tgt_int_stats);
+-	if (!priv->debug.debugfs_tgt_int_stats)
+-		goto err;
+-
+-	priv->debug.debugfs_tgt_tx_stats = debugfs_create_file("tgt_tx_stats",
+-						       S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_tgt_tx_stats);
+-	if (!priv->debug.debugfs_tgt_tx_stats)
+-		goto err;
+-
+-	priv->debug.debugfs_tgt_rx_stats = debugfs_create_file("tgt_rx_stats",
+-						       S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_tgt_rx_stats);
+-	if (!priv->debug.debugfs_tgt_rx_stats)
+-		goto err;
+-
+-	priv->debug.debugfs_xmit = debugfs_create_file("xmit", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_xmit);
+-	if (!priv->debug.debugfs_xmit)
+-		goto err;
+-
+-	priv->debug.debugfs_recv = debugfs_create_file("recv", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_recv);
+-	if (!priv->debug.debugfs_recv)
+-		goto err;
+-
+-	priv->debug.debugfs_slot = debugfs_create_file("slot", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_slot);
+-	if (!priv->debug.debugfs_slot)
+-		goto err;
+-
+-	priv->debug.debugfs_queue = debugfs_create_file("queue", S_IRUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_queue);
+-	if (!priv->debug.debugfs_queue)
+-		goto err;
+-
+-	priv->debug.debugfs_debug = debugfs_create_file("debug", S_IRUSR,
+-							priv->debug.debugfs_phy,
+-							priv, &fops_debug);
+-	if (!priv->debug.debugfs_debug)
+-		goto err;
+-
+-	return 0;
+-
+-err:
+-	ath9k_htc_exit_debug(ah);
+-	return -ENOMEM;
+-}
+-
+-void ath9k_htc_exit_debug(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+-
+-	debugfs_remove(priv->debug.debugfs_queue);
+-	debugfs_remove(priv->debug.debugfs_slot);
+-	debugfs_remove(priv->debug.debugfs_recv);
+-	debugfs_remove(priv->debug.debugfs_xmit);
+-	debugfs_remove(priv->debug.debugfs_tgt_int_stats);
+-	debugfs_remove(priv->debug.debugfs_tgt_tx_stats);
+-	debugfs_remove(priv->debug.debugfs_tgt_rx_stats);
+-	debugfs_remove(priv->debug.debugfs_debug);
+-	debugfs_remove(priv->debug.debugfs_phy);
+-}
++		return -ENOMEM;
+ 
+-int ath9k_htc_debug_create_root(void)
+-{
+-	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
++	debugfs_create_file("tgt_int_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_int_stats);
++	debugfs_create_file("tgt_tx_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_tx_stats);
++	debugfs_create_file("tgt_rx_stats", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_tgt_rx_stats);
++	debugfs_create_file("xmit", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_xmit);
++	debugfs_create_file("recv", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_recv);
++	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_slot);
++	debugfs_create_file("queue", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_queue);
++	debugfs_create_file("debug", S_IRUSR, priv->debug.debugfs_phy,
++				priv, &fops_debug);
+ 
+ 	return 0;
+ }
+-
+-void ath9k_htc_debug_remove_root(void)
+-{
+-	debugfs_remove(ath9k_debugfs_root);
+-	ath9k_debugfs_root = NULL;
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 22736eb..1a8980d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -140,7 +140,6 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
+ 
+ static void ath9k_deinit_priv(struct ath9k_htc_priv *priv)
+ {
+-	ath9k_htc_exit_debug(priv->ah);
+ 	ath9k_hw_deinit(priv->ah);
+ 	kfree(priv->ah);
+ 	priv->ah = NULL;
+@@ -150,6 +149,10 @@ static void ath9k_deinit_device(struct ath9k_htc_priv *priv)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
+ 
++	if (priv->debug.debugfs_phy) {
++		debugfs_remove_recursive(priv->debug.debugfs_phy);
++		priv->debug.debugfs_phy = NULL;
++	}
+ 	wiphy_rfkill_stop_polling(hw->wiphy);
+ 	ath9k_deinit_leds(priv);
+ 	ieee80211_unregister_hw(hw);
+@@ -700,12 +703,6 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 		goto err_hw;
+ 	}
+ 
+-	ret = ath9k_htc_init_debug(ah);
+-	if (ret) {
+-		ath_err(common, "Unable to create debugfs files\n");
+-		goto err_debug;
+-	}
+-
+ 	ret = ath9k_init_queues(priv);
+ 	if (ret)
+ 		goto err_queues;
+@@ -725,8 +722,6 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	return 0;
+ 
+ err_queues:
+-	ath9k_htc_exit_debug(ah);
+-err_debug:
+ 	ath9k_hw_deinit(ah);
+ err_hw:
+ 
+@@ -867,6 +862,12 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
+ 			goto err_world;
+ 	}
+ 
++	error = ath9k_htc_init_debug(priv->ah);
++	if (error) {
++		ath_err(common, "Unable to create debugfs files\n");
++		goto err_world;
++	}
++
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"WMI:%d, BCN:%d, CAB:%d, UAPSD:%d, MGMT:%d, "
+ 		"BE:%d, BK:%d, VI:%d, VO:%d\n",
+@@ -987,38 +988,20 @@ int ath9k_htc_resume(struct htc_target *htc_handle)
+ 
+ static int __init ath9k_htc_init(void)
+ {
+-	int error;
+-
+-	error = ath9k_htc_debug_create_root();
+-	if (error < 0) {
+-		printk(KERN_ERR
+-			"ath9k_htc: Unable to create debugfs root: %d\n",
+-			error);
+-		goto err_dbg;
+-	}
+-
+-	error = ath9k_hif_usb_init();
+-	if (error < 0) {
++	if (ath9k_hif_usb_init() < 0) {
+ 		printk(KERN_ERR
+ 			"ath9k_htc: No USB devices found,"
+ 			" driver not installed.\n");
+-		error = -ENODEV;
+-		goto err_usb;
++		return -ENODEV;
+ 	}
+ 
+ 	return 0;
+-
+-err_usb:
+-	ath9k_htc_debug_remove_root();
+-err_dbg:
+-	return error;
+ }
+ module_init(ath9k_htc_init);
+ 
+ static void __exit ath9k_htc_exit(void)
+ {
+ 	ath9k_hif_usb_exit();
+-	ath9k_htc_debug_remove_root();
+ 	printk(KERN_INFO "ath9k_htc: Driver unloaded\n");
+ }
+ module_exit(ath9k_htc_exit);
+-- 
+1.7.4.4
 
-
-Andreas
