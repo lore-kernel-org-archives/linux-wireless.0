@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57267 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752586Ab1DSN7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:31 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:05 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 11/22] ath9k_hw: Clean up rx/tx chain configuration before AGC/IQ cal
-Date: Tue, 19 Apr 2011 19:29:09 +0530
-Message-ID: <1303221560-25139-12-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36471 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756554Ab1DOTWL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 15:22:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1302892585.30441.12.camel@dev.znau.edu.ua>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	<1302781431.21145.6.camel@dev.znau.edu.ua>
+	<BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
+	<4DA6E9BD.3090404@hauke-m.de>
+	<BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+	<1302786900.21965.52.camel@dev.znau.edu.ua>
+	<BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
+	<1302892585.30441.12.camel@dev.znau.edu.ua>
+Date: Fri, 15 Apr 2011 21:21:44 +0200
+Message-ID: <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use hw supported chains instead of hard coded values.
+W dniu 15 kwietnia 2011 20:36 użytkownik George Kashperko
+<george@znau.edu.ua> napisał:
+>> >> Arnd: I found you saying:
+>> >> > I believe the one thing we really want from this driver is the bus
+>> >> > scan code, which is not present in the amba bus implementation,
+>> >> I explained how it works, I believe scanning (EPROM in this case) it
+>> >> Broadcom specific, not really AMBA standard. How do you see it?
+>> >>
+>> > It might not Broadcom specific as EPROM core seems to be CoreLink one
+>> > core and maybe is arm-developed. But it isn't documented publicly and we
+>> > don't know yet if it is obligatory for all amba (or at least axi)
+>> > interconnects or not.
+>>
+>> Maybe EPROM is not Broadcom specific, but I suspect the content we
+>> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
+>> manuf/id/rev/class we deal with. So I guess everything *we* (out
+>> driver) read from EPROM is Bcm specific.
+>>
+>
+> Played around amba registers on bcm4716. For all amba cores present
+> (under all I mean broadcom ip core agents, oob router core, erom core,
+> and other I-dont-know-what-for cores present at 0x18100000). All those
+> feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
+> PrimeCell PeripheralIDs:
+> * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
+> * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
+> is this please);
+> * vendor 0xBB, part_number 0x366 for EROM core;
+>
+> ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
+> no evidence for that with google.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
+Yeah, as I suspected, everything except Broadcom specific cores
+matches AMBA standards quite nicely. Still, I don't see anything in it
+we could use for driver.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 4a4cd88..09f3aa7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -940,21 +940,18 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			       struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int val;
- 
- 	val = REG_READ(ah, AR_ENT_OTP);
- 	ath_dbg(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
- 
--	if (AR_SREV_9485(ah))
--		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
--	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
-+	/* Configure rx/tx chains before running AGC/TxiQ cals */
-+	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
- 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
- 	else
--		/*
--		 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain
--		 * mode before running AGC/TxIQ cals
--		 */
--		ar9003_hw_set_chain_masks(ah, 0x7, 0x7);
-+		ar9003_hw_set_chain_masks(ah, pCap->rx_chainmask,
-+					  pCap->tx_chainmask);
- 
- 	/* Do Tx IQ Calibration */
- 	if (AR_SREV_9485(ah))
+Let's wait for Russell and Arnd to comment.
+
 -- 
-1.7.0.4
-
+Rafał
