@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from opensource.wolfsonmicro.com ([80.75.67.52]:58615 "EHLO
-	opensource2.wolfsonmicro.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755986Ab1DFOL1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48192 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796Ab1DOGzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 10:11:27 -0400
-Date: Wed, 6 Apr 2011 23:11:33 +0900
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-To: Antonio Ospite <ospite@studenti.unina.it>
-Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-Message-ID: <20110406141131.GC2810@opensource.wolfsonmicro.com>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
+	Fri, 15 Apr 2011 02:55:35 -0400
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20110415045321.GA11504@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Apr 2011 08:55:27 +0200
+Message-ID: <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
+On Fri, 2011-04-15 at 10:23 +0530, Yogesh Ashok Powar wrote:
+> When drivers use HW crypto, reservation for tail room is not needed for
+> any crypto suite. Do not reserve tail room in such cases, this helps in
+> optimizing the transmit path.
+> 
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-> +	tristate "Generic rfkill regulator driver"
-> +	depends on RFKILL || !RFKILL
+NACK.
 
-That looks *odd*.  Otherwise this looks fine from a regulator API point
-of view.  You use an exclusive get() so you could get away without
-remembering the enable state as nothing else could hold the device open
-but there's no harm in doing so and it's defensive against silly
-constraints that force the regulator on.
+>  	/*
+> -	 * This could be optimised, devices that do full hardware
+> -	 * crypto (including TKIP MMIC) need no tailroom... But we
+> -	 * have no drivers for such devices currently.
+> +	 * When full HW crypto is being used by the driver,
+> +	 * no tail room is needed. Hence do not ask for tail room
+> +	 * in such cases. This will avoid copying the skb in
+> +	 * pskb_expand_head.
+>  	 */
+> -	if (may_encrypt) {
+> +	if (!(local->hw.flags & IEEE80211_HW_CRYPTO_ENABLED) && may_encrypt) {
+
+There's no need for this as a HW flag, and in its present form it is
+EXTREMELY likely to be misused completely. And realise that even drivers
+that implement HW crypto may need the extra tailroom for TKIP MMIC, so
+your description of the flag is completely bogus.
+
+You can implement the performance feature, but only by keeping track of
+which keys need tailroom and skipping the code here once they are all
+programmed into the device which will handle them including MMIC.
+
+johannes
+
