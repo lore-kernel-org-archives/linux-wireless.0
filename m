@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48067 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413Ab1DMFuS (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:35054 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978Ab1DOX4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:50:18 -0400
-Received: by iyb14 with SMTP id 14so274186iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:50:18 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 15 Apr 2011 19:56:48 -0400
+Message-ID: <4DA8DB3C.3060800@lwfinger.net>
+Date: Fri, 15 Apr 2011 18:56:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.14890.766362.879019@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:22:42 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 02/40] ath9k_htc: Rename firmware
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Strange build error with new driver on 2.6.39-rc3
+References: <4DA8C0DD.8090003@lwfinger.net>
+In-Reply-To: <4DA8C0DD.8090003@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On 04/15/2011 05:04 PM, Larry Finger wrote:
+> When building a new driver on kernel 2.6.39-rc3 when using a 32-bit system, I
+> get the following error:
+>
+> MODPOST 511 modules
+> FATAL: drivers/net/wireless/rtlwifi/rtl8192se/rtl8192se: sizeof(struct
+> usb_device_id)=20 is not a modulo of the size of section
+> __mod_usb_device_table=168.
+> Fix definition of struct usb_device_id in mod_devicetable.h
+>
+> This error is strange in that this device is PCI based and contains no mention
+> of usb_device_id. There is a USB-based driver in the rtlwifi tree, but there is
+> also another PCI driver and it does not get this error.
 
-Since the new FW requires backward incompatible host driver changes,
-rename the FW to allow older driver versions to work with the
-older FW.
+I found the problem. It was a faulty MODULE_DEVICE_TABLE macro statement.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index dc05820..c81b2da 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -17,8 +17,8 @@
- #include "htc.h"
- 
- /* identify firmware images */
--#define FIRMWARE_AR7010_1_1	"ar7010_1_1.fw"
--#define FIRMWARE_AR9271		"ar9271.fw"
-+#define FIRMWARE_AR7010_1_1     "htc_7010.fw"
-+#define FIRMWARE_AR9271         "htc_9271.fw"
- 
- MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
- MODULE_FIRMWARE(FIRMWARE_AR9271);
--- 
-1.7.4.4
-
+Larry
