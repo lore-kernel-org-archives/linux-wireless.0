@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:37729 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636Ab1DHQLN (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53003 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab1DORSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 12:11:13 -0400
-Received: by fxm17 with SMTP id 17so2432046fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 09:11:12 -0700 (PDT)
-Message-ID: <4D9F3399.1050201@gmail.com>
-Date: Fri, 08 Apr 2011 20:11:05 +0400
-From: Igor Plyatov <plyatov@gmail.com>
+	Fri, 15 Apr 2011 13:18:55 -0400
+Received: by bwz15 with SMTP id 15so2352299bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 10:18:53 -0700 (PDT)
+Message-ID: <4DA87DFA.1020908@googlemail.com>
+Date: Fri, 15 Apr 2011 19:18:50 +0200
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	George <george0505@realtek.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: net/wireless/rtlwifi: problem with D-link DWA-131 USB adapter
-References: <4D9F0DAE.30809@gmail.com> <4D9F14FE.8060905@lwfinger.net> <4D9F2462.60600@gmail.com> <4D9F2DEA.9080200@lwfinger.net>
-In-Reply-To: <4D9F2DEA.9080200@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: [iw, ath5k] setting of antennas
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Larry,
+Hello!
 
->> Is there any way to detect Realtek chipset type by some means like 
->> lsusb or else?
->
->
-> For my DWA-130, lsusb outputs the following
->
-> Bus 001 Device 003: ID 07d1:3300 D-Link System DWA-130 802.11n 
-> Wireless N Adapter(rev.E) [Realtek RTL8192SU]
->
-> The descriptive info is in file /usr/share/usb.ids and available 
-> on-line at http://www.linux-usb.org/usb.ids.
->
-> Larry
->
+Thanks to Bruno Randolf, John Linville, Johannes Berg and other, it is
+possible to set transmission or reception antennas with ath5k. But:
 
-Thanks and best regards!
---
-Igor Plyatov
+Is it only possible to set the bitmap of used antennas via iw(8) like this:
+
+phy <phyname> set antenna <bitmap> | all | <tx bitmap> <rx bitmap>
+
+Or is there a way to this with an IOCTL or similar in an own program?
+
+I do also know of the (deprecated) way to this via debugfs, but I'd
+really like to do it on my own in a C-program as part of other things to
+be done. I wouldn't like this operation to be performed with a
+system(3)-call of iw(8).
+
+Any hints? I could not find documentation about this topic...
+
+Best regards,
+Dennis
