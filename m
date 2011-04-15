@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:53056 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760734Ab1D1Sub (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34771 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755691Ab1DOLBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 14:50:31 -0400
-Subject: Re: EFF's Open Wireless Movement - solutions for Linux 802.11 APs
-From: "David Lynch Jr." <dhlii@dlasys.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Fri, 15 Apr 2011 07:01:50 -0400
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, openwireless@eff.org
-In-Reply-To: <4DB9AEB2.4000807@lwfinger.net>
-References: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com>
-	 <4DB9AEB2.4000807@lwfinger.net>
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20110415105140.GD11576@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+	 <20110415084005.GC11576@hertz.marvell.com>
+	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+	 <20110415105140.GD11576@hertz.marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 28 Apr 2011 14:50:32 -0400
-Message-ID: <1304016632.24745.127.camel@hp-dhlii> (sfid-20110428_205050_218633_B8D606F9)
+Date: Fri, 15 Apr 2011 13:01:44 +0200
+Message-ID: <1302865304.3572.15.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-04-28 at 13:15 -0500, Larry Finger wrote:
+On Fri, 2011-04-15 at 16:21 +0530, Yogesh Ashok Powar wrote:
 
-> There is no doubt that the EFF means well; however, there is one situation that 
-> they seem to ignore. If any part of my AP is unencrypted and some outsider uses 
-> it to download child pornography, the IP address in any server logs is mine. If 
-> the authorities recover those logs as part of a criminal investigation and 
-> investigate the clients, they will immediately come to me. How do I prove that I 
-> am innocent of the porno charge and only guilty of being a good citizen and 
-> providing wireless access to the public? I do not relish the thought of becoming 
-> a registered sex offender.
+> > > Then Skip the code which expands the skb iff
+> > > IEEE80211_CRYPTO_NO_TAILROOM_NEEDED is set and the key is programmed
+> > > into the hardware (checking KEY_FLAG_UPLOADED_TO_HARDWARE).
+> > 
+> > You don't know the key at this point, so you have to keep track of
+> > whether this is true for all keys, which depends on whether or not
+> > they're already programmed into the HW (since for SW crypto we need the
+> > tailroom)
+> From this it seems that we do not reserve tailroom iff
+> IEEE80211_KEY_FLAG_GENERATE_MMIC flag is unset for all keys and all the keys
+> are programmed into the hardware.
+> 
+> Also, say in mixed mode if TKIP and CCMP keys are configured and this
+> flag is set for TKIP MMIC, we will end up reserving tailroom even for
+> CCMP.  Is my understanding correct?
 
-	If your WiFi is secured and someone cracks it - something that is
-fairly easy, and particularly easy for someone engaging in activities
-they do not wish to have traced back to them, now you are in a far worse
-state. 
-	Regardless of the technical realities, the defense of "somebody else
-downloaded child porn through my unsecured access point" has a far
-greater likelyhood of prevailing than that of "some evil doer cracked my
-WPA2 key and used my access point to download child porn". It is
-entirely possible that you will not even be allowed to present that
-defense without proving that it actually occured.
-	My wife is a public defender handling criminal appeals. There is an
-ever increasing number of "sex offender" cases, most of which are far
-from the "child preditors" that we all fear. In many states urinating in
-public - even hidden behind a tree at an outdoor event where no
-facilites were provided could get you a conviction as a registered sex
-offender.  
-	We have been engaged in an argument that the risks associated with even
-a secured access point - and the risk may actually be greater with a
-secured one because the burden of proof shifts dramatically, is so great
-that it overshadows the value of WiFi.
+Yes, correct.
+
+> Also, though I have not looked into this part of the code very closely,
+> how about deriving key information at this place? Will that be feasible?
+
+No, we can't do it here. I suppose we could postpone it for per key
+stuff, but that's more complex and probably good for a separate patch.
+
+johannes
 
