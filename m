@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46762 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755952Ab1DFOiG (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48343 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753590Ab1DOJ1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 10:38:06 -0400
-Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own
- stack.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-In-Reply-To: <BANLkTinG4b9bzGhamHuF0zi0V=OQT5uBWQ@mail.gmail.com>
-References: <1301969218-9878-1-git-send-email-javier@cozybit.com>
-	 <1301987234.3831.2.camel@jlt3.sipsolutions.net>
-	 <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
-	 <1302035332.4968.11.camel@jlt3.sipsolutions.net>
-	 <BANLkTinG4b9bzGhamHuF0zi0V=OQT5uBWQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 16:38:03 +0200
-Message-ID: <1302100683.4090.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 15 Apr 2011 05:27:25 -0400
+Received: by bwz15 with SMTP id 15so2040685bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 02:27:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+ <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
+ <201104142251.10881.chunkeey@googlemail.com> <BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
+ <BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com> <BANLkTimmdRi_CmwgH14aJbQJecYav-4r8Q@mail.gmail.com>
+ <BANLkTimfifFrKdgYuMvAMhSGKAJXu3W9mA@mail.gmail.com> <BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
+From: Damian Lesiuk <lesiuk@gmail.com>
+Date: Fri, 15 Apr 2011 11:26:44 +0200
+Message-ID: <BANLkTikUS=G3J7C3HSNnHJGGTeZ9OR+qPw@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-05 at 15:04 -0700, Javier Cardona wrote:
+After aplying this patch:
 
-> > After thinking about this more, yes, I think I do object. Not only is
-> > the design strange with passing frames back and forth, but also it seems
-> > like a rather slippery slope, at some point I fear somebody will attempt
-> > to "fake" MPM to take advantage of that kernel code even when it's not
-> > really fitting.
-> 
-> The above seem to be concerns with the API itself and not with
-> partitioning.  We could make the API specific for mesh peering frames
-> in a way that cannot be used for any other purpose other than
-> protecting mesh peering frames.
+Station 74:f0:6d:33:ea:00 (on wlan0)
+        inactive time:  50 ms
+        rx bytes:       4501008
+        rx packets:     45502
+        tx bytes:       123883066
+        tx packets:     83649
+        signal:         -32 dBm
+        tx bitrate:     150.0 MBit/s MCS 7 40Mhz short GI
 
-Well, it's a bit of both. I can just see somebody trying to implement a
-new protocol and making it look like MPM in order to be able to feed it
-back into the kernel, or something like that. More generally, I don't
-much like the looping back of things.
+I can get now 55 mbps.
+It's max for me?
 
-> I know of a few mesh use cases where wpa_supplicant is not required,
-> such as resource constrained embedded platforms like the ones used in
-> sensor networks.  But hey, we'll re-evaluate the wpa_supplicant route
-> and see if it is doable.
-
-I think in that case it'd make some sense to make the code in the kernel
-configurable? Can't be all that much overhead to have essentially the
-same code outside the kernel?
-
-johannes
-
+2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
+> Ok I found it.
+> https://dev.openwrt.org/browser/trunk/package/hostapd/patches/130-scan_wait.patch?rev=20090
+>
+> 2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
+>> Look at noscan option in their docs.
+>> http://wiki.openwrt.org/doc/uci/wireless
+>>
+>> 2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
+>>> Openwrt have noscan option with mac80211
+>>> (https://dev.openwrt.org/browser/branches/backfire/package/mac80211/files/lib/wifi/mac80211.sh?rev=22356)
+>>> They patched code?
+>>>
+>>> Where can I find that patch?
+>>>
+>>> 2011/4/15 Helmut Schaa <helmut.schaa@googlemail.com>:
+>>>> On Fri, Apr 15, 2011 at 8:22 AM, Damian Lesiuk <lesiuk@gmail.com> wrote:
+>>>>> Is there option to do not scan for overlapping BSSs?
+>>>>
+>>>> AFAIK not without patching the code.
+>>>>
+>>>> Helmut
+>>>>
+>>>
+>>
+>
