@@ -1,134 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38917 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753621Ab1DLNSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:07 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:42 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/22] ath9k_hw: Initialize mode registers from initvals.h for AR9340
-Date: Tue, 12 Apr 2011 18:47:43 +0530
-Message-ID: <1302614273-2063-3-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+Received: from w1.fi ([128.177.27.249]:38220 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752938Ab1DOQey (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 12:34:54 -0400
+Date: Fri, 15 Apr 2011 19:34:43 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Juan Carlos Garza <juancarlosgarza@gmail.com>
+Cc: hostap@lists.shmoo.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: WPA2 Access Point (HostAPD) authentication with Samsung Galaxy
+ Tab fails.
+Message-ID: <20110415163443.GH23532@jm.kir.nu>
+References: <BANLkTimEipE8q-ehYFrXpVqHRSHrCcZxXw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTimEipE8q-ehYFrXpVqHRSHrCcZxXw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c  |   59 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    3 +
- drivers/net/wireless/ath/ath9k/hw.h         |    1 +
- 3 files changed, 62 insertions(+), 1 deletions(-)
+On Fri, Apr 15, 2011 at 12:54:28PM +0200, Juan Carlos Garza wrote:
+> I am having trouble to authenticate a Samsung Galaxy Tab with an AP on
+> a rt3070 usb device. The specifics follow...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index aebaad9..37af721 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -18,6 +18,7 @@
- #include "ar9003_mac.h"
- #include "ar9003_2p2_initvals.h"
- #include "ar9485_initvals.h"
-+#include "ar9340_initvals.h"
- 
- /* General hardware code for the AR9003 hadware family */
- 
-@@ -28,7 +29,63 @@
-  */
- static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- {
--	if (AR_SREV_9485_11(ah)) {
-+	if (AR_SREV_9340(ah)) {
-+		/* mac */
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-+				ar9340_1p0_mac_core,
-+				ARRAY_SIZE(ar9340_1p0_mac_core), 2);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+				ar9340_1p0_mac_postamble,
-+				ARRAY_SIZE(ar9340_1p0_mac_postamble), 5);
-+
-+		/* bb */
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+				ar9340_1p0_baseband_core,
-+				ARRAY_SIZE(ar9340_1p0_baseband_core), 2);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+				ar9340_1p0_baseband_postamble,
-+				ARRAY_SIZE(ar9340_1p0_baseband_postamble), 5);
-+
-+		/* radio */
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+				ar9340_1p0_radio_core,
-+				ARRAY_SIZE(ar9340_1p0_radio_core), 2);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
-+				ar9340_1p0_radio_postamble,
-+				ARRAY_SIZE(ar9340_1p0_radio_postamble), 5);
-+
-+		/* soc */
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+				ar9340_1p0_soc_preamble,
-+				ARRAY_SIZE(ar9340_1p0_soc_preamble), 2);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+				ar9340_1p0_soc_postamble,
-+				ARRAY_SIZE(ar9340_1p0_soc_postamble), 5);
-+
-+		/* rx/tx gain */
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9340Common_wo_xlna_rx_gain_table_1p0,
-+				ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
-+				5);
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9340Modes_high_ob_db_tx_gain_table_1p0,
-+				ARRAY_SIZE(ar9340Modes_high_ob_db_tx_gain_table_1p0),
-+				5);
-+
-+		INIT_INI_ARRAY(&ah->iniModesAdditional,
-+				ar9340Modes_fast_clock_1p0,
-+				ARRAY_SIZE(ar9340Modes_fast_clock_1p0),
-+				3);
-+
-+		INIT_INI_ARRAY(&ah->iniModesAdditional_40M,
-+				ar9340_1p0_radio_core_40M,
-+				ARRAY_SIZE(ar9340_1p0_radio_core_40M),
-+				2);
-+	} else if (AR_SREV_9485_11(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index f01c31f..1544e57 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -646,6 +646,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 		REG_WRITE_ARRAY(&ah->iniModesAdditional,
- 				modesIndex, regWrites);
- 
-+	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
-+		REG_WRITE_ARRAY(&ah->iniModesAdditional_40M, 1, regWrites);
-+
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7837a83..f821381 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -799,6 +799,7 @@ struct ath_hw {
- 	struct ar5416IniArray iniPcieSerdes;
- 	struct ar5416IniArray iniPcieSerdesLowPower;
- 	struct ar5416IniArray iniModesAdditional;
-+	struct ar5416IniArray iniModesAdditional_40M;
- 	struct ar5416IniArray iniModesRxGain;
- 	struct ar5416IniArray iniModesTxGain;
- 	struct ar5416IniArray iniModes_9271_1_0_only;
+> However, I am trying to authenticate with a Samsung Galaxy Tab with
+> Android 2.2 on it, and I get the following log:
+
+> mgmt::auth
+> authentication: STA=bc:47:60:93:74:bd auth_alg=0 auth_transaction=1
+> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: authentication OK (open system)
+> authentication reply: STA=bc:47:60:93:74:bd auth_alg=0
+> mgmt::assoc_req
+> association request: STA=bc:47:60:93:74:bd capab_info=0x431 listen_interval=10
+> unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+>   new AID 2
+> HT: STA bc:47:60:93:74:bd HT Capabilities Info: 0x182c
+> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: association OK (aid 2)
+> mgmt::auth cb
+> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: authenticated
+
+Huh... That rt3070 device or driver sure takes long to deliver the TX
+status information.
+
+> Data/PS-poll frame from not associated STA bc:47:60:93:74:bd
+> mgmt::assoc_resp cb
+
+And since the station you are using here seems to send some Data frames
+quickly after the association, it happens to hit a race condition
+between the association response TX status callback and first Data frame
+being received. This in turn makes hostapd disassociate the station
+since from its view point, the station tried to send a Data frame while
+it had not yet completed association.
+
+You can now find a workaround for this in the current development branch
+for hostapd:
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=b8281964afb1df98135418fc22a9fa240968d100
+
 -- 
-1.7.0.4
-
+Jouni Malinen                                            PGP id EFC895FA
