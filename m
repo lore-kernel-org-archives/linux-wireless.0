@@ -1,51 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61042 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828Ab1DWLfY (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:10037 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155Ab1DOTpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 07:35:24 -0400
-Received: by wwa36 with SMTP id 36so1276502wwa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 04:35:23 -0700 (PDT)
-Subject: Re: [PATCH 4/4] iwlwifi: split the drivers for agn and legacy
- devices 3945/4965
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-In-Reply-To: <1298315209-17986-5-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1298315209-17986-5-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 23 Apr 2011 14:35:17 +0300
-Message-ID: <1303558517.8537.7.camel@maxim-laptop>
+	Fri, 15 Apr 2011 15:45:47 -0400
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	 <1302781431.21145.6.camel@dev.znau.edu.ua>
+	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
+	 <4DA6E9BD.3090404@hauke-m.de>
+	 <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+	 <1302786900.21965.52.camel@dev.znau.edu.ua>
+	 <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
+	 <1302892585.30441.12.camel@dev.znau.edu.ua>
+	 <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 15 Apr 2011 22:42:21 +0300
+Message-Id: <1302896541.30441.33.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-21 at 11:06 -0800, Wey-Yi Guy wrote:
-> From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-> 
-> Intel WiFi devices 3945 and 4965 now have their own driver in the folder
-> 
-> 	drivers/net/wireless/iwlegacy
-> 
-> Add support to build these drivers independently of the driver for
-> AGN devices. Selecting the 3945 builds iwl3945.ko and iwl_legacy.ko,
-> and selecting the 4965 builds iwl4965.ko and iwl_legacy.ko. iwl-legacy.ko
-> contains code shared between both devices.
-> 
-> The 3945 is an ABG/BG device, with no support for 802.11n. The 4965 is a 2x3
-> ABGN device.
 
-This one came to me as a surprise, I updated the kernel, and whoops, the
-wireless led, blinks all the time!
-It turns out that in splitted driver iwl3945 doesn't have any led
-support, and indeed the light on my notebook doesn't change state often.
-It ether doesn't light up at all, or just blinks at constant rate.
+> W dniu 15 kwietnia 2011 20:36 użytkownik George Kashperko
+> <george@znau.edu.ua> napisał:
+> >> >> Arnd: I found you saying:
+> >> >> > I believe the one thing we really want from this driver is the bus
+> >> >> > scan code, which is not present in the amba bus implementation,
+> >> >> I explained how it works, I believe scanning (EPROM in this case) it
+> >> >> Broadcom specific, not really AMBA standard. How do you see it?
+> >> >>
+> >> > It might not Broadcom specific as EPROM core seems to be CoreLink one
+> >> > core and maybe is arm-developed. But it isn't documented publicly and we
+> >> > don't know yet if it is obligatory for all amba (or at least axi)
+> >> > interconnects or not.
+> >>
+> >> Maybe EPROM is not Broadcom specific, but I suspect the content we
+> >> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
+> >> manuf/id/rev/class we deal with. So I guess everything *we* (out
+> >> driver) read from EPROM is Bcm specific.
+> >>
+> >
+> > Played around amba registers on bcm4716. For all amba cores present
+> > (under all I mean broadcom ip core agents, oob router core, erom core,
+> > and other I-dont-know-what-for cores present at 0x18100000). All those
+> > feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
+> > PrimeCell PeripheralIDs:
+> > * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
+> > * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
+> > is this please);
+> > * vendor 0xBB, part_number 0x366 for EROM core;
+> >
+> > ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
+> > no evidence for that with google.
+> 
+> Yeah, as I suspected, everything except Broadcom specific cores
+> matches AMBA standards quite nicely. Still, I don't see anything in it
+> we could use for driver.
+> 
+> Let's wait for Russell and Arnd to comment.
 
-I have iwl3945.
+Summarising the differences and similarities in broadcom core management
+for ssb and amba I think on another possibility on making bus-related
+things.
+SSB-attached cores were OCP-compliant ones. This resulted in OCP device
+identification with 16-bit vendor id, 12-bit core id with all IDs
+starting with 0x800. 4-bit revision code. Also seems this implied
+status/control registers.
+AMBA-attached broadcom cores seems to follow this reusing their
+OCP-compliant cores on axi.
 
-Best regards,
-	Maxim Levitsky
+So, we could start with introducing virtual "ocp" bus (which could be of
+some use for other vendors utilising ocp model) with additional
+library/module for broadcom-specific extensions (accounting for
+buscommon/buscore/etc.).
+
+On other hand just broadcom-specific bus looks like good alternative too
+but here I just fail to decide on relevant naming.
+
+Have nice day,
+George
+
 
