@@ -1,40 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37194 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757463Ab1DXPcE (ORCPT
+Received: from nm28-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.149]:40992 "HELO
+	nm28-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754764Ab1DONjZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 11:32:04 -0400
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"L.Kriara@sms.ed.ac.uk" <L.Kriara@sms.ed.ac.uk>
-In-Reply-To: <4DB4415F.2070707@atheros.com>
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
-	 <1303652185.3603.0.camel@jlt3.sipsolutions.net>
-	 <4DB4318F.6070801@atheros.com>
-	 <1303657150.3603.1.camel@jlt3.sipsolutions.net>
-	 <4DB4415F.2070707@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 17:32:00 +0200
-Message-ID: <1303659120.3603.3.camel@jlt3.sipsolutions.net> (sfid-20110424_173209_239821_B470BD23)
-Mime-Version: 1.0
+	Fri, 15 Apr 2011 09:39:25 -0400
+Message-ID: <112866.32529.qm@web161619.mail.bf1.yahoo.com>
+Date: Fri, 15 Apr 2011 06:39:24 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Compat-wireless release for 2011-04-07 is baked
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTintXt40gCUEW2Mf0eGEQdUT7QB9zA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 20:57 +0530, Mohammed Shafi wrote:
-> On Sunday 24 April 2011 08:29 PM, Johannes Berg wrote:
-> > iw wlan0 station dump | grep ... | wc -l
-> thanks, that  works! I need to divide by 11 :)
 
-Heh, yes, but that might change and/or be HW dependent, hence grep. So
-if you do
+--- On Fri, 4/15/11, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> 
+> OK fixed, lets see what this thing spits out tomorrow, but
+> I think it should be fixed.
 
-iw wlan0 station dump | grep '^Station ' | wc -l
+It spat a tar ball over twice the size of the normal CW archives. Inside is another "compat-wireless-2.6" directory with the same contents, doubling its size. Also, I think the cronjob won't send emails now.
 
-you won't need to divide and won't be HW dependent.
-
-johannes
-
+Walter
