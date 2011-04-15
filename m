@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3972 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425Ab1DURKl convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54119 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab1DOHaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 13:10:41 -0400
-To: "Roland Vossen" <rvossen@broadcom.com>,
-	"Joe Perches" <joe@perches.com>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 1/3] staging: brcm80211: replaced WL_NONE with
- no_printk
-References: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
- <1303383725-1440-2-git-send-email-rvossen@broadcom.com>
- <1303403680.24766.55.camel@Joe-Laptop>
-Date: Thu, 21 Apr 2011 19:10:26 +0200
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vuasnofu3ri7v4@arend-laptop>
-In-Reply-To: <1303403680.24766.55.camel@Joe-Laptop>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+	Fri, 15 Apr 2011 03:30:07 -0400
+Subject: Re: [PATCH] {mac|nl}80211: Add station connected time
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org, helmut.schaa@googlemail.com,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+In-Reply-To: <1302278064-18403-1-git-send-email-mshajakhan@atheros.com>
+References: <1302278064-18403-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Apr 2011 09:29:56 +0200
+Message-ID: <1302852596.3572.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 21 Apr 2011 18:34:40 +0200, Joe Perches <joe@perches.com> wrote:
+On Fri, 2011-04-08 at 21:24 +0530, Mohammed Shafi Shajakhan wrote:
 
-> On Thu, 2011-04-21 at 13:02 +0200, Roland Vossen wrote:
-> []
->> diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h  
->> b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
->> index 54af257..8705b40 100644
->> --- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
->> +++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
->> @@ -20,8 +20,6 @@
->>  /* wl_msg_level is a bit vector with defs in wlioctl.h */
->>  extern u32 wl_msg_level;
->>
->> -#define WL_NONE(fmt, args...) no_printk(fmt, ##args)
->> -
->
-> I think you misunderstand the purpose of no_printk.
-> no_printk is used simply to validate format arguments
-> and not emit anything.
->
-> It's typically used for debugging like
->
-> #ifndef DEBUG
-> #define FOO_DBG(fmt, ...)	printk(fmt, ##__VA_ARGS__)
-> #else
-> #define FOO_DBG(fmt, ...)	no_printk(fmt, ##__VA_ARGS__)
-> #endif
->
-> What you've got here is effectively a comment.
->
+> +static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
+> +					size_t count, loff_t *ppos)
+> +{
+> +	struct sta_info *sta = file->private_data;
+> +	struct timespec uptime;
+> +	struct tm result;
+> +	long connected_time_secs;
+> +	char buf[100];
+> +	int res;
+> +	do_posix_clock_monotonic_gettime(&uptime);
+> +	connected_time_secs = uptime.tv_sec - sta->last_connected;
+> +	time_to_tm(connected_time_secs, 0, &result);
+> +	result.tm_year -= 70;
+> +	result.tm_mday -= 1;
+> +	res = scnprintf(buf, sizeof(buf),
+> +		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
+> +			result.tm_year, result.tm_mon, result.tm_mday,
+> +			result.tm_hour, result.tm_min, result.tm_sec);
 
-If you want to debug a specific source file you could do following in that  
-particular source file:
+net/mac80211/debugfs_sta.c: In function 'sta_connected_time_read':
+net/mac80211/debugfs_sta.c:113:4: warning: format '%d' expects type
+'int', but argument 4 has type 'long int'
 
-#undef no_printk
-#define no_printk  printk
+Please fix.
 
-Not sure whether that is the intended use here.
-
-Gr. AvS
--- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+johannes
 
