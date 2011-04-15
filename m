@@ -1,51 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41491 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757011Ab1DXAaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2011 20:30:04 -0400
-Message-ID: <4DB36EBD.7060907@hauke-m.de>
-Date: Sun, 24 Apr 2011 02:28:45 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:1850 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752841Ab1DOJ5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 05:57:37 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] staging: brcm80211: made fullmac error codes more
+ consistent
+Date: Fri, 15 Apr 2011 11:57:24 +0200
+Message-ID: <1302861444-27530-5-git-send-email-rvossen@broadcom.com>
+In-Reply-To: <1302861444-27530-1-git-send-email-rvossen@broadcom.com>
+References: <1302861444-27530-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: building compat-wireless-2011-04-23 fails with 2.6.38.4
-References: <4DB352B3.9060807@01019freenet.de>
-In-Reply-To: <4DB352B3.9060807@01019freenet.de>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2011 12:29 AM, Andreas Hartmann wrote:
-> Hello,
-> 
-> I got the following erros compiling compat-wireless-2011-04-23:
-> 
-> CC [M]  /Downloads/compat-wireless-2011-04-23/compat/main.o
-> In file included from
-> /Downloads/compat-wireless-2011-04-23/include/linux/compat-2.6.h:34:0,from
-> <command-line>:0:
-> /Downloads/compat-wireless-2011-04-23/include/linux/compat-2.6.39.h:103:32:
-> error: redefinition of ‘kstrtoul’
-> /usr/src/linux-2.6.38.4-1/include/linux/kernel.h:197:32: note: previous
-> definition of ‘kstrtoul’ was here
-...
-> 
-> 
-> Could you please take a look at this problem?
-> 
-> 
-> Thank you,
-> Andreas
+Code cleanup. The code contains several checks on the condition
+SDIOH_API_SUCCESS(status). On failure, the error returned depended on the
+check, instead of being consistent. This has been corrected.
 
-Hi Andreas,
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-in kernel 2.6.38.4 kstrto* was integrated into it, but compat-wireless
-assumes that it is not there, because kernel <= 2.6.38.3 do not have it.
-This should be fixed in compat-wireless, but there are some people with
-older versions of the 2.6.38 kernel series out there like the users of
-Ubuntu Natty 11.04. It will result in many bug reports if
-compat-wireless does not work with the recent Ubuntu version. I will try
-to find a solution to make it work with all versions of 2.6.38 tomorrow.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 7ea19dd..282d711 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -127,7 +127,7 @@ int bcmsdh_intr_enable(void *sdh)
+ 	ASSERT(bcmsdh);
+ 
+ 	status = sdioh_interrupt_set(bcmsdh->sdioh, true);
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ int bcmsdh_intr_disable(void *sdh)
+@@ -137,7 +137,7 @@ int bcmsdh_intr_disable(void *sdh)
+ 	ASSERT(bcmsdh);
+ 
+ 	status = sdioh_interrupt_set(bcmsdh->sdioh, false);
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ int bcmsdh_intr_reg(void *sdh, bcmsdh_cb_fn_t fn, void *argh)
+@@ -147,7 +147,7 @@ int bcmsdh_intr_reg(void *sdh, bcmsdh_cb_fn_t fn, void *argh)
+ 	ASSERT(bcmsdh);
+ 
+ 	status = sdioh_interrupt_register(bcmsdh->sdioh, fn, argh);
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ int bcmsdh_intr_dereg(void *sdh)
+@@ -157,7 +157,7 @@ int bcmsdh_intr_dereg(void *sdh)
+ 	ASSERT(bcmsdh);
+ 
+ 	status = sdioh_interrupt_deregister(bcmsdh->sdioh);
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ #if defined(DHD_DEBUG)
+@@ -330,7 +330,7 @@ int bcmsdh_cis_read(void *sdh, uint func, u8 * cis, uint length)
+ 		kfree(tmp_buf);
+ 	}
+ 
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ static int bcmsdhsdio_set_sbaddr_window(void *sdh, u32 address)
+@@ -534,7 +534,7 @@ bcmsdh_send_buf(void *sdh, u32 addr, uint fn, uint flags,
+ 				      SDIOH_WRITE, fn, addr, width, nbytes, buf,
+ 				      pkt);
+ 
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ int bcmsdh_rwdata(void *sdh, uint rw, u32 addr, u8 *buf, uint nbytes)
+@@ -554,7 +554,7 @@ int bcmsdh_rwdata(void *sdh, uint rw, u32 addr, u8 *buf, uint nbytes)
+ 				 (rw ? SDIOH_WRITE : SDIOH_READ), SDIO_FUNC_1,
+ 				 addr, 4, nbytes, buf, NULL);
+ 
+-	return SDIOH_API_SUCCESS(status) ? 0 : -EBADE;
++	return SDIOH_API_SUCCESS(status) ? 0 : -EIO;
+ }
+ 
+ int bcmsdh_abort(void *sdh, uint fn)
+-- 
+1.7.1
 
-Hauke
+
