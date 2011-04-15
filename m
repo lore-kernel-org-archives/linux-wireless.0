@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:49395 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750826Ab1DZSeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 14:34:36 -0400
-Received: from [195.4.92.23] (helo=13.mx.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
-	id 1QEn5j-00020o-UG
-	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:31 +0200
-Received: from p54a183c6.dip0.t-ipconnect.de ([84.161.131.198]:39977 helo=mail.maya.org)
-	by 13.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
-	id 1QEn5j-0004QM-KN
-	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:31 +0200
-Message-ID: <4DB710A6.6070701@dualc.maya.org> (sfid-20110426_203439_950923_B9F2955A)
-Date: Tue, 26 Apr 2011 20:36:22 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:64394 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960Ab1DOJlh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2011 05:41:37 -0400
+Received: by qwk3 with SMTP id 3so1338995qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 02:41:36 -0700 (PDT)
 MIME-Version: 1.0
-To: Mark Davis <marked86@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Searching for a good hardware for an AP with hostapd
-References: <4DB54A1D.9030501@01019freenet.de> <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
-In-Reply-To: <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
+In-Reply-To: <BANLkTikUS=G3J7C3HSNnHJGGTeZ9OR+qPw@mail.gmail.com>
+References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
+	<BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com>
+	<BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
+	<201104142251.10881.chunkeey@googlemail.com>
+	<BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
+	<BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com>
+	<BANLkTimmdRi_CmwgH14aJbQJecYav-4r8Q@mail.gmail.com>
+	<BANLkTimfifFrKdgYuMvAMhSGKAJXu3W9mA@mail.gmail.com>
+	<BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
+	<BANLkTikUS=G3J7C3HSNnHJGGTeZ9OR+qPw@mail.gmail.com>
+Date: Fri, 15 Apr 2011 11:41:36 +0200
+Message-ID: <BANLkTik_y=LAzYJUEyrggeQyyJm2_FgnBQ@mail.gmail.com>
+Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
+ MASTER MODE
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Damian Lesiuk <lesiuk@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mark Davis wrote:
-> OxfordTec (http://www.oxfordtec.com/) stocks the SparkLAN WPEA-127N
-> full-size Mini PCIe card which sports an AR9380.
-> 
-> Unex also has an AR9390 full-size Mini PCIe card
-> (http://www.unex.com.tw/product/dnxa-h1).
-> 
-> -mark
+On Fri, Apr 15, 2011 at 11:26 AM, Damian Lesiuk <lesiuk@gmail.com> wrote:
+> After aplying this patch:
+>
+> Station 74:f0:6d:33:ea:00 (on wlan0)
+>        inactive time:  50 ms
+>        rx bytes:       4501008
+>        rx packets:     45502
+>        tx bytes:       123883066
+>        tx packets:     83649
+>        signal:         -32 dBm
+>        tx bitrate:     150.0 MBit/s MCS 7 40Mhz short GI
+>
+> I can get now 55 mbps.
+> It's max for me?
 
-Thanks for your advice - I will have a closer look to it.
+Maybe, depending on the channel conditions, interferences etc.
 
-I found an interesting site, which lists a lot of wlan devices and there
-chipsets and vice verse: http://www.wikidevi.com/wiki/Main_Page
+Also, how do you measure the throughput? Is it TCP or UDP? Do you
+use any higher level protocols like SMB, NFS or FTP?
 
-
-Andreas
+Helmut
