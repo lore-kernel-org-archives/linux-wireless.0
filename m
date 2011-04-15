@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:54905 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752424Ab1DZIyr (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:8746 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069Ab1DOSj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 04:54:47 -0400
-Received: by mail-yi0-f41.google.com with SMTP id 18so170579yib.28
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 01:54:46 -0700 (PDT)
-Subject: Re: [PATCH V2 1/2] wl12xx: consider encryption when configuring
- auto arp template
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTinN2jZdqeCPi6R+tCoF=318UJ_qyQ@mail.gmail.com>
-References: <1302774475-2977-1-git-send-email-eliad@wizery.com>
-	 <1303800793.2336.25.camel@cumari>
-	 <BANLkTinN2jZdqeCPi6R+tCoF=318UJ_qyQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Apr 2011 11:54:41 +0300
-Message-ID: <1303808081.2172.0.camel@pimenta> (sfid-20110426_105450_918973_2EF38429)
+	Fri, 15 Apr 2011 14:39:57 -0400
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	 <1302781431.21145.6.camel@dev.znau.edu.ua>
+	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
+	 <4DA6E9BD.3090404@hauke-m.de>
+	 <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+	 <1302786900.21965.52.camel@dev.znau.edu.ua>
+	 <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 15 Apr 2011 21:36:25 +0300
+Message-Id: <1302892585.30441.12.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-26 at 11:39 +0300, Eliad Peller wrote:
-> >> @@ -2749,8 +2764,10 @@ static void
-> wl1271_bss_info_changed_sta(struct wl1271 *wl,
-> >>                       ret = wl1271_acx_arp_ip_filter(wl,
-> >>                               ACX_ARP_FILTER_ARP_FILTERING,
-> >>                               addr);
-> >> -             } else
-> >> +             } else {
-> >> +                     wl->ip_addr = 0;
-> >>                       ret = wl1271_acx_arp_ip_filter(wl, 0, addr);
-> >> +             }
-> >
-> > This is not important at all, but maybe it's a bit cleaner: you
-> could
-> > remove the addr argument in wl1271_acx_arp_ip_filter() and always
-> use
-> > wl->ip_addr instead? You could then also get rid of the local addr
-> here.
-> >
-> in fact, since we are going toward multi-role fw, i do try to avoid
-> using the global wl struct as much as possible.
-> anyway, i didn't change this function, so i don't think it's the right
-> patch to change it.
-> (we should probably change a lot of functions after we'll have a
-> per-interface data) 
+> >> Arnd: I found you saying:
+> >> > I believe the one thing we really want from this driver is the bus
+> >> > scan code, which is not present in the amba bus implementation,
+> >> I explained how it works, I believe scanning (EPROM in this case) it
+> >> Broadcom specific, not really AMBA standard. How do you see it?
+> >>
+> > It might not Broadcom specific as EPROM core seems to be CoreLink one
+> > core and maybe is arm-developed. But it isn't documented publicly and we
+> > don't know yet if it is obligatory for all amba (or at least axi)
+> > interconnects or not.
+> 
+> Maybe EPROM is not Broadcom specific, but I suspect the content we
+> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
+> manuf/id/rev/class we deal with. So I guess everything *we* (out
+> driver) read from EPROM is Bcm specific.
+> 
 
-Agreed. :)
+Played around amba registers on bcm4716. For all amba cores present
+(under all I mean broadcom ip core agents, oob router core, erom core,
+and other I-dont-know-what-for cores present at 0x18100000). All those
+feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
+PrimeCell PeripheralIDs:
+* vendor 0xBB, part_number 0x368 for broadcom cores' agents;
+* vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
+is this please);
+* vendor 0xBB, part_number 0x366 for EROM core;
 
--- 
-Cheers,
-Luca.
+ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
+no evidence for that with google.
+
+Have nice day,
+George
+
 
