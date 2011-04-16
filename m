@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4528 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755775Ab1DGL4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 07:56:33 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Question of CSA callback
-References: <op.vtkf4iiu3ri7v4@arend-laptop>
- <1302177128.3779.12.camel@jlt3.sipsolutions.net>
-Date: Thu, 7 Apr 2011 13:56:20 +0200
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37431 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068Ab1DPON1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2011 10:13:27 -0400
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtkgr6op3ri7v4@arend-laptop>
-In-Reply-To: <1302177128.3779.12.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+In-Reply-To: <BANLkTinNoX6GBG=6xVC8ZfOO4OyZ_o=sFg@mail.gmail.com>
+References: <1302781431.21145.6.camel@dev.znau.edu.ua> <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
+ <4DA6E9BD.3090404@hauke-m.de> <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
+ <1302786900.21965.52.camel@dev.znau.edu.ua> <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
+ <1302892585.30441.12.camel@dev.znau.edu.ua> <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+ <1302896541.30441.33.camel@dev.znau.edu.ua> <BANLkTinPVaYC14Y=m5iu7GYodkRb6uTuPw@mail.gmail.com>
+ <20110415195642.22440.qmail@stuge.se> <BANLkTinNoX6GBG=6xVC8ZfOO4OyZ_o=sFg@mail.gmail.com>
+From: Jonas Gorski <jonas.gorski+openwrt@gmail.com>
+Date: Sat, 16 Apr 2011 16:13:06 +0200
+Message-ID: <BANLkTinXUt1aNudnRqEG40vcrtMBCc3Nxg@mail.gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg KH <greg@kroah.com>, Russell King <rmk@arm.linux.org.uk>,
+	Arend van Spriel <arend@broadcom.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-arm-kernel@lists.infradead.org, b43-dev@lists.infradead.org,
+	Peter Stuge <peter@stuge.se>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 07 Apr 2011 13:52:08 +0200, Johannes Berg  
-<johannes@sipsolutions.net> wrote:
+On 16 April 2011 16:00, Rafał Miłecki <zajec5@gmail.com> wrote:
+> Of the other point there is no sense in calling it
+> bcm_amba_axi_for_wifi as I believe we can meet other devices than just
+> wifi on this architecture.
 
-> On Thu, 2011-04-07 at 13:42 +0200, Arend van Spriel wrote:
->> Hi Johannes,
->>
->> Recently I have taken a look at csa switch callback. After looking more
->> closely I decided to let mac80211 handle this itself, but I noticed
->> something strange in the interface so maybe you can clarify this.
->>
->> void (*channel_switch)(struct ieee80211_hw *hw,
->> 		       struct ieee80211_channel_switch *ch_switch);
->>
->> void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
->>
->> Basically we get a channel switch callback for iee80211_hw and for the
->> ieee80211_chswitch_done() the driver has to provide a vif. Should the
->> channel switch also operate on a vif?
->
-> Ah, well, no, not right now anyway -- mac80211 doesn't support
-> multi-channel operation yet.
->
-> However, I think this kind of hw offload isn't necessary for your device
-> at all.
+Current bcm47xx/53xx SoCs from Broadcom also use this architecture for
+the system bus (like the older ones used SSB), and they usually have
+ethernet macs, memory controllers, mips cores on it (and, as far as I
+can see, also always a 802.11 core).
 
-Indeed I concluded we do not need this, but I just wanted to clarify the  
-intended use of the interface.
 
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
-
+Jonas
