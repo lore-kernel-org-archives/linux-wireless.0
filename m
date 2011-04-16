@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:35108 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752846Ab1DSGJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 02:09:05 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
-Date: Tue, 19 Apr 2011 11:12:50 +0530
-Message-Id: <1303191772-4299-2-git-send-email-nishants@marvell.com>
-In-Reply-To: <1303191772-4299-1-git-send-email-nishants@marvell.com>
-References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:43745 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973Ab1DPIri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2011 04:47:38 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2011 01:47:12 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Fix free slot value for cab queue
+Date: Sat, 16 Apr 2011 14:17:39 +0530
+Message-ID: <1302943659-20116-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pradeep Nemavat <pnemavat@marvell.com>
+ath9k_htc_tx_get_slot can return zero as valid index.
 
-Timestamp tx packets using a HW micro-second timer.
-This timestamp will be compared to the current timestamp
-in the hardware and if the difference is greater than 500ms,
-the packet will be dropped.
-
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/mwl8k.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 7968301..aca0139 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1792,6 +1792,14 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
- 		tx_stats->pkts++;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index bf7ef1b..a157107 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -322,7 +322,7 @@ static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
+ 		}
  
-+/* HW micro second timer register
-+ * located at offset 0xA600. This
-+ * will be used to timestamp tx
-+ * packets.
-+ */
-+
-+#define	MWL8K_HW_TIMER_REGISTER	(priv->regs + 0xA600)
-+
- static void
- mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- {
-@@ -1972,6 +1980,10 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 		tx->peer_id = MWL8K_STA(tx_info->control.sta)->peer_id;
- 	else
- 		tx->peer_id = 0;
-+
-+	if (priv->ap_fw)
-+		tx->timestamp = cpu_to_le32(ioread32(MWL8K_HW_TIMER_REGISTER));
-+
- 	wmb();
- 	tx->status = cpu_to_le32(MWL8K_TXD_STATUS_FW_OWNED | txstatus);
- 
+ 		tx_slot = ath9k_htc_tx_get_slot(priv);
+-		if (tx_slot != 0) {
++		if (tx_slot < 0) {
+ 			ath_dbg(common, ATH_DBG_XMIT, "No free CAB slot\n");
+ 			dev_kfree_skb_any(skb);
+ 			goto next;
 -- 
-1.6.0.3
+1.7.4.4
 
