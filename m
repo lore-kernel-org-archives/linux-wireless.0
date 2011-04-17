@@ -1,123 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757161Ab1DAVgj (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.171]:58959 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab1DQRii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:39 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:38 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 02/10] nl80211: Add userspace authentication  flag to mesh setup
-Date: Fri,  1 Apr 2011 13:35:43 -0700
-Message-Id: <1301690151-14979-3-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+	Sun, 17 Apr 2011 13:38:38 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+Date: Sun, 17 Apr 2011 19:38:12 +0200
+Cc: George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <1302892585.30441.12.camel@dev.znau.edu.ua> <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+In-Reply-To: <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104171938.12834.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Friday 15 April 2011, Rafał Miłecki wrote:
+> W dniu 15 kwietnia 2011 20:36 użytkownik George Kashperko
+> <george@znau.edu.ua> napisał:
+> >> >> Arnd: I found you saying:
+> >> >> > I believe the one thing we really want from this driver is the bus
+> >> >> > scan code, which is not present in the amba bus implementation,
+> >> >> I explained how it works, I believe scanning (EPROM in this case) it
+> >> >> Broadcom specific, not really AMBA standard. How do you see it?
+> >>
+> >> Maybe EPROM is not Broadcom specific, but I suspect the content we
+> >> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
+> >> manuf/id/rev/class we deal with. So I guess everything we (out
+> >> driver) read from EPROM is Bcm specific.
+> >>
+> >
+> > Played around amba registers on bcm4716. For all amba cores present
+> > (under all I mean broadcom ip core agents, oob router core, erom core,
+> > and other I-dont-know-what-for cores present at 0x18100000). All those
+> > feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
+> > PrimeCell PeripheralIDs:
+> > * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
+> > * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
+> > is this please);
+> > * vendor 0xBB, part_number 0x366 for EROM core;
+> >
+> > ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
+> > no evidence for that with google.
+> 
+> Yeah, as I suspected, everything except Broadcom specific cores
+> matches AMBA standards quite nicely. Still, I don't see anything in it
+> we could use for driver.
+> 
+> Let's wait for Russell and Arnd to comment.
 
-During mesh setup, use NL80211_MESH_SETUP_USERSPACE_AUTH flag to create
-a secure mesh and route management frames to userspace.
+In general, the bus_type directly relates to how a device gets probed.
+If broadcom uses the same basic register layout as regular AMBA devices,
+it should use the amba bus type.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- include/linux/nl80211.h    |    4 ++++
- include/net/cfg80211.h     |    2 ++
- net/mac80211/cfg.c         |    1 +
- net/mac80211/ieee80211_i.h |    1 +
- net/wireless/nl80211.c     |    2 ++
- 5 files changed, 10 insertions(+), 0 deletions(-)
+Compare this to the PCI bus type, which essentially deals with devices
+that have a PCI configuration space that contains generic (irq, memory,
+vendor/device ID, ...) registers along with device specific registers.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 82ef17d..91e3a8d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1691,6 +1691,9 @@ enum nl80211_meshconf_params {
-  * robust security network ie, or a vendor specific information element that
-  * vendors will use to identify the path selection methods and metrics in use.
-  *
-+ * @NL80211_MESH_SETUP_USERSPACE_AUTH: Enable this option if an authentication
-+ * daemon will be authenticating mesh candidates.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-  */
-@@ -1699,6 +1702,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
- 	NL80211_MESH_SETUP_IE,
-+	NL80211_MESH_SETUP_USERSPACE_AUTH,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1714943..2334985 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -656,6 +656,7 @@ struct mesh_config {
-  * @path_metric: which metric to use
-  * @ie: vendor information elements (optional)
-  * @ie_len: length of vendor information elements
-+ * @is_secure: or not
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -666,6 +667,7 @@ struct mesh_setup {
- 	u8  path_metric;
- 	const u8 *ie;
- 	u8 ie_len;
-+	bool is_secure;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f2f345a..4f73085 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1042,6 +1042,7 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
-+	ifmsh->is_secure = setup->is_secure;
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d0fafde..7d1cb36 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -490,6 +490,7 @@ struct ieee80211_if_mesh {
- 	bool accepting_plinks;
- 	const u8 *ie;
- 	u8 ie_len;
-+	bool is_secure;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f251089..5878f2b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,6 +2804,7 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
-+	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
-@@ -2915,6 +2916,7 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		setup->ie = nla_data(ieattr);
- 		setup->ie_len = nla_len(ieattr);
- 	}
-+	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
- 
- 	return 0;
- }
--- 
-1.7.4.1
+I think it would be fine to extend the AMBA bus slightly if there are
+just minor differences.
 
+A new bus_type really only makes sense if you expect a lot of devices
+to use this and you want to have the probing in the bus. If you only
+want to have a way to enumerate devices that get created by the
+parent driver, you can also use platform devices.
+
+	Arnd
