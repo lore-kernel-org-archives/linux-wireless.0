@@ -1,45 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40220 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab1DRLQE (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753804Ab1DRNgW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:16:04 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 21so3798215wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:16:03 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 05/10] wl12xx: print firmware program counter during recovery
-Date: Mon, 18 Apr 2011 14:15:24 +0300
-Message-Id: <1303125329-27214-5-git-send-email-arik@wizery.com>
-In-Reply-To: <1303125329-27214-1-git-send-email-arik@wizery.com>
-References: <1303125329-27214-1-git-send-email-arik@wizery.com>
+	Mon, 18 Apr 2011 09:36:22 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:21 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 22/23] rt2x00: Implement get_ringparam callback function
+Date: Mon, 18 Apr 2011 15:34:41 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181534.02553.IvDoorn@gmail.com> <201104181534.23133.IvDoorn@gmail.com>
+In-Reply-To: <201104181534.23133.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181534.42625.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When performing recovery, print the firmware version and program
-counter (by reading the SCR_PAD4 register). The value of the firmware
-program counter during assert can be useful for debugging.
+From: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+With the get_ringparam callback function we can export ring parameters
+to ethtool through the mac80211 interface.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
+ drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   16 ++++++++++++++++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
+ drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
+ 9 files changed, 25 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index a2a26df..e0c8ca4 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -985,7 +985,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	if (wl->state != WL1271_STATE_ON)
- 		goto out;
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index d4acdde..bbe76f7 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1720,6 +1720,7 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
+ 	.tx_last_beacon		= rt2400pci_tx_last_beacon,
+ 	.rfkill_poll		= rt2x00mac_rfkill_poll,
+ 	.flush			= rt2x00mac_flush,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
  
--	wl1271_info("Hardware recovery in progress.");
-+	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
-+		    wl->chip.fw_ver_str, wl1271_read32(wl, SCR_PAD4));
+ static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 15f5649..6f48996 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -2013,6 +2013,7 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
+ 	.tx_last_beacon		= rt2500pci_tx_last_beacon,
+ 	.rfkill_poll		= rt2x00mac_rfkill_poll,
+ 	.flush			= rt2x00mac_flush,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
  
- 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
- 		ieee80211_connection_loss(wl->vif);
+ static const struct rt2x00lib_ops rt2500pci_rt2x00_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index d88c367..5ef3386 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1823,6 +1823,7 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
+ 	.conf_tx		= rt2x00mac_conf_tx,
+ 	.rfkill_poll		= rt2x00mac_rfkill_poll,
+ 	.flush			= rt2x00mac_flush,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
+ 
+ static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index b0c729b..08d3947 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1028,6 +1028,7 @@ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
+ 	.ampdu_action		= rt2800_ampdu_action,
+ 	.flush			= rt2x00mac_flush,
+ 	.get_survey		= rt2800_get_survey,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
+ 
+ static const struct rt2800_ops rt2800pci_rt2800_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 44ead75..0d4e8fa 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -673,6 +673,7 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
+ 	.ampdu_action		= rt2800_ampdu_action,
+ 	.flush			= rt2x00mac_flush,
+ 	.get_survey		= rt2800_get_survey,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
+ 
+ static const struct rt2800_ops rt2800usb_rt2800_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index dcdc50d..f1d8f55 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -1254,6 +1254,8 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		      const struct ieee80211_tx_queue_params *params);
+ void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw);
+ void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop);
++void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
++			     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+ 
+ /*
+  * Driver allocation handlers.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 4770156..6d1d383 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -737,3 +737,19 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop)
+ 		rt2x00queue_flush_queue(queue, drop);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_flush);
++
++void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
++			     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max)
++{
++	struct rt2x00_dev *rt2x00dev = hw->priv;
++	struct data_queue *queue;
++
++	tx_queue_for_each(rt2x00dev, queue) {
++		*tx += queue->length;
++		*tx_max += queue->limit;
++	}
++
++	*rx = rt2x00dev->rx->length;
++	*rx_max = rt2x00dev->rx->limit;
++}
++EXPORT_SYMBOL_GPL(rt2x00mac_get_ringparam);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index c5dccdb..eb54031 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2979,6 +2979,7 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
+ 	.get_tsf		= rt61pci_get_tsf,
+ 	.rfkill_poll		= rt2x00mac_rfkill_poll,
+ 	.flush			= rt2x00mac_flush,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
+ 
+ static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index be3eb5e..bf7fea4 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2310,6 +2310,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+ 	.get_tsf		= rt73usb_get_tsf,
+ 	.rfkill_poll		= rt2x00mac_rfkill_poll,
+ 	.flush			= rt2x00mac_flush,
++	.get_ringparam		= rt2x00mac_get_ringparam,
+ };
+ 
+ static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
 -- 
-1.7.1
+1.7.2.3
 
