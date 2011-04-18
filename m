@@ -1,88 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60480 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451Ab1DBBlU (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021Ab1DRNfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 21:41:20 -0400
-Received: by wya21 with SMTP id 21so3411243wya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 18:41:19 -0700 (PDT)
-Message-ID: <4D967EB9.9070309@gmail.com>
-Date: Sat, 02 Apr 2011 03:41:13 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Mon, 18 Apr 2011 09:35:52 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:52 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 07/23] rt2x00: Use TXOP_HTTXOP for beacons
+Date: Mon, 18 Apr 2011 15:28:50 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181528.05047.IvDoorn@gmail.com> <201104181528.28208.IvDoorn@gmail.com>
+In-Reply-To: <201104181528.28208.IvDoorn@gmail.com>
 MIME-Version: 1.0
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com, linville@tuxdriver.com, gwingerde@gmail.com
-Subject: Re: [PATCH] wireless: rt2x00: rt{2500,73}usb.c fix duplicate ids
-References: <1301184953-18436-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1301184953-18436-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181528.51457.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2011 01:15 AM, Xose Vazquez Perez wrote:
-> based on the Ralink drivers:
-> 
-> W = Windows_ralink_driver
-> L = Linux_ralink_driver
-> 
-> USB_IDs         W_73  W_2500 L_73  L_2500
-> =============   ====  ====== ====  ======
-> 0x050d,0x7050   -     -      -     YES
-> 0x050d,0x705a   -     -      YES   -
-> 0x1371,0x9022   -     YES    YES   -
-> 0x148f,0x2573   YES   -      YES   -
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2500usb.c |    4 ----
->  drivers/net/wireless/rt2x00/rt73usb.c   |    1 -
->  2 files changed, 0 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 979fe65..f6682f0 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1910,13 +1910,10 @@ static struct usb_device_id rt2500usb_device_table[] = {
->  	/* Belkin */
->  	{ USB_DEVICE(0x050d, 0x7050), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x050d, 0x7051), USB_DEVICE_DATA(&rt2500usb_ops) },
-> -	{ USB_DEVICE(0x050d, 0x705a), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	/* Cisco Systems */
->  	{ USB_DEVICE(0x13b1, 0x000d), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x13b1, 0x0011), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x13b1, 0x001a), USB_DEVICE_DATA(&rt2500usb_ops) },
-> -	/* CNet */
-> -	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	/* Conceptronic */
->  	{ USB_DEVICE(0x14b2, 0x3c02), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	/* D-LINK */
-> @@ -1939,7 +1936,6 @@ static struct usb_device_id rt2500usb_device_table[] = {
->  	/* Ralink */
->  	{ USB_DEVICE(0x148f, 0x1706), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
-> -	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	{ USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
->  	/* Sagem */
->  	{ USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index 02f1148..bc7a957 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -2407,7 +2407,6 @@ static struct usb_device_id rt73usb_device_table[] = {
->  	{ USB_DEVICE(0x0b05, 0x1723), USB_DEVICE_DATA(&rt73usb_ops) },
->  	{ USB_DEVICE(0x0b05, 0x1724), USB_DEVICE_DATA(&rt73usb_ops) },
->  	/* Belkin */
-> -	{ USB_DEVICE(0x050d, 0x7050), USB_DEVICE_DATA(&rt73usb_ops) },
->  	{ USB_DEVICE(0x050d, 0x705a), USB_DEVICE_DATA(&rt73usb_ops) },
->  	{ USB_DEVICE(0x050d, 0x905b), USB_DEVICE_DATA(&rt73usb_ops) },
->  	{ USB_DEVICE(0x050d, 0x905c), USB_DEVICE_DATA(&rt73usb_ops) },
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-John, is there any wrong in this patch ?
-It wasn't included in your last 'pull request' to davem.
+Use TXOP_HTTXOP for beacons to stay in sync with the legacy drivers.
 
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00ht.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+index e8c0c3e..a30f68c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ht.c
++++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+@@ -92,14 +92,15 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 
+ 	/*
+ 	 * Determine IFS values
+-	 * - Use TXOP_BACKOFF for management frames
++	 * - Use TXOP_BACKOFF for management frames except beacons
+ 	 * - Use TXOP_SIFS for fragment bursts
+ 	 * - Use TXOP_HTTXOP for everything else
+ 	 *
+ 	 * Note: rt2800 devices won't use CTS protection (if used)
+ 	 * for frames not transmitted with TXOP_HTTXOP
+ 	 */
+-	if (ieee80211_is_mgmt(hdr->frame_control))
++	if (ieee80211_is_mgmt(hdr->frame_control) &&
++	    !ieee80211_is_beacon(hdr->frame_control))
+ 		txdesc->u.ht.txop = TXOP_BACKOFF;
+ 	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+ 		txdesc->u.ht.txop = TXOP_SIFS;
 -- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+1.7.2.3
+
