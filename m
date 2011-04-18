@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58850 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756293Ab1DMOYH convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43854 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab1DRLQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 10:24:07 -0400
-Received: by bwz15 with SMTP id 15so615180bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 07:24:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201104131332.47029.chunkeey@googlemail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <201104131214.53633.chunkeey@googlemail.com> <BANLkTikKvO6EvMrGtOCdYCO9_pdgUzPxyQ@mail.gmail.com>
- <201104131332.47029.chunkeey@googlemail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Wed, 13 Apr 2011 16:23:26 +0200
-Message-ID: <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 18 Apr 2011 07:16:22 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so5507192wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:16:22 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 08/10] wl12xx: add debugfs entry for starting recovery
+Date: Mon, 18 Apr 2011 14:15:27 +0300
+Message-Id: <1303125329-27214-8-git-send-email-arik@wizery.com>
+In-Reply-To: <1303125329-27214-1-git-send-email-arik@wizery.com>
+References: <1303125329-27214-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tcpdump file
-http://uniwersytecka.dyndns.biz/~lesiuk/dump
+This entry is useful for debugging the driver state machine during
+recovery.
 
-I had hostapd older than 0.7.3 but after upgrade there is the same problem.
-There is only one change. Windows 7 is displaying it as 75 mbps
-connection not 150 mbps (with the same config as with the older
-version) but I have still 16 mbps dl rate.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-I am using gentoo linux and I didn't compiled that driver manually. I
-have that driver from 3.6.38 kernel.
-I really want to make it work.
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 8e75b09..6eb48b7 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -291,6 +291,25 @@ static const struct file_operations gpio_power_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t start_recovery_write(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	mutex_lock(&wl->mutex);
++	ieee80211_queue_work(wl->hw, &wl->recovery_work);
++	mutex_unlock(&wl->mutex);
++
++	return count;
++}
++
++static const struct file_operations start_recovery_ops = {
++	.write = start_recovery_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 				     struct dentry *rootdir)
+ {
+@@ -399,6 +418,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(excessive_retries, rootdir);
+ 
+ 	DEBUGFS_ADD(gpio_power, rootdir);
++	DEBUGFS_ADD(start_recovery, rootdir);
+ 
+ 	return 0;
+ 
+-- 
+1.7.1
 
-What should I do? Will OS change help?
-
-2011/4/13 Christian Lamparter <chunkeey@googlemail.com>:
-> On Wednesday 13 April 2011 12:51:58 Damian Lesiuk wrote:
->> It doesn't solved my problem. Still max dl speed 16 mbps.
-> ok, so it could be something else... maybe it's a driver bug, maybe
-> something is outdated [avoid hostapd older than 0.7,3], or maybe
-> just a simple configuration problem [on either side]?
->
-> you can't tell that by just looking at the low throughput figure.
-> Instead you probably have to capture the handshake between the
-> AP+client and look who's lying about their 11n capabilities.
->
-> Luckily, all mac80211-based driver come with a nifty feature which
-> allows you to monitor any incoming/outgoing data. Just setup a
-> monitor interface.
-> <http://wireless.kernel.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
->
-> and start a sniffer. tcpdump/whireshark is more than enough.
->
->> btw, Can I use ath9k_htc with my Atheros 9170 in N master mode.
-> no, ar9170 is too old. ath9k_htc is exclusive driver for the
-> ar9271,ar701x+ar928x devices, which appeared in late 2009.
->
->> What about performance?
-> it's ok.
->
-> Regards,
->        Chr
->
