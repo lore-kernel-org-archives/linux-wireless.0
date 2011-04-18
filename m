@@ -1,304 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1532 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755965Ab1DHOv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 10:51:26 -0400
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: dwmw2@infradead.org
-cc: henryp@broadcom.com, brudley@broadcom.com, rvossen@broadcom.com,
-	arend@broadcom.com, linux-wireless@vger.kernel.org,
-	devel@linuxdriverproject.org
-Subject: [PATCH 1/3] linux-firmware: Simplified license file for brcm
- firmware
-Date: Fri, 8 Apr 2011 07:51:12 -0700
-Message-ID: <1302274274-2534-1-git-send-email-henryp@broadcom.com>
-In-Reply-To: <20110407211521.GA3252@broadcom.com>
-References: <20110407211521.GA3252@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54424 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab1DRLWk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 07:22:40 -0400
+Received: by wwa36 with SMTP id 36so5514188wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:22:39 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 2/2] wl12xx: support FW TX inactivity triggers
+Date: Mon, 18 Apr 2011 14:22:29 +0300
+Message-Id: <1303125749-31967-2-git-send-email-arik@wizery.com>
+In-Reply-To: <1303125749-31967-1-git-send-email-arik@wizery.com>
+References: <1303125749-31967-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New, much shorter license for firmware files submitted by Broadcom to
-linux-firmware repository.
+In AP mode register for the MAX_TX_RETRY and INACTIVE_STA events.
+Both are reported to the upper layers as a TX failure in the offending
+stations.
 
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+In STA mode we register only for the MAX_TX_RETRY event. A TX failure is
+interpreted as a loss of connection.
+
+Support for IEEE80211_HW_REPORTS_TX_ACK_STATUS has been removed to avoid
+the inherent race condition of a mac80211 TX failure counter in addition
+to the FW counter.
+
+This patch depends on "mac80211: allow low level drivers to report packet
+loss"
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- LICENCE.broadcom_bcm43xx |  262 +++++++++++-----------------------------------
- 1 files changed, 61 insertions(+), 201 deletions(-)
+ drivers/net/wireless/wl12xx/boot.c   |    6 +++-
+ drivers/net/wireless/wl12xx/cmd.c    |    2 +-
+ drivers/net/wireless/wl12xx/conf.h   |    6 ++++
+ drivers/net/wireless/wl12xx/event.c  |   47 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/event.h  |   12 ++++++++-
+ drivers/net/wireless/wl12xx/main.c   |    8 +++++-
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 -
+ 7 files changed, 76 insertions(+), 6 deletions(-)
 
-diff --git a/LICENCE.broadcom_bcm43xx b/LICENCE.broadcom_bcm43xx
-index e2cf868..ff26fdd 100644
---- a/LICENCE.broadcom_bcm43xx
-+++ b/LICENCE.broadcom_bcm43xx
-@@ -1,205 +1,65 @@
- SOFTWARE LICENSE AGREEMENT
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index b5ec2c2..072f783 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -478,10 +478,12 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 		DISCONNECT_EVENT_COMPLETE_ID |
+ 		RSSI_SNR_TRIGGER_0_EVENT_ID |
+ 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+-		SOFT_GEMINI_SENSE_EVENT_ID;
++		SOFT_GEMINI_SENSE_EVENT_ID |
++		MAX_TX_RETRY_EVENT_ID;
  
--Unless you and Broadcom Corporation (“Broadcom”) execute a separate written
--software license agreement governing use of the accompanying software, this
--software is licensed to you under the terms of this Software License Agreement
--(“Agreement”).
--
--ANY USE, REPRODUCTION OR DISTRIBUTION OF THE SOFTWARE CONSTITUTES YOUR
--ACCEPTANCE OF THIS AGREEMENT.
--
--1.	DEFINITIONS.
--
--1.1.	“Broadcom Product” means any of the proprietary integrated circuit
--product(s) sold by Broadcom with which the Software was designed to be used, or
--their successors.
--
--1.2.	“Licensee” means you or if you are accepting on behalf of an entity
--then the entity and its affiliates exercising rights under, and complying with
--all of the terms of this Agreement.
--
--1.3.	“Software” shall mean that software made available by Broadcom to
--Licensee in binary code form with this Agreement.
--
--2.	LICENSE GRANT; OWNERSHIP
--
--2.1.	License Grants.  Subject to the terms and conditions of this Agreement,
--Broadcom hereby grants to Licensee a non-exclusive, non-transferable,
--royalty-free license (i) to use and integrate the Software in conjunction with
--any other software; and (ii) to reproduce and distribute the Software complete,
--unmodified and as provided by Broadcom, and only for use with a Broadcom
--Product.
--
--2.2.	Restriction on Modification.  Licensee may not make any modifications
--to the Software.
--
--2.3.	Restriction on Distribution.  Licensee shall only distribute the
--Software under the terms of this Agreement and a copy of this Agreement
--accompanies such distribution.
--
--2.4.	Proprietary Notices.  Licensee shall not remove, efface or obscure any
--copyright or trademark notices from the Software.  Licensee shall include
--reproductions of the Broadcom copyright notice with each copy of the Software,
--except where such Software is embedded in a manner not readily accessible to
--the end user.  Licensee acknowledges that any symbols, trademarks, tradenames,
--and service marks adopted by Broadcom to identify the Software belong to
--Broadcom and that Licensee shall have no rights therein.
--
--2.5.	Ownership.  Broadcom shall retain all right, title and interest,
--including all intellectual property rights, in and to the Software.  Licensee
--hereby covenants that it will not assert any claim that the Software created by
--or for Broadcom infringe any intellectual property right owned or controlled by
--Licensee; provided however, the foregoing shall not apply in case the Agreement
--is terminated.
--
--2.6.	No Other Rights Granted; Restrictions.  Apart from the license rights
--expressly set forth in this Agreement, Broadcom does not grant and Licensee
--does not receive any ownership right, title or interest nor any security
--interest or other interest in any intellectual property rights relating to the
--Software, nor in any copy of any part of the foregoing.  No license is granted
--to Licensee in any human readable code of the Software (source code). Licensee
--shall not (i) use, license, sell or otherwise distribute the Software except as
--provided in this Agreement, (ii) attempt to modify in any way, reverse
--engineer, decompile or disassemble any portion of the Software; or (iii) use
--the Software or other material in violation of any applicable law or
--regulation, including but not limited to any regulatory agency, such as FCC,
--rules.
--
--3.	NO WARRANTY OR SUPPORT
--
--3.1.	No Warranty. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM GRANTS AND
--LICENSEE RECEIVES NO WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, BY STATUTE,
--COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.  BROADCOM SPECIFICALLY
--DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A SPECIFIC
--PURPOSE OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR ANY UPGRADES TO OR
--DOCUMENTATION FOR THE SOFTWARE.  WITHOUT LIMITATION OF THE ABOVE, BROADCOM
--GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL OPERATE WITHOUT
--INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE RESULTS THEREFROM
--INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY OR RELIABILITY.
--
--3.2.	No Support.  Nothing in this agreement shall obligate Broadcom to
--provide any support for the Software. Broadcom may, but shall be under no
--obligation to, correct any defects in the Software and/or provide updates to
--licensees of the Software.  Licensee shall make reasonable efforts to promptly
--report to Broadcom any defects it finds in the Software, as an aid to creating
--improved revisions of the Software.
--
--3.3.	Dangerous Applications.  The Software is not designed, intended, or
--certified for use in components of systems intended for the operation of
--weapons, weapons systems, nuclear installations, means of mass transportation,
--aviation, life-support computers or equipment (including resuscitation
--equipment and surgical implants), pollution control, hazardous substances
--management, or for any other dangerous application in which the failure of the
--Software could create a situation where personal injury or death may occur. 
--Licensee understands that use of the Software in such applications is fully at
--the risk of Licensee.
--
--4.	TERM AND TERMINATION
--
--4.1.	Termination.  This Agreement will automatically terminate if Licensee
--fails to comply with any of the terms and conditions hereof. In such event,
--Licensee must destroy all copies of the Software and all of its component
--parts.
--
--4.2.	Effect Of Termination.  Upon any termination of this Agreement, the
--rights and licenses granted to Licensee under this Agreement shall immediately
--terminate.
--
--4.3.	Survival.  The rights and obligations under this Agreement which by
--their nature should survive termination will remain in effect after expiration
--or termination of this Agreement.
--
--5.	CONFIDENTIALITY
--
--5.1.	Obligations.  Licensee acknowledges and agrees that any documentation
--relating to the Software, and any other information (if such other information
--is identified as confidential or should be recognized as confidential under the
--circumstances) provided to Licensee by Broadcom hereunder (collectively,
--“Confidential Information”) constitute the confidential and proprietary
--information of Broadcom, and that Licensee’s protection thereof is an essential
--condition to Licensee’s use and possession of the Software.  Licensee shall
--retain all Confidential Information in strict confidence and not disclose it to
--any third party or use it in any way except under a written agreement with
--terms and conditions at least as protective as the terms of this Section.
--Licensee will exercise at least the same amount of diligence in preserving the
--secrecy of the Confidential Information as it uses in preserving the secrecy of
--its own most valuable confidential information, but in no event less than
--reasonable diligence.  Information shall not be considered Confidential
--Information if and to the extent that it: (i) was in the public domain at the
--time it was disclosed or has entered the public domain through no fault of
--Licensee; (ii) was known to Licensee, without restriction, at the time of
--disclosure as proven by the files of Licensee in existence at the time of
--disclosure; or (iii) becomes known to Licensee, without restriction, from a
--source other than Broadcom without breach of this Agreement by Licensee and
--otherwise not in violation of Broadcom’s rights.
--
--5.2.	Return of Confidential Information.  Notwithstanding the foregoing, all
--documents and other tangible objects containing or representing Broadcom
--Confidential Information and all copies thereof which are in the possession of
--Licensee shall be and remain the property of Broadcom, and shall be promptly
--returned to Broadcom upon written request by Broadcom or upon termination of
--this Agreement.
--
--6.	LIMITATION OF LIABILITY TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO
--EVENT SHALL BROADCOM OR ANY OF BROADCOM’S LICENSORS HAVE ANY LIABILITY FOR ANY
--INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON
--ANY THEORY OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING
--NEGLIGENCE) OR OTHERWISE, ARISING OUT OF THIS AGREEMENT, INCLUDING BUT NOT
--LIMITED TO LOSS OF PROFITS, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE
--POSSIBILITY OF SUCH DAMAGES. IN NO EVENT WILL BROADCOM’S LIABILITY WHETHER IN
--CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, EXCEED THE AMOUNT PAID BY
--LICENSEE FOR SOFTWARE UNDER THIS AGREEMENT.  THESE LIMITATIONS SHALL APPLY
--NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY.
--
--7.	MISCELLANEOUS
--
--7.1.	Export Regulations. YOU UNDERSTAND AND AGREE THAT THE SOFTWARE IS
-+The accompanying software in binary code form (“Software”), is licensed to you,
-+or, if you are accepting on behalf of an entity, the entity and its affiliates
-+exercising rights hereunder (“Licensee”) subject to the terms of this software
-+license agreement (“Agreement”), unless Licensee and Broadcom Corporation
-+(“Broadcom”) execute a separate written software license agreement governing
-+use of the Software. ANY USE, REPRODUCTION, OR DISTRIBUTION OF THE SOFTWARE
-+CONSTITUTES LICENSEE’S ACCEPTANCE OF THIS AGREEMENT.
-+
-+1.	License. Subject to the terms and conditions of this Agreement,
-+Broadcom hereby grants to Licensee a limited, non-exclusive, non-transferable,
-+royalty-free license: (i) to use and integrate the Software with any other
-+software; and (ii) to reproduce and distribute the Software complete,
-+unmodified, and as provided by Broadcom, solely for use with Broadcom
-+proprietary integrated circuit product(s) sold by Broadcom with which the
-+Software was designed to be used, or their successors.
-+
-+2.	Restrictions. Licensee shall distribute Software with a copy of this
-+Agreement. Licensee shall not remove, efface or obscure any copyright or
-+trademark notices from the Software. Reproductions of the Broadcom copyright
-+notice shall be included with each copy of the Software, except where such
-+Software is embedded in a manner not readily accessible to the end user.
-+Licensee shall not: (i) use, license, sell or otherwise distribute the Software
-+except as provided in this Agreement; (ii) attempt to modify in any way,
-+reverse engineer, decompile or disassemble any portion of the Software; or
-+(iii) use the Software or other material in violation of any applicable law or
-+regulation, including but not limited to any regulatory agency. This Agreement
-+shall automatically terminate upon Licensee’s failure to comply with any of the
-+terms of this Agreement. In such event, Licensee will destroy all copies of the
-+Software and its component parts.
-+
-+3.	Ownership. The Software is licensed and not sold.  Title to and
-+ownership of the Software, including all intellectual property rights thereto,
-+and any portion thereof remain with Broadcom or its licensors. Licensee hereby
-+covenants that it will not assert any claim that the Software created by or for
-+Broadcom infringe any intellectual property right owned or controlled by
-+Licensee.
-+
-+4.     	Disclaimer. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM PROVIDES AND
-+GRANTS AND LICENSEE RECEIVES NO SUPPORT AND NO WARRANTIES OF ANY KIND, EXPRESS
-+OR IMPLIED, BY STATUTE, COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.
-+BROADCOM SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY,
-+FITNESS FOR A SPECIFIC PURPOSE, OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR
-+ANY UPGRADES TO OR DOCUMENTATION FOR THE SOFTWARE. WITHOUT LIMITATION OF THE
-+ABOVE, BROADCOM GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL
-+OPERATE WITHOUT INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE
-+RESULTS THEREFROM INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY, OR
-+RELIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL BROADCOM
-+OR ANY OF ITS LICENSORS HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
-+INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON ANY THEORY
-+OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR
-+OTHERWISE, ARISING OUT OF THIS AGREEMENT OR USE, REPRODUCTION, OR DISTRIBUTION
-+OF THE SOFTWARE, INCLUDING BUT NOT LIMITED TO LOSS OF DATA AND LOSS OF PROFITS,
-+EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THESE
-+LIMITATIONS SHALL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
-+LIMITED REMEDY.
-+
-+5. 	Export Laws.  LICENSEE UNDERSTANDS AND AGREES THAT THE SOFTWARE IS
- SUBJECT TO UNITED STATES AND OTHER APPLICABLE EXPORT-RELATED LAWS AND
--REGULATIONS AND THAT YOU MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE SOFTWARE OR
--ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE LAWS.
--WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT OR TRANSFER OF THE SOFTWARE
--TO CUBA, IRAN, NORTH KOREA, SUDAN AND SYRIA IS PROHIBITED.
--
--7.2	Assignment. This Agreement shall be binding upon and inure to the
--benefit of the parties and their respective successors and assigns, provided,
--however that Licensee may not assign this Agreement or any rights or obligation
--hereunder, directly or indirectly, by operation of law or otherwise, without
--the prior written consent of Broadcom, and any such attempted assignment shall
--be void.  Notwithstanding the foregoing, Licensee may assign this Agreement to
--a successor to all or substantially all of its business or assets to which this
--Agreement relates that is not a competitor of Broadcom.
--
--7.3.	Governing Law; Venue.  This Agreement shall be governed by the laws of
--California without regard to any conflict-of-laws rules, and the United Nations
--Convention on Contracts for the International Sale of Goods is hereby excluded.
--The sole jurisdiction and venue for actions related to the subject matter
--hereof shall be the state and federal courts located in the County of Orange,
--California, and both parties hereby consent to such jurisdiction and venue.
--
--7.4.	Severability.  All terms and provisions of this Agreement shall, if
--possible, be construed in a manner which makes them valid, but in the event any
--term or provision of this Agreement is found by a court of competent
--jurisdiction to be illegal or unenforceable, the validity or enforceability of
--the remainder of this Agreement shall not be affected if the illegal or
--unenforceable provision does not materially affect the intent of this
--Agreement.  If the illegal or unenforceable provision materially affects the
--intent of the parties to this Agreement, this Agreement shall become
--terminated.
--
--7.5.	Equitable Relief.  Licensee hereby acknowledges that its breach of this
--Agreement would cause irreparable harm and significant injury to Broadcom that
--may be difficult to ascertain and that a remedy at law would be inadequate.
--Accordingly, Licensee agrees that Broadcom shall have the right to seek and
--obtain immediate injunctive relief to enforce obligations under the Agreement
--in addition to any other rights and remedies it may have.
--
--7.6.	Waiver.  The waiver of, or failure to enforce, any breach or default
--hereunder shall not constitute the waiver of any other or subsequent breach or
--default.
--
--7.7.	Entire Agreement.  This Agreement sets forth the entire Agreement
--between the parties and supersedes any and all prior proposals, agreements and
--representations between them, whether written or oral concerning the Software.
--This Agreement may be changed only by mutual agreement of the parties in
--writing.
-+REGULATIONS AND THAT LICENSEE MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE
-+SOFTWARE OR ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE
-+LAWS. WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT, OR TRANSFER OF THE
-+SOFTWARE TO CUBA, IRAN, NORTH KOREA, SUDAN, AND SYRIA IS PROHIBITED.
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+-		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
++		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID |
++				  INACTIVE_STA_EVENT_ID;
+ 	else
+ 		wl->event_mask |= DUMMY_PACKET_EVENT_ID;
  
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 2468044..d483316 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1070,7 +1070,7 @@ int wl1271_cmd_start_bss(struct wl1271 *wl)
+ 
+ 	memcpy(cmd->bssid, bss_conf->bssid, ETH_ALEN);
+ 
+-	cmd->aging_period = cpu_to_le16(WL1271_AP_DEF_INACTIV_SEC);
++	cmd->aging_period = cpu_to_le16(wl->conf.tx.ap_aging_period);
+ 	cmd->bss_index = WL1271_AP_BSS_INDEX;
+ 	cmd->global_hlid = WL1271_AP_GLOBAL_HLID;
+ 	cmd->broadcast_hlid = WL1271_AP_BROADCAST_HLID;
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 743bd0b..e6398e0 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -689,6 +689,12 @@ struct conf_tx_settings {
+ 	u16 ap_max_tx_retries;
+ 
+ 	/*
++	 * AP-mode - after this number of seconds a connected station is
++	 * considered inactive.
++	 */
++	u16 ap_aging_period;
++
++	/*
+ 	 * Configuration for TID parameters.
+ 	 */
+ 	u8 tid_conf_count;
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index ae69330..2d484db 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -174,6 +174,8 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	u32 vector;
+ 	bool beacon_loss = false;
+ 	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
++	bool disconnect_sta = false;
++	unsigned long sta_bitmap = 0;
+ 
+ 	wl1271_event_mbox_dump(mbox);
+ 
+@@ -235,9 +237,54 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 			wl1271_tx_dummy_packet(wl);
+ 	}
+ 
++	/*
++	 * "TX retries exceeded" has a different meaning according to mode.
++	 * In AP mode the offending station is disconnected. In STA mode we
++	 * report connection loss.
++	 */
++	if (vector & MAX_TX_RETRY_EVENT_ID) {
++		wl1271_debug(DEBUG_EVENT, "MAX_TX_RETRY_EVENT_ID");
++		if (is_ap) {
++			sta_bitmap |= le16_to_cpu(mbox->sta_tx_retry_exceeded);
++			disconnect_sta = true;
++		} else {
++			beacon_loss = true;
++		}
++	}
++
++	if ((vector & INACTIVE_STA_EVENT_ID) && is_ap) {
++		wl1271_debug(DEBUG_EVENT, "INACTIVE_STA_EVENT_ID");
++		sta_bitmap |= le16_to_cpu(mbox->sta_aging_status);
++		disconnect_sta = true;
++	}
++
+ 	if (wl->vif && beacon_loss)
+ 		ieee80211_connection_loss(wl->vif);
+ 
++	if (is_ap && disconnect_sta) {
++		u32 num_packets = wl->conf.tx.ap_max_tx_retries;
++		struct ieee80211_sta *sta;
++		const u8 *addr;
++		int h;
++
++		for (h = find_first_bit(&sta_bitmap, AP_MAX_LINKS);
++		     h < AP_MAX_LINKS;
++		     h = find_next_bit(&sta_bitmap, AP_MAX_LINKS, h+1)) {
++			if (!wl1271_is_active_sta(wl, h))
++				continue;
++
++			addr = wl->links[h].addr;
++
++			rcu_read_lock();
++			sta = ieee80211_find_sta(wl->vif, addr);
++			if (sta) {
++				wl1271_debug(DEBUG_EVENT, "remove sta %d", h);
++				ieee80211_report_low_ack(sta, num_packets);
++			}
++			rcu_read_unlock();
++		}
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index b6cf06e..7ae5a08 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -58,13 +58,16 @@ enum {
+ 	CHANNEL_SWITCH_COMPLETE_EVENT_ID	 = BIT(17),
+ 	BSS_LOSE_EVENT_ID			 = BIT(18),
+ 	REGAINED_BSS_EVENT_ID			 = BIT(19),
+-	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
++	MAX_TX_RETRY_EVENT_ID			 = BIT(20),
+ 	/* STA: dummy paket for dynamic mem blocks */
+ 	DUMMY_PACKET_EVENT_ID                    = BIT(21),
+ 	/* AP: STA remove complete */
+ 	STA_REMOVE_COMPLETE_EVENT_ID             = BIT(21),
+ 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
++	/* STA: SG prediction */
+ 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
++	/* AP: Inactive STA */
++	INACTIVE_STA_EVENT_ID			 = BIT(23),
+ 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
+ 	PLT_RX_CALIBRATION_COMPLETE_EVENT_ID	 = BIT(25),
+ 	DBG_EVENT_ID				 = BIT(26),
+@@ -119,7 +122,11 @@ struct event_mailbox {
+ 
+ 	/* AP FW only */
+ 	u8 hlid_removed;
++
++	/* a bitmap of hlids for stations that have been inactive too long */
+ 	__le16 sta_aging_status;
++
++	/* a bitmap of hlids for stations which didn't respond to TX */
+ 	__le16 sta_tx_retry_exceeded;
+ 
+ 	u8 reserved_5[24];
+@@ -130,4 +137,7 @@ void wl1271_event_mbox_config(struct wl1271 *wl);
+ int wl1271_event_handle(struct wl1271 *wl, u8 mbox);
+ void wl1271_pspoll_work(struct work_struct *work);
+ 
++/* Functions from main.c */
++bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid);
++
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7126506..e840176 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -193,6 +193,7 @@ static struct conf_drv_settings default_conf = {
+ 			.aflags              = 0,
+ 		},
+ 		.ap_max_tx_retries = 100,
++		.ap_aging_period = 300,
+ 		.tid_conf_count = 4,
+ 		.tid_conf = {
+ 			[CONF_TX_AC_BE] = {
+@@ -2952,6 +2953,12 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ }
+ 
++bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
++{
++	int id = hlid - WL1271_AP_STA_HLID_START;
++	return test_bit(id, wl->ap_hlid_map);
++}
++
+ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_sta *sta)
+@@ -3535,7 +3542,6 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_HAS_RATE_CONTROL |
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+ 		IEEE80211_HW_SUPPORTS_CQM_RSSI |
+-		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		IEEE80211_HW_AP_LINK_PS;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index fb2b79f..7c521af 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -172,7 +172,6 @@ extern u32 wl12xx_debug_level;
+ #define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
+ 
+ #define WL1271_AP_BSS_INDEX        0
+-#define WL1271_AP_DEF_INACTIV_SEC  300
+ #define WL1271_AP_DEF_BEACON_EXP   20
+ 
+ #define ACX_TX_DESCRIPTORS         32
 -- 
 1.7.1
-
 
