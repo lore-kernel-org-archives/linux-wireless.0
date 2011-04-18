@@ -1,159 +1,424 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:35311 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757715Ab1DHUAk convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61445 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754127Ab1DRNgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 16:00:40 -0400
+	Mon, 18 Apr 2011 09:36:18 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833934fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:17 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 20/23] rt2x00: Optimize register access in rt2800pci
+Date: Mon, 18 Apr 2011 15:34:01 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181533.21229.IvDoorn@gmail.com> <201104181533.42494.IvDoorn@gmail.com>
+In-Reply-To: <201104181533.42494.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 8 Apr 2011 22:00:19 +0200
-Message-ID: <BANLkTi=VvH-rahnK8VhmuPWhkshuEdqR6g@mail.gmail.com>
-Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181534.02553.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 8, 2011 at 9:45 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> Cc: Michael Büsch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: George Kashperko <george@znau.edu.ua>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: linux-arm-kernel@lists.infradead.org <linux-arm-kernel@lists.infradead.org>
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This is second try for introducing new bus driver.
-> V2: Rename to axi
->    Use DEFINE_PCI_DEVICE_TABLE in bridge
->    Make use of pr_fmt and pr_*
->    Store core class
->    Rename bridge to not b43 specific
->    Replace magic 0x1000 with BCMAI_CORE_SIZE
->    Remove some old "ssb" names and defines
->    Move BCMAI_ADDR_BASE def
->    Add drvdata field
-> TODO:
-> - Interrupts
-> - Reloading driver
-> ---
->  drivers/Kconfig                           |    2 +
->  drivers/Makefile                          |    1 +
->  drivers/axi/Kconfig                       |   30 +++
->  drivers/axi/Makefile                      |    5 +
->  drivers/axi/axi_pci_bridge.c              |   33 +++
->  drivers/axi/axi_private.h                 |   45 ++++
->  drivers/axi/core.c                        |   52 ++++
->  drivers/axi/driver_chipcommon.c           |   87 +++++++
->  drivers/axi/driver_chipcommon_pmu.c       |  134 ++++++++++
->  drivers/axi/driver_pci.c                  |  191 ++++++++++++++
->  drivers/axi/host_pci.c                    |  177 +++++++++++++
->  drivers/axi/main.c                        |  256 +++++++++++++++++++
->  drivers/axi/scan.c                        |  393 +++++++++++++++++++++++++++++
->  drivers/axi/scan.h                        |   56 ++++
->  include/linux/axi/axi.h                   |  221 ++++++++++++++++
->  include/linux/axi/axi_driver_chipcommon.h |  308 ++++++++++++++++++++++
->  include/linux/axi/axi_driver_pci.h        |   85 +++++++
->  include/linux/axi/axi_regs.h              |   34 +++
->  include/linux/mod_devicetable.h           |   17 ++
->  scripts/mod/file2alias.c                  |   21 ++
->  20 files changed, 2148 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/axi/Kconfig
->  create mode 100644 drivers/axi/Makefile
->  create mode 100644 drivers/axi/axi_pci_bridge.c
->  create mode 100644 drivers/axi/axi_private.h
->  create mode 100644 drivers/axi/core.c
->  create mode 100644 drivers/axi/driver_chipcommon.c
->  create mode 100644 drivers/axi/driver_chipcommon_pmu.c
->  create mode 100644 drivers/axi/driver_pci.c
->  create mode 100644 drivers/axi/host_pci.c
->  create mode 100644 drivers/axi/main.c
->  create mode 100644 drivers/axi/scan.c
->  create mode 100644 drivers/axi/scan.h
->  create mode 100644 include/linux/axi/axi.h
->  create mode 100644 include/linux/axi/axi_driver_chipcommon.h
->  create mode 100644 include/linux/axi/axi_driver_pci.h
->  create mode 100644 include/linux/axi/axi_regs.h
->
-> diff --git a/drivers/Kconfig b/drivers/Kconfig
-> index 177c7d1..1244e8c 100644
-> --- a/drivers/Kconfig
-> +++ b/drivers/Kconfig
-> @@ -68,6 +68,8 @@ source "drivers/watchdog/Kconfig"
->
->  source "drivers/ssb/Kconfig"
->
-> +source "drivers/axi/Kconfig"
-> +
->  source "drivers/mfd/Kconfig"
->
->  source "drivers/regulator/Kconfig"
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index 3f135b6..6e1979b 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -110,6 +110,7 @@ obj-$(CONFIG_HID)           += hid/
->  obj-$(CONFIG_PPC_PS3)          += ps3/
->  obj-$(CONFIG_OF)               += of/
->  obj-$(CONFIG_SSB)              += ssb/
-> +obj-$(CONFIG_AXI)              += axi/
->  obj-$(CONFIG_VHOST_NET)                += vhost/
->  obj-$(CONFIG_VLYNQ)            += vlynq/
->  obj-$(CONFIG_STAGING)          += staging/
-> diff --git a/drivers/axi/Kconfig b/drivers/axi/Kconfig
-> new file mode 100644
-> index 0000000..f4f58f5
-> --- /dev/null
-> +++ b/drivers/axi/Kconfig
-> @@ -0,0 +1,30 @@
-> +config AXI_POSSIBLE
-> +       bool
-> +       depends on HAS_IOMEM && HAS_DMA
-> +       default y
-> +
-> +menu "AMBA AXI"
-> +       depends on AXI_POSSIBLE
-> +
-> +config AXI
-> +       tristate "AXI support"
-> +       depends on AXI_POSSIBLE
-> +
-> +config AXI_HOST_PCI_POSSIBLE
-> +       bool
-> +       depends on AXI && PCI = y
-> +       default y
-> +
-> +config AXI_HOST_PCI
-> +       bool "Support for AI on PCI-host bus"
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Shouldn't this say AXI?
+All register reads/writes in rt2800pci were previously done with
+rt2800_register_read/rt2800_register_write. These however indirectly
+call rt2x00pci_register_read/rt2x00pci_register_write which adds an
+additional overhead of at least one call and several move instructions
+to each register access.
 
-> +       depends on AXI_HOST_PCI_POSSIBLE
-> +
-> +config AXI_DEBUG
-> +       bool "AXI debugging"
-> +       depends on AXI
-> +       help
-> +         This turns on additional debugging messages.
-> +
-> +         If unsure, say N
-> +
-> +endmenu
+Replacing the calls to rt2800_register_read/rt2800_register_write with
+direct calls to rt2x00pci_register_read/rt2x00pci_register_write gets
+rid of quite a number of instructions in the drivers hotpaths (IRQ
+handling and txdone handling).
+
+For consistency replace all references to rt2800_register_read/write
+with the rt2x00pci_register_read/write variants.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |  158 ++++++++++++++++--------------
+ 1 files changed, 84 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 6f91a9a..b0c729b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -66,7 +66,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 		return;
+ 
+ 	for (i = 0; i < 200; i++) {
+-		rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
++		rt2x00pci_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
+ 
+ 		if ((rt2x00_get_field32(reg, H2M_MAILBOX_CID_CMD0) == token) ||
+ 		    (rt2x00_get_field32(reg, H2M_MAILBOX_CID_CMD1) == token) ||
+@@ -80,8 +80,8 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 	if (i == 200)
+ 		ERROR(rt2x00dev, "MCU request failed, no response from hardware\n");
+ 
+-	rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
+-	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
++	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
++	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+ }
+ 
+ #if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+@@ -105,7 +105,7 @@ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+ 	struct rt2x00_dev *rt2x00dev = eeprom->data;
+ 	u32 reg;
+ 
+-	rt2800_register_read(rt2x00dev, E2PROM_CSR, &reg);
++	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
+ 
+ 	eeprom->reg_data_in = !!rt2x00_get_field32(reg, E2PROM_CSR_DATA_IN);
+ 	eeprom->reg_data_out = !!rt2x00_get_field32(reg, E2PROM_CSR_DATA_OUT);
+@@ -127,7 +127,7 @@ static void rt2800pci_eepromregister_write(struct eeprom_93cx6 *eeprom)
+ 	rt2x00_set_field32(&reg, E2PROM_CSR_CHIP_SELECT,
+ 			   !!eeprom->reg_chip_select);
+ 
+-	rt2800_register_write(rt2x00dev, E2PROM_CSR, reg);
++	rt2x00pci_register_write(rt2x00dev, E2PROM_CSR, reg);
+ }
+ 
+ static void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
+@@ -135,7 +135,7 @@ static void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
+ 	struct eeprom_93cx6 eeprom;
+ 	u32 reg;
+ 
+-	rt2800_register_read(rt2x00dev, E2PROM_CSR, &reg);
++	rt2x00pci_register_read(rt2x00dev, E2PROM_CSR, &reg);
+ 
+ 	eeprom.data = rt2x00dev;
+ 	eeprom.register_read = rt2800pci_eepromregister_read;
+@@ -195,9 +195,9 @@ static void rt2800pci_start_queue(struct data_queue *queue)
+ 
+ 	switch (queue->qid) {
+ 	case QID_RX:
+-		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
++		rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
+ 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 1);
+-		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
++		rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
+ 		break;
+ 	case QID_BEACON:
+ 		/*
+@@ -207,15 +207,15 @@ static void rt2800pci_start_queue(struct data_queue *queue)
+ 		tasklet_enable(&rt2x00dev->tbtt_tasklet);
+ 		tasklet_enable(&rt2x00dev->pretbtt_tasklet);
+ 
+-		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
++		rt2x00pci_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
+-		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++		rt2x00pci_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+-		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
++		rt2x00pci_register_read(rt2x00dev, INT_TIMER_EN, &reg);
+ 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 1);
+-		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
++		rt2x00pci_register_write(rt2x00dev, INT_TIMER_EN, reg);
+ 		break;
+ 	default:
+ 		break;
+@@ -233,11 +233,13 @@ static void rt2800pci_kick_queue(struct data_queue *queue)
+ 	case QID_AC_BE:
+ 	case QID_AC_BK:
+ 		entry = rt2x00queue_get_entry(queue, Q_INDEX);
+-		rt2800_register_write(rt2x00dev, TX_CTX_IDX(queue->qid), entry->entry_idx);
++		rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX(queue->qid),
++					 entry->entry_idx);
+ 		break;
+ 	case QID_MGMT:
+ 		entry = rt2x00queue_get_entry(queue, Q_INDEX);
+-		rt2800_register_write(rt2x00dev, TX_CTX_IDX(5), entry->entry_idx);
++		rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX(5),
++					 entry->entry_idx);
+ 		break;
+ 	default:
+ 		break;
+@@ -251,20 +253,20 @@ static void rt2800pci_stop_queue(struct data_queue *queue)
+ 
+ 	switch (queue->qid) {
+ 	case QID_RX:
+-		rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
++		rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
+ 		rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 0);
+-		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
++		rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
+ 		break;
+ 	case QID_BEACON:
+-		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
++		rt2x00pci_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 0);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 0);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
+-		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++		rt2x00pci_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+-		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
++		rt2x00pci_register_read(rt2x00dev, INT_TIMER_EN, &reg);
+ 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 0);
+-		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
++		rt2x00pci_register_write(rt2x00dev, INT_TIMER_EN, reg);
+ 
+ 		/*
+ 		 * Wait for tbtt tasklets to finish.
+@@ -295,7 +297,7 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	reg = 0;
+ 	rt2x00_set_field32(&reg, PBF_SYS_CTRL_HOST_RAM_WRITE, 1);
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
++	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
+ 
+ 	/*
+ 	 * Write firmware to device.
+@@ -303,11 +305,11 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
+ 				   data, len);
+ 
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
++	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
++	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
+ 
+-	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+-	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
++	rt2x00pci_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
++	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
+ 
+ 	return 0;
+ }
+@@ -351,7 +353,7 @@ static void rt2800pci_clear_entry(struct queue_entry *entry)
+ 		 * Set RX IDX in register to inform hardware that we have
+ 		 * handled this entry and it is available for reuse again.
+ 		 */
+-		rt2800_register_write(rt2x00dev, RX_CRX_IDX,
++		rt2x00pci_register_write(rt2x00dev, RX_CRX_IDX,
+ 				      entry->entry_idx);
+ 	} else {
+ 		rt2x00_desc_read(entry_priv->desc, 1, &word);
+@@ -369,45 +371,51 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ 	 * Initialize registers.
+ 	 */
+ 	entry_priv = rt2x00dev->tx[0].entries[0].priv_data;
+-	rt2800_register_write(rt2x00dev, TX_BASE_PTR0, entry_priv->desc_dma);
+-	rt2800_register_write(rt2x00dev, TX_MAX_CNT0, rt2x00dev->tx[0].limit);
+-	rt2800_register_write(rt2x00dev, TX_CTX_IDX0, 0);
+-	rt2800_register_write(rt2x00dev, TX_DTX_IDX0, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR0, entry_priv->desc_dma);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT0,
++				 rt2x00dev->tx[0].limit);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX0, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX0, 0);
+ 
+ 	entry_priv = rt2x00dev->tx[1].entries[0].priv_data;
+-	rt2800_register_write(rt2x00dev, TX_BASE_PTR1, entry_priv->desc_dma);
+-	rt2800_register_write(rt2x00dev, TX_MAX_CNT1, rt2x00dev->tx[1].limit);
+-	rt2800_register_write(rt2x00dev, TX_CTX_IDX1, 0);
+-	rt2800_register_write(rt2x00dev, TX_DTX_IDX1, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR1, entry_priv->desc_dma);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT1,
++				 rt2x00dev->tx[1].limit);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX1, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX1, 0);
+ 
+ 	entry_priv = rt2x00dev->tx[2].entries[0].priv_data;
+-	rt2800_register_write(rt2x00dev, TX_BASE_PTR2, entry_priv->desc_dma);
+-	rt2800_register_write(rt2x00dev, TX_MAX_CNT2, rt2x00dev->tx[2].limit);
+-	rt2800_register_write(rt2x00dev, TX_CTX_IDX2, 0);
+-	rt2800_register_write(rt2x00dev, TX_DTX_IDX2, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR2, entry_priv->desc_dma);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT2,
++				 rt2x00dev->tx[2].limit);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX2, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX2, 0);
+ 
+ 	entry_priv = rt2x00dev->tx[3].entries[0].priv_data;
+-	rt2800_register_write(rt2x00dev, TX_BASE_PTR3, entry_priv->desc_dma);
+-	rt2800_register_write(rt2x00dev, TX_MAX_CNT3, rt2x00dev->tx[3].limit);
+-	rt2800_register_write(rt2x00dev, TX_CTX_IDX3, 0);
+-	rt2800_register_write(rt2x00dev, TX_DTX_IDX3, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR3, entry_priv->desc_dma);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT3,
++				 rt2x00dev->tx[3].limit);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX3, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX3, 0);
+ 
+ 	entry_priv = rt2x00dev->rx->entries[0].priv_data;
+-	rt2800_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
+-	rt2800_register_write(rt2x00dev, RX_MAX_CNT, rt2x00dev->rx[0].limit);
+-	rt2800_register_write(rt2x00dev, RX_CRX_IDX, rt2x00dev->rx[0].limit - 1);
+-	rt2800_register_write(rt2x00dev, RX_DRX_IDX, 0);
++	rt2x00pci_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
++	rt2x00pci_register_write(rt2x00dev, RX_MAX_CNT,
++				 rt2x00dev->rx[0].limit);
++	rt2x00pci_register_write(rt2x00dev, RX_CRX_IDX,
++				 rt2x00dev->rx[0].limit - 1);
++	rt2x00pci_register_write(rt2x00dev, RX_DRX_IDX, 0);
+ 
+ 	/*
+ 	 * Enable global DMA configuration
+ 	 */
+-	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
++	rt2x00pci_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+-	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
++	rt2x00pci_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+ 
+-	rt2800_register_write(rt2x00dev, DELAY_INT_CFG, 0);
++	rt2x00pci_register_write(rt2x00dev, DELAY_INT_CFG, 0);
+ 
+ 	return 0;
+ }
+@@ -427,8 +435,8 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	 * should clear the register to assure a clean state.
+ 	 */
+ 	if (state == STATE_RADIO_IRQ_ON) {
+-		rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+-		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
++		rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
++		rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+ 
+ 		/*
+ 		 * Enable tasklets. The beacon related tasklets are
+@@ -440,7 +448,7 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
+-	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
++	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
+@@ -459,7 +467,7 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
+-	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+ 	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
+ 
+ 	if (state == STATE_RADIO_IRQ_OFF) {
+@@ -480,7 +488,7 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Reset DMA indexes
+ 	 */
+-	rt2800_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
++	rt2x00pci_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX0, 1);
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX1, 1);
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX2, 1);
+@@ -488,26 +496,26 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX4, 1);
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX5, 1);
+ 	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DRX_IDX0, 1);
+-	rt2800_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
++	rt2x00pci_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
+ 
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
++	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
++	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
+ 
+ 	if (rt2x00_rt(rt2x00dev, RT5390)) {
+-		rt2800_register_read(rt2x00dev, AUX_CTRL, &reg);
++		rt2x00pci_register_read(rt2x00dev, AUX_CTRL, &reg);
+ 		rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
+ 		rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
+-		rt2800_register_write(rt2x00dev, AUX_CTRL, reg);
++		rt2x00pci_register_write(rt2x00dev, AUX_CTRL, reg);
+ 	}
+ 
+-	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
++	rt2x00pci_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
+ 
+-	rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
++	rt2x00pci_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
+ 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
+ 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_BBP, 1);
+-	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
++	rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
+ 
+-	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
++	rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
+ 
+ 	return 0;
+ }
+@@ -525,8 +533,8 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (rt2x00_is_soc(rt2x00dev)) {
+ 		rt2800_disable_radio(rt2x00dev);
+-		rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0);
+-		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0);
++		rt2x00pci_register_write(rt2x00dev, PWR_PIN_CFG, 0);
++		rt2x00pci_register_write(rt2x00dev, TX_PIN_CFG, 0);
+ 	}
+ }
+ 
+@@ -537,8 +545,10 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
+ 		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
+ 	} else if (state == STATE_SLEEP) {
+-		rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, 0xffffffff);
+-		rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, 0xffffffff);
++		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
++					 0xffffffff);
++		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
++					 0xffffffff);
+ 		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
+ 	}
+ 
+@@ -778,9 +788,9 @@ static inline void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
+ 	 * access needs locking.
+ 	 */
+ 	spin_lock_irq(&rt2x00dev->irqmask_lock);
+-	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
++	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+ 	rt2x00_set_field32(&reg, irq_field, 1);
+-	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+ 	spin_unlock_irq(&rt2x00dev->irqmask_lock);
+ }
+ 
+@@ -851,7 +861,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+ 	 * need to lock the kfifo.
+ 	 */
+ 	for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
+-		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &status);
++		rt2x00pci_register_read(rt2x00dev, TX_STA_FIFO, &status);
+ 
+ 		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
+ 			break;
+@@ -873,8 +883,8 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ 	u32 reg, mask;
+ 
+ 	/* Read status and ACK all interrupts */
+-	rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+-	rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
++	rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
++	rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+ 
+ 	if (!reg)
+ 		return IRQ_NONE;
+@@ -914,9 +924,9 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ 	 * the tasklet will reenable the appropriate interrupts.
+ 	 */
+ 	spin_lock(&rt2x00dev->irqmask_lock);
+-	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
++	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+ 	reg &= mask;
+-	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+ 	spin_unlock(&rt2x00dev->irqmask_lock);
+ 
+ 	return IRQ_HANDLED;
+-- 
+1.7.2.3
+
