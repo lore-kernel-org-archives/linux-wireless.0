@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:36206 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373Ab1DPSth (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36622 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968Ab1DRWry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2011 14:49:37 -0400
-Received: by iwn34 with SMTP id 34so2900867iwn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2011 11:49:36 -0700 (PDT)
-Subject: Re: crda fails to compile
-From: Calvin Walton <calvin.walton@kepstin.ca>
-To: Alex <alfragk@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 16 Apr 2011 14:49:33 -0400
-In-Reply-To: <4DA8163F.6040308@gmail.com>
-References: <4DA8163F.6040308@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1302979775.17255.4.camel@nayuki>
-Mime-Version: 1.0
+	Mon, 18 Apr 2011 18:47:54 -0400
+Date: Mon, 18 Apr 2011 19:48:13 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: pull request: bluetooth-next-2.6 2011-04-18
+Message-ID: <20110418224813.GC2472@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-15 at 12:56 +0300, Alex wrote:
-> Hi,
-> 
-> the last couple of days i've beeen trying to compile crda on my linux 
-> box (gentoo) without success.
-> 
-> I've downloaded crda-1.1.1, and i've installed all the requirements as 
-> described in the README file.
-> 
-> However, when i run make i get the following error:
-> 
-> GEN  keys-gcrypt.c
->    Trusted pubkeys: pubkeys/linville.key.pub.pem
->    File "./utils/key2pub.py", line 6
->      except ImportError, e:
->                        ^
-> SyntaxError: invalid syntax
-> make: *** [keys-gcrypt.c] Error 1
-> 
-> 
-> Any help would be appreciated,
+Hi John,
 
-My guess is that your system installation of python (/usr/bin/python) is
-actually python-3 instead of python-2. The two versions are
-incompatible: a python-2 script won't run on python-3 without porting.
+Biggest changes are the initial patches for an refactor inside the L2CAP code:
+we have to separate the L2CAP socket stuff from the L2CAP core code to make
+life of L2CAP users(rfcomm and AMP manager in the future) inside the kernel easy.
 
-On gentoo you can switch your default python version back to 2 by
-running the commands:
+Other than that we basically bugfixes and cleanups.
 
-# eselect python list
-Available Python interpreters:
-  [1]   python2.7
-  [2]   python3.1 *
-# eselect python set 1
+Please pull, thanks!
 
-Also note that gentoo has a crda package available which you could use
-instead (I'd recommend this if you're not trying to develop crda):
 
-emerge net-wireless/crda
+The following changes since commit a90c7a313a1c5b4fc99f987a2ae8f92ab0ae35c7:
 
-Hope that helps.
+  cfg80211: add a timer for invalid user reg hints (2011-04-07 15:52:29 -0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
+
+Gustavo F. Padovan (26):
+      Bluetooth: Create struct l2cap_chan
+      Bluetooth: Use struct list_head for L2CAP channels list
+      Bluetooth: Remove struct del_list
+      Bluetooth: Move ident to struct l2cap_chan
+      Bluetooth: Move conf_{req,rsp} stuff to struct l2cap_chan
+      Bluetooth: clean up l2cap_sock_recvmsg()
+      Bluetooth: Move conn_state to struct l2cap_chan
+      Bluetooth: Move of ERTM *_seq vars to struct l2cap_chan
+      Bluetooth: Move more ERTM stuff to struct l2cap_chan
+      Bluetooth: Move SDU related vars to struct l2cap_chan
+      Bluetooth: Move remote info to struct l2cap_chan
+      Bluetooth: Move ERTM timers to struct l2cap_chan
+      Bluetooth: Move srej and busy queues to struct l2cap_chan
+      Bluetooth: Move busy workqueue to struct l2cap_chan
+      Bluetooth: Fix lockdep warning with skb list lock
+      Bluetooth: Move SREJ list to struct l2cap_chan
+      Bluetooth: Remove some sk references from l2cap_core.c
+      Bluetooth: Remove unneeded uninitialized_vars()
+      Bluetooth: Move tx queue to struct l2cap_chan
+      Bluetooth: Fix wrong comparison in listen()
+      Bluetooth: Clean up ath3k_load_firmware()
+      Bluetooth: Add proper handling of received LE data
+      Bluetooth: Check return value of hci_recv_stream_fragment()
+      Bluetooth: Don't lock sock inside l2cap_get_sock_by_scid()
+      Bluetooth: Fix another locking unbalance
+      Bluetooth: Fix lockdep warning in L2CAP
+
+Jiejing Zhang (1):
+      Bluetooth: hci_uart: check the return value of recv()
+
+Kevin Gan (1):
+      Bluetooth: btmrvl: support Marvell Bluetooth device SD8787
+
+Szymon Janc (1):
+      Bluetooth: Fix Out Of Band pairing when mgmt interface is disabled
+
+ drivers/bluetooth/Kconfig       |    4 +-
+ drivers/bluetooth/ath3k.c       |    3 -
+ drivers/bluetooth/btmrvl_sdio.c |  124 +++-
+ drivers/bluetooth/btmrvl_sdio.h |   68 +-
+ drivers/bluetooth/hci_ath.c     |    7 +-
+ drivers/bluetooth/hci_h4.c      |    7 +-
+ drivers/bluetooth/hci_ldisc.c   |    6 +-
+ include/net/bluetooth/l2cap.h   |  130 ++--
+ net/bluetooth/hci_event.c       |    4 +
+ net/bluetooth/l2cap_core.c      | 1344 +++++++++++++++++++++------------------
+ net/bluetooth/l2cap_sock.c      |   72 +--
+ 11 files changed, 964 insertions(+), 805 deletions(-)
+
 -- 
-Calvin Walton <calvin.walton@kepstin.ca>
-
+Gustavo F. Padovan
+http://profusion.mobi
