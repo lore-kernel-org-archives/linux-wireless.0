@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atp-es2.it.nicta.com.au ([203.143.174.70]:54604 "EHLO
-	atp-es2.it.nicta.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452Ab1DKXuz convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:58926 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991Ab1DRLLq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 19:50:55 -0400
-Message-ID: <4DA38BFD.5090900@nicta.com.au>
-Date: Tue, 12 Apr 2011 09:17:17 +1000
-From: Peizhao Hu <Peizhao.Hu@nicta.com.au>
-Reply-To: Peizhao.Hu@nicta.com.au
+	Mon, 18 Apr 2011 07:11:46 -0400
+Received: by qyg14 with SMTP id 14so2936244qyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:11:45 -0700 (PDT)
 MIME-Version: 1.0
+Date: Mon, 18 Apr 2011 13:11:45 +0200
+Message-ID: <BANLkTikk23kkpt2Gnjx-EEK+zvo+w4ZXwQ@mail.gmail.com>
+Subject: Does mac80211 flush beacon_parameters->interval?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 To: linux-wireless@vger.kernel.org
-CC: Wei Yin <yinwei@itee.uq.edu.au>
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Subject: problems about the madwifi driver and mac80211 framework
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+I was pinged about bug report on OpenWRT [0] about b43 not setting
+beacon interval for AP mode when restarting hostapd. You can see my
+comment in this bug report for some details.
 
-I am studying the minstrel rate control mechinsim in mac80211. I have
-observed a few strange problem with the current implementation of the
-minstrel on the mac80211. They are explained below:
+It seems that starting hostapd calls:
+ieee80211_ops->start
 
-1. Different DIFS values were used by madwifi 0.9.4 and mac80211.
-In madwifi 0.9.4, the DIFS is set to 28 from the source code in the
-calc_usecs_unicast_packet() function.
+In normal situation this is followed by:
+ieee80211_ops->bss_info_changed
+with BSS_CHANGED_BEACON_INT
 
-However, according to the IEEE 802.11 2007 standard, the DIFS time for
-OFDM should be 34, which is 2 slot time plus a SIFS time shown in table
-17-15 in page 626 or described in page 271.
+However I suspect that if device was already used earlier (so this is
+restart, not cold start), driver does not receive
+BSS_CHANGED_BEACON_INT or bss_info_changed is not called at all.
 
-Why we have different DIFS values?
+Is this possible mac80211 caches beacon interval and does not flush it
+on hardware restart?
 
-2. Another question is on how we calculate the frame transmission time
+I suspect this part of code to do the caching:
+http://lxr.free-electrons.com/source/net/mac80211/cfg.c#L452
 
-In the function "ieee80211_frame_duration()" within util.c on the
-mac80211 framework, the frame time is calculated as the following.
-dur = 16; /* SIFS + signal ext */
-dur += 16; /*  T_PREAMBLE = 16 usec */
-dur += 4; /* T_SIGNAL = 4 usec */
-dur += 4 * DIV_ROUND_UP((16 + 8 * (len + 4) + 6) * 10, 4 * rate); /*
-T_SYM x N_SYM */
+How does it work? BSS_CHANGED_BEACON_INT is passed only:
+if (params->interval &&
+(sdata->vif.bss_conf.beacon_int != params->interval))
 
-In mac80211 based minstrel implementation, minstrel uses the able
-fuction to calculate the time for sending a data frame as well as
-sending an ack.
+Performing:
+grep "\.interval" ./net/mac80211/*
+grep "\->interval" ./net/mac80211/*
+does not give anything interesting. It seems nl80211.c is involved here.
 
-to our understanding the normal transmission time is calculated as below
-(assume no retransmission):
-DIFS + contentionWindow + dataTime + SIFS + ackTime
+Cold someone take a look at this?
 
-where
+[0] https://dev.openwrt.org/ticket/8033
 
-dataTime=T_PREAMBLE + T_SIGNAL + T_SYM * N_SYM
-ackTime is similar
-
-but in Minstrel's implementation (using the above
-"ieee80211_frame_duration()" function), we effectively calculate the
-transmission time as
-
-SIFS + contentionWindow + dataTime + SIFS + ackTime
-
-So why there are two SIFS???
-
-Any idea?
-
---
-regards;
-
-Peizhao
-
-The information in this e-mail may be confidential and subject to legal professional privilege and/or copyright. National ICT Australia Limited accepts no liability for any damage caused by this email or its attachments.
+-- 
+Rafał
