@@ -1,173 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1157 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841Ab1DKQ7S convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41741 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991Ab1DRLPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 12:59:18 -0400
-cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 11 Apr 2011 18:59:02 +0200
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtr9glg23ri7v4@arend-laptop>
-In-Reply-To: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+	Mon, 18 Apr 2011 07:15:42 -0400
+Received: by wwa36 with SMTP id 36so5506533wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:15:40 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 01/10] wl12xx: add BT-coexistance for AP
+Date: Mon, 18 Apr 2011 14:15:20 +0300
+Message-Id: <1303125329-27214-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 08 Apr 2011 21:45:00 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+Initialize AP specific BT coexitance parameters to default values and
+enable them in AP mode.
 
-> Cc: Michael Büsch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: George Kashperko <george@znau.edu.ua>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: linux-arm-kernel@lists.infradead.org  
-> <linux-arm-kernel@lists.infradead.org>
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This is second try for introducing new bus driver.
-> V2: Rename to axi
->     Use DEFINE_PCI_DEVICE_TABLE in bridge
->     Make use of pr_fmt and pr_*
->     Store core class
->     Rename bridge to not b43 specific
->     Replace magic 0x1000 with BCMAI_CORE_SIZE
->     Remove some old "ssb" names and defines
->     Move BCMAI_ADDR_BASE def
->     Add drvdata field
-> TODO:
-> - Interrupts
-> - Reloading driver
-> ---
->  drivers/Kconfig                           |    2 +
->  drivers/Makefile                          |    1 +
->  include/linux/mod_devicetable.h           |   17 ++
->  scripts/mod/file2alias.c                  |   21 ++
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c  |   40 ++++++++++++++++++++++---
+ drivers/net/wireless/wl12xx/acx.h  |   16 ++++++++--
+ drivers/net/wireless/wl12xx/conf.h |   35 +++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/init.c |   15 ++++++----
+ drivers/net/wireless/wl12xx/main.c |   57 +++++++++++++++++++++++++++++++++++-
+ 5 files changed, 146 insertions(+), 17 deletions(-)
 
-Hi Rafał,
-
-I tried to apply this patch, but it failed as well. I did the 4 files
-above manually and applied partial patch for the new files.
-
-When I load the module it seems to have succeeded once, but every insmod
-attempt I do now fails with following trace:
-
-Apr 11 16:43:43 arend-laptop kernel: [   61.249239] axi-pci-bridge
-0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-Apr 11 16:43:43 arend-laptop kernel: [   61.249312] Core 0 found:
-ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-Apr 11 16:43:43 arend-laptop kernel: [   61.249339] Core 1 found: IEEE
-802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-Apr 11 16:43:43 arend-laptop kernel: [   61.249400] Core 2 found: PCIe
-(manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
-Apr 11 16:43:43 arend-laptop kernel: [   61.279913] Modules linked in:
-axi(+) binfmt_misc nouveau ttm drm_kms_helper drm i2c_algo_bit
-snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel snd_hda_codec
-snd_seq_midi snd_hwdep ppdev snd_rawmidi snd_pcm snd_seq_midi_event
-parport_pc snd_seq snd_timer snd_seq_device lp pcmcia snd uvcvideo
-soundcore snd_page_alloc dell_laptop videodev dell_wmi dcdbas
-sparse_keymap intel_ips yenta_socket video pcmcia_rsrc pcmcia_core parport
-intel_agp intel_gtt agpgart psmouse btusb bluetooth joydev serio_raw
-usbhid hid mmc_block ahci sdhci_pci firewire_ohci sdhci e1000e
-firewire_core mmc_core libahci crc_itu_t
-Apr 11 16:43:43 arend-laptop kernel: [   61.280052]
-Apr 11 16:43:43 arend-laptop kernel: [   61.280366] Pid: 2008, comm:
-insmod Not tainted 2.6.39-rc1-staging-next-09270-gb905e26 #1 Dell Inc.
-Latitude E6410/07XJP9
-Apr 11 16:43:43 arend-laptop kernel: [   61.281090] EIP: 0060:[<c0213d3d>]
-EFLAGS: 00010246 CPU: 1
-Apr 11 16:43:43 arend-laptop kernel: [   61.281812] EIP is at
-kfree+0x10d/0x120
-Apr 11 16:43:43 arend-laptop kernel: [   61.282523] EAX: 40000000 EBX:
-f726bc40 ECX: f2ea6910 EDX: 0000002f
-Apr 11 16:43:43 arend-laptop kernel: [   61.283234] ESI: f57d2d60 EDI:
-00000000 EBP: f726bd70 ESP: f726bd4c
-Apr 11 16:43:43 arend-laptop kernel: [   61.283947]  DS: 007b ES: 007b FS:
-00d8 GS: 00e0 SS: 0068
-Apr 11 16:43:43 arend-laptop kernel: [   61.286071]  f726bd98 f848be2a
-f726bd70 c036dea3 f726bda0 00000007 f3aae18c f726bc40
-Apr 11 16:43:43 arend-laptop kernel: [   61.286797]  f3aae000 f726bd80
-c03642c4 f3aae16c 00000001 f726bd88 c0410639 f726bdb4
-Apr 11 16:43:43 arend-laptop kernel: [   61.287522]  f848a326 f3aae184
-f848be2a 00000000 00000000 f3aae184 00000000 f39eb800
-Apr 11 16:43:43 arend-laptop kernel: [   61.288957]  [<c036dea3>] ?
-kvasprintf+0x43/0x60
-Apr 11 16:43:43 arend-laptop kernel: [   61.289660]  [<c03642c4>]
-kobject_set_name_vargs+0x64/0x70
-Apr 11 16:43:43 arend-laptop kernel: [   61.290357]  [<c0410639>]
-dev_set_name+0x19/0x20
-Apr 11 16:43:43 arend-laptop kernel: [   61.291050]  [<f848a326>]
-axi_bus_register+0x106/0x220 [axi]
-Apr 11 16:43:43 arend-laptop kernel: [   61.291738]  [<f848bd1a>]
-axi_host_pci_probe+0xfa/0x168 [axi]
-Apr 11 16:43:43 arend-laptop kernel: [   61.292419]  [<c0381497>]
-local_pci_probe+0x47/0xb0
-Apr 11 16:43:43 arend-laptop kernel: [   61.293091]  [<c0382388>]
-pci_device_probe+0x68/0x90
-Apr 11 16:43:43 arend-laptop kernel: [   61.293755]  [<c04138af>]
-driver_probe_device+0x7f/0x190
-Apr 11 16:43:43 arend-laptop kernel: [   61.294417]  [<c0413a41>]
-__driver_attach+0x81/0x90
-Apr 11 16:43:43 arend-laptop kernel: [   61.295070]  [<c0412ec3>]
-bus_for_each_dev+0x53/0x80
-Apr 11 16:43:43 arend-laptop kernel: [   61.295720]  [<c041372e>]
-driver_attach+0x1e/0x20
-Apr 11 16:43:43 arend-laptop kernel: [   61.296371]  [<c04139c0>] ?
-driver_probe_device+0x190/0x190
-Apr 11 16:43:43 arend-laptop kernel: [   61.297015]  [<c0413140>]
-bus_add_driver+0xc0/0x240
-Apr 11 16:43:43 arend-laptop kernel: [   61.297661]  [<c0382200>] ?
-pci_dev_put+0x20/0x20
-Apr 11 16:43:43 arend-laptop kernel: [   61.298308]  [<c041406a>]
-driver_register+0x6a/0x130
-Apr 11 16:43:43 arend-laptop kernel: [   61.298958]  [<c0412897>] ?
-bus_put+0x17/0x20
-Apr 11 16:43:43 arend-laptop kernel: [   61.299608]  [<c041306e>] ?
-bus_create_file+0x3e/0x50
-Apr 11 16:43:43 arend-laptop kernel: [   61.300259]  [<c03825c5>]
-__pci_register_driver+0x45/0xb0
-Apr 11 16:43:43 arend-laptop kernel: [   61.300900]  [<f848bbb5>]
-axi_host_pci_register+0x25/0x30 [axi]
-Apr 11 16:43:43 arend-laptop kernel: [   61.301539]  [<f83bb03f>]
-axi_pci_bridge_init+0xd/0xf [axi]
-Apr 11 16:43:43 arend-laptop kernel: [   61.302172]  [<f83bb01c>]
-axi_modinit+0x1c/0x32 [axi]
-Apr 11 16:43:43 arend-laptop kernel: [   61.302810]  [<c0101125>]
-do_one_initcall+0x35/0x170
-Apr 11 16:43:43 arend-laptop kernel: [   61.303445]  [<f83bb000>] ?
-0xf83bafff
-Apr 11 16:43:43 arend-laptop kernel: [   61.304078]  [<c0181e46>]
-sys_init_module+0x116/0x1090
-Apr 11 16:43:43 arend-laptop kernel: [   61.304716]  [<c05e3e5f>]
-sysenter_do_call+0x12/0x28
-Apr 11 16:43:43 arend-laptop kernel: [   61.307475] ---[ end trace
-9219745721068e61 ]---
-
-Is this what you indicate with reloading driver in the TODO remark? I
-rebooted the system and power-cycled it but I still get this failure. I
-did not futher look into this so hopefully you can enlighten me on this.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index b277947..cda546b 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -540,13 +540,13 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_acx_sg_cfg(struct wl1271 *wl)
++int wl1271_acx_sta_sg_cfg(struct wl1271 *wl)
+ {
+-	struct acx_bt_wlan_coex_param *param;
++	struct acx_sta_bt_wlan_coex_param *param;
+ 	struct conf_sg_settings *c = &wl->conf.sg;
+ 	int i, ret;
+ 
+-	wl1271_debug(DEBUG_ACX, "acx sg cfg");
++	wl1271_debug(DEBUG_ACX, "acx sg sta cfg");
+ 
+ 	param = kzalloc(sizeof(*param), GFP_KERNEL);
+ 	if (!param) {
+@@ -555,8 +555,38 @@ int wl1271_acx_sg_cfg(struct wl1271 *wl)
+ 	}
+ 
+ 	/* BT-WLAN coext parameters */
+-	for (i = 0; i < CONF_SG_PARAMS_MAX; i++)
+-		param->params[i] = cpu_to_le32(c->params[i]);
++	for (i = 0; i < CONF_SG_STA_PARAMS_MAX; i++)
++		param->params[i] = cpu_to_le32(c->sta_params[i]);
++	param->param_idx = CONF_SG_PARAMS_ALL;
++
++	ret = wl1271_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
++	if (ret < 0) {
++		wl1271_warning("failed to set sg config: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(param);
++	return ret;
++}
++
++int wl1271_acx_ap_sg_cfg(struct wl1271 *wl)
++{
++	struct acx_ap_bt_wlan_coex_param *param;
++	struct conf_sg_settings *c = &wl->conf.sg;
++	int i, ret;
++
++	wl1271_debug(DEBUG_ACX, "acx sg ap cfg");
++
++	param = kzalloc(sizeof(*param), GFP_KERNEL);
++	if (!param) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* BT-WLAN coext parameters */
++	for (i = 0; i < CONF_SG_AP_PARAMS_MAX; i++)
++		param->params[i] = cpu_to_le32(c->ap_params[i]);
+ 	param->param_idx = CONF_SG_PARAMS_ALL;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 0a40cae..b35ebf5 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -370,14 +370,23 @@ struct acx_bt_wlan_coex {
+ 	u8 pad[3];
+ } __packed;
+ 
+-struct acx_bt_wlan_coex_param {
++struct acx_sta_bt_wlan_coex_param {
+ 	struct acx_header header;
+ 
+-	__le32 params[CONF_SG_PARAMS_MAX];
++	__le32 params[CONF_SG_STA_PARAMS_MAX];
+ 	u8 param_idx;
+ 	u8 padding[3];
+ } __packed;
+ 
++struct acx_ap_bt_wlan_coex_param {
++	struct acx_header header;
++
++	__le32 params[CONF_SG_AP_PARAMS_MAX];
++	u8 param_idx;
++	u8 padding[3];
++} __packed;
++
++
+ struct acx_dco_itrim_params {
+ 	struct acx_header header;
+ 
+@@ -1263,7 +1272,8 @@ int wl1271_acx_beacon_filter_opt(struct wl1271 *wl, bool enable_filter);
+ int wl1271_acx_beacon_filter_table(struct wl1271 *wl);
+ int wl1271_acx_conn_monit_params(struct wl1271 *wl, bool enable);
+ int wl1271_acx_sg_enable(struct wl1271 *wl, bool enable);
+-int wl1271_acx_sg_cfg(struct wl1271 *wl);
++int wl1271_acx_sta_sg_cfg(struct wl1271 *wl);
++int wl1271_acx_ap_sg_cfg(struct wl1271 *wl);
+ int wl1271_acx_cca_threshold(struct wl1271 *wl);
+ int wl1271_acx_bcn_dtim_options(struct wl1271 *wl);
+ int wl1271_acx_aid(struct wl1271 *wl, u16 aid);
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 743bd0b..0c1d0c7 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -396,12 +396,43 @@ enum {
+ 	CONF_SG_TEMP_PARAM_3,
+ 	CONF_SG_TEMP_PARAM_4,
+ 	CONF_SG_TEMP_PARAM_5,
+-	CONF_SG_PARAMS_MAX,
++
++	/*
++	 * AP beacon miss
++	 *
++	 * Range: 0 - 255
++	 */
++	CONF_SG_AP_BEACON_MISS_TX,
++
++	/*
++	 * AP RX window length
++	 *
++	 * Range: 0 - 50
++	 */
++	CONF_SG_RX_WINDOW_LENGTH,
++
++	/*
++	 * AP connection protection time
++	 *
++	 * Range: 0 - 5000
++	 */
++	CONF_SG_AP_CONNECTION_PROTECTION_TIME,
++
++	CONF_SG_TEMP_PARAM_6,
++	CONF_SG_TEMP_PARAM_7,
++	CONF_SG_TEMP_PARAM_8,
++	CONF_SG_TEMP_PARAM_9,
++	CONF_SG_TEMP_PARAM_10,
++
++	CONF_SG_STA_PARAMS_MAX = CONF_SG_TEMP_PARAM_5 + 1,
++	CONF_SG_AP_PARAMS_MAX = CONF_SG_TEMP_PARAM_10 + 1,
++
+ 	CONF_SG_PARAMS_ALL = 0xff
+ };
+ 
+ struct conf_sg_settings {
+-	u32 params[CONF_SG_PARAMS_MAX];
++	u32 sta_params[CONF_SG_STA_PARAMS_MAX];
++	u32 ap_params[CONF_SG_AP_PARAMS_MAX];
+ 	u8 state;
+ };
+ 
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index cf46607..e8c979d 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -285,7 +285,10 @@ int wl1271_init_pta(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	ret = wl1271_acx_sg_cfg(wl);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		ret = wl1271_acx_ap_sg_cfg(wl);
++	else
++		ret = wl1271_acx_sta_sg_cfg(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -351,11 +354,6 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* Bluetooth WLAN coexistence */
+-	ret = wl1271_init_pta(wl);
+-	if (ret < 0)
+-		return ret;
+-
+ 	/* Beacons and broadcast settings */
+ 	ret = wl1271_init_beacon_broadcast(wl);
+ 	if (ret < 0)
+@@ -563,6 +561,11 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* Bluetooth WLAN coexistence */
++	ret = wl1271_init_pta(wl);
++	if (ret < 0)
++		return ret;
++
+ 	/* Default memory configuration */
+ 	ret = wl1271_acx_init_mem_config(wl);
+ 	if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7126506..1c206ae 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -51,7 +51,7 @@
+ 
+ static struct conf_drv_settings default_conf = {
+ 	.sg = {
+-		.params = {
++		.sta_params = {
+ 			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
+ 			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
+ 			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
+@@ -101,6 +101,61 @@ static struct conf_drv_settings default_conf = {
+ 			[CONF_SG_DHCP_TIME]                         = 5000,
+ 			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP]  = 100,
+ 		},
++		.ap_params = {
++			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
++			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
++			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
++			[CONF_SG_BT_LOAD_RATIO]                     = 50,
++			[CONF_SG_AUTO_PS_MODE]                      = 1,
++			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
++			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
++			[CONF_SG_ANTENNA_CONFIGURATION]             = 0,
++			[CONF_SG_BEACON_MISS_PERCENT]               = 60,
++			[CONF_SG_RATE_ADAPT_THRESH]                 = 64,
++			[CONF_SG_RATE_ADAPT_SNR]                    = 1,
++			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_BR]      = 10,
++			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_BR]      = 25,
++			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_BR]      = 25,
++			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_BR]       = 20,
++			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_BR]       = 25,
++			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_BR]       = 25,
++			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MIN_EDR]     = 7,
++			[CONF_SG_WLAN_PS_BT_ACL_MASTER_MAX_EDR]     = 25,
++			[CONF_SG_WLAN_PS_MAX_BT_ACL_MASTER_EDR]     = 25,
++			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MIN_EDR]      = 8,
++			[CONF_SG_WLAN_PS_BT_ACL_SLAVE_MAX_EDR]      = 25,
++			[CONF_SG_WLAN_PS_MAX_BT_ACL_SLAVE_EDR]      = 25,
++			[CONF_SG_RXT]                               = 1200,
++			[CONF_SG_TXT]                               = 1000,
++			[CONF_SG_ADAPTIVE_RXT_TXT]                  = 1,
++			[CONF_SG_PS_POLL_TIMEOUT]                   = 10,
++			[CONF_SG_UPSD_TIMEOUT]                      = 10,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MIN_EDR] = 7,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_MASTER_MAX_EDR] = 15,
++			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_MASTER_EDR] = 15,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MIN_EDR]  = 8,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_SLAVE_MAX_EDR]  = 20,
++			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_SLAVE_EDR]  = 15,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_MIN_BR]         = 20,
++			[CONF_SG_WLAN_ACTIVE_BT_ACL_MAX_BR]         = 50,
++			[CONF_SG_WLAN_ACTIVE_MAX_BT_ACL_BR]         = 10,
++			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_HV3]  = 200,
++			[CONF_SG_PASSIVE_SCAN_DURATION_FACTOR_A2DP] = 800,
++			[CONF_SG_PASSIVE_SCAN_A2DP_BT_TIME]         = 75,
++			[CONF_SG_PASSIVE_SCAN_A2DP_WLAN_TIME]       = 15,
++			[CONF_SG_HV3_MAX_SERVED]                    = 6,
++			[CONF_SG_DHCP_TIME]                         = 5000,
++			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_A2DP]  = 100,
++			[CONF_SG_TEMP_PARAM_1]                      = 0,
++			[CONF_SG_TEMP_PARAM_2]                      = 0,
++			[CONF_SG_TEMP_PARAM_3]                      = 0,
++			[CONF_SG_TEMP_PARAM_4]                      = 0,
++			[CONF_SG_TEMP_PARAM_5]                      = 0,
++			[CONF_SG_AP_BEACON_MISS_TX]                 = 3,
++			[CONF_SG_RX_WINDOW_LENGTH]                  = 6,
++			[CONF_SG_AP_CONNECTION_PROTECTION_TIME]     = 50,
++			[CONF_SG_TEMP_PARAM_6]                      = 1,
++		},
+ 		.state = CONF_SG_PROTECTIVE,
+ 	},
+ 	.rx = {
 -- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+1.7.1
 
