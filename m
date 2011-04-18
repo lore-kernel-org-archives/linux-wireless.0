@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40867 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751582Ab1DMLuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 07:50:16 -0400
-Received: from dlep34.itg.ti.com ([157.170.170.115])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p3DBoF5x031924
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2011 06:50:15 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH v2] wl12xx: Update Power Save Exit Retries Packets
-Date: Wed, 13 Apr 2011 14:52:50 +0300
-Message-Id: <1302695570-14436-1-git-send-email-shahar_levi@ti.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47382 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908Ab1DRH3a convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 03:29:30 -0400
+Received: by vws1 with SMTP id 1so3278500vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 00:29:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110415163443.GH23532@jm.kir.nu>
+References: <BANLkTimEipE8q-ehYFrXpVqHRSHrCcZxXw@mail.gmail.com>
+	<20110415163443.GH23532@jm.kir.nu>
+Date: Mon, 18 Apr 2011 09:29:29 +0200
+Message-ID: <BANLkTikM0p1aJA2DsS2-pCi2O80rwtTmqQ@mail.gmail.com>
+Subject: Re: WPA2 Access Point (HostAPD) authentication with Samsung Galaxy
+ Tab fails.
+From: Juan Carlos Garza <juancarlosgarza@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: hostap@lists.shmoo.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reducing the retries of sending PS exit packets to the peer AP.
-That fix is to avoid sending unrealizable number of PS exit packets
-in case of ap lost.
+Hi,
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
-Changes from v1:
- - Update commit message
+On Fri, Apr 15, 2011 at 6:34 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Fri, Apr 15, 2011 at 12:54:28PM +0200, Juan Carlos Garza wrote:
+>> I am having trouble to authenticate a Samsung Galaxy Tab with an AP on
+>> a rt3070 usb device. The specifics follow...
+>
+>> However, I am trying to authenticate with a Samsung Galaxy Tab with
+>> Android 2.2 on it, and I get the following log:
+>
+>> mgmt::auth
+>> authentication: STA=bc:47:60:93:74:bd auth_alg=0 auth_transaction=1
+>> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: authentication OK (open system)
+>> authentication reply: STA=bc:47:60:93:74:bd auth_alg=0
+>> mgmt::assoc_req
+>> association request: STA=bc:47:60:93:74:bd capab_info=0x431 listen_interval=10
+>> unknown vendor specific information element ignored (vendor OUI 00:10:18 len=9)
+>>   new AID 2
+>> HT: STA bc:47:60:93:74:bd HT Capabilities Info: 0x182c
+>> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: association OK (aid 2)
+>> mgmt::auth cb
+>> wlan0: STA bc:47:60:93:74:bd IEEE 802.11: authenticated
+>
+> Huh... That rt3070 device or driver sure takes long to deliver the TX
+> status information.
+>
+>> Data/PS-poll frame from not associated STA bc:47:60:93:74:bd
+>> mgmt::assoc_resp cb
+>
+> And since the station you are using here seems to send some Data frames
+> quickly after the association, it happens to hit a race condition
+> between the association response TX status callback and first Data frame
+> being received. This in turn makes hostapd disassociate the station
+> since from its view point, the station tried to send a Data frame while
+> it had not yet completed association.
+>
+> You can now find a workaround for this in the current development branch
+> for hostapd:
+> http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=b8281964afb1df98135418fc22a9fa240968d100
 
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 85cb4da..22c917d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -256,7 +256,7 @@ static struct conf_drv_settings default_conf = {
- 		.bet_enable                  = CONF_BET_MODE_ENABLE,
- 		.bet_max_consecutive         = 50,
- 		.psm_entry_retries           = 5,
--		.psm_exit_retries            = 255,
-+		.psm_exit_retries            = 16,
- 		.psm_entry_nullfunc_retries  = 3,
- 		.psm_entry_hangover_period   = 1,
- 		.keep_alive_interval         = 55000,
--- 
-1.7.0.4
+Thanks a lot, I am currently testing the patched 0.7.3 and now
+authentications are successful.
 
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
+
+Regards,
+Juan Carlos Garza Fernández
