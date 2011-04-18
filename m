@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.ralinktech.com.tw ([211.75.121.152]:43849 "HELO
-	smtp.ralinktech.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753122Ab1DLFhP convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39241 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862Ab1DRUpO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 01:37:15 -0400
-From: RA-Shiang Tu <Shiang_Tu@ralinktech.com>
-To: Walter Goldens <goldenstranger@yahoo.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: "dwmw2@infradead.org" <dwmw2@infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"gwingerde@gmail.com" <gwingerde@gmail.com>,
-	"ben@decadent.org.uk" <ben@decadent.org.uk>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] rt2800pci: rt2800usb: Firmware update
-Date: Tue, 12 Apr 2011 05:23:35 +0000
-Message-ID: <3CD5C4D3B07007449D2E692F161FEE710933423B@TWHCMBS02.tw.ralinktech.ad>
-References: <4DA33FFD.5070004@gmail.com>
- <312743.30438.qm@web161611.mail.bf1.yahoo.com>
-In-Reply-To: <312743.30438.qm@web161611.mail.bf1.yahoo.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 18 Apr 2011 16:45:14 -0400
+Received: by iwn34 with SMTP id 34so4212459iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 13:45:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1303129610.3588.7.camel@jlt3.sipsolutions.net>
+References: <1303125749-31967-1-git-send-email-arik@wizery.com> <1303129610.3588.7.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 18 Apr 2011 23:44:58 +0300
+Message-ID: <BANLkTikc9wrZ__8URZ3ASQ6F=rUHix2iGA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet loss
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-> > > Are there any changelogs for these firmware files? Do
-> > they
-> > > only offer support for newer chips, or are there any
-> > actual
-> > > improvements and bug fixes implemented? Users should
-> > know
-> > > whether updating the firmware will be of any use to
-> > them.
-> >
-> > Shiang Tu from ralink says [1] :
-> > "We always suggest to use latest firmware, because it's backward
-> > compatible and also has some enhancement, bug fix, or
-> support of new
-> > chip.
+On Mon, Apr 18, 2011 at 15:26, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2011-04-18 at 14:22 +0300, Arik Nemtsov wrote:
+>> Add API that allows low level drivers to notify mac80211 about TX
+>> packet loss. This is useful when there are FW triggers to notify the
+>> low level driver about these events.
 >
-> Sorry, but how very ... Microsoft-y of Ralink.
-> Something has changed, a bug, an improvement, but we are to
-> guess what it is?
-> Maybe if people knew how these firmware files affect
-> different generations of chips, they'd knew how to maintain
-> them better. I think this contributes to the mess here.
+>> +void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
+>> +{
+>> +     struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+>> +     cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
+>> +                                 num_packets, GFP_ATOMIC);
 >
+> I think it would make more sense to add num_packets to sta->lost_packets
+> and invoke it only when over the threshold as done in
+> ieee80211_tx_status(), as then we can share any threshold calculation
+> improvements.
 
-First of all, thanks for all for the great help to make Ralink chipset can
-work well in Linux.
+Well in a wl12xx chip we just configure some thresholds to the FW and
+it triggers the event for us. Using TX status doesn't really make
+sense since the FW has automatic rate control (so 50 tries are more
+like 50 * 8).
 
-In deed, restricted by the limited resources, Ralink didn't involve in the
-rt2x00 project development closely for long time and the rt2x00 project
-developers and free contributors only can get limited information from
-Ralink's open source code. I think that' why make the situation becomes
-a little bit complicate. Sorry for that.
+>
+> Also, are you sure? Do you really not get _any_ TX status?
 
-Now we try to work closely with rt2x00 project, we also will sumbit latest
-frimware to linux-firmware once have any updates. We are newbie to work
-with open source community, if we have any problem, your kindly help will
-be highly appreciated.
+Currently we do get TX status, but there are plans to remove it later on.
 
-Thanks very much.
-
-Best Regards
-Shiang
-CONFIDENTIALITY STATEMENT : The information, attachments and any rights attaching in this e-mail are confidential and privileged; it is intended only for the individual or entity named as the recipient hereof.Any disclosure, copying, distribution, dissemination or use of the contents of this e-mail by persons other than the intended recipient is STRICTLY PROHIBITED and may violate applicable laws.If you have received this e-mail in error, please delete the original message and notify us by return email or collect call immediately. Thank you.
+Regards,
+Arik
