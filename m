@@ -1,75 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from treacle.ucs.ed.ac.uk ([129.215.16.102]:44238 "EHLO
-	treacle.ucs.ed.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358Ab1DZMfG convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45773 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab1DROum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 08:35:06 -0400
-Message-ID: <20110426125801.q89ma5n6cgkwog80@www.sms.ed.ac.uk> (sfid-20110426_143510_754584_C1FC83BE)
-Date: Tue, 26 Apr 2011 12:58:01 +0100
-From: Lito Kriara <L.Kriara@sms.ed.ac.uk>
-To: Mohammed Shafi <mshajakhan@Atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
-	<1303652185.3603.0.camel@jlt3.sipsolutions.net>
-	<4DB4318F.6070801@atheros.com>
-	<1303657150.3603.1.camel@jlt3.sipsolutions.net>
-	<4DB4415F.2070707@atheros.com>
-	<1303659120.3603.3.camel@jlt3.sipsolutions.net>
-	<4DB4F8D5.1060108@atheros.com>
-In-Reply-To: <4DB4F8D5.1060108@atheros.com>
+	Mon, 18 Apr 2011 10:50:42 -0400
+Received: by fxm17 with SMTP id 17so2856188fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 07:50:40 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
+Date: Mon, 18 Apr 2011 16:48:43 +0200
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com> <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
+In-Reply-To: <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104181648.43967.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I was away the last couple of days and just saw these e-mails. It  
-seems really interesting and helpful, but what if we need to know at  
-runtime the number of stations connected to the AP?
-Is the first patch sent good to use? Should I do some modification to it?
+Hi,
 
-Thank you all very much,
-Lito
+Am Montag, 18. April 2011 schrieb Ivo Van Doorn:
+> > Wouldn't this be better to create two pointers in struct rt2x00_dev.
+> > One for writing function and one for reading function? Am I right
+> > thinking calling functions by pointers is quite fast? Or is this still
+> > noticeably slower than using proper functions directly?
+> 
+> We already have the pointer inside struct rt2x00_dev which references
+> the register access functions for rt2800pci/usb. These pointers are used
+> by rt2800lib to access the common registers. What this patch does, is
+> optimize the case where we exactly know which function we need, because
+> we are in the actual driver.
+> 
+> As for the performance, I'll let Helmut comment on that as he created patch 20,
+> which introduced this change to rt2800pci. :)
 
+Sure, I was comparing some assembly in the rt2800pci hotpaths (on a 380Mhz
+MIPS CPU btw). A register read/write on PCI is just a readl or writel,
+nothing more but using the indirect wrappers we get something like this
+(This is x86_64 as I didn't want to cross compile right now). For example
+the register read + write in rt2800pci_enable_interrupt (which is called
+in every tasklet invocation, which can happen for every rx'ed frame and
+every tx'ed frame).
 
-Quoting Mohammed Shafi <mshajakhan@Atheros.com> on Mon, 25 Apr 2011  
-10:00:13 +0530:
+movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
+leaq    -36(%rbp), %rdx #, tmp82
+movq    %rbx, %rdi      # rt2x00dev,
+movq    72(%rax), %rax  # D.47612_27->drv, D.47612_27->drv
+movl    $516, %esi      #,
+call    *(%rax) # rt2800ops_29->register_read
+movb    %r14b, %cl      #,
+movq    8(%rbx), %rax   # rt2x00dev_1(D)->ops, rt2x00dev_1(D)->ops
+movq    %rbx, %rdi      # rt2x00dev,
+movq    72(%rax), %rax  # D.47619_31->drv, D.47619_31->drv
+movl    $516, %esi      #,
+movl    $1, %edx        #, reg.119
+sall    %cl, %edx       #, reg.119
+andl    %r13d, %edx     # irq_field$bit_mask, reg.119
+notl    %r13d   # tmp89
+andl    -36(%rbp), %r13d        # reg, tmp89
+orl     %r13d, %edx     # tmp89, reg.119
+movl    %edx, -36(%rbp) # reg.119, reg
+call    *16(%rax)       # rt2800ops_33->register_write
 
-> On Sunday 24 April 2011 09:02 PM, Johannes Berg wrote:
->> On Sun, 2011-04-24 at 20:57 +0530, Mohammed Shafi wrote:
->>
->>> On Sunday 24 April 2011 08:29 PM, Johannes Berg wrote:
->>>
->>>> iw wlan0 station dump | grep ... | wc -l
->>>>
->>> thanks, that  works! I need to divide by 11 :)
->>>
->> Heh, yes, but that might change and/or be HW dependent, hence grep. So
->> if you do
->>
->> iw wlan0 station dump | grep '^Station ' | wc -l
->>
->> you won't need to divide and won't be HW dependent.
->>
-> Oh ok, thanks!
-> regards,
-> shafi
->
->> johannes
->>
->>
+Also, this will trigger rt2x00pci_register_read
 
+pushq   %rbp    #
+mov     %esi, %esi      # offset, addr.27
+movq    %rsp, %rbp      #,
+addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.27
+movl    %eax, (%rdx)    # ret,* value
 
+And rt2x00pci_register_write:
 
--- 
-The University of Edinburgh is a charitable body, registered in
-Scotland, with registration number SC005336.
+pushq   %rbp    #
+mov     %esi, %esi      # offset, addr.26
+movq    %rsp, %rbp      #,
+addq    1056(%rdi), %rsi        # rt2x00dev_1(D)->csr.base, addr.26
+movl 	%edx,(%rsi)        # value,* addr.26
 
+And here the same when using rt2x00pci_register_read/write directly:
 
+movq    1056(%rbx), %rax        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
+movl 	516(%rax),%eax     #, reg.119
+movl    %r13d, %edx     # irq_field$bit_mask, tmp80
+movb    %r14b, %cl      #,
+notl    %edx    # tmp80
+andl    %edx, %eax      # tmp80, reg.119
+movl    $1, %edx        #, tmp85
+sall    %cl, %edx       #, tmp85
+andl    %r13d, %edx     # irq_field$bit_mask, tmp85
+orl     %edx, %eax      # tmp85, reg.119
+movq    1056(%rbx), %rdx        # rt2x00dev_1(D)->csr.base, rt2x00dev_1(D)->csr.base
+movl 	%eax,516(%rdx)     # reg.119,
+
+As you can see we save more then just one indirect function call:
+
+17 movs -> 7 movs
+2 calls -> 0 calls
+1 add -> 0 adds
+
+This happens because the compiler is able to apply a number of optimizations
+that are only possible by inlining rt2x00pci_register_read/write. When using
+the indirect function call the compiler is not able to inline them.
+
+So, I first thought about using direct calls only in the interrupt handler
+and the RX/TX hotpaths but since using rt2800_register_read and
+rt2x00pci_register_read in different locations in rt2800pci would be even
+more confusing I just replaced every rt2800_register_read with
+rt2x00pci_register_read in rt2800pci.
+
+One way to keep the abstraction and still improve the register_read/write
+operations would be to introduce a inlined rt2800pci_register_read/write
+which directly calls rt2x00pci_register_read/write and provide that via
+rt2800_ops to rt2800lib. That way all calls in rt2800pci can directly
+inline rt2x00_register_read/write while rt2800lib will still use indirect
+calls to do the same.
+
+However, I didn't see any need for this.
+
+Helmut
