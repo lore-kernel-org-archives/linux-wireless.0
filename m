@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:62737 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754441Ab1DJVqu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 17:46:50 -0400
-Received: by wwa36 with SMTP id 36so5968879wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 14:46:48 -0700 (PDT)
-Message-ID: <4DA22545.6050209@gmail.com>
-Date: Sun, 10 Apr 2011 23:46:45 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: Firmware files for Ralink RT28x0
-References: <4DA2042A.3010301@gmail.com> <1302469406.5282.341.camel@localhost>
-In-Reply-To: <1302469406.5282.341.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mga01.intel.com ([192.55.52.88]:32823 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755925Ab1DRRFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 13:05:38 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/10] iwlagn: verify that huge commands are synchronous
+Date: Mon, 18 Apr 2011 09:44:10 -0700
+Message-Id: <1303145057-6545-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/10/2011 11:03 PM, Ben Hutchings wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> These files aren't used by the Ralink drivers.  So why should you
-> believe the labels on them?
+Since huge commands all share a single buffer,
+there can only be a single one in flight at a
+time since otherwise they'd overwrite each
+other. This is true in the driver now, but it
+seems like a possible source of bugs, so add
+a test to verify that huge commands are always
+sent synchronously.
 
-Because the hardware manufacturer says that:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-March/003380.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Anyway, the firmware in staging(or ralink web) drivers look different because
-they are different _versions_ of the _same_ firmware.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index e7faba5..1b69507 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -470,6 +470,14 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
++	/*
++	 * As we only have a single huge buffer, check that the command
++	 * is synchronous (otherwise buffers could end up being reused).
++	 */
++
++	if (WARN_ON((cmd->flags & CMD_ASYNC) && (cmd->flags & CMD_SIZE_HUGE)))
++		return -EINVAL;
++
+ 	spin_lock_irqsave(&priv->hcmd_lock, flags);
+ 
+ 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
+-- 
+1.7.0.4
 
-rt2870.bin: before 4096 bytes, now 8192 bytes.
-
-> linux-firmware is not *actively* maintained; it requires people to send
-> submissions (repeatedly...).
-
-On 04/06/2010, *ONE YEAR AGO* , I sent a patch to rt2870.bin rt2860.bin.
-It went to /dev/null
-
-A similar patch was sent by the *driver maintainer* on 10/30/2010.
-It went to /dev/null
-
-The same patch was sent by the *hardware manufacturer* on 03/11/2011
-It went to /dev/null
-
-Torvalds, Mozart and God are pending.
-
-> I think there may be a problem with distribution of Intel Pro Wireless
-> firmware because Intel requires users to accept a EULA.
-
-If it's included in Fedora then there are zero issues with licenses.
