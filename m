@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:60113 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab1DMEHh (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754023Ab1DRNgH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 00:07:37 -0400
-Date: Wed, 13 Apr 2011 09:29:48 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+	Mon, 18 Apr 2011 09:36:07 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:06 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: [PATCH] mwl8k: Fix checkpatch.pl and sparse warnings and errors
-Message-ID: <20110413035947.GA4938@hertz.marvell.com>
-References: <20110408185529.GA26751@hertz.marvell.com>
- <20110412202831.GC24309@tuxdriver.com>
+Subject: [PATCH 14/23] rt2x00: Linksys WUSB600N rev2 is a RT3572 device.
+Date: Mon, 18 Apr 2011 15:31:50 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181531.03375.IvDoorn@gmail.com> <201104181531.32313.IvDoorn@gmail.com>
+In-Reply-To: <201104181531.32313.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110412202831.GC24309@tuxdriver.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181531.51867.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-   Please see in-line.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-On Tue, Apr 12, 2011 at 01:28:32PM -0700, John W. Linville wrote:
-> On Sat, Apr 09, 2011 at 12:25:37AM +0530, Yogesh Ashok Powar wrote:
-> > Fix checkpatch errors and warnings comprising of indent errors, spaces and
-> > __packed warnings. Also fix 'make C = 2' warnings.
-> > 
-> > Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-> > ---
-> >  drivers/net/wireless/mwl8k.c |   27 +++++++++++++--------------
-> >  1 files changed, 13 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> > index 8913180..fb472f4 100644
-> > --- a/drivers/net/wireless/mwl8k.c
-> > +++ b/drivers/net/wireless/mwl8k.c
-> > @@ -701,7 +701,7 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
-> >  			       "helper image\n", pci_name(priv->pdev));
-> >  			return rc;
-> >  		}
-> > -		msleep(5);
-> > +		msleep(20);
-> >  
-> >  		rc = mwl8k_feed_fw_image(priv, fw->data, fw->size);
-> >  	} else {
-> 
-> Is this an indent error, a space, or a __packed warning??
+Move the USB ID entry from the unknown devices to the list of RT35xx based
+devices.
 
-This was checkpatch warning. The exact warning is as below
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->WARNING: msleep < 20ms can sleep for up to 20ms; see Documentation/timers/timers-howto.txt
->+		msleep(5);
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 2005972..1bb9a7d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -983,6 +983,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Linksys */
+ 	{ USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sitecom */
+@@ -1041,7 +1042,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Linksys */
+ 	{ USB_DEVICE(0x1737, 0x0077), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1737, 0x0078), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Motorola */
+ 	{ USB_DEVICE(0x100d, 0x9032), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Ovislink */
+-- 
+1.7.2.3
 
-Thanks
-Yogesh Powar
