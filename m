@@ -1,175 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2521 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932882Ab1DZCef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 22:34:35 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
-Subject: [PATCH 2/5] staging: brcm80211: Move sdiod strength init to
- dhd_sdio.c
-Date: Mon, 25 Apr 2011 19:34:05 -0700
-Message-ID: <1303785248-27420-3-git-send-email-frankyl@broadcom.com> (sfid-20110426_043442_301108_735A627D)
-In-Reply-To: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
-References: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:48216 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab1DRVSG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 17:18:06 -0400
+Received: by qyg14 with SMTP id 14so3272325qyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 14:18:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 18 Apr 2011 16:18:05 -0500
+Message-ID: <BANLkTimvT-9mSQ8n1zyDYpioxJEv=Kc7Jg@mail.gmail.com>
+Subject: Mesh broken
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, devel@lists.open80211s.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move si_sdiod_drive_strength_init to dhd_sdio and rename to
-dhdsdio_sdiod_drive_strength_init for dhd_pmu.c removal
+Hi all,
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  114 ++++++++++++++++++++++++-
- 1 files changed, 112 insertions(+), 2 deletions(-)
+We have a 6 node mesh setup, with one node acting as a mesh portal.
+All the nodes are in direct range of each other, so every node has 5
+peer links. The node that acts as a mesh portal has another laptop
+connected to it via an Ethernet cable which runs an iperf TCP server.
+Every mesh node runs an iperf TCP client where the transmit data rate
+is limited to about 500Kbps.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 2827af2..e2d5aa5 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -485,6 +485,8 @@ static int dhdsdio_download_code_array(struct dhd_bus *bus);
- static void dhdsdio_chip_disablecore(bcmsdh_info_t *sdh, u32 corebase);
- static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
- static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
-+static void dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus,
-+					u32 drivestrength);
- 
- static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
- {
-@@ -2292,7 +2294,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
- 
- 	case IOV_SVAL(IOV_SDIOD_DRIVE):
- 		dhd_sdiod_drive_strength = int_val;
--		si_sdiod_drive_strength_init(bus->sih,
-+		dhdsdio_sdiod_drive_strength_init(bus,
- 					     dhd_sdiod_drive_strength);
- 		break;
- 
-@@ -5270,7 +5272,7 @@ dhdsdio_probe_attach(struct dhd_bus *bus, void *sdh, void *regsva, u16 devid)
- 		goto fail;
- 	}
- 
--	si_sdiod_drive_strength_init(bus->sih, dhd_sdiod_drive_strength);
-+	dhdsdio_sdiod_drive_strength_init(bus, dhd_sdiod_drive_strength);
- 
- 	/* Get info on the ARM and SOCRAM cores... */
- 	if (!DHD_NOPMU(bus)) {
-@@ -6316,3 +6318,111 @@ dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase)
- 		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
- 	udelay(1);
- }
-+
-+/* SDIO Pad drive strength to select value mappings */
-+struct sdiod_drive_str {
-+	u8 strength;	/* Pad Drive Strength in mA */
-+	u8 sel;		/* Chip-specific select value */
-+};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 1 */
-+static const struct sdiod_drive_str sdiod_drive_strength_tab1[] = {
-+	{
-+	4, 0x2}, {
-+	2, 0x3}, {
-+	1, 0x0}, {
-+	0, 0x0}
-+	};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 2, 3 */
-+static const struct sdiod_drive_str sdiod_drive_strength_tab2[] = {
-+	{
-+	12, 0x7}, {
-+	10, 0x6}, {
-+	8, 0x5}, {
-+	6, 0x4}, {
-+	4, 0x2}, {
-+	2, 0x1}, {
-+	0, 0x0}
-+	};
-+
-+/* SDIO Drive Strength to sel value table for PMU Rev 8 (1.8V) */
-+static const struct sdiod_drive_str sdiod_drive_strength_tab3[] = {
-+	{
-+	32, 0x7}, {
-+	26, 0x6}, {
-+	22, 0x5}, {
-+	16, 0x4}, {
-+	12, 0x3}, {
-+	8, 0x2}, {
-+	4, 0x1}, {
-+	0, 0x0}
-+	};
-+
-+#define SDIOD_DRVSTR_KEY(chip, pmu)     (((chip) << 16) | (pmu))
-+
-+static void
-+dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus, u32 drivestrength) {
-+	struct sdiod_drive_str *str_tab = NULL;
-+	u32 str_mask = 0;
-+	u32 str_shift = 0;
-+#ifdef BCMDBG
-+	char chn[8];
-+#endif
-+
-+	if (!(bus->ci->cccaps & CC_CAP_PMU))
-+		return;
-+
-+	switch (SDIOD_DRVSTR_KEY(bus->ci->chip, bus->ci->pmurev)) {
-+	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 1):
-+		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab1;
-+		str_mask = 0x30000000;
-+		str_shift = 28;
-+		break;
-+	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 2):
-+	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 3):
-+		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab2;
-+		str_mask = 0x00003800;
-+		str_shift = 11;
-+		break;
-+	case SDIOD_DRVSTR_KEY(BCM4336_CHIP_ID, 8):
-+		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab3;
-+		str_mask = 0x00003800;
-+		str_shift = 11;
-+		break;
-+	default:
-+		DHD_ERROR(("No SDIO Drive strength init"
-+			"done for chip %s rev %d pmurev %d\n",
-+			bcm_chipname(bus->ci->chip, chn, 8),
-+			bus->ci->chiprev, bus->ci->pmurev));
-+		break;
-+	}
-+
-+	if (str_tab != NULL) {
-+		u32 drivestrength_sel = 0;
-+		u32 cc_data_temp;
-+		int i;
-+
-+		for (i = 0; str_tab[i].strength != 0; i++) {
-+			if (drivestrength >= str_tab[i].strength) {
-+				drivestrength_sel = str_tab[i].sel;
-+				break;
-+			}
-+		}
-+
-+		bcmsdh_reg_write(bus->sdh,
-+			CORE_CC_REG(bus->ci->cccorebase, chipcontrol_addr),
-+			4, 1);
-+		cc_data_temp = bcmsdh_reg_read(bus->sdh,
-+			CORE_CC_REG(bus->ci->cccorebase, chipcontrol_addr), 4);
-+		cc_data_temp &= ~str_mask;
-+		drivestrength_sel <<= str_shift;
-+		cc_data_temp |= drivestrength_sel;
-+		bcmsdh_reg_write(bus->sdh,
-+			CORE_CC_REG(bus->ci->cccorebase, chipcontrol_addr),
-+			4, cc_data_temp);
-+
-+		DHD_INFO(("SDIO: %dmA drive strength selected, set to 0x%08x\n",
-+			drivestrength, cc_data_temp));
-+	}
-+}
--- 
-1.7.1
+When we run the iperf client on all the mesh nodes while using
+compat-wireless from 18th Jan, 2011, things seem to work fine. There
+is rarely a connection loss. However, the peak data rate at the laptop
+which is connected to the mesh portal (via Ethernet) goes much higher
+than the expected 3Mbps (6*500Kbps).
 
+When we use compat-wireless from 28th March, 2011, and repeat the
+above experiment again, the results we get are quite disappointing.
+The TCP connections from all 6 nodes constantly break. Also, if only
+one mesh node is communicating with the laptop connected to the mesh
+portal, the connection does not break. If using the same
+compat-wireless, we force the max plinks to 1 (one) at each node, the
+TCP connections do not break. Everything works fine.
 
+If we use compat-wireless from 31st march, 2011, the mesh nodes are
+not even able to establish plinks with each other.
+
+"iw dev mesh station dump"
+
+returns nothing.
+
+Switching to compat-wireless from 14th April, 2011 results in plinks
+alternating between LISTEN and OPN_SNT states. The displayed beacon
+signal strength (in station dump) is very low (close to -80dbm).
+
+Infrastructure mode works fine.
+
+Can anyone please elaborate on what could be happening here?
+
+Thanks,
+-Qasim
