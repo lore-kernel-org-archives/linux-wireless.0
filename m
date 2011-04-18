@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64843 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755493Ab1D1OXX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 10:23:23 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:22:56 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC/RFT 2/9] ath9k_hw: enable Antenna diversity for AR9485
-Date: Thu, 28 Apr 2011 19:52:52 +0530
-Message-ID: <1304000579-5784-3-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162326_586738_425B54B7)
-In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
-References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34073 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464Ab1DROGH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 10:06:07 -0400
+Received: by qwk3 with SMTP id 3so2424271qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 07:06:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com>
+References: <201104181526.01722.IvDoorn@gmail.com>
+	<201104181533.42494.IvDoorn@gmail.com>
+	<201104181534.02553.IvDoorn@gmail.com>
+	<201104181534.23133.IvDoorn@gmail.com>
+	<BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com>
+Date: Mon, 18 Apr 2011 16:06:05 +0200
+Message-ID: <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
+Subject: Re: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Hi,
 
-read antenna diversity and combining information from the EEPROM.
-Enable antenna diversity/combining feature only when both LNA
-diversity and fast diversity are supported
+>> All register reads/writes in rt2800usb were previously done with
+>> rt2800_register_read/rt2800_register_write. These however indirectly
+>> call rt2x00usb_register_read/rt2x00usb_register_write which adds an
+>> additional overhead of at least one call and several move instructions
+>> to each register access.
+>>
+>> Replacing the calls to rt2800_register_read/rt2800_register_write with
+>> direct calls to rt2x00usb_register_read/rt2x00usb_register_write gets
+>> rid of quite a number of instructions in the drivers hotpaths (IRQ
+>> handling and txdone handling).
+>>
+>> For consistency replace all references to rt2800_register_read/write
+>> with the rt2x00usb_register_read/write variants.
+>
+> This way you loose abstraction of writes/reads for usb vs. pci. And
+> you still can not optimize rt2800lib code which is shared between usb
+> and pci.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Well the rt2800lib code is not changed by this (or patch 20 of this series).
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e99e319..47d3881 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2014,6 +2014,22 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
- 
- 
-+	if (AR_SREV_9485(ah)) {
-+		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+		/*
-+		 * enable the diversity-combining algorithm only when
-+		 * both enable_lna_div and enable_fast_div are set
-+		 *		Table for Diversity
-+		 * ant_div_alt_lnaconf		bit 0-1
-+		 * ant_div_main_lnaconf		bit 2-3
-+		 * ant_div_alt_gaintb		bit 4
-+		 * ant_div_main_gaintb		bit 5
-+		 * enable_ant_div_lnadiv	bit 6
-+		 * enable_ant_fast_div		bit 7
-+		 */
-+		if ((ant_div_ctl1 >> 0x6) == 0x3)
-+			pCap->hw_caps |= ATH9K_HW_CAP_ANT_DIV_COMB;
-+	}
- 
- 	if (AR_SREV_9485_10(ah)) {
- 		pCap->pcie_lcr_extsync_en = true;
--- 
-1.7.0.4
+> Wouldn't this be better to create two pointers in struct rt2x00_dev.
+> One for writing function and one for reading function? Am I right
+> thinking calling functions by pointers is quite fast? Or is this still
+> noticeably slower than using proper functions directly?
 
+We already have the pointer inside struct rt2x00_dev which references
+the register access functions for rt2800pci/usb. These pointers are used
+by rt2800lib to access the common registers. What this patch does, is
+optimize the case where we exactly know which function we need, because
+we are in the actual driver.
+
+As for the performance, I'll let Helmut comment on that as he created patch 20,
+which introduced this change to rt2800pci. :)
+
+Ivo
