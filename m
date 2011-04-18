@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56712 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045Ab1DCKxQ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754023Ab1DRNf7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2011 06:53:16 -0400
-Received: from dlep35.itg.ti.com ([157.170.170.118])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p33ArFs3004646
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 3 Apr 2011 05:53:16 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH v2] wl12xx: Set correct REF CLK and TCXO CLK values to the FW
-Date: Sun,  3 Apr 2011 13:54:54 +0300
-Message-Id: <1301828094-29569-1-git-send-email-shahar_levi@ti.com>
+	Mon, 18 Apr 2011 09:35:59 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:58 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/23] rt2800usb: handle TX status timeouts
+Date: Mon, 18 Apr 2011 15:30:01 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181529.13131.IvDoorn@gmail.com> <201104181529.39237.IvDoorn@gmail.com>
+In-Reply-To: <201104181529.39237.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181530.02029.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix mismatch between the REF CLK and TCXO CLK information that is
-set in the platform data and the NVS, so we override what comes
-from the NVS and replace it with what comes from the platform data.
+From: Johannes Stezenbach <js@sig21.net>
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+The watchdog just triggers rt2800usb_work_txdone() when it
+detects a TX status timeout, thus rt2800usb_work_txdone() needs to
+handle this case.
+
+Signed-off-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/wl12xx/cmd.c |   11 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 2468044..beb9f88 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -129,6 +129,9 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 	if (gp->tx_bip_fem_auto_detect)
- 		answer = true;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 862430e..69004b9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -449,11 +449,14 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ 		while (!rt2x00queue_empty(queue)) {
+ 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
  
-+	/* Override the REF CLK from the NVS with the one from platform data */
-+	gen_parms->general_params.ref_clock = wl->ref_clock;
-+
- 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
- 	if (ret < 0) {
- 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
-@@ -168,6 +171,14 @@ int wl128x_cmd_general_parms(struct wl1271 *wl)
- 	if (gp->tx_bip_fem_auto_detect)
- 		answer = true;
- 
-+	/*
-+	 * Override the REF&TCXO CLKs from the NVS with the one from platform
-+	 * data.
-+	 * FW use the relevant CLK (REF or TCXO) according to the boot sequence
-+	 */
-+	gen_parms->general_params.ref_clock = wl->ref_clock;
-+	gen_parms->general_params.tcxo_ref_clock = wl->tcxo_clock;
-+
- 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
- 	if (ret < 0) {
- 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
+-			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+-			    !test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
++				break;
++			if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++				rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
++			else if (rt2x00queue_status_timeout(entry))
++				rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
++			else
+ 				break;
+-
+-			rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
+ 		}
+ 	}
+ }
 -- 
-1.7.0.4
+1.7.2.3
 
