@@ -1,145 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52217 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595Ab1DMFvT (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38707 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754338Ab1DROOO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:51:19 -0400
-Received: by iyb14 with SMTP id 14so274699iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:51:19 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 18 Apr 2011 10:14:14 -0400
+Received: by qwk3 with SMTP id 3so2428726qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 07:14:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.14952.83939.733480@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:23:44 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 09/40] ath9k_htc: Fix beacon miss under heavy load
+In-Reply-To: <BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
+References: <201104181526.01722.IvDoorn@gmail.com>
+	<201104181533.42494.IvDoorn@gmail.com>
+	<201104181534.02553.IvDoorn@gmail.com>
+	<201104181534.23133.IvDoorn@gmail.com>
+	<BANLkTi=37Qv6tf5FH4VP=FrrFU=V7UhbNQ@mail.gmail.com>
+	<BANLkTimOsO1RSO-+n97a0WiQR__f_sgcUQ@mail.gmail.com>
+Date: Mon, 18 Apr 2011 16:14:13 +0200
+Message-ID: <BANLkTi=qCaeN0PFKbtstn+wPtMoje2R=mg@mail.gmail.com>
+Subject: Re: [PATCH 21/23] rt2x00: Optimize register access in rt2800usb
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+W dniu 18 kwietnia 2011 16:06 użytkownik Ivo Van Doorn
+<ivdoorn@gmail.com> napisał:
+> Hi,
+>
+>>> All register reads/writes in rt2800usb were previously done with
+>>> rt2800_register_read/rt2800_register_write. These however indirectly
+>>> call rt2x00usb_register_read/rt2x00usb_register_write which adds an
+>>> additional overhead of at least one call and several move instructions
+>>> to each register access.
+>>>
+>>> Replacing the calls to rt2800_register_read/rt2800_register_write with
+>>> direct calls to rt2x00usb_register_read/rt2x00usb_register_write gets
+>>> rid of quite a number of instructions in the drivers hotpaths (IRQ
+>>> handling and txdone handling).
+>>>
+>>> For consistency replace all references to rt2800_register_read/write
+>>> with the rt2x00usb_register_read/write variants.
+>>
+>> This way you loose abstraction of writes/reads for usb vs. pci. And
+>> you still can not optimize rt2800lib code which is shared between usb
+>> and pci.
+>
+> Well the rt2800lib code is not changed by this (or patch 20 of this series).
+>
+>> Wouldn't this be better to create two pointers in struct rt2x00_dev.
+>> One for writing function and one for reading function? Am I right
+>> thinking calling functions by pointers is quite fast? Or is this still
+>> noticeably slower than using proper functions directly?
+>
+> We already have the pointer inside struct rt2x00_dev which references
+> the register access functions for rt2800pci/usb. These pointers are used
+> by rt2800lib to access the common registers. What this patch does, is
+> optimize the case where we exactly know which function we need, because
+> we are in the actual driver.
 
-Transmission of beacons becomes erratic when TX load
-is high, since the latency involved in the generation
-of a SWBA interrupt on the target to the actual sending
-of a beacon is quite high for USB devices.
+Ah, OK, I can see rt2800_register_read/write indeed are using pointers:
+rt2800ops->register_read(rt2x00dev, offset, value);
+So I believe it was still not fast enough for you.
 
-Fix this by adjusting the beacon response time.
+It's OK then. I just though you were using
+if (dev->usb)
+rt2x00usb_register_read
+else
+...
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h            |    7 ++++
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   39 ++++++++++++++++++++---
- 2 files changed, 41 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index a072a9e..133fc6d 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -358,6 +358,13 @@ struct ath_led {
- 
- #define BSTUCK_THRESHOLD 10
- 
-+/*
-+ * Adjust these when the max. no of beaconing interfaces is
-+ * increased.
-+ */
-+#define DEFAULT_SWBA_RESPONSE 40 /* in TUs */
-+#define MIN_SWBA_RESPONSE     10 /* in TUs */
-+
- struct htc_beacon_config {
- 	struct ieee80211_vif *bslot[ATH9K_HTC_MAX_BCN_VIF];
- 	u16 beacon_interval;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index c96779c..48bc288 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -198,6 +198,15 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 	intval /= ATH9K_HTC_MAX_BCN_VIF;
- 	nexttbtt = intval;
- 
-+	/*
-+	 * To reduce beacon misses under heavy TX load,
-+	 * set the beacon response time to a larger value.
-+	 */
-+	if (intval > DEFAULT_SWBA_RESPONSE)
-+		priv->ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
-+	else
-+		priv->ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
-+
- 	if (priv->op_flags & OP_TSF_RESET) {
- 		ath9k_hw_reset_tsf(priv->ah);
- 		priv->op_flags &= ~OP_TSF_RESET;
-@@ -216,9 +225,10 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 		imask |= ATH9K_INT_SWBA;
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
--		"AP Beacon config, intval: %d, nexttbtt: %u "
-+		"AP Beacon config, intval: %d, nexttbtt: %u, resp_time: %d "
- 		"imask: 0x%x\n",
--		bss_conf->beacon_interval, nexttbtt, imask);
-+		bss_conf->beacon_interval, nexttbtt,
-+		priv->ah->config.sw_beacon_response_time, imask);
- 
- 	ath9k_htc_beaconq_config(priv);
- 
-@@ -252,12 +262,22 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 		nexttbtt += intval;
- 	} while (nexttbtt < tsftu);
- 
-+	/*
-+	 * Only one IBSS interfce is allowed.
-+	 */
-+	if (intval > DEFAULT_SWBA_RESPONSE)
-+		priv->ah->config.sw_beacon_response_time = DEFAULT_SWBA_RESPONSE;
-+	else
-+		priv->ah->config.sw_beacon_response_time = MIN_SWBA_RESPONSE;
-+
- 	if (priv->op_flags & OP_ENABLE_BEACON)
- 		imask |= ATH9K_INT_SWBA;
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
--		"IBSS Beacon config, intval: %d, nexttbtt: %u, imask: 0x%x\n",
--		bss_conf->beacon_interval, nexttbtt, imask);
-+		"IBSS Beacon config, intval: %d, nexttbtt: %u, "
-+		"resp_time: %d, imask: 0x%x\n",
-+		bss_conf->beacon_interval, nexttbtt,
-+		priv->ah->config.sw_beacon_response_time, imask);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, TU_TO_USEC(nexttbtt), TU_TO_USEC(intval));
-@@ -317,6 +337,7 @@ static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
- static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 				  int slot)
- {
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ieee80211_vif *vif;
- 	struct ath9k_htc_vif *avp;
- 	struct tx_beacon_header beacon_hdr;
-@@ -325,6 +346,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 	struct ieee80211_mgmt *mgmt;
- 	struct sk_buff *beacon;
- 	u8 *tx_fhdr;
-+	int ret;
- 
- 	memset(&beacon_hdr, 0, sizeof(struct tx_beacon_header));
- 	memset(&tx_ctl, 0, sizeof(struct ath9k_htc_tx_ctl));
-@@ -367,7 +389,14 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 	tx_fhdr = skb_push(beacon, sizeof(beacon_hdr));
- 	memcpy(tx_fhdr, (u8 *) &beacon_hdr, sizeof(beacon_hdr));
- 
--	htc_send(priv->htc, beacon, priv->beacon_ep, &tx_ctl);
-+	ret = htc_send(priv->htc, beacon, priv->beacon_ep, &tx_ctl);
-+	if (ret != 0) {
-+		if (ret == -ENOMEM) {
-+			ath_dbg(common, ATH_DBG_BSTUCK,
-+				"Failed to send beacon, no free TX buffer\n");
-+		}
-+		dev_kfree_skb_any(beacon);
-+	}
- 
- 	spin_unlock_bh(&priv->beacon_lock);
- }
+> As for the performance, I'll let Helmut comment on that as he created patch 20,
+> which introduced this change to rt2800pci. :)
+
 -- 
-1.7.4.4
-
+Rafał
