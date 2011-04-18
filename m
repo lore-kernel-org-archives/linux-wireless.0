@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63965 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:64481 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753225Ab1DKOwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 10:52:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1751911Ab1DRFVH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 01:21:07 -0400
+Received: from mail.atheros.com ([10.234.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 07:52:20 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2011 22:20:41 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 4/4] ath9k_hw: Fix AR9382 beacon distribution in IBSS
-Date: Mon, 11 Apr 2011 20:22:31 +0530
-Message-ID: <1302533551-27462-4-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
-References: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] mac80211: Fix a compilation warning
+Date: Mon, 18 Apr 2011 10:50:58 +0530
+Message-ID: <1303104058-18958-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update AR9003 mac_core table to fix imbalance
-beacon distribution of AR9382.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+mac80211/debugfs_sta.c:113: warning:
+format ‘%d’ expects type ‘int’, but argument 4 has type ‘long int’
+introduced by the commit  ebe27c91af8b7f4810ae906fbd3eeb2d87850026
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/debugfs_sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index f915a3d..46ecb32 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -1508,9 +1508,9 @@ static const u32 ar9300_2p2_mac_core[][2] = {
- 	{0x000081f8, 0x00000000},
- 	{0x000081fc, 0x00000000},
- 	{0x00008240, 0x00100000},
--	{0x00008244, 0x0010f424},
-+	{0x00008244, 0x0010f400},
- 	{0x00008248, 0x00000800},
--	{0x0000824c, 0x0001e848},
-+	{0x0000824c, 0x0001e800},
- 	{0x00008250, 0x00000000},
- 	{0x00008254, 0x00000000},
- 	{0x00008258, 0x00000000},
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index c008232..a01d213 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -108,7 +108,7 @@ static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
+ 	result.tm_year -= 70;
+ 	result.tm_mday -= 1;
+ 	res = scnprintf(buf, sizeof(buf),
+-		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
++		"years  - %ld\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
+ 			result.tm_year, result.tm_mon, result.tm_mday,
+ 			result.tm_hour, result.tm_min, result.tm_sec);
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
 -- 
-1.7.4.4
+1.7.0.4
 
