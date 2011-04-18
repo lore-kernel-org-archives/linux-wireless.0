@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:34124 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751318Ab1DTRfx (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:52702 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832Ab1DRLIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 13:35:53 -0400
-Received: by mail-ew0-f52.google.com with SMTP id 28so409711ewy.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 10:35:50 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Set End-of-transaction Flag at Wl127x AP Mode
-From: Luciano Coelho <coelho@ti.com>
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1301901639-19457-1-git-send-email-shahar_levi@ti.com>
-References: <1301901639-19457-1-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 20:38:17 +0300
-Message-ID: <1303321097.1988.734.camel@cumari>
-Mime-Version: 1.0
+	Mon, 18 Apr 2011 07:08:17 -0400
+Received: by pvg12 with SMTP id 12so2111576pvg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:08:17 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19884.7222.186200.867910@gargle.gargle.HOWL>
+Date: Mon, 18 Apr 2011 16:40:46 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, jouni.malinen@atheros.com
+Subject: Re: [PATCH 1/2] ath9k: fix powersave frame filtering/buffering in AP mode
+In-Reply-To: <4DABFC54.8030502@openwrt.org>
+References: <1303075690-53804-1-git-send-email-nbd@openwrt.org>
+	<19883.48525.986878.991570@gargle.gargle.HOWL>
+	<4DABFC54.8030502@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-04 at 10:20 +0300, Shahar Levi wrote:
-> End-of-transaction flag should be set when working with
-> wl127x chip on AP mode.
-> 
-> Thanks Ido Yariv <ido@wizery.com> for the guidance with that.
-> 
-> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> ---
+Felix Fietkau wrote:
+> The driver calls ieee80211_sta_set_tim on STA_NOTIFY_SLEEP whenever it 
+> still has some buffered frames that it intends to keep until the client 
+> wakes up again (i.e. frames that will not be returned to mac80211 as 
+> filtered).
 
-Applied.  Thanks, Shahar!
+Why should ieee80211_sta_set_tim() be called from complete_aggr() ?
 
--- 
-Cheers,
-Luca.
-
+Sujith
