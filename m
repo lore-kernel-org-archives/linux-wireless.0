@@ -1,77 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:33573 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617Ab1DTF2y (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861Ab1DRNgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 01:28:54 -0400
-Received: by mail-px0-f179.google.com with SMTP id 2so318654pxi.10
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 22:28:53 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 18 Apr 2011 09:36:05 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:04 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/23] rt2x00: Always inline rt2x00pci_enable_interrupt
+Date: Mon, 18 Apr 2011 15:31:31 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181530.37227.IvDoorn@gmail.com> <201104181531.03375.IvDoorn@gmail.com>
+In-Reply-To: <201104181531.03375.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19886.28589.429644.634493@gargle.gargle.HOWL>
-Date: Wed, 20 Apr 2011 11:01:25 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 5/5] ath9k_htc: Remove unused macros and structures
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181531.32313.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+This allows the compiler to perform the necessary bitfield calculations
+during compile time instead of run time and thus reduces the number of
+instructions to run during each tasklet invocation. This should improve
+performance in the RX hotpath.
+
+This comes at the cost of a slight increase in the module size (for
+example rt2800pci):
+
+Before:
+   text    data     bss     dec     hex filename
+  14133     832       4   14969    3a79 drivers/net/wireless/rt2x00/rt2800pci.ko
+
+After:
+   text    data     bss     dec     hex filename
+  14149     832       4   14985    3a89 drivers/net/wireless/rt2x00/rt2800pci.ko
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h     |    3 ---
- drivers/net/wireless/ath/ath9k/htc_hst.h |   11 -----------
- 2 files changed, 0 insertions(+), 14 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |    4 ++--
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index af90829..55f4bb3 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -66,8 +66,6 @@ enum htc_opmode {
- 	HTC_M_WDS	= 2
- };
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 6b7206e..01e9517 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1314,8 +1314,8 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev,
+ 	}
+ }
  
--#define ATH9K_HTC_HDRSPACE sizeof(struct htc_frame_hdr)
--
- #define ATH9K_HTC_AMPDU  1
- #define ATH9K_HTC_NORMAL 2
- #define ATH9K_HTC_BEACON 3
-@@ -75,7 +73,6 @@ enum htc_opmode {
+-static void rt2400pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
+-				       struct rt2x00_field32 irq_field)
++static inline void rt2400pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
++					      struct rt2x00_field32 irq_field)
+ {
+ 	u32 reg;
  
- #define ATH9K_HTC_TX_CTSONLY      0x1
- #define ATH9K_HTC_TX_RTSCTS       0x2
--#define ATH9K_HTC_TX_USE_MIN_RATE 0x100
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 82e8012..c8deeeb 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1446,8 +1446,8 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev,
+ 	}
+ }
  
- struct tx_frame_hdr {
- 	u8 data_type;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index cb9174a..91a5305 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -83,21 +83,10 @@ struct htc_ep_callbacks {
- 	void (*rx) (void *, struct sk_buff *, enum htc_endpoint_id);
- };
+-static void rt2500pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
+-				       struct rt2x00_field32 irq_field)
++static inline void rt2500pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
++					      struct rt2x00_field32 irq_field)
+ {
+ 	u32 reg;
  
--#define HTC_TX_QUEUE_SIZE 256
--
--struct htc_txq {
--	struct sk_buff *buf[HTC_TX_QUEUE_SIZE];
--	u32 txqdepth;
--	u16 txbuf_cnt;
--	u16 txq_head;
--	u16 txq_tail;
--};
--
- struct htc_endpoint {
- 	u16 service_id;
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index d2fe5fd..46c3e3c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -768,8 +768,8 @@ static bool rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	return !max_tx_done;
+ }
  
- 	struct htc_ep_callbacks ep_callbacks;
--	struct htc_txq htc_txq;
- 	u32 max_txqdepth;
- 	int max_msglen;
+-static void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
+-				       struct rt2x00_field32 irq_field)
++static inline void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
++					      struct rt2x00_field32 irq_field)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 35c5d20..264508f 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2260,8 +2260,8 @@ static void rt61pci_wakeup(struct rt2x00_dev *rt2x00dev)
+ 	rt61pci_config(rt2x00dev, &libconf, IEEE80211_CONF_CHANGE_PS);
+ }
+ 
+-static void rt61pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
+-				     struct rt2x00_field32 irq_field)
++static inline void rt61pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
++					    struct rt2x00_field32 irq_field)
+ {
+ 	u32 reg;
  
 -- 
-1.7.4.4
+1.7.2.3
 
