@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4651 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939Ab1DULCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 07:02:21 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/3] staging: brcm80211: logging code clean up
-Date: Thu, 21 Apr 2011 13:02:02 +0200
-Message-ID: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40541 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673Ab1DRI5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 04:57:53 -0400
+Received: by fxm17 with SMTP id 17so2778565fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 01:57:52 -0700 (PDT)
+Message-ID: <4DABFD08.3070806@gmail.com>
+Date: Mon, 18 Apr 2011 11:57:44 +0300
+From: Alex <alfragk@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Calvin Walton <calvin.walton@kepstin.ca>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: crda fails to compile
+References: <4DA8163F.6040308@gmail.com> <1302979775.17255.4.camel@nayuki>
+In-Reply-To: <1302979775.17255.4.camel@nayuki>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Difference with v2,v1 patches: added reference counting of device object by
-adding get_device() and put_device() calls. Patch is based on the latest
-staging-next so should apply.
+On 16/4/2011 9:49 μμ, Calvin Walton wrote:
+> On Fri, 2011-04-15 at 12:56 +0300, Alex wrote:
+>> Hi,
+>>
+>> the last couple of days i've beeen trying to compile crda on my linux
+>> box (gentoo) without success.
+>>
+>> I've downloaded crda-1.1.1, and i've installed all the requirements as
+>> described in the README file.
+>>
+>> However, when i run make i get the following error:
+>>
+>> GEN  keys-gcrypt.c
+>>     Trusted pubkeys: pubkeys/linville.key.pub.pem
+>>     File "./utils/key2pub.py", line 6
+>>       except ImportError, e:
+>>                         ^
+>> SyntaxError: invalid syntax
+>> make: *** [keys-gcrypt.c] Error 1
+>>
+>>
+>> Any help would be appreciated,
+> My guess is that your system installation of python (/usr/bin/python) is
+> actually python-3 instead of python-2. The two versions are
+> incompatible: a python-2 script won't run on python-3 without porting.
+>
+> On gentoo you can switch your default python version back to 2 by
+> running the commands:
+>
+> # eselect python list
+> Available Python interpreters:
+>    [1]   python2.7
+>    [2]   python3.1 *
+> # eselect python set 1
+>
+> Also note that gentoo has a crda package available which you could use
+> instead (I'd recommend this if you're not trying to develop crda):
+>
+> emerge net-wireless/crda
+>
+> Hope that helps.
 
-v1 patch comment (still valid):
-Improved code readability by getting rid of proprietary log functions like
-WL_NONE and WL_ERROR. More logging code cleanup changes in the pipeline, but
-I would first like to get some feedback of the community on this patch.
+Thanks it works now!
 
-Roland Vossen (3):
-  staging: brcm80211: replaced WL_NONE with no_printk
-  staging: brcm80211: making device object accessible from wlc and phy
-  staging: brcm80211: replaced WL_ERROR with dev_err in two files.
-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    2 +-
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 +-
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h   |    2 +-
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wl_dbg.h        |    2 -
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |  273 +++++++++++---------
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c     |    8 +-
- drivers/staging/brcm80211/brcmsmac/wlc_antsel.c    |    7 +-
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    3 +-
- drivers/staging/brcm80211/brcmsmac/wlc_channel.c   |    8 +-
- drivers/staging/brcm80211/brcmsmac/wlc_main.c      |   10 +-
- drivers/staging/brcm80211/brcmsmac/wlc_main.h      |    1 +
- drivers/staging/brcm80211/brcmsmac/wlc_pub.h       |    2 +-
- 14 files changed, 178 insertions(+), 146 deletions(-)
-
-
+Alex
