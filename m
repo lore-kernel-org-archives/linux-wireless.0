@@ -1,312 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4722 "EHLO MMS3.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:4008 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752387Ab1DUSah convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 14:30:37 -0400
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: dwmw2@infradead.org
-cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	henryp@broadcom.com, brudley@broadcom.com, rvossen@broadcom.com,
-	arend@broadcom.com, "Henry Ptasinski" <henryp@broadcom.com>
-Subject: =?UTF-8?q?=5BPATCH=201/3=5D=20linux-firmware=3A=20Simplified=20license=20file=20for=20brcm=20firmware?=
-Date: Thu, 21 Apr 2011 11:30:22 -0700
-Message-ID: <1303410624-10560-2-git-send-email-henryp@broadcom.com>
-In-Reply-To: <1303410624-10560-1-git-send-email-henryp@broadcom.com>
-References: <1302015522-20601-4-git-send-email-henryp@broadcom.com>
- <1303410624-10560-1-git-send-email-henryp@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+	id S1754380Ab1DRRFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 13:05:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/10] iwlagn: remove un-necessary ieee80211_ops
+Date: Mon, 18 Apr 2011 09:44:15 -0700
+Message-Id: <1303145057-6545-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New, much shorter license for firmware files submitted by Broadcom to
-linux-firmware repository.
+After driver split, no need to use ieee80211_ops, remove it
 
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- LICENCE.broadcom_bcm43xx |  270 +++++++++++-----------------------------------
- 1 files changed, 65 insertions(+), 205 deletions(-)
- rewrite LICENCE.broadcom_bcm43xx (99%)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   22 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   24 ------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
+ 7 files changed, 22 insertions(+), 37 deletions(-)
 
-diff --git a/LICENCE.broadcom_bcm43xx b/LICENCE.broadcom_bcm43xx
-dissimilarity index 99%
-index e2cf868..ff26fdd 100644
---- a/LICENCE.broadcom_bcm43xx
-+++ b/LICENCE.broadcom_bcm43xx
-@@ -1,205 +1,65 @@
--SOFTWARE LICENSE AGREEMENT
--
--Unless you and Broadcom Corporation (“Broadcom”) execute a separate written
--software license agreement governing use of the accompanying software, this
--software is licensed to you under the terms of this Software License Agreement
--(“Agreement”).
--
--ANY USE, REPRODUCTION OR DISTRIBUTION OF THE SOFTWARE CONSTITUTES YOUR
--ACCEPTANCE OF THIS AGREEMENT.
--
--1.	DEFINITIONS.
--
--1.1.	“Broadcom Product” means any of the proprietary integrated circuit
--product(s) sold by Broadcom with which the Software was designed to be used, or
--their successors.
--
--1.2.	“Licensee” means you or if you are accepting on behalf of an entity
--then the entity and its affiliates exercising rights under, and complying with
--all of the terms of this Agreement.
--
--1.3.	“Software” shall mean that software made available by Broadcom to
--Licensee in binary code form with this Agreement.
--
--2.	LICENSE GRANT; OWNERSHIP
--
--2.1.	License Grants.  Subject to the terms and conditions of this Agreement,
--Broadcom hereby grants to Licensee a non-exclusive, non-transferable,
--royalty-free license (i) to use and integrate the Software in conjunction with
--any other software; and (ii) to reproduce and distribute the Software complete,
--unmodified and as provided by Broadcom, and only for use with a Broadcom
--Product.
--
--2.2.	Restriction on Modification.  Licensee may not make any modifications
--to the Software.
--
--2.3.	Restriction on Distribution.  Licensee shall only distribute the
--Software under the terms of this Agreement and a copy of this Agreement
--accompanies such distribution.
--
--2.4.	Proprietary Notices.  Licensee shall not remove, efface or obscure any
--copyright or trademark notices from the Software.  Licensee shall include
--reproductions of the Broadcom copyright notice with each copy of the Software,
--except where such Software is embedded in a manner not readily accessible to
--the end user.  Licensee acknowledges that any symbols, trademarks, tradenames,
--and service marks adopted by Broadcom to identify the Software belong to
--Broadcom and that Licensee shall have no rights therein.
--
--2.5.	Ownership.  Broadcom shall retain all right, title and interest,
--including all intellectual property rights, in and to the Software.  Licensee
--hereby covenants that it will not assert any claim that the Software created by
--or for Broadcom infringe any intellectual property right owned or controlled by
--Licensee; provided however, the foregoing shall not apply in case the Agreement
--is terminated.
--
--2.6.	No Other Rights Granted; Restrictions.  Apart from the license rights
--expressly set forth in this Agreement, Broadcom does not grant and Licensee
--does not receive any ownership right, title or interest nor any security
--interest or other interest in any intellectual property rights relating to the
--Software, nor in any copy of any part of the foregoing.  No license is granted
--to Licensee in any human readable code of the Software (source code). Licensee
--shall not (i) use, license, sell or otherwise distribute the Software except as
--provided in this Agreement, (ii) attempt to modify in any way, reverse
--engineer, decompile or disassemble any portion of the Software; or (iii) use
--the Software or other material in violation of any applicable law or
--regulation, including but not limited to any regulatory agency, such as FCC,
--rules.
--
--3.	NO WARRANTY OR SUPPORT
--
--3.1.	No Warranty. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM GRANTS AND
--LICENSEE RECEIVES NO WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, BY STATUTE,
--COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.  BROADCOM SPECIFICALLY
--DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A SPECIFIC
--PURPOSE OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR ANY UPGRADES TO OR
--DOCUMENTATION FOR THE SOFTWARE.  WITHOUT LIMITATION OF THE ABOVE, BROADCOM
--GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL OPERATE WITHOUT
--INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE RESULTS THEREFROM
--INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY OR RELIABILITY.
--
--3.2.	No Support.  Nothing in this agreement shall obligate Broadcom to
--provide any support for the Software. Broadcom may, but shall be under no
--obligation to, correct any defects in the Software and/or provide updates to
--licensees of the Software.  Licensee shall make reasonable efforts to promptly
--report to Broadcom any defects it finds in the Software, as an aid to creating
--improved revisions of the Software.
--
--3.3.	Dangerous Applications.  The Software is not designed, intended, or
--certified for use in components of systems intended for the operation of
--weapons, weapons systems, nuclear installations, means of mass transportation,
--aviation, life-support computers or equipment (including resuscitation
--equipment and surgical implants), pollution control, hazardous substances
--management, or for any other dangerous application in which the failure of the
--Software could create a situation where personal injury or death may occur. 
--Licensee understands that use of the Software in such applications is fully at
--the risk of Licensee.
--
--4.	TERM AND TERMINATION
--
--4.1.	Termination.  This Agreement will automatically terminate if Licensee
--fails to comply with any of the terms and conditions hereof. In such event,
--Licensee must destroy all copies of the Software and all of its component
--parts.
--
--4.2.	Effect Of Termination.  Upon any termination of this Agreement, the
--rights and licenses granted to Licensee under this Agreement shall immediately
--terminate.
--
--4.3.	Survival.  The rights and obligations under this Agreement which by
--their nature should survive termination will remain in effect after expiration
--or termination of this Agreement.
--
--5.	CONFIDENTIALITY
--
--5.1.	Obligations.  Licensee acknowledges and agrees that any documentation
--relating to the Software, and any other information (if such other information
--is identified as confidential or should be recognized as confidential under the
--circumstances) provided to Licensee by Broadcom hereunder (collectively,
--“Confidential Information”) constitute the confidential and proprietary
--information of Broadcom, and that Licensee’s protection thereof is an essential
--condition to Licensee’s use and possession of the Software.  Licensee shall
--retain all Confidential Information in strict confidence and not disclose it to
--any third party or use it in any way except under a written agreement with
--terms and conditions at least as protective as the terms of this Section.
--Licensee will exercise at least the same amount of diligence in preserving the
--secrecy of the Confidential Information as it uses in preserving the secrecy of
--its own most valuable confidential information, but in no event less than
--reasonable diligence.  Information shall not be considered Confidential
--Information if and to the extent that it: (i) was in the public domain at the
--time it was disclosed or has entered the public domain through no fault of
--Licensee; (ii) was known to Licensee, without restriction, at the time of
--disclosure as proven by the files of Licensee in existence at the time of
--disclosure; or (iii) becomes known to Licensee, without restriction, from a
--source other than Broadcom without breach of this Agreement by Licensee and
--otherwise not in violation of Broadcom’s rights.
--
--5.2.	Return of Confidential Information.  Notwithstanding the foregoing, all
--documents and other tangible objects containing or representing Broadcom
--Confidential Information and all copies thereof which are in the possession of
--Licensee shall be and remain the property of Broadcom, and shall be promptly
--returned to Broadcom upon written request by Broadcom or upon termination of
--this Agreement.
--
--6.	LIMITATION OF LIABILITY TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO
--EVENT SHALL BROADCOM OR ANY OF BROADCOM’S LICENSORS HAVE ANY LIABILITY FOR ANY
--INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON
--ANY THEORY OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING
--NEGLIGENCE) OR OTHERWISE, ARISING OUT OF THIS AGREEMENT, INCLUDING BUT NOT
--LIMITED TO LOSS OF PROFITS, EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE
--POSSIBILITY OF SUCH DAMAGES. IN NO EVENT WILL BROADCOM’S LIABILITY WHETHER IN
--CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, EXCEED THE AMOUNT PAID BY
--LICENSEE FOR SOFTWARE UNDER THIS AGREEMENT.  THESE LIMITATIONS SHALL APPLY
--NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY.
--
--7.	MISCELLANEOUS
--
--7.1.	Export Regulations. YOU UNDERSTAND AND AGREE THAT THE SOFTWARE IS
--SUBJECT TO UNITED STATES AND OTHER APPLICABLE EXPORT-RELATED LAWS AND
--REGULATIONS AND THAT YOU MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE SOFTWARE OR
--ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE LAWS.
--WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT OR TRANSFER OF THE SOFTWARE
--TO CUBA, IRAN, NORTH KOREA, SUDAN AND SYRIA IS PROHIBITED.
--
--7.2	Assignment. This Agreement shall be binding upon and inure to the
--benefit of the parties and their respective successors and assigns, provided,
--however that Licensee may not assign this Agreement or any rights or obligation
--hereunder, directly or indirectly, by operation of law or otherwise, without
--the prior written consent of Broadcom, and any such attempted assignment shall
--be void.  Notwithstanding the foregoing, Licensee may assign this Agreement to
--a successor to all or substantially all of its business or assets to which this
--Agreement relates that is not a competitor of Broadcom.
--
--7.3.	Governing Law; Venue.  This Agreement shall be governed by the laws of
--California without regard to any conflict-of-laws rules, and the United Nations
--Convention on Contracts for the International Sale of Goods is hereby excluded.
--The sole jurisdiction and venue for actions related to the subject matter
--hereof shall be the state and federal courts located in the County of Orange,
--California, and both parties hereby consent to such jurisdiction and venue.
--
--7.4.	Severability.  All terms and provisions of this Agreement shall, if
--possible, be construed in a manner which makes them valid, but in the event any
--term or provision of this Agreement is found by a court of competent
--jurisdiction to be illegal or unenforceable, the validity or enforceability of
--the remainder of this Agreement shall not be affected if the illegal or
--unenforceable provision does not materially affect the intent of this
--Agreement.  If the illegal or unenforceable provision materially affects the
--intent of the parties to this Agreement, this Agreement shall become
--terminated.
--
--7.5.	Equitable Relief.  Licensee hereby acknowledges that its breach of this
--Agreement would cause irreparable harm and significant injury to Broadcom that
--may be difficult to ascertain and that a remedy at law would be inadequate.
--Accordingly, Licensee agrees that Broadcom shall have the right to seek and
--obtain immediate injunctive relief to enforce obligations under the Agreement
--in addition to any other rights and remedies it may have.
--
--7.6.	Waiver.  The waiver of, or failure to enforce, any breach or default
--hereunder shall not constitute the waiver of any other or subsequent breach or
--default.
--
--7.7.	Entire Agreement.  This Agreement sets forth the entire Agreement
--between the parties and supersedes any and all prior proposals, agreements and
--representations between them, whether written or oral concerning the Software.
--This Agreement may be changed only by mutual agreement of the parties in
--writing.
--
-+SOFTWARE LICENSE AGREEMENT
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index a018718..baf8011 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -220,7 +220,6 @@ static const struct iwl_ops iwl1000_ops = {
+ 	.lib = &iwl1000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static struct iwl_base_params iwl1000_base_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 0bd9b14..e76e02c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -304,28 +304,24 @@ static const struct iwl_ops iwl2000_ops = {
+ 	.lib = &iwl2000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl2030_ops = {
+ 	.lib = &iwl2000_lib,
+ 	.hcmd = &iwlagn_bt_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl200_ops = {
+ 	.lib = &iwl2000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl230_ops = {
+ 	.lib = &iwl2000_lib,
+ 	.hcmd = &iwlagn_bt_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static struct iwl_base_params iwl2000_base_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ced89f6..655afc1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -436,14 +436,12 @@ static const struct iwl_ops iwl5000_ops = {
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl5150_ops = {
+ 	.lib = &iwl5150_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static struct iwl_base_params iwl5000_base_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index ed6a0ed..905eb57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -386,7 +386,6 @@ static const struct iwl_ops iwl6000_ops = {
+ 	.lib = &iwl6000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl6050_ops = {
+@@ -394,7 +393,6 @@ static const struct iwl_ops iwl6050_ops = {
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+ 	.nic = &iwl6050_nic_ops,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl6150_ops = {
+@@ -402,14 +400,12 @@ static const struct iwl_ops iwl6150_ops = {
+ 	.hcmd = &iwlagn_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+ 	.nic = &iwl6150_nic_ops,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static const struct iwl_ops iwl6030_ops = {
+ 	.lib = &iwl6030_lib,
+ 	.hcmd = &iwlagn_bt_hcmd,
+ 	.utils = &iwlagn_hcmd_utils,
+-	.ieee80211_ops = &iwlagn_hw_ops,
+ };
+ 
+ static struct iwl_base_params iwl6000_base_params = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3cfd7eb..cdeb09e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3728,6 +3728,28 @@ static const u8 iwlagn_pan_ac_to_queue[] = {
+ 	7, 6, 5, 4,
+ };
+ 
++/* This function both allocates and initializes hw and priv. */
++static struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg)
++{
++	struct iwl_priv *priv;
++	/* mac80211 allocates memory for this device instance, including
++	 *   space for this driver's private structure */
++	struct ieee80211_hw *hw;
 +
-+The accompanying software in binary code form (“Software”), is licensed to you,
-+or, if you are accepting on behalf of an entity, the entity and its affiliates
-+exercising rights hereunder (“Licensee”) subject to the terms of this software
-+license agreement (“Agreement”), unless Licensee and Broadcom Corporation
-+(“Broadcom”) execute a separate written software license agreement governing
-+use of the Software. ANY USE, REPRODUCTION, OR DISTRIBUTION OF THE SOFTWARE
-+CONSTITUTES LICENSEE’S ACCEPTANCE OF THIS AGREEMENT.
++	hw = ieee80211_alloc_hw(sizeof(struct iwl_priv), &iwlagn_hw_ops);
++	if (hw == NULL) {
++		pr_err("%s: Can not allocate network device\n",
++		       cfg->name);
++		goto out;
++	}
 +
-+1.	License. Subject to the terms and conditions of this Agreement,
-+Broadcom hereby grants to Licensee a limited, non-exclusive, non-transferable,
-+royalty-free license: (i) to use and integrate the Software with any other
-+software; and (ii) to reproduce and distribute the Software complete,
-+unmodified, and as provided by Broadcom, solely for use with Broadcom
-+proprietary integrated circuit product(s) sold by Broadcom with which the
-+Software was designed to be used, or their successors.
++	priv = hw->priv;
++	priv->hw = hw;
 +
-+2.	Restrictions. Licensee shall distribute Software with a copy of this
-+Agreement. Licensee shall not remove, efface or obscure any copyright or
-+trademark notices from the Software. Reproductions of the Broadcom copyright
-+notice shall be included with each copy of the Software, except where such
-+Software is embedded in a manner not readily accessible to the end user.
-+Licensee shall not: (i) use, license, sell or otherwise distribute the Software
-+except as provided in this Agreement; (ii) attempt to modify in any way,
-+reverse engineer, decompile or disassemble any portion of the Software; or
-+(iii) use the Software or other material in violation of any applicable law or
-+regulation, including but not limited to any regulatory agency. This Agreement
-+shall automatically terminate upon Licensee’s failure to comply with any of the
-+terms of this Agreement. In such event, Licensee will destroy all copies of the
-+Software and its component parts.
++out:
++	return hw;
++}
 +
-+3.	Ownership. The Software is licensed and not sold.  Title to and
-+ownership of the Software, including all intellectual property rights thereto,
-+and any portion thereof remain with Broadcom or its licensors. Licensee hereby
-+covenants that it will not assert any claim that the Software created by or for
-+Broadcom infringe any intellectual property right owned or controlled by
-+Licensee.
-+
-+4.     	Disclaimer. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM PROVIDES AND
-+GRANTS AND LICENSEE RECEIVES NO SUPPORT AND NO WARRANTIES OF ANY KIND, EXPRESS
-+OR IMPLIED, BY STATUTE, COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.
-+BROADCOM SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY,
-+FITNESS FOR A SPECIFIC PURPOSE, OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR
-+ANY UPGRADES TO OR DOCUMENTATION FOR THE SOFTWARE. WITHOUT LIMITATION OF THE
-+ABOVE, BROADCOM GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL
-+OPERATE WITHOUT INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE
-+RESULTS THEREFROM INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY, OR
-+RELIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL BROADCOM
-+OR ANY OF ITS LICENSORS HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
-+INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON ANY THEORY
-+OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR
-+OTHERWISE, ARISING OUT OF THIS AGREEMENT OR USE, REPRODUCTION, OR DISTRIBUTION
-+OF THE SOFTWARE, INCLUDING BUT NOT LIMITED TO LOSS OF DATA AND LOSS OF PROFITS,
-+EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THESE
-+LIMITATIONS SHALL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
-+LIMITED REMEDY.
-+
-+5. 	Export Laws.  LICENSEE UNDERSTANDS AND AGREES THAT THE SOFTWARE IS
-+SUBJECT TO UNITED STATES AND OTHER APPLICABLE EXPORT-RELATED LAWS AND
-+REGULATIONS AND THAT LICENSEE MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE
-+SOFTWARE OR ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE
-+LAWS. WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT, OR TRANSFER OF THE
-+SOFTWARE TO CUBA, IRAN, NORTH KOREA, SUDAN, AND SYRIA IS PROHIBITED.
-+
+ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	int err = 0, i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 0e98a87..885167f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -67,30 +67,6 @@ u32 iwl_debug_level;
+ 
+ const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ 
+-
+-/* This function both allocates and initializes hw and priv. */
+-struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg)
+-{
+-	struct iwl_priv *priv;
+-	/* mac80211 allocates memory for this device instance, including
+-	 *   space for this driver's private structure */
+-	struct ieee80211_hw *hw;
+-
+-	hw = ieee80211_alloc_hw(sizeof(struct iwl_priv),
+-				cfg->ops->ieee80211_ops);
+-	if (hw == NULL) {
+-		pr_err("%s: Can not allocate network device\n",
+-		       cfg->name);
+-		goto out;
+-	}
+-
+-	priv = hw->priv;
+-	priv->hw = hw;
+-
+-out:
+-	return hw;
+-}
+-
+ #define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
+ #define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
+ static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index abee507..0049790 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -210,7 +210,6 @@ struct iwl_ops {
+ 	const struct iwl_hcmd_utils_ops *utils;
+ 	const struct iwl_nic_ops *nic;
+ 	const struct iwl_legacy_ops *legacy;
+-	const struct ieee80211_ops *ieee80211_ops;
+ };
+ 
+ struct iwl_mod_params {
+@@ -364,7 +363,6 @@ struct iwl_cfg {
+  *   L i b                 *
+  ***************************/
+ 
+-struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg);
+ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		    const struct ieee80211_tx_queue_params *params);
+ int iwl_mac_tx_last_beacon(struct ieee80211_hw *hw);
 -- 
-1.7.4.5
-
+1.7.0.4
 
