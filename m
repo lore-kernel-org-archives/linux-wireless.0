@@ -1,95 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39623 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:1886 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756168Ab1DLRPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 13:15:51 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: receive EAP frames from a station in an AP VLAN on the main AP
-Date: Tue, 12 Apr 2011 19:15:22 +0200
-Message-Id: <1302628522-65573-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1302196736-30656-1-git-send-email-nbd@openwrt.org>
-References: <1302196736-30656-1-git-send-email-nbd@openwrt.org>
+	id S1753779Ab1DRNcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 09:32:11 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] staging: brcm80211: remove retrieval function for
+ tsf in wlc_main.c
+Date: Mon, 18 Apr 2011 15:31:51 +0200
+Message-ID: <1303133511-8300-6-git-send-email-arend@broadcom.com>
+In-Reply-To: <1303133511-8300-1-git-send-email-arend@broadcom.com>
+References: <1303133511-8300-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it easier to handle moving stations to VLAN interfaces that are
-part of a different bridge.
+wlc_main.c provides a function to read the tsf, but it is not used.
+Consequently, it is removed.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
 ---
- net/mac80211/rx.c |   20 ++++++++++++++++----
- 1 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c |    5 -----
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h |    2 --
+ 2 files changed, 0 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fc2ff78..92f261a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1585,7 +1585,7 @@ ieee80211_drop_unencrypted_mgmt(struct ieee80211_rx_data *rx)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 34584be..6fb9d9c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -7861,11 +7861,6 @@ void wlc_set_rcmta(struct wlc_info *wlc, int idx, const u8 *addr)
+ 	wlc_bmac_set_rcmta(wlc->hw, idx, addr);
  }
  
- static int
--__ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
-+__ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
+-void wlc_read_tsf(struct wlc_info *wlc, u32 *tsf_l_ptr, u32 *tsf_h_ptr)
+-{
+-	wlc_bmac_read_tsf(wlc->hw, tsf_l_ptr, tsf_h_ptr);
+-}
+-
+ void wlc_set_cwmin(struct wlc_info *wlc, u16 newmin)
  {
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-@@ -1593,6 +1593,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	struct ethhdr *ehdr;
- 	int ret;
- 
-+	*port_control = false;
- 	if (ieee80211_has_a4(hdr->frame_control) &&
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
- 		return -1;
-@@ -1611,11 +1612,13 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 		return -1;
- 
- 	ret = ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
--	if (ret < 0 || !check_port_control)
-+	if (ret < 0)
- 		return ret;
- 
- 	ehdr = (struct ethhdr *) rx->skb->data;
--	if (ehdr->h_proto != rx->sdata->control_port_protocol)
-+	if (ehdr->h_proto == rx->sdata->control_port_protocol)
-+		*port_control = true;
-+	else if (check_port_control)
- 		return -1;
- 
- 	return 0;
-@@ -1916,6 +1919,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	struct net_device *dev = sdata->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	__le16 fc = hdr->frame_control;
-+	bool port_control;
- 	int err;
- 
- 	if (unlikely(!ieee80211_is_data(hdr->frame_control)))
-@@ -1932,13 +1936,21 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	    sdata->vif.type == NL80211_IFTYPE_AP)
- 		return RX_DROP_MONITOR;
- 
--	err = __ieee80211_data_to_8023(rx);
-+	err = __ieee80211_data_to_8023(rx, &port_control);
- 	if (unlikely(err))
- 		return RX_DROP_UNUSABLE;
- 
- 	if (!ieee80211_frame_allowed(rx, fc))
- 		return RX_DROP_MONITOR;
- 
-+	if (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+	    unlikely(port_control) && sdata->bss) {
-+		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
-+				     u.ap);
-+		dev = sdata->dev;
-+		rx->sdata = sdata;
-+	}
-+
- 	rx->skb->dev = dev;
- 
- 	dev->stats.rx_packets++;
+ 	wlc->band->CWmin = newmin;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+index d1114e8..34023fa 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+@@ -813,8 +813,6 @@ extern void wlc_get_rcmta(struct wlc_info *wlc, int idx,
+ #endif
+ extern void wlc_set_rcmta(struct wlc_info *wlc, int idx,
+ 			  const u8 *addr);
+-extern void wlc_read_tsf(struct wlc_info *wlc, u32 *tsf_l_ptr,
+-			 u32 *tsf_h_ptr);
+ extern void wlc_set_cwmin(struct wlc_info *wlc, u16 newmin);
+ extern void wlc_set_cwmax(struct wlc_info *wlc, u16 newmax);
+ extern void wlc_fifoerrors(struct wlc_info *wlc);
 -- 
-1.7.3.2
+1.7.1
+
 
