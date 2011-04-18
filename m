@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3755 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756538Ab1D0RWx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 13:22:53 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
-Subject: [PATCH] staging: brcm80211: Change print macro for debug only
- code
-Date: Wed, 27 Apr 2011 10:22:31 -0700
-Message-ID: <1303924951-30821-1-git-send-email-frankyl@broadcom.com> (sfid-20110427_192256_876994_009B4A54)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:54127 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754324Ab1DRTEX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 15:04:23 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4029D540154
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 15:09:16 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110418190420.393ED40EB7@repository3.orbit-lab.org>
+Date: Mon, 18 Apr 2011 15:04:20 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the debug macro from DHD_ERROR to DHD_INFO in
-dhdsdio_sdiod_drive_strength_init to fix a compile error when
-BCM_DEBUG is not turned on
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 29e3397...47c017e akpm-end   -> origin/akpm-end  (forced update)
+   85f2e68..d733ed6  akpm-start -> origin/akpm-start
+   735ce72..f0acf12  history    -> origin/history
+ + 8198b6a...930ee7f master     -> origin/master  (forced update)
+   85f2e68..d733ed6  stable     -> origin/stable
+ * [new tag]         next-20110418 -> next-20110418
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 6debc1e..299efa0 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -6363,7 +6363,7 @@ dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus, u32 drivestrength) {
- 		str_shift = 11;
- 		break;
- 	default:
--		DHD_ERROR(("No SDIO Drive strength init"
-+		DHD_INFO(("No SDIO Drive strength init"
- 			"done for chip %s rev %d pmurev %d\n",
- 			bcm_chipname(bus->ci->chip, chn, 8),
- 			bus->ci->chiprev, bus->ci->pmurev));
--- 
-1.7.1
-
-
+    838665 - Total upstream lines of code being pulled
+      2232 - backport code changes
+      1934 - backport code additions
+       298 - backport code deletions
+      7869 - backport from compat module
+     10101 - total backport code
+    1.2044 - % of code consists of backport work
