@@ -1,243 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3003 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752841Ab1DRJcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 05:32:04 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] staging: brcm80211: removed all ASSERTs from
- wl_mac80211.c
-Date: Mon, 18 Apr 2011 11:31:47 +0200
-Message-ID: <1303119108-32487-3-git-send-email-rvossen@broadcom.com>
-In-Reply-To: <1303119108-32487-1-git-send-email-rvossen@broadcom.com>
-References: <1303119108-32487-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754078Ab1DRNgL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 09:36:11 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:10 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 16/23] rt2x00: Add USB IDs.
+Date: Mon, 18 Apr 2011 15:32:33 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181531.51867.IvDoorn@gmail.com> <201104181532.14262.IvDoorn@gmail.com>
+In-Reply-To: <201104181532.14262.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104181532.34476.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+
+Add USB IDs that are listed in the latest Ralink Windows and/or Linux drivers.
+
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   60 +++++++---------------
- 1 files changed, 19 insertions(+), 41 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index ba4d6de..169d26b 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -188,10 +188,6 @@ static int wl_ops_start(struct ieee80211_hw *hw)
- 
- static void wl_ops_stop(struct ieee80211_hw *hw)
- {
--#ifdef BRCMDBG
--	struct wl_info *wl = hw->priv;
--	ASSERT(wl);
--#endif /*BRCMDBG*/
- 	ieee80211_stop_queues(hw);
- }
- 
-@@ -283,7 +279,6 @@ static int wl_ops_config(struct ieee80211_hw *hw, u32 changed)
- 			goto config_out;
- 		}
- 		wlc_iovar_getint(wl->wlc, "bcn_li_bcn", &new_int);
--		ASSERT(new_int == conf->listen_interval);
- 	}
- 	if (changed & IEEE80211_CONF_CHANGE_MONITOR)
- 		wiphy_err(wiphy, "%s: change monitor mode: %s (implement)\n",
-@@ -635,13 +630,12 @@ wl_ops_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 		    u8 buf_size)
- {
--#if defined(BCMDBG)
- 	struct scb *scb = (struct scb *)sta->drv_priv;
--#endif
- 	struct wl_info *wl = hw->priv;
- 	int status;
- 
--	ASSERT(scb->magic == SCB_MAGIC);
-+	if (WARN_ON(scb->magic != SCB_MAGIC))
-+		return -EIDRM;
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		no_printk("%s: action = IEEE80211_AMPDU_RX_START\n", __func__);
-@@ -656,7 +650,7 @@ wl_ops_ampdu_action(struct ieee80211_hw *hw,
- 		if (!status) {
- 			dev_err(wl->dev, "START: tid %d is not agg\'able\n",
- 				tid);
--			return -1;
-+			return -EINVAL;
- 		}
- 		/* XXX: Use the starting sequence number provided ... */
- 		*ssn = 0;
-@@ -746,7 +740,7 @@ static int wl_set_hint(struct wl_info *wl, char *abbrev)
- static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 			    uint bustype, void *btparam, uint irq)
- {
--	struct wl_info *wl;
-+	struct wl_info *wl = NULL;
- 	int unit, err;
- 
- 	unsigned long base_addr;
-@@ -759,14 +753,10 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 
- 	/* allocate private info */
- 	hw = pci_get_drvdata(btparam);	/* btparam == pdev */
--	wl = hw->priv;
--	ASSERT(wl);
--	wl->dev = &hw->wiphy->dev;
--
--	if (unit < 0) {
--		dev_err(wl->dev, "wl%d: unit number overflow, exiting\n", unit);
-+	if (hw != NULL)
-+		wl = hw->priv;
-+	if (WARN_ON(hw == NULL) || WARN_ON(wl == NULL))
- 		return NULL;
--	}
- 
- 	atomic_set(&wl->callbacks, 0);
- 
-@@ -801,7 +791,7 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 			KBUILD_MODNAME, "/lib/firmware/brcm");
- 		wl_release_fw(wl);
- 		wl_remove((struct pci_dev *)btparam);
--		goto fail1;
-+		return NULL;
- 	}
- 
- 	/* common load-time initialization */
-@@ -817,9 +807,6 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 	wl->pub = wlc_pub(wl->wlc);
- 
- 	wl->pub->ieee_hw = hw;
--	ASSERT(wl->pub->ieee_hw);
--	ASSERT(wl->pub->ieee_hw->priv == wl);
--
- 
- 	if (wlc_iovar_setint(wl->wlc, "mpc", 0)) {
- 		dev_err(wl->dev, "wl%d: Error setting MPC variable to 0\n",
-@@ -844,7 +831,8 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 	}
- 
- 	memcpy(perm, &wl->pub->cur_etheraddr, ETH_ALEN);
--	ASSERT(is_valid_ether_addr(perm));
-+	if (WARN_ON(!is_valid_ether_addr(perm)))
-+		goto fail;
- 	SET_IEEE80211_PERM_ADDR(hw, perm);
- 
- 	err = ieee80211_register_hw(hw);
-@@ -867,7 +855,6 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 
- fail:
- 	wl_free(wl);
--fail1:
- 	return NULL;
- }
- 
-@@ -1066,8 +1053,7 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
- 		}
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl_band_2GHz_nphy;
- 	} else {
--		BUG();
--		return -1;
-+		return -EPERM;
- 	}
- 
- 	/* Assume all bands use the same phy.  True for 11n devices. */
-@@ -1077,7 +1063,7 @@ static int ieee_hw_rate_init(struct ieee80211_hw *hw)
- 			hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			    &wl_band_5GHz_nphy;
- 		} else {
--			return -1;
-+			return -EPERM;
- 		}
- 	}
- 
-@@ -1130,8 +1116,6 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct ieee80211_hw *hw;
- 	u32 val;
- 
--	ASSERT(pdev);
--
- 	WL_TRACE("%s: bus %d slot %d func %d irq %d\n",
- 		 __func__, pdev->bus->number, PCI_SLOT(pdev->devfn),
- 		 PCI_FUNC(pdev->devfn), pdev->irq);
-@@ -1158,8 +1142,7 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	hw = ieee80211_alloc_hw(sizeof(struct wl_info), &wl_ops);
- 	if (!hw) {
- 		pr_err("%s: ieee80211_alloc_hw failed\n", __func__);
--		rc = -ENOMEM;
--		goto err_1;
-+		return -ENOMEM;
- 	}
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
-@@ -1177,9 +1160,6 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return -ENODEV;
- 	}
- 	return 0;
-- err_1:
--	pr_err("%s: err_1: Major hoarkage\n", __func__);
--	return 0;
- }
- 
- static int wl_suspend(struct pci_dev *pdev, pm_message_t state)
-@@ -1370,7 +1350,6 @@ static void wl_free(struct wl_info *wl)
- {
- 	struct wl_timer *t, *next;
- 
--	ASSERT(wl);
- 	/* free ucode data */
- 	if (wl->fw.fw_cnt)
- 		wl_ucode_data_free();
-@@ -1566,7 +1545,6 @@ static irqreturn_t BCMFASTPATH wl_isr(int irq, void *dev_id)
- 
- 			/* ...and call the second level interrupt handler */
- 			/* schedule dpc */
--			ASSERT(wl->resched == false);
- 			tasklet_schedule(&wl->tasklet);
- 		}
- 	}
-@@ -1694,8 +1672,6 @@ void wl_add_timer(struct wl_info *wl, struct wl_timer *t, uint ms, int periodic)
- 			__func__, t->name, periodic);
- 	}
- #endif
--	ASSERT(!t->set);
--
- 	t->ms = ms;
- 	t->periodic = (bool) periodic;
- 	t->set = true;
-@@ -1771,8 +1747,6 @@ static int wl_linux_watchdog(void *ctx)
- 	uint id;
- 	/* refresh stats */
- 	if (wl->pub->up) {
--		ASSERT(wl->stats_id < 2);
--
- 		cnt = wl->pub->_cnt;
- 		id = 1 - wl->stats_id;
- 		stats = &wl->stats_watchdog[id];
-@@ -1858,14 +1832,18 @@ int wl_ucode_init_uint(struct wl_info *wl, u32 *data, u32 idx)
- 		     entry++, hdr++) {
- 			if (hdr->idx == idx) {
- 				pdata = wl->fw.fw_bin[i]->data + hdr->offset;
--				ASSERT(hdr->len == 4);
-+				if (hdr->len != 4) {
-+					dev_err(wl->dev,
-+						"ERROR: fw hdr len\n");
-+					return -ENOMSG;
-+				}
- 				*data = *((u32 *) pdata);
- 				return 0;
- 			}
- 		}
- 	}
- 	dev_err(wl->dev, "ERROR: ucode tag:%d can not be found!\n", idx);
--	return -1;
-+	return -ENOMSG;
- }
- 
- /*
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6f7c161..fd8aa99 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -775,6 +775,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07b8, 0x3072) },
+ 	{ USB_DEVICE(0x1482, 0x3c09) },
+ 	/* AirTies */
++	{ USB_DEVICE(0x1eda, 0x2012) },
+ 	{ USB_DEVICE(0x1eda, 0x2310) },
+ 	/* Allwin */
+ 	{ USB_DEVICE(0x8516, 0x2070) },
+@@ -933,6 +934,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x0042) },
+ 	{ USB_DEVICE(0x0df6, 0x0047) },
+ 	{ USB_DEVICE(0x0df6, 0x0048) },
++	{ USB_DEVICE(0x0df6, 0x0051) },
++	{ USB_DEVICE(0x0df6, 0x005f) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0x6618) },
+ 	{ USB_DEVICE(0x083a, 0x7511) },
+@@ -963,6 +966,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0586, 0x3416) },
+ 	{ USB_DEVICE(0x0586, 0x3418) },
+ 	{ USB_DEVICE(0x0586, 0x341e) },
++	{ USB_DEVICE(0x0586, 0x343e) },
+ #ifdef CONFIG_RT2800USB_RT33XX
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3370) },
+@@ -998,6 +1002,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	 * Unclear what kind of devices these are (they aren't supported by the
+ 	 * vendor linux driver).
+ 	 */
++	/* Abocom */
++	{ USB_DEVICE(0x07b8, 0x3073) },
++	{ USB_DEVICE(0x07b8, 0x3074) },
+ 	/* Alpha Networks */
+ 	{ USB_DEVICE(0x14b2, 0x3c08) },
+ 	{ USB_DEVICE(0x14b2, 0x3c11) },
+@@ -1005,14 +1012,17 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0e0b, 0x9031) },
+ 	{ USB_DEVICE(0x0e0b, 0x9041) },
+ 	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x166a) },
+ 	{ USB_DEVICE(0x0b05, 0x1760) },
+ 	{ USB_DEVICE(0x0b05, 0x1761) },
+ 	{ USB_DEVICE(0x0b05, 0x1790) },
++	{ USB_DEVICE(0x0b05, 0x179d) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3262) },
+ 	{ USB_DEVICE(0x13d3, 0x3284) },
+ 	{ USB_DEVICE(0x13d3, 0x3322) },
+ 	/* Belkin */
++	{ USB_DEVICE(0x050d, 0x1003) },
+ 	{ USB_DEVICE(0x050d, 0x825a) },
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x012e) },
+@@ -1028,20 +1038,29 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c13) },
+ 	{ USB_DEVICE(0x07d1, 0x3c15) },
+ 	{ USB_DEVICE(0x07d1, 0x3c17) },
++	{ USB_DEVICE(0x2001, 0x3c17) },
+ 	/* Edimax */
+ 	{ USB_DEVICE(0x7392, 0x4085) },
++	{ USB_DEVICE(0x7392, 0x7722) },
+ 	/* Encore */
+ 	{ USB_DEVICE(0x203d, 0x14a1) },
+ 	/* Gemtek */
+ 	{ USB_DEVICE(0x15a9, 0x0010) },
+ 	/* Gigabyte */
+ 	{ USB_DEVICE(0x1044, 0x800c) },
++	/* Huawei */
++	{ USB_DEVICE(0x148f, 0xf101) },
++	/* I-O DATA */
++	{ USB_DEVICE(0x04bb, 0x094b) },
+ 	/* LevelOne */
+ 	{ USB_DEVICE(0x1740, 0x0605) },
+ 	{ USB_DEVICE(0x1740, 0x0615) },
+ 	/* Linksys */
+ 	{ USB_DEVICE(0x1737, 0x0077) },
+ 	{ USB_DEVICE(0x1737, 0x0078) },
++	/* Logitec */
++	{ USB_DEVICE(0x0789, 0x0168) },
++	{ USB_DEVICE(0x0789, 0x0169) },
+ 	/* Motorola */
+ 	{ USB_DEVICE(0x100d, 0x9032) },
+ 	/* Ovislink */
+@@ -1056,6 +1075,15 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x2019, 0xab24) },
+ 	/* Qcom */
+ 	{ USB_DEVICE(0x18e8, 0x6259) },
++	/* RadioShack */
++	{ USB_DEVICE(0x08b9, 0x1197) },
++	/* Sitecom */
++	{ USB_DEVICE(0x0df6, 0x003c) },
++	{ USB_DEVICE(0x0df6, 0x004a) },
++	{ USB_DEVICE(0x0df6, 0x004d) },
++	{ USB_DEVICE(0x0df6, 0x0053) },
++	{ USB_DEVICE(0x0df6, 0x0060) },
++	{ USB_DEVICE(0x0df6, 0x0062) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512) },
+ 	{ USB_DEVICE(0x083a, 0xc522) },
 -- 
-1.7.1
-
+1.7.2.3
 
