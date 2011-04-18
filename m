@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54127 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754324Ab1DRTEX (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:11325 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753507Ab1DRKTF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 15:04:23 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4029D540154
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 15:09:16 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-18 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110418190420.393ED40EB7@repository3.orbit-lab.org>
-Date: Mon, 18 Apr 2011 15:04:20 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 18 Apr 2011 06:19:05 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 03:18:39 -0700
+Message-ID: <4DAC1014.7020303@atheros.com>
+Date: Mon, 18 Apr 2011 15:49:00 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] mac80211: Fix a compilation warning
+References: <1303104058-18958-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1303104058-18958-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 29e3397...47c017e akpm-end   -> origin/akpm-end  (forced update)
-   85f2e68..d733ed6  akpm-start -> origin/akpm-start
-   735ce72..f0acf12  history    -> origin/history
- + 8198b6a...930ee7f master     -> origin/master  (forced update)
-   85f2e68..d733ed6  stable     -> origin/stable
- * [new tag]         next-20110418 -> next-20110418
-
-compat-wireless code metrics
-
-    838665 - Total upstream lines of code being pulled
-      2232 - backport code changes
-      1934 - backport code additions
-       298 - backport code deletions
-      7869 - backport from compat module
-     10101 - total backport code
-    1.2044 - % of code consists of backport work
+On Monday 18 April 2011 10:50 AM, Mohammed Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>
+> mac80211/debugfs_sta.c:113: warning:
+> format ‘%d’ expects type ‘int’, but argument 4 has type ‘long int’
+> introduced by the commit  ebe27c91af8b7f4810ae906fbd3eeb2d87850026
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> ---
+>   net/mac80211/debugfs_sta.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+> index c008232..a01d213 100644
+> --- a/net/mac80211/debugfs_sta.c
+> +++ b/net/mac80211/debugfs_sta.c
+> @@ -108,7 +108,7 @@ static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
+>   	result.tm_year -= 70;
+>   	result.tm_mday -= 1;
+>   	res = scnprintf(buf, sizeof(buf),
+> -		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
+> +		"years  - %ld\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
+>   			result.tm_year, result.tm_mon, result.tm_mday,
+>   			result.tm_hour, result.tm_min, result.tm_sec);
+>   	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+>    
+John, this seems to be already fixed by this patch
+[PATCH -next] mac80211: fix debugfs printk format warning
+http://www.spinics.net/lists/linux-wireless/msg67977.html
