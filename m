@@ -1,96 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62452 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757353Ab1D3PSw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 11:18:52 -0400
-Received: by ewy4 with SMTP id 4so1391005ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:18:51 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/6] rt2x00: Introduce capability flag for Bluetooth co-existence.
-Date: Sat, 30 Apr 2011 17:15:37 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104301713.47545.IvDoorn@gmail.com> <201104301714.49872.IvDoorn@gmail.com> <201104301715.13753.IvDoorn@gmail.com>
-In-Reply-To: <201104301715.13753.IvDoorn@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3588 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753700Ab1DRNcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 09:32:06 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] staging: brcm80211: provide TSF value in receive
+ status
+Date: Mon, 18 Apr 2011 15:31:49 +0200
+Message-ID: <1303133511-8300-4-git-send-email-arend@broadcom.com>
+In-Reply-To: <1303133511-8300-1-git-send-email-arend@broadcom.com>
+References: <1303133511-8300-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104301715.38080.IvDoorn@gmail.com> (sfid-20110430_171858_601432_71A24B22)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Packets passed to the mac80211 stack have a mactime field in the
+receive status indicating the actual time it was received by the
+phy radio. It was not (properly) filled in before this change.
 
-Use flag instead of re-reading the eeprom every time.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   13 ++++++++-----
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c |   50 ++++++++++++++++++++----
+ 1 files changed, 41 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 71c16c6..6ed646a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1640,7 +1640,6 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 					 struct channel_info *info)
- {
- 	u8 rfcsr;
--	u16 eeprom;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 0eb1040..34584be 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -282,6 +282,7 @@ static void wlc_compute_ofdm_plcp(ratespec_t rate, uint length, u8 *plcp);
+ static void wlc_compute_mimo_plcp(ratespec_t rate, uint length, u8 *plcp);
+ static u16 wlc_compute_frame_dur(struct wlc_info *wlc, ratespec_t rate,
+ 				    u8 preamble_type, uint next_frag_len);
++static u64 wlc_recover_tsf64(struct wlc_info *wlc, struct wlc_d11rxhdr *rxh);
+ static void wlc_recvctl(struct wlc_info *wlc,
+ 			d11rxhdr_t *rxh, struct sk_buff *p);
+ static uint wlc_calc_frame_len(struct wlc_info *wlc, ratespec_t rate,
+@@ -6472,25 +6473,56 @@ void wlc_bcn_li_upd(struct wlc_info *wlc)
+ 			      (wlc->bcn_li_dtim << 8) | wlc->bcn_li_bcn);
+ }
  
- 	rt2800_rfcsr_write(rt2x00dev, 8, rf->rf1);
- 	rt2800_rfcsr_write(rt2x00dev, 9, rf->rf3);
-@@ -1670,11 +1669,10 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 		rt2x00_set_field8(&rfcsr, RFCSR17_CODE, rt2x00dev->freq_offset);
- 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
- 
--	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
- 	if (rf->channel <= 14) {
- 		int idx = rf->channel-1;
- 
--		if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF1_BT_COEXIST)) {
-+		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
- 			if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F)) {
- 				/* r55/r59 value array of channel 1~14 */
- 				static const char r55_bt_rev[] = {0x83, 0x83,
-@@ -2917,8 +2915,7 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		ant = (div_mode == 3) ? 1 : 0;
- 
- 		/* check if this is a Bluetooth combo card */
--		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
--		if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF1_BT_COEXIST)) {
-+		if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
- 			u32 reg;
- 
- 			rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
-@@ -3741,6 +3738,12 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CAPABILITY_HW_BUTTON, &rt2x00dev->cap_flags);
- 
- 	/*
-+	 * Detect if this device has Bluetooth co-existence.
-+	 */
-+	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF1_BT_COEXIST))
-+		__set_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags);
++/*
++ * recover 64bit TSF value from the 16bit TSF value in the rx header
++ * given the assumption that the TSF passed in header is within 65ms
++ * of the current tsf.
++ *
++ * 6       5       4       4       3       2       1
++ * 3.......6.......8.......0.......2.......4.......6.......8......0
++ * |<---------- tsf_h ----------->||<--- tsf_l -->||<-RxTSFTime ->|
++ *
++ * The RxTSFTime are the lowest 16 bits and provided by the ucode. The
++ * tsf_l is filled in by wlc_bmac_recv, which is done earlier in the
++ * receive call sequence after rx interrupt. Only the higher 16 bits
++ * are used. Finally, the tsf_h is read from the tsf register.
++ */
++static u64 wlc_recover_tsf64(struct wlc_info *wlc, struct wlc_d11rxhdr *rxh)
++{
++	u32 tsf_h, tsf_l;
++	u16 rx_tsf_0_15, rx_tsf_16_31;
++
++	wlc_bmac_read_tsf(wlc->hw, &tsf_l, &tsf_h);
++
++	rx_tsf_16_31 = (u16)(tsf_l >> 16);
++	rx_tsf_0_15 = rxh->rxhdr.RxTSFTime;
 +
 +	/*
- 	 * Read frequency offset and RF programming sequence.
- 	 */
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_FREQ, &eeprom);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index acf561f..86e1410 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -697,6 +697,7 @@ enum rt2x00_capability_flags {
- 	CAPABILITY_EXTERNAL_LNA_A,
- 	CAPABILITY_EXTERNAL_LNA_BG,
- 	CAPABILITY_DOUBLE_ANTENNA,
-+	CAPABILITY_BT_COEXIST,
- };
++	 * a greater tsf time indicates the low 16 bits of
++	 * tsf_l wrapped, so decrement the high 16 bits.
++	 */
++	if ((u16)tsf_l < rx_tsf_0_15) {
++		rx_tsf_16_31 -= 1;
++		if (rx_tsf_16_31 == 0xffff)
++			tsf_h -= 1;
++	}
++
++	return ((u64)tsf_h << 32) | (((u32)rx_tsf_16_31 << 16) + rx_tsf_0_15);
++}
++
+ static void
+ prep_mac80211_status(struct wlc_info *wlc, d11rxhdr_t *rxh, struct sk_buff *p,
+ 		     struct ieee80211_rx_status *rx_status)
+ {
+-	u32 tsf_l, tsf_h;
+ 	wlc_d11rxhdr_t *wlc_rxh = (wlc_d11rxhdr_t *) rxh;
+ 	int preamble;
+ 	int channel;
+ 	ratespec_t rspec;
+ 	unsigned char *plcp;
  
- /*
+-#if 0
+-	/* Clearly, this is bogus -- reading the TSF now is wrong */
+-	wlc_read_tsf(wlc, &tsf_l, &tsf_h);	/* mactime */
+-	rx_status->mactime = tsf_h;
+-	rx_status->mactime <<= 32;
+-	rx_status->mactime |= tsf_l;
+-	rx_status->flag |= RX_FLAG_MACTIME_MPDU; /* clearly wrong */
+-#endif
++	/* fill in TSF and flag its presence */
++	rx_status->mactime = wlc_recover_tsf64(wlc, wlc_rxh);
++	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+ 
+ 	channel = WLC_CHAN_CHANNEL(rxh->RxChan);
+ 
 -- 
-1.7.2.3
+1.7.1
+
 
