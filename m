@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33667 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752915Ab1DYSPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 14:15:54 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2.6.39 v2] iwlegacy: led stay solid on when no traffic
-Date: Mon, 25 Apr 2011 11:12:57 -0700
-Message-Id: <1303755177-28781-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110425_201556_810123_9EF0D66E)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54964 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab1DRLWg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 07:22:36 -0400
+Received: by wya21 with SMTP id 21so3803021wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:22:35 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/2] mac80211: allow low level drivers to report packet loss
+Date: Mon, 18 Apr 2011 14:22:28 +0300
+Message-Id: <1303125749-31967-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc change the led behavior
-for iwlwifi driver; the side effect cause led blink all the time.
+Add API that allows low level drivers to notify mac80211 about TX
+packet loss. This is useful when there are FW triggers to notify the
+low level driver about these events.
 
-Modify the led blink table to fix this problem
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-v2: remove "-1" entry from table
----
- drivers/net/wireless/iwlegacy/iwl-led.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |   11 +++++++++++
+ net/mac80211/status.c  |    8 ++++++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
-index 15eb8b7..bda0d61 100644
---- a/drivers/net/wireless/iwlegacy/iwl-led.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-@@ -48,8 +48,21 @@ module_param(led_mode, int, S_IRUGO);
- MODULE_PARM_DESC(led_mode, "0=system default, "
- 		"1=On(RF On)/Off(RF Off), 2=blinking");
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cefe1b3..efbdda9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2265,6 +2265,17 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ 				 struct sk_buff *skb);
  
-+/* Throughput		OFF time(ms)	ON time (ms)
-+ *	>300			25		25
-+ *	>200 to 300		40		40
-+ *	>100 to 200		55		55
-+ *	>70 to 100		65		65
-+ *	>50 to 70		75		75
-+ *	>20 to 50		85		85
-+ *	>10 to 20		95		95
-+ *	>5 to 10		110		110
-+ *	>1 to 5			130		130
-+ *	>0 to 1			167		167
-+ *	<=0					SOLID ON
+ /**
++ * ieee80211_report_low_ack - report non-responding station
++ *
++ * When operating in AP-mode, call this function to report a non-responding
++ * connected STA.
++ *
++ * @sta: the non-responding connected sta
++ * @num_packets: number of packets sent to @sta without a response
 + */
- static const struct ieee80211_tpt_blink iwl_blink[] = {
--	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
-+	{ .throughput = 0, .blink_time = 334 },
- 	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
- 	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
- 	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
-@@ -101,6 +114,11 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
- 	if (priv->blink_on == on && priv->blink_off == off)
- 		return 0;
- 
-+	if (off == 0) {
-+		/* led is SOLID_ON */
-+		on = IWL_LED_SOLID;
-+	}
++void ieee80211_report_low_ack(struct ieee80211_sta *sta, u32 num_packets);
 +
- 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
- 			priv->cfg->base_params->led_compensation);
- 	led_cmd.on = iwl_legacy_blink_compensation(priv, on,
++/**
+  * ieee80211_beacon_get_tim - beacon generation function
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 3ed3c83..1658efa 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -446,3 +446,11 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	dev_kfree_skb(skb);
+ }
+ EXPORT_SYMBOL(ieee80211_tx_status);
++
++void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
++				    num_packets, GFP_ATOMIC);
++}
++EXPORT_SYMBOL(ieee80211_report_low_ack);
 -- 
-1.7.0.4
+1.7.1
 
