@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34805 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756418Ab1DHOyA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 10:54:00 -0400
-Message-ID: <4D9F2185.10108@lwfinger.net>
-Date: Fri, 08 Apr 2011 09:53:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:63804 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751067Ab1DRERQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 00:17:16 -0400
+Received: from mail.atheros.com ([10.234.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2011 21:16:50 -0700
+Message-ID: <4DABBB45.7090006@atheros.com>
+Date: Mon, 18 Apr 2011 09:47:09 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@suse.de>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Removal of staging/rt2860sta (and rt2870sta)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>,
+	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [PATCH] {mac|nl}80211: Add station connected time
+References: <1302278064-18403-1-git-send-email-mshajakhan@atheros.com> <1302852596.3572.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1302852596.3572.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg,
-
-When I looked again at the removal of rt2860sta from staging, it was quickly 
-obvious that unless rt2870sta was also removed, very little of the code could be 
-removed. As I have no experience with rt2800usb, the mainline driver for that 
-device, I went to the wireless mailing list with the question. There was one 
-objection to the removal, but the maintainers were in favor, thus I will be 
-submitting a patch to delete both drivers.
-
-I did the changes on my local git tree, committed them, and used 'git 
-format-patch'. I expected that 'git rm' statements would be used to delete the 
-files, but I got normal patch format. As a result, the resulting patch is over 
-2.4 GB, and has over 75,000 lines. Obviously, I'm reluctant to dump a patch of 
-this size on the lists. Is there a way to force git to use "rm" statements, or 
-is there some way to handle this large patch?
-
-Thanks,
-
-Larry
-
-
+On Friday 15 April 2011 12:59 PM, Johannes Berg wrote:
+> On Fri, 2011-04-08 at 21:24 +0530, Mohammed Shafi Shajakhan wrote:
+>
+>    
+>> +static ssize_t sta_connected_time_read(struct file *file, char __user *userbuf,
+>> +					size_t count, loff_t *ppos)
+>> +{
+>> +	struct sta_info *sta = file->private_data;
+>> +	struct timespec uptime;
+>> +	struct tm result;
+>> +	long connected_time_secs;
+>> +	char buf[100];
+>> +	int res;
+>> +	do_posix_clock_monotonic_gettime(&uptime);
+>> +	connected_time_secs = uptime.tv_sec - sta->last_connected;
+>> +	time_to_tm(connected_time_secs, 0,&result);
+>> +	result.tm_year -= 70;
+>> +	result.tm_mday -= 1;
+>> +	res = scnprintf(buf, sizeof(buf),
+>> +		"years  - %d\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
+>> +			result.tm_year, result.tm_mon, result.tm_mday,
+>> +			result.tm_hour, result.tm_min, result.tm_sec);
+>>      
+> net/mac80211/debugfs_sta.c: In function 'sta_connected_time_read':
+> net/mac80211/debugfs_sta.c:113:4: warning: format '%d' expects type
+> 'int', but argument 4 has type 'long int'
+>
+> Please fix.
+>    
+Sure, thanks a lot.
+> johannes
+>
+>    
