@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53806 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752164Ab1DFVIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 17:08:48 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com> (sfid-20110406_230206_684163_663F35B6)
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 <1302123428.20093.6.camel@maggie>
-	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	 (sfid-20110406_230206_684163_663F35B6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 23:08:32 +0200
-Message-ID: <1302124112.20093.11.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:52497 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787Ab1DRLP5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 07:15:57 -0400
+Received: by wwk4 with SMTP id 4so1665679wwk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:15:56 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 04/10] wl12xx: schedule recovery on command timeout
+Date: Mon, 18 Apr 2011 14:15:23 +0300
+Message-Id: <1303125329-27214-4-git-send-email-arik@wizery.com>
+In-Reply-To: <1303125329-27214-1-git-send-email-arik@wizery.com>
+References: <1303125329-27214-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-06 at 23:01 +0200, Rafał Miłecki wrote: 
-> W dniu 6 kwietnia 2011 22:57 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> > On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote:
-> >> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
-> >> > If we want to have two drivers working on two (different) cores
-> >> > simultaneously, we will have to add trivial mutex to group core
-> >> > switching with core operation (read/write).
-> >>
-> >> With a little of work we could avoid switching and mutexes on no-host
-> >> boards. MMIO is not limited to one core at once in such a case.
-> >
-> > I don't think that this is a problem at all.
-> > All that magic does happen inside of the bus I/O handlers.
-> > Just like SSB does it.
-> > From a driver point of view, the I/O functions just need to
-> > be atomic.
-> >
-> > For SSB it's not always 100% atomic, but we're always safe
-> > due to some assumptions being made. But this is an SSB implementation
-> > detail that is different from AXI. So don't look too closely
-> > at the SSB implementation of the I/O functions. You certainly want
-> > to implement them slightly differently in AXI. SSB currently doesn't
-> > make use of the additional sliding windows, because they are not
-> > available in the majority of SSB devices.
-> >
-> > The AXI bus subsystem will manage the sliding windows and the driver
-> > doesn't know about the details.
-> 
-> Sure, I've meant mutex inside bcmai (or whatever name), not on the driver side!
-> 
-> In BCMAI:
-> bcmai_read() {
-> mutex_get();
-> switch_core();
-> ioread();
-> mutex_release();
-> }
+We use a long timeout (2 seconds) when sending commands to the FW.
+When a command times out, it means the FW is stuck, and we should
+commence recovery.
 
-Yeah that basically is the idea. But it's a little bit harder than that.
-The problem is that the mutex cannot be taken in interrupt context.
-A spinlock probably is a bit hairy, too, depending on how heavy
-a core switch is on AXI.
+This should make recovery times shorter as we'll recover on the first
+timeout indication.
 
-On SSB we workaround this with some (dirty but working) assumptions.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-On AXI you probably can do lockless I/O, if you use the two windows
-(how many windows are there?) in a clever way to avoid core switching
-completely after the system was initialized.
-
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 2468044..8090026 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -76,7 +76,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 		if (time_after(jiffies, timeout)) {
+ 			wl1271_error("command complete timeout");
+ 			ret = -ETIMEDOUT;
+-			goto out;
++			goto fail;
+ 		}
+ 
+ 		poll_count++;
+@@ -96,14 +96,17 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 	status = le16_to_cpu(cmd->status);
+ 	if (status != CMD_STATUS_SUCCESS) {
+ 		wl1271_error("command execute failure %d", status);
+-		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 		ret = -EIO;
++		goto fail;
+ 	}
+ 
+ 	wl1271_write32(wl, ACX_REG_INTERRUPT_ACK,
+ 		       WL1271_ACX_INTR_CMD_COMPLETE);
++	return 0;
+ 
+-out:
++fail:
++	WARN_ON(1);
++	ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 	return ret;
+ }
+ 
 -- 
-Greetings Michael.
+1.7.1
 
