@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52181 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754795Ab1DKVTP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 17:19:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110411210631.GA28559@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
-	<20110411210631.GA28559@kroah.com>
-Date: Mon, 11 Apr 2011 23:19:13 +0200
-Message-ID: <BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
+Received: from mga01.intel.com ([192.55.52.88]:37034 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755952Ab1DRRFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 13:05:39 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/10] iwlagn: use huge command for beacon
+Date: Mon, 18 Apr 2011 09:44:11 -0700
+Message-Id: <1303145057-6545-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/11 Greg KH <greg@kroah.com>:
-> On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
->> +static void axi_release_core_dev(struct device *dev)
->> +{
->> +     /* Silent lack-of-release warning */
->> +}
->
-> Ok, WTF!!!!
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thank you for your kindly words. It's much more enjoyable to work on
-kernel that way. I definitely made that on purpose.
+When testing some new P2P code, Angie found that the
+driver might crash because the beacon command ended
+up being bigger than a regular command. This is quite
+obvious -- a normal command is limited to roughly 360
+bytes but a beacon may be much larger of course.
 
+To fix this, use the huge command buffer.
+
+Reported-by: Angie Chinchilla <angie.v.chinchilla@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 0daeded..3cfd7eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -253,6 +253,10 @@ int iwlagn_send_beacon_cmd(struct iwl_priv *priv)
+ 	struct iwl_frame *frame;
+ 	unsigned int frame_size;
+ 	int rc;
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_TX_BEACON,
++		.flags = CMD_SIZE_HUGE,
++	};
+ 
+ 	frame = iwl_get_free_frame(priv);
+ 	if (!frame) {
+@@ -268,8 +272,10 @@ int iwlagn_send_beacon_cmd(struct iwl_priv *priv)
+ 		return -EINVAL;
+ 	}
+ 
+-	rc = iwl_send_cmd_pdu(priv, REPLY_TX_BEACON, frame_size,
+-			      &frame->u.cmd[0]);
++	cmd.len = frame_size;
++	cmd.data = &frame->u.cmd[0];
++
++	rc = iwl_send_cmd_sync(priv, &cmd);
+ 
+ 	iwl_free_frame(priv, frame);
+ 
 -- 
-Rafał
+1.7.0.4
+
