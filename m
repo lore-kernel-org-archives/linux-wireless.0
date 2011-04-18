@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:43432 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752212Ab1DAR4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 13:56:31 -0400
-Received: by mail-ey0-f182.google.com with SMTP id 7so1526730eyg.41
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 10:56:29 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: remove unused conf_radio_params structure
-Date: Fri,  1 Apr 2011 20:56:56 +0300
-Message-Id: <1301680616-7940-1-git-send-email-coelho@ti.com>
+Received: from mga09.intel.com ([134.134.136.24]:2957 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755490Ab1DRQCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 12:02:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6] iwlwifi: fix frame injection for HT channels
+Date: Mon, 18 Apr 2011 08:41:31 -0700
+Message-Id: <1303141291-902-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This structure has not been used anymore since commit
-e6b190ff3c2f4e4859502c41fa17b5c595e82000.
+From: Daniel Halperin <dhalperi@cs.washington.edu>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+For some reason, sending QoS configuration causes transmission to stop
+after a single frame on HT channels when not associated. Removing the
+extra QoS configuration has no effect on station mode, and fixes
+injection mode.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/conf.h |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 52269d4..6c9e3a6 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1020,15 +1020,6 @@ enum single_dual_band_enum {
- #define CONF_NUMBER_OF_CHANNELS_2_4 14
- #define CONF_NUMBER_OF_CHANNELS_5   35
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index dfdbea6..fbbde07 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -335,7 +335,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ieee80211_channel *channel = conf->channel;
+ 	const struct iwl_channel_info *ch_info;
+ 	int ret = 0;
+-	bool ht_changed[NUM_IWL_RXON_CTX] = {};
  
--struct conf_radio_parms {
--	/*
--	 * FEM parameter set to use
--	 *
--	 * Range: 0 or 1
--	 */
--	u8 fem;
--};
--
- struct conf_itrim_settings {
- 	/* enable dco itrim */
- 	u8 enable;
+ 	IWL_DEBUG_MAC80211(priv, "changed %#x", changed);
+ 
+@@ -383,10 +382,8 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 		for_each_context(priv, ctx) {
+ 			/* Configure HT40 channels */
+-			if (ctx->ht.enabled != conf_is_ht(conf)) {
++			if (ctx->ht.enabled != conf_is_ht(conf))
+ 				ctx->ht.enabled = conf_is_ht(conf);
+-				ht_changed[ctx->ctxid] = true;
+-			}
+ 
+ 			if (ctx->ht.enabled) {
+ 				if (conf_is_ht40_minus(conf)) {
+@@ -455,8 +452,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (!memcmp(&ctx->staging, &ctx->active, sizeof(ctx->staging)))
+ 			continue;
+ 		iwlagn_commit_rxon(priv, ctx);
+-		if (ht_changed[ctx->ctxid])
+-			iwlagn_update_qos(priv, ctx);
+ 	}
+  out:
+ 	mutex_unlock(&priv->mutex);
 -- 
-1.7.1
+1.7.0.4
 
