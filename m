@@ -1,82 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:54676 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796Ab1DSFtX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 01:49:23 -0400
-Received: from mail.atheros.com ([10.234.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 22:48:57 -0700
-Date: Tue, 19 Apr 2011 11:19:03 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ralf@linux-mips.org" <ralf@linux-mips.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 03/22] ath9k_hw: Introduce a bool for 25mhz clock and
-	populate it
-Message-ID: <20110419054902.GB21802@vasanth-laptop>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com> <4DA458A8.5030205@openwrt.org> <20110412140035.GA15609@vasanth-laptop> <20110412143305.GB15609@vasanth-laptop> <20110412145135.GB24309@tuxdriver.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60830 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869Ab1DRMTj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2011 08:19:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110412145135.GB24309@tuxdriver.com>
+In-Reply-To: <201104171938.12834.arnd@arndb.de>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	<1302892585.30441.12.camel@dev.znau.edu.ua>
+	<BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+	<201104171938.12834.arnd@arndb.de>
+Date: Mon, 18 Apr 2011 14:19:38 +0200
+Message-ID: <BANLkTim6iCAsViJQS4XrY-XObs8pp-BiQQ@mail.gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2011 at 08:21:36PM +0530, John W. Linville wrote:
-> On Tue, Apr 12, 2011 at 08:03:06PM +0530, Vasanthakumar Thiagarajan wrote:
-> > On Tue, Apr 12, 2011 at 07:30:36PM +0530, Vasanth Thiagarajan wrote:
-> > > > >   {
-> > > > > +#define AR9340_SOC_SEL_25M_40M 0xB80600B0
-> > > > > +#define AR9340_REF_CLK_40 (1<<  4) /* 0 - 25MHz   1 - 40 MHz */
-> > > > > +
-> > > > >   	struct ath_common *common = ath9k_hw_common(ah);
-> > > > >   	int r = 0;
-> > > > >
-> > > > > @@ -508,6 +511,14 @@ static int __ath9k_hw_init(struct ath_hw *ah)
-> > > > >
-> > > > >   	ath9k_hw_attach_ops(ah);
-> > > > >
-> > > > > +	if (AR_SREV_9340(ah)) {
-> > > > > +		if (*((volatile u32 *) AR9340_SOC_SEL_25M_40M)&
-> > > > > +		    AR9340_REF_CLK_40)
-> > > > > +			ah->is_clk_25mhz = false;
-> > > > > +		else
-> > > > > +			ah->is_clk_25mhz = true;
-> > > > > +	}
-> > > > > +
-> > > > >   	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
-> > > > >   		ath_err(common, "Couldn't wakeup chip\n");
-> > > > >   		return -EIO;
-> > > > I think this flag should be passed down from the arch code through 
-> > > > platform data instead. Also, dereferencing volatile u32 pointers for 
-> > > > reading registers is somewhat hackish, readl or ioread32 would be better.
-> > > 
-> > > Yeah, I was also not comfortable with this part of code. I'll fix
-> > > that. thanks for the comments.
-> > 
-> > Linville, ralf,
-> > 
-> > The code change needs to be done in arch code also to fix this
-> > cleanly. I'm not quite sure about the right way of submitting changes
-> > in BSP and ath9k driver without possibly breaking the driver due to
-> > the fact that the change in BSP may not be available along with
-> > driver change soon in wireless-testing.
-> 
-> Generally we can negotiate to take the related changes through one
-> tree or the other.  How does the arch change look?
+W dniu 17 kwietnia 2011 19:38 użytkownik Arnd Bergmann <arnd@arndb.de> napisał:
+> On Friday 15 April 2011, Rafał Miłecki wrote:
+>> W dniu 15 kwietnia 2011 20:36 użytkownik George Kashperko
+>> <george@znau.edu.ua> napisał:
+>> >> >> Arnd: I found you saying:
+>> >> >> > I believe the one thing we really want from this driver is the bus
+>> >> >> > scan code, which is not present in the amba bus implementation,
+>> >> >> I explained how it works, I believe scanning (EPROM in this case) it
+>> >> >> Broadcom specific, not really AMBA standard. How do you see it?
+>> >>
+>> >> Maybe EPROM is not Broadcom specific, but I suspect the content we
+>> >> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
+>> >> manuf/id/rev/class we deal with. So I guess everything we (out
+>> >> driver) read from EPROM is Bcm specific.
+>> >>
+>> >
+>> > Played around amba registers on bcm4716. For all amba cores present
+>> > (under all I mean broadcom ip core agents, oob router core, erom core,
+>> > and other I-dont-know-what-for cores present at 0x18100000). All those
+>> > feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
+>> > PrimeCell PeripheralIDs:
+>> > * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
+>> > * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
+>> > is this please);
+>> > * vendor 0xBB, part_number 0x366 for EROM core;
+>> >
+>> > ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
+>> > no evidence for that with google.
+>>
+>> Yeah, as I suspected, everything except Broadcom specific cores
+>> matches AMBA standards quite nicely. Still, I don't see anything in it
+>> we could use for driver.
+>>
+>> Let's wait for Russell and Arnd to comment.
+>
+> In general, the bus_type directly relates to how a device gets probed.
+> If broadcom uses the same basic register layout as regular AMBA devices,
+> it should use the amba bus type.
 
-arch change will look like 
+>From Broadcom side we *could* use some registers that are AMBA
+specific, they are present... but there is totally no point in doing
+that. Everything we use is Broadcom specific.
 
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index 020387a..f03f8bf 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -28,6 +28,7 @@ struct ath9k_platform_data {
-        int led_pin;
-        u32 gpio_mask;
-        u32 gpio_val;
-+       bool is_clk_25mhz;
- };
 
-Vasanth
+> I think it would be fine to extend the AMBA bus slightly if there are
+> just minor differences.
+
+As I said, Broadcom specific driver use nothing from AMBA common
+things. Plus we implement routines that are Broadcom specific and no
+other platform will use them.
+
+-- 
+Rafał
