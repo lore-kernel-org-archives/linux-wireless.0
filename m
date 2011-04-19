@@ -1,38 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48077 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932481Ab1DNTHA (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:4111 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751869Ab1DSN6s convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 15:07:00 -0400
-Received: by bwz15 with SMTP id 15so1630204bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 12:06:59 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Damian Lesiuk <lesiuk@gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
-Date: Thu, 14 Apr 2011 21:06:48 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com> <BANLkTik2F_6w5jacYw+2-=7Jken6aF_RBQ@mail.gmail.com>
-In-Reply-To: <BANLkTik2F_6w5jacYw+2-=7Jken6aF_RBQ@mail.gmail.com>
+	Tue, 19 Apr 2011 09:58:48 -0400
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Arnd Bergmann" <arnd@arndb.de>
+cc: "George Kashperko" <george@znau.edu.ua>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Jonas Gorski" <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Greg KH" <greg@kroah.com>, "Andy Botting" <andy@andybotting.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom
+ bus?
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+ <1302892585.30441.12.camel@dev.znau.edu.ua>
+ <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+ <201104171938.12834.arnd@arndb.de>
+Date: Tue, 19 Apr 2011 15:58:32 +0200
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201104142106.48549.chunkeey@googlemail.com>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vt6ufu1n3ri7v4@arend-laptop>
+In-Reply-To: <201104171938.12834.arnd@arndb.de>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 14 April 2011 16:50:31 Damian Lesiuk wrote:
-> btw I have 40 mbps now WOW!! :)
-nearly half-way.
+On Sun, 17 Apr 2011 19:38:12 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
 
-> But my windows 7 laptop still shows it as 75 mbps connection.
+Hi Rafał,
 
-yup, but that's because of hostapd. You should start it with -d (or -dd)
-and check the logs for something like:
+As you probably expected I tried to integrate and use your bcmai/bcmaxi/?
+driver with our brcm80211 driver (making progress). In the mean time I  
+tried to follow the discussions going on, but I am still catching up.
 
-"20/40 MHz operation not permitted on channel pri=7 sec=3 based on overlapping BSSes"
+> Compare this to the PCI bus type, which essentially deals with devices
+> that have a PCI configuration space that contains generic (irq, memory,
+> vendor/device ID, ...) registers along with device specific registers.
 
-this is expected [see 802.11n 11.14.12 ] and you'll have to deal with
-this issue differently [e.g.: move to another channel]. 
+How much alike is the (BCM)AXI bus type? My assumption was that each
+registered PCI device is handled by a single driver module. In the
+current(?) bcmai implementation each device driver is called with the
+appropriate device structure reference, but it will also have the bus
+structure reference and through that can also access other cores on the
+(bcm)axi bus. This seems to me a potential issue when there are no
+synchronization mechanisms in place (whether in a SoC configuration or
+PCI-hosted). Does the PCI bus type allow driver for device A access
+device B?
 
-Regards,
-	Chr
+> A new bus_type really only makes sense if you expect a lot of devices
+> to use this and you want to have the probing in the bus. If you only
+> want to have a way to enumerate devices that get created by the
+> parent driver, you can also use platform devices.
+
+The main assumption of the (bcm)axi driver seems to be that each core can
+be considered as a device. Correct me if I am wrong, but I consider a
+device to be an entity providing a particular system function. So an
+ethernet device provides ethernet connectivity function, a mixer device
+provides sound mixing function, and so on. The cores within a chip are not
+always self-contained like this. To clarify let's say a system function is
+realized by programming core A, core B, and finally trigger core A to set
+the function in motion. This implies the need of coordination between the
+programming steps on those cores.
+
+Is my view on what is a device wrong? Does a platform device differ in
+this respect from a regular device?
+
+Gr. AvS
+-- 
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+
