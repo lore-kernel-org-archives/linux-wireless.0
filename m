@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:45095 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751867Ab1DSN5Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:57:24 -0400
-Received: by mail-ew0-f51.google.com with SMTP id 6so2253515ewy.24
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:57:22 -0700 (PDT)
-Subject: wl12xx tree rebased
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Apr 2011 16:59:43 +0300
-Message-ID: <1303221583.1988.693.camel@cumari>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:57265 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752690Ab1DSN72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 09:59:28 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:02 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 09/22] ath9k_hw: Read spur frequency information from eeprom for AR9340
+Date: Tue, 19 Apr 2011 19:29:07 +0530
+Message-ID: <1303221560-25139-10-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I haven't been able to send a pull-request of my previous integration
-round to John Linville because of some extra testing we wanted to do and
-because I have been traveling for a couple of weeks.  So I had to rebase
-the wl12xx tree again, so that the latest developments and patches
-included in stable releases get into the tree without major merges.
-
-Please rebase or reset your local trees so that we're aligned again.
-
-Sorry for the inconvenience.  
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c4d0805..0b999f9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -151,7 +151,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	 * is out-of-band and can be ignored.
+ 	 */
+ 
+-	if (AR_SREV_9485(ah)) {
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah)) {
+ 		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
+ 							 IS_CHAN_2GHZ(chan));
+ 		if (spur_fbin_ptr[0] == 0) /* No spur */
+@@ -176,7 +176,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 
+ 	for (i = 0; i < max_spur_cnts; i++) {
+ 		negative = 0;
+-		if (AR_SREV_9485(ah))
++		if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
+ 			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
+ 					IS_CHAN_2GHZ(chan)) - synth_freq;
+ 		else
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
