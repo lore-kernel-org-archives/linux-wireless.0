@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52789 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750984Ab1DETEL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 15:04:11 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 5222954017C
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Apr 2011 15:08:39 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-05 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110405190409.65E1640EB1@repository3.orbit-lab.org>
-Date: Tue,  5 Apr 2011 15:04:09 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.19.149.2]:57267 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752586Ab1DSN7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 09:59:31 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:05 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 11/22] ath9k_hw: Clean up rx/tx chain configuration before AGC/IQ cal
+Date: Tue, 19 Apr 2011 19:29:09 +0530
+Message-ID: <1303221560-25139-12-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + c26edee...8f0a591 akpm-end   -> origin/akpm-end  (forced update)
-   78fca1b9..d7c764c akpm-start -> origin/akpm-start
-   fab5279..7031438  history    -> origin/history
- + 338afa8...d6671a6 master     -> origin/master  (forced update)
-   78fca1b9..d7c764c stable     -> origin/stable
- * [new tag]         next-20110405 -> next-20110405
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+Use hw supported chains instead of hard coded values.
 
-compat-wireless code metrics
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-    857760 - Total upstream lines of code being pulled
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 4a4cd88..09f3aa7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -940,21 +940,18 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 			       struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	int val;
+ 
+ 	val = REG_READ(ah, AR_ENT_OTP);
+ 	ath_dbg(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
+ 
+-	if (AR_SREV_9485(ah))
+-		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
+-	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
++	/* Configure rx/tx chains before running AGC/TxiQ cals */
++	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
+ 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
+ 	else
+-		/*
+-		 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain
+-		 * mode before running AGC/TxIQ cals
+-		 */
+-		ar9003_hw_set_chain_masks(ah, 0x7, 0x7);
++		ar9003_hw_set_chain_masks(ah, pCap->rx_chainmask,
++					  pCap->tx_chainmask);
+ 
+ 	/* Do Tx IQ Calibration */
+ 	if (AR_SREV_9485(ah))
+-- 
+1.7.0.4
+
