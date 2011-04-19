@@ -1,102 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:56858 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078Ab1DLFDV convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:35120 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752871Ab1DSGJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 01:03:21 -0400
-Received: by vxi39 with SMTP id 39so4623488vxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 22:03:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1302284338.2031.21.camel@pimenta>
-References: <1301834245-16679-1-git-send-email-guy@wizery.com>
-	<1302284338.2031.21.camel@pimenta>
-Date: Tue, 12 Apr 2011 08:03:20 +0300
-Message-ID: <BANLkTimtZaGTcouKvKS+cEfU=G6c6b775w@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: use 2 spare TX blocks for GEM cipher
-From: Guy Eilam <guy@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Apr 2011 02:09:14 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: [PATCH 3/4] mwl8k: Reserve buffers for tx management frames
+Date: Tue, 19 Apr 2011 11:12:51 +0530
+Message-Id: <1303191772-4299-3-git-send-email-nishants@marvell.com>
+In-Reply-To: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 8, 2011 at 8:38 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Sun, 2011-04-03 at 15:37 +0300, Guy Eilam wrote:
->> Add tx_spare_blocks member to the wl1271 struct
->> for more generic configuration of the amount
->> of spare TX blocks that should be used.
->> The default value is 1.
->> in case GEM cipher is used by the STA, we need
->> 2 spare TX blocks instead of just 1.
->>
->> Signed-off-by: Guy Eilam <guy@wizery.com>
->> ---
->
-> Looks good, but I have a couple of comments.
->
->
->> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> index 85cb4da..f962e43 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->
-> [..]
->
->> @@ -2039,6 +2043,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
->>                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff
->>               };
->>
->> +             /*
->> +              * A STA set to GEM cipher requires 2 tx spare blocks.
->> +              * Return to default value when GEM cipher key is removed
->> +              */
->> +             if (key_type == KEY_GEM) {
->> +                     if (action == KEY_ADD_OR_REPLACE)
->> +                             wl->tx_spare_blocks = 2;
->> +                     else
->> +                             wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
->> +             }
->> +
->
-> This won't make a real difference in the code flow, but wouldn't it be
-> better to make it explicit that the "else" case is KEY_REMOVE? There is
-> also KEY_SET_ID, which is only used with WEP, so it doesn't matter now.
-> But I think it's more consistent to be clear about it.
->
+Since queues are not stopped anymore, management frames would be
+dropped if the corresponding tx queue is full.
+This can cause issues say when we want to setup an ampdu stream and
+action frames i.e addba requests keep getting dropped frequently.
+Fix this by reserving some buffers to allow management frames to
+go through in queue full conditions.
 
-I can add a more explicit "else if" case for KEY_REMOVE.
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   30 ++++++++++++++++++++++--------
+ 1 files changed, 22 insertions(+), 8 deletions(-)
 
->
->
->> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
->> index db9e47e..2c79b6e 100644
->> --- a/drivers/net/wireless/wl12xx/tx.c
->> +++ b/drivers/net/wireless/wl12xx/tx.c
->> @@ -135,12 +135,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
->>       u32 len;
->>       u32 total_blocks;
->>       int id, ret = -EBUSY;
->> -     u32 spare_blocks;
->> +     u32 spare_blocks = wl->tx_spare_blocks;
->>
->>       if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
->>               spare_blocks = 2;
->> -     else
->> -             spare_blocks = 1;
->
-> Do we still need the quirk now? Wouldn't it be nicer to change the
-> wl->tx_spare_blocks value directly instead?
->
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index aca0139..82cd725 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1818,6 +1818,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	u8 tid = 0;
+ 	struct mwl8k_ampdu_stream *stream = NULL;
+ 	bool start_ba_session = false;
++	bool mgmtframe = false;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+ 
+ 	wh = (struct ieee80211_hdr *)skb->data;
+@@ -1826,6 +1827,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	else
+ 		qos = 0;
+ 
++	if (ieee80211_is_mgmt(wh->frame_control))
++		mgmtframe = true;
++
+ 	if (priv->ap_fw)
+ 		mwl8k_encapsulate_tx_frame(skb);
+ 	else
+@@ -1955,15 +1959,25 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 
+ 	txq = priv->txq + index;
+ 
+-	if (txq->len >= MWL8K_TX_DESCS) {
+-		if (start_ba_session) {
+-			spin_lock(&priv->stream_lock);
+-			mwl8k_remove_stream(hw, stream);
+-			spin_unlock(&priv->stream_lock);
++	/* Mgmt frames that go out frequently are probe responses.
++	 * Other mgmt frames got out relatively infrequently.
++	 * Hence reserve 2 buffers so that other mgmt frames do not get
++	 * dropped due to an already queued probe response in one of
++	 * the reserved buffers.
++	 */
++
++	if (txq->len >= (MWL8K_TX_DESCS - 2)) {
++		if ((mgmtframe == false) ||
++			(txq->len == MWL8K_TX_DESCS)) {
++			if (start_ba_session) {
++				spin_lock(&priv->stream_lock);
++				mwl8k_remove_stream(hw, stream);
++				spin_unlock(&priv->stream_lock);
++			}
++			spin_unlock_bh(&priv->tx_lock);
++			dev_kfree_skb(skb);
++			return;
+ 		}
+-		spin_unlock_bh(&priv->tx_lock);
+-		dev_kfree_skb(skb);
+-		return;
+ 	}
+ 
+ 	BUG_ON(txq->skb[txq->tail] != NULL);
+-- 
+1.6.0.3
 
-We still need the quirk because if we change the tx_spare_blocks
-directly, then the
-we also need to have a tx_spare_blocks_previously member so that the KEY_GEM
-code will know the value to set in KEY_REMOVAL.
-Do you really think that it is better?
-
->
-> --
-> Cheers,
-> Luca.
->
->
