@@ -1,106 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4582 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755368Ab1DERB1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:01:27 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from fw.wantstofly.org ([80.101.37.227]:52724 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399Ab1DSHpR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 03:45:17 -0400
+Date: Tue, 19 Apr 2011 09:48:09 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Nishant Sarmukadam <nishants@marvell.com>
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/25] update for 2.6.40
-Date: Tue,  5 Apr 2011 09:41:47 -0700
-Message-Id: <1302021732-21250-1-git-send-email-wey-yi.w.guy@intel.com>
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: Re: [PATCH 1/4] mwl8k: Do not stop tx queues
+Message-ID: <20110419074809.GJ1897@wantstofly.org>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303191772-4299-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We continue the _agn clean up work after driver split
+On Tue, Apr 19, 2011 at 11:12:49AM +0530, Nishant Sarmukadam wrote:
 
-Johannes Berg (21):
-  iwlagn: remove unused variable
-  iwlagn: clean up some 3945/4965 remnants
-  iwlagn: make mac80211 handlers static
-  iwlagn: clean up ucode loading
-  iwlagn: remove pointless return variables
-  iwlagn: simplify ucode check code
-  iwlagn: verify specific ucode
-  iwlagn: remove bootstrap code
-  iwlagn: centralize and fix ucode restart
-  iwlagn: remove ucode_data_backup
-  iwlagn: add feature flags
-  iwlagn: fix ucode verify message
-  iwlagn: clean up alive handling
-  iwlagn: init cmd_queue earlier
-  iwlagn: remove BSM clock setting
-  iwlagn: remove hw_wa_rev
-  iwlagn: remove hw_rev
-  iwlagn: remove rev_id
-  iwlagn: remove rxb page bookkeeping
-  iwlagn: remove ISR ops
-  iwlagn: move IO functions out of line
+> From: Pradeep Nemavat <pnemavat@marvell.com>
+> 
+> This is in preparation to support life time expiry of packets in the
+> hardware to avoid head-of-line blocking where a slow client can
+> hog a tx queue and affect the traffic to a faster client from the same
+> queue. Time stamp the packets in driver to allow dropping them in the
+> hardware if they are queued for more than 500ms.
+> 
+> Since queues are not being stopped now, we need to be prepared for
+> a situation where packets hit the driver after the queues are full.
+> Drop all such packets in the driver itself.
 
-Wey-Yi Guy (4):
-  iwlagn: remove more 3945/4965 related defines
-  iwlagn: return send calibration result
-  iwlagn: change Copyright to 2011
-  iwlagn: check more error return code
+What this patch seems to do is: don't propagate queue start/stop
+indications to mac80211, and if a packet is handed to mwl8k for
+transmission while a TX queue is full, just drop it in the driver.
+(This doesn't seem to correspond with the commit message.)
 
-
- drivers/net/wireless/iwlwifi/Makefile          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c        |   14 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c        |   15 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c        |   25 +-
- drivers/net/wireless/iwlwifi/iwl-6000-hw.h     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c        |   26 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.h   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   52 +-
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c  |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-ict.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-led.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-led.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c      |   11 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h      |   30 +--
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |  122 ++---
- drivers/net/wireless/iwlwifi/iwl-agn.c         |  225 ++++-----
- drivers/net/wireless/iwlwifi/iwl-agn.h         |   36 +--
- drivers/net/wireless/iwlwifi/iwl-commands.h    |  643 +-----------------------
- drivers/net/wireless/iwlwifi/iwl-core.c        |  114 ++---
- drivers/net/wireless/iwlwifi/iwl-core.h        |   30 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    9 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h         |  271 +++-------
- drivers/net/wireless/iwlwifi/iwl-devtrace.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c      |   48 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h      |  191 +-------
- drivers/net/wireless/iwlwifi/iwl-fh.h          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-io.c          |  274 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-io.h          |  491 +-----------------
- drivers/net/wireless/iwlwifi/iwl-led.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h        |  342 +-------------
- drivers/net/wireless/iwlwifi/iwl-rx.c          |   13 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c         |    3 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c          |    6 +-
- 55 files changed, 700 insertions(+), 2380 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-io.c
-
+But since the driver still has an accurate idea of TX queue fullness
+(i.e. it's not as if at transmit time, you go and transparently reclaim
+TX queue entries), why do you need to start/stop mac80211 TX queues at
+all?  Won't it still work fine without deleting that logic?
