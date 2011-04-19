@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58118 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901Ab1DZUfu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab1DSN5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 16:35:50 -0400
-Received: by wwa36 with SMTP id 36so1154709wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 13:35:49 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] wl12xx: discard corrupted packets in RX
-Date: Tue, 26 Apr 2011 23:35:40 +0300
-Message-Id: <1303850140-11230-2-git-send-email-arik@wizery.com> (sfid-20110426_223622_802240_DF69311D)
-In-Reply-To: <1303850140-11230-1-git-send-email-arik@wizery.com>
-References: <1303850140-11230-1-git-send-email-arik@wizery.com>
+	Tue, 19 Apr 2011 09:57:24 -0400
+Subject: Re: [PATCH 1/2] staging: brcm80211: removed #ifdef __mips__
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <1303220960.27432.11.camel@maggie>
+References: <1303197225-4263-1-git-send-email-rvossen@broadcom.com>
+	 <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
+	 <1303215002.27432.5.camel@maggie>  <4DAD920A.9080500@broadcom.com>
+	 <1303220960.27432.11.camel@maggie>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Apr 2011 15:57:17 +0200
+Message-ID: <1303221437.3603.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When packets arrive with a RX descriptor indicating corruption, discard
-them.
+On Tue, 2011-04-19 at 15:49 +0200, Michael Büsch wrote:
+> On Tue, 2011-04-19 at 15:45 +0200, Roland Vossen wrote: 
+> > Hello guys,
+> > 
+> > Greg, please drop this patch set. Rest of this email is FYI only.
+> > 
+> > Michael:
+> > 
+> > > Are you sure? __mips__ is automagically defined by GCC, if compiling
+> > > for MIPS. Maybe it should be converted to some CONFIG_... symbol.
+> > > But removal seems wrong.
+> > 
+> > You are right. The majority of the removed #ifdef __mips__ code has to 
+> > do with write flushing. To accomplish this, it performs a R_REG after a 
+> > W_REG. I assumed that writeb() and friends guarantee ordering and write 
+> > flushing, but after some reading I learned that this is not the case.
+> > 
+> > I will rework the code and submit a new patch set.
+> > 
+> > For some background info: this patch was a reaction on an email from 
+> > John Linville to us. John wrote:
+> > 
+> > <quote>
+> > I took a quick run through a pull of staging from today.  I made a few
+> > notes, but a lot of them would seem to relate to the utils stuff you
+> > mention above.  One general comment would be that there still seems
+> > to be a lot of MIPS-specific stuff buried in the code, in particular
+> > a lot of "#ifdef __mips__" stuff that if necessary should at least
+> > be hidden inside the W_REG macro.
+> > </quote>
+> 
+> You should probably create a new macro W_REG_FLUSH or something like
+> that, which enforces ordering by reading back the register, if required.
+> That avoids ugly #ifdefs in the code.
 
-In general white-list the RX descriptor status to prevent rouge data
-from being sent up.
+I don't see how write flushing would be MIPS specific anyway? It's a
+function of the bus (PCI), not the host architecture, no?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/rx.c |   33 ++++++++++++++++++++++++++-------
- 1 files changed, 26 insertions(+), 7 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index faf5a1d..7009103 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -76,12 +76,15 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 						      status->band);
- 
- 	if (desc->flags & WL1271_RX_DESC_ENCRYPT_MASK) {
--		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
-+		u8 desc_err_code = desc->status & WL1271_RX_DESC_STATUS_MASK;
- 
--		if (likely(!(desc->status & WL1271_RX_DESC_DECRYPT_FAIL)))
--			status->flag |= RX_FLAG_DECRYPTED;
--		if (unlikely(desc->status & WL1271_RX_DESC_MIC_FAIL))
-+		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED |
-+				RX_FLAG_DECRYPTED;
-+
-+		if (unlikely(desc_err_code == WL1271_RX_DESC_MIC_FAIL)) {
- 			status->flag |= RX_FLAG_MMIC_ERROR;
-+			wl1271_warning("Michael MIC error");
-+		}
- 	}
- }
- 
-@@ -100,6 +103,25 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
- 	if (unlikely(wl->state == WL1271_STATE_PLT))
- 		return -EINVAL;
- 
-+	/* the data read starts with the descriptor */
-+	desc = (struct wl1271_rx_descriptor *) data;
-+
-+	switch (desc->status & WL1271_RX_DESC_STATUS_MASK) {
-+	/* discard corrupted packets */
-+	case WL1271_RX_DESC_DRIVER_RX_Q_FAIL:
-+	case WL1271_RX_DESC_DECRYPT_FAIL:
-+		wl1271_warning("corrupted packet in RX with status: 0x%x",
-+			       desc->status & WL1271_RX_DESC_STATUS_MASK);
-+		return -EINVAL;
-+	case WL1271_RX_DESC_SUCCESS:
-+	case WL1271_RX_DESC_MIC_FAIL:
-+		break;
-+	default:
-+		wl1271_error("invalid RX descriptor status: 0x%x",
-+			     desc->status & WL1271_RX_DESC_STATUS_MASK);
-+		return -EINVAL;
-+	}
-+
- 	skb = __dev_alloc_skb(length, GFP_KERNEL);
- 	if (!skb) {
- 		wl1271_error("Couldn't allocate RX frame");
-@@ -109,9 +131,6 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
- 	buf = skb_put(skb, length);
- 	memcpy(buf, data, length);
- 
--	/* the data read starts with the descriptor */
--	desc = (struct wl1271_rx_descriptor *) buf;
--
- 	/* now we pull the descriptor out of the buffer */
- 	skb_pull(skb, sizeof(*desc));
- 
--- 
-1.7.1
 
