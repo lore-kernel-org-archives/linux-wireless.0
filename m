@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57274 "EHLO mail.atheros.com"
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:44433 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148Ab1DSN7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:42 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:16 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 18/22] ath9k_hw: Read iq calibration data only for active chains
-Date: Tue, 19 Apr 2011 19:29:16 +0530
-Message-ID: <1303221560-25139-19-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754587Ab1DSMKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 08:10:14 -0400
+Subject: Re: [PATCH 1/2] staging: brcm80211: removed #ifdef __mips__
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
+References: <1303197225-4263-1-git-send-email-rvossen@broadcom.com>
+	 <1303197225-4263-2-git-send-email-rvossen@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Apr 2011 14:10:02 +0200
+Message-ID: <1303215002.27432.5.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   24 +++++++++++++-----------
- 1 files changed, 13 insertions(+), 11 deletions(-)
+On Tue, 2011-04-19 at 09:13 +0200, Roland Vossen wrote: 
+> Code cleanup. __mips__ was undefined for current builds.
+> 
+> Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |   48 --------------------
+>  drivers/staging/brcm80211/include/bcmdefs.h        |    4 --
+>  drivers/staging/brcm80211/include/bcmutils.h       |   31 -------------
+>  drivers/staging/brcm80211/util/bcmutils.c          |   28 -----------
+>  drivers/staging/brcm80211/util/hnddma.c            |   23 ---------
+>  5 files changed, 0 insertions(+), 134 deletions(-)
+> 
+> diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+> index 40f0444..92133c7 100644
+> --- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+> +++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+> @@ -246,15 +246,9 @@ u16 read_radio_reg(phy_info_t *pi, u16 addr)
+>  	    (D11REV_IS(pi->sh->corerev, 22)
+>  	     && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
+>  		W_REG(&pi->regs->radioregaddr, addr);
+> -#ifdef __mips__
+> -		(void)R_REG(&pi->regs->radioregaddr);
+> -#endif
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 09f3aa7..bceff49 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -185,17 +185,19 @@ static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
- 
- 	/* Accumulate IQ cal measures for active chains */
- 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		ah->totalPowerMeasI[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
--		ah->totalPowerMeasQ[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
--		ah->totalIqCorrMeas[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
--		ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
--			"%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
--			ah->cal_samples, i, ah->totalPowerMeasI[i],
--			ah->totalPowerMeasQ[i],
--			ah->totalIqCorrMeas[i]);
-+		if (ah->txchainmask & BIT(i)) {
-+			ah->totalPowerMeasI[i] +=
-+				REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+			ah->totalPowerMeasQ[i] +=
-+				REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+			ah->totalIqCorrMeas[i] +=
-+				(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+			ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+				"%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
-+				ah->cal_samples, i, ah->totalPowerMeasI[i],
-+				ah->totalPowerMeasQ[i],
-+				ah->totalIqCorrMeas[i]);
-+		}
- 	}
- }
- 
+Are you sure? __mips__ is automagically defined by GCC, if compiling
+for MIPS. Maybe it should be converted to some CONFIG_... symbol.
+But removal seems wrong.
+
 -- 
-1.7.0.4
+Greetings Michael.
 
