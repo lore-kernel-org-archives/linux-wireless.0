@@ -1,258 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35840 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664Ab1DMFwg (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.186]:57439 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab1DSNrh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:52:36 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so276432iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:52:35 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 19 Apr 2011 09:47:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+Date: Tue, 19 Apr 2011 15:46:49 +0200
+Cc: George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <201104181619.35115.arnd@arndb.de> <BANLkTinB-9h=bZg9zg219i2wi3zUCA6mcw@mail.gmail.com>
+In-Reply-To: <BANLkTinB-9h=bZg9zg219i2wi3zUCA6mcw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15028.922442.713392@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:25:00 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 20/40] ath9k_htc: Move TX specific stuff to a separate
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104191546.49632.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
- structure
+On Monday 18 April 2011, Rafał Miłecki wrote:
+> W dniu 18 kwietnia 2011 16:19 użytkownik Arnd Bergmann <arnd@arndb.de> napisał:
+> > You mean the hardware has two sets of registers containing the same
+> > information, one of them the standard registers, and one with broadcom
+> > specific ones?
+> >
+> > Why don't you just use the standard ones then?
+> 
+> No. Did you read my first mail in this thread?
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |   19 ++++++++++++-------
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    8 ++++----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   22 +++++++++++-----------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   24 ++++++++++++------------
- 5 files changed, 40 insertions(+), 35 deletions(-)
+I'm sorry, but I found the information in this thread and the related ones
+highly confusing and sometimes contradictory. Thanks for clarifying it
+once more.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 1568c36..3af8a58 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -260,6 +260,13 @@ struct ath9k_htc_rx {
- 	spinlock_t rxbuflock;
- };
- 
-+struct ath9k_htc_tx {
-+	bool tx_queues_stop;
-+	spinlock_t tx_lock;
-+
-+	struct sk_buff_head tx_queue;
-+};
-+
- struct ath9k_htc_tx_ctl {
- 	u8 type; /* ATH9K_HTC_* */
- };
-@@ -433,22 +440,20 @@ struct ath9k_htc_priv {
- 	u16 nstations;
- 	bool rearm_ani;
- 	bool reconfig_beacon;
-+	unsigned int rxfilter;
- 
- 	struct ath9k_hw_cal_data caldata;
-+	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- 
- 	spinlock_t beacon_lock;
-+	struct htc_beacon_config cur_beacon_conf;
- 
--	bool tx_queues_stop;
--	spinlock_t tx_lock;
-+	struct ath9k_htc_rx rx;
-+	struct ath9k_htc_tx tx;
- 
--	struct htc_beacon_config cur_beacon_conf;
--	unsigned int rxfilter;
- 	struct tasklet_struct swba_tasklet;
- 	struct tasklet_struct rx_tasklet;
--	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
--	struct ath9k_htc_rx rx;
- 	struct tasklet_struct tx_tasklet;
--	struct sk_buff_head tx_queue;
- 	struct delayed_work ani_work;
- 	struct work_struct ps_work;
- 	struct work_struct fatal_work;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 459ba0d..1f6df4a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -398,9 +398,9 @@ void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
- 
- 	/* Start TX */
- 	htc_start(priv->htc);
--	spin_lock_bh(&priv->tx_lock);
--	priv->tx_queues_stop = false;
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_lock_bh(&priv->tx.tx_lock);
-+	priv->tx.tx_queues_stop = false;
-+	spin_unlock_bh(&priv->tx.tx_lock);
- 	ieee80211_wake_queues(hw);
- 
- 	WMI_CMD(WMI_ENABLE_INTR_CMDID);
-@@ -431,7 +431,7 @@ void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
- 	ieee80211_stop_queues(hw);
- 	htc_stop(priv->htc);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
--	skb_queue_purge(&priv->tx_queue);
-+	skb_queue_purge(&priv->tx.tx_queue);
- 
- 	/* Stop RX */
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 921d76f..c270da7 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -673,7 +673,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 
- 	spin_lock_init(&priv->wmi->wmi_lock);
- 	spin_lock_init(&priv->beacon_lock);
--	spin_lock_init(&priv->tx_lock);
-+	spin_lock_init(&priv->tx.tx_lock);
- 	mutex_init(&priv->mutex);
- 	mutex_init(&priv->htc_pm_lock);
- 	tasklet_init(&priv->rx_tasklet, ath9k_rx_tasklet,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 4002267..ff3a495 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -707,9 +707,9 @@ static int ath9k_htc_tx_aggr_oper(struct ath9k_htc_priv *priv,
- 			(aggr.aggr_enable) ? "Starting" : "Stopping",
- 			sta->addr, tid);
- 
--	spin_lock_bh(&priv->tx_lock);
-+	spin_lock_bh(&priv->tx.tx_lock);
- 	ista->tid_state[tid] = (aggr.aggr_enable && !ret) ? AGGR_START : AGGR_STOP;
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_unlock_bh(&priv->tx.tx_lock);
- 
- 	return ret;
- }
-@@ -853,9 +853,9 @@ static void ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
- 				"Stopping TX queues\n");
- 			ieee80211_stop_queues(hw);
--			spin_lock_bh(&priv->tx_lock);
--			priv->tx_queues_stop = true;
--			spin_unlock_bh(&priv->tx_lock);
-+			spin_lock_bh(&priv->tx.tx_lock);
-+			priv->tx.tx_queues_stop = true;
-+			spin_unlock_bh(&priv->tx.tx_lock);
- 		} else {
- 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
- 				"Tx failed\n");
-@@ -923,9 +923,9 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
- 	priv->op_flags &= ~OP_INVALID;
- 	htc_start(priv->htc);
- 
--	spin_lock_bh(&priv->tx_lock);
--	priv->tx_queues_stop = false;
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_lock_bh(&priv->tx.tx_lock);
-+	priv->tx.tx_queues_stop = false;
-+	spin_unlock_bh(&priv->tx.tx_lock);
- 
- 	ieee80211_wake_queues(hw);
- 
-@@ -965,7 +965,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	tasklet_kill(&priv->rx_tasklet);
- 	tasklet_kill(&priv->tx_tasklet);
- 
--	skb_queue_purge(&priv->tx_queue);
-+	skb_queue_purge(&priv->tx.tx_queue);
- 
- 	ath9k_wmi_event_drain(priv);
- 
-@@ -1563,9 +1563,9 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
--		spin_lock_bh(&priv->tx_lock);
-+		spin_lock_bh(&priv->tx.tx_lock);
- 		ista->tid_state[tid] = AGGR_OPERATIONAL;
--		spin_unlock_bh(&priv->tx_lock);
-+		spin_unlock_bh(&priv->tx.tx_lock);
- 		break;
- 	default:
- 		ath_err(ath9k_hw_common(priv->ah), "Unknown AMPDU action\n");
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index ab55dff..6f7987d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -239,10 +239,10 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
- {
- 	bool ret = false;
- 
--	spin_lock_bh(&priv->tx_lock);
-+	spin_lock_bh(&priv->tx.tx_lock);
- 	if ((tid < ATH9K_HTC_MAX_TID) && (ista->tid_state[tid] == AGGR_STOP))
- 		ret = true;
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_unlock_bh(&priv->tx.tx_lock);
- 
- 	return ret;
- }
-@@ -257,7 +257,7 @@ void ath9k_tx_tasklet(unsigned long data)
- 	struct sk_buff *skb = NULL;
- 	__le16 fc;
- 
--	while ((skb = skb_dequeue(&priv->tx_queue)) != NULL) {
-+	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
- 
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		fc = hdr->frame_control;
-@@ -292,9 +292,9 @@ void ath9k_tx_tasklet(unsigned long data)
- 
- 				if (ath9k_htc_check_tx_aggr(priv, ista, tid)) {
- 					ieee80211_start_tx_ba_session(sta, tid, 0);
--					spin_lock_bh(&priv->tx_lock);
-+					spin_lock_bh(&priv->tx.tx_lock);
- 					ista->tid_state[tid] = AGGR_PROGRESS;
--					spin_unlock_bh(&priv->tx_lock);
-+					spin_unlock_bh(&priv->tx.tx_lock);
- 				}
- 			}
- 		}
-@@ -307,16 +307,16 @@ void ath9k_tx_tasklet(unsigned long data)
- 	}
- 
- 	/* Wake TX queues if needed */
--	spin_lock_bh(&priv->tx_lock);
--	if (priv->tx_queues_stop) {
--		priv->tx_queues_stop = false;
--		spin_unlock_bh(&priv->tx_lock);
-+	spin_lock_bh(&priv->tx.tx_lock);
-+	if (priv->tx.tx_queues_stop) {
-+		priv->tx.tx_queues_stop = false;
-+		spin_unlock_bh(&priv->tx.tx_lock);
- 		ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
- 			"Waking up TX queues\n");
- 		ieee80211_wake_queues(priv->hw);
- 		return;
- 	}
--	spin_unlock_bh(&priv->tx_lock);
-+	spin_unlock_bh(&priv->tx.tx_lock);
- }
- 
- void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
-@@ -348,13 +348,13 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 	if (txok)
- 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
- 
--	skb_queue_tail(&priv->tx_queue, skb);
-+	skb_queue_tail(&priv->tx.tx_queue, skb);
- 	tasklet_schedule(&priv->tx_tasklet);
- }
- 
- int ath9k_tx_init(struct ath9k_htc_priv *priv)
- {
--	skb_queue_head_init(&priv->tx_queue);
-+	skb_queue_head_init(&priv->tx.tx_queue);
- 	return 0;
- }
- 
--- 
-1.7.4.4
+> There is pair of cores for every device. First is AMBA-specific called
+> agent/wrapper and second one is Broadcom-specific.
+> 
+> AMBA specific core called agent/wrapper has AMBA specific registers:
+> CID and PID. However we do not ever read that in Broadcom driver,
+> because that are useless for us. On AMBA specific core we use only
+> some Broadcom specific registers to manage (enable/disable) second
+> (Broadcom-specific) core.
 
+Ideally, we should model the devices along the IP blocks and how they
+fit together. If I understand correctly what you are saying, your hardware
+looks like
+
+pci_dev
+  |
+  +---------+-----------+ ...
+  |         |           |
+ amba_dev   amba_dev   amba_dev
+   |           |           |
+ bcm_dev     bcm_dev     bcm_dev
+
+In that case, you would need three bus types (pci_bus, amba_bus and
+your own bcm_bus) and at least seven devices to represent all of it
+using the device model. This is possible, but it seems you are also
+saying that you don't need the complexity of this, e.g. because you
+don't care about the amba device at all.
+
+The easiest shortcut would be to not represent the AMBA devices
+at all, and I guess that is fine. Introducing your own bus_type
+for the broadcom devices sounds like a correct way to use the
+linux driver model, especially if the devices on that bus are
+totally independent from one another. I think you should do that
+if you have e.g. a PCI card containing a single PCI function with
+multiple IP blocks that do completely unrelated things (wifi,
+bluetooth, ethernet, ...).
+
+You could also just use platform_devices if you don't want to
+introduce your own bus, and there is not much commonality between
+the devices in terms of probing them.
+
+However, I would not use the device model if the IP blocks in your
+device are just responsible for different aspects of one logical
+device, e.g. PHY, power management and DMA within a single network
+adapter. If that is what you have, don't use a Linux device for
+each of those blocks at all, but instead do a "library" module
+for each block: export some interfaces from the module that can
+be used by multiple drivers, and create the data structure from
+the main driver, filled out with the data describing the IP
+block (memory ranges, interrupts, etc).
+
+	Arnd
