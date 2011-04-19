@@ -1,218 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:32971 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595Ab1DMFvL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:51:11 -0400
-Received: by iwn34 with SMTP id 34so276109iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:51:11 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.14942.781658.553699@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:23:34 +0530
+Received: from mail.atheros.com ([12.19.149.2]:57276 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752733Ab1DSN7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 09:59:46 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:20 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 08/40] ath9k_htc: Handle buffered frames in AP mode
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 21/22] ath9k_hw: Disable INTR_HOST1_FATAL to avoid interrupt strom with ar9430
+Date: Tue, 19 Apr 2011 19:29:19 +0530
+Message-ID: <1303221560-25139-22-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-
-Use the CAB endpoint to send buffered multicast or
-broadcast frames after each SWBA event.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h            |    6 +++-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   43 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    5 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   14 ++++++--
- 5 files changed, 65 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |    6 +++++-
+ drivers/net/wireless/ath/ath9k/mac.c |   10 ++++++----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 87e4ca9..a072a9e 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -292,6 +292,7 @@ struct ath9k_htc_tx_ctl {
- 
- #define TX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
- #define RX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.rx_stats.c++)
-+#define CAB_STAT_INC   priv->debug.tx_stats.cab_queued++
- 
- #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
- 
-@@ -301,6 +302,7 @@ struct ath_tx_stats {
- 	u32 skb_queued;
- 	u32 skb_completed;
- 	u32 skb_dropped;
-+	u32 cab_queued;
- 	u32 queue_stats[WME_NUM_AC];
- };
- 
-@@ -324,6 +326,7 @@ struct ath9k_debug {
- 
- #define TX_STAT_INC(c) do { } while (0)
- #define RX_STAT_INC(c) do { } while (0)
-+#define CAB_STAT_INC   do { } while (0)
- 
- #define TX_QSTAT_INC(c) do { } while (0)
- 
-@@ -505,7 +508,8 @@ void ath9k_htc_stop_ani(struct ath9k_htc_priv *priv);
- 
- int ath9k_tx_init(struct ath9k_htc_priv *priv);
- void ath9k_tx_tasklet(unsigned long data);
--int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb);
-+int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
-+		       struct sk_buff *skb, bool is_cab);
- void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
- bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype);
- int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 7aafd21..c96779c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -272,6 +272,48 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
- 	dev_kfree_skb_any(skb);
- }
- 
-+static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
-+				    int slot)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ieee80211_vif *vif;
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *hdr;
-+	int padpos, padsize, ret;
-+
-+	spin_lock_bh(&priv->beacon_lock);
-+
-+	vif = priv->cur_beacon_conf.bslot[slot];
-+
-+	skb = ieee80211_get_buffered_bc(priv->hw, vif);
-+
-+	while(skb) {
-+		hdr = (struct ieee80211_hdr *) skb->data;
-+
-+		padpos = ath9k_cmn_padpos(hdr->frame_control);
-+		padsize = padpos & 3;
-+		if (padsize && skb->len > padpos) {
-+			if (skb_headroom(skb) < padsize) {
-+				dev_kfree_skb_any(skb);
-+				goto next;
-+			}
-+			skb_push(skb, padsize);
-+			memmove(skb->data, skb->data + padsize, padpos);
-+		}
-+
-+		ret = ath9k_htc_tx_start(priv, skb, true);
-+		if (ret != 0) {
-+			ath_dbg(common, ATH_DBG_FATAL,
-+				"Failed to send CAB frame\n");
-+			dev_kfree_skb_any(skb);
-+		}
-+	next:
-+		skb = ieee80211_get_buffered_bc(priv->hw, vif);
-+	}
-+
-+	spin_unlock_bh(&priv->beacon_lock);
-+}
-+
- static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
- 				  int slot)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c725640..b780f6f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -793,12 +793,16 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 					  enum nl80211_iftype opmode)
  {
-@@ -390,6 +432,7 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv)
- 	}
- 	spin_unlock_bh(&priv->beacon_lock);
++	u32 sync_default = AR_INTR_SYNC_DEFAULT;
+ 	u32 imr_reg = AR_IMR_TXERR |
+ 		AR_IMR_TXURN |
+ 		AR_IMR_RXERR |
+ 		AR_IMR_RXORN |
+ 		AR_IMR_BCNMISC;
  
-+	ath9k_htc_send_buffered(priv, slot);
- 	ath9k_htc_send_beacon(priv, slot);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9405e0a..b1c68bf 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -748,7 +748,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		IEEE80211_HW_HAS_RATE_CONTROL |
- 		IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_PS_NULLFUNC_STACK;
-+		IEEE80211_HW_PS_NULLFUNC_STACK |
-+		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
- 
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6926ac0..8f38075 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -797,6 +797,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "SKBs dropped",
- 			priv->debug.tx_stats.skb_dropped);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%20s : %10u\n", "CAB queued",
-+			priv->debug.tx_stats.cab_queued);
- 
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "BE queued",
-@@ -1054,7 +1057,7 @@ static void ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		memmove(skb->data, skb->data + padsize, padpos);
- 	}
- 
--	ret = ath9k_htc_tx_start(priv, skb);
-+	ret = ath9k_htc_tx_start(priv, skb, false);
- 	if (ret != 0) {
- 		if (ret == -ENOMEM) {
- 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index b3f9485..0e28558 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -79,7 +79,8 @@ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
- 	return error;
- }
- 
--int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
-+int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
-+		       struct sk_buff *skb, bool is_cab)
- {
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_mgmt *mgmt;
-@@ -170,6 +171,12 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 		tx_fhdr = skb_push(skb, sizeof(tx_hdr));
- 		memcpy(tx_fhdr, (u8 *) &tx_hdr, sizeof(tx_hdr));
- 
-+		if (is_cab) {
-+			CAB_STAT_INC;
-+			epid = priv->cab_ep;
-+			goto send;
-+		}
++	if (AR_SREV_9340(ah))
++		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
 +
- 		qnum = skb_get_queue_mapping(skb);
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		imr_reg |= AR_IMR_RXOK_HP;
+ 		if (ah->config.rx_intr_mitigation)
+@@ -829,7 +833,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
  
- 		switch (qnum) {
-@@ -222,7 +229,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 		memcpy(tx_fhdr, (u8 *) &mgmt_hdr, sizeof(mgmt_hdr));
- 		epid = priv->mgmt_ep;
+ 	if (!AR_SREV_9100(ah)) {
+ 		REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xFFFFFFFF);
+-		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, AR_INTR_SYNC_DEFAULT);
++		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
+ 		REG_WRITE(ah, AR_INTR_SYNC_MASK, 0);
  	}
--
-+send:
- 	return htc_send(priv->htc, skb, epid, &tx_ctl);
- }
  
-@@ -326,7 +333,8 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 	} else if ((ep_id == priv->data_bk_ep) ||
- 		   (ep_id == priv->data_be_ep) ||
- 		   (ep_id == priv->data_vi_ep) ||
--		   (ep_id == priv->data_vo_ep)) {
-+		   (ep_id == priv->data_vo_ep) ||
-+		   (ep_id == priv->cab_ep)) {
- 		skb_pull(skb, sizeof(struct tx_frame_hdr));
- 	} else {
- 		ath_err(common, "Unsupported TX EPID: %d\n", ep_id);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 1968c67..c8a4ced 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -812,10 +812,14 @@ EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
+ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	u32 sync_default = AR_INTR_SYNC_DEFAULT;
+ 
+ 	if (!(ah->imask & ATH9K_INT_GLOBAL))
+ 		return;
+ 
++	if (AR_SREV_9340(ah))
++		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
++
+ 	ath_dbg(common, ATH_DBG_INTERRUPT, "enable IER\n");
+ 	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
+ 	if (!AR_SREV_9100(ah)) {
+@@ -824,10 +828,8 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
+ 
+ 
+-		REG_WRITE(ah, AR_INTR_SYNC_ENABLE,
+-			  AR_INTR_SYNC_DEFAULT);
+-		REG_WRITE(ah, AR_INTR_SYNC_MASK,
+-			  AR_INTR_SYNC_DEFAULT);
++		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
++		REG_WRITE(ah, AR_INTR_SYNC_MASK, sync_default);
+ 	}
+ 	ath_dbg(common, ATH_DBG_INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
+ 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
 -- 
-1.7.4.4
+1.7.0.4
 
