@@ -1,29 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm19-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.162]:32620 "HELO
-	nm19-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754302Ab1DKPSn (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:35108 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846Ab1DSGJF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:18:43 -0400
-Message-ID: <779506.13049.qm@web161604.mail.bf1.yahoo.com>
-Date: Mon, 11 Apr 2011 08:18:41 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
-To: dwmw2@infradead.org, Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, gwingerde@gmail.com,
-	xose.vazquez@gmail.com, ben@decadent.org.uk,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Shiang Tu <shiang_tu@ralinktech.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 19 Apr 2011 02:09:05 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Pradeep Nemavat <pnemavat@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
+Date: Tue, 19 Apr 2011 11:12:50 +0530
+Message-Id: <1303191772-4299-2-git-send-email-nishants@marvell.com>
+In-Reply-To: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Update firmware for rt2800pci to Version 34 and firmware
-> for rt2800usb to
-> Version 29.
+From: Pradeep Nemavat <pnemavat@marvell.com>
 
-Are there any changelogs for these firmware files? Do they only offer support for newer chips, or are there any actual improvements and bug fixes implemented? Users should know whether updating the firmware will be of any use to them.
+Timestamp tx packets using a HW micro-second timer.
+This timestamp will be compared to the current timestamp
+in the hardware and if the difference is greater than 500ms,
+the packet will be dropped.
 
-Walter 
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 7968301..aca0139 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1792,6 +1792,14 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
+ 		tx_stats->pkts++;
+ }
+ 
++/* HW micro second timer register
++ * located at offset 0xA600. This
++ * will be used to timestamp tx
++ * packets.
++ */
++
++#define	MWL8K_HW_TIMER_REGISTER	(priv->regs + 0xA600)
++
+ static void
+ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ {
+@@ -1972,6 +1980,10 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 		tx->peer_id = MWL8K_STA(tx_info->control.sta)->peer_id;
+ 	else
+ 		tx->peer_id = 0;
++
++	if (priv->ap_fw)
++		tx->timestamp = cpu_to_le32(ioread32(MWL8K_HW_TIMER_REGISTER));
++
+ 	wmb();
+ 	tx->status = cpu_to_le32(MWL8K_TXD_STATUS_FW_OWNED | txstatus);
+ 
+-- 
+1.6.0.3
+
