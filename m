@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm29.bullet.mail.bf1.yahoo.com ([98.139.212.188]:43162 "HELO
-	nm29.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754685Ab1DGWJB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 18:09:01 -0400
-Message-ID: <895357.54625.qm@web161601.mail.bf1.yahoo.com>
-Date: Thu, 7 Apr 2011 15:08:59 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Compat-wireless release for 2011-04-07 is baked
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <4D9E30DE.5060500@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:57269 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752608Ab1DSN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 09:59:35 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:09 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 14/22] ath9k_hw: Skip internal regulator configuration for AR9340
+Date: Tue, 19 Apr 2011 19:29:12 +0530
+Message-ID: <1303221560-25139-15-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
+References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> > 
-> > Walter
-> Hi Walter,
-> 
-> the subject of this message is wrong, compat-wireless
-> release for
-> 2011-04-07 was not baked, because some patches do not
-> apply. ;-)
-> A successful message should look like this:
-> http://www.spinics.net/lists/linux-wireless/msg66930.html
-> When the statistic is included it was successful.
-> 
-> compat-wireless is build automatically by a daily cron job
-> and this cron
-> job also sends these mails.
-> 
-> You could apply the patches I send to the mailing list some
-> hours ago
-> and generate your own compat-wireless version or wait some
-> time.
-> 
-> Hauke
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 5138104..be673fd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3753,7 +3753,8 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+-	ar9003_hw_internal_regulator_apply(ah);
++	if (!AR_SREV_9340(ah))
++		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
+ }
+-- 
+1.7.0.4
 
-Hello Hauke,
-
-I understand the mechanics of the cron job generating compat-wireless tar balls and emails to the mailing list. I don't understand who /or what/ uploads them in kernel.org and orbit lab?
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/
-http://wireless.kernel.org/download/compat-wireless-2.6/
-
-Walter
-
-PS, I guess this CW bot "baker" needs a little fine-tuning
