@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50845 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757360Ab1DHPuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 11:50:15 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 16/16] iwlagn: downgrade warning on unknown TLV
-Date: Fri,  8 Apr 2011 08:30:36 -0700
-Message-Id: <1302276636-12802-17-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:59731 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220Ab1DSOUS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 10:20:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <op.vt6ufu1n3ri7v4@arend-laptop>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	<1302892585.30441.12.camel@dev.znau.edu.ua>
+	<BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
+	<201104171938.12834.arnd@arndb.de>
+	<op.vt6ufu1n3ri7v4@arend-laptop>
+Date: Tue, 19 Apr 2011 16:20:17 +0200
+Message-ID: <BANLkTimcR9Z54kgHDK63=jL1U-yvWspjRg@mail.gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>, Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+W dniu 19 kwietnia 2011 15:58 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On Sun, 17 Apr 2011 19:38:12 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> Hi Rafał,
+>
+> As you probably expected I tried to integrate and use your bcmai/bcmaxi/?
+> driver with our brcm80211 driver (making progress). In the mean time I tried
+> to follow the discussions going on, but I am still catching up.
+>
+>> Compare this to the PCI bus type, which essentially deals with devices
+>> that have a PCI configuration space that contains generic (irq, memory,
+>> vendor/device ID, ...) registers along with device specific registers.
+>
+> How much alike is the (BCM)AXI bus type? My assumption was that each
+> registered PCI device is handled by a single driver module. In the
+> current(?) bcmai implementation each device driver is called with the
+> appropriate device structure reference, but it will also have the bus
+> structure reference and through that can also access other cores on the
+> (bcm)axi bus. This seems to me a potential issue when there are no
+> synchronization mechanisms in place (whether in a SoC configuration or
+> PCI-hosted). Does the PCI bus type allow driver for device A access
+> device B?
 
-If we maintain API properly, then there isn't
-really a reason to warn about this since we'll
-just be adding things that are safe to ignore,
-so downgrade the warning to debug info level.
+There are bus-specific infos that have to be available for drivers,
+like board id, sprom, CC access. So bcmai(?) drivers have to have
+access to bus struct.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+One core driver should never touch other core, like 80211 touching ETH
+or USB or anything. Exception is CC and maybe PCI(e).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 20499b7..47a4cda 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1481,7 +1481,7 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		default:
--			IWL_WARN(priv, "unknown TLV: %d\n", tlv_type);
-+			IWL_DEBUG_INFO(priv, "unknown TLV: %d\n", tlv_type);
- 			break;
- 		}
- 	}
+I still have to make use of all windows to improve cores access.
+
+
+>> A new bus_type really only makes sense if you expect a lot of devices
+>> to use this and you want to have the probing in the bus. If you only
+>> want to have a way to enumerate devices that get created by the
+>> parent driver, you can also use platform devices.
+>
+> The main assumption of the (bcm)axi driver seems to be that each core can
+> be considered as a device. Correct me if I am wrong, but I consider a
+> device to be an entity providing a particular system function. So an
+> ethernet device provides ethernet connectivity function, a mixer device
+> provides sound mixing function, and so on. The cores within a chip are not
+> always self-contained like this. To clarify let's say a system function is
+> realized by programming core A, core B, and finally trigger core A to set
+> the function in motion. This implies the need of coordination between the
+> programming steps on those cores.
+
+What cores may need to access each other? AFAIK so far we didn't meet
+such a cores.
+
 -- 
-1.7.0.4
-
+Rafał
