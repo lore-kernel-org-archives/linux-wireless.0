@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab1DRNfi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:35:38 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833789fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:38 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/23] rt2x00: Fix stuck queue in tx failure case
-Date: Mon, 18 Apr 2011 15:26:37 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com>
-In-Reply-To: <201104181526.01722.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181526.37747.IvDoorn@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:26307 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab1DSOnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 10:43:47 -0400
+Subject: Re: [PATCH 02/10] iwlagn: remove most BUG_ON instances
+From: wwguy <wey-yi.w.guy@intel.com>
+To: "Berg, Johannes" <johannes.berg@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1303214502.3603.1.camel@jlt3.sipsolutions.net>
+References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1303145057-6545-3-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110419120002.GA2220@redhat.com>
+	 <1303214502.3603.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Apr 2011 07:40:59 -0700
+Message-ID: <1303224059.13481.0.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, 2011-04-19 at 05:01 -0700, Berg, Johannes wrote:
+> On Tue, 2011-04-19 at 14:00 +0200, Stanislaw Gruszka wrote:
+> > On Mon, Apr 18, 2011 at 09:44:09AM -0700, Wey-Yi Guy wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > @@ -394,7 +394,9 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > > -	BUG_ON(addr & ~DMA_BIT_MASK(36));
+> > > +	if (WARN_ON(addr & ~DMA_BIT_MASK(36)))
+> > > +		return -EINVAL;
+> > Seems useless.
+> 
+> Better than the BUG_ON, mostly to catch programmer errors though I
+> guess.
+> 
+> > > @@ -169,10 +171,12 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+> > >  	int cmd_idx;
+> > >  	int ret;
+> > >  
+> > > -	lockdep_assert_held(&priv->mutex);
+> > I think better keep it.
+> 
+> Oh, that must be a merge error, I don't remember doing that.
+> 
+That is a merge error, I will put it back even it is just for debugging.
 
-Since commit 0b7fde54f94979edc67bbf86b5adba702ebfefe8 "rt2x00: Protect
-queue control with mutex" rt2x00 used rt2x00queue_pause_queue for
-stopping a tx queue in mac80211. But in case of a failure in the tx
-path rt2x00 still called ieee80211_stop_queue which stopped the queue
-but prevented rt2x00queue_unpause_queue to wake the queue up again
-resulting in a stuck tx queue.
+Wey
+> 
 
-Fix this by also using rt2x00queue_pause_queue in case of tx failures.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 661c6ba..4a1c41b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -158,7 +158,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	return;
- 
-  exit_fail:
--	ieee80211_stop_queue(rt2x00dev->hw, qid);
-+	rt2x00queue_pause_queue(queue);
- 	dev_kfree_skb_any(skb);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_tx);
--- 
-1.7.2.3
 
