@@ -1,155 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38916 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753621Ab1DLNSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:02 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:17:37 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/22] ath9k_hw: Configure pll control register accordingly for AR9340
-Date: Tue, 12 Apr 2011 18:47:42 +0530
-Message-ID: <1302614273-2063-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:56628 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754241Ab1DSKMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 06:12:18 -0400
+Subject: Re: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
+From: Nishant Sarmukadam <nishants@marvell.com>
+Reply-To: <nishants@marvell.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+In-Reply-To: <20110419075404.GK1897@wantstofly.org>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+	 <1303191772-4299-2-git-send-email-nishants@marvell.com>
+	 <20110419075404.GK1897@wantstofly.org>
 Content-Type: text/plain
+Date: Tue, 19 Apr 2011 15:38:20 +0530
+Message-ID: <1303207700.20919.32.camel@localhost.localdomain>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |   52 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/hw.h  |    2 +-
- drivers/net/wireless/ath/ath9k/phy.h |    3 ++
- drivers/net/wireless/ath/ath9k/reg.h |    4 ++-
- 4 files changed, 56 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8b90b9c..9e8a9c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -725,15 +725,48 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x0);
- 		udelay(1000);
- 
--		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
--			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
-+	} else if (AR_SREV_9340(ah)) {
-+		u32 regval, pll2_divint, pll2_divfrac, refdiv;
-+
-+		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
-+		udelay(1000);
-+
-+		REG_SET_BIT(ah, AR_PHY_PLL_MODE, 0x1 << 16);
-+		udelay(100);
-+
-+		if (ah->is_clk_25mhz) {
-+			pll2_divint = 0x54;
-+			pll2_divfrac = 0x1eb85;
-+			refdiv = 3;
-+		} else {
-+			pll2_divint = 88;
-+			pll2_divfrac = 0;
-+			refdiv = 5;
-+		}
-+
-+		regval = REG_READ(ah, AR_PHY_PLL_MODE);
-+		regval |= (0x1 << 16);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
-+		udelay(100);
-+
-+		REG_WRITE(ah, AR_PHY_PLL_CONTROL, (refdiv << 27) |
-+			  (pll2_divint << 18) | pll2_divfrac);
-+		udelay(100);
-+
-+		regval = REG_READ(ah, AR_PHY_PLL_MODE);
-+		regval = (regval & 0x80071fff) | (0x1 << 30) | (0x1 << 13) |
-+			 (0x4 << 26) | (0x18 << 19);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE, regval);
-+		REG_WRITE(ah, AR_PHY_PLL_MODE,
-+			  REG_READ(ah, AR_PHY_PLL_MODE) & 0xfffeffff);
-+		udelay(1000);
- 	}
- 
- 	pll = ath9k_hw_compute_pll_control(ah, chan);
- 
- 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
- 		udelay(1000);
- 
- 	/* Switch the core clock for ar9271 to 117Mhz */
-@@ -745,6 +778,19 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 	udelay(RTC_PLL_SETTLE_DELAY);
- 
- 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
-+
-+	if (AR_SREV_9340(ah)) {
-+		if (ah->is_clk_25mhz) {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
-+			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
-+		} else {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
-+			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
-+		}
-+		udelay(100);
-+	}
- }
- 
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 721eb27..7837a83 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -122,7 +122,7 @@
- #define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
- 
- #define BASE_ACTIVATE_DELAY         100
--#define RTC_PLL_SETTLE_DELAY        100
-+#define RTC_PLL_SETTLE_DELAY        (AR_SREV_9340(ah) ? 1000 : 100)
- #define COEF_SCALE_S                24
- #define HT40_CHANNEL_CENTER_SHIFT   10
- 
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 8e5fe9d..9441bf8 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -45,4 +45,7 @@
- #define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
- #define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
- 
-+#define AR_PHY_PLL_CONTROL 0x16180
-+#define AR_PHY_PLL_MODE 0x16184
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 53285a1..fbc18d3 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1182,6 +1182,7 @@ enum {
- #define AR_RTC_PLL_REFDIV_5     0x000000c0
- #define AR_RTC_PLL_CLKSEL       0x00000300
- #define AR_RTC_PLL_CLKSEL_S     8
-+#define AR_RTC_PLL_BYPASS	0x00010000
- 
- #define PLL3 0x16188
- #define PLL3_DO_MEAS_MASK 0x40000000
-@@ -1228,7 +1229,8 @@ enum {
- 
- /* RTC_DERIVED_* - only for AR9100 */
- 
--#define AR_RTC_DERIVED_CLK           (AR_RTC_BASE + 0x0038)
-+#define AR_RTC_DERIVED_CLK \
-+	(AR_SREV_9100(ah) ? (AR_RTC_BASE + 0x0038) : 0x7038)
- #define AR_RTC_DERIVED_CLK_PERIOD    0x0000fffe
- #define AR_RTC_DERIVED_CLK_PERIOD_S  1
- 
--- 
-1.7.0.4
+On Tue, 2011-04-19 at 00:54 -0700, Lennert Buytenhek wrote:
+> On Tue, Apr 19, 2011 at 11:12:50AM +0530, Nishant Sarmukadam wrote:
+> 
+> > From: Pradeep Nemavat <pnemavat@marvell.com>
+> > 
+> > Timestamp tx packets using a HW micro-second timer.
+> > This timestamp will be compared to the current timestamp
+> > in the hardware and if the difference is greater than 500ms,
+> > the packet will be dropped.
+> 
+> Why don't you do this entirely in the firmware?
+> 
+> When a packet is put into the TX ring by the host, give it a timestamp
+> of zero.
+> 
+> When the firmware gets a TX interrupt, have it walk the TX ring from
+> the last TX entry where a timestamp was written to (i.e. keep a separate
+> index for this), and timestamp all TX ring entries that are marked as
+> being FW OWNED but don't have a timestamp yet (and update your index).
+> 
+> Then when the time comes to process the TX packet (i.e. it has reached
+> the head of the TX queue), compare the timestamp with the current time.
+
+Since firmware cannot access host memory directly, it needs additional
+dma operations to read all descriptors, then check the ownership bit and
+update the timestamp for the descriptors. It can easily take about 1us
+per descriptor for this and it can hit the peak throughput by about
+2.5%. Also, when the firmware is processing the packets from the host tx
+queues, it keeps the host interrupt for tx packets disabled to avoid
+unnecessary interruptions. Hence, the timestamp in the firmware can
+deviate from when the packet was queued in the host queue. 
+
+
+> 
+> As an added bonus, this'll also work over USB/SPI/whatever other bus
+> type where you cannot read some H/W microsecond timestamp register
+> directly like you can on PCI(e) -- which sticks out like a sore thumb
+> because it goes around the clean command / ring based host<->firmware
+> interface.
+
+We agree that this approach will not work without additional changes for
+non-PCI devices. However, we do not foresee such devices being supported
+by mwl8k in the near future.  
+
 
