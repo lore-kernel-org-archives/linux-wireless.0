@@ -1,61 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:48216 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154Ab1DRVSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 17:18:06 -0400
-Received: by qyg14 with SMTP id 14so3272325qyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 14:18:06 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:57292 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752505Ab1DSODP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 10:03:15 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 07:02:49 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 06/22] ath9k_hw: Initialize mode registers from initvals.h for AR9340
+Date: Tue, 19 Apr 2011 19:33:20 +0530
+Message-ID: <1303221803-25230-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
+References: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Date: Mon, 18 Apr 2011 16:18:05 -0500
-Message-ID: <BANLkTimvT-9mSQ8n1zyDYpioxJEv=Kc7Jg@mail.gmail.com>
-Subject: Mesh broken
-From: Qasim Javed <qasimj@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, devel@lists.open80211s.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  |   59 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    3 +
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 +
+ 3 files changed, 62 insertions(+), 1 deletions(-)
 
-We have a 6 node mesh setup, with one node acting as a mesh portal.
-All the nodes are in direct range of each other, so every node has 5
-peer links. The node that acts as a mesh portal has another laptop
-connected to it via an Ethernet cable which runs an iperf TCP server.
-Every mesh node runs an iperf TCP client where the transmit data rate
-is limited to about 500Kbps.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index aebaad9..37af721 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -18,6 +18,7 @@
+ #include "ar9003_mac.h"
+ #include "ar9003_2p2_initvals.h"
+ #include "ar9485_initvals.h"
++#include "ar9340_initvals.h"
+ 
+ /* General hardware code for the AR9003 hadware family */
+ 
+@@ -28,7 +29,63 @@
+  */
+ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ {
+-	if (AR_SREV_9485_11(ah)) {
++	if (AR_SREV_9340(ah)) {
++		/* mac */
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
++				ar9340_1p0_mac_core,
++				ARRAY_SIZE(ar9340_1p0_mac_core), 2);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
++				ar9340_1p0_mac_postamble,
++				ARRAY_SIZE(ar9340_1p0_mac_postamble), 5);
++
++		/* bb */
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
++				ar9340_1p0_baseband_core,
++				ARRAY_SIZE(ar9340_1p0_baseband_core), 2);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
++				ar9340_1p0_baseband_postamble,
++				ARRAY_SIZE(ar9340_1p0_baseband_postamble), 5);
++
++		/* radio */
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
++				ar9340_1p0_radio_core,
++				ARRAY_SIZE(ar9340_1p0_radio_core), 2);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
++				ar9340_1p0_radio_postamble,
++				ARRAY_SIZE(ar9340_1p0_radio_postamble), 5);
++
++		/* soc */
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
++				ar9340_1p0_soc_preamble,
++				ARRAY_SIZE(ar9340_1p0_soc_preamble), 2);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
++				ar9340_1p0_soc_postamble,
++				ARRAY_SIZE(ar9340_1p0_soc_postamble), 5);
++
++		/* rx/tx gain */
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++				ar9340Common_wo_xlna_rx_gain_table_1p0,
++				ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
++				5);
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++				ar9340Modes_high_ob_db_tx_gain_table_1p0,
++				ARRAY_SIZE(ar9340Modes_high_ob_db_tx_gain_table_1p0),
++				5);
++
++		INIT_INI_ARRAY(&ah->iniModesAdditional,
++				ar9340Modes_fast_clock_1p0,
++				ARRAY_SIZE(ar9340Modes_fast_clock_1p0),
++				3);
++
++		INIT_INI_ARRAY(&ah->iniModesAdditional_40M,
++				ar9340_1p0_radio_core_40M,
++				ARRAY_SIZE(ar9340_1p0_radio_core_40M),
++				2);
++	} else if (AR_SREV_9485_11(ah)) {
+ 		/* mac */
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 1bc33f5..c4d0805 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -646,6 +646,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional,
+ 				modesIndex, regWrites);
+ 
++	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
++		REG_WRITE_ARRAY(&ah->iniModesAdditional_40M, 1, regWrites);
++
+ 	ar9003_hw_override_ini(ah);
+ 	ar9003_hw_set_channel_regs(ah, chan);
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b08df20..ec6e60d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -799,6 +799,7 @@ struct ath_hw {
+ 	struct ar5416IniArray iniPcieSerdes;
+ 	struct ar5416IniArray iniPcieSerdesLowPower;
+ 	struct ar5416IniArray iniModesAdditional;
++	struct ar5416IniArray iniModesAdditional_40M;
+ 	struct ar5416IniArray iniModesRxGain;
+ 	struct ar5416IniArray iniModesTxGain;
+ 	struct ar5416IniArray iniModes_9271_1_0_only;
+-- 
+1.7.0.4
 
-When we run the iperf client on all the mesh nodes while using
-compat-wireless from 18th Jan, 2011, things seem to work fine. There
-is rarely a connection loss. However, the peak data rate at the laptop
-which is connected to the mesh portal (via Ethernet) goes much higher
-than the expected 3Mbps (6*500Kbps).
-
-When we use compat-wireless from 28th March, 2011, and repeat the
-above experiment again, the results we get are quite disappointing.
-The TCP connections from all 6 nodes constantly break. Also, if only
-one mesh node is communicating with the laptop connected to the mesh
-portal, the connection does not break. If using the same
-compat-wireless, we force the max plinks to 1 (one) at each node, the
-TCP connections do not break. Everything works fine.
-
-If we use compat-wireless from 31st march, 2011, the mesh nodes are
-not even able to establish plinks with each other.
-
-"iw dev mesh station dump"
-
-returns nothing.
-
-Switching to compat-wireless from 14th April, 2011 results in plinks
-alternating between LISTEN and OPN_SNT states. The displayed beacon
-signal strength (in station dump) is very low (close to -80dbm).
-
-Infrastructure mode works fine.
-
-Can anyone please elaborate on what could be happening here?
-
-Thanks,
--Qasim
