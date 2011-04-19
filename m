@@ -1,78 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44295 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756206Ab1DFSaU (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:43936 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035Ab1DSGhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:30:20 -0400
-Date: Wed, 6 Apr 2011 13:18:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Joe Culler <joe.culler@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Green <michael.green@atheros.com>,
-	David Quan <david.quan@atheros.com>
-Subject: Re: invalid regdomain: 0x5c (was: problem with D-Link DWA-160)
-Message-ID: <20110406171858.GH11941@tuxdriver.com>
-References: <BANLkTinLdpaS9GLN88ObSACbmQJOK7wnug@mail.gmail.com>
- <201104061423.02484.chunkeey@googlemail.com>
- <BANLkTinaQHv-WUdg6F+xSE-X36bzOqCphQ@mail.gmail.com>
- <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
+	Tue, 19 Apr 2011 02:37:37 -0400
+Received: by pwi15 with SMTP id 15so2602308pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 23:37:36 -0700 (PDT)
+Message-ID: <4DAD2E36.5000105@gmail.com>
+Date: Tue, 19 Apr 2011 16:39:50 +1000
+From: Peizhao Hu <peizhao.research@gmail.com>
+Reply-To: peizhao.research@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <BANLkTi=NuktQeE07p3QDZbekyXMF4uR_cg@mail.gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Question on ieee80211_frame_duration in util.c
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 06, 2011 at 10:17:45AM -0700, Luis R. Rodriguez wrote:
-> On Wed, Apr 6, 2011 at 10:17 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Wed, Apr 6, 2011 at 5:23 AM, Christian Lamparter
-> > <chunkeey@googlemail.com> wrote:
-> >> On Wednesday 06 April 2011 05:26:28 Joe Culler wrote:
-> >>> [...]
-> >>> I have a problem with carl9170 driver with my d-link dwa-160 under
-> >>> linux-2.6.39-rc1.
-> >>> Here's the dmesg:
-> >>
-> >>> [ 3114.257063] ath: EEPROM regdomain: 0x5c
-> >>> [ 3114.257066] ath: EEPROM indicates we should expect a direct regpair map
-> >>> [ 3114.257069] ath: invalid regulatory domain/country code 0x5c
-> >>> [ 3114.257071] ath: Invalid EEPROM contents
-> >> clearly, the regdomain code 0x5c is not defined in the
-> >> drivers/net/wireless/ath/regd_common.h => regDomainPairs struct.
-> >>
-> >> this would be easy to fix [see attached patch], however I'm
-> >> not quite sure what to do about the 5GHz band in this case,
-> >> since the CTL_FCC is more restrictive than it should be.
-> >>
-> >> Regards,
-> >>        Chr
-> >>
-> >> ---
-> >> diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-> >> index 248c670..5c2cfe6 100644
-> >> --- a/drivers/net/wireless/ath/regd_common.h
-> >> +++ b/drivers/net/wireless/ath/regd_common.h
-> >> @@ -195,6 +195,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
-> >>        {APL9_WORLD, CTL_ETSI, CTL_ETSI},
-> >>
-> >>        {APL3_FCCA, CTL_FCC, CTL_FCC},
-> >> +       {APL7_FCCA, CTL_FCC, CTL_FCC},
-> >>        {APL1_ETSIC, CTL_FCC, CTL_ETSI},
-> >>        {APL2_ETSIC, CTL_FCC, CTL_ETSI},
-> >>        {APL2_APLD, CTL_FCC, NO_CTL},
-> >
-> > I verified internally with our other code and this is correct, APL7
-> > maps to FCC CTL and FCCA maps to FCC CTL as well. For an upstream
-> > patch:
-> >
-> > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> Oh and please Cc stable@kernel.org, thanks a lot!
+Hi all,
 
-...and don't forget the Signed-off-by...
+I am trying to understand why this function is implemented as such 
+currently.
+
+within the util.c in mac80211, if the coding is OFDM:
+
+         /*
+	 * OFDM:
+	 *
+	 * N_DBPS = DATARATE x 4	
+	 * N_SYM = Ceiling((16+8xLENGTH+6) / N_DBPS)
+	 *    (16 = SIGNAL time, 6 = tail bits)
+	 * TXTIME = T_PREAMBLE + T_SIGNAL + T_SYM x N_SYM + Signal Ext
+	 *
+	 * T_SYM = 4 usec
+	 * 802.11a - 17.5.2: aSIFSTime = 16 usec
+	 * 802.11g - 19.8.4: aSIFSTime = 10 usec +
+	 *    signal ext = 6 usec
+	 */
+	dur = 16; /* SIFS + signal ext */
+	dur += 16; /* 17.3.2.3: T_PREAMBLE = 16 usec */
+	dur += 4; /* 17.3.2.3: T_SIGNAL = 4 usec */
+	dur += 4 * DIV_ROUND_UP((16 + 8 * (len + 4) + 6) * 10,
+	            4 * rate); /* T_SYM x N_SYM */
+
+so the Tx time for a frame is calculated as
+
+SIFS + T_PREAMBLE + T_SIGNAL + T_SYM * N_SYM
+
+What is this Tx time calculation for? Data or the ack? I looks like it 
+is for the ack, since it has an SIFS in front. Because the my 
+understanding of the standard IEEE std 802.11 2007 Section 9. a full 
+transmission consists of
+
+DIFS + Data + SIFS + Ack
+
+ From the rc80211_minstrel.c implementation,
+
+calc_rate_durations(struct minstrel_sta_info *mi, struct ieee80211_local *local,
+struct minstrel_rate *d, struct ieee80211_rate *rate)
+{
+     int erp = !!(rate->flags&  IEEE80211_RATE_ERP_G);
+     d->perfect_tx_time = ieee80211_frame_duration(local, 1200, rate->bitrate, erp, 1);
+     d->ack_time = ieee80211_frame_duration(local, 10, rate->bitrate, erp, 1);
+}
+
+It looks like minstrel treating the Tx time calculation for data frame 
+and ack to be the same (as shown above).
+
+If this is right, then we have
+
+SIFS + Data + SIFS + Ack
+
+Anyone has an idea on this?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+regards;
+
+Peizhao Hu
+
