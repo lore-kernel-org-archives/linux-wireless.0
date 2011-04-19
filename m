@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35112 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752912Ab1DHStX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 14:49:23 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k_hw: remove unnecessary parts of the AR9380 SREV check
-Date: Fri,  8 Apr 2011 20:49:16 +0200
-Message-Id: <1302288556-69156-1-git-send-email-nbd@openwrt.org>
+Received: from fw.wantstofly.org ([80.101.37.227]:55902 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753637Ab1DSK2w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 06:28:52 -0400
+Date: Tue, 19 Apr 2011 12:31:44 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Nishant Sarmukadam <nishants@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: Re: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
+Message-ID: <20110419103144.GM1897@wantstofly.org>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+ <1303191772-4299-2-git-send-email-nishants@marvell.com>
+ <20110419075404.GK1897@wantstofly.org>
+ <1303207700.20919.32.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303207700.20919.32.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Older versions have not been sold and the driver does not explicitly
-check for them anyway, so we can simply ignore the macRev here.
-Reduces ath9k_hw size on mips by more than 2 KB.
+On Tue, Apr 19, 2011 at 03:38:20PM +0530, Nishant Sarmukadam wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/reg.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+> > > Timestamp tx packets using a HW micro-second timer.
+> > > This timestamp will be compared to the current timestamp
+> > > in the hardware and if the difference is greater than 500ms,
+> > > the packet will be dropped.
+> > 
+> > Why don't you do this entirely in the firmware?
+> > 
+> > When a packet is put into the TX ring by the host, give it a timestamp
+> > of zero.
+> > 
+> > When the firmware gets a TX interrupt, have it walk the TX ring from
+> > the last TX entry where a timestamp was written to (i.e. keep a separate
+> > index for this), and timestamp all TX ring entries that are marked as
+> > being FW OWNED but don't have a timestamp yet (and update your index).
+> > 
+> > Then when the time comes to process the TX packet (i.e. it has reached
+> > the head of the TX queue), compare the timestamp with the current time.
+> 
+> Since firmware cannot access host memory directly, it needs additional
+> dma operations to read all descriptors, then check the ownership bit and
+> update the timestamp for the descriptors. It can easily take about 1us
+> per descriptor for this and it can hit the peak throughput by about
+> 2.5%.
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 693d543..2fbbe88 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -858,9 +858,7 @@
- #define AR_SREV_9300(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
- #define AR_SREV_9300_20_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9300) || \
--	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
--	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
-+	((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9300)
- 
- #define AR_SREV_9485(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
--- 
-1.7.3.2
+That DMA needs to happen anyway, whether you have the host timestamp
+the packets or not, so this doesn't seem to be an applicable argument.
 
+
+> Also, when the firmware is processing the packets from the host tx
+> queues, it keeps the host interrupt for tx packets disabled to avoid
+> unnecessary interruptions. Hence, the timestamp in the firmware can
+> deviate from when the packet was queued in the host queue. 
+
+Right, but that is an (easily fixable?) implementation detail, and not
+a reason for why this fundamentally cannot work.
+
+
+> > As an added bonus, this'll also work over USB/SPI/whatever other bus
+> > type where you cannot read some H/W microsecond timestamp register
+> > directly like you can on PCI(e) -- which sticks out like a sore thumb
+> > because it goes around the clean command / ring based host<->firmware
+> > interface.
+> 
+> We agree that this approach will not work without additional changes
+> for non-PCI devices. However, we do not foresee such devices being
+> supported by mwl8k in the near future.  
+
+It's still an ugly layering violation, IMHO.  But if MRVL is OK with it...
