@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:45930 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757548Ab1D2R0n (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:40656 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753725Ab1DSRMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 13:26:43 -0400
-Subject: [PATCH] net: fix rtnl even race in register_netdevice()
-To: netdev@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 Apr 2011 20:26:34 +0300
-Message-ID: <20110429172634.27130.25375.stgit@x201> (sfid-20110429_192646_168893_086F114A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 19 Apr 2011 13:12:44 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: [PATCH V2 4/4] mwl8k: Enable life time expiry for tx packets in the hardware
+Date: Tue, 19 Apr 2011 22:16:22 +0530
+Message-Id: <1303231582-17333-4-git-send-email-nishants@marvell.com>
+In-Reply-To: <1303231582-17333-1-git-send-email-nishants@marvell.com>
+References: <1303231582-17333-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@atheros.com>
+Tell the firmware to enable the life time expiry of tx packets
+in the hardware. The hardware will now refer to the timestamp
+in every tx packet and decide whether the packet needs to be
+dropped or transmitted.
 
-There's a race in register_netdevice so that the rtnl event is sent before
-the device is actually ready. This was visible with flimflam, chrome os
-connection manager:
-
-00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device()
-00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
-   4): No such device
-00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
-   0xbfefda3c len 1004
-00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
-   NEWLINK len 1004 type 16 flags 0x0000 seq 0
-
-So the kobject is visible in udev before the device is ready.
-
-(ignore the 10 s delay, I added that to reproduce the issue easily)
-
-The issue is reported here:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=15606
-
-The fix is to call netdev_register_kobject() after the device is added
-to the list.
-
-Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
 ---
- net/core/dev.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwl8k.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 956d3b0..f2afbe6 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -5425,11 +5425,6 @@ int register_netdevice(struct net_device *dev)
- 	if (ret)
- 		goto err_uninit;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 82cd725..7db4bb9 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2502,7 +2502,8 @@ static int mwl8k_cmd_set_hw_spec(struct ieee80211_hw *hw)
  
--	ret = netdev_register_kobject(dev);
--	if (ret)
--		goto err_uninit;
--	dev->reg_state = NETREG_REGISTERED;
--
- 	netdev_update_features(dev);
+ 	cmd->flags = cpu_to_le32(MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP |
+-				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON);
++				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON |
++				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY);
+ 	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
+ 	cmd->total_rxd = cpu_to_le32(MWL8K_RX_DESCS);
  
- 	/*
-@@ -5443,6 +5438,11 @@ int register_netdevice(struct net_device *dev)
- 	dev_hold(dev);
- 	list_netdevice(dev);
- 
-+	ret = netdev_register_kobject(dev);
-+	if (ret)
-+		goto err_uninit;
-+	dev->reg_state = NETREG_REGISTERED;
-+
- 	/* Notify protocols, that a new device appeared. */
- 	ret = call_netdevice_notifiers(NETDEV_REGISTER, dev);
- 	ret = notifier_to_errno(ret);
+-- 
+1.6.0.3
 
