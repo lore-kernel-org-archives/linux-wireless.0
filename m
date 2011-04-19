@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:63401 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932855Ab1DMVf1 (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:52887 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab1DSHvM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 17:35:27 -0400
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	 <20110413163113.GA24015@kroah.com>
-	 <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-	 <1302726703.8015.1.camel@dev.znau.edu.ua>
-	 <BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
-	 <1302727516.8015.9.camel@dev.znau.edu.ua>
-	 <BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
-	 <1302729243.8479.1.camel@dev.znau.edu.ua>
-	 <BANLkTinLn4Ug=gX4coHJbSzrkxdSMjgGeg@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 14 Apr 2011 00:24:10 +0300
-Message-Id: <1302729850.8479.7.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Tue, 19 Apr 2011 03:51:12 -0400
+Date: Tue, 19 Apr 2011 09:54:04 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Nishant Sarmukadam <nishants@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: Re: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
+Message-ID: <20110419075404.GK1897@wantstofly.org>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+ <1303191772-4299-2-git-send-email-nishants@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303191772-4299-2-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 19, 2011 at 11:12:50AM +0530, Nishant Sarmukadam wrote:
 
-> 2011/4/13 George Kashperko <george@znau.edu.ua>:
-> >> I had no idea what you were referring to. We do not dig into PCIe
-> >> functions yet, so I believe for now we need this "if".
-> > You are already deep inside. Your host code drives pci function.
+> From: Pradeep Nemavat <pnemavat@marvell.com>
 > 
-> But I don't use multiple PCIe functions, do not focus on that at all.
-> 
-Don't see anything in the host driver code preventing it to be bound to
-functions other than 0. But anyways if you sure your host will be used
-by several cores then why don't you spinlock window accesses ?
+> Timestamp tx packets using a HW micro-second timer.
+> This timestamp will be compared to the current timestamp
+> in the hardware and if the difference is greater than 500ms,
+> the packet will be dropped.
 
-Have nice day,
-George
+Why don't you do this entirely in the firmware?
 
+When a packet is put into the TX ring by the host, give it a timestamp
+of zero.
 
+When the firmware gets a TX interrupt, have it walk the TX ring from
+the last TX entry where a timestamp was written to (i.e. keep a separate
+index for this), and timestamp all TX ring entries that are marked as
+being FW OWNED but don't have a timestamp yet (and update your index).
+
+Then when the time comes to process the TX packet (i.e. it has reached
+the head of the TX queue), compare the timestamp with the current time.
+
+As an added bonus, this'll also work over USB/SPI/whatever other bus
+type where you cannot read some H/W microsecond timestamp register
+directly like you can on PCI(e) -- which sticks out like a sore thumb
+because it goes around the clean command / ring based host<->firmware
+interface.
