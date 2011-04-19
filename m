@@ -1,74 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:44947 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753983Ab1DJQOr (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:40638 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235Ab1DSRMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 12:14:47 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: George Kashperko <george@znau.edu.ua>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael B?sch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <op.vtpt6v173ri7v4@arend-laptop>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop> <20110410080159.GB2798@ucw.cz>
-	 <BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
-	 <20110410082420.GA1460@localhost.ucw.cz>
-	 <BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
-	 <op.vtpt6v173ri7v4@arend-laptop>
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 10 Apr 2011 19:11:57 +0300
-Message-Id: <1302451917.14558.13.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Tue, 19 Apr 2011 13:12:34 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Pradeep Nemavat <pnemavat@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH V2 1/4] mwl8k: Do not stop tx queues
+Date: Tue, 19 Apr 2011 22:16:19 +0530
+Message-Id: <1303231582-17333-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Pradeep Nemavat <pnemavat@marvell.com>
 
-> On Sun, 10 Apr 2011 10:30:53 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
-> 
-> > 2011/4/10 Pavel Machek <pavel@ucw.cz>:
-> >>> >> >+config BCMAI_HOST_PCI_POSSIBLE
-> >>> >> >+       bool
-> >>> >> >+       depends on BCMAI && PCI = y
-> >>> >> >+       default y
-> >>> >> >+
-> >>> >> >+config BCMAI_HOST_PCI
-> >>> >> >+       bool "Support for AI on PCI-host bus"
-> >>> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
-> >>> >> >+
-> 
-> Hi Rafał,
-> 
-> Could use term AMBA AXI instead which gives enough hits on Google to hint  
-> interested people to more in depth information.
-> 
-> FYI: AXI = Advanced eXtensible Interface
-> 	High-speed interconnect for chip cores ( provides higher bursts/transfers  
-> than predecessor AHB = Advanced High-performance Bus (AHB)).
-> 
-> Gr. AvS
+This is in preparation to support life time expiry of packets in the
+hardware to avoid head-of-line blocking where a slow client can
+hog a tx queue and affect the traffic to a faster client from the same
+queue. Time stamp the packets in driver to allow dropping them in the
+hardware if they are queued for more than 500ms.
 
-Not sure if AXI will be relevant bus name to manage newer Broadcom IP
-cores. Yes, AMBA AXI is underlying interconnect used for communications,
-but those communications are made in regard of communication ports
-(those thingys referenced at Broadcom code as wrappers and which are
-actually master ports intermediately bound to the backplane itself).
-Pretty much sure your original bcmb is much more relevant for managing
-Broadcom hardware extensions over AXI than just axi, especially
-considering that techniques we use to identify, enumerate and control
-AXI slave ports are completely Broadcom-specific.
+If queues are stopped, packets will be queued up outside the driver.
+Since we will be able to timestamp the packets only after they hit the
+driver, the timestamp will be less accurate since we cannot consider
+the time the packets spent in queues outside the driver. With this commit,
+to achieve accurate timestamping, the tx queues will never be stopped.
+Now, we need to be prepared for a situation where packets hit the driver
+even after the tx queues are full. Drop all such packets in the driver itself.
 
-Have nice day,
-George
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ebaae35..7968301 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1666,10 +1666,6 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+ 		processed++;
+ 	}
+ 
+-	if (index < MWL8K_TX_WMM_QUEUES && processed && priv->radio_on &&
+-	    !mutex_is_locked(&priv->fw_mutex))
+-		ieee80211_wake_queue(hw, index);
+-
+ 	return processed;
+ }
+ 
+@@ -1951,13 +1947,14 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 
+ 	txq = priv->txq + index;
+ 
+-	if (index >= MWL8K_TX_WMM_QUEUES && txq->len >= MWL8K_TX_DESCS) {
+-		/* This is the case in which the tx packet is destined for an
+-		 * AMPDU queue and that AMPDU queue is full.  Because we don't
+-		 * start and stop the AMPDU queues, we must drop these packets.
+-		 */
+-		dev_kfree_skb(skb);
++	if (txq->len >= MWL8K_TX_DESCS) {
++		if (start_ba_session) {
++			spin_lock(&priv->stream_lock);
++			mwl8k_remove_stream(hw, stream);
++			spin_unlock(&priv->stream_lock);
++		}
+ 		spin_unlock_bh(&priv->tx_lock);
++		dev_kfree_skb(skb);
+ 		return;
+ 	}
+ 
+@@ -1985,9 +1982,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	if (txq->tail == MWL8K_TX_DESCS)
+ 		txq->tail = 0;
+ 
+-	if (txq->head == txq->tail && index < MWL8K_TX_WMM_QUEUES)
+-		ieee80211_stop_queue(hw, index);
+-
+ 	mwl8k_tx_start(priv);
+ 
+ 	spin_unlock_bh(&priv->tx_lock);
+-- 
+1.6.0.3
 
