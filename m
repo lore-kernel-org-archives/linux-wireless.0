@@ -1,98 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34037 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801Ab1DNUvV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 16:51:21 -0400
-Received: by bwz15 with SMTP id 15so1702987bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 13:51:20 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Damian Lesiuk <lesiuk@gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps) MASTER MODE
-Date: Thu, 14 Apr 2011 22:51:10 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com> <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
-In-Reply-To: <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4908 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889Ab1DSG7V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 02:59:21 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] staging: brcm80211: replaced WL_AMPDU_* with BCMMSG
+Date: Tue, 19 Apr 2011 08:59:03 +0200
+Message-ID: <1303196344-3157-3-git-send-email-rvossen@broadcom.com>
+In-Reply-To: <1303196344-3157-1-git-send-email-rvossen@broadcom.com>
+References: <1303196344-3157-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201104142251.10881.chunkeey@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 14 April 2011 21:36:05 Damian Lesiuk wrote:
-> I don't have any more log.
-> I dumped it by hostapd -dd /config/file &> log_file
 
-sure, this is what it looks like, your output is clearly "mangled".
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wl_dbg.h    |    3 -
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |   50 +++++++++--------------
+ 2 files changed, 20 insertions(+), 33 deletions(-)
 
---- cut ---
-# hostapd -dd /etc/hostapd/hostapd.conf.2ghz
-Configuration file: /etc/hostapd/hostapd.conf.2ghz
-ctrl_interface_group=0
-nl80211: Add own interface ifindex 7
-nl80211: New interface mon.wlanap created: ifindex=9
-nl80211: Add own interface ifindex 9
-BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-nl80211: Added 802.11b mode based on 802.11g information
-Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=20 dBm
-RATE[0] rate=10 flags=0x1
-RATE[1] rate=20 flags=0x1
-RATE[2] rate=55 flags=0x1
-RATE[3] rate=110 flags=0x1
-RATE[4] rate=60 flags=0x0
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x0
-RATE[7] rate=180 flags=0x0
-RATE[8] rate=240 flags=0x0
-RATE[9] rate=360 flags=0x0
-RATE[10] rate=480 flags=0x0
-RATE[11] rate=540 flags=0x0
-Scan for neighboring BSSes prior to enabling 40 MHz channel
-Scan requested (ret=0) - scan timeout 10 seconds
-Interface initialization will be completed in a callback
-nl80211: Event message available
-nl80211: Scan trigger
-RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlanap' added
-Unknown event 5
-RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'mon.wlanap' added
-Unknown event 5
-RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlanap' added
-Unknown event 5
-nl80211: Event message available
-nl80211: New scan results available
-Received scan results (2 BSSes)
-40 MHz affected channel range: [2427,2477] MHz
-Neighboring BSS: d8:5d:4c:c0:f8:e3 freq=2412 pri=1 sec=5
-40 MHz pri/sec mismatch with BSS d8:5d:4c:c0:f8:e3 <2412,2432> (chan=1+) vs. <2462,2442> <====
-20/40 MHz operation not permitted on channel pri=11 sec=7 based on overlapping BSSes <=========
-Completing interface initialization
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+index 5e58f5e..d95f8a9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
++++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+@@ -36,7 +36,6 @@ do {						\
+ 
+ #ifdef BCMDBG
+ 
+-#define WL_AMPDU(fmt, args...)	WL_PRINT(WL_AMPDU_VAL, fmt, ##args)
+ #define WL_FFPLD(fmt, args...)	WL_PRINT(WL_FFPLD_VAL, fmt, ##args)
+ 
+ /* Extra message control for AMPDU debugging */
+@@ -80,8 +79,6 @@ do {						\
+ 
+ #else				/* BCMDBG */
+ 
+-#define	WL_TRACE(fmt, args...)		no_printk(fmt, ##args)
+-#define WL_AMPDU(fmt, args...)		no_printk(fmt, ##args)
+ #define WL_FFPLD(fmt, args...)		no_printk(fmt, ##args)
+ 
+ #define WL_AMPDU_UPDN(fmt, args...)	no_printk(fmt, ##args)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index 1b92767..d306bf7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -76,16 +76,6 @@
+ 	AMPDU_DELIMITER_LEN + 3\
+ 	+ DOT11_A4_HDR_LEN + DOT11_QOS_LEN + DOT11_IV_MAX_LEN)
+ 
+-#ifdef BCMDBG
+-u32 wl_ampdu_dbg =
+-    WL_AMPDU_UPDN_VAL |
+-    WL_AMPDU_ERR_VAL |
+-    WL_AMPDU_TX_VAL |
+-    WL_AMPDU_RX_VAL |
+-    WL_AMPDU_CTL_VAL |
+-    WL_AMPDU_HW_VAL | WL_AMPDU_HWTXS_VAL | WL_AMPDU_HWDBG_VAL;
+-#endif
+-
+ /* structure to hold tx fifo information and pre-loading state
+  * counters specific to tx underflows of ampdus
+  * some counters might be redundant with the ones in wlc or ampdu structures.
+@@ -235,7 +225,7 @@ void scb_ampdu_cleanup(struct ampdu_info *ampdu, struct scb *scb)
+ 	scb_ampdu_t *scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
+ 	u8 tid;
+ 
+-	WL_AMPDU_UPDN("scb_ampdu_cleanup: enter\n");
++	BCMMSG(ampdu->wlc->dev, "enter\n");
+ 	for (tid = 0; tid < AMPDU_MAX_SCB_TID; tid++) {
+ 		ampdu_cleanup_tid_ini(ampdu, scb_ampdu, tid, false);
+ 	}
+@@ -605,8 +595,8 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 		ndelim = txh->RTSPLCPFallback[AMPDU_FBR_NULL_DELIM];
+ 		seg_cnt += 1;
+ 
+-		WL_AMPDU_TX("wl%d: wlc_sendampdu: mpdu %d plcp_len %d\n",
+-			    wlc->pub->unit, count, len);
++		BCMMSG(wlc->dev, "wl%d: mpdu %d plcp_len %d\n",
++			wlc->pub->unit, count, len);
+ 
+ 		/*
+ 		 * aggregateable mpdu. For ucode/hw agg,
+@@ -636,8 +626,9 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 
+ 		dma_len += (u16) pkttotlen(p);
+ 
+-		WL_AMPDU_TX("wl%d: wlc_sendampdu: ampdu_len %d seg_cnt %d null delim %d\n",
+-			    wlc->pub->unit, ampdu_len, seg_cnt, ndelim);
++		BCMMSG(wlc->dev, "wl%d: ampdu_len %d"
++			" seg_cnt %d null delim %d\n",
++			wlc->pub->unit, ampdu_len, seg_cnt, ndelim);
+ 
+ 		txh->MacTxControlLow = cpu_to_le16(mcl);
+ 
+@@ -713,8 +704,9 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 		/* test whether to add more */
+ 		if ((MCS_RATE(mcs, true, false) >= f->dmaxferrate) &&
+ 		    (count == f->mcs2ampdu_table[mcs])) {
+-			WL_AMPDU_ERR("wl%d: PR 37644: stopping ampdu at %d for mcs %d\n",
+-				     wlc->pub->unit, count, mcs);
++			BCMMSG(wlc->dev, "wl%d: PR 37644: stopping"
++				" ampdu at %d for mcs %d\n",
++				wlc->pub->unit, count, mcs);
+ 			break;
+ 		}
+ 
+@@ -852,8 +844,8 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 			WLC_SET_MIMO_PLCP_AMPDU(txh->FragPLCPFallback);
+ 		}
+ 
+-		WL_AMPDU_TX("wl%d: wlc_sendampdu: count %d ampdu_len %d\n",
+-			    wlc->pub->unit, count, ampdu_len);
++		BCMMSG(wlc->dev, "wl%d: count %d ampdu_len %d\n",
++			wlc->pub->unit, count, ampdu_len);
+ 
+ 		/* inform rate_sel if it this is a rate probe pkt */
+ 		frameid = le16_to_cpu(txh->TxFrameID);
+@@ -1075,11 +1067,10 @@ wlc_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 		ack_recd = false;
+ 		if (ba_recd) {
+ 			bindex = MODSUB_POW2(seq, start_seq, SEQNUM_MAX);
+-
+-			WL_AMPDU_TX("%s: tid %d seq is %d, start_seq is %d, bindex is %d set %d, index %d\n",
+-				    __func__, tid, seq, start_seq, bindex,
+-				    isset(bitmap, bindex), index);
+-
++			BCMMSG(wlc->dev, "tid %d seq %d,"
++				" start_seq %d, bindex %d set %d, index %d\n",
++				tid, seq, start_seq, bindex,
++				isset(bitmap, bindex), index);
+ 			/* if acked then clear bit and free packet */
+ 			if ((bindex < AMPDU_TX_BA_MAX_WSIZE)
+ 			    && isset(bitmap, bindex)) {
+@@ -1157,8 +1148,7 @@ ampdu_cleanup_tid_ini(struct ampdu_info *ampdu, scb_ampdu_t *scb_ampdu, u8 tid,
+ 	if (!ini)
+ 		return;
+ 
+-	WL_AMPDU_CTL("wl%d: ampdu_cleanup_tid_ini: tid %d\n",
+-		     ampdu->wlc->pub->unit, tid);
++	BCMMSG(ampdu->wlc->dev, "wl%d: tid %d\n", ampdu->wlc->pub->unit, tid);
+ 
+ 	if (ini->tx_in_transit && !force)
+ 		return;
+@@ -1200,13 +1190,13 @@ static int wlc_ampdu_set(struct ampdu_info *ampdu, bool on)
+ 
+ 	if (on) {
+ 		if (!N_ENAB(wlc->pub)) {
+-			WL_AMPDU_ERR("wl%d: driver not nmode enabled\n",
+-				     wlc->pub->unit);
++			dev_err(ampdu->wlc->dev, "wl%d: driver not "
++				"nmode enabled\n", wlc->pub->unit);
+ 			return -ENOTSUPP;
+ 		}
+ 		if (!wlc_ampdu_cap(ampdu)) {
+-			WL_AMPDU_ERR("wl%d: device not ampdu capable\n",
+-				     wlc->pub->unit);
++			dev_err(ampdu->wlc->dev, "wl%d: device not "
++				"ampdu capable\n", wlc->pub->unit);
+ 			return -ENOTSUPP;
+ 		}
+ 		wlc->pub->_ampdu = on;
+-- 
+1.7.1
 
---- cut ---
 
-Regards,
-	Chr
