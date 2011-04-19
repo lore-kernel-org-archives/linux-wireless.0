@@ -1,125 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57057 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:57293 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751945Ab1CaWcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 18:32:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1751988Ab1DSODR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 10:03:17 -0400
+Received: from mail.atheros.com ([10.234.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 15:31:39 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] cfg80211: add a timer for invalid user reg hints
-Date: Thu, 31 Mar 2011 15:31:38 -0700
-Message-ID: <1301610698-3688-1-git-send-email-lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 07:02:51 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH V2 07/22] ath9k_hw: Don't do ani initialization for AR9340
+Date: Tue, 19 Apr 2011 19:33:21 +0530
+Message-ID: <1303221803-25230-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
+References: <1303221803-25230-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have no other option but to inform userspace that we have
-queued up their regulatory hint request when we are given one
-given that nl80211 operates atomically on user requests. The
-best we can do is accept the request, and set a timer for processing
-it. If the timer is hit we restore the regulatory settings and
-ignore the user input.
-
-This fixes this reported bug:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=28112
-
-Reported-by: gregoryx.alagnou@intel.com
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- net/wireless/reg.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3332d5b..62d9ea1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -42,6 +42,7 @@
- #include <linux/ctype.h>
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
-+#include <linux/timer.h>
- #include <net/cfg80211.h>
- #include "core.h"
- #include "reg.h"
-@@ -106,6 +107,10 @@ struct reg_beacon {
- static void reg_todo(struct work_struct *work);
- static DECLARE_WORK(reg_work, reg_todo);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 013ffba..08e0aa9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -462,7 +462,7 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 		return ecode;
+ 	}
  
-+static struct timer_list reg_timer;
-+static void reg_timeout_work(struct work_struct *work);
-+static DECLARE_WORK(reg_timeout, reg_timeout_work);
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 5,
-@@ -1330,6 +1335,9 @@ static void reg_set_request_processed(void)
- 		need_more_processing = true;
- 	spin_unlock(&reg_requests_lock);
- 
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+		del_timer_sync(&reg_timer);
-+
- 	if (need_more_processing)
- 		schedule_work(&reg_work);
- }
-@@ -1584,6 +1592,7 @@ int regulatory_hint_user(const char *alpha2)
- 	request->initiator = NL80211_REGDOM_SET_BY_USER;
- 
- 	queue_regulatory_request(request);
-+	mod_timer(&reg_timer, jiffies + msecs_to_jiffies(3142));
- 
- 	return 0;
- }
-@@ -1787,7 +1796,6 @@ static void restore_regulatory_settings(bool reset_user)
- 		regulatory_hint_user(user_alpha2);
- }
- 
--
- void regulatory_hint_disconnect(void)
- {
- 	REG_DBG_PRINT("All devices are disconnected, going to "
-@@ -2125,6 +2133,18 @@ out:
- 	mutex_unlock(&reg_mutex);
- }
- 
-+static void reg_timeout_work(struct work_struct *work)
-+{
-+	restore_regulatory_settings(true);
-+}
-+
-+static void reg_set_failed_timer(unsigned long data)
-+{
-+	REG_DBG_PRINT("Timeout while waiting for CRDA to reply,"
-+		      "restoring regulatory settings");
-+	schedule_work(&reg_timeout);
-+}
-+
- int __init regulatory_init(void)
- {
- 	int err = 0;
-@@ -2137,6 +2157,7 @@ int __init regulatory_init(void)
- 
- 	spin_lock_init(&reg_requests_lock);
- 	spin_lock_init(&reg_pending_beacons_lock);
-+	setup_timer(&reg_timer, reg_set_failed_timer, (unsigned long) NULL);
- 
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
-@@ -2178,6 +2199,8 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	struct reg_beacon *reg_beacon, *btmp;
- 
- 	cancel_work_sync(&reg_work);
-+	cancel_work_sync(&reg_timeout);
-+	del_timer_sync(&reg_timer);
- 
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
+-	if (!AR_SREV_9100(ah)) {
++	if (!AR_SREV_9100(ah) && !AR_SREV_9340(ah)) {
+ 		ath9k_hw_ani_setup(ah);
+ 		ath9k_hw_ani_init(ah);
+ 	}
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
