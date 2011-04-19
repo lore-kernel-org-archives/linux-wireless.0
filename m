@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40540 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757005Ab1DMSej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 14:34:39 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: sedat.dilek@gmail.com, Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2 1/7] ath5k: optimize tx descriptor setup
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
-	<1302646041-3917-1-git-send-email-nbd@openwrt.org>
-	<BANLkTingC8r-obXeYxjbHVr2G80MCbhyMQ@mail.gmail.com>
-	<20110413125134.GA4832@tuxdriver.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 13 Apr 2011 21:34:35 +0300
-In-Reply-To: <20110413125134.GA4832@tuxdriver.com> (John W. Linville's message of "Wed\, 13 Apr 2011 08\:51\:34 -0400")
-Message-ID: <87fwpmknk4.fsf@purkki.adurom.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56575 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931Ab1DSPPh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 11:15:37 -0400
+Date: Tue, 19 Apr 2011 11:09:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Roel <vruchtengaard@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ipw2100 fatal interrupt
+Message-ID: <20110419150946.GA2545@tuxdriver.com>
+References: <4DAD3DBC.3010205@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DAD3DBC.3010205@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+On Tue, Apr 19, 2011 at 09:46:04AM +0200, Roel wrote:
+> Goodmorning, i have 2 laptops i cannot use the wifi anymore.
+> The error message in /var/log/messages
+> 
+>     "ipw2100 fatal interrupt. scheduling firmware restart"
+> 
+> Is there something i can do to fix this problem?
+> 
+> The hardware and OS =
+> 
+>     Fedora 14, Dell D600 and IBM T42
+> 
+>     The wifi router a Fritzbox 7340
 
->> Looks like this v2 did not found its way to wireless-next [1].
->
-> That's what happens, when it is posted after I've already merged the v1. :-)
->
-> I fixed things up and will commit the difference with the following message:
->
->     ath5k: improve comments for optimized tx descriptor setup
->     
->     Comment the use of local variables to reduce the number of load/store
->     operations on uncached memory, in hopes of not losing this optimization
->     accidentally in the future.
-
-Thanks John. It was my fault as I was so slow to comment. But I blame
-the sun for this, it's so amazing to see the sun again after six
-months! ;)
+Can you determine the last kernel revision that was working for you?
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
