@@ -1,200 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2523 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4309 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932919Ab1DZCef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 22:34:35 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1752167Ab1DSG7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 02:59:15 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
 To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
-Subject: [PATCH 1/5] staging: brcm80211: Remove siutils dependency of
- dhdsdio_download_state
-Date: Mon, 25 Apr 2011 19:34:04 -0700
-Message-ID: <1303785248-27420-2-git-send-email-frankyl@broadcom.com> (sfid-20110426_043442_817090_F5F51152)
-In-Reply-To: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
-References: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] staging: brcm80211: got rid of WL_FFPLD message log
+ macro
+Date: Tue, 19 Apr 2011 08:59:04 +0200
+Message-ID: <1303196344-3157-4-git-send-email-rvossen@broadcom.com>
+In-Reply-To: <1303196344-3157-1-git-send-email-rvossen@broadcom.com>
+References: <1303196344-3157-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use dhdsdio_chip_disablecore and dhd_sdio_chip_resetcore to replace
-siutils functions used in dhdsdio_download_state
+Code cleanup. Partially removed, remaining replaced with BCMMSG.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  114 ++++++++++++-------------
- 1 files changed, 53 insertions(+), 61 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wl_dbg.h    |    8 --------
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |   13 ++++++-------
+ drivers/staging/brcm80211/include/wlioctl.h    |    2 --
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 14f4703..2827af2 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -482,7 +482,9 @@ static int dhdsdio_download_nvram(struct dhd_bus *bus);
- #ifdef BCMEMBEDIMAGE
- static int dhdsdio_download_code_array(struct dhd_bus *bus);
- #endif
-+static void dhdsdio_chip_disablecore(bcmsdh_info_t *sdh, u32 corebase);
- static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
-+static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+index d95f8a9..2e8948f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
++++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+@@ -22,12 +22,6 @@
+ /* wl_msg_level is a bit vector with defs in wlioctl.h */
+ extern u32 wl_msg_level;
  
- static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
- {
-@@ -2615,42 +2617,18 @@ static int dhdsdio_write_vars(dhd_bus_t *bus)
- static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
- {
- 	uint retries;
-+	u32 regdata;
- 	int bcmerror = 0;
- 
- 	/* To enter download state, disable ARM and reset SOCRAM.
- 	 * To exit download state, simply reset ARM (default is RAM boot).
- 	 */
- 	if (enter) {
+-#define WL_PRINT(level, fmt, args...)		\
+-do {						\
+-	if (wl_msg_level & level)		\
+-		printk(fmt, ##args);		\
+-} while (0)
 -
- 		bus->alp_only = true;
+ #define BCMMSG(dev, fmt, args...)		\
+ do {						\
+ 	if (wl_msg_level & WL_TRACE_VAL)	\
+@@ -36,7 +30,6 @@ do {						\
  
--		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
--		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
--			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
--			bcmerror = BCME_ERROR;
--			goto fail;
--		}
-+		dhdsdio_chip_disablecore(bus->sdh, bus->ci->armcorebase);
+ #ifdef BCMDBG
  
--		si_core_disable(bus->sih, 0);
--		if (bcmsdh_regfail(bus->sdh)) {
--			bcmerror = BCME_SDIO_ERROR;
--			goto fail;
--		}
--
--		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
--			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
--				   __func__));
--			bcmerror = BCME_ERROR;
--			goto fail;
--		}
--
--		si_core_reset(bus->sih, 0, 0);
--		if (bcmsdh_regfail(bus->sdh)) {
--			DHD_ERROR(("%s: Failure trying reset SOCRAM core?\n",
--				   __func__));
--			bcmerror = BCME_SDIO_ERROR;
--			goto fail;
--		}
-+		dhdsdio_chip_resetcore(bus->sdh, bus->ci->ramcorebase);
+-#define WL_FFPLD(fmt, args...)	WL_PRINT(WL_FFPLD_VAL, fmt, ##args)
  
- 		/* Clear the top bit of memory */
- 		if (bus->ramsize) {
-@@ -2659,14 +2637,11 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
- 					 (u8 *)&zeros, 4);
- 		}
- 	} else {
--		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
--			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
--				   __func__));
--			bcmerror = BCME_ERROR;
--			goto fail;
--		}
--
--		if (!si_iscoreup(bus->sih)) {
-+		regdata = bcmsdh_reg_read(bus->sdh,
-+			CORE_SB(bus->ci->ramcorebase, sbtmstatelow), 4);
-+		regdata &= (SBTML_RESET | SBTML_REJ_MASK |
-+			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+		if ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) != regdata) {
- 			DHD_ERROR(("%s: SOCRAM core is down after reset?\n",
- 				   __func__));
- 			bcmerror = BCME_ERROR;
-@@ -2679,41 +2654,16 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
- 			bcmerror = 0;
- 		}
+ /* Extra message control for AMPDU debugging */
+ #define   WL_AMPDU_UPDN_VAL	0x00000001	/* Config up/down related  */
+@@ -79,7 +72,6 @@ do {						\
  
--		if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0) &&
--		    !si_setcore(bus->sih, SDIOD_CORE_ID, 0)) {
--			DHD_ERROR(("%s: Can't change back to SDIO core?\n",
--				   __func__));
--			bcmerror = BCME_ERROR;
--			goto fail;
--		}
- 		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries);
+ #else				/* BCMDBG */
  
--		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
--		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
--			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
--			bcmerror = BCME_ERROR;
--			goto fail;
--		}
--
--		si_core_reset(bus->sih, 0, 0);
--		if (bcmsdh_regfail(bus->sdh)) {
--			DHD_ERROR(("%s: Failure trying to reset ARM core?\n",
--				   __func__));
--			bcmerror = BCME_SDIO_ERROR;
--			goto fail;
--		}
-+		dhdsdio_chip_resetcore(bus->sdh, bus->ci->armcorebase);
+-#define WL_FFPLD(fmt, args...)		no_printk(fmt, ##args)
  
- 		/* Allow HT Clock now that the ARM is running. */
- 		bus->alp_only = false;
- 
- 		bus->dhd->busstate = DHD_BUS_LOAD;
+ #define WL_AMPDU_UPDN(fmt, args...)	no_printk(fmt, ##args)
+ #define WL_AMPDU_RX(fmt, args...)	no_printk(fmt, ##args)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index d306bf7..f217cd8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -315,7 +315,7 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 			 M_UCODE_MACSTAT + offsetof(macstat_t, txfunfl[fid]));
+ 	new_txunfl = (u16) (cur_txunfl - fifo->prev_txfunfl);
+ 	if (new_txunfl == 0) {
+-		WL_FFPLD("check_txunfl : TX status FRAG set but no tx underflows\n");
++		BCMMSG(wlc->dev, "TX status FRAG set but no tx underflows\n");
+ 		return -1;
  	}
--
- fail:
--	/* Always return to SDIOD core */
--	if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0))
--		si_setcore(bus->sih, SDIOD_CORE_ID, 0);
--
- 	return bcmerror;
- }
+ 	fifo->prev_txfunfl = cur_txunfl;
+@@ -325,7 +325,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
  
-@@ -6324,3 +6274,45 @@ fail:
- 	kfree(ci);
- 	return err;
- }
-+
-+static void
-+dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase)
-+{
-+	u32 regdata;
-+
-+	/*
-+	 * Must do the disable sequence first to work for
-+	 * arbitrary current core state.
-+	 */
-+	dhdsdio_chip_disablecore(sdh, corebase);
-+
-+	/*
-+	 * Now do the initialization sequence.
-+	 * set reset while enabling the clock and
-+	 * forcing them on throughout the core
-+	 */
-+	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
-+		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
-+		SBTML_RESET);
-+	udelay(1);
-+
-+	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbtmstatehigh), 4);
-+	if (regdata & SBTMH_SERR)
-+		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatehigh), 4, 0);
-+
-+	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbimstate), 4);
-+	if (regdata & (SBIM_IBE | SBIM_TO))
-+		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbimstate), 4,
-+			regdata & ~(SBIM_IBE | SBIM_TO));
-+
-+	/* clear reset and allow it to propagate throughout the core */
-+	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
-+		(SICF_FGC << SBTML_SICF_SHIFT) |
-+		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+	udelay(1);
-+
-+	/* leave clock enabled */
-+	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
-+		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
-+	udelay(1);
-+}
+ 	/* check if fifo is big enough */
+ 	if (wlc_xmtfifo_sz_get(wlc, fid, &xmtfifo_sz)) {
+-		WL_FFPLD("check_txunfl : get xmtfifo_sz failed\n");
+ 		return -1;
+ 	}
+ 
+@@ -339,8 +338,8 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 	if (fifo->accum_txfunfl < 10)
+ 		return 0;
+ 
+-	WL_FFPLD("ampdu_count %d  tx_underflows %d\n",
+-		 current_ampdu_cnt, fifo->accum_txfunfl);
++	BCMMSG(wlc->dev, "ampdu_count %d  tx_underflows %d\n",
++		current_ampdu_cnt, fifo->accum_txfunfl);
+ 
+ 	/*
+ 	   compute the current ratio of tx unfl per ampdu.
+@@ -367,7 +366,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 	 */
+ 
+ 	if (fifo->ampdu_pld_size >= max_mpdu * FFPLD_MPDU_SIZE) {
+-		WL_FFPLD(("tx fifo pld : max ampdu fits in fifo\n)"));
+ 		fifo->accum_txfunfl = 0;
+ 		return 0;
+ 	}
+@@ -393,8 +391,9 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 		      (max_mpdu * FFPLD_MPDU_SIZE - fifo->ampdu_pld_size))
+ 		     / (max_mpdu * FFPLD_MPDU_SIZE)) * 100;
+ 
+-		WL_FFPLD("DMA estimated transfer rate %d; pre-load size %d\n",
+-			 fifo->dmaxferrate, fifo->ampdu_pld_size);
++		BCMMSG(wlc->dev, "DMA estimated transfer rate %d; "
++			"pre-load size %d\n",
++			fifo->dmaxferrate, fifo->ampdu_pld_size);
+ 	} else {
+ 
+ 		/* decrease ampdu size */
+diff --git a/drivers/staging/brcm80211/include/wlioctl.h b/drivers/staging/brcm80211/include/wlioctl.h
+index 5e2b11b..1e11c42 100644
+--- a/drivers/staging/brcm80211/include/wlioctl.h
++++ b/drivers/staging/brcm80211/include/wlioctl.h
+@@ -1247,8 +1247,6 @@ typedef struct tx_inst_power {
+ /* Message levels */
+ #define WL_ERROR_VAL		0x00000001
+ #define WL_TRACE_VAL		0x00000002
+-#define WL_AMPDU_VAL		0x20000000
+-#define WL_FFPLD_VAL		0x40000000
+ 
+ /* maximum channels returned by the get valid channels iovar */
+ #define WL_NUMCHANNELS		64
 -- 
 1.7.1
 
