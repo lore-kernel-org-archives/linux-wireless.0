@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38923 "EHLO mail.atheros.com"
+Received: from mail.system76.com ([173.14.1.49]:41112 "EHLO mail.system76.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754455Ab1DLNSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:18:38 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 06:18:12 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 15/22] ath9k_hw: Configure tuning capacitance value for AR9340 as well
-Date: Tue, 12 Apr 2011 18:47:49 +0530
-Message-ID: <1302614273-2063-9-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
-References: <1302614273-2063-1-git-send-email-vasanth@atheros.com>
+	id S1753925Ab1DSUDU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 16:03:20 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.system76.com (Postfix) with ESMTP id 5B518B24002
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 13:57:10 -0600 (MDT)
+Received: from mail.system76.com ([127.0.0.1])
+	by localhost (mail.system76.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ck-yr8xwL7nr for <linux-wireless@vger.kernel.org>;
+	Tue, 19 Apr 2011 13:57:09 -0600 (MDT)
+Received: from mail.system76.com (localhost [127.0.0.1])
+	by mail.system76.com (Postfix) with ESMTP id 3F047B24001
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 13:57:09 -0600 (MDT)
+Date: Tue, 19 Apr 2011 13:57:09 -0600 (MDT)
+From: "Carl J. Richell" <carl@system76.com>
+To: linux-wireless@vger.kernel.org
+Message-ID: <11019945.17539.1303243029113.JavaMail.root@mail>
+In-Reply-To: <30703261.17529.1303241985428.JavaMail.root@mail>
+Subject: rtlwifi: rtl8192ce: LED initialization
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi wireless developers,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 6e5baa7..262fb62 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3755,7 +3755,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	ar9003_hw_atten_apply(ah, chan);
- 	if (!AR_SREV_9340(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
- 		ar9003_hw_apply_tuning_caps(ah);
- }
+The patch at the following link fixes the wireless LED on rtl8192ce devices.
+
+http://marc.info/?l=linux-wireless&m=130247823800466&w=2
+
+However, there is the following Error when compiling against 2.6.38 in Ubuntu natty:
+
+"
+drivers/net/wireless/rtlwifi/rtl8192ce/led.c: In function ‘_rtl92ce_init_led’:
+drivers/net/wireless/rtlwifi/rtl8192ce/led.c:40:6: error: ‘struct rtl_led’ has no member named ‘ledon’
+make[5]: *** [drivers/net/wireless/rtlwifi/rtl8192ce/led.o] Error 1
+"
+
+The driver compiles correctly and the LED works after commenting out the offending line:
+
+wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
  
--- 
-1.7.0.4
+static void _rtl92ce_init_led(struct ieee80211_hw *hw,
+			      struct rtl_led *pled, enum rtl_led_pin ledpin)
+{
+	pled->hw = hw;
+	pled->ledpin = ledpin;
+/*	pled->ledon = false; */
+}
 
+Is this an appropriate fix?
+
+Best Regards,
+
+
+Carl Richell
