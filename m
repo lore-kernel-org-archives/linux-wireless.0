@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4484 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752167Ab1DSJB1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 05:01:27 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/5] staging: brcm80211: last ASSERTs removed from
- softmac
-Date: Tue, 19 Apr 2011 11:01:11 +0200
-Message-ID: <1303203676-20165-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:51303 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942Ab1DSVMF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 17:12:05 -0400
+Received: by pvg12 with SMTP id 12so49025pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 14:12:05 -0700 (PDT)
+Message-ID: <4DADFAA0.7010205@lwfinger.net>
+Date: Tue, 19 Apr 2011 16:12:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Carl J. Richell" <carl@system76.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtlwifi: rtl8192ce: LED initialization
+References: <11019945.17539.1303243029113.JavaMail.root@mail>
+In-Reply-To: <11019945.17539.1303243029113.JavaMail.root@mail>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup.
+On 04/19/2011 02:57 PM, Carl J. Richell wrote:
+> Hi wireless developers,
+>
+> The patch at the following link fixes the wireless LED on rtl8192ce devices.
+>
+> http://marc.info/?l=linux-wireless&m=130247823800466&w=2
+>
+> However, there is the following Error when compiling against 2.6.38 in Ubuntu natty:
+>
+> "
+> drivers/net/wireless/rtlwifi/rtl8192ce/led.c: In function ‘_rtl92ce_init_led’:
+> drivers/net/wireless/rtlwifi/rtl8192ce/led.c:40:6: error: ‘struct rtl_led’ has no member named ‘ledon’
+> make[5]: *** [drivers/net/wireless/rtlwifi/rtl8192ce/led.o] Error 1
+> "
+>
+> The driver compiles correctly and the LED works after commenting out the offending line:
+>
+> wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
+>
+> static void _rtl92ce_init_led(struct ieee80211_hw *hw,
+> 			      struct rtl_led *pled, enum rtl_led_pin ledpin)
+> {
+> 	pled->hw = hw;
+> 	pled->ledpin = ledpin;
+> /*	pled->ledon = false; */
+> }
+>
+> Is this an appropriate fix?
 
-Roland Vossen (5):
-  staging: brcm80211: removed ASSERTs from aiutils.c
-  staging: brcm80211: removed ASSERTs from wlc_pmu.c
-  staging: brcm80211: removed ASSERTs from siutils.c
-  staging: brcm80211: removed ASSERTs from hnddma.c and sbutils.c
-  staging: brcm80211: moved ASSERT logic to fullmac driver
+The patch was made for 2.6.39.
 
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    2 +
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    3 +
- .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    3 +
- drivers/staging/brcm80211/brcmfmac/dhd.h           |   10 +++
- drivers/staging/brcm80211/brcmfmac/dhd_pmu.c       |    3 +-
- drivers/staging/brcm80211/brcmfmac/wl_iw.c         |   50 +++++++++++++
- drivers/staging/brcm80211/brcmsmac/aiutils.c       |   78 +------------------
- drivers/staging/brcm80211/brcmsmac/wlc_pmu.c       |   50 +------------
- drivers/staging/brcm80211/include/bcmdefs.h        |    6 --
- drivers/staging/brcm80211/include/bcmutils.h       |   10 ---
- drivers/staging/brcm80211/util/bcmutils.c          |   50 -------------
- drivers/staging/brcm80211/util/hnddma.c            |    2 -
- drivers/staging/brcm80211/util/sbutils.c           |   16 +----
- drivers/staging/brcm80211/util/siutils.c           |   49 +-----------
- 14 files changed, 82 insertions(+), 250 deletions(-)
+For 2.6.38, the routine _rtl92ce_init_led() does not exist, thus some of the 
+other changes in rtl8192ce from .38 to .39 have been put into the driver, but 
+not all. Your change should be OK.
 
+Larry
 
