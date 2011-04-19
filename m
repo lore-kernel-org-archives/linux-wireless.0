@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11673 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756854Ab1DLKlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 06:41:44 -0400
-Date: Tue, 12 Apr 2011 12:41:39 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 10/16] iwlagn: remove un-needed configuration
-Message-ID: <20110412104139.GC2804@redhat.com>
-References: <1302276636-12802-1-git-send-email-wey-yi.w.guy@intel.com>
- <1302276636-12802-11-git-send-email-wey-yi.w.guy@intel.com>
- <20110412103905.GB2804@redhat.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55958 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab1DSUDG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2011 16:03:06 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so16482ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 13:03:06 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] ssb: cc: clear GPIOPULL registers on init
+Date: Tue, 19 Apr 2011 22:40:24 +0200
+Message-Id: <1303245624-3057-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1303245624-3057-1-git-send-email-zajec5@gmail.com>
+References: <1303245624-3057-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110412103905.GB2804@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2011 at 12:39:05PM +0200, Stanislaw Gruszka wrote:
-> On Fri, Apr 08, 2011 at 08:30:30AM -0700, Wey-Yi Guy wrote:
-> > +	lctl = iwl_pcie_link_ctl(priv);
-> > +	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
-> > +				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
-> > +		/* L1-ASPM enabled; disable(!) L0S  */
-> > +		iwl_set_bit(priv, CSR_GIO_REG,
-> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
-> > +		IWL_DEBUG_POWER(priv, "L1 Enabled; Disabling L0S\n");
-> > +	} else {
-> > +		/* L1-ASPM disabled; enable(!) L0S */
-We claim to enable L0S,
-> > +		iwl_clear_bit(priv, CSR_GIO_REG,
-> > +				CSR_GIO_REG_VAL_L0S_ENABLED);
-but we clear CSR_GIO_REG_VAL_L0S_ENABLED bit, hmm ...
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_chipcommon.c           |    7 +++++++
+ include/linux/ssb/ssb_driver_chipcommon.h |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
+index 7c031fd..5476ca5 100644
+--- a/drivers/ssb/driver_chipcommon.c
++++ b/drivers/ssb/driver_chipcommon.c
+@@ -260,6 +260,13 @@ void ssb_chipcommon_init(struct ssb_chipcommon *cc)
+ 	if (cc->dev->id.revision >= 11)
+ 		cc->status = chipco_read32(cc, SSB_CHIPCO_CHIPSTAT);
+ 	ssb_dprintk(KERN_INFO PFX "chipcommon status is 0x%x\n", cc->status);
++
++	if (cc->dev->id.revision >= 16) {
++		/* TODO: is this needed on lower revision cores? */
++		chipco_write32(cc, SSB_CHIPCO_GPIOPULLUP, 0);
++		chipco_write32(cc, SSB_CHIPCO_GPIOPULLDOWN, 0);
++	}
++
+ 	ssb_pmu_init(cc);
+ 	chipco_powercontrol_init(cc);
+ 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
+diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+index 2cdf249..ba83bc5 100644
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -123,6 +123,8 @@
+ #define SSB_CHIPCO_FLASHDATA		0x0048
+ #define SSB_CHIPCO_BCAST_ADDR		0x0050
+ #define SSB_CHIPCO_BCAST_DATA		0x0054
++#define SSB_CHIPCO_GPIOPULLUP		0x0058
++#define SSB_CHIPCO_GPIOPULLDOWN		0x005C
+ #define SSB_CHIPCO_GPIOIN		0x0060
+ #define SSB_CHIPCO_GPIOOUT		0x0064
+ #define SSB_CHIPCO_GPIOOUTEN		0x0068
+-- 
+1.7.3.4
+
