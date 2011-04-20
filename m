@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:44293 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739Ab1DHWBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 18:01:38 -0400
-Date: Fri, 8 Apr 2011 15:01:57 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
-Message-ID: <20110408220157.GC26019@kroah.com>
-References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40353 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123Ab1DTVf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 17:35:26 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: make patches apply again
+Date: Wed, 20 Apr 2011 23:35:10 +0200
+Message-Id: <1303335312-6970-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 08, 2011 at 09:45:00PM +0200, Rafał Miłecki wrote:
-> Cc: Michael Büsch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: George Kashperko <george@znau.edu.ua>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: linux-arm-kernel@lists.infradead.org <linux-arm-kernel@lists.infradead.org>
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This is second try for introducing new bus driver.
-> V2: Rename to axi
->     Use DEFINE_PCI_DEVICE_TABLE in bridge
->     Make use of pr_fmt and pr_*
->     Store core class
->     Rename bridge to not b43 specific
->     Replace magic 0x1000 with BCMAI_CORE_SIZE
->     Remove some old "ssb" names and defines
->     Move BCMAI_ADDR_BASE def
->     Add drvdata field
-> TODO:
-> - Interrupts
-> - Reloading driver
 
-Please add to the TODO list:
-	- Documentation/ABI entries for new sysfs files
-	- proper Kconfig entry documentation for the different options
-	- remove unneeded pcicore_write* wrapper functions that do
-	  nothing.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/03-rfkill.patch |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
+diff --git a/patches/03-rfkill.patch b/patches/03-rfkill.patch
+index a46bdf6..051c6f0 100644
+--- a/patches/03-rfkill.patch
++++ b/patches/03-rfkill.patch
+@@ -30,7 +30,7 @@ This would do the policing from within mac80211.
+ 
+ --- a/net/rfkill/Makefile
+ +++ b/net/rfkill/Makefile
+-@@ -2,6 +2,6 @@
++@@ -2,7 +2,7 @@
+  # Makefile for the RF switch subsystem.
+  #
+  
+@@ -40,6 +40,7 @@ This would do the policing from within mac80211.
+ +rfkill_backport-y			+= core.o
+ +rfkill_backport-$(CONFIG_RFKILL_BACKPORT_INPUT)	+= input.o
+ +obj-$(CONFIG_RFKILL_BACKPORT)		+= rfkill_backport.o
++ obj-$(CONFIG_RFKILL_REGULATOR)	+= rfkill-regulator.o
+ --- a/net/rfkill/input.c
+ +++ b/net/rfkill/input.c
+ @@ -232,7 +232,7 @@ static int rfkill_connect(struct input_h
+-- 
+1.7.1
 
-> +static void axi_release_core_dev(struct device *dev)
-> +{
-> +	kfree(dev);
-> +}
-
-This is wrong, unless you are really only creating a 'struct device'.
-Why are you doing that instead of embedding struct device in your
-structure?
-
-thanks,
-
-greg k-h
