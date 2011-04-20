@@ -1,203 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36887 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758588Ab1D1Jw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 05:52:59 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 09/10] iwlegacy: more priv->mutex serialization
-Date: Thu, 28 Apr 2011 11:51:32 +0200
-Message-Id: <1303984293-6601-9-git-send-email-sgruszka@redhat.com> (sfid-20110428_115309_228541_596DDB1B)
-In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
-References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:61996 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325Ab1DTGod (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 02:44:33 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Arend van Spriel" <arend@broadcom.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+Date: Wed, 20 Apr 2011 08:44:10 +0200
+Cc: "Greg KH" <greg@kroah.com>,
+	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Jonas Gorski" <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Andy Botting" <andy@andybotting.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com> <20110419140257.GA20456@kroah.com> <op.vt74sxvp3ri7v4@arend-laptop>
+In-Reply-To: <op.vt74sxvp3ri7v4@arend-laptop>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104200844.10607.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check status bits with mutex taken, because when we wait for mutex
-unlock, status can change. Patch should also make remaining sync
-commands be send with priv->mutex taken. That will prevent execute
-these commands when we are currently reset firmware, what could
-possibly cause troubles.
+On Wednesday 20 April 2011 08:39:59 Arend van Spriel wrote:
+> On Tue, 19 Apr 2011 16:02:57 +0200, Greg KH <greg@kroah.com> wrote:
+> 
+> > Please don't use a platform device, unless there is no other way for
+> > your device to work.  For this device, you are connected to the PCI bus,
+> > so a platform device does not make sense at all.
+> 
+> Hi Greg,
+> 
+> This is only true for a particular usage model. There are two models as  
+> shown below:
+> 
+> 1) PCI(e) card
+>                        ...........
+> +----------+          :   x y z :     x, y, and z are cores.
+> |    uC    |__________:___|_|_| :
+> |          |  PCI-bus : axi-bus :
+> +----------+          :.........:
+>                        bcm chipset
+> 
+> 2) SoC
+>            ...............
+>            : uC    x y z :
+>            :  |____|_|_| :
+>            :    axi-bus  :
+>            :.............:
+>              bcm chipset
+> 
+> Your statement is true for 1) but in usage model 2) there is no PCI bus.  
+> Also you refer to the chipset when you say 'device'. In the axi bus type  
+> each individual core is registered as a device in the linux device tree.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-core.c     |    8 ++++--
- drivers/net/wireless/iwlegacy/iwl3945-base.c |   21 ++++++++++++-------
- drivers/net/wireless/iwlegacy/iwl4965-base.c |   28 ++++++++++++++-----------
- 3 files changed, 34 insertions(+), 23 deletions(-)
+I guess what Greg was referring to is having platform devices for x/y/z
+here. In case 2, you might still need to have a platform_device for the
+combination of the three IP cores if they make up one logical device.
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 4b244fe..d743373 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -2429,11 +2429,13 @@ void iwl_legacy_mac_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	IWL_DEBUG_MAC80211(priv, "changes = 0x%X\n", changes);
- 
--	if (!iwl_legacy_is_alive(priv))
--		return;
--
- 	mutex_lock(&priv->mutex);
- 
-+	if (!iwl_legacy_is_alive(priv)) {
-+		mutex_unlock(&priv->mutex);
-+		return;
-+	}
-+
- 	if (changes & BSS_CHANGED_QOS) {
- 		unsigned long flags;
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index 64714f7..0460d3b 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -2748,11 +2748,12 @@ static void iwl3945_bg_init_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, init_alive_start.work);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	iwl3945_init_alive_start(priv);
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -2761,11 +2762,12 @@ static void iwl3945_bg_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, alive_start.work);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	iwl3945_alive_start(priv);
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -2995,10 +2997,12 @@ static void iwl3945_bg_restart(struct work_struct *data)
- 	} else {
- 		iwl3945_down(priv);
- 
--		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		mutex_lock(&priv->mutex);
-+		if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
-+			mutex_unlock(&priv->mutex);
- 			return;
-+		}
- 
--		mutex_lock(&priv->mutex);
- 		__iwl3945_up(priv);
- 		mutex_unlock(&priv->mutex);
- 	}
-@@ -3009,11 +3013,12 @@ static void iwl3945_bg_rx_replenish(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, rx_replenish);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	iwl3945_rx_replenish(priv);
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 871e13b..8650970 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -2404,11 +2404,12 @@ static void iwl4965_bg_init_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, init_alive_start.work);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	priv->cfg->ops->lib->init_alive_start(priv);
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -2417,11 +2418,12 @@ static void iwl4965_bg_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, alive_start.work);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	iwl4965_alive_start(priv);
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -2471,10 +2473,12 @@ static void iwl4965_bg_restart(struct work_struct *data)
- 	} else {
- 		iwl4965_down(priv);
- 
--		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		mutex_lock(&priv->mutex);
-+		if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
-+			mutex_unlock(&priv->mutex);
- 			return;
-+		}
- 
--		mutex_lock(&priv->mutex);
- 		__iwl4965_up(priv);
- 		mutex_unlock(&priv->mutex);
- 	}
-@@ -2851,21 +2855,22 @@ void iwl4965_mac_channel_switch(struct ieee80211_hw *hw,
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-+	mutex_lock(&priv->mutex);
-+
- 	if (iwl_legacy_is_rfkill(priv))
--		goto out_exit;
-+		goto out;
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
- 	    test_bit(STATUS_SCANNING, &priv->status))
--		goto out_exit;
-+		goto out;
- 
- 	if (!iwl_legacy_is_associated_ctx(ctx))
--		goto out_exit;
-+		goto out;
- 
- 	/* channel switch in progress */
- 	if (priv->switch_rxon.switch_in_progress == true)
--		goto out_exit;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	if (priv->cfg->ops->lib->set_channel_switch) {
- 
- 		ch = channel->hw_value;
-@@ -2921,7 +2926,6 @@ void iwl4965_mac_channel_switch(struct ieee80211_hw *hw,
- 	}
- out:
- 	mutex_unlock(&priv->mutex);
--out_exit:
- 	if (!priv->switch_rxon.switch_in_progress)
- 		ieee80211_chswitch_done(ctx->vif, false);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
--- 
-1.7.1
+As mentioned in my reply, it depends a lot on what these cores actually
+are, e.g. whether you might want to have only one of them active in a
+given system to drive a specific functionality, or if you always need
+all three of them.
 
+	Arnd
