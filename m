@@ -1,137 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51512 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932100Ab1DVRzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 13:55:14 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/10] iwlagn: remove hw_ready variable
-Date: Fri, 22 Apr 2011 10:33:18 -0700
-Message-Id: <1303493598-10979-11-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:55350 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab1DTJA6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 05:00:58 -0400
+Received: by pzk9 with SMTP id 9so284555pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 02:00:57 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19886.41312.953407.161944@gargle.gargle.HOWL>
+Date: Wed, 20 Apr 2011 14:33:28 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 2/5] ath9k_htc: Fix AMPDU subframe handling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-This variable is only ever checked right after
-the function that sets it, but the same function
-will also return the status, so we can pass it
-through instead of checking hw_ready later.
+* Register the driver's maximum ampdu subframe limit to mac80211.
+* Cleanup the target capabilities structure and fix an endian issue.
+* Fix BTCOEX by sending a command to the target when the BT priority
+  changes.
+* Bump the required firmware version to 1.1
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   29 +++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    1 -
- 3 files changed, 15 insertions(+), 18 deletions(-)
+v2: Add more strict version checks.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 8216e5c..e202a40 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2306,8 +2306,7 @@ int iwlagn_start_device(struct iwl_priv *priv)
- {
+ drivers/net/wireless/ath/ath9k/hif_usb.h      |    3 +++
+ drivers/net/wireless/ath/ath9k/htc.h          |   14 +++++++-------
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    6 ++----
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   15 ++++++---------
+ 5 files changed, 35 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index f59df48..9a52ccc 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -17,6 +17,9 @@
+ #ifndef HTC_USB_H
+ #define HTC_USB_H
+ 
++#define MAJOR_VERSION_REQ 1
++#define MINOR_VERSION_REQ 1
++
+ #define IS_AR7010_DEVICE(_v) (((_v) == AR9280_USB) || ((_v) == AR9287_USB))
+ 
+ #define AR9271_FIRMWARE       0x501000
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 48a8855..af90829 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -106,15 +106,14 @@ struct tx_beacon_header {
+ 	u16 rev;
+ } __packed;
+ 
++#define MAX_TX_AMPDU_SUBFRAMES_9271 17
++#define MAX_TX_AMPDU_SUBFRAMES_7010 22
++
+ struct ath9k_htc_cap_target {
+-	u32 flags;
+-	u32 flags_ext;
+-	u32 ampdu_limit;
++	__be32 ampdu_limit;
+ 	u8 ampdu_subframes;
++	u8 enable_coex;
+ 	u8 tx_chainmask;
+-	u8 tx_chainmask_legacy;
+-	u8 rtscts_ratecode;
+-	u8 protmode;
+ 	u8 pad;
+ } __packed;
+ 
+@@ -551,7 +550,8 @@ void ath9k_htc_txep(void *priv, struct sk_buff *skb, enum htc_endpoint_id ep_id,
+ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
+ 			enum htc_endpoint_id ep_id, bool txok);
+ 
+-int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
++int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv,
++				u8 enable_coex);
+ void ath9k_htc_station_work(struct work_struct *work);
+ void ath9k_htc_aggr_work(struct work_struct *work);
+ void ath9k_htc_ani_work(struct work_struct *work);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 138f8e1..d051a42 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -65,15 +65,13 @@ static void ath_btcoex_period_work(struct work_struct *work)
+ 	u32 timer_period;
+ 	bool is_btscan;
  	int ret;
+-	u8 cmd_rsp, aggr;
  
--	iwl_prepare_card_hw(priv);
--	if (!priv->hw_ready) {
-+	if (iwl_prepare_card_hw(priv)) {
- 		IWL_WARN(priv, "Exit HW not ready\n");
- 		return -EIO;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f30735b..a4f1009 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2367,9 +2367,10 @@ static void iwl_down(struct iwl_priv *priv)
+ 	ath_detect_bt_priority(priv);
  
- #define HW_READY_TIMEOUT (50)
+ 	is_btscan = !!(priv->op_flags & OP_BT_SCAN);
  
-+/* Note: returns poll_bit return value, which is >= 0 if success */
- static int iwl_set_hw_ready(struct iwl_priv *priv)
- {
--	int ret = 0;
-+	int ret;
+-	aggr = priv->op_flags & OP_BT_PRIORITY_DETECTED;
+-
+-	WMI_CMD_BUF(WMI_AGGR_LIMIT_CMD, &aggr);
++	ret = ath9k_htc_update_cap_target(priv,
++				  !!(priv->op_flags & OP_BT_PRIORITY_DETECTED));
+ 	if (ret) {
+ 		ath_err(common, "Unable to set BTCOEX parameters\n");
+ 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 06e043b..dbf5f95 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -753,6 +753,12 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	hw->queues = 4;
+ 	hw->channel_change_time = 5000;
+ 	hw->max_listen_interval = 10;
++
++	if (AR_SREV_9271(priv->ah))
++		hw->max_tx_aggregation_subframes = MAX_TX_AMPDU_SUBFRAMES_9271;
++	else
++		hw->max_tx_aggregation_subframes = MAX_TX_AMPDU_SUBFRAMES_7010;
++
+ 	hw->vif_data_size = sizeof(struct ath9k_htc_vif);
+ 	hw->sta_data_size = sizeof(struct ath9k_htc_sta);
  
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
- 		CSR_HW_IF_CONFIG_REG_BIT_NIC_READY);
-@@ -2379,25 +2380,21 @@ static int iwl_set_hw_ready(struct iwl_priv *priv)
- 				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
- 				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
- 				HW_READY_TIMEOUT);
--	if (ret != -ETIMEDOUT)
--		priv->hw_ready = true;
--	else
--		priv->hw_ready = false;
+@@ -802,6 +808,17 @@ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
+ 		 priv->fw_version_major,
+ 		 priv->fw_version_minor);
  
--	IWL_DEBUG_INFO(priv, "hardware %s\n",
--		      (priv->hw_ready == 1) ? "ready" : "not ready");
-+	IWL_DEBUG_INFO(priv, "hardware%s ready\n", ret < 0 ? " not" : "");
- 	return ret;
++	/*
++	 * Check if the available FW matches the driver's
++	 * required version.
++	 */
++	if (priv->fw_version_major != MAJOR_VERSION_REQ ||
++	    priv->fw_version_minor != MINOR_VERSION_REQ) {
++		dev_err(priv->dev, "ath9k_htc: Please upgrade to FW version %d.%d\n",
++			MAJOR_VERSION_REQ, MINOR_VERSION_REQ);
++		return -EINVAL;
++	}
++
+ 	return 0;
  }
  
-+/* Note: returns standard 0/-ERROR code */
- int iwl_prepare_card_hw(struct iwl_priv *priv)
- {
--	int ret = 0;
-+	int ret;
- 
- 	IWL_DEBUG_INFO(priv, "iwl_prepare_card_hw enter\n");
- 
- 	ret = iwl_set_hw_ready(priv);
--	if (priv->hw_ready)
--		return ret;
-+	if (ret >= 0)
-+		return 0;
- 
- 	/* If HW is not ready, prepare the conditions to check again */
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
-@@ -2407,10 +2404,13 @@ int iwl_prepare_card_hw(struct iwl_priv *priv)
- 			~CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE,
- 			CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE, 150000);
- 
--	/* HW should be ready by now, check again. */
--	if (ret != -ETIMEDOUT)
--		iwl_set_hw_ready(priv);
-+	if (ret < 0)
-+		return ret;
- 
-+	/* HW should be ready by now, check again. */
-+	ret = iwl_set_hw_ready(priv);
-+	if (ret >= 0)
-+		return 0;
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 7cff554..a640268 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -563,7 +563,8 @@ static int ath9k_htc_remove_station(struct ath9k_htc_priv *priv,
+ 	return 0;
  }
  
-@@ -3741,8 +3741,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * PCI Tx retries from interfering with C3 CPU state */
- 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+-int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
++int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv,
++				u8 enable_coex)
+ {
+ 	struct ath9k_htc_cap_target tcap;
+ 	int ret;
+@@ -571,13 +572,9 @@ int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
  
--	iwl_prepare_card_hw(priv);
--	if (!priv->hw_ready) {
-+	if (iwl_prepare_card_hw(priv)) {
- 		IWL_WARN(priv, "Failed, HW not ready\n");
- 		goto out_iounmap;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 857eb0e..197fa74 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1503,7 +1503,6 @@ struct iwl_priv {
- 	struct timer_list statistics_periodic;
- 	struct timer_list ucode_trace;
- 	struct timer_list watchdog;
--	bool hw_ready;
+ 	memset(&tcap, 0, sizeof(struct ath9k_htc_cap_target));
  
- 	struct iwl_event_log event_log;
+-	/* FIXME: Values are hardcoded */
+-	tcap.flags = 0x240c40;
+-	tcap.flags_ext = 0x80601000;
+-	tcap.ampdu_limit = 0xffff0000;
+-	tcap.ampdu_subframes = 20;
+-	tcap.tx_chainmask_legacy = priv->ah->caps.tx_chainmask;
+-	tcap.protmode = 1;
++	tcap.ampdu_limit = cpu_to_be32(0xffff);
++	tcap.ampdu_subframes = priv->hw->max_tx_aggregation_subframes;
++	tcap.enable_coex = enable_coex;
+ 	tcap.tx_chainmask = priv->ah->caps.tx_chainmask;
  
+ 	WMI_CMD_BUF(WMI_TARGET_IC_UPDATE_CMDID, &tcap);
+@@ -936,7 +933,7 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 
+ 	ath9k_host_rx_init(priv);
+ 
+-	ret = ath9k_htc_update_cap_target(priv);
++	ret = ath9k_htc_update_cap_target(priv, 0);
+ 	if (ret)
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Failed to update capability in target\n");
 -- 
-1.7.0.4
+1.7.4.4
 
