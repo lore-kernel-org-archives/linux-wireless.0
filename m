@@ -1,80 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:36149 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602Ab1DNNpH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 09:45:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <1302786900.21965.52.camel@dev.znau.edu.ua>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
-	<1302781431.21145.6.camel@dev.znau.edu.ua>
-	<BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-	<4DA6E9BD.3090404@hauke-m.de>
-	<BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
-	<1302786900.21965.52.camel@dev.znau.edu.ua>
-Date: Thu, 14 Apr 2011 15:45:05 +0200
-Message-ID: <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37269 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123Ab1DTVcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 17:32:05 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: add time_to_tm
+Date: Wed, 20 Apr 2011 23:31:50 +0200
+Message-Id: <1303335110-23688-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 kwietnia 2011 15:15 użytkownik George Kashperko
-<george@znau.edu.ua> napisał:
->
->> W dniu 14 kwietnia 2011 14:34 użytkownik Hauke Mehrtens
->> <hauke@hauke-m.de> napisał:
->> > On 04/14/2011 02:04 PM, Rafał Miłecki wrote:
->> >> Hauke: you were proposing integrating with drivers/amba. I really
->> >> expect you to comment on this, please tell us how do you see this now,
->> >> when we have better overview. I took your proposal seriously, you can
->> >> see the results above.
->> >
->> > I had no closer look at drivers/amba and this bus driver, I just saw
->> > that there was a discussion about drivers/amba and this implementation
->> > with no result. When the Bradcom cores are not directly connected to
->> > AMBA, but are using some sort of wrapper and there are no benefits in
->> > using drivers/amba, just leave it.
->> >
->> > As the implementation of the Braodcom AIX Bus contains some Broadcom
->> > extensions and there seams to be no normal AMBA device being connected
->> > to some Broadcom devices with this special interface number 3) "Broadcom
->> > specific bus (bcmai)" seams to the the best approach in my opinion.
->>
->> Thanks for commenting.
->>
->> Russell: you were asking:
->> > What does this do which the 'amba' bus support doesn't?
->> I believe I explained it well in this thread. Do you still think about
->> using amba/driver? Do you think we should use it?
->>
->> Arnd: I found you saying:
->> > I believe the one thing we really want from this driver is the bus
->> > scan code, which is not present in the amba bus implementation,
->> I explained how it works, I believe scanning (EPROM in this case) it
->> Broadcom specific, not really AMBA standard. How do you see it?
->>
-> It might not Broadcom specific as EPROM core seems to be CoreLink one
-> core and maybe is arm-developed. But it isn't documented publicly and we
-> don't know yet if it is obligatory for all amba (or at least axi)
-> interconnects or not.
+time_to_tm is needed in net/mac80211/debugfs_sta.c now.
 
-Maybe EPROM is not Broadcom specific, but I suspect the content we
-deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
-manuf/id/rev/class we deal with. So I guess everything *we* (out
-driver) read from EPROM is Bcm specific.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.32.c        |   97 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/compat-2.6.32.h |   28 ++++++++++++
+ 2 files changed, 125 insertions(+), 0 deletions(-)
 
+diff --git a/compat/compat-2.6.32.c b/compat/compat-2.6.32.c
+index 013150d..0b3af07 100644
+--- a/compat/compat-2.6.32.c
++++ b/compat/compat-2.6.32.c
+@@ -117,3 +117,100 @@ void __dev_addr_unsync(struct dev_addr_list **to, int *to_count,
+ }
+ EXPORT_SYMBOL_GPL(__dev_addr_unsync);
+ 
++/*
++ * Nonzero if YEAR is a leap year (every 4 years,
++ * except every 100th isn't, and every 400th is).
++ */
++static int __isleap(long year)
++{
++	return (year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0);
++}
++
++/* do a mathdiv for long type */
++static long math_div(long a, long b)
++{
++	return a / b - (a % b < 0);
++}
++
++/* How many leap years between y1 and y2, y1 must less or equal to y2 */
++static long leaps_between(long y1, long y2)
++{
++	long leaps1 = math_div(y1 - 1, 4) - math_div(y1 - 1, 100)
++		+ math_div(y1 - 1, 400);
++	long leaps2 = math_div(y2 - 1, 4) - math_div(y2 - 1, 100)
++		+ math_div(y2 - 1, 400);
++	return leaps2 - leaps1;
++}
++
++/* How many days come before each month (0-12). */
++static const unsigned short __mon_yday[2][13] = {
++	/* Normal years. */
++	{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
++	/* Leap years. */
++	{0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366}
++};
++
++#define SECS_PER_HOUR	(60 * 60)
++#define SECS_PER_DAY	(SECS_PER_HOUR * 24)
++
++/**
++ * time_to_tm - converts the calendar time to local broken-down time
++ *
++ * @totalsecs	the number of seconds elapsed since 00:00:00 on January 1, 1970,
++ *		Coordinated Universal Time (UTC).
++ * @offset	offset seconds adding to totalsecs.
++ * @result	pointer to struct tm variable to receive broken-down time
++ */
++void time_to_tm(time_t totalsecs, int offset, struct tm *result)
++{
++	long days, rem, y;
++	const unsigned short *ip;
++
++	days = totalsecs / SECS_PER_DAY;
++	rem = totalsecs % SECS_PER_DAY;
++	rem += offset;
++	while (rem < 0) {
++		rem += SECS_PER_DAY;
++		--days;
++	}
++	while (rem >= SECS_PER_DAY) {
++		rem -= SECS_PER_DAY;
++		++days;
++	}
++
++	result->tm_hour = rem / SECS_PER_HOUR;
++	rem %= SECS_PER_HOUR;
++	result->tm_min = rem / 60;
++	result->tm_sec = rem % 60;
++
++	/* January 1, 1970 was a Thursday. */
++	result->tm_wday = (4 + days) % 7;
++	if (result->tm_wday < 0)
++		result->tm_wday += 7;
++
++	y = 1970;
++
++	while (days < 0 || days >= (__isleap(y) ? 366 : 365)) {
++		/* Guess a corrected year, assuming 365 days per year. */
++		long yg = y + math_div(days, 365);
++
++		/* Adjust DAYS and Y to match the guessed year. */
++		days -= (yg - y) * 365 + leaps_between(y, yg);
++		y = yg;
++	}
++
++	result->tm_year = y - 1900;
++
++	result->tm_yday = days;
++
++	ip = __mon_yday[__isleap(y)];
++	for (y = 11; days < ip[y]; y--)
++		continue;
++	days -= ip[y];
++
++	result->tm_mon = y;
++	result->tm_mday = days + 1;
++}
++EXPORT_SYMBOL(time_to_tm);
++/* source: kernel/time/timeconv.c*/
++
+diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
+index 321a89a..3506291 100644
+--- a/include/linux/compat-2.6.32.h
++++ b/include/linux/compat-2.6.32.h
+@@ -96,6 +96,34 @@ struct dev_pm_ops name = { \
+ 
+ #define lockdep_assert_held(l)			do { } while (0)
+ 
++/*
++ * Similar to the struct tm in userspace <time.h>, but it needs to be here so
++ * that the kernel source is self contained.
++ */
++struct tm {
++	/*
++	 * the number of seconds after the minute, normally in the range
++	 * 0 to 59, but can be up to 60 to allow for leap seconds
++	 */
++	int tm_sec;
++	/* the number of minutes after the hour, in the range 0 to 59*/
++	int tm_min;
++	/* the number of hours past midnight, in the range 0 to 23 */
++	int tm_hour;
++	/* the day of the month, in the range 1 to 31 */
++	int tm_mday;
++	/* the number of months since January, in the range 0 to 11 */
++	int tm_mon;
++	/* the number of years since 1900 */
++	long tm_year;
++	/* the number of days since Sunday, in the range 0 to 6 */
++	int tm_wday;
++	/* the number of days since January 1, in the range 0 to 365 */
++	int tm_yday;
++};
++
++void time_to_tm(time_t totalsecs, int offset, struct tm *result);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
+ 
+ #endif /* LINUX_26_32_COMPAT_H */
 -- 
-Rafał
+1.7.1
+
