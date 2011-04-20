@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53746 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754929Ab1DFU5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 16:57:35 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com> (sfid-20110406_224259_263459_4DF85580)
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 (sfid-20110406_224259_263459_4DF85580)
+Received: from mga14.intel.com ([143.182.124.37]:43538 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751478Ab1DTSo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 14:44:56 -0400
+Subject: Re: updated iwlwifi 5000 uCode available
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110420182254.GE2737@tuxdriver.com>
+References: <1303316696.14995.162.camel@wwguy-huron>
+	 <20110420182254.GE2737@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 22:57:08 +0200
-Message-ID: <1302123428.20093.6.camel@maggie>
+Date: Wed, 20 Apr 2011 11:23:26 -0700
+Message-ID: <1303323806.14995.163.camel@wwguy-huron>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote: 
-> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
-> > If we want to have two drivers working on two (different) cores
-> > simultaneously, we will have to add trivial mutex to group core
-> > switching with core operation (read/write).
+On Wed, 2011-04-20 at 11:22 -0700, John W. Linville wrote:
+> On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
+> > Hi,
+> > 
+> > Due to a packaging error, we've re-released the 5000 uCode version
+> > 8.83.5.1. 
+> > 
+> > The updated version of firmware is available for download from
+> > http://intellinuxwireless.org/?n=Downloads
+> > 
+> > The old, wrongly packaged version has the following sha1sums:
+> > 
+> > bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
+> > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > 8d94177b509be3fb653ce8ba0c633244e4abf5f3
+> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
 > 
-> With a little of work we could avoid switching and mutexes on no-host
-> boards. MMIO is not limited to one core at once in such a case.
+> The version I get from:
+> 
+> 	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
+> 
+> matches the sha1sum values listed above for the "wrongly packaged" version.
+> 
+> > The new version these:
+> > e70cc4b2249824a6b17ce9b9ae5087942c762213
+> > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > 22bf6093ed8204027cc3207c739d2cab9cc92ea3
+> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> > 
+> > The only change is removing the advertising for multiple interface
+> > support which is not actually present in this microcode.
+> > 
+> > Wey-Yi
+> 
+> So, you are going to release a different version of the file but
+> with the _same_ release number?  Couldn't you at least name it
+> iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
 
-I don't think that this is a problem at all.
-All that magic does happen inside of the bus I/O handlers.
-Just like SSB does it.
->From a driver point of view, the I/O functions just need to
-be atomic.
+Sorry for the confusion, I will rename it to show the differences
 
-For SSB it's not always 100% atomic, but we're always safe
-due to some assumptions being made. But this is an SSB implementation
-detail that is different from AXI. So don't look too closely
-at the SSB implementation of the I/O functions. You certainly want
-to implement them slightly differently in AXI. SSB currently doesn't
-make use of the additional sliding windows, because they are not
-available in the majority of SSB devices.
+Wey
 
-The AXI bus subsystem will manage the sliding windows and the driver
-doesn't know about the details.
-
--- 
-Greetings Michael.
 
