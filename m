@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34273 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756357Ab1DLPXH (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:56701 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751318Ab1DTRlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 11:23:07 -0400
-Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <20110412151554.GA20710@opensource.wolfsonmicro.com>
-References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
-	 <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
-	 <1302608488.3639.15.camel@jlt3.sipsolutions.net>
-	 <1302608642.3639.17.camel@jlt3.sipsolutions.net>
-	 <20110412151554.GA20710@opensource.wolfsonmicro.com>
+	Wed, 20 Apr 2011 13:41:47 -0400
+Received: by mail-ew0-f44.google.com with SMTP id 19so453704ewy.17
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 10:41:46 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: avoid premature elp entrance
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301785319-18777-1-git-send-email-eliad@wizery.com>
+References: <1301785319-18777-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 17:23:01 +0200
-Message-ID: <1302621781.3639.18.camel@jlt3.sipsolutions.net>
+Date: Wed, 20 Apr 2011 20:44:13 +0300
+Message-ID: <1303321453.1988.737.camel@cumari>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-12 at 08:15 -0700, Mark Brown wrote:
-> On Tue, Apr 12, 2011 at 01:44:02PM +0200, Johannes Berg wrote:
-> > On Tue, 2011-04-12 at 13:41 +0200, Johannes Berg wrote:
+On Sun, 2011-04-03 at 02:01 +0300, Eliad Peller wrote:
+> The elp_work is being enqueued on wl1271_ps_elp_sleep, but doesn't get
+> cancelled on wl1271_ps_elp_wakeup. This might cause immediate entrance
+> to elp when the wl->mutex is being released, rather than using the delayed
+> enqueueing optimization.
 > 
-> > > > +	if (pdata->name == NULL || pdata->type == 0) {
-> > > > +		dev_err(&pdev->dev, "invalid name or type in platform data\n");
-> > > > +		return -EINVAL;
-> > > > +	}
+> Cancel elp_work on wakeup request, and add a new WL1271_FLAG_ELP_REQUESTED
+> flag to further synchronize the elp actions.
 > 
-> > > > +	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
-> 
-> > > Wasn't that supposed to use pdata->supply? Actually, there's no member
-> > > "supply" in the struct?
-> 
-> No, if you're passing supply names through platform data something has
-> gone wrong - that's a big no no.
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Ok. The comment seems a little wrong still though, maybe leftover bits
-from an older version?
+Applied with a couple of changes in some comments.  Thanks, Eliad, the
+ELP man! :)
 
-> > Oh wait, I think I just misunderstood how this works. But if the name is
-> > "vrfkill" how does that really work with multiple instances?
-> 
-> That's what the struct device is there for.  The names are mapped into
-> physical regulators relative to the device.
-
-Oh ok, makes sense, thanks for the clarification.
-
-johannes
+-- 
+Cheers,
+Luca.
 
