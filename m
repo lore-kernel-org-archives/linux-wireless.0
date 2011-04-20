@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:32887 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872Ab1D2Ihs (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55911 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493Ab1DTBrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 04:37:48 -0400
-Received: by bwz15 with SMTP id 15so2942458bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 01:37:47 -0700 (PDT)
-Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1304061675.3589.1.camel@jlt3.sipsolutions.net>
-References: <1302604964.2139.5.camel@alex-2>
-	 <loom.20110412T130620-109@post.gmane.org>
-	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
-	 <loom.20110428T135917-421@post.gmane.org>
-	 (sfid-20110428_141415_832084_99A2E356) <1303995368.3558.9.camel@jlt3.sipsolutions.net>
-	 <loom.20110429T084118-365@post.gmane.org>
-	 (sfid-20110429_085443_970145_470B3272)  <1304061675.3589.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 10:37:44 +0200
-Message-ID: <1304066264.2931.23.camel@alex-2> (sfid-20110429_103754_241147_337C7358)
-Mime-Version: 1.0
+	Tue, 19 Apr 2011 21:47:10 -0400
+Received: by iwn34 with SMTP id 34so215020iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 18:47:09 -0700 (PDT)
+Message-ID: <4DAE3B17.4080308@lwfinger.net>
+Date: Tue, 19 Apr 2011 20:47:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [RFC][PATCH] ssb: cc: add & fix defines
+References: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yeah it would be an option to just always join as HT if HT is available,
-> but not create as HT unless asked.
-Ok. I just had a few thoughts about this:
-This way an ht ibss has to be created from a (patched) mac80211 HT
-hardware. There would be no way to "convert" an existing g network into
-n.
-Additionally, if a non-ht implementation joins the network, it will
-advertise it as non-ht. If a second ht-station joins from one of these
-beacons, it won't use ht.
+On 04/19/2011 08:17 PM, Rafał Miłecki wrote:
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> With updated defines following MMIO with defines makes sense:
+>   read32 0xf04001e0 ->  0x00010000
+> write32 0xf04001e0<- 0x00010002	|= SSB_CHIPCO_CLKCTLST_FORCEHT
+>   read32 0xf04001e0 ->  0x00010002
+> (...)
+>   read32 0xf04001e0 ->  0x00010002
+>   read32 0xf04001e0 ->  0x00010002
+>   read32 0xf04001e0 ->  0x00030002	(&  SSB_CHIPCO_CLKCTLST_HAVEHT)
+>
+> Of course MMIO does not come from 4328. It is from 4312 and wl (just SSB defs).
+>
+> The tricky part is that we were using SSB_CHIPCO_CLKCTLST_HAVEHT in PMU driver.
+>
+> My guess is that we were always checking for the wrong register and we got
+> false positives on test for turning PLL down.
+> ---
+>   include/linux/ssb/ssb_driver_chipcommon.h |    9 +++++++--
+>   1 files changed, 7 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+> index ba83bc5..45e7b6c 100644
+> --- a/include/linux/ssb/ssb_driver_chipcommon.h
+> +++ b/include/linux/ssb/ssb_driver_chipcommon.h
+> @@ -133,6 +133,9 @@
+>   #define SSB_CHIPCO_GPIOIRQ		0x0074
+>   #define SSB_CHIPCO_WATCHDOG		0x0080
+>   #define SSB_CHIPCO_GPIOTIMER		0x0088		/* LED powersave (corerev>= 16) */
+> +#define  SSB_CHIPCO_GPIOTIMER_OFFTIME	0x0000FFFF
+> +#define  SSB_CHIPCO_GPIOTIMER_OFFTIME_SHIFT	0
+> +#define  SSB_CHIPCO_GPIOTIMER_ONTIME	0xFFFF0000
+>   #define  SSB_CHIPCO_GPIOTIMER_ONTIME_SHIFT	16
+>   #define SSB_CHIPCO_GPIOTOUTM		0x008C		/* LED powersave (corerev>= 16) */
+>   #define SSB_CHIPCO_CLOCK_N		0x0090
+> @@ -191,8 +194,10 @@
+>   #define  SSB_CHIPCO_CLKCTLST_HAVEALPREQ	0x00000008 /* ALP available request */
+>   #define  SSB_CHIPCO_CLKCTLST_HAVEHTREQ	0x00000010 /* HT available request */
+>   #define  SSB_CHIPCO_CLKCTLST_HWCROFF	0x00000020 /* Force HW clock request off */
+> -#define  SSB_CHIPCO_CLKCTLST_HAVEHT	0x00010000 /* HT available */
+> -#define  SSB_CHIPCO_CLKCTLST_HAVEALP	0x00020000 /* APL available */
+> +#define  SSB_CHIPCO_CLKCTLST_HAVEHT	0x00010000 /* ALP available */
+> +#define  SSB_CHIPCO_CLKCTLST_HAVEALP	0x00020000 /* HT available */
+> +#define  SSB_CHIPCO_CLKCTLST_4328A0_HAVEHT	0x00010000 /* 4328a0 has reversed bits */
+> +#define  SSB_CHIPCO_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
+>   #define SSB_CHIPCO_HW_WORKAROUND	0x01E4 /* Hardware workaround (rev>= 20) */
+>   #define SSB_CHIPCO_UART0_DATA		0x0300
+>   #define SSB_CHIPCO_UART0_IMR		0x0304
 
-This way a single non-ht station could destroy a ht ibss.
+I agree that the HAVEHT bit is different for the 4328 than for the rest of the 
+versions, but I think you did not get the rest quite right. Having the HT bit 
+attached to a symbol named ALP and vice versa will only create confusion. Make 
+SSB_CHIPCO_CLKCTLST_HAVEHT be 0x00020000 and SSB_CHIPCO_CLKCTLST_HAVEALP be 
+0x000100000.
 
-
-I Think the best way to go would be to obey HT information when joining
-HT but using the HT iw parameter when joining non-ht.
-
-Then we could have the following scenario: Non-HT station A creates
-non-HT.
-HT station B joins and sets HT- (from iw). HT station C joins from A but
-doesn't see B. It's iw parameter says ht+.
-But when B comes closer to C do a "HT merge", comparing TSFs.
-
-Conclusion:
-- Create an ibss with the iw parameter
-- When joining a ht ibss, use its parameters
-- When joining non-ht, add ht from iw parameter
-- When encounter a different ht config, do a ht merge.
-
+Larry
 
