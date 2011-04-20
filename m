@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63583 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754438Ab1DAThg convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41441 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab1DTSak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 15:37:36 -0400
-Received: by iwn34 with SMTP id 34so3830041iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 12:37:36 -0700 (PDT)
+	Wed, 20 Apr 2011 14:30:40 -0400
+Date: Wed, 20 Apr 2011 14:22:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: updated iwlwifi 5000 uCode available
+Message-ID: <20110420182254.GE2737@tuxdriver.com>
+References: <1303316696.14995.162.camel@wwguy-huron>
 MIME-Version: 1.0
-In-Reply-To: <1301645863.3832.5.camel@jlt3.sipsolutions.net>
-References: <1301614180-5401-1-git-send-email-lrodriguez@atheros.com> <1301645863.3832.5.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 1 Apr 2011 12:37:16 -0700
-Message-ID: <AANLkTi=m0tjcwK30it=7bzxW_4Lh2=tQidEu0QkWeUVK@mail.gmail.com>
-Subject: Re: [PATCH v2] cfg80211: add work for processing invalid user reg hints
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, gregoryx.alagnou@intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303316696.14995.162.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 1, 2011 at 1:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-03-31 at 16:29 -0700, Luis R. Rodriguez wrote:
->>
->> +static void reg_timeout_work(struct work_struct *work)
->> +{
->> +     REG_DBG_PRINT("Timeout while waiting for CRDA to reply,"
->> +                   "restoring regulatory settings");
->> +     restore_regulatory_settings(true);
->> +}
->
-> We have a queue of requests but you're timing out only the last one.
-> Wouldn't that still get another one stuck on the queue?
+On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
+> Hi,
+> 
+> Due to a packaging error, we've re-released the 5000 uCode version
+> 8.83.5.1. 
+> 
+> The updated version of firmware is available for download from
+> http://intellinuxwireless.org/?n=Downloads
+> 
+> The old, wrongly packaged version has the following sha1sums:
+> 
+> bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
+> iwlwifi-5000-ucode-8.83.5.1.tgz
+> 8d94177b509be3fb653ce8ba0c633244e4abf5f3
+> iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
 
-The queue will sit still without processing any queued up regulatory
-requests until the last_request was processed. The last_request will
-be restored to the world regulatory domain request if we timeout on a
-bogus request. There is however one issue here though and that is that
-I did not clear out the pending requests when restoring regulatory
-settings, and then add the pending stuff back on.
+The version I get from:
 
-> TBH, I don't quite understand why we have last _and_ a queue to start with.
+	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
 
-Well so the queue has the list of pending requests, the last_request
-is actually the last request that was processed, this is always
-non-null when after bootup and after restoring regulatory settings.
-I'll send a v3 with the changes I noted.
+matches the sha1sum values listed above for the "wrongly packaged" version.
 
-Thanks for the review.
+> The new version these:
+> e70cc4b2249824a6b17ce9b9ae5087942c762213
+> iwlwifi-5000-ucode-8.83.5.1.tgz
+> 22bf6093ed8204027cc3207c739d2cab9cc92ea3
+> iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> 
+> The only change is removing the advertising for multiple interface
+> support which is not actually present in this microcode.
+> 
+> Wey-Yi
 
-  Luis
+So, you are going to release a different version of the file but
+with the _same_ release number?  Couldn't you at least name it
+iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
