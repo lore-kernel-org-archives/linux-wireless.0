@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:46911 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757606Ab1DAQqI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:46:08 -0400
-Received: by mail-ew0-f53.google.com with SMTP id 8so1164077ewy.26
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 09:46:05 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.40] wl12xx: fix potential buffer overflow in testmode nvs push
-Date: Fri,  1 Apr 2011 19:46:40 +0300
-Message-Id: <1301676400-4912-1-git-send-email-coelho@ti.com>
+Received: from plane.gmane.org ([80.91.229.3]:49768 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751340Ab1DTIja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 04:39:30 -0400
+Received: from public by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <public@plane.gmane.org>)
+	id 1QCSel-0000MT-Ol
+	for linux-wireless@vger.kernel.org; Wed, 20 Apr 2011 10:21:03 +0200
+Message-ID: <4DAE9759.9020005@gmail.com>
+Date: Wed, 20 Apr 2011 11:20:41 +0300
+From: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+MIME-Version: 1.0
+To: Sujith <public-m.sujith-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>
+CC: public-linville-2XuSBdqkA4R54TAoqtyWWQ@plane.gmane.org,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org,
+	public-ath9k-devel-xDcbHBWguxHbcTqmT+pZeQ@plane.gmane.org
+Subject: Re: [PATCH 2/5] ath9k_htc: Fix AMPDU subframe handling
+References: <19886.28554.581823.283614@gargle.gargle.HOWL>
+In-Reply-To: <19886.28554.581823.283614@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were allocating the size of the NVS file according to the chip ID
-and not checking whether the length of the buffer passed was correct
-before copying it into the allocated memory.  This is a security hole
-because buffer overflows can occur if the userspace passes a bigger
-file than what is expected.
 
-With this patch, we check if the size of the data passed from
-userspace matches the size required by the chip.
 
-Reported-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/testmode.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+On 04/20/2011 08:30 AM, Sujith wrote:
+> From: Sujith Manoharan<Sujith.Manoharan-DlyHzToyqoxBDgjK7y7TUQ@public.gmane.org>
+>
+> * Register the driver's maximum ampdu subframe limit to mac80211.
+> * Cleanup the target capabilities structure and fix an endian issue.
+> * Fix BTCOEX by sending a command to the target when the BT priority
+>    changes.
+> * Bump the required firmware version to 1.1
+>
+> Signed-off-by: Sujith Manoharan<Sujith.Manoharan-DlyHzToyqoxBDgjK7y7TUQ@public.gmane.org>
 
-diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
-index 0863859..9b9f6c9 100644
---- a/drivers/net/wireless/wl12xx/testmode.c
-+++ b/drivers/net/wireless/wl12xx/testmode.c
-@@ -205,11 +205,13 @@ static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
- 
- 	kfree(wl->nvs);
- 
--	if (wl->chip.id == CHIP_ID_1283_PG20)
--		wl->nvs = kzalloc(sizeof(struct wl128x_nvs_file), GFP_KERNEL);
--	else
--		wl->nvs = kzalloc(sizeof(struct wl1271_nvs_file), GFP_KERNEL);
-+	if ((wl->chip.id == CHIP_ID_1283_PG20) &&
-+	    (len != sizeof(struct wl128x_nvs_file)))
-+		return -EINVAL;
-+	else if (len != sizeof(struct wl1271_nvs_file))
-+		return -EINVAL;
- 
-+	wl->nvs = kzalloc(len, GFP_KERNEL);
- 	if (!wl->nvs) {
- 		wl1271_error("could not allocate memory for the nvs "
- 			     "file");
--- 
-1.7.1
+[...]
+
+> +	/*
+> +	 * Check if the available FW matches the driver's
+> +	 * required version.
+> +	 */
+> +	if (priv->fw_version_major<  MAJOR_VERSION_REQ ||
+> +	    priv->fw_version_minor<  MINOR_VERSION_REQ) {
+
+Wrong version check logic. Version 2.0 will fail this 1.1 check, because 
+of minor version number.
+Should be something like:
+if (priv->fw_version_major < MAJOR_VERSION_REQ ||
+     (priv->fw_version_major == MAJOR_VERSION_REQ &&
+      priv->fw_version_minor < MINOR_VERSION_REQ))
+
+> +		dev_err(priv->dev, "ath9k_htc: Please upgrade to FW version %d.%d\n",
+> +			MAJOR_VERSION_REQ, MINOR_VERSION_REQ);
+> +		return -EINVAL;
+> +	}
+> +
+>   	return 0;
+>   }
 
