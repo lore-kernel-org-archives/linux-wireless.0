@@ -1,162 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23017 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932077Ab1DVRzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 13:55:14 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/10] iwlagn: refactor down path
-Date: Fri, 22 Apr 2011 10:33:11 -0700
-Message-Id: <1303493598-10979-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:48480 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753441Ab1DTSqf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 14:46:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Ramesh Radhakrishnan <rramesh@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 20 Apr 2011 11:44:49 -0700
+Subject: RE: [PATCH v2] wireless: mwifiex: initial commit for Marvell
+ mwifiex driver
+Message-ID: <477F20668A386D41ADCC57781B1F704307FAAC2955@SC-VEXCH1.marvell.com>
+References: <1299873746-29484-1-git-send-email-bzhao@marvell.com>
+	 <1299874885.4320.5.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
+ <1300190698.5596.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1300190698.5596.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The iwl_down path really consists of multiple things,
-refactor out the hardware resetting (including, of
-course, related software state like irqs).
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   30 ++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   34 +---------------------------
- drivers/net/wireless/iwlwifi/iwl-agn.h     |   11 +++++++++
- 3 files changed, 42 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index e741128..5c7eeac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2293,3 +2293,33 @@ void iwlagn_remove_notification(struct iwl_priv *priv,
- 	list_del(&wait_entry->list);
- 	spin_unlock_bh(&priv->_agn.notif_wait_lock);
- }
-+
-+void iwlagn_stop_device(struct iwl_priv *priv)
-+{
-+	unsigned long flags;
-+
-+	/* stop and reset the on-board processor */
-+	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
-+
-+	/* tell the device to stop sending interrupts */
-+	spin_lock_irqsave(&priv->lock, flags);
-+	iwl_disable_interrupts(priv);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+	iwl_synchronize_irq(priv);
-+
-+	/* device going down, Stop using ICT table */
-+	iwl_disable_ict(priv);
-+
-+	iwlagn_txq_ctx_stop(priv);
-+	iwlagn_rxq_stop(priv);
-+
-+	/* Power-down device's busmaster DMA clocks */
-+	iwl_write_prph(priv, APMG_CLK_DIS_REG, APMG_CLK_VAL_DMA_CLK_RQT);
-+	udelay(5);
-+
-+	/* Make sure (redundant) we've released our request to stay awake */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+
-+	/* Stop the device, and put it in low power state */
-+	iwl_apm_stop(priv);
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2845f63..f3d9055 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -846,14 +846,6 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 		iwlagn_rx_queue_restock(priv);
- }
- 
--/* call this function to flush any scheduled tasklet */
--static inline void iwl_synchronize_irq(struct iwl_priv *priv)
--{
--	/* wait to make sure we flush pending tasklet*/
--	synchronize_irq(priv->pci_dev->irq);
--	tasklet_kill(&priv->irq_tasklet);
--}
--
- /* tasklet for iwlagn interrupt */
- static void iwl_irq_tasklet(struct iwl_priv *priv)
- {
-@@ -2338,7 +2330,6 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv);
- 
- static void __iwl_down(struct iwl_priv *priv)
- {
--	unsigned long flags;
- 	int exit_pending;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
-@@ -2370,15 +2361,6 @@ static void __iwl_down(struct iwl_priv *priv)
- 	if (!exit_pending)
- 		clear_bit(STATUS_EXIT_PENDING, &priv->status);
- 
--	/* stop and reset the on-board processor */
--	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
--
--	/* tell the device to stop sending interrupts */
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_disable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
--	iwl_synchronize_irq(priv);
--
- 	if (priv->mac80211_registered)
- 		ieee80211_stop_queues(priv->hw);
- 
-@@ -2392,21 +2374,7 @@ static void __iwl_down(struct iwl_priv *priv)
- 		       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 				STATUS_EXIT_PENDING;
- 
--	/* device going down, Stop using ICT table */
--	iwl_disable_ict(priv);
--
--	iwlagn_txq_ctx_stop(priv);
--	iwlagn_rxq_stop(priv);
--
--	/* Power-down device's busmaster DMA clocks */
--	iwl_write_prph(priv, APMG_CLK_DIS_REG, APMG_CLK_VAL_DMA_CLK_RQT);
--	udelay(5);
--
--	/* Make sure (redundant) we've released our request to stay awake */
--	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--
--	/* Stop the device, and put it in low power state */
--	iwl_apm_stop(priv);
-+	iwlagn_stop_device(priv);
- 
- 	dev_kfree_skb(priv->beacon_skb);
- 	priv->beacon_skb = NULL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 078a23e..1211f45 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -120,6 +120,17 @@ int iwl_alloc_isr_ict(struct iwl_priv *priv);
- void iwl_free_isr_ict(struct iwl_priv *priv);
- irqreturn_t iwl_isr_ict(int irq, void *data);
- 
-+/* call this function to flush any scheduled tasklet */
-+static inline void iwl_synchronize_irq(struct iwl_priv *priv)
-+{
-+	/* wait to make sure we flush pending tasklet*/
-+	synchronize_irq(priv->pci_dev->irq);
-+	tasklet_kill(&priv->irq_tasklet);
-+}
-+
-+
-+void iwlagn_stop_device(struct iwl_priv *priv);
-+
- /* tx queue */
- void iwlagn_set_wr_ptrs(struct iwl_priv *priv,
- 		     int txq_id, u32 index);
--- 
-1.7.0.4
-
+PiBJbiBtYWM4MDIxMSBoYXZlIGEgbW9kdWxlIHBhcmFtZXRlciAiaWVlZTgwMjExX2Rpc2FibGVf
+NDBtaHpfMjRnaHoiDQo+IHdoaWNoLCBmb3IgYmFja3dhcmQgY29tcGF0aWJpbGl0eSByZWFzb25z
+LCBhY3R1YWxseSBkZWZhdWx0cyB0byBmYWxzZSwNCj4gc28geW91IG5lZWQgdG8gc2V0IGl0IHRv
+IHRydWUgdG8gZ2V0IGEgY29tcGxpYW50IHN5c3RlbS4gV2hlbiBhIHN5c3RlbQ0KPiBpcyBpbnRl
+Z3JhdGVkLCB0aGlzIHBhcmFtZXRlciBjYW4gYmUgc2V0IGFzIGRlZmF1bHQuDQo+IA0KPiBJIGRv
+bid0IHRoaW5rIGl0IHJlYWxseSBpcyBuZWNlc3NhcnkgdG8gc2V0IHRoaXMgYXQgcnVudGltZS4N
+Cj4gDQo+IEkgZ3Vlc3MgSSBzZWUgdHdvIG9wdGlvbnM6DQo+ICAxKSBtb3ZlIHRoZSBtb2R1bGUg
+cGFyYW1ldGVyIHRvIGNmZzgwMjExLCBhbmQgY2hlY2sgdGhlIHNkYXRhIEhUIGNvbmZpZw0KPiAg
+ICAgaW4gdGhlIGRyaXZlciBhZ2FpbiB3aGVuIHRoaXMgaXMgbmVlZGVkDQoNCkhpIEpvaGFubmVz
+LA0KDQpUaGUgY2hhbmdlIGJlbG93IGFkb3B0cyB5b3VyIGlkZWEgb2YgbW92aW5nIGllZWU4MDIx
+MV9kaXNhYmxlXzQwbWh6XzI0Z2h6IGZyb20gbWFjODAyMTEgdG8gY2ZnODAyMTEuIENvdWxkIHlv
+dSBwbGVhc2UgcmV2aWV3IGl0PyBJIHdpbGwgcmVzZW5kIHRoZSBwYXRjaCBpZiBpdCBsb29rcyBP
+SyBmb3IgeW91Lg0KIA0KLS0tDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9uZXQvY2ZnODAyMTEuaCBi
+L2luY2x1ZGUvbmV0L2NmZzgwMjExLmgNCmluZGV4IGQzMGVhZGEuLjFjZGM0M2UgMTAwNjQ0DQot
+LS0gYS9pbmNsdWRlL25ldC9jZmc4MDIxMS5oDQorKysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5o
+DQpAQCAtMTk3NCw2ICsxOTc0LDcgQEAgZXh0ZXJuIGludCBpZWVlODAyMTFfcmFkaW90YXBfaXRl
+cmF0b3JfbmV4dCgNCiANCiBleHRlcm4gY29uc3QgdW5zaWduZWQgY2hhciByZmMxMDQyX2hlYWRl
+cls2XTsNCiBleHRlcm4gY29uc3QgdW5zaWduZWQgY2hhciBicmlkZ2VfdHVubmVsX2hlYWRlcls2
+XTsNCitleHRlcm4gYm9vbCBjZmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6Ow0KIA0KIC8qKg0K
+ICAqIGllZWU4MDIxMV9nZXRfaGRybGVuX2Zyb21fc2tiIC0gZ2V0IGhlYWRlciBsZW5ndGggZnJv
+bSBkYXRhDQpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL21haW4uYyBiL25ldC9tYWM4MDIxMS9t
+YWluLmMNCmluZGV4IDBhYjJhOGQuLjQyOTBiNTAgMTAwNjQ0DQotLS0gYS9uZXQvbWFjODAyMTEv
+bWFpbi5jDQorKysgYi9uZXQvbWFjODAyMTEvbWFpbi5jDQpAQCAtMzMsMTIgKzMzLDYgQEANCiAj
+aW5jbHVkZSAiY2ZnLmgiDQogI2luY2x1ZGUgImRlYnVnZnMuaCINCiANCi0NCi1zdGF0aWMgYm9v
+bCBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCi1tb2R1bGVfcGFyYW0oaWVlZTgwMjEx
+X2Rpc2FibGVfNDBtaHpfMjRnaHosIGJvb2wsIDA2NDQpOw0KLU1PRFVMRV9QQVJNX0RFU0MoaWVl
+ZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosDQotCQkgIkRpc2FibGUgNDBNSHogc3VwcG9ydCBp
+biB0aGUgMi40R0h6IGJhbmQiKTsNCi0NCiBzdGF0aWMgc3RydWN0IGxvY2tfY2xhc3Nfa2V5IGll
+ZWU4MDIxMV9yeF9za2JfcXVldWVfY2xhc3M7DQogDQogdm9pZCBpZWVlODAyMTFfY29uZmlndXJl
+X2ZpbHRlcihzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCkNCkBAIC03MjksMTEgKzcyMywx
+MSBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVyX2h3KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3KQ0K
+IAkJY2hhbm5lbHMgKz0gc2JhbmQtPm5fY2hhbm5lbHM7DQogDQogCQkvKg0KLQkJICogU2luY2Ug
+aWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHogaXMgZ2xvYmFsLCB3ZSBjYW4NCisJCSAqIFNp
+bmNlIGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHogaXMgZ2xvYmFsLCB3ZSBjYW4NCiAJCSAq
+IG1vZGlmeSB0aGUgc2JhbmQncyBodCBkYXRhIGV2ZW4gaWYgdGhlIGRyaXZlciB1c2VzIGENCiAJ
+CSAqIGdsb2JhbCBzdHJ1Y3R1cmUgZm9yIHRoYXQuDQogCQkgKi8NCi0JCWlmIChpZWVlODAyMTFf
+ZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KKwkJaWYgKGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRn
+aHogJiYNCiAJCSAgICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCiAJCSAgICBzYmFu
+ZC0+aHRfY2FwLmh0X3N1cHBvcnRlZCkgew0KIAkJCXNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVF
+ODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsNCmRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mv
+bmw4MDIxMS5jIGIvbmV0L3dpcmVsZXNzL25sODAyMTEuYw0KaW5kZXggMGVmYTdmZC4uM2Y0NWQ0
+NiAxMDA2NDQNCi0tLSBhL25ldC93aXJlbGVzcy9ubDgwMjExLmMNCisrKyBiL25ldC93aXJlbGVz
+cy9ubDgwMjExLmMNCkBAIC0yMyw2ICsyMywxMiBAQA0KICNpbmNsdWRlICJubDgwMjExLmgiDQog
+I2luY2x1ZGUgInJlZy5oIg0KIA0KK2Jvb2wgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsN
+Cittb2R1bGVfcGFyYW0oY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiwgYm9vbCwgMDY0NCk7
+DQorTU9EVUxFX1BBUk1fREVTQyhjZmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KKwkJICJE
+aXNhYmxlIDQwTUh6IHN1cHBvcnQgaW4gdGhlIDIuNEdIeiBiYW5kIik7DQorRVhQT1JUX1NZTUJP
+TF9HUEwoY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeik7DQorDQogc3RhdGljIGludCBubDgw
+MjExX3ByZV9kb2l0KHN0cnVjdCBnZW5sX29wcyAqb3BzLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLA0K
+IAkJCSAgICBzdHJ1Y3QgZ2VubF9pbmZvICppbmZvKTsNCiBzdGF0aWMgdm9pZCBubDgwMjExX3Bv
+c3RfZG9pdChzdHJ1Y3QgZ2VubF9vcHMgKm9wcywgc3RydWN0IHNrX2J1ZmYgKnNrYiwNCg0KDQot
+LS0NCg0KVGhhbmtzLA0KDQpCaW5nDQoNCg==
