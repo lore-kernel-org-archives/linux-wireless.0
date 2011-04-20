@@ -1,90 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:19494 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757030Ab1DGBEl (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49659 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924Ab1DTH3y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 21:04:41 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
+	Wed, 20 Apr 2011 03:29:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <op.vt76hofg3ri7v4@arend-laptop>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	<201104171938.12834.arnd@arndb.de>
+	<op.vt6ufu1n3ri7v4@arend-laptop>
+	<201104191635.40351.arnd@arndb.de>
+	<op.vt76hofg3ri7v4@arend-laptop>
+Date: Wed, 20 Apr 2011 09:29:53 +0200
+Message-ID: <BANLkTinMe-KedeOAiQYES-LCC2O4BoE28w@mail.gmail.com>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 <1302123428.20093.6.camel@maggie>
-	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	 <1302124112.20093.11.camel@maggie>
-	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	 <1302124737.27258.7.camel@dev.znau.edu.ua>
-	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-	 <1302134429.27258.32.camel@dev.znau.edu.ua>
-	 <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>, Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
-Date: Thu, 07 Apr 2011 04:02:19 +0300
-Message-Id: <1302138139.27258.35.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2011/4/20 Arend van Spriel <arend@broadcom.com>:
+> On Tue, 19 Apr 2011 16:35:40 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+>> On Tuesday 19 April 2011, Arend van Spriel wrote:
+>>
+>>> > A new bus_type really only makes sense if you expect a lot of devices
+>>> > to use this and you want to have the probing in the bus. If you only
+>>> > want to have a way to enumerate devices that get created by the
+>>> > parent driver, you can also use platform devices.
+>>>
+>>> The main assumption of the (bcm)axi driver seems to be that each core can
+>>> be considered as a device. Correct me if I am wrong, but I consider a
+>>> device to be an entity providing a particular system function. So an
+>>> ethernet device provides ethernet connectivity function, a mixer device
+>>> provides sound mixing function, and so on. The cores within a chip are
+>>> not
+>>> always self-contained like this. To clarify let's say a system function
+>>> is
+>>> realized by programming core A, core B, and finally trigger core A to set
+>>> the function in motion. This implies the need of coordination between the
+>>> programming steps on those cores.
+>>>
+>>> Is my view on what is a device wrong? Does a platform device differ in
+>>> this respect from a regular device?
+>>
+>> A platform device means something that cannot be probed, in every other
+>> respect it is the same as other devices. From your explanation above,
+>> it seems that you don't actually need to represent the cores on your
+>> particular chips as struct device in Linux at all.
+>>
+>> If you wanted to use platform_device, the right way would probably
+>> be an MFD device that creates multiple child devices (which end
+>> up as platform_device, though you don't need to worry about that)
+>> from the PCI driver. Then you could use the child devices completely
+>> independent from one another.
+>>
+>> Since you say that the cores in this case are tightly coupled and
+>> don't provide independent functionality to the system, there is
+>> no need to represent them as devices.
+>
+> Hi Arnd,
+>
+> The case is a hypothetical one, but I consider it a likely one. The axi bus
+> driver currently registers each detected core as a device in the linux
+> device tree. My statement is that this implies loose or no coupling between
+> those cores, which is not true. One (or two) exceptions have already been
+> identified. I would expect your last line to read: ...to the system, those
+> cores should not be represented as devices.
 
-> W dniu 7 kwietnia 2011 02:00 użytkownik George Kashperko
-> <george@znau.edu.ua> napisał:
-> > For PCI function description take a look at PCI specs or PCI
-> > configuration space description (e. g.
-> > http://en.wikipedia.org/wiki/PCI_configuration_space)
-> >
-> > Sorry for missleading short-ups, w11 - bcm80211 core, under two-head I
-> > mean ssb/axi with two functional cores on same interconnect (like w11
-> > +w11, not a lot of these exists I guess). Also there were some b43+b44
-> > on single PCI ssb host and those where implemented as ssb interconnect
-> > on multifunctional PCI host therefore providing separate access windows
-> > for each function.
-> >
-> > Might I mussunderstood something (its late night here at my place) when
-> > you where talking about using coreswitching involved for two drivers
-> > therefore I remembered about those functions. Seems now you were talking
-> > about chipcommon+b43 access sharing same window.
-> >
-> > As for core switching requirments for earlier SSB interconnects on PCI
-> > hosts where there were no direct chipcommon access, that one can be
-> > accomplished without spin_lock/mutex for b43 or b44 cores with proper
-> > bus design.
-> >
-> > AXI doesn't need spinlocks/mutexes as both chipcommon and pci bridge are
-> > available directly and b43 will be the only one requiring window access.
-> 
-> Ahh, so while talking about 4 windows, I guess you counted fixes
-> windows as well. That would be right, matching my knowledge.
-Nop, I mean sliding windows only.
+I do not register that exceptional devices in my code.
 
-> 
-> When asking question about amount of cores we may want to use
-> simultaneously I didn't think about ChipCommon or PCIe. The real
-> problem would be to support for example two 802.11 cores and one
-> ethernet core at the same time. That gives us 3 cores while we have
-> only 2 sliding windows. But I would not care for that too much for
-> now.
-That will give us 3 PCI functions, each with own sliding windows.
-
-> 
-> For the rest (PCI function) I have to sleep before reading specs ;)
-> 
-
-Have nice day,
-George
-
-
+-- 
+Rafał
