@@ -1,146 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:65467 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097Ab1DLFTi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 01:19:38 -0400
-Date: Tue, 12 Apr 2011 00:19:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: marked86@gmail.com, helmut.schaa@googlemail.com,
-	gwingerde@gmail.com, IvDoorn@gmail.com,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v2] rt2800usb: Add seven new USB IDs
-Message-ID: <4da3e0e7.OIpXziberWyLiFw6%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:55017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753649Ab1DTOCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 10:02:43 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH wireless-2.6] iwl4965: fix skb usage after free
+Date: Wed, 20 Apr 2011 16:01:46 +0200
+Message-Id: <1303308106-5263-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Davis <marked86@gmail.com>
+Since
 
-Adds USB IDs for seven previously missing devices. Additionally, all
-instances of 'Conceptronic' have been replaced by the OEM name.
+commit a120e912eb51e347f36c71b60a1d13af74d30e83
+Author: Stanislaw Gruszka <sgruszka@redhat.com>
+Date:   Fri Feb 19 15:47:33 2010 -0800
 
-Devices added are..
-0411:01a2 - Buffalo WLI-UC-GNM, RT3070V
-0586:341e - ZyXEL NWD2105, RT3070
-13b1:002f - Linksys AE1000, RT3572
-13b1:0031 - Cisco / Linksys AM10, RT3072
-14b2:3c2c - Keebox W150NU / Alpha Networks WUS-N12, RT3070
-157e:3013 - TRENDnet TEW-645UB, RT2770+RT2720
-15a9:0012 - Airlink AWLL7025 / Gemtek WUBR-208N, RT2870+RT2850
+    iwlwifi: sanity check before counting number of tfds can be free
 
-Signed-off-by: Mark Davis <marked86@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+we use skb->data after calling ieee80211_tx_status_irqsafe(), which
+could free skb instantly.
+
+On current kernels I do not observe practical problems related with
+bug, but on 2.6.35.y it cause random system hangs when stressing
+wireless link, making bisection of other problems impossible.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-V1 => V2 Change spaces to tabs.
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index 5c40502..fbec88d 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -1127,12 +1127,16 @@ int iwl4965_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd)) {
+ 
+ 		tx_info = &txq->txb[txq->q.read_ptr];
+-		iwl4965_tx_status(priv, tx_info,
+-				 txq_id >= IWL4965_FIRST_AMPDU_QUEUE);
++
++		if (WARN_ON_ONCE(tx_info->skb == NULL))
++			continue;
+ 
+ 		hdr = (struct ieee80211_hdr *)tx_info->skb->data;
+-		if (hdr && ieee80211_is_data_qos(hdr->frame_control))
++		if (ieee80211_is_data_qos(hdr->frame_control))
+ 			nfreed++;
++
++		iwl4965_tx_status(priv, tx_info,
++				 txq_id >= IWL4965_FIRST_AMPDU_QUEUE);
+ 		tx_info->skb = NULL;
+ 
+ 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
+-- 
+1.7.1
 
- drivers/net/wireless/rt2x00/rt2800usb.c |   35 +++++++++++++++++++-----------
- 1 files changed, 22 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 6ba31a0..d2f5c87 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -710,6 +710,16 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x8516, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x8516, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x8516, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Alpha Networks */
-+	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c2c), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Amit */
- 	{ USB_DEVICE(0x15c5, 0x0008), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Askey */
-@@ -736,15 +746,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x00e8), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x016f), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Conceptronic */
--	{ USB_DEVICE(0x14b2, 0x3c06), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c07), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c23), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c25), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c27), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c28), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0411, 0x01a2), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -776,6 +778,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Gemtek */
-+	{ USB_DEVICE(0x15a9, 0x0012), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Gigabyte */
- 	{ USB_DEVICE(0x1044, 0x800b), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -792,6 +796,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x0031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Logitec */
-@@ -870,8 +875,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x15a9, 0x0006), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sweex */
- 	{ USB_DEVICE(0x177f, 0x0302), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* U-Media*/
-+	/* U-Media */
- 	{ USB_DEVICE(0x157e, 0x300e), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x157e, 0x3013), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* ZCOM */
- 	{ USB_DEVICE(0x0cde, 0x0022), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0cde, 0x0025), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -883,6 +889,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Zyxel */
- 	{ USB_DEVICE(0x0586, 0x3416), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0586, 0x3418), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0586, 0x341e), USB_DEVICE_DATA(&rt2800usb_ops) },
- #ifdef CONFIG_RT2800USB_RT33XX
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3370), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -901,6 +908,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x1740, 0x9801), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* I-O DATA */
- 	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	/* Linksys */
-+	{ USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sitecom */
-@@ -915,6 +924,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	 * Unclear what kind of devices these are (they aren't supported by the
- 	 * vendor linux driver).
- 	 */
-+	/* Alpha Networks */
-+	{ USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Amigo */
- 	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -933,9 +945,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0411, 0x0148), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x0150), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x015d), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Conceptronic */
--	{ USB_DEVICE(0x14b2, 0x3c08), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x14b2, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x07aa, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
