@@ -1,112 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30017 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1408 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309Ab1D1MJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:09:19 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kyle McMartin <kmcmartin@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.38 1/4] iwlwifi: do not set tx power when channel is changing
-Date: Thu, 28 Apr 2011 14:08:12 +0200
-Message-Id: <1303992495-7337-2-git-send-email-sgruszka@redhat.com> (sfid-20110428_140922_456672_1496AED5)
-In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
-References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+	id S1753244Ab1DTHQu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 03:16:50 -0400
+To: "Arnd Bergmann" <arnd@arndb.de>
+cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Jonas Gorski" <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Greg KH" <greg@kroah.com>, "Andy Botting" <andy@andybotting.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom
+ bus?
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+ <201104171938.12834.arnd@arndb.de> <op.vt6ufu1n3ri7v4@arend-laptop>
+ <201104191635.40351.arnd@arndb.de>
+Date: Wed, 20 Apr 2011 09:16:26 +0200
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vt76hofg3ri7v4@arend-laptop>
+In-Reply-To: <201104191635.40351.arnd@arndb.de>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit f844a709a7d8f8be61a571afc31dfaca9e779621 upstream.
+On Tue, 19 Apr 2011 16:35:40 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
 
-Mac80211 can request for tx power and channel change in one ->config
-call. If that happens, *_send_tx_power functions will try to setup tx
-power for old channel, what can be not correct because we already change
-the band. I.e  error  "Failed to get channel info for channel 140 [0]",
-can be printed frequently when operating in software scanning mode.
+> On Tuesday 19 April 2011, Arend van Spriel wrote:
+>
+>> > A new bus_type really only makes sense if you expect a lot of devices
+>> > to use this and you want to have the probing in the bus. If you only
+>> > want to have a way to enumerate devices that get created by the
+>> > parent driver, you can also use platform devices.
+>>
+>> The main assumption of the (bcm)axi driver seems to be that each core  
+>> can
+>> be considered as a device. Correct me if I am wrong, but I consider a
+>> device to be an entity providing a particular system function. So an
+>> ethernet device provides ethernet connectivity function, a mixer device
+>> provides sound mixing function, and so on. The cores within a chip are  
+>> not
+>> always self-contained like this. To clarify let's say a system function  
+>> is
+>> realized by programming core A, core B, and finally trigger core A to  
+>> set
+>> the function in motion. This implies the need of coordination between  
+>> the
+>> programming steps on those cores.
+>>
+>> Is my view on what is a device wrong? Does a platform device differ in
+>> this respect from a regular device?
+>
+> A platform device means something that cannot be probed, in every other
+> respect it is the same as other devices. From your explanation above,
+> it seems that you don't actually need to represent the cores on your
+> particular chips as struct device in Linux at all.
+>
+> If you wanted to use platform_device, the right way would probably
+> be an MFD device that creates multiple child devices (which end
+> up as platform_device, though you don't need to worry about that)
+> from the PCI driver. Then you could use the child devices completely
+> independent from one another.
+>
+> Since you say that the cores in this case are tightly coupled and
+> don't provide independent functionality to the system, there is
+> no need to represent them as devices.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 ++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |   13 ++++++++++---
- 4 files changed, 14 insertions(+), 8 deletions(-)
+Hi Arnd,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 39b6f16..4e7b58b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1823,7 +1823,7 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	/* If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames */
--	rc = priv->cfg->ops->lib->send_tx_power(priv);
-+	rc = iwl_set_tx_power(priv, priv->tx_power_next, true);
- 	if (rc) {
- 		IWL_ERR(priv, "Error setting Tx power (%d).\n", rc);
- 		return rc;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 91a9f52..992caa0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1571,7 +1571,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *c
- 
- 	/* If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames */
--	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
-+	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
- 	if (ret) {
- 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
- 		return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 6d140bd..ee802fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -288,10 +288,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 * If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames.
- 	 *
--	 * FIXME: which RXON requires a tune? Can we optimise this out in
--	 *        some cases?
-+	 * It's expected we set power here if channel is changing.
- 	 */
--	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
-+	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
- 	if (ret) {
- 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
- 		return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index efbde1f..91cac6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1161,6 +1161,8 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- {
- 	int ret;
- 	s8 prev_tx_power;
-+	bool defer;
-+	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 
- 	lockdep_assert_held(&priv->mutex);
- 
-@@ -1188,10 +1190,15 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 	if (!iwl_is_ready_rf(priv))
- 		return -EIO;
- 
--	/* scan complete use tx_power_next, need to be updated */
-+	/* scan complete and commit_rxon use tx_power_next value,
-+	 * it always need to be updated for newest request */
- 	priv->tx_power_next = tx_power;
--	if (test_bit(STATUS_SCANNING, &priv->status) && !force) {
--		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
-+
-+	/* do not set tx power when scanning or channel changing */
-+	defer = test_bit(STATUS_SCANNING, &priv->status) ||
-+		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
-+	if (defer && !force) {
-+		IWL_DEBUG_INFO(priv, "Deferring tx power set\n");
- 		return 0;
- 	}
- 
+The case is a hypothetical one, but I consider it a likely one. The axi  
+bus driver currently registers each detected core as a device in the linux  
+device tree. My statement is that this implies loose or no coupling  
+between those cores, which is not true. One (or two) exceptions have  
+already been identified. I would expect your last line to read: ...to the  
+system, those cores should not be represented as devices.
+
+Gr. AvS
 -- 
-1.7.1
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
