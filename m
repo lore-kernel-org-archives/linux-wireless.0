@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:10911 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794Ab1DLLaD convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:57712 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755922Ab1DTTzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:30:03 -0400
-From: Anantha Idapalapati <aidapalapati@nvidia.com>
-To: Olof Johansson <olofj@chromium.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Uday Raval <uraval@nvidia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Andy Ritger <ARitger@nvidia.com>,
-	Rakesh Kumar <krakesh@nvidia.com>
-Date: Tue, 12 Apr 2011 16:59:44 +0530
-Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
-Message-ID: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A55103@BGMAIL02.nvidia.com>
-References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
-	<1302532734.6487.12.camel@jlt3.sipsolutions.net>
-	<108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
-	<1302533629.6487.14.camel@jlt3.sipsolutions.net>
- <BANLkTi=LT7u8d6dVDWkQ-xp-BZMYZgS_vQ@mail.gmail.com>
-In-Reply-To: <BANLkTi=LT7u8d6dVDWkQ-xp-BZMYZgS_vQ@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	Wed, 20 Apr 2011 15:55:44 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Ramesh Radhakrishnan <rramesh@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 20 Apr 2011 12:55:04 -0700
+Subject: RE: [PATCH v2] wireless: mwifiex: initial commit for Marvell
+ mwifiex driver
+Message-ID: <477F20668A386D41ADCC57781B1F704307FAAC298D@SC-VEXCH1.marvell.com>
+References: <1299873746-29484-1-git-send-email-bzhao@marvell.com>
+	 <1299874885.4320.5.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
+	 <1300190698.5596.15.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FAAC2955@SC-VEXCH1.marvell.com>
+ <1303326002.3619.9.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1303326002.3619.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Olof and all,
-
-I made mistake while creating the patch after pushing the change to chromium review site. Now I send the correct file. Please review the latest patch I just send.
-
-Thanks
-Anantha
-
------Original Message-----
-From: olofj@google.com [mailto:olofj@google.com] On Behalf Of Olof Johansson
-Sent: Monday, April 11, 2011 8:51 PM
-To: Johannes Berg
-Cc: Anantha Idapalapati; linville@tuxdriver.com; Uday Raval; linux-wireless@vger.kernel.org; Andy Ritger; Rakesh Kumar
-Subject: Re: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
-
-[gah, this gmail account has html formatting on by default. repost in
-plain text]
-
-On Mon, Apr 11, 2011 at 7:53 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Mon, 2011-04-11 at 20:15 +0530, Anantha Idapalapati wrote:
-> > Initially it was written specific to BCM4329. But because of the
-> > reason most of the BT chips have similar switch on/off sequence, this
-> > driver is made generic. If there is any specific changes required for
-> > a particular platform, this driver can be taken as reference.
->
-> Well, so, it still has bcm4329 all over the code, so you should get rid
-> of that and just call it rfkill_gpio or something. Also, if it's all
-> this generic, then how about you make an rfkill GPIO driver that works
-> like the rfkill regulator driver we recently got?
-
-Anantha,
-
-This doesn't seem to be the same version of the driver as the last one
-you uploaded to the Chromium OS code review system, which had all the
-brcm4329 references renamed and moved out of the driver.
-
-Any reason you wouldn't start out with the cleanest version before you submit?
-
-The version I'm referring to is at:   http://codereview.chromium.org/6295009/
-
-
--Olof
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+PiA+IC0tLQ0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL25ldC9jZmc4MDIxMS5oIGIvaW5jbHVk
+ZS9uZXQvY2ZnODAyMTEuaA0KPiA+IGluZGV4IGQzMGVhZGEuLjFjZGM0M2UgMTAwNjQ0DQo+ID4g
+LS0tIGEvaW5jbHVkZS9uZXQvY2ZnODAyMTEuaA0KPiA+ICsrKyBiL2luY2x1ZGUvbmV0L2NmZzgw
+MjExLmgNCj4gPiBAQCAtMTk3NCw2ICsxOTc0LDcgQEAgZXh0ZXJuIGludCBpZWVlODAyMTFfcmFk
+aW90YXBfaXRlcmF0b3JfbmV4dCgNCj4gPg0KPiA+ICBleHRlcm4gY29uc3QgdW5zaWduZWQgY2hh
+ciByZmMxMDQyX2hlYWRlcls2XTsNCj4gPiAgZXh0ZXJuIGNvbnN0IHVuc2lnbmVkIGNoYXIgYnJp
+ZGdlX3R1bm5lbF9oZWFkZXJbNl07DQo+ID4gK2V4dGVybiBib29sIGNmZzgwMjExX2Rpc2FibGVf
+NDBtaHpfMjRnaHo7DQo+ID4NCj4gPiAgLyoqDQo+ID4gICAqIGllZWU4MDIxMV9nZXRfaGRybGVu
+X2Zyb21fc2tiIC0gZ2V0IGhlYWRlciBsZW5ndGggZnJvbSBkYXRhDQo+ID4gZGlmZiAtLWdpdCBh
+L25ldC9tYWM4MDIxMS9tYWluLmMgYi9uZXQvbWFjODAyMTEvbWFpbi5jDQo+ID4gaW5kZXggMGFi
+MmE4ZC4uNDI5MGI1MCAxMDA2NDQNCj4gPiAtLS0gYS9uZXQvbWFjODAyMTEvbWFpbi5jDQo+ID4g
+KysrIGIvbmV0L21hYzgwMjExL21haW4uYw0KPiA+IEBAIC0zMywxMiArMzMsNiBAQA0KPiA+ICAj
+aW5jbHVkZSAiY2ZnLmgiDQo+ID4gICNpbmNsdWRlICJkZWJ1Z2ZzLmgiDQo+ID4NCj4gPiAtDQo+
+ID4gLXN0YXRpYyBib29sIGllZWU4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6Ow0KPiA+IC1tb2R1
+bGVfcGFyYW0oaWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosIGJvb2wsIDA2NDQpOw0KPiA+
+IC1NT0RVTEVfUEFSTV9ERVNDKGllZWU4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KPiA+IC0J
+CSAiRGlzYWJsZSA0ME1IeiBzdXBwb3J0IGluIHRoZSAyLjRHSHogYmFuZCIpOw0KPiA+IC0NCj4g
+PiAgc3RhdGljIHN0cnVjdCBsb2NrX2NsYXNzX2tleSBpZWVlODAyMTFfcnhfc2tiX3F1ZXVlX2Ns
+YXNzOw0KPiA+DQo+ID4gIHZvaWQgaWVlZTgwMjExX2NvbmZpZ3VyZV9maWx0ZXIoc3RydWN0IGll
+ZWU4MDIxMV9sb2NhbCAqbG9jYWwpDQo+ID4gQEAgLTcyOSwxMSArNzIzLDExIEBAIGludCBpZWVl
+ODAyMTFfcmVnaXN0ZXJfaHcoc3RydWN0IGllZWU4MDIxMV9odyAqaHcpDQo+ID4gIAkJY2hhbm5l
+bHMgKz0gc2JhbmQtPm5fY2hhbm5lbHM7DQo+ID4NCj4gPiAgCQkvKg0KPiA+IC0JCSAqIFNpbmNl
+IGllZWU4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6IGlzIGdsb2JhbCwgd2UgY2FuDQo+ID4gKwkJ
+ICogU2luY2UgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiBpcyBnbG9iYWwsIHdlIGNhbg0K
+PiA+ICAJCSAqIG1vZGlmeSB0aGUgc2JhbmQncyBodCBkYXRhIGV2ZW4gaWYgdGhlIGRyaXZlciB1
+c2VzIGENCj4gPiAgCQkgKiBnbG9iYWwgc3RydWN0dXJlIGZvciB0aGF0Lg0KPiA+ICAJCSAqLw0K
+PiA+IC0JCWlmIChpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KPiA+ICsJCWlmIChj
+Zmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6ICYmDQo+ID4gIAkJICAgIGJhbmQgPT0gSUVFRTgw
+MjExX0JBTkRfMkdIWiAmJg0KPiA+ICAJCSAgICBzYmFuZC0+aHRfY2FwLmh0X3N1cHBvcnRlZCkg
+ew0KPiA+ICAJCQlzYmFuZC0+aHRfY2FwLmNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9TVVBfV0lE
+VEhfMjBfNDA7DQo+IA0KPiBXZWxsLCBJIHRoaW5rIGluIHRoYXQgY2FzZSB0aGlzIGNvZGUgc2hv
+dWxkIGFsc28gYmUgbW92ZWQuDQoNCk9LLiBJIHdpbGwgcmVzZW5kIHRoZSBwYXRjaC4NCg0KVGhh
+bmtzLA0KDQpCaW5nDQo=
