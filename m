@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32823 "EHLO mga01.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1527 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754380Ab1DRRFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 13:05:36 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/10] update for 2.6.40
-Date: Mon, 18 Apr 2011 09:44:07 -0700
-Message-Id: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751127Ab1DTIir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 04:38:47 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] staging: brcm80211: better feedback to user on ioctl
+ errors
+Date: Wed, 20 Apr 2011 10:38:39 +0200
+Message-ID: <1303288719-3036-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We fix the huge xommands synchronous problem especially for beacon
-We continue clean up the _agn driver after split
+Messages are now logged that provide the user with a clue on what went wrong.
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c |   44 ++++++++++++++++++++----
+ 1 files changed, 36 insertions(+), 8 deletions(-)
 
-Johannes Berg (3):
-  iwlagn: remove most BUG_ON instances
-  iwlagn: verify that huge commands are synchronous
-  iwlagn: use huge command for beacon
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 46bf93b..dba6195 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -4141,7 +4141,7 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 	     void *params, int p_len, void *arg, int len,
+ 	     bool set, struct wlc_if *wlcif)
+ {
+-	int err = 0;
++	int err;
+ 	int val_size;
+ 	const bcm_iovar_t *vi = NULL;
+ 	u32 actionid;
+@@ -4151,8 +4151,34 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 	    !(IS_ALIGNED((unsigned long)(arg), (uint) sizeof(int)))) {
+ 		dev_err(wlc->dev, "wl%d: %s unaligned get ptr for %s\n",
+ 			 wlc->pub->unit, __func__, name);
+-		err = ENOTSUPP;
+-		goto exit;
++		return -ENOTSUPP;
++	}
++
++	if (name == NULL || len < 0) {
++		dev_err(wlc->dev, "wl%d: %s name/arg error len=%d\n",
++			wlc->pub->unit, __func__, len);
++		return -ENOTSUPP;
++	}
++
++	if (!set && !(arg && len)) {
++		dev_err(wlc->dev, "Get MUST have return space\n");
++		goto fail;
++	}
++
++	if (wlc->pub->hw_off && wlc->pub->up) {
++		dev_err(wlc->dev, "hw is off but adapter is up!\n");
++		goto fail;
++	}
++
++	if (set && (params || p_len)) {
++		dev_err(wlc->dev, "Set does NOT take qualifiers\n");
++		goto fail;
++	}
++
++	if (!set && len == sizeof(int) &&
++	    !IS_ALIGNED((unsigned long)(arg), (uint) sizeof(int))) {
++		dev_err(wlc->dev, "unaligned access on get\n");
++		goto fail;
+ 	}
+ 
+ 	/* find the given iovar name */
+@@ -4164,10 +4190,8 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 			break;
+ 	}
+ 	/* iovar name not found */
+-	if (i >= WLC_MAXMODULES) {
+-		err = -ENOTSUPP;
+-		goto exit;
+-	}
++	if (i >= WLC_MAXMODULES)
++		return -ENOTSUPP;
+ 
+ 	/* set up 'params' pointer in case this is a set command so that
+ 	 * the convenience int and bool code can be common to set and get
+@@ -4192,8 +4216,12 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 					name, params, p_len, arg, len, val_size,
+ 					wlcif);
+ 
+- exit:
+ 	return err;
++
++fail:
++	dev_err(wlc->dev, "wl%d: %s(set=%d,%s) failed\n", wlc->pub->unit,
++		__func__, set, name);
++	return -ENOTSUPP;
+ }
+ 
+ int
+-- 
+1.7.1
 
-Wey-Yi Guy (7):
-  iwlagn: use direct call for led functions
-  iwlagn: always support uCode trace
-  iwlagn: temperature should be measure for all _agn devices
-  iwlagn: no 5.2GHz/HT40 support for bgn devices
-  iwlagn: remove un-necessary ieee80211_ops
-  iwlagn: remove legacy ops
-  iwlagn: remove led_ops
-
- drivers/net/wireless/iwlwifi/Makefile      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c    |   11 +----
- drivers/net/wireless/iwlwifi/iwl-2000.c    |   18 +-------
- drivers/net/wireless/iwlwifi/iwl-5000.c    |   16 ------
- drivers/net/wireless/iwlwifi/iwl-6000.c    |   22 --------
- drivers/net/wireless/iwlwifi/iwl-agn-led.c |   73 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-agn-led.h |   33 -------------
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   42 ++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-core.c    |   24 ---------
- drivers/net/wireless/iwlwifi/iwl-core.h    |   28 -----------
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    3 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c  |    6 --
- drivers/net/wireless/iwlwifi/iwl-eeprom.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-hcmd.c    |   12 +++--
- drivers/net/wireless/iwlwifi/iwl-led.c     |   26 ++++++++++-
- drivers/net/wireless/iwlwifi/iwl-led.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-power.c   |   13 ++---
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    9 ++-
- drivers/net/wireless/iwlwifi/iwl-tx.c      |   38 ++++++++++-----
- 19 files changed, 113 insertions(+), 265 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-led.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-led.h
 
