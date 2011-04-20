@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Message-Id: <4D9D0A45020000230002AEF7@novprvlin0050.provo.novell.com>
-Date: Wed, 06 Apr 2011 08:50:13 -0600
-From: "Joey Lee" <jlee@novell.com>
-To: <ospite@studenti.unina.it>
-Cc: <gmzhuo@gmail.com>, <marek.vasut@gmail.com>,
-	<openezx-devel@lists.openezx.org>,
-	<broonie@opensource.wolfsonmicro.com>, <johannes@sipsolutions.net>,
-	<lrg@slimlogic.co.uk>, <linville@tuxdriver.com>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
- <1302082178.3811.7.camel@jlt3.sipsolutions.net>
- <20110406160654.e629dfde.ospite@studenti.unina.it>
- <1302098968.4090.0.camel@jlt3.sipsolutions.net>
- <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
-In-Reply-To: <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-px0-f179.google.com ([209.85.212.179]:33573 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab1DTF2y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 01:28:54 -0400
+Received: by mail-px0-f179.google.com with SMTP id 2so318654pxi.10
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 22:28:53 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19886.28589.429644.634493@gargle.gargle.HOWL>
+Date: Wed, 20 Apr 2011 11:01:25 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 5/5] ath9k_htc: Remove unused macros and structures
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio, 
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-於 三，2011-04-06 於 16:24 +0200，Antonio Ospite 提到：
-> On Wed, 06 Apr 2011 16:09:28 +0200
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > On Wed, 2011-04-06 at 16:06 +0200, Antonio Ospite wrote:
-> > 
-> > > > > +	if (regulator_is_enabled(vcc)) {
-> > > > > +		dev_dbg(&pdev->dev, "Regulator already enabled\n");
-> > > > > +		rfkill_data->reg_enabled = 1;
-> > > > > +	}
-> > > > > +	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
-> > > > > +
-> > > > > +	ret = rfkill_register(rf_kill);
-> > > > 
-> > > > We recently had a thread about how rfkill_init_sw_state() isn't quite
-> > > > working the right way. Also, it is indented to be used for devices that
-> > > > keep their state over resume. I think you should remove it here and rely
-> > > > on rfkill to sync you after registration.
-> > > > 
-> > > > Cf. the long thread here:
-> > > > http://thread.gmane.org/gmane.linux.acpi.devel/49577
-> > > >
-> > > 
-> > > Ok, but I still need to replace that call with a rfkill_set_sw_state()
-> > > to expose the initial status of the regulator to the rfkill system,
-> > > right?
-> > 
-> > Well, you could, but if you don't do that then the rfkill subsystem will
-> > simply call set_block() shortly after registration to put it into the
-> > state that it thinks it should be in, which is usually more useful.
-> > 
-> 
-> I see, let's just drop rfkill_init_sw_state() then.
-> 
-> Regards,
->    Antonio
-> 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h     |    3 ---
+ drivers/net/wireless/ath/ath9k/htc_hst.h |   11 -----------
+ 2 files changed, 0 insertions(+), 14 deletions(-)
 
-Like Johannes's comment, the rfkill_init_sw_state is a bit tricky
-especially when RFKILL_INPUT enabled. The rfkill_init_sw_state will
-replicate the state to device global state, then rfkill will replicate
-it to other killswitch.
-
-If you want to use rfkill_init_sw_state to set rfkill initial state when
-driver probed, then I suggest you need test it when:
-	- RFKILL_INPUT enabled
-	and
-	- when device initial state is disabled(BLOCKED)
-
-If you want to maintain the rfkill initial state by your self, you can
-reference this patch:
-http://git.kernel.org/?p=linux/kernel/git/mjg59/platform-drivers-x86.git;a=commitdiff;h=8215af019040ce9182728afee9642d8fdeb17f59
-
-The patch set intial state by rfkill_set_sw_state after rfkill register,
-and don't touch the BIOS (firmware?) state in set_block until driver
-probe finished.
-
-
-Thank's a lot!
-Joey Lee
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index af90829..55f4bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -66,8 +66,6 @@ enum htc_opmode {
+ 	HTC_M_WDS	= 2
+ };
+ 
+-#define ATH9K_HTC_HDRSPACE sizeof(struct htc_frame_hdr)
+-
+ #define ATH9K_HTC_AMPDU  1
+ #define ATH9K_HTC_NORMAL 2
+ #define ATH9K_HTC_BEACON 3
+@@ -75,7 +73,6 @@ enum htc_opmode {
+ 
+ #define ATH9K_HTC_TX_CTSONLY      0x1
+ #define ATH9K_HTC_TX_RTSCTS       0x2
+-#define ATH9K_HTC_TX_USE_MIN_RATE 0x100
+ 
+ struct tx_frame_hdr {
+ 	u8 data_type;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
+index cb9174a..91a5305 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.h
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
+@@ -83,21 +83,10 @@ struct htc_ep_callbacks {
+ 	void (*rx) (void *, struct sk_buff *, enum htc_endpoint_id);
+ };
+ 
+-#define HTC_TX_QUEUE_SIZE 256
+-
+-struct htc_txq {
+-	struct sk_buff *buf[HTC_TX_QUEUE_SIZE];
+-	u32 txqdepth;
+-	u16 txbuf_cnt;
+-	u16 txq_head;
+-	u16 txq_tail;
+-};
+-
+ struct htc_endpoint {
+ 	u16 service_id;
+ 
+ 	struct htc_ep_callbacks ep_callbacks;
+-	struct htc_txq htc_txq;
+ 	u32 max_txqdepth;
+ 	int max_msglen;
+ 
+-- 
+1.7.4.4
 
