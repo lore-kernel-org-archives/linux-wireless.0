@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42372 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996Ab1DEU2y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 16:28:54 -0400
-Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own
- stack.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-In-Reply-To: <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
-References: <1301969218-9878-1-git-send-email-javier@cozybit.com>
-	 <1301987234.3831.2.camel@jlt3.sipsolutions.net>
-	 <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Apr 2011 22:28:52 +0200
-Message-ID: <1302035332.4968.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:41543 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752167Ab1DTODk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 10:03:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlwifi: fix possible data overwrite in hcmd callback
+Date: Wed, 20 Apr 2011 16:02:58 +0200
+Message-Id: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-05 at 11:05 -0700, Javier Cardona wrote:
+My commit 3598e1774c94e55c71b585340e7dc4538f310e3f
+"iwlwifi: fix enqueue hcmd race conditions" move hcmd callback after
+command queue reclaim, to avoid call it with hcmd_lock. But since
+queue read index was updated, cmd data can be overwritten. Fix problem
+by calling callback before taking hcmd_lock and queue reclaim.
 
-> We would like to preserve the ability to join an open mesh without a
-> daemon, in the same way that a station can associate with an AP
-> without one.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |   15 ++++-----------
+ 1 files changed, 4 insertions(+), 11 deletions(-)
 
-Keep in mind that even the station case on an open or WEP network is
-pretty useless since it will not reconnect if the connection drops, or
-do any sort of roaming.
-
-> With that goal in mind, the alternatives are to
-> duplicate the MPM in userspace or to reuse the in-kernel MPM with only
-> AMPE in userspace.  Considering that AMPE uses MPM frames and state
-> machines, reusing the in-kernel MPM is a significantly lower effort
-> alternative.  Furthermore, while working on AMPE we can also bring the
-> in-kernel MPM up to spec.
-> Of course this requires agreeing on a suitable API between MPM and
-> AMPE.  If you don't like the generic one I proposed we can try to
-> define a mesh-specific alternative.  But first, setting aside the API change
-> proposal, do you object to this AMPE-in-userspace/MPM-in-kernel partition?
-
-After thinking about this more, yes, I think I do object. Not only is
-the design strange with passing frames back and forth, but also it seems
-like a rather slippery slope, at some point I fear somebody will attempt
-to "fake" MPM to take advantage of that kernel code even when it's not
-really fitting.
-
-Since practically speaking, wpa_supplicant is already required for
-almost everything, I don't see any real disadvantages to duplicating the
-MPM state machine there, and starting to deprecate the one in the kernel
-over time with new features only available in userspace one, maybe even
-removing it at some point. I realise this is a little more short-term
-effort, but I think the long-term benefit probably outweighs it.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3732380..efff189 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -607,9 +607,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	struct iwl_cmd_meta *meta;
+ 	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
+ 	unsigned long flags;
+-	void (*callback) (struct iwl_priv *priv, struct iwl_device_cmd *cmd,
+-			  struct iwl_rx_packet *pkt);
+-
+ 
+ 	/* If a Tx command is being handled and it isn't in the actual
+ 	 * command queue then there a command routing bug has been introduced
+@@ -623,8 +620,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 		return;
+ 	}
+ 
+-	spin_lock_irqsave(&priv->hcmd_lock, flags);
+-
+ 	cmd_index = get_cmd_index(&txq->q, index, huge);
+ 	cmd = txq->cmd[cmd_index];
+ 	meta = &txq->meta[cmd_index];
+@@ -634,13 +629,14 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 			 dma_unmap_len(meta, len),
+ 			 PCI_DMA_BIDIRECTIONAL);
+ 
+-	callback = NULL;
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
+ 		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
+ 		rxb->page = NULL;
+-	} else
+-		callback = meta->callback;
++	} else if (meta->callback)
++		meta->callback(priv, cmd, pkt);
++
++	spin_lock_irqsave(&priv->hcmd_lock, flags);
+ 
+ 	iwl_hcmd_queue_reclaim(priv, txq_id, index, cmd_index);
+ 
+@@ -655,7 +651,4 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	meta->flags = 0;
+ 
+ 	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+-
+-	if (callback)
+-		callback(priv, cmd, pkt);
+ }
+-- 
+1.7.1
 
