@@ -1,52 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59361 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752984Ab1DAQPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:15:36 -0400
-Subject: Re: ChipCommon as independent driver?
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com> (sfid-20110401_120617_934926_1F9732B2)
-References: <AANLkTikGp+ZFhTtsaW7E4SO_5trte1_eF4KLWbkwVty5@mail.gmail.com>
-	 <1301673646.5219.18.camel@maggie>
-	 <BANLkTin2ZaBVbum9Y=iqWTwW4kzkdKAJnA@mail.gmail.com>
-	 (sfid-20110401_120617_934926_1F9732B2)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 18:15:30 +0200
-Message-ID: <1301674530.5219.25.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-px0-f179.google.com ([209.85.212.179]:33573 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab1DTF2n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 01:28:43 -0400
+Received: by pxi2 with SMTP id 2so318654pxi.10
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 22:28:42 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19886.28574.983271.871943@gargle.gargle.HOWL>
+Date: Wed, 20 Apr 2011 11:01:10 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 4/5] ath9k_htc: Use power save wrappers when accessing HW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 18:06 +0200, Rafał Miłecki wrote: 
-> W dniu 1 kwietnia 2011 18:00 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> > On Fri, 2011-04-01 at 16:49 +0200, Rafał Miłecki wrote:
-> >> Do you have idea how we could nicely solve that issue?
-> >
-> > Yeah. Just don't share code between ssb and bcmai.
-> > That's the only clean solution to that mess.
-> 
-> Do you want to have core drivers separated as well? Really? Should we
-> have separated pci core? chiccommon core?
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Yes. Those "drivers" are a mess full of ssb specific workarounds
-to hardware limitations.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   24 +++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    2 ++
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-> gige core?
-
-Are there bcmai devices with gige core?
-This driver is a _real_ mess. It basically is one huge
-workaround, because the hardware is incredibly stupid.
-
-> 80211 (b43) core?
-
-No. The b43 (and b44) driver is pretty much self contained. It will be
-easy
-to make it run on both platforms. There are only a few places
-that need changes.
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index eca7774..894e5ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -33,9 +33,15 @@ static ssize_t read_file_tgt_int_stats(struct file *file, char __user *user_buf,
+ 
+ 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
+ 
++	ath9k_htc_ps_wakeup(priv);
++
+ 	WMI_CMD(WMI_INT_STATS_CMDID);
+-	if (ret)
++	if (ret) {
++		ath9k_htc_ps_restore(priv);
+ 		return -EINVAL;
++	}
++
++	ath9k_htc_ps_restore(priv);
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "RX",
+@@ -85,9 +91,15 @@ static ssize_t read_file_tgt_tx_stats(struct file *file, char __user *user_buf,
+ 
+ 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
+ 
++	ath9k_htc_ps_wakeup(priv);
++
+ 	WMI_CMD(WMI_TX_STATS_CMDID);
+-	if (ret)
++	if (ret) {
++		ath9k_htc_ps_restore(priv);
+ 		return -EINVAL;
++	}
++
++	ath9k_htc_ps_restore(priv);
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "Xretries",
+@@ -149,9 +161,15 @@ static ssize_t read_file_tgt_rx_stats(struct file *file, char __user *user_buf,
+ 
+ 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
+ 
++	ath9k_htc_ps_wakeup(priv);
++
+ 	WMI_CMD(WMI_RX_STATS_CMDID);
+-	if (ret)
++	if (ret) {
++		ath9k_htc_ps_restore(priv);
+ 		return -EINVAL;
++	}
++
++	ath9k_htc_ps_restore(priv);
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "NoBuf",
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index fbc238a..c8577d5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1582,6 +1582,7 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 
+ 	mutex_lock(&priv->mutex);
++	ath9k_htc_ps_wakeup(priv);
+ 
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+@@ -1607,6 +1608,7 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 		ath_err(ath9k_hw_common(priv->ah), "Unknown AMPDU action\n");
+ 	}
+ 
++	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+ 
+ 	return ret;
 -- 
-Greetings Michael.
+1.7.4.4
 
