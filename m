@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37429 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab1DECQc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32916 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755993Ab1DTUPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 22:16:32 -0400
-Received: by iwn34 with SMTP id 34so6347290iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:32 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v7 04/10] mac80211: ignore peers if security is enabled for this mesh
-Date: Mon,  4 Apr 2011 18:15:34 -0700
-Message-Id: <1301966140-26080-5-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+	Wed, 20 Apr 2011 16:15:41 -0400
+Date: Wed, 20 Apr 2011 16:11:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: updated iwlwifi 5000 uCode available
+Message-ID: <20110420201124.GF2737@tuxdriver.com>
+References: <1303316696.14995.162.camel@wwguy-huron>
+ <20110420182254.GE2737@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110420182254.GE2737@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Wed, Apr 20, 2011 at 02:22:54PM -0400, John W. Linville wrote:
+> On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
+> > Hi,
+> > 
+> > Due to a packaging error, we've re-released the 5000 uCode version
+> > 8.83.5.1. 
+> > 
+> > The updated version of firmware is available for download from
+> > http://intellinuxwireless.org/?n=Downloads
+> > 
+> > The old, wrongly packaged version has the following sha1sums:
+> > 
+> > bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
+> > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > 8d94177b509be3fb653ce8ba0c633244e4abf5f3
+> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> 
+> The version I get from:
+> 
+> 	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
+> 
+> matches the sha1sum values listed above for the "wrongly packaged" version.
+> 
+> > The new version these:
+> > e70cc4b2249824a6b17ce9b9ae5087942c762213
+> > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > 22bf6093ed8204027cc3207c739d2cab9cc92ea3
+> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> > 
+> > The only change is removing the advertising for multiple interface
+> > support which is not actually present in this microcode.
+> > 
+> > Wey-Yi
+> 
+> So, you are going to release a different version of the file but
+> with the _same_ release number?  Couldn't you at least name it
+> iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c       |    4 ++++
- net/mac80211/mesh_plink.c |    4 ++++
- net/wireless/mesh.c       |    1 +
- 3 files changed, 9 insertions(+), 0 deletions(-)
+BTW, this name suggestions sucks...  8.83.5.1.1 or 8.83.5.2 would be
+better for packaging purposes (at least for RPM).
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1c244c0..47a26c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -573,6 +573,10 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
- 			       &elems);
- 
-+	/* ignore beacons from secure mesh peers if our security is off */
-+	if (elems.rsn_len && !sdata->u.mesh.is_secure)
-+		return;
-+
- 	if (elems.ds_params && elems.ds_params_len == 1)
- 		freq = ieee80211_channel_to_frequency(elems.ds_params[0], band);
- 	else
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index c705b20..bafe255 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -449,6 +449,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		mpl_dbg("Mesh plink: missing necessary peer link ie\n");
- 		return;
- 	}
-+	if (elems.rsn_len && !sdata->u.mesh.is_secure) {
-+		mpl_dbg("Mesh plink: can't establish link with secure peer\n");
-+		return;
-+	}
- 
- 	ftype = mgmt->u.action.u.plink_action.action_code;
- 	ie_len = elems.peer_link_len;
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 0e5c122..e0226e8 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -55,6 +55,7 @@ const struct mesh_setup default_mesh_setup = {
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
- 	.ie = NULL,
- 	.ie_len = 0,
-+	.is_secure = false,
- };
- 
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
 -- 
-1.7.4.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
