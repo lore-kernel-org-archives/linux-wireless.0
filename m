@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898Ab1DOHKG (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:46652 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751747Ab1DTSAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 03:10:06 -0400
-Subject: Re: [PATCH 2/2] ath9k_htc: Cleanup HTC debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: Sujith <m.sujith@gmail.com>,
-	Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110415070626.GB23429@vmraj-lnx.users.atheros.com>
-References: <1302848033-7072-1-git-send-email-rmanoharan@atheros.com>
-	 <1302848033-7072-2-git-send-email-rmanoharan@atheros.com>
-	 <19879.59459.480384.309998@gargle.gargle.HOWL>
-	 <20110415070626.GB23429@vmraj-lnx.users.atheros.com>
+	Wed, 20 Apr 2011 14:00:19 -0400
+Received: by mail-ey0-f172.google.com with SMTP id 13so463634eye.17
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 11:00:15 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: print actual rx packet size (without padding)
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1302016891-19091-1-git-send-email-eliad@wizery.com>
+References: <1302016891-19091-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Apr 2011 09:10:00 +0200
-Message-ID: <1302851401.3572.3.camel@jlt3.sipsolutions.net>
+Date: Wed, 20 Apr 2011 21:02:41 +0300
+Message-ID: <1303322561.1988.739.camel@cumari>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-15 at 12:36 +0530, Rajkumar Manoharan wrote:
+On Tue, 2011-04-05 at 18:21 +0300, Eliad Peller wrote:
+> When debugging, reduce the padding size from each rx packet, to
+> get the actual packet size (so comparing it against a cap file
+> will be easier)
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-> > > @@ -150,6 +149,10 @@ static void ath9k_deinit_device(struct ath9k_htc_priv *priv)
-> > >  {
-> > >  	struct ieee80211_hw *hw = priv->hw;
-> > >  
-> > > +	if (priv->debug.debugfs_phy) {
-> > > +		debugfs_remove_recursive(priv->debug.debugfs_phy);
-> > > +		priv->debug.debugfs_phy = NULL;
-> > > +	}
-> > 
-> > It would be consistent to have this chunk of code in ath9k_htc_exit_debug().
-> >
-> I think mac80211 handles debugfs_remove_recursive. isn't it?
-> If so, Shall I remove it?
+Applied.  Thanks!
 
-cfg80211 will remove all per wiphy debugfs files, but you might want to
-remove them before so nobody accesses them while you're uninitialising.
-
-johannes
+-- 
+Cheers,
+Luca.
 
