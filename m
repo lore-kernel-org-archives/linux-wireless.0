@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42170 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941Ab1DOBQY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 21:16:24 -0400
-Received: by iyb14 with SMTP id 14so1847479iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 18:16:23 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:28698 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752095Ab1DTKtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 06:49:06 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 03:48:40 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [RFC] mac80211: Assign locally managed MAC address for each vif
+Date: Wed, 20 Apr 2011 16:19:02 +0530
+Message-ID: <1303296542-18260-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimFpfiufv09raZNOLX30Ot6fdZV1Q@mail.gmail.com>
-References: <4DA606CC.9040609@hauke-m.de> <77733.17144.qm@web161604.mail.bf1.yahoo.com>
- <BANLkTimFpfiufv09raZNOLX30Ot6fdZV1Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Apr 2011 18:16:02 -0700
-Message-ID: <BANLkTintXt40gCUEW2Mf0eGEQdUT7QB9zA@mail.gmail.com>
-Subject: Re: Compat-wireless release for 2011-04-07 is baked
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 14, 2011 at 8:38 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Apr 14, 2011 at 8:32 AM, Walter Goldens
-> <goldenstranger@yahoo.com> wrote:
->>> The cron job generating compat-wireless places it to a
->>> location, so it
->>> is available for download on orbit, the cron job is running
->>> on a server
->>> at orbit. Now some other cron job copies it to
->>> wireless.kernel.org.
->>>
->>> The scripts generating compat-wireless can be found here:
->>> http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-user.git;a=tree
->>
->>
->> Thanks for clearing this up, Hauke. There hasn't been one single compat-wireless tar ball for the month of April.
->>
->>
->>> > PS, I guess this CW bot "baker" needs a little
->>> fine-tuning
->>> Yes that's true. Are you willing to improve it so it
->>> generated better
->>> messages on failure?
->>
->> I'm willing, but I've got my hands full right now. Luis is maintaining this, isn't he? I think he's away now. Maybe he'd like to check with his own creations.
->
-> I'm not away, just doing other things. Will check this out today.
+If the chip does not have set of hw mac addresses for each vif,
+let's generate a locally managed mac address for the secondary
+vifs. By doing this, we can avoid setting hw ether address
+before bringing up the interface. The actual hw mac address
+is set to the first vif.
 
-OK fixed, lets see what this thing spits out tomorrow, but I think it
-should be fixed.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ net/mac80211/iface.c |   22 ++++++++++++++++++----
+ 1 files changed, 18 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4054399..ba75e25 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1011,19 +1011,33 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 				       struct net_device *dev,
+ 				       enum nl80211_iftype type)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata, *ifdata = NULL;
+ 	u64 mask, start, addr, val, inc;
+ 	u8 *m;
+ 	u8 tmp_addr[ETH_ALEN];
+-	int i;
++	int i = 0;
+ 
+ 	/* default ... something at least */
+ 	memcpy(dev->perm_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
+ 
+ 	if (is_zero_ether_addr(local->hw.wiphy->addr_mask) &&
+-	    local->hw.wiphy->n_addresses <= 1)
+-		return;
++	    local->hw.wiphy->n_addresses <= 1) {
+ 
++		list_for_each_entry(ifdata, &local->interfaces, list)
++			i++;
++		/*
++		 * XOR virtual interface index into the least significant bits
++		 * to generate a different MAC address for secondary vifs
++		 */
++		if (i) {
++			dev->perm_addr[0] |= 0x02; /* Locally managed address */
++			dev->perm_addr[5] ^= i & 0xff;
++			dev->perm_addr[4] ^= (i & 0xff00) >> 8;
++			dev->perm_addr[3] ^= (i & 0xff0000) >> 16;
++		}
++
++		return;
++	}
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 
+-- 
+1.7.4.4
+
