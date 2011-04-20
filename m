@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58540 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758844Ab1DNOvM convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:34124 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751318Ab1DTRfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 10:51:12 -0400
-Received: by bwz15 with SMTP id 15so1439743bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 07:51:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
- <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
- <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Thu, 14 Apr 2011 16:50:31 +0200
-Message-ID: <BANLkTik2F_6w5jacYw+2-=7Jken6aF_RBQ@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: linux-wireless@vger.kernel.org
-Cc: chunkeey@googlemail.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Apr 2011 13:35:53 -0400
+Received: by mail-ew0-f52.google.com with SMTP id 28so409711ewy.11
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 10:35:50 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Set End-of-transaction Flag at Wl127x AP Mode
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1301901639-19457-1-git-send-email-shahar_levi@ti.com>
+References: <1301901639-19457-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Apr 2011 20:38:17 +0300
+Message-ID: <1303321097.1988.734.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-btw I have 40 mbps now WOW!! :)
-But my windows 7 laptop still shows it as 75 mbps connection.
+On Mon, 2011-04-04 at 10:20 +0300, Shahar Levi wrote:
+> End-of-transaction flag should be set when working with
+> wl127x chip on AP mode.
+> 
+> Thanks Ido Yariv <ido@wizery.com> for the guidance with that.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-2011/4/14 Damian Lesiuk <lesiuk@gmail.com>:
-> uniwersytecka-server ~ # iw wlan0 station dump
-> Station 74:f0:6d:33:ea:00 (on wlan0)
->       inactive time:  20 ms
->       rx bytes:       5043668
->       rx packets:     9305
->       tx bytes:       13762256
->       tx packets:     11634
->       signal:         -31 dBm
->       tx bitrate:     65.0 MBit/s MCS 7
->
-> So it helped in some way.
-> Why that network isn't 300 mbps?
->
-> My config is:
-> interface=wlan0
-> driver=nl80211
-> ssid=lesiuk
-> channel=7
-> hw_mode=g
-> ieee80211n=1
-> wme_enabled=1
-> ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
->
+Applied.  Thanks, Shahar!
+
+-- 
+Cheers,
+Luca.
+
