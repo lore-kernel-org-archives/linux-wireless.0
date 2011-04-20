@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43385 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420Ab1DUBMR convert rfc822-to-8bit (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:40419 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890Ab1DTRET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 21:12:17 -0400
-Received: by iyb14 with SMTP id 14so1046794iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 18:12:17 -0700 (PDT)
+	Wed, 20 Apr 2011 13:04:19 -0400
+Date: Wed, 20 Apr 2011 14:04:32 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: pull request: bluetooth-2.6 2011-04-20
+Message-ID: <20110420170432.GA2301@joana>
 MIME-Version: 1.0
-In-Reply-To: <20110412202853.GA20598@vmehta-desktop>
-References: <1302148341-1783-1-git-send-email-nsingh@atheros.cm> <20110412202853.GA20598@vmehta-desktop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 20 Apr 2011 18:11:57 -0700
-Message-ID: <BANLkTiniif7vO5LPh1p2CwFdjoAW9Oc-+A@mail.gmail.com>
-Subject: Re: [PATCH 0/5] staging:ath6kl:patches for supporting 2.1.1 and bug fixes
-To: Vipin Mehta <vmehta@atheros.com>,
-	Kalle Valo <kalle.valo@atheros.com>,
-	Dave Cech <Dave.Cech@atheros.com>, Greg KH <greg@kroah.com>
-Cc: Naveen Singh <nsingh@atheros.cm>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vipin Mehta <Vipin.Mehta@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Naveen Singh <Naveen.Singh@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2011 at 1:28 PM, Vipin Mehta <vmehta@atheros.com> wrote:
-> Greg,
->  Did you get a chance to review these patches? Pls provide us your feedback.
+Hi John,
 
-Greg,
+Four small fixes for 2.6.39. An incorrect refcnt balance for hci connection by
+Ville Tervo, a warning fix in the command timer by Vinicius Gomes, an ERTM
+fix by Ruiyi Zhang, and SCO synchronization fix by Luiz Augusto von Dentz.
 
-I saw you were starting to integrate some changes (I think), I was
-just wondering if these were in the batch of new updates you are
-integrating, or if we should resubmit.
+Please pull or let me know any problems. Thanks.
 
-  Luis
+
+The following changes since commit 332704a51498a7e29aa92c19dc03f11f80b71bfe:
+
+  iwlegacy: fix tx_power initialization (2011-04-13 15:09:53 -0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
+                                                                                                     
+Luiz Augusto von Dentz (1):                                                                          
+      Bluetooth: fix shutdown on SCO sockets                                                         
+                                                                                                     
+Ruiyi Zhang (1):                                                                                     
+      Bluetooth: Only keeping SAR bits when retransmitting one frame.                                
+                                                                                                     
+Ville Tervo (1):                                                                                     
+      Bluetooth: Fix refcount balance for hci connection                                             
+                                                                                                     
+Vinicius Costa Gomes (1):                                                                            
+      Bluetooth: Fix keeping the command timer running                                               
+
+ net/bluetooth/hci_core.c   |    5 ++---
+ net/bluetooth/hci_event.c  |    2 --
+ net/bluetooth/l2cap_core.c |    1 +
+ net/bluetooth/sco.c        |    9 +++++++++
+ 4 files changed, 12 insertions(+), 5 deletions(-)
+
+-- 
+Gustavo F. Padovan
+http://profusion.mobi
