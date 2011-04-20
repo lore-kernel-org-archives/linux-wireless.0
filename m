@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47551 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123Ab1DAHvm (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:36647 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750768Ab1DTR6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 03:51:42 -0400
-Received: by fxm17 with SMTP id 17so2420760fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 00:51:41 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Realman Namingston <realname1776@gmail.com>
-Subject: Re: bad packets in monitor mode with ar9170 devices
-Date: Fri, 1 Apr 2011 09:51:42 +0200
+	Wed, 20 Apr 2011 13:58:37 -0400
+Received: by mail-ey0-f180.google.com with SMTP id 24so405547eyg.39
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 10:58:36 -0700 (PDT)
+Subject: Re: [PATCH v2] wl12xx: Set correct REF CLK and TCXO CLK values to
+ the FW
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
 Cc: linux-wireless@vger.kernel.org
-References: <AANLkTi=pWrS9jK1obHLiXu+oLK6YS00fG-YQqzUieYH7@mail.gmail.com>
-In-Reply-To: <AANLkTi=pWrS9jK1obHLiXu+oLK6YS00fG-YQqzUieYH7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104010951.42502.chunkeey@googlemail.com>
+In-Reply-To: <1301828094-29569-1-git-send-email-shahar_levi@ti.com>
+References: <1301828094-29569-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Apr 2011 21:00:58 +0300
+Message-ID: <1303322458.1988.738.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 April 2011 05:12:45 Realman Namingston wrote:
-> ar9170-based devices record a fair amount of bad packets in monitor
-> mode both with the old ar9170usb and new carl9170 drivers. The packets
-> contain random BSSIDs, some measure of additional random data, and
-> seem to scale proportional to the amount of traffic occurring on the
-> observed channel. This behavior makes the devices rather unattractive
-> for use in Kismet and site survey applications.
+On Sun, 2011-04-03 at 13:54 +0300, Shahar Levi wrote:
+> Fix mismatch between the REF CLK and TCXO CLK information that is
+> set in the platform data and the NVS, so we override what comes
+> from the NVS and replace it with what comes from the platform data.
 > 
-> I assume this is due to a shortcoming of the hardware.. but is there
-> any potential fix possible?
-no, you misunderstood that completely: it's a shortcoming of kismet!
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-quote:
-"Usually the wireless adapter is unable to transmit in monitor mode and
-is restricted to a single wireless channel, though this is dependent on
-the wireless adapter's driver, its firmware, and its chip set's features.
-Also, in monitor mode the adapter does not check to see if the cyclic
-redundancy check (CRC) values are correct for packets captured, so some
-captured packets may be corrupted."
+Applied with a small fix in a comment.  Thank you!
 
-http://en.wikipedia.org/wiki/Monitor_mode
+-- 
+Cheers,
+Luca.
+
