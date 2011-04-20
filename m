@@ -1,83 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57142 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4192 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754846Ab1DKSZs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 14:25:48 -0400
-Date: Mon, 11 Apr 2011 20:25:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Robin Dong <hao.bigrat@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Robin Dong <sanbai@taobao.com>
-Subject: Re: [PATCH] fix iwl3945 tx power setting in iwl3945_init_drv
-Message-ID: <20110411182531.GA5344@redhat.com>
-References: <1302433562-4078-1-git-send-email-hao.bigrat@gmail.com>
+	id S1751127Ab1DTH6B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 03:58:01 -0400
+To: "Arnd Bergmann" <arnd@arndb.de>
+cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Jonas Gorski" <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Greg KH" <greg@kroah.com>, "Andy Botting" <andy@andybotting.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom
+ bus?
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+ <201104191635.40351.arnd@arndb.de> <op.vt76hofg3ri7v4@arend-laptop>
+ <201104200926.09110.arnd@arndb.de>
+Date: Wed, 20 Apr 2011 09:57:40 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1302433562-4078-1-git-send-email-hao.bigrat@gmail.com>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vt7787f43ri7v4@arend-laptop>
+In-Reply-To: <201104200926.09110.arnd@arndb.de>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robin
+On Wed, 20 Apr 2011 09:26:08 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
 
-> When I build and run the kernel-2.6.39-rc2 on my laptop, my intel-3945-a/b/g wireless
-> card will not work and the dmesg is:
-> 
-> [   58.597834] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [   58.597839] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [   58.598276] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [   58.598279] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [   94.064147] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [   94.064152] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [   94.064529] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [   94.064533] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [  133.892160] sky2 0000:02:00.0: eth1: disabling interface
-> [  473.313935] sky2 0000:02:00.0: eth1: enabling interface
-> [  473.314238] ADDRCONF(NETDEV_UP): eth1: link is not ready
-> [  473.383740] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [  473.383748] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [  473.384146] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [  473.384153] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [  473.455655] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [  473.455663] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> [  473.456128] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-> [  473.456134] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-> 
-> It is weird the iwl3945 set txpower 15 above limit 14.
-> So I checked iwl4965 and iwl3945 driver and found out it will set 
-> tx_power_next to 0 in "iwl4965_init_drv" but to 15 in "iwl3945_init_drv"
-> I change tx_power_next=0 in "iwl3945_init_drv", and my wireless card works.
+> On Wednesday 20 April 2011 09:16:26 Arend van Spriel wrote:
+>> >
+>> > A platform device means something that cannot be probed, in every  
+>> other
+>> > respect it is the same as other devices. From your explanation above,
+>> > it seems that you don't actually need to represent the cores on your
+>> > particular chips as struct device in Linux at all.
+>> >
+>> > If you wanted to use platform_device, the right way would probably
+>> > be an MFD device that creates multiple child devices (which end
+>> > up as platform_device, though you don't need to worry about that)
+>> > from the PCI driver. Then you could use the child devices completely
+>> > independent from one another.
+>> >
+>> > Since you say that the cores in this case are tightly coupled and
+>> > don't provide independent functionality to the system, there is
+>> > no need to represent them as devices.
+>>
+>> The case is a hypothetical one, but I consider it a likely one. The axi
+>> bus driver currently registers each detected core as a device in the  
+>> linux
+>> device tree. My statement is that this implies loose or no coupling
+>> between those cores, which is not true. One (or two) exceptions have
+>> already been identified. I would expect your last line to read: ...to  
+>> the
+>> system, those cores should not be represented as devices.
+>
+> The important question is what is most practical here. If most of the
+> cores of this type are standalone devices, it's probably best to  
+> represent
+> all of them as separate devices, and find ways to deal with the few  
+> logical
+> devices that are spread across multiple cores.
+> It it's the exception and you typically have a significant number of IP
+> blocks that need to be combined to make a single logical device, I would
+> recommend not representing each of them as a struct device.
+>
+> We really need to figure out first what the requirements are given the
+> hardware you want to support with this.
 
-Thanks for catching this. I wonder if this is a problem of bad
-tx_power_device_lmt value instead of default setting, because on older
-kernel default tx_power value 15 worked, right? I would like to avoid
-changing default setting is possible.
+Very true. I have forwarded this email conversation to a colleague of mine  
+to see whether my hypothesis is likely or rarely true at least for  
+Broadcom chipsets. As we concluded that Broadcom seems to be the only one  
+currently using this bus that input may be sufficient to determine the  
+requirements.
 
-Could you apply below simple patch and apply similar changes on older
-kernel to compare if tx_power_device_lmt change on your system between
-kernels and why?
+Gr. AvS
+-- 
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 7007d61..78af49b 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -235,6 +235,9 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
- 
- 			geo_ch->flags |= ch->ht40_extension_channel;
- 
-+			printk("ch->max_power_avg %u, priv->tx_power_device_lmt %u\n",
-+				ch->max_power_avg, priv->tx_power_device_lmt);
-+
- 			if (ch->max_power_avg > priv->tx_power_device_lmt)
- 				priv->tx_power_device_lmt = ch->max_power_avg;
- 		} else {
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-index 04c5648..45f458b 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-@@ -448,6 +448,7 @@ int iwl_legacy_init_channel_map(struct iwl_priv *priv)
- 			/* Initialize regulatory-based run-time data */
- 			ch_info->max_power_avg = ch_info->curr_txpow =
- 			    eeprom_ch_info[ch].max_power_avg;
-+			printk("band %d ch %d max_power_avg %d\n", band, ch, ch_info->max_power_avg);
- 			ch_info->scan_power = eeprom_ch_info[ch].max_power_avg;
- 			ch_info->min_power = 0;
- 
