@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35687 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:28631 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754882Ab1D1MJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:09:22 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kyle McMartin <kmcmartin@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.38 3/4] iwl3945: disable hw scan by default
-Date: Thu, 28 Apr 2011 14:08:14 +0200
-Message-Id: <1303992495-7337-4-git-send-email-sgruszka@redhat.com> (sfid-20110428_140926_835865_6414E2E3)
-In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
-References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+	id S1752274Ab1DTO1f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 10:27:35 -0400
+Subject: Re: [PATCH] iwlwifi: fix possible data overwrite in hcmd callback
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
+References: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Apr 2011 07:05:48 -0700
+Message-ID: <1303308348.14995.149.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 0263aa45293838b514b8af674a03faf040991a90 upstream.
+Hi Stanislaw,
 
-After new NetworkManager 0.8.996 changes, hardware scanning is causing
-microcode errors as reported here:
-https://bugzilla.redhat.com/show_bug.cgi?id=683571
-and sometimes kernel crashes:
-https://bugzilla.redhat.com/show_bug.cgi?id=688252
+On Wed, 2011-04-20 at 07:02 -0700, Stanislaw Gruszka wrote:
+> My commit 3598e1774c94e55c71b585340e7dc4538f310e3f
+> "iwlwifi: fix enqueue hcmd race conditions" move hcmd callback after
+> command queue reclaim, to avoid call it with hcmd_lock. But since
+> queue read index was updated, cmd data can be overwritten. Fix problem
+> by calling callback before taking hcmd_lock and queue reclaim.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-tx.c |   15 ++++-----------
+>  1 files changed, 4 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> index 3732380..efff189 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> @@ -607,9 +607,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+>  	struct iwl_cmd_meta *meta;
+>  	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
+>  	unsigned long flags;
+> -	void (*callback) (struct iwl_priv *priv, struct iwl_device_cmd *cmd,
+> -			  struct iwl_rx_packet *pkt);
+> -
+>  
+>  	/* If a Tx command is being handled and it isn't in the actual
+>  	 * command queue then there a command routing bug has been introduced
+> @@ -623,8 +620,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+>  		return;
+>  	}
+>  
+> -	spin_lock_irqsave(&priv->hcmd_lock, flags);
+> -
+>  	cmd_index = get_cmd_index(&txq->q, index, huge);
+>  	cmd = txq->cmd[cmd_index];
+>  	meta = &txq->meta[cmd_index];
+> @@ -634,13 +629,14 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+>  			 dma_unmap_len(meta, len),
+>  			 PCI_DMA_BIDIRECTIONAL);
+>  
+> -	callback = NULL;
+>  	/* Input error checking is done when commands are added to queue. */
+>  	if (meta->flags & CMD_WANT_SKB) {
+>  		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
+>  		rxb->page = NULL;
+> -	} else
+> -		callback = meta->callback;
+> +	} else if (meta->callback)
+> +		meta->callback(priv, cmd, pkt);
+> +
+> +	spin_lock_irqsave(&priv->hcmd_lock, flags);
+>  
+>  	iwl_hcmd_queue_reclaim(priv, txq_id, index, cmd_index);
+>  
+> @@ -655,7 +651,4 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+>  	meta->flags = 0;
+>  
+>  	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+> -
+> -	if (callback)
+> -		callback(priv, cmd, pkt);
+>  }
 
-Also with hw scan there are very bad performance on some systems
-as reported here:
-https://bugzilla.redhat.com/show_bug.cgi?id=671366
+Could you elaborate a bit more, why you do not need to protect getting
+the cmd index.
 
-Since Intel no longer supports 3945, there is no chance to get proper
-firmware fixes, we need workaround problems by disable hardware scanning
-by default.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index cf0699a..a8340f7 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -94,6 +94,7 @@ MODULE_LICENSE("GPL");
- struct iwl_mod_params iwl3945_mod_params = {
- 	.sw_crypto = 1,
- 	.restart_fw = 1,
-+	.disable_hw_scan = 1,
- 	/* the rest are 0 by default */
- };
- 
-@@ -4317,7 +4318,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
- 		   int, S_IRUGO);
--MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
-+MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
- module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
- MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
- 
--- 
-1.7.1
+Wey
 
