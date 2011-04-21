@@ -1,86 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37298 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754950Ab1D1LLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 07:11:15 -0400
-Date: Thu, 28 Apr 2011 13:10:23 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH wireless-2.6] iwlagn: fix "Received BA when not expected"
-Message-ID: <20110428111011.GA6967@redhat.com> (sfid-20110428_131118_871724_45CC9A2E)
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43016 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459Ab1DUPQ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 11:16:26 -0400
+Received: by yxs7 with SMTP id 7so498114yxs.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 08:16:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Matteo Croce <matteo@openwrt.org>
+Date: Thu, 21 Apr 2011 17:15:45 +0200
+Message-ID: <BANLkTi=aj5PO9uVazVcZcA3865ma3LkCrA@mail.gmail.com>
+Subject: 802.11n frame injection
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Need to use broadcast sta_id for management and multicast frames,
-otherwise we broke BA session and get messages like that:
+This patch allows to set the tx rate and retries when injecting,
+and report correct MCS information on received frames.
 
-"Received BA when not expected"
+Signed-off-by: Matteo Croce <matteo@openwrt.org>
 
-or (on older kernels):
+--- a/net/mac80211/tx.c	2011-04-18 15:30:13.540573589 +0200
++++ b/net/mac80211/tx.c	2011-04-19 16:17:19.072552828 +0200
+@@ -1091,6 +1091,44 @@
+ 				tx->flags |= IEEE80211_TX_FRAGMENTED;
+ 			break;
 
-"BA scd_flow 0 does not match txq_id 10"
-
-This fix regression introduced in 2.6.35 during station management
-code rewrite by:
-
-commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Apr 30 11:30:45 2010 -0700
-
-    iwlwifi: use iwl_find_station less
-
-Patch partially resolve:
-https://bugzilla.kernel.org/show_bug.cgi?id=16691
-However, there are still 11n performance problems on 4965 and 5xxx
-devices that need to be ivestigated.
-
-Cc: stable@kernel.org # 2.6.35+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   18 ++++++++++++------
- 1 files changed, 12 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 494de0e..dfde372 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -31,6 +31,7 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/sched.h>
-+#include <linux/etherdevice.h>
- 
- #include "iwl-dev.h"
- #include "iwl-core.h"
-@@ -582,12 +583,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	hdr_len = ieee80211_hdrlen(fc);
- 
--	/* Find index into station table for destination station */
--	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
--	if (sta_id == IWL_INVALID_STATION) {
--		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
--			       hdr->addr1);
--		goto drop_unlock;
-+	/* If this frame is broadcast or management, use broadcast station id */
-+	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
-+		sta_id = ctx->bcast_sta_id;
-+	else {
-+		/* Find index into station table for destination station */
-+		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-+		if (sta_id == IWL_INVALID_STATION) {
-+			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
-+				       hdr->addr1);
-+			goto drop_unlock;
++		case IEEE80211_RADIOTAP_RATE: {
++			info->control.rates[0].idx = 0;
++			if (*iterator.this_arg) {
++				int i;
++				for (i = 0; i < sband->n_bitrates; i++)
++					if (sband->bitrates[i].bitrate ==
++						*iterator.this_arg * 5) {
++						info->control.rates[0].idx = i;
++						break;
++					}
++			}
++			info->control.rates[0].flags = 0;
++			info->control.rates[1].idx = -1;
++			info->control.rates[2].idx = -1;
++			info->control.rates[3].idx = -1;
++			info->control.rates[4].idx = -1;
++			break;
 +		}
- 	}
- 
- 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
--- 
-1.7.1
++
++		case IEEE80211_RADIOTAP_DATA_RETRIES:
++			info->control.rates[0].count = *iterator.this_arg;
++			break;
++
++		case IEEE80211_RADIOTAP_MCS: {
++			u8 flags = iterator.this_arg[1];
++			u8 mcs = iterator.this_arg[2];
++			info->control.rates[0].idx = mcs;
++			info->control.rates[0].flags |=
++				IEEE80211_TX_RC_MCS;
++			if (flags & IEEE80211_RADIOTAP_MCS_BW_40)
++				info->control.rates[0].flags |=
++				IEEE80211_TX_RC_40_MHZ_WIDTH;
++			if (flags & IEEE80211_RADIOTAP_MCS_SGI)
++				info->control.rates[0].flags |=
++				IEEE80211_TX_RC_SHORT_GI;
++			break;
++		}
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+--- a/net/mac80211/ieee80211_i.h	2011-04-18 15:30:13.532573589 +0200
++++ b/net/mac80211/ieee80211_i.h	2011-04-18 17:06:47.904572241 +0200
+@@ -1196,6 +1196,10 @@
+ 	u8 padding_for_rate;
+ 	__le16 tx_flags;
+ 	u8 data_retries;
++	/*HT info*/
++	u8 ht_known;
++	u8 ht_flag;
++	u8 ht_mcs;
+ } __packed;
 
+
+--- a/net/mac80211/status.c	2011-04-18 15:30:13.548573589 +0200
++++ b/net/mac80211/status.c	2011-04-18 17:23:40.560572005 +0200
+@@ -405,6 +405,19 @@
+ 	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+ 		rthdr->rate = sband->bitrates[
+ 				info->status.rates[0].idx].bitrate / 5;
++	/* HT rates */
++	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
++		rthdr->hdr.it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
++		rthdr->rate = 0;
++		rthdr->ht_known =	IEEE80211_RADIOTAP_MCS_HAVE_BW |
++					IEEE80211_RADIOTAP_MCS_HAVE_MCS |
++					IEEE80211_RADIOTAP_MCS_HAVE_GI;
++		rthdr->ht_mcs = info->status.rates[0].idx;
++		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
++		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
++			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
++	}
+
+ 	/* for now report the total retry_count */
+ 	rthdr->data_retries = retry_count;
+--- a/net/wireless/radiotap.c	2011-04-18 15:30:13.524573589 +0200
++++ b/net/wireless/radiotap.c	2011-04-18 16:11:36.044573011 +0200
+@@ -40,6 +40,7 @@
+ 	[IEEE80211_RADIOTAP_TX_FLAGS] = { .align = 2, .size = 2, },
+ 	[IEEE80211_RADIOTAP_RTS_RETRIES] = { .align = 1, .size = 1, },
+ 	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
++	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
+ 	/*
+ 	 * add more here as they are defined in radiotap.h
+ 	 */
