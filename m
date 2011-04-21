@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26059 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752611Ab1DEP3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 11:29:21 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:28:56 -0700
-Message-ID: <4D9B354B.3070308@atheros.com>
-Date: Tue, 5 Apr 2011 20:59:15 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: Add station uptime in debugfs
-References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <4D9B2268.8070902@openwrt.org> <4D9B2F79.2090606@atheros.com> <4D9B346A.5000601@openwrt.org>
-In-Reply-To: <4D9B346A.5000601@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:59278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599Ab1DUMeB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 08:34:01 -0400
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20110421121513.GC27527@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+	 <20110415084005.GC11576@hertz.marvell.com>
+	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+	 <20110415105140.GD11576@hertz.marvell.com>
+	 <1302865304.3572.15.camel@jlt3.sipsolutions.net>
+	 <20110421121513.GC27527@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Apr 2011 14:33:56 +0200
+Message-ID: <1303389236.3597.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 April 2011 08:55 PM, Felix Fietkau wrote:
-> On 2011-04-05 5:04 PM, Mohammed Shafi wrote:
->    
->> On Tuesday 05 April 2011 07:38 PM, Felix Fietkau wrote:
->>      
->>>   On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
->>>
->>>        
->>>>   From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>
->>>>   Add station uptime parameter in debugfs. This will be helpful to get a
->>>>   measure of stability of connection and also during stress testing.
->>>>
->>>>   Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>
->>>>          
->>>        
->>>>   diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
->>>>   index 999f8fb..08b9f51 100644
->>>>   --- a/net/mac80211/sta_info.c
->>>>   +++ b/net/mac80211/sta_info.c
->>>>   @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->>>>      	sta->local = local;
->>>>      	sta->sdata = sdata;
->>>>      	sta->last_rx = jiffies;
->>>>   +	sta->sta_uptime = jiffies;
->>>>
->>>>      	ewma_init(&sta->avg_signal, 1024, 8);
->>>>
->>>>
->>>>          
->>>   I think jiffies can easily overflow. Maybe it would be better to get a
->>>   timeval from the monotonic clock.
->>>
->>>        
->> Thanks, yes thats true and I assumed this will work fine for 49 days
->> assuming 32 bit(please correct me if my calculations are wrong). will
->> the overflow will take place in less than this time?.
->>      
-> Yes, but there are people that deploy point to point links that can last
-> longer than that ;)
->    
-Oh ok, then  I will look into it. Thanks for the review!
->    
->> I will dig more into it by looking at the time val.
->>      
-> Thanks.
->
-> - Felix
-> .
->
->    
+On Thu, 2011-04-21 at 17:45 +0530, Yogesh Ashok Powar wrote:
+
+> @@ -101,6 +101,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+>  
+>  	if (!ret) {
+>  		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+> +		if (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
+> +			key->local->crypto_tx_tailroom_needed_cnt++;
+> +
+>  		return 0;
+>  	}
+>  
+> @@ -117,6 +120,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+>  	case WLAN_CIPHER_SUITE_CCMP:
+>  	case WLAN_CIPHER_SUITE_AES_CMAC:
+>  		/* all of these we can do in software */
+> +
+> +		/* SW encryption need tailroom reservation */
+> +		BUG_ON(!key->local);
+
+BUG_ON? Seriously? It was already dereferenced about 10 times here... In
+any case, this isn't right.
+
+> @@ -156,6 +164,11 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+>  			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+>  
+>  	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+> +
+> +	if ((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
+> +				&& key->local->crypto_tx_tailroom_needed_cnt)
+> +		key->local->crypto_tx_tailroom_needed_cnt--;
+
+And that if (cnt) can't be right either.
+
+
+> +	if (key_sw_programmed && local->crypto_tx_tailroom_needed_cnt)
+> +		local->crypto_tx_tailroom_needed_cnt--;
+
+So you're putting if (needed_cnt) everywhere because you have
+refcounting bugs? Better fix those bugs ....
+
+
+> +	local->crypto_tx_tailroom_needed_cnt = 0;
+
+Not necessary, it's already 0.
+
+
+I don't think you understood what I said how it should work. You must
+increase the counter when the key is created, and then you can reduce it
+again when the key is uploaded and no mmic is needed.
+
+johannes
+
