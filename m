@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:56266 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab1DHJPT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752177Ab1DULiG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 05:15:19 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: interrupt handling changes
-Date: Fri,  8 Apr 2011 14:00:49 +0530
-Message-Id: <1302251449-763-1-git-send-email-nishants@marvell.com>
+	Thu, 21 Apr 2011 07:38:06 -0400
+Subject: [PATCH] mac80211: tear down BA sessions properly on suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Apr 2011 13:38:00 +0200
+Message-ID: <1303385880.3597.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do not need to enable all the interrupts in mwl8k_probe_hw.
-We need to enable only MWL8K_A2H_INT_OPC_DONE interrupt for sending
-commands to the firmware. Keep the other interrupts masked in
-mwl8k_probe_hw. Also, in mwl8k_start, where we expect other interrupts,
-enable only those interrupts we are interested in.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Currently, the code to tear down BA sessions will
+execute after queues are stopped, but attempt to
+send frames, so those frames will just get queued,
+which isn't intended. Move this code to before to
+tear down the sessions properly.
+
+Additionally, after stopping queues, flush the TX
+queues in the driver driver to make sure all the
+frames went out.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwl8k.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ net/mac80211/pm.c |   16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 8913180..07e8134 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -4285,6 +4285,8 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+--- a/net/mac80211/pm.c	2011-04-21 13:32:22.000000000 +0200
++++ b/net/mac80211/pm.c	2011-04-21 13:32:24.000000000 +0200
+@@ -14,12 +14,23 @@ int __ieee80211_suspend(struct ieee80211
  
- 	/* Enable interrupts */
- 	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
-+	iowrite32(MWL8K_A2H_EVENTS,
-+		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+ 	ieee80211_scan_cancel(local);
  
- 	rc = mwl8k_fw_lock(hw);
- 	if (!rc) {
-@@ -5283,7 +5285,8 @@ static int mwl8k_probe_hw(struct ieee80211_hw *hw)
- 	iowrite32(MWL8K_A2H_INT_TX_DONE|MWL8K_A2H_INT_RX_READY|
- 		  MWL8K_A2H_INT_BA_WATCHDOG,
- 		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_CLEAR_SEL);
--	iowrite32(0xffffffff, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
-+	iowrite32(MWL8K_A2H_INT_OPC_DONE,
-+		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
++	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++		mutex_lock(&local->sta_mtx);
++		list_for_each_entry(sta, &local->sta_list, list) {
++			set_sta_flags(sta, WLAN_STA_BLOCK_BA);
++			ieee80211_sta_tear_down_BA_sessions(sta, true);
++		}
++		mutex_unlock(&local->sta_mtx);
++	}
++
+ 	ieee80211_stop_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
  
- 	rc = request_irq(priv->pdev->irq, mwl8k_interrupt,
- 			 IRQF_SHARED, MWL8K_NAME, hw);
--- 
-1.6.0.3
+ 	/* flush out all packets */
+ 	synchronize_net();
+ 
++	drv_flush(local, false);
++
+ 	local->quiescing = true;
+ 	/* make quiescing visible to timers everywhere */
+ 	mb();
+@@ -43,11 +54,6 @@ int __ieee80211_suspend(struct ieee80211
+ 	/* tear down aggregation sessions and remove STAs */
+ 	mutex_lock(&local->sta_mtx);
+ 	list_for_each_entry(sta, &local->sta_list, list) {
+-		if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+-			set_sta_flags(sta, WLAN_STA_BLOCK_BA);
+-			ieee80211_sta_tear_down_BA_sessions(sta, true);
+-		}
+-
+ 		if (sta->uploaded) {
+ 			sdata = sta->sdata;
+ 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+
 
