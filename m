@@ -1,113 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64845 "EHLO mail.atheros.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3190 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760422Ab1D1OXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 10:23:30 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:23:03 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC/RFT 3/9] ath9k_hw: define registers/macros to support Antenna diversity
-Date: Thu, 28 Apr 2011 19:52:53 +0530
-Message-ID: <1304000579-5784-4-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162333_134892_340A87D6)
-In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
-References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+	id S1752114Ab1DULD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 07:03:27 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 2/3] staging: brcm80211: making device object
+ accessible from wlc and phy
+Date: Thu, 21 Apr 2011 13:02:04 +0200
+Message-ID: <1303383725-1440-3-git-send-email-rvossen@broadcom.com>
+In-Reply-To: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
+References: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Next commits will replace WL_ERROR with dev_err and friends. Because
+these functions require a linux device object, device object pointers
+have been added to three data structures.
 
-define few registers and macros to configure/enable Antenna diversity
-parameters in AR9485
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |   31 ++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/hw.h         |    3 ++
- 2 files changed, 31 insertions(+), 3 deletions(-)
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 +++-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h   |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |    9 +++++----
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    3 ++-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |    4 +++-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h      |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_pub.h       |    2 +-
+ 9 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 2a0d5cb..c4f409f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -245,6 +245,9 @@
-  */
- #define AR_BBB_BASE	0x9d00
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+index 873d64c..9790de2 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+@@ -581,7 +581,8 @@ void wlc_phy_shared_detach(shared_phy_t *phy_sh)
+ 	}
+ }
  
-+#define AR_BBB_SIG_DETECT_ANT_FAST_DIV			0x00002000
-+#define AR_BBB_SIG_DETECT_ANT_FAST_DIV_S		13
-+
- /*
-  * AGC Register Map
-  */
-@@ -261,12 +264,37 @@
- #define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
- #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
+-wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype, char *vars)
++wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype,
++			  char *vars, struct device *dev)
+ {
+ 	phy_info_t *pi;
+ 	u32 sflags = 0;
+@@ -611,6 +612,7 @@ wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype, char *vars
+ 	if (pi == NULL) {
+ 		return NULL;
+ 	}
++	pi->dev = dev;
+ 	pi->regs = (d11regs_t *) regs;
+ 	pi->sh = sh;
+ 	pi->phy_init_por = true;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
+index bf962d5..6faf7a5 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
+@@ -149,7 +149,7 @@ typedef struct shared_phy_params {
+ extern shared_phy_t *wlc_phy_shared_attach(shared_phy_params_t *shp);
+ extern void wlc_phy_shared_detach(shared_phy_t *phy_sh);
+ extern wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype,
+-				 char *vars);
++				 char *vars, struct device *dev);
+ extern void wlc_phy_detach(wlc_phy_t *ppi);
  
-+/*
-+ * Antenna Diversity  settings
-+ */
- #define AR_PHY_MC_GAIN_CTRL     (AR_AGC_BASE + 0x28)
- #define AR_ANT_DIV_CTRL_ALL	0x7e000000
- #define AR_ANT_DIV_CTRL_ALL_S	25
- #define AR_ANT_DIV_ENABLE	0x1000000
- #define AR_ANT_DIV_ENABLE_S	24
- 
-+#define AR_PHY_CCK_DETECT       (AR_AGC_BASE + 0x1c0)
-+#define AR_FAST_DIV_ENABLE	0x2000
-+#define AR_FAST_DIV_ENABLE_S	13
-+
-+#define AR_PHY_9485_ANT_FAST_DIV_BIAS			0x00007e00
-+#define AR_PHY_9485_ANT_DIV_LNADIV			0x01000000
-+#define AR_PHY_9485_ANT_DIV_ALT_LNACONF			0x06000000
-+#define AR_PHY_9485_ANT_DIV_MAIN_LNACONF		0x18000000
-+#define AR_PHY_9485_ANT_DIV_ALT_GAINTB			0x20000000
-+#define AR_PHY_9485_ANT_DIV_MAIN_GAINTB			0x40000000
-+#define AR_PHY_9485_ANT_DIV_LNADIV_S			24
-+#define AR_PHY_9485_ANT_DIV_ALT_LNACONF_S		25
-+#define AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S		27
-+#define AR_PHY_9485_ANT_DIV_ALT_GAINTB_S		29
-+#define AR_PHY_9485_ANT_DIV_MAIN_GAINTB_S		30
-+#define AR_PHY_9485_ANT_FAST_DIV_BIAS_S                  9
-+
-+#define AR_PHY_9485_ANT_DIV_LNA1_MINUS_LNA2		0x0
-+#define AR_PHY_9485_ANT_DIV_LNA2			0x1
-+#define AR_PHY_9485_ANT_DIV_LNA1			0x2
-+#define AR_PHY_9485_ANT_DIV_LNA1_PLUS_LNA2		0x3
-+
- #define AR_PHY_EXTCHN_PWRTHR1   (AR_AGC_BASE + 0x2c)
- #define AR_PHY_EXT_CHN_WIN      (AR_AGC_BASE + 0x30)
- #define AR_PHY_20_40_DET_THR    (AR_AGC_BASE + 0x34)
-@@ -278,9 +306,6 @@
- #define AR_PHY_RSSI_0           (AR_AGC_BASE + 0x180)
- #define AR_PHY_SPUR_CCK_REP0    (AR_AGC_BASE + 0x184)
- 
--#define AR_PHY_CCK_DETECT       (AR_AGC_BASE + 0x1c0)
--#define AR_FAST_DIV_ENABLE	0x2000
--#define AR_FAST_DIV_ENABLE_S	13
- 
- #define AR_PHY_DAG_CTRLCCK      (AR_AGC_BASE + 0x1c4)
- #define AR_PHY_IQCORR_CTRL_CCK  (AR_AGC_BASE + 0x1c8)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 48420df..096f75b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -476,6 +476,9 @@ struct ath_hw_antcomb_conf {
- 	u8 main_lna_conf;
- 	u8 alt_lna_conf;
- 	u8 fast_div_bias;
-+	u8 main_gaintb;
-+	u8 alt_gaintb;
-+	int lna1_lna2_delta;
+ extern bool wlc_phy_get_phyversion(wlc_phy_t *pih, u16 *phytype,
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
+index 6e12a95..479a9b0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
+@@ -936,6 +936,7 @@ struct phy_info {
+ 	u8 phycal_tempdelta;
+ 	u32 mcs20_po;
+ 	u32 mcs40_po;
++	struct device *dev;
  };
  
- /**
+ typedef s32 fixed;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 62d4a86..1477419 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -746,6 +746,8 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
+ 	wl = hw->priv;
+ 	ASSERT(wl);
+ 
++	wl->dev = get_device(&hw->wiphy->dev);
++
+ 	atomic_set(&wl->callbacks, 0);
+ 
+ 	/* setup the bottom half handler */
+@@ -784,7 +786,8 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
+ 
+ 	/* common load-time initialization */
+ 	wl->wlc = wlc_attach((void *)wl, vendor, device, unit, wl->piomode,
+-			     wl->regsva, wl->bcm_bustype, btparam, &err);
++			     wl->regsva, wl->bcm_bustype, btparam, &err,
++			     &hw->wiphy->dev);
+ 	wl_release_fw(wl);
+ 	if (!wl->wlc) {
+ 		WL_ERROR("%s: wlc_attach() failed with code %d\n",
+@@ -847,7 +850,6 @@ fail1:
+ }
+ 
+ 
+-
+ #define CHAN2GHZ(channel, freqency, chflags)  { \
+ 	.band = IEEE80211_BAND_2GHZ, \
+ 	.center_freq = (freqency), \
+@@ -1253,9 +1255,7 @@ static void wl_remove(struct pci_dev *pdev)
+ 		no_printk("%s: Down\n", __func__);
+ 	}
+ 	pci_disable_device(pdev);
+-
+ 	wl_free(wl);
+-
+ 	pci_set_drvdata(pdev, NULL);
+ 	ieee80211_free_hw(hw);
+ }
+@@ -1388,6 +1388,7 @@ static void wl_free(struct wl_info *wl)
+ 		iounmap((void *)wl->regsva);
+ 	}
+ 	wl->regsva = NULL;
++	put_device(wl->dev);
+ }
+ 
+ /*
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
+index f3198cc..6b0d4e0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
+@@ -72,6 +72,7 @@ struct wl_info {
+ 	/* ping-pong stats counters updated by Linux watchdog */
+ 	struct net_device_stats stats_watchdog[2];
+ 	struct wl_firmware fw;
++	struct device *dev;	/* linux device object */
+ };
+ 
+ #define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index f52b339..d596476 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -849,7 +849,8 @@ int wlc_bmac_attach(struct wlc_info *wlc, u16 vendor, u16 device, uint unit,
+ 
+ 		/* Get a phy for this band */
+ 		wlc_hw->band->pi = wlc_phy_attach(wlc_hw->phy_sh,
+-			(void *)regs, wlc_bmac_bandtype(wlc_hw), vars);
++			(void *)regs, wlc_bmac_bandtype(wlc_hw), vars,
++			wlc->dev);
+ 		if (wlc_hw->band->pi == NULL) {
+ 			WL_ERROR("wl%d: wlc_bmac_attach: wlc_phy_attach failed\n",
+ 				 unit);
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 2cf154b..a8b8991 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -1675,7 +1675,8 @@ struct wlc_pub *wlc_pub(void *wlc)
+  * The common driver entry routine. Error codes should be unique
+  */
+ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
+-		 void *regsva, uint bustype, void *btparam, uint *perr)
++		 void *regsva, uint bustype, void *btparam, uint *perr,
++		 struct device *dev)
+ {
+ 	struct wlc_info *wlc;
+ 	uint err = 0;
+@@ -1691,6 +1692,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
+ 	wlc = (struct wlc_info *) wlc_attach_malloc(unit, &err, device);
+ 	if (wlc == NULL)
+ 		goto fail;
++	wlc->dev = dev;
+ 	pub = wlc->pub;
+ 
+ #if defined(BCMDBG)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+index f11161d..c9cc63a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+@@ -757,6 +757,7 @@ struct wlc_info {
+ 				 */
+ 	bool pr80838_war;
+ 	uint hwrxoff;
++	struct device *dev;	/* Linux device object */
+ };
+ 
+ /* antsel module specific state */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
+index 273c508..b9d4813 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
+@@ -482,7 +482,7 @@ extern const u8 wme_fifo2ac[];
+ /* common functions for every port */
+ extern void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit,
+ 			bool piomode, void *regsva, uint bustype, void *btparam,
+-			uint *perr);
++			uint *perr, struct device *dev);
+ extern uint wlc_detach(struct wlc_info *wlc);
+ extern int wlc_up(struct wlc_info *wlc);
+ extern uint wlc_down(struct wlc_info *wlc);
 -- 
-1.7.0.4
+1.7.1
+
 
