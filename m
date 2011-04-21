@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49537 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756077Ab1DHROK convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:56152 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab1DUMyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 13:14:10 -0400
+	Thu, 21 Apr 2011 08:54:41 -0400
+Date: Thu, 21 Apr 2011 18:16:25 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+Message-ID: <20110421124624.GA29211@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+ <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+ <20110415084005.GC11576@hertz.marvell.com>
+ <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+ <20110415105140.GD11576@hertz.marvell.com>
+ <1302865304.3572.15.camel@jlt3.sipsolutions.net>
+ <20110421121513.GC27527@hertz.marvell.com>
+ <1303389236.3597.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=DiGX=yg9HAxYHwKdOvedJdYC_sw@mail.gmail.com>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
-	<BANLkTi=DiGX=yg9HAxYHwKdOvedJdYC_sw@mail.gmail.com>
-Date: Fri, 8 Apr 2011 19:14:09 +0200
-Message-ID: <BANLkTinCFnFELn_BPFWE+WCHtZB7d0o1gg@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303389236.3597.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/4/8 Rafał Miłecki <zajec5@gmail.com>:
->> Could you say something more about *class*, please? For my BCM43224 it
->> seems to be 0x0. WIll check BCM4313 in a moment.
->
-> Same for BCM4313.
->
-> BCM43224:
-> axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-> axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-> axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
->
-> BCM4313
-> axi: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-> axi: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-> axi: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
+On Thu, Apr 21, 2011 at 05:33:56AM -0700, Johannes Berg wrote:
+> On Thu, 2011-04-21 at 17:45 +0530, Yogesh Ashok Powar wrote:
+> 
+> > @@ -101,6 +101,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+> >  
+> >  	if (!ret) {
+> >  		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+> > +		if (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
+> > +			key->local->crypto_tx_tailroom_needed_cnt++;
+> > +
+> >  		return 0;
+> >  	}
+> >  
+> > @@ -117,6 +120,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+> >  	case WLAN_CIPHER_SUITE_CCMP:
+> >  	case WLAN_CIPHER_SUITE_AES_CMAC:
+> >  		/* all of these we can do in software */
+> > +
+> > +		/* SW encryption need tailroom reservation */
+> > +		BUG_ON(!key->local);
+> 
+> BUG_ON? Seriously? It was already dereferenced about 10 times here... In
+> any case, this isn't right.
+> 
+> > @@ -156,6 +164,11 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+> >  			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+> >  
+> >  	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+> > +
+> > +	if ((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)
+> > +				&& key->local->crypto_tx_tailroom_needed_cnt)
+> > +		key->local->crypto_tx_tailroom_needed_cnt--;
+> 
+> And that if (cnt) can't be right either.
+> 
+> 
+> > +	if (key_sw_programmed && local->crypto_tx_tailroom_needed_cnt)
+> > +		local->crypto_tx_tailroom_needed_cnt--;
+> 
+> So you're putting if (needed_cnt) everywhere because you have
+> refcounting bugs? Better fix those bugs ....
+I will address these comments.
 
-This is last one, really ;)
+> 
+> 
+> > +	local->crypto_tx_tailroom_needed_cnt = 0;
+> 
+> Not necessary, it's already 0.
+> 
+> 
+> I don't think you understood what I said how it should work. You must
+> increase the counter when the key is created, and then you can reduce it
+> again when the key is uploaded and no mmic is needed.
+I thought about this initially, but then realized that this will not
+handle the scenario where we disable the key which needs tailroom space
+reservation?  Once the last key, that needs tailroom reservation, is
+disabled, we can skip the tailroom code again?
 
-This is MMIO dump (from wl):
-R 4 92.541328 1 0xfaafc000 0x4bf80001 0x0 0
-R 4 92.541351 1 0xfaafc014 0x4bf81201 0x0 0
-R 4 92.541373 1 0xfaafc028 0x4bf82001 0x0 0
-
-So there is not any mistake in my reading code. This the youngest 0x1
-is SCAN_ER_VALID.
-
--- 
-Rafał
+thanks
+Yogesh
