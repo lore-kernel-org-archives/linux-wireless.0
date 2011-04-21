@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48343 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590Ab1DOJ1Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 05:27:25 -0400
-Received: by bwz15 with SMTP id 15so2040685bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2011 02:27:24 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:43161 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754021Ab1DUUax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 16:30:53 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 13:30:26 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>, <kvalo@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 5/5] ath6kl: fix operations for power management
+Date: Thu, 21 Apr 2011 13:30:40 -0700
+Message-ID: <1303417840-19605-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
+References: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=HaJ0ZrtmDo=wwBOrEweZrjHqWXw@mail.gmail.com> <BANLkTikyCcN6dP0DiQboXv4rDoSGqTDdTA@mail.gmail.com>
- <201104142251.10881.chunkeey@googlemail.com> <BANLkTinpodW6rjQ7GTOFkVV7L=KG8kuS7Q@mail.gmail.com>
- <BANLkTimw4SOgMHXNJmue-JsbXD4QuMjmgQ@mail.gmail.com> <BANLkTimmdRi_CmwgH14aJbQJecYav-4r8Q@mail.gmail.com>
- <BANLkTimfifFrKdgYuMvAMhSGKAJXu3W9mA@mail.gmail.com> <BANLkTik5jzVUHaPKm6Tu-shDOwLkcyUt0A@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Fri, 15 Apr 2011 11:26:44 +0200
-Message-ID: <BANLkTikUS=G3J7C3HSNnHJGGTeZ9OR+qPw@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After aplying this patch:
+From: Naveen Singh <nsingh@atheros.com>
 
-Station 74:f0:6d:33:ea:00 (on wlan0)
-        inactive time:  50 ms
-        rx bytes:       4501008
-        rx packets:     45502
-        tx bytes:       123883066
-        tx packets:     83649
-        signal:         -32 dBm
-        tx bitrate:     150.0 MBit/s MCS 7 40Mhz short GI
+The cfg80211 ops for power management were completely
+broken. If we were asked for to go into power save it was putting
+device in awake, and when we were asked to become awake we were
+putting the device into power save... This fixes the powersave
+operations to do the right thing.
 
-I can get now 55 mbps.
-It's max for me?
+Signed-off-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
-> Ok I found it.
-> https://dev.openwrt.org/browser/trunk/package/hostapd/patches/130-scan_wait.patch?rev=20090
->
-> 2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
->> Look at noscan option in their docs.
->> http://wiki.openwrt.org/doc/uci/wireless
->>
->> 2011/4/15 Damian Lesiuk <lesiuk@gmail.com>:
->>> Openwrt have noscan option with mac80211
->>> (https://dev.openwrt.org/browser/branches/backfire/package/mac80211/files/lib/wifi/mac80211.sh?rev=22356)
->>> They patched code?
->>>
->>> Where can I find that patch?
->>>
->>> 2011/4/15 Helmut Schaa <helmut.schaa@googlemail.com>:
->>>> On Fri, Apr 15, 2011 at 8:22 AM, Damian Lesiuk <lesiuk@gmail.com> wrote:
->>>>> Is there option to do not scan for overlapping BSSs?
->>>>
->>>> AFAIK not without patching the code.
->>>>
->>>> Helmut
->>>>
->>>
->>
->
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index d5e554e..e87d3aa 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -1209,10 +1209,10 @@ ar6k_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 
+     if(pmgmt) {
+         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Max Perf\n", __func__));
+-        pwrMode.powerMode = MAX_PERF_POWER;
++        pwrMode.powerMode = REC_POWER;
+     } else {
+         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Rec Power\n", __func__));
+-        pwrMode.powerMode = REC_POWER;
++        pwrMode.powerMode = MAX_PERF_POWER;
+     }
+ 
+     if(wmi_powermode_cmd(ar->arWmi, pwrMode.powerMode) != 0) {
+-- 
+1.7.4.15.g7811d
+
