@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52082 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752096Ab1DRJLG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 05:11:06 -0400
-Message-ID: <4DAC0026.5020905@openwrt.org>
-Date: Mon, 18 Apr 2011 11:11:02 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: add a function for setting the TIM bit for
- a specific station
-References: <1303055100-38307-1-git-send-email-nbd@openwrt.org> <1303114525.3588.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1303114525.3588.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from dakia2.marvell.com ([65.219.4.35]:52585 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab1DULbU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 07:31:20 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, pnemavat@marvell.com,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH V3 3/4] mwl8k: Reserve buffers for tx management frames
+Date: Thu, 21 Apr 2011 16:34:58 +0530
+Message-Id: <1303383899-3262-3-git-send-email-nishants@marvell.com>
+In-Reply-To: <1303383899-3262-1-git-send-email-nishants@marvell.com>
+References: <1303383899-3262-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-04-18 10:15 AM, Johannes Berg wrote:
-> On Sun, 2011-04-17 at 17:45 +0200, Felix Fietkau wrote:
->>  This allows a driver to buffer frames for a PS station and tell mac80211
->>  to wake it up even though mac80211 does not have any buffered frames for
->>  it.
->>  This is necessary for properly handling aggregation related buffering,
->>  in ath9k, because the driver needs to keep its frames in order to keep
->>  track of the Block-ACK window.
->
-> Indeed, I thought I'd solved these cases with the WLAN_STA_PS_DRIVER
-> thing but that's not true of course because it blocks wakeup until all
-> frames have been filtered, which will never happen here. I think I'll
-> probably need to implement using this in iwlwifi as well.
->
-> The only question I have is how will PS-Poll be handled while an
-> aggregation session is active?? Is it even allowed to poll a-MPDUs?
-Not sure - polling A-MPDUs may not be allowed, the standard only 
-mentions polling MSDU and A-MSDU. We could add a driver callback later 
-that mac80211 calls upon receiving a PS-Poll when WLAN_STA_PS_DRIVER_BUF 
-is set, which will trigger the release of a single packet and indicate 
-in the return status whether it was the last one (from the driver's 
-point of view).
+Since queues are not stopped anymore, management frames would be
+dropped if the corresponding tx queue is full.
+This can cause issues say when we want to setup an ampdu stream and
+action frames i.e addba requests keep getting dropped frequently.
+Fix this by reserving some buffers to allow management frames to
+go through in queue full conditions.
 
-- Felix
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   31 +++++++++++++++++++++++--------
+ 1 files changed, 23 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4adb050..ed5413d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1818,6 +1818,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	u8 tid = 0;
+ 	struct mwl8k_ampdu_stream *stream = NULL;
+ 	bool start_ba_session = false;
++	bool mgmtframe = false;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+ 
+ 	wh = (struct ieee80211_hdr *)skb->data;
+@@ -1826,6 +1827,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	else
+ 		qos = 0;
+ 
++	if (ieee80211_is_mgmt(wh->frame_control))
++		mgmtframe = true;
++
+ 	if (priv->ap_fw)
+ 		mwl8k_encapsulate_tx_frame(skb);
+ 	else
+@@ -1955,15 +1959,26 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 
+ 	txq = priv->txq + index;
+ 
+-	if (txq->len >= MWL8K_TX_DESCS) {
+-		if (start_ba_session) {
+-			spin_lock(&priv->stream_lock);
+-			mwl8k_remove_stream(hw, stream);
+-			spin_unlock(&priv->stream_lock);
++	/* Mgmt frames that go out frequently are probe
++	 * responses. Other mgmt frames got out relatively
++	 * infrequently. Hence reserve 2 buffers so that
++	 * other mgmt frames do not get dropped due to an
++	 * already queued probe response in one of the
++	 * reserved buffers.
++	 */
++
++	if (txq->len >= MWL8K_TX_DESCS - 2) {
++		if (mgmtframe == false ||
++			txq->len == MWL8K_TX_DESCS) {
++			if (start_ba_session) {
++				spin_lock(&priv->stream_lock);
++				mwl8k_remove_stream(hw, stream);
++				spin_unlock(&priv->stream_lock);
++			}
++			spin_unlock_bh(&priv->tx_lock);
++			dev_kfree_skb(skb);
++			return;
+ 		}
+-		spin_unlock_bh(&priv->tx_lock);
+-		dev_kfree_skb(skb);
+-		return;
+ 	}
+ 
+ 	BUG_ON(txq->skb[txq->tail] != NULL);
+-- 
+1.6.0.3
+
