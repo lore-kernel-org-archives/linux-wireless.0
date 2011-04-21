@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:51554 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200Ab1DAJO4 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43385 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab1DUBMR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 05:14:56 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jiri Slaby <jslaby@suse.cz>
-Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality in separate module
-Date: Fri, 1 Apr 2011 11:14:37 +0200
-Cc: Russell King <rmk@arm.linux.org.uk>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	devel@linuxdriverproject.org, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <20110331141424.GD19540@flint.arm.linux.org.uk> <4D94A781.6060904@suse.cz>
-In-Reply-To: <4D94A781.6060904@suse.cz>
+	Wed, 20 Apr 2011 21:12:17 -0400
+Received: by iyb14 with SMTP id 14so1046794iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 18:12:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104011114.37940.arnd@arndb.de>
+In-Reply-To: <20110412202853.GA20598@vmehta-desktop>
+References: <1302148341-1783-1-git-send-email-nsingh@atheros.cm> <20110412202853.GA20598@vmehta-desktop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 Apr 2011 18:11:57 -0700
+Message-ID: <BANLkTiniif7vO5LPh1p2CwFdjoAW9Oc-+A@mail.gmail.com>
+Subject: Re: [PATCH 0/5] staging:ath6kl:patches for supporting 2.1.1 and bug fixes
+To: Vipin Mehta <vmehta@atheros.com>,
+	Kalle Valo <kalle.valo@atheros.com>,
+	Dave Cech <Dave.Cech@atheros.com>, Greg KH <greg@kroah.com>
+Cc: Naveen Singh <nsingh@atheros.cm>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Vipin Mehta <Vipin.Mehta@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Naveen Singh <Naveen.Singh@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 31 March 2011, Jiri Slaby wrote:
-> I don't see why it couldn't like without the packed attribute. (The
-> manual says packed attribute for a struct is equivalent to specifying
-> packed to each member of that struct. It doesn't say anything about the
-> structure alignment itself.)
+On Tue, Apr 12, 2011 at 1:28 PM, Vipin Mehta <vmehta@atheros.com> wrote:
+> Greg,
+>  Did you get a chance to review these patches? Pls provide us your feedback.
 
-To give some more background, any variable that is marked packed is
-assumed to be potentially unaligned (byte aligned). If a struct
-contains only members with byte alignment, it too is byte aligned.
+Greg,
 
-	Arnd
+I saw you were starting to integrate some changes (I think), I was
+just wondering if these were in the batch of new updates you are
+integrating, or if we should resubmit.
+
+  Luis
