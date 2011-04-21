@@ -1,406 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110Ab1DRNgQ (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:33686 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750829Ab1DUTew (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:36:16 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:15 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 19/23] rt2x00: Merge rt2x00ht.c contents in other files.
-Date: Mon, 18 Apr 2011 15:33:41 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181533.00721.IvDoorn@gmail.com> <201104181533.21229.IvDoorn@gmail.com>
-In-Reply-To: <201104181533.21229.IvDoorn@gmail.com>
+	Thu, 21 Apr 2011 15:34:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 21 Apr 2011 12:34:27 -0700
+Subject: RE: [PATCH] cfg80211: module_param to disable HT40 in 2.4GHz band
+Message-ID: <477F20668A386D41ADCC57781B1F704307FAAC2C53@SC-VEXCH1.marvell.com>
+References: <1303344002-4542-1-git-send-email-bzhao@marvell.com>
+ <1303368617.3597.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1303368617.3597.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181533.42494.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-
-The two functions that are in rt2x00ht.c can be much better placed
-closer to the places where the call-sites of these functions are (one
-in rt2x00config.c and one in rt2x00queue.c) allowing us to make these
-functions static.
-Also, conditional compilations doesn't seem to be necessary anymore as
-802.11n support is quite common nowadays.
-
-This makes the code a bit easier readable and searchable.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/Kconfig        |    5 -
- drivers/net/wireless/rt2x00/Makefile       |    1 -
- drivers/net/wireless/rt2x00/rt2x00config.c |   28 ++++++
- drivers/net/wireless/rt2x00/rt2x00ht.c     |  137 ----------------------------
- drivers/net/wireless/rt2x00/rt2x00lib.h    |   24 -----
- drivers/net/wireless/rt2x00/rt2x00queue.c  |   81 ++++++++++++++++-
- 6 files changed, 108 insertions(+), 168 deletions(-)
- delete mode 100644 drivers/net/wireless/rt2x00/rt2x00ht.c
-
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index d7e27b3..c457731 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -59,7 +59,6 @@ config RT2800PCI
- 	select RT2800_LIB
- 	select RT2X00_LIB_PCI if PCI
- 	select RT2X00_LIB_SOC if RALINK_RT288X || RALINK_RT305X
--	select RT2X00_LIB_HT
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_CCITT
-@@ -133,7 +132,6 @@ config RT2800USB
- 	depends on USB
- 	select RT2800_LIB
- 	select RT2X00_LIB_USB
--	select RT2X00_LIB_HT
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_CCITT
-@@ -196,9 +194,6 @@ config RT2X00_LIB_USB
- config RT2X00_LIB
- 	tristate
- 
--config RT2X00_LIB_HT
--	boolean
--
- config RT2X00_LIB_FIRMWARE
- 	boolean
- 	select FW_LOADER
-diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/rt2x00/Makefile
-index 9713398..349d5b8 100644
---- a/drivers/net/wireless/rt2x00/Makefile
-+++ b/drivers/net/wireless/rt2x00/Makefile
-@@ -7,7 +7,6 @@ rt2x00lib-$(CONFIG_RT2X00_LIB_DEBUGFS)	+= rt2x00debug.o
- rt2x00lib-$(CONFIG_RT2X00_LIB_CRYPTO)	+= rt2x00crypto.o
- rt2x00lib-$(CONFIG_RT2X00_LIB_FIRMWARE)	+= rt2x00firmware.o
- rt2x00lib-$(CONFIG_RT2X00_LIB_LEDS)	+= rt2x00leds.o
--rt2x00lib-$(CONFIG_RT2X00_LIB_HT)	+= rt2x00ht.o
- 
- obj-$(CONFIG_RT2X00_LIB)		+= rt2x00lib.o
- obj-$(CONFIG_RT2X00_LIB_PCI)		+= rt2x00pci.o
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index e225a66..f70a2b4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -163,6 +163,34 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- 		rt2x00queue_start_queue(rt2x00dev->rx);
- }
- 
-+static u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+				   struct ieee80211_conf *conf)
-+{
-+	struct hw_mode_spec *spec = &rt2x00dev->spec;
-+	int center_channel;
-+	u16 i;
-+
-+	/*
-+	 * Initialize center channel to current channel.
-+	 */
-+	center_channel = spec->channels[conf->channel->hw_value].channel;
-+
-+	/*
-+	 * Adjust center channel to HT40+ and HT40- operation.
-+	 */
-+	if (conf_is_ht40_plus(conf))
-+		center_channel += 2;
-+	else if (conf_is_ht40_minus(conf))
-+		center_channel -= (center_channel == 14) ? 1 : 2;
-+
-+	for (i = 0; i < spec->num_channels; i++)
-+		if (spec->channels[i].channel == center_channel)
-+			return i;
-+
-+	WARN_ON(1);
-+	return conf->channel->hw_value;
-+}
-+
- void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		      struct ieee80211_conf *conf,
- 		      unsigned int ieee80211_flags)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-deleted file mode 100644
-index a30f68c..0000000
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ /dev/null
-@@ -1,137 +0,0 @@
--/*
--	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
--	<http://rt2x00.serialmonkey.com>
--
--	This program is free software; you can redistribute it and/or modify
--	it under the terms of the GNU General Public License as published by
--	the Free Software Foundation; either version 2 of the License, or
--	(at your option) any later version.
--
--	This program is distributed in the hope that it will be useful,
--	but WITHOUT ANY WARRANTY; without even the implied warranty of
--	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
--	GNU General Public License for more details.
--
--	You should have received a copy of the GNU General Public License
--	along with this program; if not, write to the
--	Free Software Foundation, Inc.,
--	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-- */
--
--/*
--	Module: rt2x00lib
--	Abstract: rt2x00 HT specific routines.
-- */
--
--#include <linux/kernel.h>
--#include <linux/module.h>
--
--#include "rt2x00.h"
--#include "rt2x00lib.h"
--
--void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
--				   struct txentry_desc *txdesc,
--				   const struct rt2x00_rate *hwrate)
--{
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
--	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
--
--	if (tx_info->control.sta)
--		txdesc->u.ht.mpdu_density =
--		    tx_info->control.sta->ht_cap.ampdu_density;
--
--	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
--
--	/*
--	 * Only one STBC stream is supported for now.
--	 */
--	if (tx_info->flags & IEEE80211_TX_CTL_STBC)
--		txdesc->u.ht.stbc = 1;
--
--	/*
--	 * If IEEE80211_TX_RC_MCS is set txrate->idx just contains the
--	 * mcs rate to be used
--	 */
--	if (txrate->flags & IEEE80211_TX_RC_MCS) {
--		txdesc->u.ht.mcs = txrate->idx;
--
--		/*
--		 * MIMO PS should be set to 1 for STA's using dynamic SM PS
--		 * when using more then one tx stream (>MCS7).
--		 */
--		if (tx_info->control.sta && txdesc->u.ht.mcs > 7 &&
--		    ((tx_info->control.sta->ht_cap.cap &
--		      IEEE80211_HT_CAP_SM_PS) >>
--		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
--		    WLAN_HT_CAP_SM_PS_DYNAMIC)
--			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
--	} else {
--		txdesc->u.ht.mcs = rt2x00_get_rate_mcs(hwrate->mcs);
--		if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
--			txdesc->u.ht.mcs |= 0x08;
--	}
--
--	/*
--	 * This frame is eligible for an AMPDU, however, don't aggregate
--	 * frames that are intended to probe a specific tx rate.
--	 */
--	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU &&
--	    !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
--		__set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
--
--	/*
--	 * Set 40Mhz mode if necessary (for legacy rates this will
--	 * duplicate the frame to both channels).
--	 */
--	if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH ||
--	    txrate->flags & IEEE80211_TX_RC_DUP_DATA)
--		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
--	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
--		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
--
--	/*
--	 * Determine IFS values
--	 * - Use TXOP_BACKOFF for management frames except beacons
--	 * - Use TXOP_SIFS for fragment bursts
--	 * - Use TXOP_HTTXOP for everything else
--	 *
--	 * Note: rt2800 devices won't use CTS protection (if used)
--	 * for frames not transmitted with TXOP_HTTXOP
--	 */
--	if (ieee80211_is_mgmt(hdr->frame_control) &&
--	    !ieee80211_is_beacon(hdr->frame_control))
--		txdesc->u.ht.txop = TXOP_BACKOFF;
--	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
--		txdesc->u.ht.txop = TXOP_SIFS;
--	else
--		txdesc->u.ht.txop = TXOP_HTTXOP;
--}
--
--u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
--			    struct ieee80211_conf *conf)
--{
--	struct hw_mode_spec *spec = &rt2x00dev->spec;
--	int center_channel;
--	u16 i;
--
--	/*
--	 * Initialize center channel to current channel.
--	 */
--	center_channel = spec->channels[conf->channel->hw_value].channel;
--
--	/*
--	 * Adjust center channel to HT40+ and HT40- operation.
--	 */
--	if (conf_is_ht40_plus(conf))
--		center_channel += 2;
--	else if (conf_is_ht40_minus(conf))
--		center_channel -= (center_channel == 14) ? 1 : 2;
--
--	for (i = 0; i < spec->num_channels; i++)
--		if (spec->channels[i].channel == center_channel)
--			return i;
--
--	WARN_ON(1);
--	return conf->channel->hw_value;
--}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 57ede6c..322cc4f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -388,30 +388,6 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
- #endif /* CONFIG_RT2X00_LIB_CRYPTO */
- 
- /*
-- * HT handlers.
-- */
--#ifdef CONFIG_RT2X00_LIB_HT
--void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
--				   struct txentry_desc *txdesc,
--				   const struct rt2x00_rate *hwrate);
--
--u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
--			    struct ieee80211_conf *conf);
--#else
--static inline void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
--						 struct txentry_desc *txdesc,
--						 const struct rt2x00_rate *hwrate)
--{
--}
--
--static inline u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
--					  struct ieee80211_conf *conf)
--{
--	return conf->channel->hw_value;
--}
--#endif /* CONFIG_RT2X00_LIB_HT */
--
--/*
-  * RFkill handlers.
-  */
- static inline void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 0d79278..56f9d0d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -302,6 +302,85 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 	}
- }
- 
-+static void rt2x00queue_create_tx_descriptor_ht(struct queue_entry *entry,
-+						struct txentry_desc *txdesc,
-+						const struct rt2x00_rate *hwrate)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
-+
-+	if (tx_info->control.sta)
-+		txdesc->u.ht.mpdu_density =
-+		    tx_info->control.sta->ht_cap.ampdu_density;
-+
-+	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
-+
-+	/*
-+	 * Only one STBC stream is supported for now.
-+	 */
-+	if (tx_info->flags & IEEE80211_TX_CTL_STBC)
-+		txdesc->u.ht.stbc = 1;
-+
-+	/*
-+	 * If IEEE80211_TX_RC_MCS is set txrate->idx just contains the
-+	 * mcs rate to be used
-+	 */
-+	if (txrate->flags & IEEE80211_TX_RC_MCS) {
-+		txdesc->u.ht.mcs = txrate->idx;
-+
-+		/*
-+		 * MIMO PS should be set to 1 for STA's using dynamic SM PS
-+		 * when using more then one tx stream (>MCS7).
-+		 */
-+		if (tx_info->control.sta && txdesc->u.ht.mcs > 7 &&
-+		    ((tx_info->control.sta->ht_cap.cap &
-+		      IEEE80211_HT_CAP_SM_PS) >>
-+		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
-+		    WLAN_HT_CAP_SM_PS_DYNAMIC)
-+			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
-+	} else {
-+		txdesc->u.ht.mcs = rt2x00_get_rate_mcs(hwrate->mcs);
-+		if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-+			txdesc->u.ht.mcs |= 0x08;
-+	}
-+
-+	/*
-+	 * This frame is eligible for an AMPDU, however, don't aggregate
-+	 * frames that are intended to probe a specific tx rate.
-+	 */
-+	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU &&
-+	    !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
-+		__set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
-+
-+	/*
-+	 * Set 40Mhz mode if necessary (for legacy rates this will
-+	 * duplicate the frame to both channels).
-+	 */
-+	if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH ||
-+	    txrate->flags & IEEE80211_TX_RC_DUP_DATA)
-+		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
-+	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
-+		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
-+
-+	/*
-+	 * Determine IFS values
-+	 * - Use TXOP_BACKOFF for management frames except beacons
-+	 * - Use TXOP_SIFS for fragment bursts
-+	 * - Use TXOP_HTTXOP for everything else
-+	 *
-+	 * Note: rt2800 devices won't use CTS protection (if used)
-+	 * for frames not transmitted with TXOP_HTTXOP
-+	 */
-+	if (ieee80211_is_mgmt(hdr->frame_control) &&
-+	    !ieee80211_is_beacon(hdr->frame_control))
-+		txdesc->u.ht.txop = TXOP_BACKOFF;
-+	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
-+		txdesc->u.ht.txop = TXOP_SIFS;
-+	else
-+		txdesc->u.ht.txop = TXOP_HTTXOP;
-+}
-+
- static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 					     struct txentry_desc *txdesc)
- {
-@@ -397,7 +476,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	rt2x00queue_create_tx_descriptor_seq(entry, txdesc);
- 
- 	if (test_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags))
--		rt2x00ht_create_tx_descriptor(entry, txdesc, hwrate);
-+		rt2x00queue_create_tx_descriptor_ht(entry, txdesc, hwrate);
- 	else
- 		rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, hwrate);
- }
--- 
-1.7.2.3
-
+PiBJbiBzZW5kX3dpcGh5PyBZb3UncmUga2lkZGluZywgcmlnaHQ/IE5BQ0suIFBsZWFzZSB0cnkg
+dG8gdW5kZXJzdGFuZCBob3cNCj4gdGhlIGNvZGUgaW4gbWFjODAyMTEgd29ya2VkLg0KDQpIaSBK
+b2hhbm5lcywNCg0KU29ycnksIG15IGJhZC4gQ291bGQgeW91IHBsZWFzZSByZXZpZXcgdGhlIHYy
+IGJlbG93Pw0KDQotLS0NCkZyb20gMDUwMmJiYjNhZGI1YjdmYmY3M2ZkYzQwMmFmY2JkNGFkMThj
+ZjQyYSBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCkZyb206IEFtaXRrdW1hciBLYXJ3YXIgPGFr
+YXJ3YXJAbWFydmVsbC5jb20+DQpEYXRlOiBUaHUsIDIxIEFwciAyMDExIDEyOjIwOjA5IC0wNzAw
+DQpTdWJqZWN0OiBbUEFUQ0ggdjJdIGNmZzgwMjExOiBtb2R1bGVfcGFyYW0gdG8gZGlzYWJsZSBI
+VDQwIGluIDIuNEdIeiBiYW5kDQoNCkN1cnJlbnRseSBtYWM4MDIxMSB1c2VzIGllZWU4MDIxMV9k
+aXNhYmxlXzQwbWh6XzI0Z2h6IG1vZHVsZQ0KcGFyYW1ldGVyIHRvIGFsbG93IGRpc2FibGluZyA0
+ME1IeiBvcGVyYXRpb24gaW4gdGhlIDIuNEdIeiBiYW5kLg0KTW92ZSB0aGlzIGhhbmRsaW5nIGZy
+b20gbWFjODAyMTEgdG8gY2ZnODAyMTEgc28gdGhhdCB0aGUgZmVhdHVyZQ0Kd2lsbCBiZSBtb3Jl
+IGdlbmVyaWMuDQoNClNpZ25lZC1vZmYtYnk6IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFy
+dmVsbC5jb20+DQpTaWduZWQtb2ZmLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPg0K
+LS0tDQp2MjogdGhlIGNoZWNrIGZvciBkaXNhYmxpbmcgSFQ0MCB3YXMgd3JvbmcgaW4gdjEuIHYy
+IGZpeGVzIHRoYXQuDQogICAgTm8gbmVlZCB0byBleHBvcnQgdGhlIHN5bWJvbCBhcyBzYmFuZC0+
+aHRfY2FwIGFscmVhZHkgaGFzIGl0Lg0KdjE6IG1vdmUgZGlzYWJsZV80MG1oel8yNGdoeiBtb2R1
+bGUgcGFyYW1ldGVyIGZyb20gbWFjODAyMTEgdG8gY2ZnODAyMTENCg0KIG5ldC9tYWM4MDIxMS9t
+YWluLmMgfCAgIDE4IC0tLS0tLS0tLS0tLS0tLS0tLQ0KIG5ldC93aXJlbGVzcy9jb3JlLmMgfCAg
+IDE3ICsrKysrKysrKysrKysrKysrDQogMiBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCsp
+LCAxOCBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tYWluLmMgYi9u
+ZXQvbWFjODAyMTEvbWFpbi5jDQppbmRleCAwYWIyYThkLi42MTg3NzY2IDEwMDY0NA0KLS0tIGEv
+bmV0L21hYzgwMjExL21haW4uYw0KKysrIGIvbmV0L21hYzgwMjExL21haW4uYw0KQEAgLTMzLDEy
+ICszMyw2IEBADQogI2luY2x1ZGUgImNmZy5oIg0KICNpbmNsdWRlICJkZWJ1Z2ZzLmgiDQoNCi0N
+Ci1zdGF0aWMgYm9vbCBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCi1tb2R1bGVfcGFy
+YW0oaWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosIGJvb2wsIDA2NDQpOw0KLU1PRFVMRV9Q
+QVJNX0RFU0MoaWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosDQotICAgICAgICAgICAgICAg
+ICJEaXNhYmxlIDQwTUh6IHN1cHBvcnQgaW4gdGhlIDIuNEdIeiBiYW5kIik7DQotDQogc3RhdGlj
+IHN0cnVjdCBsb2NrX2NsYXNzX2tleSBpZWVlODAyMTFfcnhfc2tiX3F1ZXVlX2NsYXNzOw0KDQog
+dm9pZCBpZWVlODAyMTFfY29uZmlndXJlX2ZpbHRlcihzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICps
+b2NhbCkNCkBAIC03MjgsMTggKzcyMiw2IEBAIGludCBpZWVlODAyMTFfcmVnaXN0ZXJfaHcoc3Ry
+dWN0IGllZWU4MDIxMV9odyAqaHcpDQogICAgICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAg
+IGNoYW5uZWxzICs9IHNiYW5kLT5uX2NoYW5uZWxzOw0KDQotICAgICAgICAgICAgICAgLyoNCi0g
+ICAgICAgICAgICAgICAgKiBTaW5jZSBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiBpcyBn
+bG9iYWwsIHdlIGNhbg0KLSAgICAgICAgICAgICAgICAqIG1vZGlmeSB0aGUgc2JhbmQncyBodCBk
+YXRhIGV2ZW4gaWYgdGhlIGRyaXZlciB1c2VzIGENCi0gICAgICAgICAgICAgICAgKiBnbG9iYWwg
+c3RydWN0dXJlIGZvciB0aGF0Lg0KLSAgICAgICAgICAgICAgICAqLw0KLSAgICAgICAgICAgICAg
+IGlmIChpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KLSAgICAgICAgICAgICAgICAg
+ICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCi0gICAgICAgICAgICAgICAgICAgc2Jh
+bmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQpIHsNCi0gICAgICAgICAgICAgICAgICAgICAgIHNiYW5k
+LT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsNCi0gICAg
+ICAgICAgICAgICAgICAgICAgIHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQ
+X1NHSV80MDsNCi0gICAgICAgICAgICAgICB9DQotDQogICAgICAgICAgICAgICAgaWYgKG1heF9i
+aXRyYXRlcyA8IHNiYW5kLT5uX2JpdHJhdGVzKQ0KICAgICAgICAgICAgICAgICAgICAgICAgbWF4
+X2JpdHJhdGVzID0gc2JhbmQtPm5fYml0cmF0ZXM7DQogICAgICAgICAgICAgICAgc3VwcF9odCA9
+IHN1cHBfaHQgfHwgc2JhbmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQ7DQpkaWZmIC0tZ2l0IGEvbmV0
+L3dpcmVsZXNzL2NvcmUuYyBiL25ldC93aXJlbGVzcy9jb3JlLmMNCmluZGV4IGZlMDFkZTIuLmJi
+ZjFmYTEgMTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3MvY29yZS5jDQorKysgYi9uZXQvd2lyZWxl
+c3MvY29yZS5jDQpAQCAtNDYsNiArNDYsMTEgQEAgc3RhdGljIHN0cnVjdCBkZW50cnkgKmllZWU4
+MDIxMV9kZWJ1Z2ZzX2RpcjsNCiAvKiBmb3IgdGhlIGNsZWFudXAsIHNjYW4gYW5kIGV2ZW50IHdv
+cmtzICovDQogc3RydWN0IHdvcmtxdWV1ZV9zdHJ1Y3QgKmNmZzgwMjExX3dxOw0KDQorc3RhdGlj
+IGJvb2wgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCittb2R1bGVfcGFyYW0oY2ZnODAy
+MTFfZGlzYWJsZV80MG1oel8yNGdoeiwgYm9vbCwgMDY0NCk7DQorTU9EVUxFX1BBUk1fREVTQyhj
+Zmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KKyAgICAgICAgICAgICAgICAiRGlzYWJsZSA0
+ME1IeiBzdXBwb3J0IGluIHRoZSAyLjRHSHogYmFuZCIpOw0KKw0KIC8qIHJlcXVpcmVzIGNmZzgw
+MjExX211dGV4IHRvIGJlIGhlbGQhICovDQogc3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2
+aWNlICpjZmc4MDIxMV9yZGV2X2J5X3dpcGh5X2lkeChpbnQgd2lwaHlfaWR4KQ0KIHsNCkBAIC00
+NTEsNiArNDU2LDE4IEBAIGludCB3aXBoeV9yZWdpc3RlcihzdHJ1Y3Qgd2lwaHkgKndpcGh5KQ0K
+ICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQoNCiAgICAgICAgICAgICAg
+ICAvKg0KKyAgICAgICAgICAgICAgICAqIFNpbmNlIGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRn
+aHogaXMgZ2xvYmFsLCB3ZSBjYW4NCisgICAgICAgICAgICAgICAgKiBtb2RpZnkgdGhlIHNiYW5k
+J3MgaHQgZGF0YSBldmVuIGlmIHRoZSBkcml2ZXIgdXNlcyBhDQorICAgICAgICAgICAgICAgICog
+Z2xvYmFsIHN0cnVjdHVyZSBmb3IgdGhhdC4NCisgICAgICAgICAgICAgICAgKi8NCisgICAgICAg
+ICAgICAgICBpZiAoY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KKyAgICAgICAgICAg
+ICAgICAgICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCisgICAgICAgICAgICAgICAg
+ICAgc2JhbmQtPmh0X2NhcC5odF9zdXBwb3J0ZWQpIHsNCisgICAgICAgICAgICAgICAgICAgICAg
+IHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsN
+CisgICAgICAgICAgICAgICAgICAgICAgIHNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVFODAyMTFf
+SFRfQ0FQX1NHSV80MDsNCisgICAgICAgICAgICAgICB9DQorDQorICAgICAgICAgICAgICAgLyoN
+CiAgICAgICAgICAgICAgICAgKiBTaW5jZSB3ZSB1c2UgYSB1MzIgZm9yIHJhdGUgYml0bWFwcyBp
+bg0KICAgICAgICAgICAgICAgICAqIGllZWU4MDIxMV9nZXRfcmVzcG9uc2VfcmF0ZSwgd2UgY2Fu
+bm90DQogICAgICAgICAgICAgICAgICogaGF2ZSBtb3JlIHRoYW4gMzIgbGVnYWN5IHJhdGVzLg0K
+LS0NCjEuNy4wLjINCg0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
