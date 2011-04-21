@@ -1,91 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1408 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753244Ab1DTHQu convert rfc822-to-8bit (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:57422 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab1DUOM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 03:16:50 -0400
-To: "Arnd Bergmann" <arnd@arndb.de>
-cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Thu, 21 Apr 2011 10:12:59 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Arend van Spriel" <arend@broadcom.com>
+Subject: Re: [PATCH] drivers: brcmaxi: provide amba axi functionality in separate module
+Date: Thu, 21 Apr 2011 16:12:49 +0200
+Cc: zajec5@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, b43-dev@lists.infradead.org,
 	"George Kashperko" <george@znau.edu.ua>,
+	"Jonas Gorski" <jonas.gorski@gmail.com>,
 	"Hauke Mehrtens" <hauke@hauke-m.de>,
 	"Russell King" <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Jonas Gorski" <jonas.gorski@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Greg KH" <greg@kroah.com>, "Andy Botting" <andy@andybotting.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom
- bus?
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
- <201104171938.12834.arnd@arndb.de> <op.vt6ufu1n3ri7v4@arend-laptop>
- <201104191635.40351.arnd@arndb.de>
-Date: Wed, 20 Apr 2011 09:16:26 +0200
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Andy Botting" <andy@andybotting.com>, "Greg KH" <greg@kroah.com>,
+	"Michael Buesch" <m@bues.ch>
+References: <1303331669-31293-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1303331669-31293-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vt76hofg3ri7v4@arend-laptop>
-In-Reply-To: <201104191635.40351.arnd@arndb.de>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201104211612.49805.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 19 Apr 2011 16:35:40 +0200, Arnd Bergmann <arnd@arndb.de> wrote:
+On Wednesday 20 April 2011, Arend van Spriel wrote:
+> The open-source community is looking for a library which will detect
+> cores in a chip using axi backplane. Another proposal has been
+> sent by Rafał Miłecki, which registers detected cores in the linux
+> device tree to be claimed by device drivers. This implies cores will
+> always provide a system function to the kernel which is indepent from
+> other cores and have very loose or no coupling. If this is not true,
+> exceptions need to be added in the device registration process. This
+> means knowledge of specific devices from specific vendors is sitting
+> in a bus driver. Whether the exceptions are rarely or likely is a
+> pending question.
 
-> On Tuesday 19 April 2011, Arend van Spriel wrote:
->
->> > A new bus_type really only makes sense if you expect a lot of devices
->> > to use this and you want to have the probing in the bus. If you only
->> > want to have a way to enumerate devices that get created by the
->> > parent driver, you can also use platform devices.
->>
->> The main assumption of the (bcm)axi driver seems to be that each core  
->> can
->> be considered as a device. Correct me if I am wrong, but I consider a
->> device to be an entity providing a particular system function. So an
->> ethernet device provides ethernet connectivity function, a mixer device
->> provides sound mixing function, and so on. The cores within a chip are  
->> not
->> always self-contained like this. To clarify let's say a system function  
->> is
->> realized by programming core A, core B, and finally trigger core A to  
->> set
->> the function in motion. This implies the need of coordination between  
->> the
->> programming steps on those cores.
->>
->> Is my view on what is a device wrong? Does a platform device differ in
->> this respect from a regular device?
->
-> A platform device means something that cannot be probed, in every other
-> respect it is the same as other devices. From your explanation above,
-> it seems that you don't actually need to represent the cores on your
-> particular chips as struct device in Linux at all.
->
-> If you wanted to use platform_device, the right way would probably
-> be an MFD device that creates multiple child devices (which end
-> up as platform_device, though you don't need to worry about that)
-> from the PCI driver. Then you could use the child devices completely
-> independent from one another.
->
-> Since you say that the cores in this case are tightly coupled and
-> don't provide independent functionality to the system, there is
-> no need to represent them as devices.
+Hi Arend,
 
-Hi Arnd,
+I have two very general comments about this:
 
-The case is a hypothetical one, but I consider it a likely one. The axi  
-bus driver currently registers each detected core as a device in the linux  
-device tree. My statement is that this implies loose or no coupling  
-between those cores, which is not true. One (or two) exceptions have  
-already been identified. I would expect your last line to read: ...to the  
-system, those cores should not be represented as devices.
+> To feed the discussion this implementation takes a different approach.
+> A calling entity (being a pci device driver, or SoC initialization
+> sequence) registers a table with core identities and a callback function.
+> It then starts the scan and for each detected core with a callback
+> function it does the call providing the core information. Apart from
+> that it provides some basic operations on the core.
+> 
+> It has been tested using the brcmsmac driver (in drivers/staging/brcm80211).
 
-Gr. AvS
--- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+The API split between PCI and non-PCI devices appears to be
+unhelpful. Can't you abstract the interface so that a user
+would apply the exact same interfaces in both cases, and handle
+the differences internally?
 
+> +/* Core Codes */
+> +#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
+> +#define	CC_CORE_ID		0x800	/* chipcommon core */
+> +#define	ILINE20_CORE_ID		0x801	/* iline20 core */
+> +#define	SRAM_CORE_ID		0x802	/* sram core */
+> +#define	SDRAM_CORE_ID		0x803	/* sdram core */
+> +#define	PCI_CORE_ID		0x804	/* pci core */
+> +#define	MIPS_CORE_ID		0x805	/* mips core */
+> +#define	ENET_CORE_ID		0x806	/* enet mac core */
+> +#define	CODEC_CORE_ID		0x807	/* v90 codec core */
+> +#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
+> +#define	ADSL_CORE_ID		0x809	/* ADSL core */
+> +#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
+> +#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
+> +#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
+> +#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
+> +#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
+> +#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
+> +#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
+> ...
+
+This list to me is a strong hint that the cores behind the AXI bridge
+should normally be actual devices in Linux, i.e. the approach that
+Rafał suggested.  The vast majority of these is something that in Linux
+would be operated by a device driver. The exceptions that I can see
+are CPU cores and bus bridges, both of which we typically also represent
+as devices in the flattened device tree, even though they typically
+don't have a Linux driver attached to them.
+
+	Arnd
