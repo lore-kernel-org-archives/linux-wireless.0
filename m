@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:63563 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757040Ab1DHXQY convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:34731 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752319Ab1DUTE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 19:16:24 -0400
-Received: by qyk7 with SMTP id 7so165889qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 16:16:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTi=7OZ40Tn-=8KCX_ReNsUQ3euwTfQ@mail.gmail.com>
-References: <1302267632-2326-1-git-send-email-zajec5@gmail.com>
-	<1302299890.28673.1.camel@maggie>
-	<BANLkTi=7OZ40Tn-=8KCX_ReNsUQ3euwTfQ@mail.gmail.com>
-Date: Sat, 9 Apr 2011 01:16:24 +0200
-Message-ID: <BANLkTi=fbjLbERhsiqiWSJSGcBk1eeA5Yg@mail.gmail.com>
-Subject: Re: [PATCH][2.6.39?] b43: trivial: update module info about firmware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Apr 2011 15:04:27 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 78CD25403F4
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 15:09:27 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-21 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110421190425.62D2140EB7@repository3.orbit-lab.org>
+Date: Thu, 21 Apr 2011 15:04:25 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 9 kwietnia 2011 01:16 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> W dniu 8 kwietnia 2011 23:58 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
->> On Fri, 2011-04-08 at 15:00 +0200, Rafał Miłecki wrote:
->>> We do not use ucode9,
->>
->> Well, but we should.
->> There are only minor differences between r5 and r9 firmware.
->> r9 basically is a r5 firmware with workarounds added that are
->> needed for r9 devices.
->>
->> So I think we should start using r9 instead of removing it here.
->
-> I meant to add support for loading ucode 9 later and the re-add info
-> about this. But OK, I'll make V2 which only adds 16_mimo. For normal
-> development cycle (wireless-testing) I'll add ucode9 loading support.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   4642bc7..77081fd  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   be5674a..98d6ba7  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + a3bf4e2...90c32f0 akpm-end   -> origin/akpm-end  (forced update)
+   6cf5443..2f666bc  akpm-start -> origin/akpm-start
+   9093003..d645622  history    -> origin/history
+ + 2f91e51...104958b master     -> origin/master  (forced update)
+   6cf5443..2f666bc  stable     -> origin/stable
+ * [new tag]         next-20110421 -> next-20110421
 
-John: wait for V2 please.
+compat-wireless code metrics
 
--- 
-Rafał
+    840807 - Total upstream lines of code being pulled
+      2331 - backport code changes
+      2027 - backport code additions
+       304 - backport code deletions
+      7994 - backport from compat module
+     10325 - total backport code
+    1.2280 - % of code consists of backport work
