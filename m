@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:43423 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918Ab1D3PSq (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35567 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935Ab1DUQ5W convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 11:18:46 -0400
-Received: by ewy4 with SMTP id 4so1390988ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:18:45 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/6] rt2x00: Reduce tx status reading timeout
-Date: Sat, 30 Apr 2011 17:13:46 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+	Thu, 21 Apr 2011 12:57:22 -0400
+Received: by iwn34 with SMTP id 34so1538205iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 09:57:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201104301713.47545.IvDoorn@gmail.com> (sfid-20110430_171848_808402_5C568668)
+In-Reply-To: <EE97821C81277E459BEA5C6384C6F24101086A274525@srvexch01.SODIELEC.local>
+References: <EE97821C81277E459BEA5C6384C6F24101086A274525@srvexch01.SODIELEC.local>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 21 Apr 2011 09:57:02 -0700
+Message-ID: <BANLkTimL+nC9WTZw_UD4vixsXqf9nB5XUg@mail.gmail.com>
+Subject: Re: Problem Mesh security with ath9k and hostap-sae: mesh points
+ can't authenticate
+To: =?ISO-8859-1?Q?C=E9dric_MOLINIER?= <c.molinier@actiasodielec.fr>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When no TX status was available, the default timeout
-of 20ms is a bit high. The frame is highly likely already
-send out, so the TX status should be available within
-only a few milliseconds.
+2011/4/14 Cédric MOLINIER <c.molinier@actiasodielec.fr>:
+> On my embedded system, I'm trying to use the tools for authenticated MESH.
+> I am using the fork of wpa_supplicant available that can authenticate mesh peers, available here:https://github.com/cozybit/hostap-sae.
+> I followed what is described in the open80211s HOW page (http://o11s.org/trac/wiki/HOWTO#Testing).
+>
+> But, none Mesh Point does not authenticate.
+>
+> So can someone tell me what is the problem, please?
+>
+> Below, you can see my configuration and the output debug of wpa_supplicant (SAE).
+> You can see a station (MP) is detected ("nl80211: New station 00:15:61:10:4f:7d"),
+> but wpa_supplicant reject it:
+>   mesh0: 0: 00:15:61:10:4f:7d ssid='' wpa_ie_len=0 rsn_ie_len=20 caps=0x0 level=-67
+>   mesh0:    skip - SSID not known
+>
+>
+> Thanks.
+>
+> C. Molinier
+>
+>
+>
+> I have two Mesh Point (MP) (with the same configuration):
+> - MP(A) with MAC address 00:0B:6B:B5:EC:37
+> - MP(B) with MAC address 00:15:61:10:4f:7d
+>
+> I use:
+> - kernel 2.6.27
+> - compat-wireless 2.6.39-rc1-3 for ath9k driver
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+The supplicant logs below seem to indicate that you may not have the
+changes required to do mesh node authentication.  Try to find out if
+that compat-wireless has, for instance, this patch:
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=71839121a0f35f9968d2e204a76eb22683156fd8
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 0d4e8fa..e4f82d2 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -134,7 +134,7 @@ static void rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
- 	} else if (!kfifo_is_empty(&rt2x00dev->txstatus_fifo)) {
- 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
- 	} else if (rt2800usb_txstatus_pending(rt2x00dev)) {
--		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(20));
-+		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
- 	}
- }
- 
-@@ -493,7 +493,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
- 	 * also delayed -> use a timer to retrieve it.
- 	 */
- 	if (rt2800usb_txstatus_pending(rt2x00dev))
--		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(20));
-+		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
- }
- 
- /*
--- 
-1.7.2.3
+> nl80211: Register frame command failed (type=176): ret=-22 (Invalid argument)
+> nl80211: Register frame match - hexdump(len=1): 03
+> nl80211: Failed to register Auth frame processing - ignore for now
 
+Cheers,
+
+Javier
