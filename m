@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48222 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213Ab1DZTPq (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:52597 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730Ab1DULbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 15:15:46 -0400
-Date: Tue, 26 Apr 2011 15:12:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet
- loss
-Message-ID: <20110426191247.GJ2804@tuxdriver.com> (sfid-20110426_211550_341199_5D97182F)
-References: <1303125749-31967-1-git-send-email-arik@wizery.com>
- <1303129610.3588.7.camel@jlt3.sipsolutions.net>
- <BANLkTikc9wrZ__8URZ3ASQ6F=rUHix2iGA@mail.gmail.com>
- <1303216566.3603.6.camel@jlt3.sipsolutions.net>
- <BANLkTik81g3NOwHcQk2eqOcMjaubCLdk+w@mail.gmail.com>
- <1303286933.3619.0.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303286933.3619.0.camel@jlt3.sipsolutions.net>
+	Thu, 21 Apr 2011 07:31:24 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, pnemavat@marvell.com,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH V3 4/4] mwl8k: Enable life time expiry for tx packets in the hardware
+Date: Thu, 21 Apr 2011 16:34:59 +0530
+Message-Id: <1303383899-3262-4-git-send-email-nishants@marvell.com>
+In-Reply-To: <1303383899-3262-1-git-send-email-nishants@marvell.com>
+References: <1303383899-3262-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 20, 2011 at 10:08:53AM +0200, Johannes Berg wrote:
-> On Wed, 2011-04-20 at 00:54 +0300, Arik Nemtsov wrote:
-> 
-> > > That's your choice, but I wouldn't do it. You'll have to support TX
-> > > status when requested, otherwise AP operation won't work, so you need
-> > > the code anyway.
-> > 
-> > Can you elaborate why?
-> > 
-> > I'm assuming you mean the removal of
-> > IEEE80211_HW_REPORTS_TX_ACK_STATUS (in the second patch of this
-> > series). Note that it was only added recently, and AP/STA modes seemed
-> > to work fine without it.
-> > From a look in the code it seems this flag helps with connection
-> > monitoring in STA mode. The other use is determining the current PS
-> > mode when IEEE80211_HW_PS_NULLFUNC_STACK is enabled. These two are
-> > done by HW in wl12xx cards.
-> 
-> Well, there's the flag saying "you can rely on it", but there's also the
-> fact that AP mode relies on status for (some) frames anyway. So if you
-> just want to remove the flag I guess that's OK, but if you want to
-> remove all status processing .. that'll cause issues with AP mode.
+Tell the firmware to enable the life time expiry of tx packets
+in the hardware. The hardware will now refer to the timestamp
+in every tx packet and decide whether the packet needs to be
+dropped or transmitted.
 
-Do the wl12xx guys still want this?
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ed5413d..20c06be 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2504,7 +2504,8 @@ static int mwl8k_cmd_set_hw_spec(struct ieee80211_hw *hw)
+ 
+ 	cmd->flags = cpu_to_le32(MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP |
+-				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON);
++				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON |
++				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY);
+ 	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
+ 	cmd->total_rxd = cpu_to_le32(MWL8K_RX_DESCS);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.3
+
