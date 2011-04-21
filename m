@@ -1,162 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52767 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754293Ab1DHMG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 08:06:59 -0400
-Message-ID: <4D9EFA5F.3040900@openwrt.org>
-Date: Fri, 08 Apr 2011 14:06:55 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fw.wantstofly.org ([80.101.37.227]:64942 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515Ab1DUHbs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 03:31:48 -0400
+Date: Thu, 21 Apr 2011 09:34:39 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Nishant Sarmukadam <nishants@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+Subject: Re: [PATCH 2/4] mwl8k: Add timestamp information for tx packets
+Message-ID: <20110421073439.GV1897@wantstofly.org>
+References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
+ <1303191772-4299-2-git-send-email-nishants@marvell.com>
+ <20110419075404.GK1897@wantstofly.org>
+ <1303207700.20919.32.camel@localhost.localdomain>
+ <20110419103144.GM1897@wantstofly.org>
+ <1303218401.21371.8.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2.6.39 v2] ath9k_hw: fix stopping rx DMA during resets
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303218401.21371.8.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During PHY errors, the MAC can sometimes fail to enter an idle state on older
-hardware (before AR9380) after an rx stop has been requested.
+On Tue, Apr 19, 2011 at 06:36:41PM +0530, Nishant Sarmukadam wrote:
 
-This typically shows up in the kernel log with messages like these:
+> > > > > Timestamp tx packets using a HW micro-second timer.
+> > > > > This timestamp will be compared to the current timestamp
+> > > > > in the hardware and if the difference is greater than 500ms,
+> > > > > the packet will be dropped.
+> > > > 
+> > > > Why don't you do this entirely in the firmware?
+> > > > 
+> > > > When a packet is put into the TX ring by the host, give it a timestamp
+> > > > of zero.
+> > > > 
+> > > > When the firmware gets a TX interrupt, have it walk the TX ring from
+> > > > the last TX entry where a timestamp was written to (i.e. keep a separate
+> > > > index for this), and timestamp all TX ring entries that are marked as
+> > > > being FW OWNED but don't have a timestamp yet (and update your index).
+> > > > 
+> > > > Then when the time comes to process the TX packet (i.e. it has reached
+> > > > the head of the TX queue), compare the timestamp with the current time.
+> > > 
+> > > Since firmware cannot access host memory directly, it needs additional
+> > > dma operations to read all descriptors, then check the ownership bit and
+> > > update the timestamp for the descriptors. It can easily take about 1us
+> > > per descriptor for this and it can hit the peak throughput by about
+> > > 2.5%.
+> > 
+> > That DMA needs to happen anyway, whether you have the host timestamp
+> > the packets or not, so this doesn't seem to be an applicable argument.
+> 
+> Currently, firmware downloads a small fixed number of descriptors at a
+> given time from any tx queue as it does not have memory to download all
+> the descriptors from a host queue.
+> 
+> Assume that the total tx buffers available in firmware is X and host tx
+> queue size is 2X and that the host queue is completely backlogged. In
+> this case, the firmware needs to download the descriptors from the head
+> of the host queue to transmit corresponding packets and it needs to
+> download the descriptors at the tail of the host queue to timestamp
+> them. But, firmware cannot transmit the packets associated with
+> descriptors from the tail since there are packets in host queue which
+> were queued earlier to these packets. This effectively results in each
+> descriptor being downloaded twice - once for timestamp and once for
+> transmission.
 
-ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath9k/recv.c:504 ath_stoprecv+0xcc/0xf0 [ath9k]()
-Call Trace:
-[<8023f0e8>] dump_stack+0x8/0x34
-[<80075050>] warn_slowpath_common+0x78/0xa4
-[<80075094>] warn_slowpath_null+0x18/0x24
-[<80d66d60>] ath_stoprecv+0xcc/0xf0 [ath9k]
-[<80d642cc>] ath_set_channel+0xbc/0x270 [ath9k]
-[<80d65254>] ath_radio_disable+0x4a4/0x7fc [ath9k]
+Point taken, but if the firmware has N buffers in its H/W TX ring,
+does the host really need to have 2N buffers in its F/W TX ring?
 
-When this happens, the state that the MAC enters is easy to identify and
-does not result in bogus DMA traffic, however to ensure a working state
-after a channel change, the hardware should still be reset.
-
-This patch adds detection for this specific MAC state, after which the above
-warnings completely disappear in my tests.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
-Cc: Kyungwan Nam <Kyungwan.Nam@Atheros.com>
-
----
-v2: remove a redundant ath9k_hw_stopdmarecv call, print the MAC DMA state when the error still occurs
-
- drivers/net/wireless/ath/ath9k/hw.c   |    9 ---------
- drivers/net/wireless/ath/ath9k/mac.c  |   25 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/mac.h  |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
- 4 files changed, 26 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1b5bd13..c8a2d0d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1249,15 +1249,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ah->txchainmask = common->tx_chainmask;
- 	ah->rxchainmask = common->rx_chainmask;
- -	if ((common->bus_ops->ath_bus_type != ATH_USB) && !ah->chip_fullsleep) {
--		ath9k_hw_abortpcurecv(ah);
--		if (!ath9k_hw_stopdmarecv(ah)) {
--			ath_dbg(common, ATH_DBG_XMIT,
--				"Failed to stop receive dma\n");
--			bChannelChange = false;
--		}
--	}
--
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
- diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 6f431cb..1968c67 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -710,27 +710,46 @@ void ath9k_hw_abortpcurecv(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_abortpcurecv);
- -bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
-+bool ath9k_hw_stopdmarecv(struct ath_hw *ah, bool *reset)
- {
- #define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 mac_status, last_mac_status = 0;
- 	int i;
- +	/* Enable access to the DMA observation bus */
-+	REG_WRITE(ah, AR_MACMISC,
-+		  ((AR_MACMISC_DMA_OBS_LINE_8 << AR_MACMISC_DMA_OBS_S) |
-+		   (AR_MACMISC_MISC_OBS_BUS_1 <<
-+		    AR_MACMISC_MISC_OBS_BUS_MSB_S)));
-+
- 	REG_WRITE(ah, AR_CR, AR_CR_RXD);
-  	/* Wait for rx enable bit to go low */
- 	for (i = AH_RX_STOP_DMA_TIMEOUT / AH_TIME_QUANTUM; i != 0; i--) {
- 		if ((REG_READ(ah, AR_CR) & AR_CR_RXE) == 0)
- 			break;
-+
-+		if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+			mac_status = REG_READ(ah, AR_DMADBG_7) & 0x7f0;
-+			if (mac_status == 0x1c0 && mac_status == last_mac_status) {
-+				*reset = true;
-+				break;
-+			}
-+
-+			last_mac_status = mac_status;
-+		}
-+
- 		udelay(AH_TIME_QUANTUM);
- 	}
-  	if (i == 0) {
- 		ath_err(common,
--			"DMA failed to stop in %d ms AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
-+			"DMA failed to stop in %d ms AR_CR=0x%08x AR_DIAG_SW=0x%08x DMADBG_7=0x%08x\n",
- 			AH_RX_STOP_DMA_TIMEOUT / 1000,
- 			REG_READ(ah, AR_CR),
--			REG_READ(ah, AR_DIAG_SW));
-+			REG_READ(ah, AR_DIAG_SW),
-+			REG_READ(ah, AR_DMADBG_7));
- 		return false;
- 	} else {
- 		return true;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index b2b2ff8..c2a5938 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -695,7 +695,7 @@ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
- void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
- void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning);
- void ath9k_hw_abortpcurecv(struct ath_hw *ah);
--bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
-+bool ath9k_hw_stopdmarecv(struct ath_hw *ah, bool *reset);
- int ath9k_hw_beaconq_setup(struct ath_hw *ah);
-  /* Interrupt Handling */
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 9e9cd83..56ce5f7 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -483,12 +483,12 @@ start_recv:
- bool ath_stoprecv(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	bool stopped;
-+	bool stopped, reset = false;
-  	spin_lock_bh(&sc->rx.rxbuflock);
- 	ath9k_hw_abortpcurecv(ah);
- 	ath9k_hw_setrxfilter(ah, 0);
--	stopped = ath9k_hw_stopdmarecv(ah);
-+	stopped = ath9k_hw_stopdmarecv(ah, &reset);
-  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ath_edma_stop_recv(sc);
-@@ -503,7 +503,7 @@ bool ath_stoprecv(struct ath_softc *sc)
- 			"confusing the DMA engine when we start RX up\n");
- 		ATH_DBG_WARN_ON_ONCE(!stopped);
- 	}
--	return stopped;
-+	return stopped || reset;
- }
-  void ath_flushrecv(struct ath_softc *sc)
--- 
-1.7.3.2
+There is another issue in that mwl8k H/W reports that a packet has been
+transmitted OK even before the packet is attempted to be transmitted
+(i.e. firmware marks the packet as transmitted as soon as the DMA for
+the packet data completes), which sounds like a good candidate for
+fixing at the same time.
 
 
+> This will significantly affect the peak throughput performance.
+
+Does that mean that you've implemented this and tried it out? :-)
