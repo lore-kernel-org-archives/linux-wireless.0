@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:58931 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932485Ab1DNTEY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 15:04:24 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id AC9A65400DD
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 15:09:10 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-14 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110414190422.B1AA640EB5@repository3.orbit-lab.org>
-Date: Thu, 14 Apr 2011 15:04:22 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.perches.com ([173.55.12.10]:4865 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754859Ab1DUQem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 12:34:42 -0400
+Subject: Re: [PATCH v3 1/3] staging: brcm80211: replaced WL_NONE with
+ no_printk
+From: Joe Perches <joe@perches.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1303383725-1440-2-git-send-email-rvossen@broadcom.com>
+References: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
+	 <1303383725-1440-2-git-send-email-rvossen@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Apr 2011 09:34:40 -0700
+Message-ID: <1303403680.24766.55.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 75a9436...73fa655 akpm-end   -> origin/akpm-end  (forced update)
-   aaa119a..85f2e68  akpm-start -> origin/akpm-start
-   f093e8a..f7cc2f6  history    -> origin/history
- + 13ceff9...9e06a6e master     -> origin/master  (forced update)
-   aaa119a..85f2e68  stable     -> origin/stable
- * [new tag]         69a07f0b117a40fcc1a479358d8e1f41793617f2 -> 69a07f0b117a40fcc1a479358d8e1f41793617f2
- * [new tag]         next-20110414 -> next-20110414
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Thu, 2011-04-21 at 13:02 +0200, Roland Vossen wrote:
+[]
+> diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+> index 54af257..8705b40 100644
+> --- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+> +++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+> @@ -20,8 +20,6 @@
+>  /* wl_msg_level is a bit vector with defs in wlioctl.h */
+>  extern u32 wl_msg_level;
+>  
+> -#define WL_NONE(fmt, args...) no_printk(fmt, ##args)
+> -
 
-compat-wireless code metrics
+I think you misunderstand the purpose of no_printk.
+no_printk is used simply to validate format arguments
+and not emit anything.
 
-    839618 - Total upstream lines of code being pulled
+It's typically used for debugging like
+
+#ifndef DEBUG
+#define FOO_DBG(fmt, ...)	printk(fmt, ##__VA_ARGS__)
+#else
+#define FOO_DBG(fmt, ...)	no_printk(fmt, ##__VA_ARGS__)
+#endif
+
+What you've got here is effectively a comment.
+
+More likely there was a mistake in the initial
+conversion to of WL_NONE to no_printk.
+
+
