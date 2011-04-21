@@ -1,106 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1527 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751127Ab1DTIir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 04:38:47 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] staging: brcm80211: better feedback to user on ioctl
- errors
-Date: Wed, 20 Apr 2011 10:38:39 +0200
-Message-ID: <1303288719-3036-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:52578 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab1DULbM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 07:31:12 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, pnemavat@marvell.com,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH V3 1/4] mwl8k: Do not stop tx queues
+Date: Thu, 21 Apr 2011 16:34:56 +0530
+Message-Id: <1303383899-3262-1-git-send-email-nishants@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Messages are now logged that provide the user with a clue on what went wrong.
+From: Pradeep Nemavat <pnemavat@marvell.com>
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+This is in preparation to support life time expiry of packets in the
+hardware to avoid head-of-line blocking where a slow client can
+hog a tx queue and affect the traffic to a faster client from the same
+queue. Time stamp the packets in driver to allow dropping them in the
+hardware if they are queued for more than 500ms.
+
+If queues are stopped, packets will be queued up outside the driver.
+Since we will be able to timestamp the packets only after they hit the
+driver, the timestamp will be less accurate since we cannot consider
+the time the packets spent in queues outside the driver. With this commit,
+to achieve accurate timestamping, the tx queues will not be stopped in
+normal conditions. The only scenarios where the queues will be stopped are
+when firmware commands are executing or if the interface is brought down.
+Now, we need to be prepared for a situation where packets hit the driver
+even after the tx queues are full. Drop all such packets in the driver itself.
+
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_main.c |   44 ++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwl8k.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index 46bf93b..dba6195 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -4141,7 +4141,7 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
- 	     void *params, int p_len, void *arg, int len,
- 	     bool set, struct wlc_if *wlcif)
- {
--	int err = 0;
-+	int err;
- 	int val_size;
- 	const bcm_iovar_t *vi = NULL;
- 	u32 actionid;
-@@ -4151,8 +4151,34 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
- 	    !(IS_ALIGNED((unsigned long)(arg), (uint) sizeof(int)))) {
- 		dev_err(wlc->dev, "wl%d: %s unaligned get ptr for %s\n",
- 			 wlc->pub->unit, __func__, name);
--		err = ENOTSUPP;
--		goto exit;
-+		return -ENOTSUPP;
-+	}
-+
-+	if (name == NULL || len < 0) {
-+		dev_err(wlc->dev, "wl%d: %s name/arg error len=%d\n",
-+			wlc->pub->unit, __func__, len);
-+		return -ENOTSUPP;
-+	}
-+
-+	if (!set && !(arg && len)) {
-+		dev_err(wlc->dev, "Get MUST have return space\n");
-+		goto fail;
-+	}
-+
-+	if (wlc->pub->hw_off && wlc->pub->up) {
-+		dev_err(wlc->dev, "hw is off but adapter is up!\n");
-+		goto fail;
-+	}
-+
-+	if (set && (params || p_len)) {
-+		dev_err(wlc->dev, "Set does NOT take qualifiers\n");
-+		goto fail;
-+	}
-+
-+	if (!set && len == sizeof(int) &&
-+	    !IS_ALIGNED((unsigned long)(arg), (uint) sizeof(int))) {
-+		dev_err(wlc->dev, "unaligned access on get\n");
-+		goto fail;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ebaae35..7968301 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1666,10 +1666,6 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+ 		processed++;
  	}
  
- 	/* find the given iovar name */
-@@ -4164,10 +4190,8 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
- 			break;
- 	}
- 	/* iovar name not found */
--	if (i >= WLC_MAXMODULES) {
--		err = -ENOTSUPP;
--		goto exit;
--	}
-+	if (i >= WLC_MAXMODULES)
-+		return -ENOTSUPP;
- 
- 	/* set up 'params' pointer in case this is a set command so that
- 	 * the convenience int and bool code can be common to set and get
-@@ -4192,8 +4216,12 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
- 					name, params, p_len, arg, len, val_size,
- 					wlcif);
- 
-- exit:
- 	return err;
-+
-+fail:
-+	dev_err(wlc->dev, "wl%d: %s(set=%d,%s) failed\n", wlc->pub->unit,
-+		__func__, set, name);
-+	return -ENOTSUPP;
+-	if (index < MWL8K_TX_WMM_QUEUES && processed && priv->radio_on &&
+-	    !mutex_is_locked(&priv->fw_mutex))
+-		ieee80211_wake_queue(hw, index);
+-
+ 	return processed;
  }
  
- int
+@@ -1951,13 +1947,14 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 
+ 	txq = priv->txq + index;
+ 
+-	if (index >= MWL8K_TX_WMM_QUEUES && txq->len >= MWL8K_TX_DESCS) {
+-		/* This is the case in which the tx packet is destined for an
+-		 * AMPDU queue and that AMPDU queue is full.  Because we don't
+-		 * start and stop the AMPDU queues, we must drop these packets.
+-		 */
+-		dev_kfree_skb(skb);
++	if (txq->len >= MWL8K_TX_DESCS) {
++		if (start_ba_session) {
++			spin_lock(&priv->stream_lock);
++			mwl8k_remove_stream(hw, stream);
++			spin_unlock(&priv->stream_lock);
++		}
+ 		spin_unlock_bh(&priv->tx_lock);
++		dev_kfree_skb(skb);
+ 		return;
+ 	}
+ 
+@@ -1985,9 +1982,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 	if (txq->tail == MWL8K_TX_DESCS)
+ 		txq->tail = 0;
+ 
+-	if (txq->head == txq->tail && index < MWL8K_TX_WMM_QUEUES)
+-		ieee80211_stop_queue(hw, index);
+-
+ 	mwl8k_tx_start(priv);
+ 
+ 	spin_unlock_bh(&priv->tx_lock);
 -- 
-1.7.1
-
+1.6.0.3
 
