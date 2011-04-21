@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37869 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622Ab1DLLlj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:41:39 -0400
-Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Ospite <ospite@studenti.unina.it>
-Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
-References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
-	 <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 13:41:28 +0200
-Message-ID: <1302608488.3639.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2199 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752708Ab1DUSal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 14:30:41 -0400
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: dwmw2@infradead.org
+cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	henryp@broadcom.com, brudley@broadcom.com, rvossen@broadcom.com,
+	arend@broadcom.com, "Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH 0/3] linux-firmware: brcm firmware fixes
+Date: Thu, 21 Apr 2011 11:30:21 -0700
+Message-ID: <1303410624-10560-1-git-send-email-henryp@broadcom.com>
+In-Reply-To: <1302015522-20601-4-git-send-email-henryp@broadcom.com>
+References: <1302015522-20601-4-git-send-email-henryp@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-08 at 12:59 +0200, Antonio Ospite wrote:
-> Add a regulator consumer driver for rfkill to enable controlling radio
-> transmitters connected to voltage regulators using the regulator
-> framework.
-> 
-> A new "vrfkill" virtual supply is provided to use in platform code.
-> 
-> Signed-off-by: Guiming Zhuo <gmzhuo@gmail.com>
-> Signed-off-by: Antonio Ospite <ospite@studenti.unina.it>
-> ---
-> 
-> Changes since v1:
-> 
->   - changed "voltage regulator" to "voltage regulators" in the commit
->     message
-> 
->   - drop rfkill_init_sw_state() as requested by Johannes Berg
-> 
->   - moved assignment fields of rfkill_data _before_ rfkill_register(),
->     as the latter will call .set_block (via schedule_work()) which would
->     find NULL pointers for the .vcc and .rf_kill fields otherwise.
-> 
->     This issue was masked when I was using rfkill_init_sw_state() which
->     was setting the persistent flag: rfkill_register() does not call
->     schedule_work() immediately when the persistent flag is set.
-> 
->     So please take another look at this part of rfkill_regulator_probe().
-> 
-> Mark, I left in the RFKILL || !RFKILL part.
-> 
-> If there are no more comments, who is going to merge the driver, Johannes?
+Resending this series, as patch 2 wasn't complete (older version of git only
+caught 1 of 4 file renames), causing patch 3 to fail to apply.
 
-I don't have a tree, John can merge it, but I found a few more bugs:
+- Henry
 
-> + * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
-> + * 	{ .dev_name = "rfkill-regulator.0", supply = "vrfkill" },
-> + * };
+Henry Ptasinski (3):
+  linux-firmware: Simplified license file for brcm firmware
+  linux-firmware: Removed codeversion from brcm firmware filenames.
+  linux-firmware: updated firmware for BCM4313, BCM43224, and BCM43225
+    chips
 
-It's a comment, but it should be .supply = (missing the .)
+ LICENCE.broadcom_bcm43xx                           |  270 +++++---------------
+ WHENCE                                             |   12 +-
+ ...llmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} |  Bin 269595 -> 269595 bytes
+ ...llmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} |    0
+ brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw}      |  Bin 97376 -> 97344 bytes
+ brcm/bcm43xx_hdr-0-610-809-0.fw                    |  Bin 180 -> 0 bytes
+ brcm/bcm43xx_hdr-0.fw                              |  Bin 0 -> 180 bytes
+ 7 files changed, 71 insertions(+), 211 deletions(-)
+ rewrite LICENCE.broadcom_bcm43xx (99%)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} (100%)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} (100%)
+ rename brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw} (74%)
+ delete mode 100644 brcm/bcm43xx_hdr-0-610-809-0.fw
+ create mode 100644 brcm/bcm43xx_hdr-0.fw
 
-> +	if (pdata->name == NULL || pdata->type == 0) {
-> +		dev_err(&pdev->dev, "invalid name or type in platform data\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
+-- 
+1.7.4.5
 
-Wasn't that supposed to use pdata->supply? Actually, there's no member
-"supply" in the struct?
-
-> +	dev_info(&pdev->dev, "initialized\n");
-
-Is that message really useful?
-
-Other than that, looks good to me.
-
-johannes
 
