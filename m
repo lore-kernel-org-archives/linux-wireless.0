@@ -1,70 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37429 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab1DECQk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47341 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103Ab1DUAah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 22:16:40 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so6347290iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:39 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v7 08/10] mac80211: Perform PLINK_ACTION on new station
-Date: Mon,  4 Apr 2011 18:15:38 -0700
-Message-Id: <1301966140-26080-9-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+	Wed, 20 Apr 2011 20:30:37 -0400
+Date: Wed, 20 Apr 2011 20:16:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: updated iwlwifi 5000 uCode available
+Message-ID: <20110421001615.GA2437@tuxdriver.com>
+References: <1303316696.14995.162.camel@wwguy-huron>
+ <20110420182254.GE2737@tuxdriver.com>
+ <20110420201124.GF2737@tuxdriver.com>
+ <1303330625.31956.1.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303330625.31956.1.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Wed, Apr 20, 2011 at 01:17:05PM -0700, wwguy wrote:
+> On Wed, 2011-04-20 at 13:11 -0700, John W. Linville wrote:
+> > On Wed, Apr 20, 2011 at 02:22:54PM -0400, John W. Linville wrote:
+> > > On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
+> > > > Hi,
+> > > > 
+> > > > Due to a packaging error, we've re-released the 5000 uCode version
+> > > > 8.83.5.1. 
+> > > > 
+> > > > The updated version of firmware is available for download from
+> > > > http://intellinuxwireless.org/?n=Downloads
+> > > > 
+> > > > The old, wrongly packaged version has the following sha1sums:
+> > > > 
+> > > > bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
+> > > > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > > > 8d94177b509be3fb653ce8ba0c633244e4abf5f3
+> > > > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> > > 
+> > > The version I get from:
+> > > 
+> > > 	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
+> > > 
+> > > matches the sha1sum values listed above for the "wrongly packaged" version.
+> > > 
+> > > > The new version these:
+> > > > e70cc4b2249824a6b17ce9b9ae5087942c762213
+> > > > iwlwifi-5000-ucode-8.83.5.1.tgz
+> > > > 22bf6093ed8204027cc3207c739d2cab9cc92ea3
+> > > > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
+> > > > 
+> > > > The only change is removing the advertising for multiple interface
+> > > > support which is not actually present in this microcode.
+> > > > 
+> > > > Wey-Yi
+> > > 
+> > > So, you are going to release a different version of the file but
+> > > with the _same_ release number?  Couldn't you at least name it
+> > > iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
+> > 
+> > BTW, this name suggestions sucks...  8.83.5.1.1 or 8.83.5.2 would be
+> > better for packaging purposes (at least for RPM).
+> > 
+> this is really not an official build, so the build# stay the same. I am
+> ok to rename to anything, but the internal build# will not changed.
 
-Modify the NEW_STATION command to accept PLINK_ACTIONS, in case
-userspace wants to create stations and initiate a peer link right away
-(for authenticated stations) or create a blocked station (for
-debugging).
+Which is the unofficial build?  The one that was previously released?
+Or the new one?  I am presuming that the one originally released is
+the "unofficial" one...
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_plink.c |    2 +-
- net/wireless/nl80211.c    |    5 +++++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+I appreciate your situation, but using the same release number for
+a new release (even if it is the "official" one) is a really bad
+release policy.  Just for your own sanity I would think that you
+would want a new release number -- even if you just did a rebuild
+and changed nothing but that number.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 5d0dd92..b327e0e 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- 	if (!sta)
- 		return NULL;
- 
--	sta->flags = WLAN_STA_AUTHORIZED;
-+	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
- 	rate_control_rate_init(sta);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dba1a21..128ca25 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2330,11 +2330,16 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.ht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
-+		params.plink_action =
-+		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+
- 	if (parse_station_flags(info, &params))
- 		return -EINVAL;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
- 		return -EINVAL;
- 
+John
 -- 
-1.7.4.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
