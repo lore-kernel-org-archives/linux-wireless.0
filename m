@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14889 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4651 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751673Ab1DFLBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 07:01:14 -0400
-Message-ID: <4D9C47D2.9040703@redhat.com>
-Date: Wed, 06 Apr 2011 19:00:34 +0800
-From: Cong Wang <amwang@redhat.com>
+	id S1750939Ab1DULCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 07:02:21 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3 0/3] staging: brcm80211: logging code clean up
+Date: Thu, 21 Apr 2011 13:02:02 +0200
+Message-ID: <1303383725-1440-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Patch] wireless: remove obsolete ar9170usb driver
-References: <1302086160-9158-1-git-send-email-amwang@redhat.com> <1302086729.3811.14.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1302086729.3811.14.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-于 2011年04月06日 18:45, Johannes Berg 写道:
-> On Wed, 2011-04-06 at 18:36 +0800, Amerigo Wang wrote:
->> AR9170USB is scheduled to be removed in 2.6.40.
->>
->> Cc: Christian Lamparter<chunkeey@googlemail.com>
->
-> Christian already submitted this patch, and I believe it was merged.
->
-> What tree are you working against? You seem to be missing a bunch of
-> wireless things that _should_ be in linux-next (I was going to check but
-> git.kernel.org is really slow right now)?
->
+Difference with v2,v1 patches: added reference counting of device object by
+adding get_device() and put_device() calls. Patch is based on the latest
+staging-next so should apply.
 
-It is based on today's Linus tree and I also checked the latest net-next-2.6.
-Sorry that I missed the wireless tree.
+v1 patch comment (still valid):
+Improved code readability by getting rid of proprietary log functions like
+WL_NONE and WL_ERROR. More logging code cleanup changes in the pipeline, but
+I would first like to get some feedback of the community on this patch.
 
-Anyway, good to see this is already removed.
+Roland Vossen (3):
+  staging: brcm80211: replaced WL_NONE with no_printk
+  staging: brcm80211: making device object accessible from wlc and phy
+  staging: brcm80211: replaced WL_ERROR with dev_err in two files.
 
-Thanks.
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h   |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wl_dbg.h        |    2 -
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |  273 +++++++++++---------
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c     |    8 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_antsel.c    |    7 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    3 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c   |    8 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |   10 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h      |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_pub.h       |    2 +-
+ 14 files changed, 178 insertions(+), 146 deletions(-)
+
+
