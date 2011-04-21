@@ -1,101 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33631 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:52893 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758344Ab1D1Jwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 05:52:41 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 02/10] iwlegacy: enable only rfkill interrupt when device is down
-Date: Thu, 28 Apr 2011 11:51:25 +0200
-Message-Id: <1303984293-6601-2-git-send-email-sgruszka@redhat.com> (sfid-20110428_115258_541546_A3E89F83)
-In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
-References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+	id S1750945Ab1DUNDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 09:03:16 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 06:02:49 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] ath9k: Fix bug in configuring hw timer
+Date: Thu, 21 Apr 2011 18:33:27 +0530
+Message-ID: <1303391008-4794-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add two below iwlwifi commits to iwlegacy:
+Hw next tigger time is configured as current_tsf + (timer_period * 10) which
+is wrong, it should be current_tsf + timer_period. The wrong hw timer configuration
+would cause btcoex related issues.
 
-commit 554d1d027b19265c4aa3f718b3126d2b86e09a08
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Thu Dec 23 12:38:21 2010 +0100
-
-    iwlagn: enable only rfkill interrupt when device is down
-
-commit 3dd823e6b86407aed1a025041d8f1df77e43a9c8
-Author: Don Fry <donald.h.fry@intel.com>
-Date:   Sun Feb 6 09:29:45 2011 -0800
-
-    iwlagn: Re-enable RF_KILL interrupt when down
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwlegacy/iwl-helpers.h  |    6 ++++++
- drivers/net/wireless/iwlegacy/iwl4965-base.c |   12 ++++++++----
- 2 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c |    6 +++---
+ drivers/net/wireless/ath/ath9k/hw.c   |   13 ++++---------
+ 2 files changed, 7 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-helpers.h b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-index 02132e7..a6effda 100644
---- a/drivers/net/wireless/iwlegacy/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-helpers.h
-@@ -149,6 +149,12 @@ static inline void iwl_legacy_disable_interrupts(struct iwl_priv *priv)
- 	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
- }
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 44a0a88..cc5fad6 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -138,10 +138,10 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
  
-+static inline void iwl_legacy_enable_rfkill_int(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
-+	iwl_write32(priv, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
-+}
-+
- static inline void iwl_legacy_enable_interrupts(struct iwl_priv *priv)
+ static void ath9k_gen_timer_start(struct ath_hw *ah,
+ 				  struct ath_gen_timer *timer,
+-				  u32 timer_next,
++				  u32 trig_timeout,
+ 				  u32 timer_period)
  {
- 	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 644bf31..46966e9 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -1072,6 +1072,9 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
- 	/* only Re-enable if diabled by irq */
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
- 		iwl_legacy_enable_interrupts(priv);
-+	/* Re-enable RF_KILL if it occurred */
-+	else if (handled & CSR_INT_BIT_RF_KILL)
-+		iwl_legacy_enable_rfkill_int(priv);
+-	ath9k_hw_gen_timer_start(ah, timer, timer_next, timer_period);
++	ath9k_hw_gen_timer_start(ah, timer, trig_timeout, timer_period);
  
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
- 	if (iwl_legacy_get_debug_level(priv) & (IWL_DL_ISR)) {
-@@ -2624,9 +2627,10 @@ void iwl4965_mac_stop(struct ieee80211_hw *hw)
+ 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
+ 		ath9k_hw_disable_interrupts(ah);
+@@ -195,7 +195,7 @@ static void ath_btcoex_period_timer(unsigned long data)
  
- 	flush_workqueue(priv->workqueue);
- 
--	/* enable interrupts again in order to receive rfkill changes */
-+	/* User space software may expect getting rfkill changes
-+	 * even if interface is down */
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--	iwl_legacy_enable_interrupts(priv);
-+	iwl_legacy_enable_rfkill_int(priv);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-@@ -3406,14 +3410,14 @@ iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * 8. Enable interrupts and read RFKILL state
- 	 *********************************************/
- 
--	/* enable interrupts if needed: hw bug w/a */
-+	/* enable rfkill interrupt: hw bug w/a */
- 	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
- 	if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
- 		pci_cmd &= ~PCI_COMMAND_INTX_DISABLE;
- 		pci_write_config_word(priv->pci_dev, PCI_COMMAND, pci_cmd);
+ 		timer_period = is_btscan ? btcoex->btscan_no_stomp :
+ 					   btcoex->btcoex_no_stomp;
+-		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, 0,
++		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, timer_period,
+ 				      timer_period * 10);
+ 		btcoex->hw_timer_enabled = true;
  	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9a89855..3e1b85e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2423,11 +2423,11 @@ EXPORT_SYMBOL(ath_gen_timer_alloc);
  
--	iwl_legacy_enable_interrupts(priv);
-+	iwl_legacy_enable_rfkill_int(priv);
+ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 			      struct ath_gen_timer *timer,
+-			      u32 timer_next,
++			      u32 trig_timeout,
+ 			      u32 timer_period)
+ {
+ 	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
+-	u32 tsf;
++	u32 tsf, timer_next;
  
- 	/* If platform's RF_KILL switch is NOT set to KILL */
- 	if (iwl_read32(priv, CSR_GP_CNTRL) &
+ 	BUG_ON(!timer_period);
+ 
+@@ -2435,18 +2435,13 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 
+ 	tsf = ath9k_hw_gettsf32(ah);
+ 
++	timer_next = tsf + trig_timeout;
++
+ 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_HWTIMER,
+ 		"current tsf %x period %x timer_next %x\n",
+ 		tsf, timer_period, timer_next);
+ 
+ 	/*
+-	 * Pull timer_next forward if the current TSF already passed it
+-	 * because of software latency
+-	 */
+-	if (timer_next < tsf)
+-		timer_next = tsf + timer_period;
+-
+-	/*
+ 	 * Program generic timer registers
+ 	 */
+ 	REG_WRITE(ah, gen_tmr_configuration[timer->index].next_addr,
 -- 
-1.7.1
+1.7.0.4
 
