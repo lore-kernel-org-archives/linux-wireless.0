@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:47279 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754028Ab1DEO62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 10:58:28 -0400
-Date: Tue, 5 Apr 2011 07:13:30 -0700
-From: Greg KH <greg@kroah.com>
-To: Vipin Mehta <vmehta@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Vipin Mehta <Vipin.Mehta@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Naveen Singh <Naveen.Singh@Atheros.com>
-Subject: Re: [PATCH 34/34] ath6kl: remove the HTC raw interface
-Message-ID: <20110405141330.GA25749@kroah.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
- <1301446591-15236-35-git-send-email-lrodriguez@atheros.com>
- <35B17FE5076C7040809188FBE7913F984316D17DDC@SC1EXMB-MBCL.global.atheros.com>
- <AANLkTi=_T-f7e0dGC05mACjGFD86VP+MULZsfXinTXkq@mail.gmail.com>
- <20110404225248.GA30856@vmehta-desktop>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52072 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751652Ab1DUC0h convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2011 22:26:37 -0400
+Received: by vws1 with SMTP id 1so996435vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2011 19:26:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110404225248.GA30856@vmehta-desktop>
+In-Reply-To: <BANLkTikssXGwo7e1aqz-Qb8D08mv9g_MNA@mail.gmail.com>
+References: <1303262232-2605-1-git-send-email-zajec5@gmail.com>
+ <4DAE3B17.4080308@lwfinger.net> <BANLkTikssXGwo7e1aqz-Qb8D08mv9g_MNA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 21 Apr 2011 12:26:16 +1000
+Message-ID: <BANLkTikdRatp3puWDDyXhHQNQNtzDSPOtw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] ssb: cc: add & fix defines
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 04, 2011 at 03:56:43PM -0700, Vipin Mehta wrote:
-> On Thu, Mar 31, 2011 at 11:03:50AM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Mar 31, 2011 at 9:50 AM, Vipin Mehta <Vipin.Mehta@atheros.com> wrote:
-> > > The raw HTC support is required for the tools used on the manufacturing floor
-> > > For module calibration. Without this code, the driver and the hardware
-> > > cannot be shipped. I suggest we keep this code until we add the support for
-> > > nl80211 test command interface and migrate the tools to use the new interface.
-> > 
-> > Vipin, so you NACK the patch -- that's fine. Greg please drop this
-> > one. Vipin, when do you plan on adding the nl80211 test command
-> > support? The API already exists. I'll remind you that this is a
-> > blocker for getting this out of staging.
-> > 
-> >   Luis
-> Greg,
->   Can you apply the rest of the changes from patch 0 through 33 in
-> this series if you are satisfied with them. We have more patches coming
-> but are currently waiting for you to apply the existing ones.
+On Wed, Apr 20, 2011 at 18:15, Rafał Miłecki <zajec5@gmail.com> wrote:
+[snip]
+>
+> It was bad idea to send patch so late. Did I really update comments
+> hoping it will work? :|
 
-Already applied.
+I read the patch and wondered what the heck you were doing, but I
+thought to myself: Rafał knows way more about ssb and the related code
+than I do, so surely he knows what he's doing. =)
 
-thanks,
+Thanks,
 
-greg k-h
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
