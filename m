@@ -1,114 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:53727 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757477Ab1DLSHC (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:65310 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755156Ab1DURYo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 14:07:02 -0400
-Received: by pxi2 with SMTP id 2so3655027pxi.10
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 11:07:02 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: linux-wireless@vger.kernel.org, buytenh@wantstofly.org
-Cc: Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH] mwl8k: use traffic threshold to decide when to start ampdu
-Date: Tue, 12 Apr 2011 11:06:28 -0700
-Message-Id: <1302631588-8455-1-git-send-email-brian@cozybit.com>
+	Thu, 21 Apr 2011 13:24:44 -0400
+Received: by iyb14 with SMTP id 14so1563542iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 10:24:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTimvT-9mSQ8n1zyDYpioxJEv=Kc7Jg@mail.gmail.com>
+References: <BANLkTimvT-9mSQ8n1zyDYpioxJEv=Kc7Jg@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 21 Apr 2011 10:24:23 -0700
+Message-ID: <BANLkTimpp5hU3X17yfCrcBzmfqaO7T8OJA@mail.gmail.com>
+Subject: Re: Mesh broken
+To: Qasim Javed <qasimj@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, devel@lists.open80211s.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, ampdu stream is created on the first qos packet to an
-HT sta. The overhead of setting up the BA session may not be
-justified if the outgoing packet rate is minimal (e.g., ping). So
-we only allow ampdu streams after seeing a critical number of
-packets in an arbitrary one-second interval.
+On Mon, Apr 18, 2011 at 2:18 PM, Qasim Javed <qasimj@gmail.com> wrote:
+> Hi all,
+>
+> We have a 6 node mesh setup, with one node acting as a mesh portal.
+> All the nodes are in direct range of each other, so every node has 5
+> peer links. The node that acts as a mesh portal has another laptop
+> connected to it via an Ethernet cable which runs an iperf TCP server.
+> Every mesh node runs an iperf TCP client where the transmit data rate
+> is limited to about 500Kbps.
+>
+> When we run the iperf client on all the mesh nodes while using
+> compat-wireless from 18th Jan, 2011, things seem to work fine. There
+> is rarely a connection loss. However, the peak data rate at the laptop
+> which is connected to the mesh portal (via Ethernet) goes much higher
+> than the expected 3Mbps (6*500Kbps).
+>
+> When we use compat-wireless from 28th March, 2011, and repeat the
+> above experiment again, the results we get are quite disappointing.
+> The TCP connections from all 6 nodes constantly break. Also, if only
+> one mesh node is communicating with the laptop connected to the mesh
+> portal, the connection does not break. If using the same
+> compat-wireless, we force the max plinks to 1 (one) at each node, the
+> TCP connections do not break. Everything works fine.
+>
+> If we use compat-wireless from 31st march, 2011, the mesh nodes are
+> not even able to establish plinks with each other.
+>
+> "iw dev mesh station dump"
+>
+> returns nothing.
+>
+> Switching to compat-wireless from 14th April, 2011 results in plinks
+> alternating between LISTEN and OPN_SNT states. The displayed beacon
+> signal strength (in station dump) is very low (close to -80dbm).
+>
+> Infrastructure mode works fine.
+>
+> Can anyone please elaborate on what could be happening here?
 
-Based on work by Nishant Sarmukadam <nishants@marvell.com>
+I have no clue, but FWIW we tested a recent version of
+wireless-testing (1d4af019d920c838e4de81afa0b5d67879090fd5) on ath9k
+hardware (AR5418) and worked well¹.
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |   45 +++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 44 insertions(+), 1 deletions(-)
+Javier
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ae56d2f..ce2fd66 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -288,10 +288,17 @@ struct mwl8k_vif {
- #define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
- #define IEEE80211_KEY_CONF(_u8) ((struct ieee80211_key_conf *)(_u8))
- 
-+struct tx_traffic_info {
-+	u32 start_time;
-+	u32 pkts;
-+};
-+
-+#define MWL8K_MAX_TID 8
- struct mwl8k_sta {
- 	/* Index into station database. Returned by UPDATE_STADB.  */
- 	u8 peer_id;
- 	u8 is_ampdu_allowed;
-+	struct tx_traffic_info tx_stats[MWL8K_MAX_TID];
- };
- #define MWL8K_STA(_sta) ((struct mwl8k_sta *)&((_sta)->drv_priv))
- 
-@@ -1754,6 +1761,41 @@ mwl8k_lookup_stream(struct ieee80211_hw *hw, u8 *addr, u8 tid)
- 	return NULL;
- }
- 
-+#define MWL8K_AMPDU_PACKET_THRESHOLD 64
-+static inline bool mwl8k_ampdu_allowed(struct ieee80211_sta *sta, u8 tid)
-+{
-+	struct mwl8k_sta *sta_info = MWL8K_STA(sta);
-+	struct tx_traffic_info *tx_stats;
-+
-+	BUG_ON(tid >= MWL8K_MAX_TID);
-+	tx_stats = &sta_info->tx_stats[tid];
-+
-+	return sta_info->is_ampdu_allowed &&
-+		tx_stats->pkts > MWL8K_AMPDU_PACKET_THRESHOLD;
-+}
-+
-+static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
-+{
-+	struct mwl8k_sta *sta_info = MWL8K_STA(sta);
-+	struct tx_traffic_info *tx_stats;
-+
-+	BUG_ON(tid >= MWL8K_MAX_TID);
-+	tx_stats = &sta_info->tx_stats[tid];
-+
-+	if (tx_stats->start_time == 0)
-+		tx_stats->start_time = jiffies;
-+
-+	/* reset the packet count after each second elapses.  If the number of
-+	 * packets ever exceeds the ampdu_min_traffic threshold, we will allow
-+	 * an ampdu stream to be started.
-+	 */
-+	if (jiffies - tx_stats->start_time > HZ) {
-+		tx_stats->pkts = 0;
-+		tx_stats->start_time = 0;
-+	} else
-+		tx_stats->pkts++;
-+}
-+
- static void
- mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- {
-@@ -1840,6 +1882,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	    skb->protocol != cpu_to_be16(ETH_P_PAE) &&
- 	    sta->ht_cap.ht_supported && priv->ap_fw) {
- 		tid = qos & 0xf;
-+		mwl8k_tx_count_packet(sta, tid);
- 		spin_lock(&priv->stream_lock);
- 		stream = mwl8k_lookup_stream(hw, sta->addr, tid);
- 		if (stream != NULL) {
-@@ -1880,7 +1923,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 			 * prevents sequence number mismatch at the recepient
- 			 * as described above.
- 			 */
--			if (MWL8K_STA(sta)->is_ampdu_allowed) {
-+			if (mwl8k_ampdu_allowed(sta, tid)) {
- 				stream = mwl8k_add_stream(hw, sta, tid);
- 				if (stream != NULL)
- 					start_ba_session = true;
--- 
-1.7.1.1
-
+[1] We had to apply a fix to that particular card that
+(http://o11s.org/trac/wiki/ath9kFilteringIssueFix) but that does not
+seem to apply to your hardware as you were running in mesh mode
+before.
