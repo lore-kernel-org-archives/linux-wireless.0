@@ -1,121 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:38029 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754441Ab1DJVDg (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:53052 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753911Ab1DUIXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 17:03:36 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4DA2042A.3010301@gmail.com>
-References: <4DA2042A.3010301@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-o3qyJqkE8SuX39fEJ35J"
-Date: Sun, 10 Apr 2011 22:03:26 +0100
-Message-ID: <1302469406.5282.341.camel@localhost>
-Mime-Version: 1.0
-Subject: Re: Firmware files for Ralink RT28x0
+	Thu, 21 Apr 2011 04:23:33 -0400
+Subject: Re: [PATCH V2 2/4] mwl8k: Add timestamp information for tx packets
+From: Nishant Sarmukadam <nishants@marvell.com>
+Reply-To: <nishants@marvell.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+In-Reply-To: <20110421074209.GX1897@wantstofly.org>
+References: <1303231582-17333-1-git-send-email-nishants@marvell.com>
+	 <1303231582-17333-2-git-send-email-nishants@marvell.com>
+	 <20110421074209.GX1897@wantstofly.org>
+Content-Type: text/plain
+Date: Thu, 21 Apr 2011 13:45:10 +0530
+Message-ID: <1303373710.24017.46.camel@localhost.localdomain>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-o3qyJqkE8SuX39fEJ35J
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2011-04-21 at 00:42 -0700, Lennert Buytenhek wrote:
+> On Tue, Apr 19, 2011 at 10:16:20PM +0530, Nishant Sarmukadam wrote:
+> 
+> > From: Pradeep Nemavat <pnemavat@marvell.com>
+> > 
+> > Timestamp tx packets using a HW micro-second timer.
+> > This timestamp will be compared to the current timestamp
+> > in the hardware and if the difference is greater than 500ms,
+> > the packet will be dropped.
+> > 
+> > Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+> > Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> > ---
+> >  drivers/net/wireless/mwl8k.c |   12 ++++++++++++
+> >  1 files changed, 12 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> > index 7968301..aca0139 100644
+> > --- a/drivers/net/wireless/mwl8k.c
+> > +++ b/drivers/net/wireless/mwl8k.c
+> > @@ -1792,6 +1792,14 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
+> >  		tx_stats->pkts++;
+> >  }
+> >  
+> > +/* HW micro second timer register
+> > + * located at offset 0xA600. This
+> > + * will be used to timestamp tx
+> > + * packets.
+> > + */
+> > +
+> > +#define	MWL8K_HW_TIMER_REGISTER	(priv->regs + 0xA600)
+> 
+> 1. Ugly implicit 'priv' argument here. :-(
+> 
+>    Please just do something like:
+> 
+>  #define  MWL8K_A2H_INT_RX_READY                  (1 << 1)
+>  #define  MWL8K_A2H_INT_TX_DONE                   (1 << 0)
+> +
+> +/* Misc registers */
+> +#define MWL8K_HW_TIMER_REGISTER		0x0000a600
+> 
+>  #define MWL8K_A2H_EVENTS        (MWL8K_A2H_INT_DUMMY | \
+>                                   MWL8K_A2H_INT_CHNL_SWITCHED | \
+> 
+>    and then just use it as ioread32(priv->regs + MWL8K_HW_TIMER_REGISTER).
+> 
+> 
+Ok, will send out patch set V3 incorporating this change. 
 
-On Sun, 2011-04-10 at 21:25 +0200, Xose Vazquez Perez wrote:
-> Ben Hutchings wrote:
->=20
-> > Ralink provides multiple drivers per bus type for RT28xx and later
-> > chips.  For PCI devices they split between RT2860 and RT309x; for USB
-> > devices they split between RT2870 and RT307x (I think - the chip model
-> > numbers don't seem to be stated consistently).
-> >=20
-> > In addition, the USB drivers have two separate images packed together
-> > and they can select different images based on the controller version:
-> >=20
-> > #ifdef RTMP_MAC_USB
-> > 		if ((Version !=3D 0x2860) && (Version !=3D 0x2872) && (Version !=3D 0=
-x3070))=20
-> > 		{	// Use Firmware V2.
-> > 			//printk("KH:Use New Version,part2\n");
-> > 			pFirmwareImage =3D (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV1_LENGTH];
-> > 			FileLength =3D FIRMWAREIMAGEV2_LENGTH;
-> > 		}
-> > 		else
-> > 		{
-> > 			//printk("KH:Use New Version,part1\n");
-> > 			pFirmwareImage =3D FirmwareImage;
-> > 			FileLength =3D FIRMWAREIMAGEV1_LENGTH;
-> > 		}
-> > #endif // RTMP_MAC_USB //
-> >=20
-> > The firmware blobs in RT2870 version 2009-08-20 and RT3070 version
-> > 2009-05-25 are all marked as version 17 (or 0.17), but *they all have
-> > different contents*.
-> >=20
-> > I attempted to maintain the same version selection logic when convertin=
-g
-> > the staging drivers to use the firmware loader, since I assumed there
-> > was a good reason for it.
-> >=20
->=20
-> As you can see in the ralink web[1] RT28XX/RT30XX USB devices (RT2870/RT2=
-770/RT3572/RT3070)
-> need _only_ the rt2870.bin fw-file.
->=20
-> And RT28XX/RT30XX PCI/mPCI/PCIe/CardBus devices
-> (RT2760/RT2790/RT2860/RT2890/RT3060/RT3062/RT3562/RT2860/RT2760/RT2890/RT=
-2790/RT3090)
-> need _only_ the rt2860.bin fw-file.
+> 2. Does this register exist on 8687/superfly3, or is it SJ only?
 
-These files aren't used by the Ralink drivers.  So why should you
-believe the labels on them?
+Yes, this does exist on 8687 and superfly3 as well. 
 
-> > linux-firmware is supposed to have all firmware files referenced by any
-> > version of Linux
->=20
-> That's a good joke!
-> linux-firmware is *unmaintained* , a lot of firmwares are missing.
 
-linux-firmware is not *actively* maintained; it requires people to send
-submissions (repeatedly...).
-
-> Even the intel ones(microcode.dat, ipw2{1,2}*), zd1211, etc...
-
-I think there may be a problem with distribution of Intel Pro Wireless
-firmware because Intel requires users to accept a EULA.
-
-> Others are very old, really it's a mess.
-> Fedora puts _forty_ patches on top of linux-firmware.
-
-So help to make it better.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-o3qyJqkE8SuX39fEJ35J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATaIbGee/yOyVhhEJAQpvAxAAnRzrTr4WXSFbt8IFCrLb9EIk+6tG6ve/
-ZDKxFAPs65ZTC3kIbbPdenLtIvdWLlrYVdYM9AeB7Vpd+JIn2nSQZatd4X46Z4/O
-6bYmtNvQRhB/zJndY21UWvPmLpBc/3L0rTt25YsM7TGqU9M5/GW/5wRQeeyzn1+7
-lQFSeIpL1b7FghbP63Yg4b2sy1lCIPskcW9oL3o0SkjIEpIHeck1sw2MVsMyfkl9
-16sws1N/AYIuZ8+M3bM2VHHfnJAFJDASWorBCjlFkoD2F4VoQ6C9MvrqM4YNquWm
-0V61iXwdvGWZuM+KikORMAS+sWEBcq8MmuxH6Tb4xarRVw3QKTcfHs1x1yRmbzIx
-av9bq39c/2hTJMUysoh0/6F7CMP+VD5vu38Zl3av8b2SfmSTgw21cZM6OBk965FZ
-EGdCH3TWhfNXm7c2dpAWNyDTV72J8LKsRovbprjQn6efzXA8g95WdVoHucFSYJEc
-DTrY2jajc4s2FiHI1/mtY+NwR4HsTtsixZtu0f7WfCJbY+cEWLQ3YSVU6wJlpzRD
-ncifqq6FY9dDQzSUbHuwquqc1C7iE9WlUbaUYgpxuFMP97d6e1A8zb91Zz5b1Fng
-PlVXOV//EbXgjxWmsM4OD75fl5o/a6TRcbAy3sIbIj7je5YCKCcFW/GVENTp+pPh
-MCBCA56m+vw=
-=+VWz
------END PGP SIGNATURE-----
-
---=-o3qyJqkE8SuX39fEJ35J--
