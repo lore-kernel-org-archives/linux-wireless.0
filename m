@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:54322 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167Ab1D1CIv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 22:08:51 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/3] mwifiex: check firmware capabilities while initialising 5GHz band parameters
-Date: Wed, 27 Apr 2011 19:13:11 -0700
-Message-Id: <1303956793-17982-1-git-send-email-bzhao@marvell.com> (sfid-20110428_040854_908299_A8A4D4BE)
+Received: from mail.atheros.com ([12.19.149.2]:43145 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753902Ab1DUUaw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Apr 2011 16:30:52 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 13:30:26 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <nsingh@atheros.com>, <kvalo@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 4/5] ath6kl: fix scan operation while disconnect
+Date: Thu, 21 Apr 2011 13:30:39 -0700
+Message-ID: <1303417840-19605-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
+References: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Naveen Singh <nsingh@atheros.com>
 
-There are some SD8787 cards which don't support 5GHz band.
-Therefore initialise 5GHz band parameters only if hardware
-supports the band.
+If a scan operation is pending and in between a disconnect
+event is received from firmware the scan results never get
+sent back to cfg80211. This causes a scan failure and yields
+a device/resource busy state upon retries. If a disconnect
+event is received and scan is pending return the scan done
+to the cfg80211 to enable futher scans to be issued.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/staging/ath6kl/os/linux/cfg80211.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index b99ae26..5855755 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1235,20 +1235,23 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
- 	wdev->wiphy->max_scan_ssids = 10;
- 	wdev->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
-+
- 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &mwifiex_band_2ghz;
--	wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &mwifiex_band_5ghz;
-+	mwifiex_setup_ht_caps(
-+		&wdev->wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap, priv);
-+
-+	if (priv->adapter->config_bands & BAND_A) {
-+		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &mwifiex_band_5ghz;
-+		mwifiex_setup_ht_caps(
-+			&wdev->wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap, priv);
-+	} else {
-+		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
-+	}
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index 1f799c1..d5e554e 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -627,6 +627,10 @@ ar6k_cfg80211_disconnect_event(struct ar6_softc *ar, u8 reason,
  
- 	/* Initialize cipher suits */
- 	wdev->wiphy->cipher_suites = mwifiex_cipher_suites;
- 	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: reason=%u\n", __func__, reason));
  
--	/* Initialize parameters for 2GHz band */
--
--	mwifiex_setup_ht_caps(&wdev->wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap,
--									priv);
--	mwifiex_setup_ht_caps(&wdev->wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap,
--									priv);
--
- 	memcpy(wdev->wiphy->perm_addr, mac, 6);
- 	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 
++    if (ar->scan_request) {
++	cfg80211_scan_done(ar->scan_request, true);
++        ar->scan_request = NULL;
++    }
+     if((ADHOC_NETWORK & ar->arNetworkType)) {
+         if(NL80211_IFTYPE_ADHOC != ar->wdev->iftype) {
+             AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
 -- 
-1.7.0.2
+1.7.4.15.g7811d
 
