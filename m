@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40363 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750767Ab1DATDv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47340 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100Ab1DUAah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 15:03:51 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 942F85400DD
-	for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2011 15:08:11 -0400 (EDT)
-Subject: Compat-wireless release for 2011-04-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110401190349.A56ED40EAF@repository3.orbit-lab.org>
-Date: Fri,  1 Apr 2011 15:03:49 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 20 Apr 2011 20:30:37 -0400
+Date: Wed, 20 Apr 2011 20:18:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: pull request: bluetooth-2.6 2011-04-20
+Message-ID: <20110421001836.GB2437@tuxdriver.com>
+References: <20110420170432.GA2301@joana>
+ <20110420202015.GA2311@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110420202015.GA2311@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   c625dee..1d65853  linux-2.6.39.y -> origin/linux-2.6.39.y
-   7b4debf..6a250de  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   33712ab..3f34341  linux-2.6.39.y -> origin/linux-2.6.39.y
-   89e9cfb..c932d97  master     -> origin/master
- * [new tag]         v2.6.39-rc1-2 -> v2.6.39-rc1-2
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 338bd4a...a2471e3 akpm-end   -> origin/akpm-end  (forced update)
-   c435267..3f0f2e0  history    -> origin/history
- + e04c134...260080e master     -> origin/master  (forced update)
- * [new tag]         next-20110401 -> next-20110401
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Wed, Apr 20, 2011 at 05:20:15PM -0300, Gustavo F. Padovan wrote:
+> Hi John,
+> 
+> * Gustavo F. Padovan <padovan@profusion.mobi> [2011-04-20 14:04:32 -0300]:
+> 
+> > Hi John,
+> > 
+> > Four small fixes for 2.6.39. An incorrect refcnt balance for hci connection by
+> > Ville Tervo, a warning fix in the command timer by Vinicius Gomes, an ERTM
+> > fix by Ruiyi Zhang, and SCO synchronization fix by Luiz Augusto von Dentz.
+> > 
+> > Please pull or let me know any problems. Thanks.
+> 
+> Hold on with the pull! I've found a merge conflict with -next. (I tested the
+> merge with --dry-run, but it doesn't check for check conflicts). I'll do the
+> right thing now and send a new pull request to you soon. 
+> 
+> Regards,
+> 
+> -- 
+> Gustavo F. Padovan
+> http://profusion.mobi
 
-compat-wireless code metrics
+FWIW, I already did the pull into wireless-2.6 and pushed it out
+for some soak time.  If there is a merge conflict with -next, then
+please let me know how to fix it and I'll pull wireless-2.6 into
+wireless-next-2.6 as soon as possible to eliminate the conflict.
 
-    858087 - Total upstream lines of code being pulled
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
