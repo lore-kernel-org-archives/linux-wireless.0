@@ -1,414 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39988 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757576Ab1DXP4Q (ORCPT
+Received: from mail.embedromix.ro ([80.96.69.110]:55689 "EHLO
+	mail.embedromix.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754772Ab1DVKFr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 11:56:16 -0400
-Received: by bwz15 with SMTP id 15so1206145bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 08:56:14 -0700 (PDT)
-Message-Id: <d93982039621737cf58e2a45b79fd596938c6c3b.1303660092.git.chunkeey@googlemail.com> (sfid-20110424_175620_074789_7A8BE65F)
-In-Reply-To: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
-References: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 24 Apr 2011 17:44:19 +0200
-Subject: [PATCH 2/2] carl9170: improve unicast PS buffering
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Fri, 22 Apr 2011 06:05:47 -0400
+Date: Fri, 22 Apr 2011 13:05:19 +0300 (EEST)
+From: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: linux-wireless@vger.kernel.org, ivdoorn@gmail.com,
+	dwmw2@infradead.org
+Subject: Re: [PATCH] Ralink 3090 must load rt3090.bin firmware, not
+ rt2860.bin.
+In-Reply-To: <4DB092A7.6070100@lwfinger.net>
+Message-ID: <alpine.LFD.2.00.1104220940510.11278@mail.embedromix.ro>
+References: <alpine.LFD.2.00.1104212222470.9925@mail.embedromix.ro> <4DB092A7.6070100@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY=------------030601080800090908070707
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using the ieee80211_sta_block allows the PS code
-to handle awake->doze->awake transitions of our
-clients in a race-free manner.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/carl9170.h |    2 +
- drivers/net/wireless/ath/carl9170/main.c     |   92 +--------------
- drivers/net/wireless/ath/carl9170/tx.c       |  157 +++++++++++++++++---------
- 3 files changed, 112 insertions(+), 139 deletions(-)
+--------------030601080800090908070707
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; FORMAT=flowed
+Content-ID: <alpine.LFD.2.00.1104220940512.11278@mail.embedromix.ro>
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index b0b3d02..71d6d07 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -460,6 +460,8 @@ struct carl9170_ba_stats {
- 
- struct carl9170_sta_info {
- 	bool ht_sta;
-+	bool sleeping;
-+	atomic_t pending_frames;
- 	unsigned int ampdu_max_len;
- 	struct carl9170_sta_tid *agg[CARL9170_NUM_TID];
- 	struct carl9170_ba_stats stats[CARL9170_NUM_TID];
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index c10f132..a357281 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1193,6 +1193,8 @@ static int carl9170_op_sta_add(struct ieee80211_hw *hw,
- 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
- 	unsigned int i;
- 
-+	atomic_set(&sta_info->pending_frames, 0);
-+
- 	if (sta->ht_cap.ht_supported) {
- 		if (sta->ht_cap.ampdu_density > 6) {
- 			/*
-@@ -1571,99 +1573,17 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
- 				   enum sta_notify_cmd cmd,
- 				   struct ieee80211_sta *sta)
- {
--	struct ar9170 *ar = hw->priv;
- 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
--	struct sk_buff *skb, *tmp;
--	struct sk_buff_head free;
--	int i;
- 
- 	switch (cmd) {
- 	case STA_NOTIFY_SLEEP:
--		/*
--		 * Since the peer is no longer listening, we have to return
--		 * as many SKBs as possible back to the mac80211 stack.
--		 * It will deal with the retry procedure, once the peer
--		 * has become available again.
--		 *
--		 * NB: Ideally, the driver should return the all frames in
--		 * the correct, ascending order. However, I think that this
--		 * functionality should be implemented in the stack and not
--		 * here...
--		 */
--
--		__skb_queue_head_init(&free);
--
--		if (sta->ht_cap.ht_supported) {
--			rcu_read_lock();
--			for (i = 0; i < CARL9170_NUM_TID; i++) {
--				struct carl9170_sta_tid *tid_info;
--
--				tid_info = rcu_dereference(sta_info->agg[i]);
--
--				if (!tid_info)
--					continue;
--
--				spin_lock_bh(&ar->tx_ampdu_list_lock);
--				if (tid_info->state >
--				    CARL9170_TID_STATE_SUSPEND)
--					tid_info->state =
--						CARL9170_TID_STATE_SUSPEND;
--				spin_unlock_bh(&ar->tx_ampdu_list_lock);
--
--				spin_lock_bh(&tid_info->lock);
--				while ((skb = __skb_dequeue(&tid_info->queue)))
--					__skb_queue_tail(&free, skb);
--				spin_unlock_bh(&tid_info->lock);
--			}
--			rcu_read_unlock();
--		}
--
--		for (i = 0; i < ar->hw->queues; i++) {
--			spin_lock_bh(&ar->tx_pending[i].lock);
--			skb_queue_walk_safe(&ar->tx_pending[i], skb, tmp) {
--				struct _carl9170_tx_superframe *super;
--				struct ieee80211_hdr *hdr;
--				struct ieee80211_tx_info *info;
--
--				super = (void *) skb->data;
--				hdr = (void *) super->frame_data;
--
--				if (compare_ether_addr(hdr->addr1, sta->addr))
--					continue;
--
--				__skb_unlink(skb, &ar->tx_pending[i]);
--
--				info = IEEE80211_SKB_CB(skb);
--				if (info->flags & IEEE80211_TX_CTL_AMPDU)
--					atomic_dec(&ar->tx_ampdu_upload);
--
--				carl9170_tx_status(ar, skb, false);
--			}
--			spin_unlock_bh(&ar->tx_pending[i].lock);
--		}
--
--		while ((skb = __skb_dequeue(&free)))
--			carl9170_tx_status(ar, skb, false);
--
-+		sta_info->sleeping = true;
-+		if (atomic_read(&sta_info->pending_frames))
-+			ieee80211_sta_block_awake(hw, sta, true);
- 		break;
- 
- 	case STA_NOTIFY_AWAKE:
--		if (!sta->ht_cap.ht_supported)
--			return;
--
--		rcu_read_lock();
--		for (i = 0; i < CARL9170_NUM_TID; i++) {
--			struct carl9170_sta_tid *tid_info;
--
--			tid_info = rcu_dereference(sta_info->agg[i]);
--
--			if (!tid_info)
--				continue;
--
--			if ((tid_info->state == CARL9170_TID_STATE_SUSPEND))
--				tid_info->state = CARL9170_TID_STATE_IDLE;
--		}
--		rcu_read_unlock();
-+		sta_info->sleeping = false;
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index cb70ed7..bee2c92 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -104,6 +104,56 @@ static void carl9170_tx_accounting(struct ar9170 *ar, struct sk_buff *skb)
- 	spin_unlock_bh(&ar->tx_stats_lock);
- }
- 
-+/* needs rcu_read_lock */
-+static struct ieee80211_sta *__carl9170_get_tx_sta(struct ar9170 *ar,
-+						   struct sk_buff *skb)
-+{
-+	struct _carl9170_tx_superframe *super = (void *) skb->data;
-+	struct ieee80211_hdr *hdr = (void *) super->frame_data;
-+	struct ieee80211_vif *vif;
-+	unsigned int vif_id;
-+
-+	vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
-+		 CARL9170_TX_SUPER_MISC_VIF_ID_S;
-+
-+	if (WARN_ON_ONCE(vif_id >= AR9170_MAX_VIRTUAL_MAC))
-+		return NULL;
-+
-+	vif = rcu_dereference(ar->vif_priv[vif_id].vif);
-+	if (unlikely(!vif))
-+		return NULL;
-+
-+	/*
-+	 * Normally we should use wrappers like ieee80211_get_DA to get
-+	 * the correct peer ieee80211_sta.
-+	 *
-+	 * But there is a problem with indirect traffic (broadcasts, or
-+	 * data which is designated for other stations) in station mode.
-+	 * The frame will be directed to the AP for distribution and not
-+	 * to the actual destination.
-+	 */
-+
-+	return ieee80211_find_sta(vif, hdr->addr1);
-+}
-+
-+static void carl9170_tx_ps_unblock(struct ar9170 *ar, struct sk_buff *skb)
-+{
-+	struct ieee80211_sta *sta;
-+	struct carl9170_sta_info *sta_info;
-+
-+	rcu_read_lock();
-+	sta = __carl9170_get_tx_sta(ar, skb);
-+	if (unlikely(!sta))
-+		goto out_rcu;
-+
-+	sta_info = (struct carl9170_sta_info *) sta->drv_priv;
-+	if (atomic_dec_return(&sta_info->pending_frames) == 0)
-+		ieee80211_sta_block_awake(ar->hw, sta, false);
-+
-+out_rcu:
-+	rcu_read_unlock();
-+}
-+
- static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *txinfo;
-@@ -135,6 +185,7 @@ static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
- 	}
- 
- 	spin_unlock_bh(&ar->tx_stats_lock);
-+
- 	if (atomic_dec_and_test(&ar->tx_total_queued))
- 		complete(&ar->tx_flush);
- }
-@@ -329,13 +380,10 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
- {
- 	struct _carl9170_tx_superframe *super = (void *) skb->data;
- 	struct ieee80211_hdr *hdr = (void *) super->frame_data;
--	struct ieee80211_tx_info *tx_info;
- 	struct carl9170_tx_info *ar_info;
--	struct carl9170_sta_info *sta_info;
- 	struct ieee80211_sta *sta;
-+	struct carl9170_sta_info *sta_info;
- 	struct carl9170_sta_tid *tid_info;
--	struct ieee80211_vif *vif;
--	unsigned int vif_id;
- 	u8 tid;
- 
- 	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
-@@ -343,30 +391,10 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
- 	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
- 		return;
- 
--	tx_info = IEEE80211_SKB_CB(skb);
--	ar_info = (void *) tx_info->rate_driver_data;
--
--	vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
--		 CARL9170_TX_SUPER_MISC_VIF_ID_S;
--
--	if (WARN_ON_ONCE(vif_id >= AR9170_MAX_VIRTUAL_MAC))
--		return;
-+	ar_info = (void *) txinfo->rate_driver_data;
- 
- 	rcu_read_lock();
--	vif = rcu_dereference(ar->vif_priv[vif_id].vif);
--	if (unlikely(!vif))
--		goto out_rcu;
--
--	/*
--	 * Normally we should use wrappers like ieee80211_get_DA to get
--	 * the correct peer ieee80211_sta.
--	 *
--	 * But there is a problem with indirect traffic (broadcasts, or
--	 * data which is designated for other stations) in station mode.
--	 * The frame will be directed to the AP for distribution and not
--	 * to the actual destination.
--	 */
--	sta = ieee80211_find_sta(vif, hdr->addr1);
-+	sta = __carl9170_get_tx_sta(ar, skb);
- 	if (unlikely(!sta))
- 		goto out_rcu;
- 
-@@ -427,6 +455,7 @@ void carl9170_tx_status(struct ar9170 *ar, struct sk_buff *skb,
- 	if (txinfo->flags & IEEE80211_TX_CTL_AMPDU)
- 		carl9170_tx_status_process_ampdu(ar, skb, txinfo);
- 
-+	carl9170_tx_ps_unblock(ar, skb);
- 	carl9170_tx_put_skb(skb);
- }
- 
-@@ -540,11 +569,7 @@ static void carl9170_tx_ampdu_timeout(struct ar9170 *ar)
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *txinfo;
- 	struct carl9170_tx_info *arinfo;
--	struct _carl9170_tx_superframe *super;
- 	struct ieee80211_sta *sta;
--	struct ieee80211_vif *vif;
--	struct ieee80211_hdr *hdr;
--	unsigned int vif_id;
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(iter, &ar->tx_ampdu_list, list) {
-@@ -562,20 +587,7 @@ static void carl9170_tx_ampdu_timeout(struct ar9170 *ar)
- 		    msecs_to_jiffies(CARL9170_QUEUE_TIMEOUT)))
- 			goto unlock;
- 
--		super = (void *) skb->data;
--		hdr = (void *) super->frame_data;
--
--		vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
--			 CARL9170_TX_SUPER_MISC_VIF_ID_S;
--
--		if (WARN_ON(vif_id >= AR9170_MAX_VIRTUAL_MAC))
--			goto unlock;
--
--		vif = rcu_dereference(ar->vif_priv[vif_id].vif);
--		if (WARN_ON(!vif))
--			goto unlock;
--
--		sta = ieee80211_find_sta(vif, hdr->addr1);
-+		sta = __carl9170_get_tx_sta(ar, skb);
- 		if (WARN_ON(!sta))
- 			goto unlock;
- 
-@@ -1199,15 +1211,6 @@ static struct sk_buff *carl9170_tx_pick_skb(struct ar9170 *ar,
- 	arinfo = (void *) info->rate_driver_data;
- 
- 	arinfo->timeout = jiffies;
--
--	/*
--	 * increase ref count to "2".
--	 * Ref counting is the easiest way to solve the race between
--	 * the the urb's completion routine: carl9170_tx_callback and
--	 * wlan tx status functions: carl9170_tx_status/janitor.
--	 */
--	carl9170_tx_get_skb(skb);
--
- 	return skb;
- 
- err_unlock:
-@@ -1228,6 +1231,36 @@ void carl9170_tx_drop(struct ar9170 *ar, struct sk_buff *skb)
- 	__carl9170_tx_process_status(ar, super->s.cookie, q);
- }
- 
-+static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
-+{
-+	struct ieee80211_sta *sta;
-+	struct carl9170_sta_info *sta_info;
-+
-+	rcu_read_lock();
-+	sta = __carl9170_get_tx_sta(ar, skb);
-+	if (!sta)
-+		goto out_rcu;
-+
-+	sta_info = (void *) sta->drv_priv;
-+	if (unlikely(sta_info->sleeping)) {
-+		struct ieee80211_tx_info *tx_info;
-+
-+		rcu_read_unlock();
-+
-+		tx_info = IEEE80211_SKB_CB(skb);
-+		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
-+			atomic_dec(&ar->tx_ampdu_upload);
-+
-+		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-+		carl9170_tx_status(ar, skb, false);
-+		return true;
-+	}
-+
-+out_rcu:
-+	rcu_read_unlock();
-+	return false;
-+}
-+
- static void carl9170_tx(struct ar9170 *ar)
- {
- 	struct sk_buff *skb;
-@@ -1247,6 +1280,9 @@ static void carl9170_tx(struct ar9170 *ar)
- 			if (unlikely(!skb))
- 				break;
- 
-+			if (unlikely(carl9170_tx_ps_drop(ar, skb)))
-+				continue;
-+
- 			atomic_inc(&ar->tx_total_pending);
- 
- 			q = __carl9170_get_queue(ar, i);
-@@ -1256,6 +1292,16 @@ static void carl9170_tx(struct ar9170 *ar)
- 			 */
- 			skb_queue_tail(&ar->tx_status[q], skb);
- 
-+			/*
-+			 * increase ref count to "2".
-+			 * Ref counting is the easiest way to solve the
-+			 * race between the urb's completion routine:
-+			 *	carl9170_tx_callback
-+			 * and wlan tx status functions:
-+			 *	carl9170_tx_status/janitor.
-+			 */
-+			carl9170_tx_get_skb(skb);
-+
- 			carl9170_usb_tx(ar, skb);
- 			schedule_garbagecollector = true;
- 		}
-@@ -1368,6 +1414,11 @@ void carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * all ressouces which are associated with the frame.
- 	 */
- 
-+	if (sta) {
-+		struct carl9170_sta_info *stai = (void *) sta->drv_priv;
-+		atomic_inc(&stai->pending_frames);
-+	}
-+
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
- 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
- 		if (run)
--- 
-1.7.4.4
+On Thu, 21 Apr 2011, Larry Finger wrote:
 
+> On 04/21/2011 02:25 PM, Catalin(ux) M. BOIE wrote:
+>> Hello.
+>> 
+>> Please apply it.
+>> Thank you!
+
+Hello.
+
+(David added to CC)
+
+> NACK. That version of rt2860.bin is really old.
+>
+> Please remove your patch and try with the attached version of 
+rt2860.bin. It
+> is version 29.
+>
+> Larry
+
+Larry, Ivo, thank you for your time.
+
+rt3090.bin comes with linux-firmware package in my Fedora 14.
+In Fedora 15 Beta seems to be the same version (20110304).
+So, they are not up-to-date.
+
+The plan:
+1. Remove rt3090.bin from linux-firmware because is confusing.
+2. Update linux-firmware's rt2860.bin to Larry's (attached) version.
+
+Does everybody agree?
+
+--
+Catalin(ux) M. BOIE
+http://kernel.embedromix.ro/
+--------------030601080800090908070707
+Content-Type: APPLICATION/OCTET-STREAM; NAME=rt2860.bin
+Content-Transfer-Encoding: BASE64
+Content-ID: <alpine.LFD.2.00.1104220940513.11278@mail.embedromix.ro>
+Content-Description: 
+Content-Disposition: ATTACHMENT; FILENAME=rt2860.bin
+
+AgNeAgKxIiL///8CAYL//////wIAHv//////AgEzwODA8MCDwILA0HXQGMKvMEUDEhAJkAQW
+4DDjA3QI8JAEFOAg5wMCAMt0gPCQcBLg9S+QBATgJM9gMBRgQiTiYEcUYFUkIXBg5VUk/mAH
+FGAIJAJwCH0BgCh9AoAkkHAQ4PVQhS9A0gGAPuVVZANgBOVVcAR9AoAJhS9B0gKAKa1Vry8S
+Ao2AIJBwEOD1R5BwEeD1RBIQJYAGkHAQ4PVF5P2vLxICjdIEkHAT5PDSr9DQ0ILQg9Dw0OAy
+kHAq4DDhU8KvkHAo4JAQHPCQcCngkBAd8JBwKuCQEB7wkBAc4PUwkBAe4CDh85AQHOCQcCjw
+kBAd4JBwKfCQEB7gkHAq8DBKDZBwJOBEAfCQAix0//DCBdKvIsDgwPDAg8CCwNDowODpwODq
+wODrwODswODtwODuwODvwODCrzBFAxIQEtKv0OD/0OD+0OD90OD80OD70OD60OD50OD40NDQ
+gtCD0PDQ4DLA4MDwwIPAgsDQddAQwq8wRQMSEAwwWArlVGAEFVSAAsJYMFkK5VBgBBVQgALC
+WdVTBzBgBBVG0gQwRQMSEA/CjdKv0NDQgtCD0PDQ4DISAtMwRQMSEAMwAQYgCQMSEBwwAgYg
+CgMSEB8wAwYgCwMSEB8wBAYgDAMSECIgEwkgEQblK0UsYAPTgAHDkqkSAuyAv8JD0kXk9SD1
+IfVT9Ub1K/UswkL1UfVS9VWQBBh0gPCQBBp0CPDCGcIYwhoiyO/I5voI5kpgDMjvyAjmFhhw
+ARbDIu0k//3sNP/I78j2CMbtxtMi0IPQgvjkk3ASdAGTcA2jo5P4dAGT9YKIg+RzdAKTaGDv
+o6OjgN/v9GAf5P4SA2rgtP8SEgNq7/B0HC71guQ0cPWD7fAiDr4E4yLA4MDwwIPAgsDQddAI
+wq8wRQMSEAbSr9DQ0ILQg9Dw0OAywq8SAAYSAhQSAxzk9SL1R5AEAHSA8NKvIjBFAxIQFeUg
+cAMgEAMwEQNDhwEiwCp0A8DgwILAg3UqCiLAKnQDwODAgsCDdSoYInWJAuT1jPWK9Yj1uPXo
+dZAY0ox1qAUizu/O7mAIf/8SA4AegPUiyO/I5mADFsMi7RT20yLI78jmYAYW5iT/syLDInh/
+5PbY/XWBXwIB0HQULvWC5DRw9YMi75ADfpOQAwBzChjvYAMfgPoi////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////wIQKAIQ
+OwIQPAISuAISuQITPgITP8Mi//8CFlYCF2sCFCoCE0AwBQYgDQMSANgwBgYgDgMSGF4iIpAE
+FOAg5wMCEreQcBLg9VaQBATgEgJnEU4wESUxEIczEKo0EMM1EVdQEXtREYRSEYRTEYRUEcVV
+EdxwEgdxEjRyEl6AEoGDAAASt3UkBXUl3JBwn3QS8NIY0mF1NQ3kkHAT8OVW9HADAhK3AhKq
+whiQARTgVP3w5JBwE/DlVvRwAwIStwISquVVZAJwN5BwEOBgCJABDXQJ8IAl5TQUYAoUYA8U
+YBQkA3AWkAENdAjwgA6QAQ10C/CABpABDXQb8H0BgAJ9Aq9WEgKNkHAR4CT/khuQBBR0gPDk
+kHAT8OVW9HADAhK3AhKqIAIDMAMdfQKvVhICjZAEFHSA8OSQcBPw5Vb0cAMCErcCEqqFVkHS
+AiKQcBHgJP+SGyKQcBDgVH9kAmADAhK3kHAR4GQIYAjgZCBgAwISt3VOA3VPICKQcBHgJP+S
+RyKQBATgJeAkXfVXkHAQ4P90RyVX+MbvxpBwEeD/dEglV/jG78bk/a9WEgKNkAQUdIDw5JBw
+E/DlVvRwAwIStwISquVHtAcIkHAR4FQH9Sbk/a9WEgKN0gQikHAQ4P6QcBHg/e345vVX/a9W
+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
+GY+CjoPgtP8HBTfk9TaAWeT1N4+CjoPwgE/lNnXwBoR0CCXw9YLkNBD1g+D9j4KOg+D8bXAw
+kHCI4ATwo+D905U3QAKAAq03kHCJ7fAFNwU25TZ18AaEdIol8PWC5DRw9YPs8IAD5PU3D78A
+AQ7vVH9gCuU3w5ROUAMCGRDlN7ROA9OAAcMiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALlOs=
+--------------030601080800090908070707--
