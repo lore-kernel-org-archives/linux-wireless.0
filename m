@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47098 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086Ab1DJLco convert rfc822-to-8bit (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:37126 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756292Ab1DVRBF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 07:32:44 -0400
+	Fri, 22 Apr 2011 13:01:05 -0400
+Received: from wpaz33.hot.corp.google.com (wpaz33.hot.corp.google.com [172.24.198.97])
+	by smtp-out.google.com with ESMTP id p3MH12VG020825
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Apr 2011 10:01:02 -0700
+Received: from wwe15 (wwe15.prod.google.com [10.241.242.15])
+	by wpaz33.hot.corp.google.com with ESMTP id p3MH0eq6010455
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Apr 2011 10:01:00 -0700
+Received: by wwe15 with SMTP id 15so677160wwe.21
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Apr 2011 10:01:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <op.vtpt6v173ri7v4@arend-laptop>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<20110410080159.GB2798@ucw.cz>
-	<BANLkTikL+GvaKN6nT-9WjpPjaJz0dR51KQ@mail.gmail.com>
-	<20110410082420.GA1460@localhost.ucw.cz>
-	<BANLkTim9JTpZGib+_C_vTFFhP5azbGwMjg@mail.gmail.com>
-	<op.vtpt6v173ri7v4@arend-laptop>
-Date: Sun, 10 Apr 2011 13:32:43 +0200
-Message-ID: <BANLkTimgJ--19=q-od7S8uj6T6AcXrtg7w@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Michael B?sch" <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1303464039-11574-1-git-send-email-rmanoharan@atheros.com>
+References: <1303464039-11574-1-git-send-email-rmanoharan@atheros.com>
+Date: Fri, 22 Apr 2011 10:00:59 -0700
+Message-ID: <BANLkTimGAg4nYcW=SW_T-1b06nZbyBvNJA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath9k_hw: Fix Tx IQ Calibration hang issue in AR9003 chips
+From: Sam Leffler <sleffler@google.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 10 kwietnia 2011 11:33 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> On Sun, 10 Apr 2011 10:30:53 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+On Fri, Apr 22, 2011 at 2:20 AM, Rajkumar Manoharan
+<rmanoharan@atheros.com> wrote:
+> On AR9003 chips, doing three IQ calibrations will possibly cause chip
+> in stuck state. In noisy environment, chip could receive
+> a packet during the middle of three calibrations and it causes
+> the conflict of HW access and the eventual failure. It also
+> causes IQ calibration outliers which results in poor Tx EVM.
+> During the issue kernel log was filled with following message
 >
->> 2011/4/10 Pavel Machek <pavel@ucw.cz>:
->>>>
->>>> >> >+config BCMAI_HOST_PCI_POSSIBLE
->>>> >> >+       bool
->>>> >> >+       depends on BCMAI && PCI = y
->>>> >> >+       default y
->>>> >> >+
->>>> >> >+config BCMAI_HOST_PCI
->>>> >> >+       bool "Support for AI on PCI-host bus"
->>>> >> >+       depends on BCMAI_HOST_PCI_POSSIBLE
->>>> >> >+
+> ath: timeout (100000 us) on reg 0xa640: 0x00000001 & 0x00000001 != 0x00000000
+> ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
+> ath: Unable to reset channel (2412 MHz), reset status -5
+> ath: Unable to set channel
 >
-> Hi Rafał,
->
-> Could use term AMBA AXI instead which gives enough hits on Google to hint
-> interested people to more in depth information.
->
-> FYI: AXI = Advanced eXtensible Interface
->        High-speed interconnect for chip cores ( provides higher
-> bursts/transfers than predecessor AHB = Advanced High-performance Bus
-> (AHB)).
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 
-"If you check PATCH V2, we renamed this to (AMBA) AXI"
+Please indicate the specific parts where this issue has been seen.  Is
+this specific to 9485 or has it been observed on 93xx devices too?
 
--- 
-Rafał
+-Sam
