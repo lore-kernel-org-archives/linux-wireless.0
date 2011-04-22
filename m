@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:48361 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932307Ab1D2ULS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 16:11:18 -0400
-Received: by mail-ew0-f44.google.com with SMTP id 19so1405227ewy.3
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 13:11:17 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: Modify memory configuration for 128x/AP
-From: Luciano Coelho <coelho@ti.com>
-To: Ido Yariv <ido@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1303134014-31393-1-git-send-email-ido@wizery.com>
-References: <1303134014-31393-1-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Apr 2011 23:05:01 +0300
-Message-ID: <1304107501.12586.159.camel@cumari> (sfid-20110429_221124_058498_ABB32F0A)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:35961 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751765Ab1DVGCt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2011 02:02:49 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 23:02:23 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 3/5] ath9k: optimize the usage of power save wrappers.
+Date: Fri, 22 Apr 2011 11:32:10 +0530
+Message-ID: <1303452132-5436-3-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
+References: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-18 at 16:40 +0300, Ido Yariv wrote:
-> The 128x/AP firmware does not yet support dynamic memory. Temporarily,
-> the memory configuration for the 127x was used both for 127x/AP as well
-> as 128x/AP. Since the two chips don't have the same number of memory
-> blocks, TP was significantly degraded.
-> 
-> This hasn't been fine tuned yet, but using the base 128x numbers
-> (without dynamic memory) seems to yield much better results (around 30%
-> more). Additional fine tuning will be required in the future.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> --- 
+We need not wake up the chip even before mutex lock is acquired and also
+that it is required only if we are going to drain the txq. So place the
+wrappers accordingly and this change is also useful when there are no
+pending frames in the txq as we do not wake up the chip unnecessarily.
 
-Applied.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a8d9009..37b80ac 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2219,9 +2219,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	int timeout = 200; /* ms */
+ 	int i, j;
+ 
+-	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
+-
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 
+ 	if (drop)
+@@ -2244,15 +2242,15 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 		    goto out;
+ 	}
+ 
++	ath9k_ps_wakeup(sc);
+ 	if (!ath_drain_all_txq(sc, false))
+ 		ath_reset(sc, false);
+-
++	ath9k_ps_restore(sc);
+ 	ieee80211_wake_queues(hw);
+ 
+ out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+ 	mutex_unlock(&sc->mutex);
+-	ath9k_ps_restore(sc);
+ }
+ 
+ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
