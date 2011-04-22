@@ -1,140 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:46358 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1DMEXl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 00:23:41 -0400
-Received: by qyg14 with SMTP id 14so142080qyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 21:23:40 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:35962 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751765Ab1DVGCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2011 02:02:54 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 23:02:27 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 4/5] ath9k: cleanup hw pll work handler
+Date: Fri, 22 Apr 2011 11:32:11 +0530
+Message-ID: <1303452132-5436-4-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
+References: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1302646041-3917-1-git-send-email-nbd@openwrt.org>
-References: <1302453139-11437-1-git-send-email-nbd@openwrt.org>
-	<1302646041-3917-1-git-send-email-nbd@openwrt.org>
-Date: Wed, 13 Apr 2011 06:23:40 +0200
-Message-ID: <BANLkTingC8r-obXeYxjbHVr2G80MCbhyMQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/7] ath5k: optimize tx descriptor setup
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 13, 2011 at 12:07 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Use local variables to reduce the number of load/store operations on uncached
-> memory.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath5k/desc.c |   45 +++++++++++++++++++--------------
->  1 files changed, 26 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-> index 16b44ff..6996d55 100644
-> --- a/drivers/net/wireless/ath/ath5k/desc.c
-> +++ b/drivers/net/wireless/ath/ath5k/desc.c
-> @@ -185,6 +185,12 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->        struct ath5k_hw_4w_tx_ctl *tx_ctl;
->        unsigned int frame_len;
->
-> +       /*
-> +        * Use local variables for these to reduce load/store access on
-> +        * uncached memory
-> +        */
-> +       u32 txctl0 = 0, txctl1 = 0, txctl2 = 0, txctl3 = 0;
-> +
->        tx_ctl = &desc->ud.ds_tx5212.tx_ctl;
->
->        /*
-> @@ -208,8 +214,9 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->        if (tx_power > AR5K_TUNE_MAX_TXPOWER)
->                tx_power = AR5K_TUNE_MAX_TXPOWER;
->
-> -       /* Clear descriptor */
-> -       memset(&desc->ud.ds_tx5212, 0, sizeof(struct ath5k_hw_5212_tx_desc));
-> +       /* Clear descriptor status area */
-> +       memset(&desc->ud.ds_tx5212.tx_stat, 0,
-> +              sizeof(desc->ud.ds_tx5212.tx_stat));
->
->        /* Setup control descriptor */
->
-> @@ -221,7 +228,7 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->        if (frame_len & ~AR5K_4W_TX_DESC_CTL0_FRAME_LEN)
->                return -EINVAL;
->
-> -       tx_ctl->tx_control_0 = frame_len & AR5K_4W_TX_DESC_CTL0_FRAME_LEN;
-> +       txctl0 = frame_len & AR5K_4W_TX_DESC_CTL0_FRAME_LEN;
->
->        /* Verify and set buffer length */
->
-> @@ -232,21 +239,17 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->        if (pkt_len & ~AR5K_4W_TX_DESC_CTL1_BUF_LEN)
->                return -EINVAL;
->
-> -       tx_ctl->tx_control_1 = pkt_len & AR5K_4W_TX_DESC_CTL1_BUF_LEN;
-> +       txctl1 = pkt_len & AR5K_4W_TX_DESC_CTL1_BUF_LEN;
->
-> -       tx_ctl->tx_control_0 |=
-> -               AR5K_REG_SM(tx_power, AR5K_4W_TX_DESC_CTL0_XMIT_POWER) |
-> -               AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
-> -       tx_ctl->tx_control_1 |= AR5K_REG_SM(type,
-> -                                       AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
-> -       tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0,
-> -                                       AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
-> -       tx_ctl->tx_control_3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
-> +       txctl0 |= AR5K_REG_SM(tx_power, AR5K_4W_TX_DESC_CTL0_XMIT_POWER) |
-> +                 AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
-> +       txctl1 |= AR5K_REG_SM(type, AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
-> +       txctl2 = AR5K_REG_SM(tx_tries0, AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
-> +       txctl3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
->
->  #define _TX_FLAGS(_c, _flag)                                   \
->        if (flags & AR5K_TXDESC_##_flag) {                      \
-> -               tx_ctl->tx_control_##_c |=                      \
-> -                       AR5K_4W_TX_DESC_CTL##_c##_##_flag;      \
-> +               txctl##_c |= AR5K_4W_TX_DESC_CTL##_c##_##_flag; \
->        }
->
->        _TX_FLAGS(0, CLRDMASK);
-> @@ -262,8 +265,8 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->         * WEP crap
->         */
->        if (key_index != AR5K_TXKEYIX_INVALID) {
-> -               tx_ctl->tx_control_0 |= AR5K_4W_TX_DESC_CTL0_ENCRYPT_KEY_VALID;
-> -               tx_ctl->tx_control_1 |= AR5K_REG_SM(key_index,
-> +               txctl0 |= AR5K_4W_TX_DESC_CTL0_ENCRYPT_KEY_VALID;
-> +               txctl1 |= AR5K_REG_SM(key_index,
->                                AR5K_4W_TX_DESC_CTL1_ENCRYPT_KEY_IDX);
->        }
->
-> @@ -274,12 +277,16 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
->                if ((flags & AR5K_TXDESC_RTSENA) &&
->                                (flags & AR5K_TXDESC_CTSENA))
->                        return -EINVAL;
-> -               tx_ctl->tx_control_2 |= rtscts_duration &
-> -                               AR5K_4W_TX_DESC_CTL2_RTS_DURATION;
-> -               tx_ctl->tx_control_3 |= AR5K_REG_SM(rtscts_rate,
-> +               txctl2 |= rtscts_duration & AR5K_4W_TX_DESC_CTL2_RTS_DURATION;
-> +               txctl3 |= AR5K_REG_SM(rtscts_rate,
->                                AR5K_4W_TX_DESC_CTL3_RTS_CTS_RATE);
->        }
->
-> +       tx_ctl->tx_control_0 = txctl0;
-> +       tx_ctl->tx_control_1 = txctl1;
-> +       tx_ctl->tx_control_2 = txctl2;
-> +       tx_ctl->tx_control_3 = txctl3;
-> +
->        return 0;
->  }
->
-> --
-> 1.7.3.2
->
+There is no reason why pll work handler should be part of xmit
+file. move it to main.c so that reading hw check routines are
+all in the same place.
 
-Looks like this v2 did not found its way to wireless-next [1].
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/init.c  |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c  |   23 -----------------------
+ 4 files changed, 25 insertions(+), 23 deletions(-)
 
-- Sedat -
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5ebfc57..0312aa0 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -423,6 +423,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
+ 
+ void ath_hw_check(struct work_struct *work);
++void ath_hw_pll_work(struct work_struct *work);
+ void ath_paprd_calibrate(struct work_struct *work);
+ void ath_ani_calibrate(unsigned long data);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e78b6ae..b172d15 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -801,6 +801,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 
+ 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
++	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+ 	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 
+ 	ath_init_leds(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 37b80ac..fa80e13 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -624,6 +624,29 @@ out:
+ 	ath9k_ps_restore(sc);
+ }
+ 
++void ath_hw_pll_work(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc,
++					    hw_pll_work.work);
++	static int count;
++
++	if (AR_SREV_9485(sc->sc_ah)) {
++		if (ar9003_get_pll_sqsum_dvc(sc->sc_ah) >= 0x40000) {
++			count++;
++
++			if (count == 3) {
++				/* Rx is hung for more than 500ms. Reset it */
++				ath_reset(sc, true);
++				count = 0;
++			}
++		} else
++			count = 0;
++
++		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
++	}
++}
++
++
+ void ath9k_tasklet(unsigned long data)
+ {
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index e9e99f7..7b91b2a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2180,28 +2180,6 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 	}
+ }
+ 
+-static void ath_hw_pll_work(struct work_struct *work)
+-{
+-	struct ath_softc *sc = container_of(work, struct ath_softc,
+-					    hw_pll_work.work);
+-	static int count;
+-
+-	if (AR_SREV_9485(sc->sc_ah)) {
+-		if (ar9003_get_pll_sqsum_dvc(sc->sc_ah) >= 0x40000) {
+-			count++;
+-
+-			if (count == 3) {
+-				/* Rx is hung for more than 500ms. Reset it */
+-				ath_reset(sc, true);
+-				count = 0;
+-			}
+-		} else
+-			count = 0;
+-
+-		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
+-	}
+-}
+-
+ static void ath_tx_complete_poll_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc,
+@@ -2396,7 +2374,6 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
+ 	}
+ 
+ 	INIT_DELAYED_WORK(&sc->tx_complete_work, ath_tx_complete_poll_work);
+-	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		error = ath_tx_edma_init(sc);
+-- 
+1.7.0.4
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=c5e0a88aa2e0f42cdb4c79c977c52f6bc38ec160
