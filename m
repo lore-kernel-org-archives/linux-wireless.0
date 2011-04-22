@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60802 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759590Ab1D0TBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 15:01:32 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: handle fail of vmalloc()
-Date: Wed, 27 Apr 2011 21:01:22 +0200
-Message-Id: <1303930882-8529-1-git-send-email-hauke@hauke-m.de> (sfid-20110427_210135_502263_AC7F014C)
-In-Reply-To: <1303927685.3542.6.camel@jlt3.sipsolutions.net>
-References: <1303927685.3542.6.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:37051 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754274Ab1DVJUv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2011 05:20:51 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Apr 2011 02:20:25 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 2/2] ath9k: set beacon related ps flags on bss_info change
+Date: Fri, 22 Apr 2011 14:50:39 +0530
+Message-ID: <1303464039-11574-2-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1303464039-11574-1-git-send-email-rmanoharan@atheros.com>
+References: <1303464039-11574-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only memset the memory if we get a valid pointer.
+Requesting beacon sync up to configure beacon timers properly
+in hw, has be done after doing beacon config with default values.
+Setting the flags in beacon config is causing the device to not
+enter into network sleep on idle state.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- compat/compat-2.6.37.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c |    6 ------
+ drivers/net/wireless/ath/ath9k/main.c   |    6 ++++++
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
-index c49efea..8698e1d 100644
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -348,7 +348,8 @@ void *vzalloc(unsigned long size)
- {
- 	void *buf;
- 	buf = vmalloc(size);
--	memset(buf, 0, size);
-+	if (buf)
-+		memset(buf, 0, size);
- 	return buf;
- }
- EXPORT_SYMBOL(vzalloc);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 24f565b..22cd241 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -781,12 +781,6 @@ void ath_set_beacon(struct ath_softc *sc)
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		ath_beacon_config_sta(sc, cur_conf);
+-		/*
+-		 * Request a re-configuration of Beacon related timers
+-		 * on the receipt of the first Beacon frame (i.e.,
+-		 * after time sync with the AP).
+-		 */
+-		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
+ 		break;
+ 	default:
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a8d9009..0fb01b7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1932,6 +1932,12 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 				"Bss Info ASSOC %d, bssid: %pM\n",
+ 				bss_conf->aid, common->curbssid);
+ 			ath_beacon_config(sc, vif);
++			/*
++			 * Request a re-configuration of Beacon related timers
++			 * on the receipt of the first Beacon frame (i.e.,
++			 * after time sync with the AP).
++			 */
++			sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
+ 			/* Reset rssi stats */
+ 			sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
 -- 
-1.7.1
+1.7.4.4
 
