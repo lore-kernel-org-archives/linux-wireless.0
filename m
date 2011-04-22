@@ -1,105 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:16563 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699Ab1DLTAF (ORCPT
+Received: from smtp-out3.tiscali.nl ([195.241.79.178]:53047 "EHLO
+	smtp-out3.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756039Ab1DVS4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 15:00:05 -0400
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: George Kashperko <george@znau.edu.ua>
-To: balbi@ti.com
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-In-Reply-To: <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 12 Apr 2011 21:47:19 +0300
-Message-Id: <1302634039.14216.10.camel@dev.znau.edu.ua>
+	Fri, 22 Apr 2011 14:56:41 -0400
+Subject: [IWL4965] TX Power requested while scanning!
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 22 Apr 2011 20:56:22 +0200
+Message-ID: <1303498582.2103.15.camel@x61.thuisdomein>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+0) Running v2.6.39-rc4 I ran into this (after a resume):
 
-> Hi,
-> 
-> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
-> > Cc: Michael Büsch <mb@bu3sch.de>
-> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> > Cc: George Kashperko <george@znau.edu.ua>
-> > Cc: Arend van Spriel <arend@broadcom.com>
-> > Cc: linux-arm-kernel@lists.infradead.org
-> > Cc: Russell King <rmk@arm.linux.org.uk>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Andy Botting <andy@andybotting.com>
-> > Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> > Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> > ---
-> > V2: Rename to axi
-> >     Use DEFINE_PCI_DEVICE_TABLE in bridge
-> >     Make use of pr_fmt and pr_*
-> >     Store core class
-> >     Rename bridge to not b43 specific
-> >     Replace magic 0x1000 with BCMAI_CORE_SIZE
-> >     Remove some old "ssb" names and defines
-> >     Move BCMAI_ADDR_BASE def
-> >     Add drvdata field
-> > V3: Fix reloading (kfree issue)
-> >     Add 14e4:0x4331
-> >     Fix non-initialized struct issue
-> >     Drop useless inline functions wrappers for pci core drv
-> >     Proper pr_* usage
-> > V3.1: Include forgotten changes (pr_* and include related)
-> >     Explain why we dare to implement empty release function
-> 
-> I'm not sure we need this. If you have an IP Core which talks AXI and
-> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
-> that IP Core, so you should go and let the kernel know about that. See
-> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
-> 
-> Besides, if you introduce this bus layer, it'll be more difficult for
-> other licensees of the same core to re-use the same driver, since it's
-> now talking a PCI emulated on top of AXI. The same can be achieved with
-> the platform_bus which is more widely used, specially on ARM SoCs.
-> 
-> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
-> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
-> 
+WARNING: at drivers/net/wireless/iwlegacy/iwl-4965.c:1128 iwl4965_send_tx_power+0x61/0x102 [iwl4965]()
+Hardware name: [...]
+TX Power requested while scanning!
+Modules linked in: tcp_lp fuse cpufreq_ondemand acpi_cpufreq freq_table mperf ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 kvm_intel kvm uinput btusb arc4 snd_hda_codec_analog bluetooth ecb snd_hda_intel snd_hda_codec iwl4965 snd_hwdep snd_seq iwl_legacy snd_seq_device thinkpad_acpi mac80211 cfg80211 rfkill snd_pcm snd_timer iTCO_wdt snd i2c_i801 snd_page_alloc iTCO_vendor_support soundcore e1000e pcspkr microcode sdhci_pci sdhci firewire_ohci mmc_core firewire_core yenta_socket crc_itu_t i915 drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: scsi_wait_scan]
+Pid: 5723, comm: kworker/u:28 Not tainted 2.6.39-0.rc4.4.fc14.x86_64 #1
+Call Trace:
+ [<ffffffff8104e27b>] warn_slowpath_common+0x85/0x9d
+ [<ffffffffa02782e0>] ? iwl4965_show_temperature+0x49/0x49 [iwl4965]
+ [<ffffffff8104e336>] warn_slowpath_fmt+0x46/0x48
+ [<ffffffffa027712f>] iwl4965_send_tx_power+0x61/0x102 [iwl4965]
+ [<ffffffff81477e05>] ? mutex_lock+0x36/0x50
+ [<ffffffffa0278337>] iwl4965_bg_txpower_work+0x57/0x73 [iwl4965]
+ [<ffffffff810647f3>] process_one_work+0x18d/0x286
+ [<ffffffff81065a5e>] worker_thread+0xfd/0x181
+ [<ffffffff81065961>] ? manage_workers.clone.16+0x172/0x172
+ [<ffffffff81069036>] kthread+0x82/0x8a
+ [<ffffffff81480524>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81068fb4>] ? kthread_worker_fn+0x14b/0x14b
+ [<ffffffff81480520>] ? gs_change+0x13/0x13
 
-Already noticed earlier that AXI isnt really good name for
-Broadcom-specific axi bus customization. As of tech docs available from
-arm, corelink AXI cores use own identification registers which feature
-different format and layout comparing to that we use for Broadcom cores.
+(2.6.39-0.rc4.4.fc14.x86_64 is not a Fedora blessed kernel, but a self
+compiled "vanilla" kernel.) I have similar WARNINGs for rc2 and rc3 in
+my log too.
 
-Maybe there is something "standartized" by the DMP specs? If so I'm
-curious if that DMP is obligatory for every axi bus ?
+1) The thing is that this triggers Fedora's "Automatic Bug Reporting
+Tool", and is a bit noisy in dmesg and friends too, but everything seems
+to be running just fine after that. I'm posting this from the session
+that just triggered this! So why is this warning needed?
 
-Naming particular Broadcom's implementation just axi limits other
-licensees in reusing axi bus name/code or will require hacks/workarounds
-from them to fit Broadcom-like core scanning/identificating techniques.
-You use bus named AXI to group and manage Broadcom cores, while never
-even publish device records for native axi cores Broadcom use to talk to
-the interconnect through. Yet again, something like bcmb/bcmai looks
-like better name for this bus.
 
-Also can't figure out how is this implementation supposed to manage
-multicore devices.
-
-Any plans on embeddables' support ?
-
-Have nice day,
-George
-
+Paul Bolle
 
