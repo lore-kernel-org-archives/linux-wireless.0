@@ -1,386 +1,363 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:34020 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758678Ab1DYRwp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2011 13:52:45 -0400
-Date: Mon, 25 Apr 2011 12:52:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/18] rtlwifi: Change efuse routines addition of
- RTL8192SE and RTL8192DE
-Message-ID: <4db5b4ec.nf9iAi5YOmnjjnIZ%Larry.Finger@lwfinger.net> (sfid-20110425_195251_166410_ED53D7C4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:23017 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081Ab1DVRzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2011 13:55:14 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/10] iwlagn: combine firmware code/data
+Date: Fri, 22 Apr 2011 10:33:17 -0700
+Message-Id: <1303493598-10979-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1303493598-10979-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming_Li <chaoming_li@realsil.com.cn>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Change efuse routines for addition of RTL8192SE and RTL8192DE code
+On new hardware, ucode images always come in
+pairs: code and data. Therefore, combine the
+variables into an appropriate struct and use
+that when both code and data are needed.
 
-Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Also, combine allocation and copying so that
+we have less code in total.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   23 +++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |   98 ++++++++++++--------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   11 ++-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h   |   24 ------
+ 6 files changed, 65 insertions(+), 98 deletions(-)
 
- efuse.c |  100 ++++++++++++++++++++++++++++++++++++++++------------------------
- efuse.h |    6 +++
- 2 files changed, 68 insertions(+), 38 deletions(-)
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/efuse.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
-@@ -52,8 +52,6 @@ static const struct efuse_map RTL8712_SD
- 	{11, 0, 0, 28}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 56dc771..c3ae2e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -161,17 +161,16 @@ static int iwlagn_load_section(struct iwl_priv *priv, const char *name,
+ }
+ 
+ static int iwlagn_load_given_ucode(struct iwl_priv *priv,
+-				   struct fw_desc *inst_image,
+-				   struct fw_desc *data_image)
++				   struct fw_img *image)
+ {
+ 	int ret = 0;
+ 
+-	ret = iwlagn_load_section(priv, "INST", inst_image,
++	ret = iwlagn_load_section(priv, "INST", &image->code,
+ 				   IWLAGN_RTC_INST_LOWER_BOUND);
+ 	if (ret)
+ 		return ret;
+ 
+-	return iwlagn_load_section(priv, "DATA", data_image,
++	return iwlagn_load_section(priv, "DATA", &image->data,
+ 				    IWLAGN_RTC_DATA_LOWER_BOUND);
+ }
+ 
+@@ -557,16 +556,16 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+  * iwl_verify_ucode - determine which instruction image is in SRAM,
+  *    and verify its contents
+  */
+-static int iwl_verify_ucode(struct iwl_priv *priv, struct fw_desc *fw_desc)
++static int iwl_verify_ucode(struct iwl_priv *priv, struct fw_img *img)
+ {
+-	if (!iwlcore_verify_inst_sparse(priv, fw_desc)) {
++	if (!iwlcore_verify_inst_sparse(priv, &img->code)) {
+ 		IWL_DEBUG_INFO(priv, "uCode is good in inst SRAM\n");
+ 		return 0;
+ 	}
+ 
+ 	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
+ 
+-	iwl_print_mismatch_inst(priv, fw_desc);
++	iwl_print_mismatch_inst(priv, &img->code);
+ 	return -EIO;
+ }
+ 
+@@ -602,8 +601,7 @@ static void iwlagn_alive_fn(struct iwl_priv *priv,
+ #define UCODE_CALIB_TIMEOUT	(2*HZ)
+ 
+ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
+-				 struct fw_desc *inst_image,
+-				 struct fw_desc *data_image,
++				 struct fw_img *image,
+ 				 int subtype, int alternate_subtype)
+ {
+ 	struct iwl_notification_wait alive_wait;
+@@ -621,7 +619,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
+ 	old_type = priv->ucode_type;
+ 	priv->ucode_type = subtype;
+ 
+-	ret = iwlagn_load_given_ucode(priv, inst_image, data_image);
++	ret = iwlagn_load_given_ucode(priv, image);
+ 	if (ret) {
+ 		priv->ucode_type = old_type;
+ 		iwlagn_remove_notification(priv, &alive_wait);
+@@ -656,7 +654,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
+ 		return -EIO;
+ 	}
+ 
+-	ret = iwl_verify_ucode(priv, inst_image);
++	ret = iwl_verify_ucode(priv, image);
+ 	if (ret) {
+ 		priv->ucode_type = old_type;
+ 		return ret;
+@@ -684,7 +682,7 @@ int iwlagn_run_init_ucode(struct iwl_priv *priv)
+ 	lockdep_assert_held(&priv->mutex);
+ 
+ 	/* No init ucode required? Curious, but maybe ok */
+-	if (!priv->ucode_init.len)
++	if (!priv->ucode_init.code.len)
+ 		return 0;
+ 
+ 	if (priv->ucode_type != UCODE_SUBTYPE_NONE_LOADED)
+@@ -696,7 +694,6 @@ int iwlagn_run_init_ucode(struct iwl_priv *priv)
+ 
+ 	/* Will also start the device */
+ 	ret = iwlagn_load_ucode_wait_alive(priv, &priv->ucode_init,
+-					   &priv->ucode_init_data,
+ 					   UCODE_SUBTYPE_INIT, -1);
+ 	if (ret)
+ 		goto error;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 12cd5e0..f30735b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1173,12 +1173,42 @@ static struct attribute_group iwl_attribute_group = {
+  *
+  ******************************************************************************/
+ 
++static void iwl_free_fw_desc(struct pci_dev *pci_dev, struct fw_desc *desc)
++{
++	if (desc->v_addr)
++		dma_free_coherent(&pci_dev->dev, desc->len,
++				  desc->v_addr, desc->p_addr);
++	desc->v_addr = NULL;
++	desc->len = 0;
++}
++
++static void iwl_free_fw_img(struct pci_dev *pci_dev, struct fw_img *img)
++{
++	iwl_free_fw_desc(pci_dev, &img->code);
++	iwl_free_fw_desc(pci_dev, &img->data);
++}
++
++static int iwl_alloc_fw_desc(struct pci_dev *pci_dev, struct fw_desc *desc,
++			     const void *data, size_t len)
++{
++	if (!len) {
++		desc->v_addr = NULL;
++		return -EINVAL;
++	}
++
++	desc->v_addr = dma_alloc_coherent(&pci_dev->dev, len,
++					  &desc->p_addr, GFP_KERNEL);
++	if (!desc->v_addr)
++		return -ENOMEM;
++	desc->len = len;
++	memcpy(desc->v_addr, data, len);
++	return 0;
++}
++
+ static void iwl_dealloc_ucode_pci(struct iwl_priv *priv)
+ {
+-	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_code);
+-	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_data);
+-	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_init);
+-	iwl_free_fw_desc(priv->pci_dev, &priv->ucode_init_data);
++	iwl_free_fw_img(priv->pci_dev, &priv->ucode_rt);
++	iwl_free_fw_img(priv->pci_dev, &priv->ucode_init);
+ }
+ 
+ struct iwlagn_ucode_capabilities {
+@@ -1647,24 +1677,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	/* Runtime instructions and 2 copies of data:
+ 	 * 1) unmodified from disk
+ 	 * 2) backup cache for save/restore during power-downs */
+-	priv->ucode_code.len = pieces.inst_size;
+-	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_code);
+-
+-	priv->ucode_data.len = pieces.data_size;
+-	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_data);
+-
+-	if (!priv->ucode_code.v_addr || !priv->ucode_data.v_addr)
++	if (iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_rt.code,
++			      pieces.inst, pieces.inst_size))
++		goto err_pci_alloc;
++	if (iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_rt.data,
++			      pieces.data, pieces.data_size))
+ 		goto err_pci_alloc;
+ 
+ 	/* Initialization instructions and data */
+ 	if (pieces.init_size && pieces.init_data_size) {
+-		priv->ucode_init.len = pieces.init_size;
+-		iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init);
+-
+-		priv->ucode_init_data.len = pieces.init_data_size;
+-		iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init_data);
+-
+-		if (!priv->ucode_init.v_addr || !priv->ucode_init_data.v_addr)
++		if (iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init.code,
++				      pieces.init, pieces.init_size))
++			goto err_pci_alloc;
++		if (iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init.data,
++				      pieces.init_data, pieces.init_data_size))
+ 			goto err_pci_alloc;
+ 	}
+ 
+@@ -1701,39 +1727,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	else
+ 		priv->cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
+ 
+-	/* Copy images into buffers for card's bus-master reads ... */
+-
+-	/* Runtime instructions (first block of data in file) */
+-	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode instr len %Zd\n",
+-			pieces.inst_size);
+-	memcpy(priv->ucode_code.v_addr, pieces.inst, pieces.inst_size);
+-
+-	IWL_DEBUG_INFO(priv, "uCode instr buf vaddr = 0x%p, paddr = 0x%08x\n",
+-		priv->ucode_code.v_addr, (u32)priv->ucode_code.p_addr);
+-
+-	/*
+-	 * Runtime data
+-	 * NOTE:  Copy into backup buffer will be done in iwl_up()
+-	 */
+-	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode data len %Zd\n",
+-			pieces.data_size);
+-	memcpy(priv->ucode_data.v_addr, pieces.data, pieces.data_size);
+-
+-	/* Initialization instructions */
+-	if (pieces.init_size) {
+-		IWL_DEBUG_INFO(priv, "Copying (but not loading) init instr len %Zd\n",
+-				pieces.init_size);
+-		memcpy(priv->ucode_init.v_addr, pieces.init, pieces.init_size);
+-	}
+-
+-	/* Initialization data */
+-	if (pieces.init_data_size) {
+-		IWL_DEBUG_INFO(priv, "Copying (but not loading) init data len %Zd\n",
+-			       pieces.init_data_size);
+-		memcpy(priv->ucode_init_data.v_addr, pieces.init_data,
+-		       pieces.init_data_size);
+-	}
+-
+ 	/*
+ 	 * figure out the offset of chain noise reset and gain commands
+ 	 * base on the size of standard phy calibration commands table size
+@@ -2450,8 +2443,7 @@ static int __iwl_up(struct iwl_priv *priv)
+ 	}
+ 
+ 	ret = iwlagn_load_ucode_wait_alive(priv,
+-					   &priv->ucode_code,
+-					   &priv->ucode_data,
++					   &priv->ucode_rt,
+ 					   UCODE_SUBTYPE_REGULAR,
+ 					   UCODE_SUBTYPE_REGULAR_NEW);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index cf05f87..c475ac4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -164,8 +164,7 @@ int iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwlagn_send_prio_tbl(struct iwl_priv *priv);
+ int iwlagn_run_init_ucode(struct iwl_priv *priv);
+ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
+-				 struct fw_desc *inst_image,
+-				 struct fw_desc *data_image,
++				 struct fw_img *image,
+ 				 int subtype, int alternate_subtype);
+ 
+ /* lib */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 2b60688..7bd4f5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -227,9 +227,9 @@ static ssize_t iwl_dbgfs_sram_read(struct file *file,
+ 	if (!priv->dbgfs_sram_offset && !priv->dbgfs_sram_len) {
+ 		priv->dbgfs_sram_offset = 0x800000;
+ 		if (priv->ucode_type == UCODE_SUBTYPE_INIT)
+-			priv->dbgfs_sram_len = priv->ucode_init_data.len;
++			priv->dbgfs_sram_len = priv->ucode_init.data.len;
+ 		else
+-			priv->dbgfs_sram_len = priv->ucode_data.len;
++			priv->dbgfs_sram_len = priv->ucode_rt.data.len;
+ 	}
+ 	len = priv->dbgfs_sram_len;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 414968c..857eb0e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -479,6 +479,10 @@ struct fw_desc {
+ 	u32 len;		/* bytes */
  };
  
--static void read_efuse_byte(struct ieee80211_hw *hw, u16 _offset,
--					u8 *pbuf);
- static void efuse_shadow_read_1byte(struct ieee80211_hw *hw, u16 offset,
- 				    u8 *value);
- static void efuse_shadow_read_2byte(struct ieee80211_hw *hw, u16 offset,
-@@ -79,7 +77,7 @@ static void efuse_word_enable_data_read(
- 					u8 *targetdata);
- static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
- 				       u16 efuse_addr, u8 word_en, u8 *data);
--static void efuse_power_switch(struct ieee80211_hw *hw, u8 bwrite,
-+static void efuse_power_switch(struct ieee80211_hw *hw, u8 write,
- 					u8 pwrstate);
- static u16 efuse_get_current_size(struct ieee80211_hw *hw);
- static u8 efuse_calculate_word_cnts(u8 word_en);
-@@ -115,8 +113,10 @@ u8 efuse_read_1byte(struct ieee80211_hw
- 	u8 bytetemp;
- 	u8 temp;
- 	u32 k = 0;
-+	const u32 efuse_len =
-+		rtlpriv->cfg->maps[EFUSE_REAL_CONTENT_SIZE];
- 
--	if (address < EFUSE_REAL_CONTENT_LEN) {
-+	if (address < efuse_len) {
- 		temp = address & 0xFF;
- 		rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CTRL] + 1,
- 			       temp);
-@@ -158,11 +158,13 @@ void efuse_write_1byte(struct ieee80211_
- 	u8 bytetemp;
- 	u8 temp;
- 	u32 k = 0;
-+	const u32 efuse_len =
-+		rtlpriv->cfg->maps[EFUSE_REAL_CONTENT_SIZE];
- 
- 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
- 		 ("Addr=%x Data =%x\n", address, value));
- 
--	if (address < EFUSE_REAL_CONTENT_LEN) {
-+	if (address < efuse_len) {
- 		rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CTRL], value);
- 
- 		temp = address & 0xFF;
-@@ -198,7 +200,7 @@ void efuse_write_1byte(struct ieee80211_
- 
++struct fw_img {
++	struct fw_desc code, data;
++};
++
+ /* v1/v2 uCode file layout */
+ struct iwl_ucode_header {
+ 	__le32 ver;	/* major/minor/API/serial */
+@@ -1266,10 +1270,9 @@ struct iwl_priv {
+ 	int fw_index;			/* firmware we're trying to load */
+ 	u32 ucode_ver;			/* version of ucode, copy of
+ 					   iwl_ucode.ver */
+-	struct fw_desc ucode_code;	/* runtime inst */
+-	struct fw_desc ucode_data;	/* runtime data original */
+-	struct fw_desc ucode_init;	/* initialization inst */
+-	struct fw_desc ucode_init_data;	/* initialization data */
++	struct fw_img ucode_rt;
++	struct fw_img ucode_init;
++
+ 	enum iwlagn_ucode_subtype ucode_type;
+ 	u8 ucode_write_complete;	/* the image write is complete */
+ 	char firmware_name[25];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index 9309ff2..41207a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -64,30 +64,6 @@ static inline int iwl_queue_dec_wrap(int index, int n_bd)
+ 	return --index & (n_bd - 1);
  }
  
--static void read_efuse_byte(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf)
-+void read_efuse_byte(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 value32;
-@@ -233,24 +235,28 @@ void read_efuse(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u8 efuse_tbl[EFUSE_MAP_LEN];
-+	u8 efuse_tbl[rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]];
- 	u8 rtemp8[1];
- 	u16 efuse_addr = 0;
- 	u8 offset, wren;
- 	u16 i;
- 	u16 j;
--	u16 efuse_word[EFUSE_MAX_SECTION][EFUSE_MAX_WORD_UNIT];
-+	const u16 efuse_max_section =
-+		rtlpriv->cfg->maps[EFUSE_MAX_SECTION_MAP];
-+	const u32 efuse_len =
-+		rtlpriv->cfg->maps[EFUSE_REAL_CONTENT_SIZE];
-+	u16 efuse_word[efuse_max_section][EFUSE_MAX_WORD_UNIT];
- 	u16 efuse_utilized = 0;
- 	u8 efuse_usage;
- 
--	if ((_offset + _size_byte) > EFUSE_MAP_LEN) {
-+	if ((_offset + _size_byte) > rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]) {
- 		RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
- 			 ("read_efuse(): Invalid offset(%#x) with read "
- 			  "bytes(%#x)!!\n", _offset, _size_byte));
- 		return;
- 	}
- 
--	for (i = 0; i < EFUSE_MAX_SECTION; i++)
-+	for (i = 0; i < efuse_max_section; i++)
- 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++)
- 			efuse_word[i][j] = 0xFFFF;
- 
-@@ -262,10 +268,10 @@ void read_efuse(struct ieee80211_hw *hw,
- 		efuse_addr++;
- 	}
- 
--	while ((*rtemp8 != 0xFF) && (efuse_addr < EFUSE_REAL_CONTENT_LEN)) {
-+	while ((*rtemp8 != 0xFF) && (efuse_addr < efuse_len)) {
- 		offset = ((*rtemp8 >> 4) & 0x0f);
- 
--		if (offset < EFUSE_MAX_SECTION) {
-+		if (offset < efuse_max_section) {
- 			wren = (*rtemp8 & 0x0f);
- 			RTPRINT(rtlpriv, FEEPROM, EFUSE_READ_ALL,
- 				("offset-%d Worden=%x\n", offset, wren));
-@@ -281,7 +287,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 					efuse_utilized++;
- 					efuse_word[offset][i] = (*rtemp8 & 0xff);
- 
--					if (efuse_addr >= EFUSE_REAL_CONTENT_LEN)
-+					if (efuse_addr >= efuse_len)
- 						break;
- 
- 					RTPRINT(rtlpriv, FEEPROM,
-@@ -294,7 +300,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 					efuse_word[offset][i] |=
- 					    (((u16)*rtemp8 << 8) & 0xff00);
- 
--					if (efuse_addr >= EFUSE_REAL_CONTENT_LEN)
-+					if (efuse_addr >= efuse_len)
- 						break;
- 				}
- 
-@@ -305,13 +311,13 @@ void read_efuse(struct ieee80211_hw *hw,
- 		RTPRINT(rtlpriv, FEEPROM, EFUSE_READ_ALL,
- 			("Addr=%d\n", efuse_addr));
- 		read_efuse_byte(hw, efuse_addr, rtemp8);
--		if (*rtemp8 != 0xFF && (efuse_addr < 512)) {
-+		if (*rtemp8 != 0xFF && (efuse_addr < efuse_len)) {
- 			efuse_utilized++;
- 			efuse_addr++;
- 		}
- 	}
- 
--	for (i = 0; i < EFUSE_MAX_SECTION; i++) {
-+	for (i = 0; i < efuse_max_section; i++) {
- 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++) {
- 			efuse_tbl[(i * 8) + (j * 2)] =
- 			    (efuse_word[i][j] & 0xff);
-@@ -324,7 +330,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 		pbuf[i] = efuse_tbl[_offset + i];
- 
- 	rtlefuse->efuse_usedbytes = efuse_utilized;
--	efuse_usage = (u8)((efuse_utilized * 100) / EFUSE_REAL_CONTENT_LEN);
-+	efuse_usage = (u8) ((efuse_utilized * 100) / efuse_len);
- 	rtlefuse->efuse_usedpercentage = efuse_usage;
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_EFUSE_BYTES,
- 				      (u8 *)&efuse_utilized);
-@@ -478,9 +484,10 @@ void rtl_efuse_shadow_map_update(struct
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 
--	if (rtlefuse->autoload_failflag == true) {
--		memset(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0], 0xFF, 128);
--	} else
-+	if (rtlefuse->autoload_failflag == true)
-+		memset(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0], 0xFF,
-+			rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
-+	else
- 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
- 
- 	memcpy(&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
-@@ -632,8 +639,9 @@ static int efuse_one_byte_write(struct i
- 
- static void efuse_read_all_map(struct ieee80211_hw *hw, u8 * efuse)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	efuse_power_switch(hw, false, true);
--	read_efuse(hw, 0, 128, efuse);
-+	read_efuse(hw, 0, rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE], efuse);
- 	efuse_power_switch(hw, false, false);
- }
- 
-@@ -641,7 +649,7 @@ static void efuse_read_data_case1(struct
- 				u8 efuse_data, u8 offset, u8 *tmpdata,
- 				u8 *readstate)
- {
--	bool bdataempty = true;
-+	bool dataempty = true;
- 	u8 hoffset;
- 	u8 tmpidx;
- 	u8 hworden;
-@@ -657,13 +665,13 @@ static void efuse_read_data_case1(struct
- 			    &efuse_data)) {
- 				tmpdata[tmpidx] = efuse_data;
- 				if (efuse_data != 0xff)
--					bdataempty = true;
-+					dataempty = true;
- 			}
- 		}
- 
--		if (bdataempty == true)
-+		if (dataempty == true) {
- 			*readstate = PG_STATE_DATA;
--		else {
-+		} else {
- 			*efuse_addr = *efuse_addr + (word_cnts * 2) + 1;
- 			*readstate = PG_STATE_HEADER;
- 		}
-@@ -677,9 +685,7 @@ static void efuse_read_data_case1(struct
- static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
- {
- 	u8 readstate = PG_STATE_HEADER;
+-/* TODO: Move fw_desc functions to iwl-pci.ko */
+-static inline void iwl_free_fw_desc(struct pci_dev *pci_dev,
+-				    struct fw_desc *desc)
+-{
+-	if (desc->v_addr)
+-		dma_free_coherent(&pci_dev->dev, desc->len,
+-				  desc->v_addr, desc->p_addr);
+-	desc->v_addr = NULL;
+-	desc->len = 0;
+-}
 -
- 	bool continual = true;
+-static inline int iwl_alloc_fw_desc(struct pci_dev *pci_dev,
+-				    struct fw_desc *desc)
+-{
+-	if (!desc->len) {
+-		desc->v_addr = NULL;
+-		return -EINVAL;
+-	}
 -
- 	u8 efuse_data, word_cnts = 0;
- 	u16 efuse_addr = 0;
- 	u8 tmpdata[8];
-@@ -795,19 +801,20 @@ static void efuse_write_data_case1(struc
- 					tmp_word_en &= (~BIT(1));
- 
- 				if ((target_pkt->word_en & BIT(2)) ^
--					(match_word_en & BIT(2)))
-+				     (match_word_en & BIT(2)))
- 					tmp_word_en &= (~BIT(2));
- 
- 				if ((target_pkt->word_en & BIT(3)) ^
--				    (match_word_en & BIT(3)))
-+				     (match_word_en & BIT(3)))
- 					tmp_word_en &= (~BIT(3));
- 
- 				if ((tmp_word_en & 0x0F) != 0x0F) {
- 					*efuse_addr = efuse_get_current_size(hw);
- 					target_pkt->offset = offset;
- 					target_pkt->word_en = tmp_word_en;
--				} else
-+				} else {
- 					*continual = false;
-+				}
- 				*write_state = PG_STATE_HEADER;
- 				*repeat_times += 1;
- 				if (*repeat_times > EFUSE_REPEAT_THRESHOLD_) {
-@@ -842,9 +849,9 @@ static void efuse_write_data_case2(struc
- 	efuse_one_byte_write(hw, *efuse_addr, pg_header);
- 	efuse_one_byte_read(hw, *efuse_addr, &tmp_header);
- 
--	if (tmp_header == pg_header)
-+	if (tmp_header == pg_header) {
- 		*write_state = PG_STATE_DATA;
--	else if (tmp_header == 0xFF) {
-+	} else if (tmp_header == 0xFF) {
- 		*write_state = PG_STATE_HEADER;
- 		*repeat_times += 1;
- 		if (*repeat_times > EFUSE_REPEAT_THRESHOLD_) {
-@@ -871,11 +878,13 @@ static void efuse_write_data_case2(struc
- 						      reorg_worden,
- 						      originaldata);
- 				*efuse_addr = efuse_get_current_size(hw);
--			 } else
-+			} else {
- 				*efuse_addr = *efuse_addr + (tmp_word_cnts * 2)
- 					      + 1;
--		} else
-+			}
-+		} else {
- 			*efuse_addr = *efuse_addr + (tmp_word_cnts * 2) + 1;
-+		}
- 
- 		*write_state = PG_STATE_HEADER;
- 		*repeat_times += 1;
-@@ -1069,10 +1078,12 @@ static u8 efuse_word_enable_data_write(s
- static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	u8 tempval;
- 	u16 tmpV16;
- 
--	if (pwrstate) {
-+	if (pwrstate && (rtlhal->hw_type !=
-+		HARDWARE_TYPE_RTL8192SE)) {
- 		tmpV16 = rtl_read_word(rtlpriv,
- 				       rtlpriv->cfg->maps[SYS_ISO_CTRL]);
- 		if (!(tmpV16 & rtlpriv->cfg->maps[EFUSE_PWC_EV12V])) {
-@@ -1105,13 +1116,22 @@ static void efuse_power_switch(struct ie
- 			tempval = rtl_read_byte(rtlpriv,
- 						rtlpriv->cfg->maps[EFUSE_TEST] +
- 						3);
--			tempval &= 0x0F;
--			tempval |= (VOLTAGE_V25 << 4);
-+
-+			if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE) {
-+				tempval &= 0x0F;
-+				tempval |= (VOLTAGE_V25 << 4);
-+			}
-+
- 			rtl_write_byte(rtlpriv,
- 				       rtlpriv->cfg->maps[EFUSE_TEST] + 3,
- 				       (tempval | 0x80));
- 		}
- 
-+		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
-+			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
-+						0x03);
-+		}
-+
- 	} else {
- 		if (write) {
- 			tempval = rtl_read_byte(rtlpriv,
-@@ -1122,6 +1142,11 @@ static void efuse_power_switch(struct ie
- 				       (tempval & 0x7F));
- 		}
- 
-+		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
-+			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
-+						0x02);
-+		}
-+
- 	}
- 
- }
-@@ -1162,3 +1187,4 @@ static u8 efuse_calculate_word_cnts(u8 w
- 	return word_cnts;
- }
- 
-+
-Index: wireless-testing/drivers/net/wireless/rtlwifi/efuse.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/efuse.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/efuse.h
-@@ -30,9 +30,10 @@
- #ifndef __RTL_EFUSE_H_
- #define __RTL_EFUSE_H_
- 
-+#define EFUSE_IC_ID_OFFSET		506
-+
- #define EFUSE_REAL_CONTENT_LEN		512
- #define EFUSE_MAP_LEN			128
--#define EFUSE_MAX_SECTION		16
- #define EFUSE_MAX_WORD_UNIT		4
- 
- #define EFUSE_INIT_MAP			0
-@@ -52,6 +53,7 @@
- #define _PRE_EXECUTE_READ_CMD_
- 
- #define EFUSE_REPEAT_THRESHOLD_		3
-+#define EFUSE_ERROE_HANDLE		1
- 
- struct efuse_map {
- 	u8 offset;
-@@ -103,6 +105,7 @@ struct efuse_priv {
- 	u8 tx_power_g[14];
- };
- 
-+extern void read_efuse_byte(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf);
- extern void efuse_initialize(struct ieee80211_hw *hw);
- extern u8 efuse_read_1byte(struct ieee80211_hw *hw, u16 address);
- extern void efuse_write_1byte(struct ieee80211_hw *hw, u16 address, u8 value);
-@@ -119,3 +122,4 @@ extern void efuse_force_write_vendor_Id(
- extern void efuse_re_pg_section(struct ieee80211_hw *hw, u8 section_idx);
- 
- #endif
-+
+-	desc->v_addr = dma_alloc_coherent(&pci_dev->dev, desc->len,
+-					  &desc->p_addr, GFP_KERNEL);
+-	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
+-}
+-
+ /*
+  * we have 8 bits used like this:
+  *
+-- 
+1.7.0.4
 
