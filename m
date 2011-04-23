@@ -1,108 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43136 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753918Ab1DUUau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 16:30:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 13:30:24 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>, <kvalo@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 3/5] ath6kl: add the device ID on the data command packet
-Date: Thu, 21 Apr 2011 13:30:38 -0700
-Message-ID: <1303417840-19605-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
-References: <1303417840-19605-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63182 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab1DWQxJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Apr 2011 12:53:09 -0400
+Received: by bwz15 with SMTP id 15so920863bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 09:53:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] ssb: mark bus as powered up earlier
+Date: Sat, 23 Apr 2011 19:30:28 +0200
+Message-Id: <1303579829-2478-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naveen Singh <nsingh@atheros.com>
+ssb_chipco_set_clockmode may want to touch CC registers to control power of the
+bus. However touching registers without powered_up set causes warnings.
 
-The firmware expects the device ID to be added on the
-data and command packets sent to firmware for AR6003 v2.1.1.
-
-Signed-off-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/ath6kl/include/common/wmi.h |   23 ++++++++++++++++++++++-
- drivers/staging/ath6kl/wmi/wmi.c            |    4 +++-
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ drivers/ssb/main.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/include/common/wmi.h b/drivers/staging/ath6kl/include/common/wmi.h
-index 46c6410..24636e6 100644
---- a/drivers/staging/ath6kl/include/common/wmi.h
-+++ b/drivers/staging/ath6kl/include/common/wmi.h
-@@ -155,6 +155,16 @@ typedef enum {
- #define WMI_DATA_HDR_GET_META(h)        (((h)->info2 >> WMI_DATA_HDR_META_SHIFT) & WMI_DATA_HDR_META_MASK)
- #define WMI_DATA_HDR_SET_META(h, _v)    ((h)->info2 = ((h)->info2 & ~(WMI_DATA_HDR_META_MASK << WMI_DATA_HDR_META_SHIFT)) | ((_v) << WMI_DATA_HDR_META_SHIFT))
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index e05ba6e..74aa2cc 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1309,20 +1309,20 @@ EXPORT_SYMBOL(ssb_bus_may_powerdown);
  
-+/* Macros for operating on WMI_DATA_HDR (info3) field */
-+#define WMI_DATA_HDR_DEVID_MASK      0xF
-+#define WMI_DATA_HDR_DEVID_SHIFT     0
-+#define GET_DEVID(_v)                ((_v) & WMI_DATA_HDR_DEVID_MASK)
+ int ssb_bus_powerup(struct ssb_bus *bus, bool dynamic_pctl)
+ {
+-	struct ssb_chipcommon *cc;
+ 	int err;
+ 	enum ssb_clkmode mode;
+ 
+ 	err = ssb_pci_xtal(bus, SSB_GPIO_XTAL | SSB_GPIO_PLL, 1);
+ 	if (err)
+ 		goto error;
+-	cc = &bus->chipco;
+-	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
+-	ssb_chipco_set_clockmode(cc, mode);
+ 
+ #ifdef CONFIG_SSB_DEBUG
+ 	bus->powered_up = 1;
+ #endif
 +
-+#define WMI_DATA_HDR_GET_DEVID(h) \
-+	(((h)->info3 >> WMI_DATA_HDR_DEVID_SHIFT) & WMI_DATA_HDR_DEVID_MASK)
-+#define WMI_DATA_HDR_SET_DEVID(h, _v) \
-+	((h)->info3 = ((h)->info3 & ~(WMI_DATA_HDR_DEVID_MASK << WMI_DATA_HDR_DEVID_SHIFT)) | (GET_DEVID(_v) << WMI_DATA_HDR_DEVID_SHIFT))
++	mode = dynamic_pctl ? SSB_CLKMODE_DYNAMIC : SSB_CLKMODE_FAST;
++	ssb_chipco_set_clockmode(&bus->chipco, mode);
 +
- typedef PREPACK struct {
-     s8 rssi;
-     u8 info;               /* usage of 'info' field(8-bit):
-@@ -171,7 +181,7 @@ typedef PREPACK struct {
-                                      * b12          - A-MSDU?
-                                      * b15:b13      - META_DATA_VERSION 0 - 7
-                                      */
--    u16 reserved;
-+    u16 info3;
- } POSTPACK WMI_DATA_HDR;
- 
- /*
-@@ -255,6 +265,17 @@ typedef PREPACK struct {
- 
- 
- #define WMI_GET_DEVICE_ID(info1) ((info1) & 0xF)
-+/* Macros for operating on WMI_CMD_HDR (info1) field */
-+#define WMI_CMD_HDR_DEVID_MASK      0xF
-+#define WMI_CMD_HDR_DEVID_SHIFT     0
-+#define GET_CMD_DEVID(_v)           ((_v) & WMI_CMD_HDR_DEVID_MASK)
-+
-+#define WMI_CMD_HDR_GET_DEVID(h) \
-+	(((h)->info1 >> WMI_CMD_HDR_DEVID_SHIFT) & WMI_CMD_HDR_DEVID_MASK)
-+#define WMI_CMD_HDR_SET_DEVID(h, _v) \
-+	((h)->info1 = ((h)->info1 & \
-+		~(WMI_CMD_HDR_DEVID_MASK << WMI_CMD_HDR_DEVID_SHIFT)) | \
-+		 (GET_CMD_DEVID(_v) << WMI_CMD_HDR_DEVID_SHIFT))
- 
- /*
-  * Control Path
-diff --git a/drivers/staging/ath6kl/wmi/wmi.c b/drivers/staging/ath6kl/wmi/wmi.c
-index 7033fc1..c3a1cc5 100644
---- a/drivers/staging/ath6kl/wmi/wmi.c
-+++ b/drivers/staging/ath6kl/wmi/wmi.c
-@@ -509,7 +509,8 @@ wmi_data_hdr_add(struct wmi_t *wmip, void *osbuf, u8 msgType, bool bMoreData,
-     }
- 
-     WMI_DATA_HDR_SET_META(dtHdr, metaVersion);
--    //dtHdr->rssi = 0;
-+
-+    dtHdr->info3 = 0;
- 
-     return (0);
- }
-@@ -2986,6 +2987,7 @@ wmi_dataSync_send(struct wmi_t *wmip, void *osbuf, HTC_ENDPOINT_ID eid)
-     dtHdr->info =
-       (SYNC_MSGTYPE & WMI_DATA_HDR_MSG_TYPE_MASK) << WMI_DATA_HDR_MSG_TYPE_SHIFT;
- 
-+    dtHdr->info3 = 0;
-     A_DPRINTF(DBG_WMI, (DBGFMT "Enter - eid %d\n", DBGARG, eid));
- 
-     return (A_WMI_CONTROL_TX(wmip->wmi_devt, osbuf, eid));
+ 	return 0;
+ error:
+ 	ssb_printk(KERN_ERR PFX "Bus powerup failed\n");
 -- 
-1.7.4.15.g7811d
+1.7.3.4
 
