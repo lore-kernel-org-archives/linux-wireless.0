@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59589 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913Ab1DECQh (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:1732 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754806Ab1DWPHq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 22:16:37 -0400
-Received: by iwn34 with SMTP id 34so6347348iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:37 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v7 07/10] mac80211: ignore peer link requests from unauthenticated stations.
-Date: Mon,  4 Apr 2011 18:15:37 -0700
-Message-Id: <1301966140-26080-8-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+	Sat, 23 Apr 2011 11:07:46 -0400
+To: "Jonas Gorski" <jonas.gorski@gmail.com>
+cc: "Arnd Bergmann" <arnd@arndb.de>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Andy Botting" <andy@andybotting.com>, "Greg KH" <greg@kroah.com>,
+	"Michael Buesch" <m@bues.ch>
+Subject: Re: [PATCH] drivers: brcmaxi: provide amba axi functionality in
+ separate module
+References: <1303331669-31293-1-git-send-email-arend@broadcom.com>
+ <201104211612.49805.arnd@arndb.de> <op.vuallvn63ri7v4@arend-laptop>
+ <BANLkTinUWNvkigqkOQeYsyaAKnVXOCji8w@mail.gmail.com>
+Date: Sat, 23 Apr 2011 17:07:19 +0200
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vuecahou3ri7v4@arend-laptop>
+In-Reply-To: <BANLkTinUWNvkigqkOQeYsyaAKnVXOCji8w@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Sat, 23 Apr 2011 14:33:21 +0200, Jonas Gorski <jonas.gorski@gmail.com>  
+wrote:
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_plink.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+> On 21 April 2011 16:38, Arend van Spriel <arend@broadcom.com> wrote:
+>> Would it be possible to make chipcommon driver optional (not doing the
+>> initialization)?
+>
+> This would need to be done on a per-device/bus basis, at least for
+> embedded. Consider the following setup (which is quite common for dual
+> band routers):
+>
+> BCM4718 (bus A)
+   +- MIPS74k
+> +- Common Core <- provides flash write access, GPIOs, watchdog, ...
+> +- 802.11 Core <- for 2.4Ghz wifi
+> +- PCIe Core
+>   + BCM43224 (bus B)
+>     +- Common Core
+>     +- 802.11 Core <- for 5Ghz wifi
+>
+> (I omitted any cores not relevant for the example)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index bafe255..5d0dd92 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -372,6 +372,9 @@ int mesh_plink_open(struct sta_info *sta)
- 	__le16 llid;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 
-+	if (!test_sta_flags(sta, WLAN_STA_AUTH))
-+		return -EPERM;
-+
- 	spin_lock_bh(&sta->lock);
- 	get_random_bytes(&llid, 2);
- 	sta->llid = llid;
-@@ -484,6 +487,12 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
- 
-+	if (sta && !test_sta_flags(sta, WLAN_STA_AUTH)) {
-+		mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
-+		rcu_read_unlock();
-+		return;
-+	}
-+
- 	if (sta && sta->plink_state == PLINK_BLOCKED) {
- 		rcu_read_unlock();
- 		return;
+The MIPS may be relevant as well ;-)
+
+In the example above I would expect two axi bus driver instances for bus A  
+and bus B.
+
+> So eventually you want to able to drive both 802.11 cores, but can't
+> exclusively claim both common cores.
+
+I would expect to be probed twice. One call for 2.4GHz 802.11 core  
+referencing to bus A and one call for 5GHz 802.11 core referencing to bus  
+B.
+
+Regarding chipcommon I agree that it requires one init sequence per  
+device. I would just like to have the option to provide a custom  
+initialization function for chip common (and possibly pcie) somehow.
+
+Gr. AvS
 -- 
-1.7.4.1
+"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
 
