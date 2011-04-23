@@ -1,73 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1990 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720Ab1DLN2S convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58115 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854Ab1DWMku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:28:18 -0400
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
- <BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
- <op.vtttxt083ri7v4@arend-laptop>
- <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
-Date: Tue, 12 Apr 2011 15:27:59 +0200
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vttucxh73ri7v4@arend-laptop>
-In-Reply-To: <BANLkTiksJmiiK53kcP6vm6CTmzXhQa7oTA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+	Sat, 23 Apr 2011 08:40:50 -0400
+Received: by wya21 with SMTP id 21so832603wya.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2011 05:40:49 -0700 (PDT)
+Subject: Re: [PATCH 4/4] iwlwifi: split the drivers for agn and legacy
+ devices 3945/4965
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+In-Reply-To: <1303558517.8537.7.camel@maxim-laptop>
+References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1298315209-17986-5-git-send-email-wey-yi.w.guy@intel.com>
+	 <1303558517.8537.7.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 23 Apr 2011 15:40:44 +0300
+Message-ID: <1303562444.11751.6.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 12 Apr 2011 15:21:44 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+On Sat, 2011-04-23 at 14:35 +0300, Maxim Levitsky wrote:
+> On Mon, 2011-02-21 at 11:06 -0800, Wey-Yi Guy wrote:
+> > From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+> > 
+> > Intel WiFi devices 3945 and 4965 now have their own driver in the folder
+> > 
+> > 	drivers/net/wireless/iwlegacy
+> > 
+> > Add support to build these drivers independently of the driver for
+> > AGN devices. Selecting the 3945 builds iwl3945.ko and iwl_legacy.ko,
+> > and selecting the 4965 builds iwl4965.ko and iwl_legacy.ko. iwl-legacy.ko
+> > contains code shared between both devices.
+> > 
+> > The 3945 is an ABG/BG device, with no support for 802.11n. The 4965 is a 2x3
+> > ABGN device.
+> 
+> This one came to me as a surprise, I updated the kernel, and whoops, the
+> wireless led, blinks all the time!
+> It turns out that in splitted driver iwl3945 doesn't have any led
+> support, and indeed the light on my notebook doesn't change state often.
+> It ether doesn't light up at all, or just blinks at constant rate.
+OK, found the cause, it is dead simple, and in fact affects all intel
+wireless card.
+I wonder how such bug could escape unnoticed.
+Nobody uses linux these days I guess.... :-(
 
-> 2011/4/12 Arend van Spriel <arend@broadcom.com>:
->> On Tue, 12 Apr 2011 15:04:48 +0200, Rafał Miłecki <zajec5@gmail.com>  
->> wrote:
->>
->>> There is one more change I started to consider. Is "core" correct name
->>> for AXI's device? Almost everywhere we can read about *components* on
->>> the AXI interconnect.
->>>
->>> Maybe it'd make sense to s/core/comp/? Arend?
->>
->> I have no strong preference on this. I tried the latest patch and it  
->> does
->> not crash anymore with load/unload.
->
-> Could you post dmesg? Probably nothing exciting, just my curiosity :)
->
-Apr 12 11:56:52 arend-laptop kernel: [ 6615.077417] axi-pci-bridge  
-0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-Apr 12 11:56:52 arend-laptop kernel: [ 6615.078690] axi: Core 0 found:  
-ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-Apr 12 11:56:52 arend-laptop kernel: [ 6615.079215] axi: Core 1 found:  
-IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-Apr 12 11:56:52 arend-laptop kernel: [ 6615.079777] axi: Core 2 found:  
-PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
-Apr 12 11:56:52 arend-laptop kernel: [ 6615.111608] axi: AXI registered
-Apr 12 11:57:25 arend-laptop kernel: [ 6648.556024] axi-pci-bridge  
-0000:03:00.0: PCI INT A disabled
 
-Happy to satisfy your curiosity.
+The problem is in iwl-led.c in both drivers.
+It defines a blink table for new generi rate based blink support (yay!)
+but first entry is negative, and code in mac layer uses it.
+Why? Beats me.
 
-Gr. AvS
+The code in mac does this:
+
+	on = 1;
+	off = 0;
+
+	for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
+		if (tpt_trig->blink_table[i].throughput < 0 ||
+		    tpt > tpt_trig->blink_table[i].throughput) {
+			off = tpt_trig->blink_table[i].blink_time / 2;
+			on = tpt_trig->blink_table[i].blink_time - off;
+			break;
+		}
+	}
+
+
+So it takes ether entry that is smaller that current one or negative,
+and iterates from end to start.
+
+
+
+
+I am note sure why you have the X - 1 pattern in the iwl-led.c
+Not sending a patch because not sure what were the intentions of this
+code.
+For me removing -1s works fine.
+
+
 -- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+Best regards,
+        Maxim Levitsky
+
+Visit my blog: http://maximlevitsky.wordpress.com
+Warning: Above blog contains rants.
 
