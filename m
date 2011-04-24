@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm4-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.129]:41394 "HELO
-	nm4-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932194Ab1DMQLk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 12:11:40 -0400
-Message-ID: <677552.47001.qm@web161601.mail.bf1.yahoo.com>
-Date: Wed, 13 Apr 2011 09:11:39 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: 2.6.38: rt2800usb: high latency (1000ms)?
-To: Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <BANLkTi==Bw6mWWJidLi+ZRzz87ck4DAqVA@mail.gmail.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:51073 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757722Ab1DXUms convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Apr 2011 16:42:48 -0400
+Received: by qyg14 with SMTP id 14so919659qyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 13:42:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1303672484.14128.2.camel@maxim-laptop>
+References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
+ <1303632949.3795.7.camel@jlt3.sipsolutions.net> <1303672484.14128.2.camel@maxim-laptop>
+From: Matteo Croce <matteo@openwrt.org>
+Date: Sun, 24 Apr 2011 22:42:07 +0200
+Message-ID: <BANLkTikWr0xsOcrKAGF4EVF02Ji=7s3vHg@mail.gmail.com> (sfid-20110424_224251_796630_8990D743)
+Subject: Re: [PATCH v2] 802.11n frame injection
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2011/4/24 Maxim Levitsky <maximlevitsky@gmail.com>:
+> On Sun, 2011-04-24 at 10:15 +0200, Johannes Berg wrote:
+>> On Fri, 2011-04-22 at 18:34 +0200, Matteo Croce wrote:
+>> > This patch allows to set the tx rate and retries when injecting,
+>> > and report correct MCS information on received frames.
+>>
+>> This description is wrong. It doesn't touch rx.c, does it?
+>
+> It does appear to touch radiotap processing, and I bet the developer
+> tested this, but other than that don't know.
+>
+>>
+>> johannes
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Best regards,
+>        Maxim Levitsky
+>
+> Visit my blog: http://maximlevitsky.wordpress.com
+> Warning: Above blog contains rants.
+>
+>
 
-> > I recall using this driver in staging and it crashing
-> my machine, now thats
-> > its no longer in staging, I thought I'd give it
-> another try.. �Using the
-> 
-> The rt2800usb was not in staging but has been inside the
-> main kernel
-> tree for quite
-> some time already, the alternative rt2870sta was in staging
-> and will
-> be removed very soon.
-> 
-> > following wireless usb adapter, I'm seeing very high
-> latency when using
-> > the device in Linux, (with Windows, there are no
-> problems). �Using Debian
-> > Testing + wpa_supplicant, using the following USB
-> adapter:
-> 
-> Can you try disabling powersaving?
-> iwconfig wlan0 power off
-> 
-> Ivo
+The old patch added RX processing but now all it's merged in mainline
+and the only piece left in rx.c was:
 
-Hi,
+--- a/net/mac80211/rx.c	2011-04-21 19:08:26.253148959 +0200
++++ b/net/mac80211/rx.c	2011-04-22 11:56:24.257134886 +0200
+@@ -195,6 +195,7 @@
+ 	put_unaligned_le16(rx_flags, pos);
+ 	pos += 2;
 
-I have exactly the same device /VID/. Ivo's suggestion fixed the problem, to some extent. Latency is fine now but every now and then I'd get (DUP!) duplicated packets and I've isolated the problem only to 54G capable APs. APs with 11n work fine without duplicate packets (or high latency).
++	/* IEEE80211_RADIOTAP_RATE_MCS */
+ 	if (status->flag & RX_FLAG_HT) {
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+ 		*pos++ = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
 
-My request is, will you please try pinging both G and N APs to see if duplicate packs are occurring at your end.
 
-Walter
+so I decided to remove this chunk, but I forget the original description
+
+-- 
+Matteo Croce
+OpenWrt Developer
+ _______                     ________        __
+|       |.-----.-----.-----.|  |  |  |.----.|  |_
+|   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+|_______||   __|_____|__|__||________||__|  |____|
+         |__| W I R E L E S S   F R E E D O M
+ATTITUDE ADJUSTMENT (bleeding edge) --------------
+ * 1/4 oz Vodka      Pour all ingredents into mixing
+ * 1/4 oz Gin        tin with ice, strain into glass.
+ * 1/4 oz Amaretto
+ * 1/4 oz Triple sec
+ * 1/4 oz Peach schnapps
+ * 1/4 oz Sour mix
+ * 1 splash Cranberry juice
+-----------------------------------------------------
