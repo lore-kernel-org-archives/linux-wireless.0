@@ -1,118 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:41204 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751842Ab1D2Gta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 02:49:30 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 23:49:03 -0700
-Message-ID: <4DBA5F73.1080800@atheros.com> (sfid-20110429_084934_000182_8857259C)
-Date: Fri, 29 Apr 2011 12:19:23 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63127 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753304Ab1DXSb2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Apr 2011 14:31:28 -0400
+Received: by eyx24 with SMTP id 24so551915eyx.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 11:31:27 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH 1/2] p54: implement multicast filter
+Date: Sun, 24 Apr 2011 22:31:19 +0400
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+References: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
+In-Reply-To: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
 MIME-Version: 1.0
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [RFC/RFT 4/9] ath9k_hw: config diversity based on eeprom	contents
-References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <1304000579-5784-5-git-send-email-mshajakhan@atheros.com> <20110429044301.GC26690@vasanth-laptop>
-In-Reply-To: <20110429044301.GC26690@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201104242231.20272.jcmvbkbc@gmail.com> (sfid-20110424_203131_978992_7AC03356)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 April 2011 10:13 AM, Vasanth Thiagarajan wrote:
-> On Thu, Apr 28, 2011 at 07:52:54PM +0530, Mohammed Shafi Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> * enable LNA-diversity, fast-diversity based on the value read from
->>    EEPROM content
->> * if antenna diversity/combining is supported set LNA1 for the main
->>    antenna and LNA2 for the alternate antenna based on the new diversity
->>    algorithm
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   50 +++++++++++++++++++++---
->>   1 files changed, 44 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
->> index fb892e5..d43e62c 100644
->> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
->> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
->> @@ -3500,6 +3500,8 @@ static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah,
->>   static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
->>   {
->>   	int chain;
->> +	u32 regval;
->> +	u32 ant_div_ctl1;
->>   	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
->>   			AR_PHY_SWITCH_CHAIN_0,
->>   			AR_PHY_SWITCH_CHAIN_1,
->> @@ -3525,13 +3527,49 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
->>
->>   	if (AR_SREV_9485(ah)) {
->>   		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
->> -		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_CTRL_ALL,
->> -			      value);
->> -		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE,
->> -			      value>>  6);
->> -		REG_RMW_FIELD(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE,
->> -			      value>>  7);
->> +		/*
->> +		 * main_lnaconf, alt_lnaconf, main_tb, alt_tb
->> +		 * are the fields present
->> +		 */
->> +		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
->> +		regval&= (~AR_ANT_DIV_CTRL_ALL);
->> +		regval |= (value&  0x3f)<<  AR_ANT_DIV_CTRL_ALL_S;
->> +		/* enable_lnadiv */
->> +		regval&= (~AR_PHY_9485_ANT_DIV_LNADIV);
->> +		regval |= ((value>>  6)&  0x1)<<
->> +				AR_PHY_9485_ANT_DIV_LNADIV_S;
->> +		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
->> +
->> +		/*enable fast_div */
->> +		regval = REG_READ(ah, AR_PHY_CCK_DETECT);
->> +		regval&= (~AR_BBB_SIG_DETECT_ANT_FAST_DIV);
->> +		regval |= ((value>>  7)&  0x1)<<
->> +				AR_BBB_SIG_DETECT_ANT_FAST_DIV_S;
->> +		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
->>      
-> Can these be simplified with REG_RMW()?.
->    
->> +		ant_div_ctl1 =
->> +			ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
->> +		/* check whether antenna diversity is enabled */
->> +		if ((ant_div_ctl1>>  0x6) == 0x3) {
->> +			regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
->> +			/*
->> +			 * clear bits 25-30 main_lnaconf, alt_lnaconf,
->> +			 * main_tb, alt_tb
->> +			 */
->> +			regval&= (~(AR_PHY_9485_ANT_DIV_MAIN_LNACONF |
->> +					AR_PHY_9485_ANT_DIV_ALT_LNACONF |
->> +					AR_PHY_9485_ANT_DIV_ALT_GAINTB |
->> +					AR_PHY_9485_ANT_DIV_MAIN_GAINTB));
->> +			/* by default use LNA1 for the main antenna */
->> +			regval |= (AR_PHY_9485_ANT_DIV_LNA1<<
->> +					AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S);
->> +			regval |= (AR_PHY_9485_ANT_DIV_LNA2<<
->> +					AR_PHY_9485_ANT_DIV_ALT_LNACONF_S);
->> +			REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
->>      
-> same here.
->    
-Vasanth, as you had said it can be further optimized and few macros are 
-redundant. Thanks a lot for the review.
+> "For best CPU usage and power consumption, having as few
+> frames as possible percolate through the stack is
+> desirable. Hence, the hardware should filter as much
+> as possible."
+> 
+> Note: Not all firmwares include the multicast filter
+> feature and the stack does not filter them either.
+> The ARP filter on the other hand was dropped from the
+> patch since it does not work correctly:
+> 
+> Quote from: Max Filippov <jcmvbkbc@gmail.com>
+> <http://www.spinics.net/lists/linux-wireless/msg67466.html>
+> "In the ARP case, when there's no other traffic on p54spi,
+> all ARP requests are dropped. But if there's some egress
+> traffic from p54spi, filter seems to work correctly:
+> only ARP requests that match filter pass through.
+> 
+> In the multicast case filter seems to work correctly, but
+> it treats broadcast as subject to that filtering too. By
+> default only 01:00:5e:00:00:01 gets into priv->mc_maclist,
+> so we miss all broadcasts.
+> 
+> These two filters seem to interfere:
+> - if we set ARP filter and multicast filter without bc
+> 	=>  we miss all ARPs if there's no egress traffic;
+> - if we set ARP filter and multicast filter with bc or
+> 	don't set mc filter at all => we get all ARPs.
+> 
+> This effect does not depend on filter setup order."
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 
-regards,
-shafi
-> Vasanth
-> .
->
->    
+wrt p54spi:
+
+Tested-by: Max Filippov <jcmvbkbc@gmail.com>
+
+Thanks.
+-- Max
