@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42688 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773Ab1DZMOu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 08:14:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 05:14:23 -0700
-Message-ID: <4DB6B734.4070509@atheros.com> (sfid-20110426_141503_422373_EF413F10)
-Date: Tue, 26 Apr 2011 17:44:44 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	Lito Kriara <L.Kriara@sms.ed.ac.uk>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>	 <1303652185.3603.0.camel@jlt3.sipsolutions.net>	 <4DB4318F.6070801@atheros.com>	 <1303657150.3603.1.camel@jlt3.sipsolutions.net>	 <4DB4415F.2070707@atheros.com>	 <1303659120.3603.3.camel@jlt3.sipsolutions.net>	 <4DB4F8D5.1060108@atheros.com>	 <20110426125801.q89ma5n6cgkwog80@www.sms.ed.ac.uk>	 <4DB6B48D.6080508@atheros.com> <1303819622.4784.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1303819622.4784.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:53593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755167Ab1DXTpB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Apr 2011 15:45:01 -0400
+Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1303673834.22777.15.camel@wwguy-ubuntu>
+References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
+	 (sfid-20110424_191812_851726_8A7D5FAA) <1303670306.3603.5.camel@jlt3.sipsolutions.net>
+	 <1303670920.22777.10.camel@wwguy-ubuntu>
+	 <1303673360.3603.7.camel@jlt3.sipsolutions.net>
+	 <1303673834.22777.15.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 24 Apr 2011 21:44:58 +0200
+Message-ID: <1303674298.3603.9.camel@jlt3.sipsolutions.net> (sfid-20110424_214505_479283_232E7A58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 26 April 2011 05:37 PM, Johannes Berg wrote:
-> On Tue, 2011-04-26 at 17:33 +0530, Mohammed Shafi wrote:
->    
->> On Tuesday 26 April 2011 05:28 PM, Lito Kriara wrote:
->>      
->>> Hello,
->>> I was away the last couple of days and just saw these e-mails. It
->>> seems really interesting and helpful, but what if we need to know at
->>> runtime the number of stations connected to the AP?
->>> Is the first patch sent good to use? Should I do some modification to it?
->>>
->>>        
->> Yes this will be fine.
->>      
-> Or you can use what I wrote without patching:
->    
-Ok.
->    
->>>>> iw wlan0 station dump | grep '^Station ' | wc -l
->>>>>            
-> FWIW, I wouldn't mind adding the num_sta to debugfs, but as we discussed
-> in this thread it's a different number.
->    
-sure, thanks.
-> johannes
->
->    
+On Sun, 2011-04-24 at 12:37 -0700, wwguy wrote:
+
+> > So if you want "solid on" by default for 0 tpt, you simply don't specify
+> > the -1 value, ie. just remove the -1 line from the table completely.
+> > IOW, instead of the patch you posted before, a simple patch just
+> > removing the first line from the table should be sufficient.
+> > 
+> > > Yes, I agree as today, "on" == "off", just thinking we should make more
+> > > flexible.
+> > 
+> > I just don't see the point since we don't really need it.
+> 
+> Just thinking give more control to the driver, but it is ok don't have
+> it
+
+I wouldn't really mind, I just don't think it's useful before some
+driver actually needs it, and all the current ones want symmetric
+blinking (and also I think asymmetric would look odd).
+
+johannes
+
