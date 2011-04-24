@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41871 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52567 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232Ab1DKOxx (ORCPT
+	with ESMTP id S1754152Ab1DXNgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 10:53:53 -0400
-Subject: RE: [PATCH] CHROMIUM: config: bluetooth: rfkill driver
+	Sun, 24 Apr 2011 09:36:31 -0400
+Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Anantha Idapalapati <aidapalapati@nvidia.com>
-Cc: "olofj@chromium.org" <olofj@chromium.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Uday Raval <uraval@nvidia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Andy Ritger <ARitger@nvidia.com>,
-	Rakesh Kumar <krakesh@nvidia.com>
-In-Reply-To: <108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
-References: <1302532426-12846-1-git-send-email-aidapalapati@nvidia.com>
-	 <1302532734.6487.12.camel@jlt3.sipsolutions.net>
-	 <108BD5B22FBF9E46BD793DEDBF92B7056CF1A54FD2@BGMAIL02.nvidia.com>
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	L.Kriara@sms.ed.ac.uk
+In-Reply-To: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
+References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Apr 2011 16:53:49 +0200
-Message-ID: <1302533629.6487.14.camel@jlt3.sipsolutions.net>
+Date: Sun, 24 Apr 2011 15:36:25 +0200
+Message-ID: <1303652185.3603.0.camel@jlt3.sipsolutions.net> (sfid-20110424_153645_857465_48CFCCB8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-11 at 20:15 +0530, Anantha Idapalapati wrote:
-> Initially it was written specific to BCM4329. But because of the
-> reason most of the BT chips have similar switch on/off sequence, this
-> driver is made generic. If there is any specific changes required for
-> a particular platform, this driver can be taken as reference.
+On Sun, 2011-04-24 at 17:25 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> 
+> this will be useful when the device is operating in AP/Ad-Hoc/Mesh
+> mode
 
-Well, so, it still has bcm4329 all over the code, so you should get rid
-of that and just call it rfkill_gpio or something. Also, if it's all
-this generic, then how about you make an rfkill GPIO driver that works
-like the rfkill regulator driver we recently got?
+Fine with me, but this counts for all virtual interfaces.
 
 johannes
+
 
