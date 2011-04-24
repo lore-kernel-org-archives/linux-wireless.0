@@ -1,62 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39980 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807Ab1DESFr convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40737 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755186Ab1DXIJA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 14:05:47 -0400
-Received: by gyd10 with SMTP id 10so253900gyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 11:05:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1301987234.3831.2.camel@jlt3.sipsolutions.net>
-References: <1301969218-9878-1-git-send-email-javier@cozybit.com> <1301987234.3831.2.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 5 Apr 2011 11:05:26 -0700
-Message-ID: <BANLkTinLaWXVVQLnjr=UuoNpOQ5QmioM_Q@mail.gmail.com>
-Subject: Re: [RFC] cfg80211: Let mgmt_tx accept frames destined for its own stack.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 24 Apr 2011 04:09:00 -0400
+Subject: Re: [PATCH 2.6.39] iwlegacy: led stay solid on when no traffic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1303578538-19474-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1303578538-19474-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 24 Apr 2011 10:08:53 +0200
+Message-ID: <1303632533.3795.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 5, 2011 at 12:07 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-04-04 at 19:06 -0700, Javier Cardona wrote:
->> This is useful for implementing frame protection in userspace. The kernel may
->> request a userspace daemon to verify a frame (sent to userspace via
->> cfg80211_rx_mgmt()).  The userspace daemon can then pass back the
->> verified/unprotected frame to the stack for further processing (via a
->> self-addressed frame sent with cfg80211_mlme_mgmt_tx())
->>
->> We are using this for our implementation authenticated peering.  11s defines
->> two versions of mesh peering, the non-secure mesh peering management (MPM) and
->> the Authenticated Mesh Peering Exchange (AMPE).  The latter is based on the
->> exact same state machine as MPM.  It is really convenient to use the in-kernel
->> MPM with a minimal userspace daemon to add the security bits introduced by
->> AMPE.  This way both secured and open mesh networks can use exact same peering
->> code.
->>
->> What do you think... will this fly?
->
-> Seems very strange to me. I guess if you're after unification in my mind
-> it makes more sense to declare the in-kernel state machine legacy, copy
-> it into the userspace tool and use it even for unprotected MPM?
+On Sat, 2011-04-23 at 10:08 -0700, Wey-Yi Guy wrote:
+> commit 843f26f06a41c5797f19e843c23ca4ed2a71a0bc change the led behavior
+> for iwlwifi driver; the side effect cause led blink all the time.
 
+Uh, no, it didn't change behaviour, that was intentional and was the way
+it was before as well...
 
-We would like to preserve the ability to join an open mesh without a
-daemon, in the same way that a station can associate with an AP
-without one.  With that goal in mind, the alternatives are to
-duplicate the MPM in userspace or to reuse the in-kernel MPM with only
-AMPE in userspace.  Considering that AMPE uses MPM frames and state
-machines, reusing the in-kernel MPM is a significantly lower effort
-alternative.  Furthermore, while working on AMPE we can also bring the
-in-kernel MPM up to spec.
-Of course this requires agreeing on a suitable API between MPM and
-AMPE.  If you don't like the generic one I proposed we can try to
-define a mesh-specific alternative.  But first, setting aside the API change
-proposal, do you object to this AMPE-in-userspace/MPM-in-kernel partition?
+> Modify the led blink table to fix this problem
 
-Cheers,
+Fine with me.
 
-Javier
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlegacy/iwl-led.c |   22 +++++++++++++++++++++-
+>  1 files changed, 21 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
+> index 15eb8b7..b226a3c 100644
+> --- a/drivers/net/wireless/iwlegacy/iwl-led.c
+> +++ b/drivers/net/wireless/iwlegacy/iwl-led.c
+> @@ -48,8 +48,22 @@ module_param(led_mode, int, S_IRUGO);
+>  MODULE_PARM_DESC(led_mode, "0=system default, "
+>  		"1=On(RF On)/Off(RF Off), 2=blinking");
+>  
+> +/* Throughput		OFF time(ms)	ON time (ms)
+> + *	>300			25		25
+> + *	>200 to 300		40		40
+> + *	>100 to 200		55		55
+> + *	>70 to 100		65		65
+> + *	>50 to 70		75		75
+> + *	>20 to 50		85		85
+> + *	>10 to 20		95		95
+> + *	>5 to 10		110		110
+> + *	>1 to 5			130		130
+> + *	>0 to 1			167		167
+> + *	<=0					SOLID ON
+> + */
+>  static const struct ieee80211_tpt_blink iwl_blink[] = {
+> -	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
+> +	{ .throughput = 0 * 1024 - 1, .blink_time = 0 },
+> +	{ .throughput = 0 * 1024, .blink_time = 334 },
+
+The -1, 0 is default, so you can leave that line out.
+
+johannes
+
+>  	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
+>  	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
+>  	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
+> @@ -101,6 +115,12 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
+>  	if (priv->blink_on == on && priv->blink_off == off)
+>  		return 0;
+>  
+> +	if (on == 0) {
+> +		/* led is SOLID_ON */
+> +		on = IWL_LED_SOLID;
+> +		off = 0;
+> +	}
+
+Why would you want to do that?
+
+johannes
+
