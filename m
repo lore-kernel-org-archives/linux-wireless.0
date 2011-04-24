@@ -1,58 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:25333 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775Ab1DEPEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 11:04:31 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 08:04:06 -0700
-Message-ID: <4D9B2F79.2090606@atheros.com>
-Date: Tue, 5 Apr 2011 20:34:25 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: Add station uptime in debugfs
-References: <1302010795-2522-1-git-send-email-mshajakhan@atheros.com> <4D9B2268.8070902@openwrt.org>
-In-Reply-To: <4D9B2268.8070902@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from external1.orbit-lab.org ([128.6.192.131]:58012 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754917Ab1DXTCq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Apr 2011 15:02:46 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 84AE9540416
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 15:07:53 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-24 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110424190245.7AE4B40EB7@repository3.orbit-lab.org> (sfid-20110424_210249_609450_AC03F273)
+Date: Sun, 24 Apr 2011 15:02:45 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 April 2011 07:38 PM, Felix Fietkau wrote:
-> On 2011-04-05 3:39 PM, Mohammed Shafi Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> Add station uptime parameter in debugfs. This will be helpful to get a
->> measure of stability of connection and also during stress testing.
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
->    
->> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
->> index 999f8fb..08b9f51 100644
->> --- a/net/mac80211/sta_info.c
->> +++ b/net/mac80211/sta_info.c
->> @@ -244,6 +244,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->>    	sta->local = local;
->>    	sta->sdata = sdata;
->>    	sta->last_rx = jiffies;
->> +	sta->sta_uptime = jiffies;
->>
->>    	ewma_init(&sta->avg_signal, 1024, 8);
->>
->>      
-> I think jiffies can easily overflow. Maybe it would be better to get a
-> timeval from the monotonic clock.
->    
-Thanks, yes thats true and I assumed this will work fine for 49 days 
-assuming 32 bit(please correct me if my calculations are wrong). will 
-the overflow will take place in less than this time?. I will dig more 
-into it by looking at the time val.
-> - Felix
-> .
->
->    
+
+compat-wireless code metrics
+
+    840807 - Total upstream lines of code being pulled
+      2331 - backport code changes
+      2027 - backport code additions
+       304 - backport code deletions
+      7994 - backport from compat module
+     10325 - total backport code
+    1.2280 - % of code consists of backport work
