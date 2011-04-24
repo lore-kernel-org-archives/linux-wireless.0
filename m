@@ -1,322 +1,414 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:39037 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab1DTF2G (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39988 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757576Ab1DXP4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 01:28:06 -0400
-Received: by pxi2 with SMTP id 2so318340pxi.10
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 22:28:05 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19886.28538.315039.261736@gargle.gargle.HOWL>
-Date: Wed, 20 Apr 2011 11:00:34 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 1/5] ath9k: Fix warnings from -Wunused-but-set-variable
+	Sun, 24 Apr 2011 11:56:16 -0400
+Received: by bwz15 with SMTP id 15so1206145bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2011 08:56:14 -0700 (PDT)
+Message-Id: <d93982039621737cf58e2a45b79fd596938c6c3b.1303660092.git.chunkeey@googlemail.com> (sfid-20110424_175620_074789_7A8BE65F)
+In-Reply-To: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
+References: <060ac4fbe5b4c314227ae3867e1dce0919772ccd.1303660092.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 24 Apr 2011 17:44:19 +0200
+Subject: [PATCH 2/2] carl9170: improve unicast PS buffering
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Using the ieee80211_sta_block allows the PS code
+to handle awake->doze->awake transitions of our
+clients in a race-free manner.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c            |    6 ------
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c  |    2 --
- drivers/net/wireless/ath/ath9k/ar9003_phy.c     |    6 +-----
- drivers/net/wireless/ath/ath9k/eeprom_9287.c    |    3 +--
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    6 +++---
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c   |    4 ++++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   11 ++++++++++-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |    2 --
- drivers/net/wireless/ath/ath9k/hw.c             |    4 +---
- drivers/net/wireless/ath/ath9k/rc.c             |   12 ++++--------
- drivers/net/wireless/ath/ath9k/recv.c           |    3 +--
- 11 files changed, 25 insertions(+), 34 deletions(-)
+ drivers/net/wireless/ath/carl9170/carl9170.h |    2 +
+ drivers/net/wireless/ath/carl9170/main.c     |   92 +--------------
+ drivers/net/wireless/ath/carl9170/tx.c       |  157 +++++++++++++++++---------
+ 3 files changed, 112 insertions(+), 139 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 2e31c77..5a1f4f5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -899,12 +899,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	 * check here default level should not modify INI setting.
- 	 */
- 	if (use_new_ani(ah)) {
--		const struct ani_ofdm_level_entry *entry_ofdm;
--		const struct ani_cck_level_entry *entry_cck;
--
--		entry_ofdm = &ofdm_level_table[ATH9K_ANI_OFDM_DEF_LEVEL];
--		entry_cck = &cck_level_table[ATH9K_ANI_CCK_DEF_LEVEL];
--
- 		ah->aniperiod = ATH9K_ANI_PERIOD_NEW;
- 		ah->config.ani_poll_interval = ATH9K_ANI_POLLINTERVAL_NEW;
- 	} else {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 6eadf97..78cc8e6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3217,7 +3217,6 @@ static int ar9300_compress_decision(struct ath_hw *ah,
- 				    u8 *word, int length, int mdata_size)
+diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
+index b0b3d02..71d6d07 100644
+--- a/drivers/net/wireless/ath/carl9170/carl9170.h
++++ b/drivers/net/wireless/ath/carl9170/carl9170.h
+@@ -460,6 +460,8 @@ struct carl9170_ba_stats {
+ 
+ struct carl9170_sta_info {
+ 	bool ht_sta;
++	bool sleeping;
++	atomic_t pending_frames;
+ 	unsigned int ampdu_max_len;
+ 	struct carl9170_sta_tid *agg[CARL9170_NUM_TID];
+ 	struct carl9170_ba_stats stats[CARL9170_NUM_TID];
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index c10f132..a357281 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1193,6 +1193,8 @@ static int carl9170_op_sta_add(struct ieee80211_hw *hw,
+ 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
+ 	unsigned int i;
+ 
++	atomic_set(&sta_info->pending_frames, 0);
++
+ 	if (sta->ht_cap.ht_supported) {
+ 		if (sta->ht_cap.ampdu_density > 6) {
+ 			/*
+@@ -1571,99 +1573,17 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
+ 				   enum sta_notify_cmd cmd,
+ 				   struct ieee80211_sta *sta)
  {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u8 *dptr;
- 	const struct ar9300_eeprom *eep = NULL;
+-	struct ar9170 *ar = hw->priv;
+ 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
+-	struct sk_buff *skb, *tmp;
+-	struct sk_buff_head free;
+-	int i;
  
- 	switch (code) {
-@@ -3235,7 +3234,6 @@ static int ar9300_compress_decision(struct ath_hw *ah,
+ 	switch (cmd) {
+ 	case STA_NOTIFY_SLEEP:
+-		/*
+-		 * Since the peer is no longer listening, we have to return
+-		 * as many SKBs as possible back to the mac80211 stack.
+-		 * It will deal with the retry procedure, once the peer
+-		 * has become available again.
+-		 *
+-		 * NB: Ideally, the driver should return the all frames in
+-		 * the correct, ascending order. However, I think that this
+-		 * functionality should be implemented in the stack and not
+-		 * here...
+-		 */
+-
+-		__skb_queue_head_init(&free);
+-
+-		if (sta->ht_cap.ht_supported) {
+-			rcu_read_lock();
+-			for (i = 0; i < CARL9170_NUM_TID; i++) {
+-				struct carl9170_sta_tid *tid_info;
+-
+-				tid_info = rcu_dereference(sta_info->agg[i]);
+-
+-				if (!tid_info)
+-					continue;
+-
+-				spin_lock_bh(&ar->tx_ampdu_list_lock);
+-				if (tid_info->state >
+-				    CARL9170_TID_STATE_SUSPEND)
+-					tid_info->state =
+-						CARL9170_TID_STATE_SUSPEND;
+-				spin_unlock_bh(&ar->tx_ampdu_list_lock);
+-
+-				spin_lock_bh(&tid_info->lock);
+-				while ((skb = __skb_dequeue(&tid_info->queue)))
+-					__skb_queue_tail(&free, skb);
+-				spin_unlock_bh(&tid_info->lock);
+-			}
+-			rcu_read_unlock();
+-		}
+-
+-		for (i = 0; i < ar->hw->queues; i++) {
+-			spin_lock_bh(&ar->tx_pending[i].lock);
+-			skb_queue_walk_safe(&ar->tx_pending[i], skb, tmp) {
+-				struct _carl9170_tx_superframe *super;
+-				struct ieee80211_hdr *hdr;
+-				struct ieee80211_tx_info *info;
+-
+-				super = (void *) skb->data;
+-				hdr = (void *) super->frame_data;
+-
+-				if (compare_ether_addr(hdr->addr1, sta->addr))
+-					continue;
+-
+-				__skb_unlink(skb, &ar->tx_pending[i]);
+-
+-				info = IEEE80211_SKB_CB(skb);
+-				if (info->flags & IEEE80211_TX_CTL_AMPDU)
+-					atomic_dec(&ar->tx_ampdu_upload);
+-
+-				carl9170_tx_status(ar, skb, false);
+-			}
+-			spin_unlock_bh(&ar->tx_pending[i].lock);
+-		}
+-
+-		while ((skb = __skb_dequeue(&free)))
+-			carl9170_tx_status(ar, skb, false);
+-
++		sta_info->sleeping = true;
++		if (atomic_read(&sta_info->pending_frames))
++			ieee80211_sta_block_awake(hw, sta, true);
  		break;
- 	case _CompressBlock:
- 		if (reference == 0) {
--			dptr = mptr;
- 		} else {
- 			eep = ar9003_eeprom_struct_find_by_id(reference);
- 			if (eep == NULL) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 1bc33f5..3113aa8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -599,29 +599,25 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	unsigned int regWrites = 0, i;
- 	struct ieee80211_channel *channel = chan->chan;
--	u32 modesIndex, freqIndex;
-+	u32 modesIndex;
  
- 	switch (chan->chanmode) {
- 	case CHANNEL_A:
- 	case CHANNEL_A_HT20:
- 		modesIndex = 1;
--		freqIndex = 1;
+ 	case STA_NOTIFY_AWAKE:
+-		if (!sta->ht_cap.ht_supported)
+-			return;
+-
+-		rcu_read_lock();
+-		for (i = 0; i < CARL9170_NUM_TID; i++) {
+-			struct carl9170_sta_tid *tid_info;
+-
+-			tid_info = rcu_dereference(sta_info->agg[i]);
+-
+-			if (!tid_info)
+-				continue;
+-
+-			if ((tid_info->state == CARL9170_TID_STATE_SUSPEND))
+-				tid_info->state = CARL9170_TID_STATE_IDLE;
+-		}
+-		rcu_read_unlock();
++		sta_info->sleeping = false;
  		break;
- 	case CHANNEL_A_HT40PLUS:
- 	case CHANNEL_A_HT40MINUS:
- 		modesIndex = 2;
--		freqIndex = 1;
- 		break;
- 	case CHANNEL_G:
- 	case CHANNEL_G_HT20:
- 	case CHANNEL_B:
- 		modesIndex = 4;
--		freqIndex = 2;
- 		break;
- 	case CHANNEL_G_HT40PLUS:
- 	case CHANNEL_G_HT40MINUS:
- 		modesIndex = 3;
--		freqIndex = 2;
- 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index cb70ed7..bee2c92 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -104,6 +104,56 @@ static void carl9170_tx_accounting(struct ar9170 *ar, struct sk_buff *skb)
+ 	spin_unlock_bh(&ar->tx_stats_lock);
+ }
  
- 	default:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 1357975..b87db47 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -319,10 +319,9 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 	u16 numXpdGain, xpdMask;
- 	u16 xpdGainValues[AR5416_NUM_PD_GAINS] = {0, 0, 0, 0};
- 	u32 reg32, regOffset, regChainOffset, regval;
--	int16_t modalIdx, diff = 0;
-+	int16_t diff = 0;
- 	struct ar9287_eeprom *pEepData = &ah->eeprom.map9287;
++/* needs rcu_read_lock */
++static struct ieee80211_sta *__carl9170_get_tx_sta(struct ar9170 *ar,
++						   struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super = (void *) skb->data;
++	struct ieee80211_hdr *hdr = (void *) super->frame_data;
++	struct ieee80211_vif *vif;
++	unsigned int vif_id;
++
++	vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
++		 CARL9170_TX_SUPER_MISC_VIF_ID_S;
++
++	if (WARN_ON_ONCE(vif_id >= AR9170_MAX_VIRTUAL_MAC))
++		return NULL;
++
++	vif = rcu_dereference(ar->vif_priv[vif_id].vif);
++	if (unlikely(!vif))
++		return NULL;
++
++	/*
++	 * Normally we should use wrappers like ieee80211_get_DA to get
++	 * the correct peer ieee80211_sta.
++	 *
++	 * But there is a problem with indirect traffic (broadcasts, or
++	 * data which is designated for other stations) in station mode.
++	 * The frame will be directed to the AP for distribution and not
++	 * to the actual destination.
++	 */
++
++	return ieee80211_find_sta(vif, hdr->addr1);
++}
++
++static void carl9170_tx_ps_unblock(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct ieee80211_sta *sta;
++	struct carl9170_sta_info *sta_info;
++
++	rcu_read_lock();
++	sta = __carl9170_get_tx_sta(ar, skb);
++	if (unlikely(!sta))
++		goto out_rcu;
++
++	sta_info = (struct carl9170_sta_info *) sta->drv_priv;
++	if (atomic_dec_return(&sta_info->pending_frames) == 0)
++		ieee80211_sta_block_awake(ar->hw, sta, false);
++
++out_rcu:
++	rcu_read_unlock();
++}
++
+ static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *txinfo;
+@@ -135,6 +185,7 @@ static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
+ 	}
  
--	modalIdx = IS_CHAN_2GHZ(chan) ? 1 : 0;
- 	xpdMask = pEepData->modalHeader.xpdGain;
+ 	spin_unlock_bh(&ar->tx_stats_lock);
++
+ 	if (atomic_dec_and_test(&ar->tx_total_queued))
+ 		complete(&ar->tx_flush);
+ }
+@@ -329,13 +380,10 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ {
+ 	struct _carl9170_tx_superframe *super = (void *) skb->data;
+ 	struct ieee80211_hdr *hdr = (void *) super->frame_data;
+-	struct ieee80211_tx_info *tx_info;
+ 	struct carl9170_tx_info *ar_info;
+-	struct carl9170_sta_info *sta_info;
+ 	struct ieee80211_sta *sta;
++	struct carl9170_sta_info *sta_info;
+ 	struct carl9170_sta_tid *tid_info;
+-	struct ieee80211_vif *vif;
+-	unsigned int vif_id;
+ 	u8 tid;
  
- 	if ((pEepData->baseEepHeader.version & AR9287_EEP_VER_MINOR_MASK) >=
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index a157107..0ded2c6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -74,7 +74,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 	__be32 htc_imask = 0;
- 	u64 tsf;
- 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
--	int ret;
-+	int ret __attribute__ ((unused));
- 	u8 cmd_rsp;
+ 	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
+@@ -343,30 +391,10 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ 	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
+ 		return;
  
- 	memset(&bs, 0, sizeof(bs));
-@@ -190,7 +190,7 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 	enum ath9k_int imask = 0;
- 	u32 nexttbtt, intval, tsftu;
- 	__be32 htc_imask = 0;
--	int ret;
-+	int ret __attribute__ ((unused));
- 	u8 cmd_rsp;
- 	u64 tsf;
+-	tx_info = IEEE80211_SKB_CB(skb);
+-	ar_info = (void *) tx_info->rate_driver_data;
+-
+-	vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
+-		 CARL9170_TX_SUPER_MISC_VIF_ID_S;
+-
+-	if (WARN_ON_ONCE(vif_id >= AR9170_MAX_VIRTUAL_MAC))
+-		return;
++	ar_info = (void *) txinfo->rate_driver_data;
  
-@@ -246,7 +246,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 	enum ath9k_int imask = 0;
- 	u32 nexttbtt, intval, tsftu;
- 	__be32 htc_imask = 0;
--	int ret;
-+	int ret __attribute__ ((unused));
- 	u8 cmd_rsp;
- 	u64 tsf;
+ 	rcu_read_lock();
+-	vif = rcu_dereference(ar->vif_priv[vif_id].vif);
+-	if (unlikely(!vif))
+-		goto out_rcu;
+-
+-	/*
+-	 * Normally we should use wrappers like ieee80211_get_DA to get
+-	 * the correct peer ieee80211_sta.
+-	 *
+-	 * But there is a problem with indirect traffic (broadcasts, or
+-	 * data which is designated for other stations) in station mode.
+-	 * The frame will be directed to the AP for distribution and not
+-	 * to the actual destination.
+-	 */
+-	sta = ieee80211_find_sta(vif, hdr->addr1);
++	sta = __carl9170_get_tx_sta(ar, skb);
+ 	if (unlikely(!sta))
+ 		goto out_rcu;
  
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index dc0b33d..138f8e1 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -74,6 +74,10 @@ static void ath_btcoex_period_work(struct work_struct *work)
- 	aggr = priv->op_flags & OP_BT_PRIORITY_DETECTED;
+@@ -427,6 +455,7 @@ void carl9170_tx_status(struct ar9170 *ar, struct sk_buff *skb,
+ 	if (txinfo->flags & IEEE80211_TX_CTL_AMPDU)
+ 		carl9170_tx_status_process_ampdu(ar, skb, txinfo);
  
- 	WMI_CMD_BUF(WMI_AGGR_LIMIT_CMD, &aggr);
-+	if (ret) {
-+		ath_err(common, "Unable to set BTCOEX parameters\n");
-+		return;
-+	}
++	carl9170_tx_ps_unblock(ar, skb);
+ 	carl9170_tx_put_skb(skb);
+ }
  
- 	ath9k_cmn_btcoex_bt_stomp(common, is_btscan ? ATH_BTCOEX_STOMP_ALL :
- 			btcoex->bt_stomp_type);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 4de3864..7cff554 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -332,6 +332,11 @@ static void __ath9k_htc_remove_monitor_interface(struct ath9k_htc_priv *priv)
- 	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
- 	hvif.index = priv->mon_vif_idx;
- 	WMI_CMD_BUF(WMI_VAP_REMOVE_CMDID, &hvif);
-+	if (ret) {
-+		ath_err(common, "Unable to remove monitor interface at idx: %d\n",
-+			priv->mon_vif_idx);
+@@ -540,11 +569,7 @@ static void carl9170_tx_ampdu_timeout(struct ar9170 *ar)
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *txinfo;
+ 	struct carl9170_tx_info *arinfo;
+-	struct _carl9170_tx_superframe *super;
+ 	struct ieee80211_sta *sta;
+-	struct ieee80211_vif *vif;
+-	struct ieee80211_hdr *hdr;
+-	unsigned int vif_id;
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(iter, &ar->tx_ampdu_list, list) {
+@@ -562,20 +587,7 @@ static void carl9170_tx_ampdu_timeout(struct ar9170 *ar)
+ 		    msecs_to_jiffies(CARL9170_QUEUE_TIMEOUT)))
+ 			goto unlock;
+ 
+-		super = (void *) skb->data;
+-		hdr = (void *) super->frame_data;
+-
+-		vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
+-			 CARL9170_TX_SUPER_MISC_VIF_ID_S;
+-
+-		if (WARN_ON(vif_id >= AR9170_MAX_VIRTUAL_MAC))
+-			goto unlock;
+-
+-		vif = rcu_dereference(ar->vif_priv[vif_id].vif);
+-		if (WARN_ON(!vif))
+-			goto unlock;
+-
+-		sta = ieee80211_find_sta(vif, hdr->addr1);
++		sta = __carl9170_get_tx_sta(ar, skb);
+ 		if (WARN_ON(!sta))
+ 			goto unlock;
+ 
+@@ -1199,15 +1211,6 @@ static struct sk_buff *carl9170_tx_pick_skb(struct ar9170 *ar,
+ 	arinfo = (void *) info->rate_driver_data;
+ 
+ 	arinfo->timeout = jiffies;
+-
+-	/*
+-	 * increase ref count to "2".
+-	 * Ref counting is the easiest way to solve the race between
+-	 * the the urb's completion routine: carl9170_tx_callback and
+-	 * wlan tx status functions: carl9170_tx_status/janitor.
+-	 */
+-	carl9170_tx_get_skb(skb);
+-
+ 	return skb;
+ 
+ err_unlock:
+@@ -1228,6 +1231,36 @@ void carl9170_tx_drop(struct ar9170 *ar, struct sk_buff *skb)
+ 	__carl9170_tx_process_status(ar, super->s.cookie, q);
+ }
+ 
++static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct ieee80211_sta *sta;
++	struct carl9170_sta_info *sta_info;
++
++	rcu_read_lock();
++	sta = __carl9170_get_tx_sta(ar, skb);
++	if (!sta)
++		goto out_rcu;
++
++	sta_info = (void *) sta->drv_priv;
++	if (unlikely(sta_info->sleeping)) {
++		struct ieee80211_tx_info *tx_info;
++
++		rcu_read_unlock();
++
++		tx_info = IEEE80211_SKB_CB(skb);
++		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
++			atomic_dec(&ar->tx_ampdu_upload);
++
++		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++		carl9170_tx_status(ar, skb, false);
++		return true;
 +	}
 +
- 	priv->nvifs--;
- 	priv->vif_slot &= ~(1 << priv->mon_vif_idx);
- }
-@@ -964,7 +969,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	struct ath_hw *ah = priv->ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int ret = 0;
-+	int ret __attribute__ ((unused));
- 	u8 cmd_rsp;
- 
- 	mutex_lock(&priv->mutex);
-@@ -1135,6 +1140,10 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
- 	hvif.index = avp->index;
- 	WMI_CMD_BUF(WMI_VAP_REMOVE_CMDID, &hvif);
-+	if (ret) {
-+		ath_err(common, "Unable to remove interface at idx: %d\n",
-+			avp->index);
-+	}
- 	priv->nvifs--;
- 	priv->vif_slot &= ~(1 << avp->index);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 723a3a9..a898dac 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -446,7 +446,6 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rate;
- 	struct ieee80211_conf *cur_conf = &priv->hw->conf;
--	struct ieee80211_supported_band *sband;
- 	bool txok;
- 	int slot;
- 
-@@ -461,7 +460,6 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	vif = tx_info->control.vif;
- 	rate = &tx_info->status.rates[0];
--	sband = priv->hw->wiphy->bands[cur_conf->channel->band];
- 
- 	memset(&tx_info->status, 0, sizeof(tx_info->status));
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 045abd5..7a9d4a4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1793,7 +1793,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 
--	u16 capField = 0, eeval;
-+	u16 eeval;
- 	u8 ant_div_ctl1, tx_chainmask, rx_chainmask;
- 
- 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
-@@ -1804,8 +1804,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		eeval |= AR9285_RDEXT_DEFAULT;
- 	regulatory->current_rd_ext = eeval;
- 
--	capField = ah->eep_ops->get_eeprom(ah, EEP_OP_CAP);
--
- 	if (ah->opmode != NL80211_IFTYPE_AP &&
- 	    ah->hw_version.subvendorid == AR_SUBVENDOR_ID_NEW_A) {
- 		if (regulatory->current_rd == 0x64 ||
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 1809409..4ccbf2d 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -854,14 +854,13 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	ath_rc_rate_set_rtscts(sc, rate_table, tx_info);
- }
- 
--static bool ath_rc_update_per(struct ath_softc *sc,
-+static void ath_rc_update_per(struct ath_softc *sc,
- 			      const struct ath_rate_table *rate_table,
- 			      struct ath_rate_priv *ath_rc_priv,
- 				  struct ieee80211_tx_info *tx_info,
- 			      int tx_rate, int xretries, int retries,
- 			      u32 now_msec)
++out_rcu:
++	rcu_read_unlock();
++	return false;
++}
++
+ static void carl9170_tx(struct ar9170 *ar)
  {
--	bool state_change = false;
- 	int count, n_bad_frames;
- 	u8 last_per;
- 	static const u32 nretry_to_per_lookup[10] = {
-@@ -992,8 +991,6 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 	struct sk_buff *skb;
+@@ -1247,6 +1280,9 @@ static void carl9170_tx(struct ar9170 *ar)
+ 			if (unlikely(!skb))
+ 				break;
  
++			if (unlikely(carl9170_tx_ps_drop(ar, skb)))
++				continue;
++
+ 			atomic_inc(&ar->tx_total_pending);
+ 
+ 			q = __carl9170_get_queue(ar, i);
+@@ -1256,6 +1292,16 @@ static void carl9170_tx(struct ar9170 *ar)
+ 			 */
+ 			skb_queue_tail(&ar->tx_status[q], skb);
+ 
++			/*
++			 * increase ref count to "2".
++			 * Ref counting is the easiest way to solve the
++			 * race between the urb's completion routine:
++			 *	carl9170_tx_callback
++			 * and wlan tx status functions:
++			 *	carl9170_tx_status/janitor.
++			 */
++			carl9170_tx_get_skb(skb);
++
+ 			carl9170_usb_tx(ar, skb);
+ 			schedule_garbagecollector = true;
  		}
- 	}
--
--	return state_change;
- }
+@@ -1368,6 +1414,11 @@ void carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * all ressouces which are associated with the frame.
+ 	 */
  
- static void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
-@@ -1017,7 +1014,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	u32 now_msec = jiffies_to_msecs(jiffies);
- 	int rate;
- 	u8 last_per;
--	bool state_change = false;
- 	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
- 	int size = ath_rc_priv->rate_table_size;
- 
-@@ -1027,9 +1023,9 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	last_per = ath_rc_priv->per[tx_rate];
- 
- 	/* Update PER first */
--	state_change = ath_rc_update_per(sc, rate_table, ath_rc_priv,
--					 tx_info, tx_rate, xretries,
--					 retries, now_msec);
-+	ath_rc_update_per(sc, rate_table, ath_rc_priv,
-+			  tx_info, tx_rate, xretries,
-+			  retries, now_msec);
- 
- 	/*
- 	 * If this rate looks bad (high PER) then stop using it for
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f69dcdf..abb9cd6 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1339,7 +1339,7 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- 	struct ath_hw_antcomb_conf div_ant_conf;
- 	struct ath_ant_comb *antcomb = &sc->ant_comb;
- 	int alt_ratio = 0, alt_rssi_avg = 0, main_rssi_avg = 0, curr_alt_set;
--	int curr_main_set, curr_bias;
-+	int curr_main_set;
- 	int main_rssi = rs->rs_rssi_ctl0;
- 	int alt_rssi = rs->rs_rssi_ctl1;
- 	int rx_ant_conf,  main_ant_conf;
-@@ -1393,7 +1393,6 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- 	ath9k_hw_antdiv_comb_conf_get(sc->sc_ah, &div_ant_conf);
- 	curr_alt_set = div_ant_conf.alt_lna_conf;
- 	curr_main_set = div_ant_conf.main_lna_conf;
--	curr_bias = div_ant_conf.fast_div_bias;
- 
- 	antcomb->count++;
- 
++	if (sta) {
++		struct carl9170_sta_info *stai = (void *) sta->drv_priv;
++		atomic_inc(&stai->pending_frames);
++	}
++
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
+ 		if (run)
 -- 
 1.7.4.4
 
