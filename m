@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:56573 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753487Ab1DSKMP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 06:12:15 -0400
-Subject: Re: [PATCH 1/4] mwl8k: Do not stop tx queues
-From: Nishant Sarmukadam <nishants@marvell.com>
-Reply-To: <nishants@marvell.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-In-Reply-To: <20110419074809.GJ1897@wantstofly.org>
-References: <1303191772-4299-1-git-send-email-nishants@marvell.com>
-	 <20110419074809.GJ1897@wantstofly.org>
-Content-Type: text/plain
-Date: Tue, 19 Apr 2011 15:38:17 +0530
-Message-ID: <1303207697.20919.31.camel@localhost.localdomain>
-MIME-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:58976 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754046Ab1DXSvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Apr 2011 14:51:33 -0400
+Subject: Re: [PATCH 1/1 RFC] mac80211: add ratio to led blinking trigger
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1303670306.3603.5.camel@jlt3.sipsolutions.net>
+References: <1303665300-1775-1-git-send-email-wey-yi.w.guy@intel.com>
+	 (sfid-20110424_191812_851726_8A7D5FAA)  <1303670306.3603.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 24 Apr 2011 11:48:40 -0700
+Message-ID: <1303670920.22777.10.camel@wwguy-ubuntu> (sfid-20110424_205147_557125_1E080196)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Tue, 2011-04-19 at 00:48 -0700, Lennert Buytenhek wrote:
-> On Tue, Apr 19, 2011 at 11:12:49AM +0530, Nishant Sarmukadam wrote:
-> 
-> > From: Pradeep Nemavat <pnemavat@marvell.com>
+On Sun, 2011-04-24 at 11:38 -0700, Johannes Berg wrote:
+> On Sun, 2011-04-24 at 10:15 -0700, Wey-Yi Guy wrote:
+> > The current led blink trigger implementaion assume on/off time are equal,
+> > it works but not have any flexbile for different blink pattern.
 > > 
-> > This is in preparation to support life time expiry of packets in the
-> > hardware to avoid head-of-line blocking where a slow client can
-> > hog a tx queue and affect the traffic to a faster client from the same
-> > queue. Time stamp the packets in driver to allow dropping them in the
-> > hardware if they are queued for more than 500ms.
-> > 
-> > Since queues are not being stopped now, we need to be prepared for
-> > a situation where packets hit the driver after the queues are full.
-> > Drop all such packets in the driver itself.
+> > Add "ratio" parameter in the trigger table and give driver more control
+> > on how the on/off blink time behavior should be.
 > 
-> What this patch seems to do is: don't propagate queue start/stop
-> indications to mac80211, and if a packet is handed to mwl8k for
-> transmission while a TX queue is full, just drop it in the driver.
-> (This doesn't seem to correspond with the commit message.)
-
-We were invoking mac80211 routines to start/stop tx queues. Since we do
-not call these routines now, the queues will not be stopped anymore.
-Hence, packets that enter the driver after the corresponding queue is
-full, need to be dropped. This is mentioned in the commit description.
-Please let me know if I am missing something. 
-
+> I considered this when writing the original code, but then decided that
+> nobody needed to have unequal on/off times. Why would we need it now?
+> (FWIW, blink = 0 is always on already, no?)
 > 
-> But since the driver still has an accurate idea of TX queue fullness
-> (i.e. it's not as if at transmit time, you go and transparently reclaim
-> TX queue entries), why do you need to start/stop mac80211 TX queues at
-> all?  Won't it still work fine without deleting that logic?
+But from what I read for iwlwifi, to turn LED_SOLID_ON, on = 11, off =
+0. Did I read it wrong.
 
-We need to timestamp all tx packets. If we stop the queues, packets will
-be queued up outside the driver (in queue full conditions). Since we
-will be able to timestamp the packets only after they hit the driver,
-the timestamp will be less accurate since we cannot consider the time
-the packets spent in the queues outside the driver. Such packets add up
-to the overall latency considerably. Hence we are not stopping the
-queues anymore. 
+Yes, I agree as today, "on" == "off", just thinking we should make more
+flexible.
+
+Wey
+
 
 
