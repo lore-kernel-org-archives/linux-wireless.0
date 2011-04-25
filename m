@@ -1,280 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40360 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752863Ab1DTVf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 17:35:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: fix build of atheros Ethernet drivers.
-Date: Wed, 20 Apr 2011 23:35:11 +0200
-Message-Id: <1303335312-6970-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1303335312-6970-1-git-send-email-hauke@hauke-m.de>
-References: <1303335312-6970-1-git-send-email-hauke@hauke-m.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:4643 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932065Ab1DYWpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 18:45:30 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
+Subject: [PATCH 3/7] staging: brcm80211: Remove siutils dependency of
+ dhdsdio_download_state
+Date: Mon, 25 Apr 2011 15:45:09 -0700
+Message-ID: <1303771513-18851-4-git-send-email-frankyl@broadcom.com> (sfid-20110426_004545_943168_416E7C42)
+In-Reply-To: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
+References: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Ethernet drivers where converted to a new hw_features netdev
-attribute. For kernel < 2.6.39 this does not work.
+Use dhdsdio_chip_disablecore and dhd_sdio_chip_resetcore to replace
+siutils functions used in dhdsdio_download_state
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- patches/40-netdev-hw-features.patch |  246 +++++++++++++++++++++++++++++++++++
- 1 files changed, 246 insertions(+), 0 deletions(-)
- create mode 100644 patches/40-netdev-hw-features.patch
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  114 ++++++++++++-------------
+ 1 files changed, 53 insertions(+), 61 deletions(-)
 
-diff --git a/patches/40-netdev-hw-features.patch b/patches/40-netdev-hw-features.patch
-new file mode 100644
-index 0000000..06c5c1a
---- /dev/null
-+++ b/patches/40-netdev-hw-features.patch
-@@ -0,0 +1,246 @@
-+This reverts the following commit in linux mainline for kernel < 2.6.39: 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 75be99d..4e5d1ee 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -482,7 +482,9 @@ static int dhdsdio_download_nvram(struct dhd_bus *bus);
+ #ifdef BCMEMBEDIMAGE
+ static int dhdsdio_download_code_array(struct dhd_bus *bus);
+ #endif
++static void dhdsdio_chip_disablecore(bcmsdh_info_t *sdh, u32 corebase);
+ static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
++static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
+ 
+ static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
+ {
+@@ -2615,42 +2617,18 @@ static int dhdsdio_write_vars(dhd_bus_t *bus)
+ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ {
+ 	uint retries;
++	u32 regdata;
+ 	int bcmerror = 0;
+ 
+ 	/* To enter download state, disable ARM and reset SOCRAM.
+ 	 * To exit download state, simply reset ARM (default is RAM boot).
+ 	 */
+ 	if (enter) {
+-
+ 		bus->alp_only = true;
+ 
+-		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
+-		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
+-			bcmerror = -EBADE;
+-			goto fail;
+-		}
++		dhdsdio_chip_disablecore(bus->sdh, bus->ci->armcorebase);
+ 
+-		si_core_disable(bus->sih, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			bcmerror = -EIO;
+-			goto fail;
+-		}
+-
+-		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
+-				   __func__));
+-			bcmerror = -EBADE;
+-			goto fail;
+-		}
+-
+-		si_core_reset(bus->sih, 0, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			DHD_ERROR(("%s: Failure trying reset SOCRAM core?\n",
+-				   __func__));
+-			bcmerror = -EIO;
+-			goto fail;
+-		}
++		dhdsdio_chip_resetcore(bus->sdh, bus->ci->ramcorebase);
+ 
+ 		/* Clear the top bit of memory */
+ 		if (bus->ramsize) {
+@@ -2659,14 +2637,11 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ 					 (u8 *)&zeros, 4);
+ 		}
+ 	} else {
+-		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
+-				   __func__));
+-			bcmerror = -EBADE;
+-			goto fail;
+-		}
+-
+-		if (!si_iscoreup(bus->sih)) {
++		regdata = bcmsdh_reg_read(bus->sdh,
++			 CORE_SB(bus->ci->ramcorebase, sbtmstatelow), 4);
++		regdata &= (SBTML_RESET | SBTML_REJ_MASK |
++			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++		if ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) != regdata) {
+ 			DHD_ERROR(("%s: SOCRAM core is down after reset?\n",
+ 				   __func__));
+ 			bcmerror = -EBADE;
+@@ -2679,41 +2654,16 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ 			bcmerror = 0;
+ 		}
+ 
+-		if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0) &&
+-		    !si_setcore(bus->sih, SDIOD_CORE_ID, 0)) {
+-			DHD_ERROR(("%s: Can't change back to SDIO core?\n",
+-				   __func__));
+-			bcmerror = -EBADE;
+-			goto fail;
+-		}
+ 		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries);
+ 
+-		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
+-		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
+-			bcmerror = -EBADE;
+-			goto fail;
+-		}
+-
+-		si_core_reset(bus->sih, 0, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			DHD_ERROR(("%s: Failure trying to reset ARM core?\n",
+-				   __func__));
+-			bcmerror = -EIO;
+-			goto fail;
+-		}
++		dhdsdio_chip_resetcore(bus->sdh, bus->ci->armcorebase);
+ 
+ 		/* Allow HT Clock now that the ARM is running. */
+ 		bus->alp_only = false;
+ 
+ 		bus->dhd->busstate = DHD_BUS_LOAD;
+ 	}
+-
+ fail:
+-	/* Always return to SDIOD core */
+-	if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0))
+-		si_setcore(bus->sih, SDIOD_CORE_ID, 0);
+-
+ 	return bcmerror;
+ }
+ 
+@@ -6324,3 +6274,45 @@ fail:
+ 	kfree(ci);
+ 	return err;
+ }
 +
-+commit 782d640afd15af7a1faf01cfe566ca4ac511319d
-+Author: Michał Mirosław <mirq-linux@rere.qmqm.pl>
-+Date:   Thu Apr 7 07:32:18 2011 +0000
++static void
++dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase)
++{
++	u32 regdata;
 +
-+    net: atl*: convert to hw_features
-+    
-+    Things left as they were:
-+     - atl1: is RX checksum really enabled?
-+     - atl2: copy-paste from atl1, with-errors-on-modify I presume
-+     - atl1c: there's a bug: MTU can't be changed if device is not up
-+    
-+    Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
-+    Signed-off-by: David S. Miller <davem@davemloft.net>
++	/*
++	 * Must do the disable sequence first to work for
++	 * arbitrary current core state.
++	 */
++	dhdsdio_chip_disablecore(sdh, corebase);
 +
-+--- a/drivers/net/atl1c/atl1c_ethtool.c
-++++ b/drivers/net/atl1c/atl1c_ethtool.c
-+@@ -113,6 +113,13 @@ static int atl1c_set_settings(struct net
-+ 	return 0;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++static u32 atl1c_get_tx_csum(struct net_device *netdev)
-++{
-++	return (netdev->features & NETIF_F_HW_CSUM) != 0;
-++}
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-++
-+ static u32 atl1c_get_msglevel(struct net_device *netdev)
-+ {
-+ 	struct atl1c_adapter *adapter = netdev_priv(netdev);
-+@@ -302,6 +309,11 @@ static const struct ethtool_ops atl1c_et
-+ 	.get_link               = ethtool_op_get_link,
-+ 	.get_eeprom_len         = atl1c_get_eeprom_len,
-+ 	.get_eeprom             = atl1c_get_eeprom,
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++	.get_tx_csum            = atl1c_get_tx_csum,
-++	.get_sg                 = ethtool_op_get_sg,
-++	.set_sg                 = ethtool_op_set_sg,
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+ };
-+ 
-+ void atl1c_set_ethtool_ops(struct net_device *netdev)
-+--- a/drivers/net/atl1c/atl1c_main.c
-++++ b/drivers/net/atl1c/atl1c_main.c
-+@@ -489,6 +489,7 @@ static void atl1c_set_rxbufsize(struct a
-+ 		roundup(mtu + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN, 8) : AT_RX_BUF_SIZE;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ static u32 atl1c_fix_features(struct net_device *netdev, u32 features)
-+ {
-+ 	if (netdev->mtu > MAX_TSO_FRAME_SIZE)
-+@@ -496,6 +497,7 @@ static u32 atl1c_fix_features(struct net
-+ 
-+ 	return features;
-+ }
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 
-+ /*
-+  * atl1c_change_mtu - Change the Maximum Transfer Unit
-+@@ -523,8 +525,19 @@ static int atl1c_change_mtu(struct net_d
-+ 		netdev->mtu = new_mtu;
-+ 		adapter->hw.max_frame_size = new_mtu;
-+ 		atl1c_set_rxbufsize(adapter, netdev);
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++		if (new_mtu > MAX_TSO_FRAME_SIZE) {
-++			adapter->netdev->features &= ~NETIF_F_TSO;
-++			adapter->netdev->features &= ~NETIF_F_TSO6;
-++		} else {
-++			adapter->netdev->features |= NETIF_F_TSO;
-++			adapter->netdev->features |= NETIF_F_TSO6;
-++		}
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+ 		atl1c_down(adapter);
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 		netdev_update_features(netdev);
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 		atl1c_up(adapter);
-+ 		clear_bit(__AT_RESETTING, &adapter->flags);
-+ 		if (adapter->hw.ctrl_flags & ATL1C_FPGA_VERSION) {
-+@@ -2590,7 +2603,9 @@ static const struct net_device_ops atl1c
-+ 	.ndo_set_mac_address 	= atl1c_set_mac_addr,
-+ 	.ndo_set_multicast_list = atl1c_set_multi,
-+ 	.ndo_change_mtu		= atl1c_change_mtu,
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	.ndo_fix_features	= atl1c_fix_features,
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 	.ndo_do_ioctl		= atl1c_ioctl,
-+ 	.ndo_tx_timeout		= atl1c_tx_timeout,
-+ 	.ndo_get_stats		= atl1c_get_stats,
-+@@ -2611,6 +2626,7 @@ static int atl1c_init_netdev(struct net_
-+ 	atl1c_set_ethtool_ops(netdev);
-+ 
-+ 	/* TODO: add when ready */
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netdev->hw_features =	NETIF_F_SG	   |
-+ 				NETIF_F_HW_CSUM	   |
-+ 				NETIF_F_HW_VLAN_TX |
-+@@ -2618,6 +2634,14 @@ static int atl1c_init_netdev(struct net_
-+ 				NETIF_F_TSO6;
-+ 	netdev->features =	netdev->hw_features |
-+ 				NETIF_F_HW_VLAN_RX;
-++#else
-++	netdev->features =	NETIF_F_SG	   |
-++				NETIF_F_HW_CSUM	   |
-++				NETIF_F_HW_VLAN_TX |
-++				NETIF_F_HW_VLAN_RX |
-++				NETIF_F_TSO	   |
-++				NETIF_F_TSO6;
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 	return 0;
-+ }
-+ 
-+--- a/drivers/net/atl1e/atl1e_ethtool.c
-++++ b/drivers/net/atl1e/atl1e_ethtool.c
-+@@ -382,6 +382,11 @@ static const struct ethtool_ops atl1e_et
-+ 	.get_eeprom_len         = atl1e_get_eeprom_len,
-+ 	.get_eeprom             = atl1e_get_eeprom,
-+ 	.set_eeprom             = atl1e_set_eeprom,
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++	.set_tx_csum            = ethtool_op_set_tx_hw_csum,
-++	.set_sg                 = ethtool_op_set_sg,
-++	.set_tso                = ethtool_op_set_tso,
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+ };
-+ 
-+ void atl1e_set_ethtool_ops(struct net_device *netdev)
-+--- a/drivers/net/atl1e/atl1e_main.c
-++++ b/drivers/net/atl1e/atl1e_main.c
-+@@ -1929,7 +1929,11 @@ void atl1e_down(struct atl1e_adapter *ad
-+ 	 * reschedule our watchdog timer */
-+ 	set_bit(__AT_DOWN, &adapter->flags);
-+ 
-++#if defined(NETIF_F_LLTX) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netif_stop_queue(netdev);
-++#else
-++	netif_tx_disable(netdev);
-++#endif
-+ 
-+ 	/* reset MAC to disable all RX/TX */
-+ 	atl1e_reset_hw(&adapter->hw);
-+@@ -2221,10 +2225,17 @@ static int atl1e_init_netdev(struct net_
-+ 	netdev->watchdog_timeo = AT_TX_WATCHDOG;
-+ 	atl1e_set_ethtool_ops(netdev);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netdev->hw_features = NETIF_F_SG | NETIF_F_HW_CSUM | NETIF_F_TSO |
-+ 		NETIF_F_HW_VLAN_TX;
-+ 	netdev->features = netdev->hw_features |
-+ 		NETIF_F_HW_VLAN_RX | NETIF_F_LLTX;
-++#else
-++	netdev->features = NETIF_F_SG | NETIF_F_HW_CSUM |
-++		NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX;
-++	netdev->features |= NETIF_F_LLTX;
-++	netdev->features |= NETIF_F_TSO;
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 
-+ 	return 0;
-+ }
-+--- a/drivers/net/atlx/atl1.c
-++++ b/drivers/net/atlx/atl1.c
-+@@ -2986,10 +2986,12 @@ static int __devinit atl1_probe(struct p
-+ 	netdev->features |= NETIF_F_SG;
-+ 	netdev->features |= (NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netdev->hw_features = NETIF_F_HW_CSUM | NETIF_F_SG | NETIF_F_TSO;
-+ 
-+ 	/* is this valid? see atl1_setup_mac_ctrl() */
-+ 	netdev->features |= NETIF_F_RXCSUM;
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
-+ 
-+ 	/*
-+ 	 * patch for some L1 of old version,
-+@@ -3605,6 +3607,14 @@ static int atl1_set_pauseparam(struct ne
-+ 	return 0;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++/* FIXME: is this right? -- CHS */
-++static u32 atl1_get_rx_csum(struct net_device *netdev)
-++{
-++	return 1;
-++}
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-++
-+ static void atl1_get_strings(struct net_device *netdev, u32 stringset,
-+ 	u8 *data)
-+ {
-+@@ -3677,4 +3687,10 @@ static const struct ethtool_ops atl1_eth
-+ 	.nway_reset		= atl1_nway_reset,
-+ 	.get_ethtool_stats	= atl1_get_ethtool_stats,
-+ 	.get_sset_count		= atl1_get_sset_count,
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++	.get_rx_csum		= atl1_get_rx_csum,
-++	.set_tx_csum		= ethtool_op_set_tx_hw_csum,
-++	.set_sg			= ethtool_op_set_sg,
-++	.set_tso		= ethtool_op_set_tso,
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+ };
-+--- a/drivers/net/atlx/atl2.c
-++++ b/drivers/net/atlx/atl2.c
-+@@ -1415,8 +1415,12 @@ static int __devinit atl2_probe(struct p
-+ 
-+ 	err = -EIO;
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netdev->hw_features = NETIF_F_SG;
-++#endif
-++#if defined(NETIF_F_HW_VLAN_TX) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
-+ 	netdev->features |= (NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX);
-++#endif
-+ 
-+ 	/* Init PHY as early as possible due to power saving issue  */
-+ 	atl2_phy_init(&adapter->hw);
-+@@ -1843,6 +1847,13 @@ static int atl2_set_settings(struct net_
-+ 	return 0;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++static u32 atl2_get_tx_csum(struct net_device *netdev)
-++{
-++	return (netdev->features & NETIF_F_HW_CSUM) != 0;
-++}
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-++
-+ static u32 atl2_get_msglevel(struct net_device *netdev)
-+ {
-+ 	return 0;
-+@@ -2110,6 +2121,14 @@ static const struct ethtool_ops atl2_eth
-+ 	.get_eeprom_len		= atl2_get_eeprom_len,
-+ 	.get_eeprom		= atl2_get_eeprom,
-+ 	.set_eeprom		= atl2_set_eeprom,
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-++	.get_tx_csum		= atl2_get_tx_csum,
-++	.get_sg			= ethtool_op_get_sg,
-++	.set_sg			= ethtool_op_set_sg,
-++#ifdef NETIF_F_TSO
-++	.get_tso		= ethtool_op_get_tso,
-++#endif
-++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+ };
-+ 
-+ static void atl2_set_ethtool_ops(struct net_device *netdev)
++	/*
++	 * Now do the initialization sequence.
++	 * set reset while enabling the clock and
++	 * forcing them on throughout the core
++	 */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
++		SBTML_RESET);
++	udelay(1);
++
++	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbtmstatehigh), 4);
++	if (regdata & SBTMH_SERR)
++		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatehigh), 4, 0);
++
++	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbimstate), 4);
++	if (regdata & (SBIM_IBE | SBIM_TO))
++		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbimstate), 4,
++			regdata & ~(SBIM_IBE | SBIM_TO));
++
++	/* clear reset and allow it to propagate throughout the core */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		(SICF_FGC << SBTML_SICF_SHIFT) |
++		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++	udelay(1);
++
++	/* leave clock enabled */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++	udelay(1);
++}
 -- 
 1.7.1
+
 
