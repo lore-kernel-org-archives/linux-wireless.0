@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46458 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756494Ab1DFSpV (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.212.179]:57492 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757038Ab1DYUzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:45:21 -0400
-Date: Wed, 6 Apr 2011 14:38:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Antonio Ospite <ospite@studenti.unina.it>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-Message-ID: <20110406183837.GI11941@tuxdriver.com>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
- <20110406141131.GC2810@opensource.wolfsonmicro.com>
- <1302099669.4090.1.camel@jlt3.sipsolutions.net>
- <1302113542.22852.7.camel@x61.thuisdomein>
+	Mon, 25 Apr 2011 16:55:51 -0400
+Message-ID: <4DB5DFBC.3070203@lwfinger.net> (sfid-20110425_225616_387441_DF8CE7EF)
+Date: Mon, 25 Apr 2011 15:55:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1302113542.22852.7.camel@x61.thuisdomein>
+To: David Miller <davem@davemloft.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-04-25
+References: <20110425193017.GC28814@tuxdriver.com>	<20110425.125835.189703400.davem@davemloft.net> <20110425.130435.112597353.davem@davemloft.net>
+In-Reply-To: <20110425.130435.112597353.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-7; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 06, 2011 at 08:12:22PM +0200, Paul Bolle wrote:
-> On Wed, 2011-04-06 at 16:21 +0200, Johannes Berg wrote:
-> > On Wed, 2011-04-06 at 23:11 +0900, Mark Brown wrote:
-> > > On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
-> > > 
-> > > > +	tristate "Generic rfkill regulator driver"
-> > > > +	depends on RFKILL || !RFKILL
-> > > 
-> > > That looks *odd*.
-> > 
-> > That's normal for rfkill -- if RFKILL==n then this can be anything since
-> > the rfkill API goes all no-op inlines, but if RFKILL==m then this can't
-> > be ==y. "depends on !RFKILL" covers the former, "depends on RFKILL" the
-> > latter.
-> 
-> But doesn't
-> 	depends on RFKILL || !RFKILL
-> 
-> always evaluate to true when running "make *config"? (Even if RFKILL is
-> an unknown symbol when that expression is parsed!)
-> 
-> I'd say that dependencies such as this one might as well be dropped from
-> their Kconfig file.
+On 04/25/2011 03:04 PM, David Miller wrote:
+> From: David Miller<davem@davemloft.net>
+> Date: Mon, 25 Apr 2011 12:58:35 -0700 (PDT)
+>
+>> From: "John W. Linville"<linville@tuxdriver.com>
+>> Date: Mon, 25 Apr 2011 15:30:17 -0400
+>>
+>>> Here is another big batch of updates intended for 2.6.40...
+>>>
+>>> There is the usual huge batch of changes for ath9k, and iwlagn, a bunch
+>>> for ath9k_htc, rt2x00, and ath5k, a few more for mwifiex, and a handful
+>>> of others.  Also included is a big batch of Bluetooth updates as well.
+>>>
+>>> Please let me know if there are problems!
+>>
+>> Pulled, thanks a lot John.
+>
+> I guess watching the build logs for new warnings is too old fashioned
+> for people, and besides Dave will do it for everyone anyways right?
+>
+> And this one is a real bug too. :-/
+>
+> I'll push this out to net-next-2.6 on top of the wireless-next pull,
+> but please be more mindful in the future.
 
-The syntax may seem strange, but basically it just says "don't let
-me by y if RFKILL is m".
+Unfortunately, the 64-bit variant of gcc v4.5.1 will miss some of these. I find 
+I need to compile code on a 32-bit system and using an older compiler to catch 
+all. Perhaps that explains the error that crept through here.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
+
