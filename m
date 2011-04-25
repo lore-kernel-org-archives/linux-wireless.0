@@ -1,79 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41543 "EHLO mx1.redhat.com"
+Received: from kroah.org ([198.145.64.141]:58825 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752167Ab1DTODk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 10:03:40 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] iwlwifi: fix possible data overwrite in hcmd callback
-Date: Wed, 20 Apr 2011 16:02:58 +0200
-Message-Id: <1303308178-5297-1-git-send-email-sgruszka@redhat.com>
+	id S1758652Ab1DYRnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 13:43:08 -0400
+Date: Mon, 25 Apr 2011 10:38:34 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Felix Fietkau <nbd@openwrt.org>,
+	ath9k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	stable@kernel.org
+Subject: Re: [stable] ath9k: Regression in 2.6.38 (30% package losses,
+ ~20KBit/s throughput) with AR9285
+Message-ID: <20110425173834.GC32065@kroah.com> (sfid-20110425_194312_447813_6FB5C1FF)
+References: <4DB56E5B.4090101@hauke-m.de>
+ <4DB57180.40208@hauke-m.de>
+ <20110425170750.GB28814@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110425170750.GB28814@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My commit 3598e1774c94e55c71b585340e7dc4538f310e3f
-"iwlwifi: fix enqueue hcmd race conditions" move hcmd callback after
-command queue reclaim, to avoid call it with hcmd_lock. But since
-queue read index was updated, cmd data can be overwritten. Fix problem
-by calling callback before taking hcmd_lock and queue reclaim.
+On Mon, Apr 25, 2011 at 01:07:51PM -0400, John W. Linville wrote:
+> You can send stuff to stable yourself.  The main rule is that it is
+> already in Linus's tree...
+> 
+> Stable folks, please apply 115dad7a7f42e68840392767323ceb9306dbdb36
+> for the 2.6.38.y tree.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |   15 ++++-----------
- 1 files changed, 4 insertions(+), 11 deletions(-)
+Now queued up.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 3732380..efff189 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -607,9 +607,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	struct iwl_cmd_meta *meta;
- 	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
- 	unsigned long flags;
--	void (*callback) (struct iwl_priv *priv, struct iwl_device_cmd *cmd,
--			  struct iwl_rx_packet *pkt);
--
- 
- 	/* If a Tx command is being handled and it isn't in the actual
- 	 * command queue then there a command routing bug has been introduced
-@@ -623,8 +620,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 		return;
- 	}
- 
--	spin_lock_irqsave(&priv->hcmd_lock, flags);
--
- 	cmd_index = get_cmd_index(&txq->q, index, huge);
- 	cmd = txq->cmd[cmd_index];
- 	meta = &txq->meta[cmd_index];
-@@ -634,13 +629,14 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 			 dma_unmap_len(meta, len),
- 			 PCI_DMA_BIDIRECTIONAL);
- 
--	callback = NULL;
- 	/* Input error checking is done when commands are added to queue. */
- 	if (meta->flags & CMD_WANT_SKB) {
- 		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
- 		rxb->page = NULL;
--	} else
--		callback = meta->callback;
-+	} else if (meta->callback)
-+		meta->callback(priv, cmd, pkt);
-+
-+	spin_lock_irqsave(&priv->hcmd_lock, flags);
- 
- 	iwl_hcmd_queue_reclaim(priv, txq_id, index, cmd_index);
- 
-@@ -655,7 +651,4 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	meta->flags = 0;
- 
- 	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
--
--	if (callback)
--		callback(priv, cmd, pkt);
- }
--- 
-1.7.1
+thanks,
 
+greg k-h
