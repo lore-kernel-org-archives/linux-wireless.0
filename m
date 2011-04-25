@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40169 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754023Ab1DRNgH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45577 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab1DYRPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:36:07 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 17so2833906fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:36:06 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/23] rt2x00: Linksys WUSB600N rev2 is a RT3572 device.
-Date: Mon, 18 Apr 2011 15:31:50 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201104181526.01722.IvDoorn@gmail.com> <201104181531.03375.IvDoorn@gmail.com> <201104181531.32313.IvDoorn@gmail.com>
-In-Reply-To: <201104181531.32313.IvDoorn@gmail.com>
+	Mon, 25 Apr 2011 13:15:49 -0400
+Date: Mon, 25 Apr 2011 13:07:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	ath9k-devel@venema.h4ckr.net,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	stable@kernel.org
+Subject: Re: ath9k: Regression in 2.6.38 (30% package losses, ~20KBit/s
+ throughput) with AR9285
+Message-ID: <20110425170750.GB28814@tuxdriver.com> (sfid-20110425_191553_104474_2E517A90)
+References: <4DB56E5B.4090101@hauke-m.de>
+ <4DB57180.40208@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104181531.51867.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DB57180.40208@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+You can send stuff to stable yourself.  The main rule is that it is
+already in Linus's tree...
 
-Move the USB ID entry from the unknown devices to the list of RT35xx based
-devices.
+Stable folks, please apply 115dad7a7f42e68840392767323ceb9306dbdb36
+for the 2.6.38.y tree.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+John
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 2005972..1bb9a7d 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -983,6 +983,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x04bb, 0x0944), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Linksys */
- 	{ USB_DEVICE(0x13b1, 0x002f), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Sitecom */
-@@ -1041,7 +1042,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Linksys */
- 	{ USB_DEVICE(0x1737, 0x0077), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0078), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Motorola */
- 	{ USB_DEVICE(0x100d, 0x9032), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Ovislink */
+On Mon, Apr 25, 2011 at 03:05:04PM +0200, Hauke Mehrtens wrote:
+> On 04/25/2011 02:51 PM, Hauke Mehrtens wrote:
+> > Hi,
+> > 
+> > with kernel 2.6.38 the wifi connection with my Atheros AR9285 is
+> > unusable when the distance from the AP is more that 3 meters. (30%
+> > package losses, ~20K/s throughput compared to ~3M/s) Tested with two
+> > cards on different devices. With kernel 2.6.35 or kernel 2.6.38 +
+> > compat-wireless 15 meters distance is no problem. The problem only
+> > occurs in 2.6.38-rc1 to 2.6.38.4 but not in any more recent versions. I
+> > did a git bisect and found the commit fixing the problem.
+> > 
+> > commit 115dad7a7f42e68840392767323ceb9306dbdb36
+> > Author: Felix Fietkau <nbd@openwrt.org>
+> > Date:   Fri Jan 14 00:06:27 2011 +0100
+> > 
+> >     ath9k_hw: partially revert "fix dma descriptor rx error bit parsing"
+> > 
+> > http://www.spinics.net/lists/linux-wireless/msg62742.html
+> > 
+> > Please send this commit to the stable series for 2.6.38.
+> > 
+> > The problem is also described at the Ubuntu launchpad:
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/735431
+> > 
+> > Hauke
+> 
+> I linked to a wrong Ubuntu Launchpad bug report. This is a correct one,
+> but there many many:
+> https://bugs.launchpad.net/archlinux/+source/linux/+bug/735171
+> 
+> Here is also a description in the kernel bugzilla:
+> https://bugzilla.kernel.org/show_bug.cgi?id=31452
+> 
+> Hauke
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
