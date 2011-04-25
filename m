@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:43538 "EHLO mga14.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4662 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478Ab1DTSo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 14:44:56 -0400
-Subject: Re: updated iwlwifi 5000 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110420182254.GE2737@tuxdriver.com>
-References: <1303316696.14995.162.camel@wwguy-huron>
-	 <20110420182254.GE2737@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Apr 2011 11:23:26 -0700
-Message-ID: <1303323806.14995.163.camel@wwguy-huron>
-Mime-Version: 1.0
+	id S932157Ab1DYWpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 18:45:30 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
+Subject: [PATCH 0/7] staging: brcm80211: remove si sb utils dependency
+ from brcmfmac
+Date: Mon, 25 Apr 2011 15:45:06 -0700
+Message-ID: <1303771513-18851-1-git-send-email-frankyl@broadcom.com> (sfid-20110426_004537_374990_CABD06D7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-20 at 11:22 -0700, John W. Linville wrote:
-> On Wed, Apr 20, 2011 at 09:24:56AM -0700, Guy, Wey-Yi wrote:
-> > Hi,
-> > 
-> > Due to a packaging error, we've re-released the 5000 uCode version
-> > 8.83.5.1. 
-> > 
-> > The updated version of firmware is available for download from
-> > http://intellinuxwireless.org/?n=Downloads
-> > 
-> > The old, wrongly packaged version has the following sha1sums:
-> > 
-> > bff3bfce6a31ad94be32b4c204ff8819b0cd03fd
-> > iwlwifi-5000-ucode-8.83.5.1.tgz
-> > 8d94177b509be3fb653ce8ba0c633244e4abf5f3
-> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
-> 
-> The version I get from:
-> 
-> 	wget http://www.intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1.tgz
-> 
-> matches the sha1sum values listed above for the "wrongly packaged" version.
-> 
-> > The new version these:
-> > e70cc4b2249824a6b17ce9b9ae5087942c762213
-> > iwlwifi-5000-ucode-8.83.5.1.tgz
-> > 22bf6093ed8204027cc3207c739d2cab9cc92ea3
-> > iwlwifi-5000-ucode-8.83.5.1/iwlwifi-5000-5.ucode
-> > 
-> > The only change is removing the advertising for multiple interface
-> > support which is not actually present in this microcode.
-> > 
-> > Wey-Yi
-> 
-> So, you are going to release a different version of the file but
-> with the _same_ release number?  Couldn't you at least name it
-> iwlwifi-5000-ucode-8.83.5.1-1.tgz or something?
+This patch series is intend to remove si and sb utility from broadcom fullmac driver.
 
-Sorry for the confusion, I will rename it to show the differences
+Franky Lin (7):
+  staging: brcm80211: Add bcmchip.h
+  staging: brcm80211: Add dhdsdio_chip_attach in dhd_sdio.c
+  staging: brcm80211: Remove siutils dependency of
+    dhdsdio_download_state
+  staging: brcm80211: Move sdiod strength init to dhd_sdio.c
+  staging: brcm80211: Add dhdsdio_chip_detach in dhd_sdio.c
+  staging: brcm80211: Remove siutils dependence from dhd_sdio.c
+  staging: brcm80211: Remove si sb utils from brcmfmac
 
-Wey
+ drivers/staging/brcm80211/brcmfmac/Makefile   |    3 -
+ drivers/staging/brcm80211/brcmfmac/bcmchip.h  |   35 +
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c   |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd_pmu.c  |  780 -------------
+ drivers/staging/brcm80211/brcmfmac/dhd_pmu.h  |   52 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  574 ++++++++--
+ drivers/staging/brcm80211/brcmfmac/sbutils.c  |    1 -
+ drivers/staging/brcm80211/brcmfmac/siutils.c  |    1 -
+ drivers/staging/brcm80211/util/bcmutils.c     |    1 -
+ drivers/staging/brcm80211/util/sbutils.c      |  462 --------
+ drivers/staging/brcm80211/util/siutils.c      | 1490 -------------------------
+ drivers/staging/brcm80211/util/siutils_priv.h |   30 -
+ 12 files changed, 490 insertions(+), 2940 deletions(-)
+ create mode 100644 drivers/staging/brcm80211/brcmfmac/bcmchip.h
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/dhd_pmu.c
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/dhd_pmu.h
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/sbutils.c
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/siutils.c
+ delete mode 100644 drivers/staging/brcm80211/util/sbutils.c
+ delete mode 100644 drivers/staging/brcm80211/util/siutils.c
+ delete mode 100644 drivers/staging/brcm80211/util/siutils_priv.h
 
 
