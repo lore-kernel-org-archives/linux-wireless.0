@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38703 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab1DJR3w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 13:29:52 -0400
-Received: by wya21 with SMTP id 21so4228058wya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 10:29:51 -0700 (PDT)
-Message-ID: <4DA1E90A.5070902@gmail.com>
-Date: Sun, 10 Apr 2011 19:29:46 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58034 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827Ab1DYNFL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 09:05:11 -0400
+Message-ID: <4DB57180.40208@hauke-m.de> (sfid-20110425_150532_150043_846CE7A2)
+Date: Mon, 25 Apr 2011 15:05:04 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: Firmware files for Ralink RT28x0
-Content-Type: text/plain; charset=ISO-8859-15
+To: Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>
+CC: ath9k-devel@lists.ath9k.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k: Regression in 2.6.38 (30% package losses, ~20KBit/s throughput)
+ with AR9285
+References: <4DB56E5B.4090101@hauke-m.de>
+In-Reply-To: <4DB56E5B.4090101@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Hutchings wrote:
-
-> I notice that rt2800{pci,usb} each specify only one firmware image,
-> regardless of the controller version.
+On 04/25/2011 02:51 PM, Hauke Mehrtens wrote:
+> Hi,
 > 
-> This is inconsistent with rt28{6,7}0sta and with the firmware images in
-> linux-firmware.
+> with kernel 2.6.38 the wifi connection with my Atheros AR9285 is
+> unusable when the distance from the AP is more that 3 meters. (30%
+> package losses, ~20K/s throughput compared to ~3M/s) Tested with two
+> cards on different devices. With kernel 2.6.35 or kernel 2.6.38 +
+> compat-wireless 15 meters distance is no problem. The problem only
+> occurs in 2.6.38-rc1 to 2.6.38.4 but not in any more recent versions. I
+> did a git bisect and found the commit fixing the problem.
 > 
-> If you think that a single image per bus type can cover all controllers,
-> please identify those firmware images, test them on each hardware
-> generation, and get them into linux-firmware.
+> commit 115dad7a7f42e68840392767323ceb9306dbdb36
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Fri Jan 14 00:06:27 2011 +0100
+> 
+>     ath9k_hw: partially revert "fix dma descriptor rx error bit parsing"
+> 
+> http://www.spinics.net/lists/linux-wireless/msg62742.html
+> 
+> Please send this commit to the stable series for 2.6.38.
+> 
+> The problem is also described at the Ubuntu launchpad:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/735431
+> 
+> Hauke
 
-querida:/datos/kernel/linux-2.6/drivers/net/wireless/rt2x00 $ grep "\.bin" *
-rt2800pci.h:#define FIRMWARE_RT2860			"rt2860.bin"
-rt2800usb.h:#define FIRMWARE_RT2870			"rt2870.bin"
-rt61pci.h:#define FIRMWARE_RT2561			"rt2561.bin"
-rt61pci.h:#define FIRMWARE_RT2561s			"rt2561s.bin"
-rt61pci.h:#define FIRMWARE_RT2661			"rt2661.bin"
-rt73usb.h:#define FIRMWARE_RT2571			"rt73.bin"
+I linked to a wrong Ubuntu Launchpad bug report. This is a correct one,
+but there many many:
+https://bugs.launchpad.net/archlinux/+source/linux/+bug/735171
 
-rt3070.bin rt3071.bin rt3090.bin should be deleted from linux-firmware.
-They were only need by staging drivers.
+Here is also a description in the kernel bugzilla:
+https://bugzilla.kernel.org/show_bug.cgi?id=31452
 
--- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+Hauke
