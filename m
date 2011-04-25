@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45602 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758391Ab1D2DLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 23:11:34 -0400
-Date: Fri, 29 Apr 2011 00:11:43 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-04-25
-Message-ID: <20110429031143.GA2353@joana> (sfid-20110429_051157_756276_B3E455D6)
-References: <20110425193017.GC28814@tuxdriver.com>
- <20110425.125835.189703400.davem@davemloft.net>
- <20110425.130435.112597353.davem@davemloft.net>
- <4DB5DFBC.3070203@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:63700 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754495Ab1DYMVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 08:21:23 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 05:20:56 -0700
+Date: Mon, 25 Apr 2011 17:51:20 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/5] ath9k: Fix warnings due to -Wunused-but-set-variable
+Message-ID: <20110425122120.GA27808@vmraj-lnx.users.atheros.com> (sfid-20110425_142126_218325_C617E3E1)
+References: <1303727180-22212-1-git-send-email-rmanoharan@atheros.com>
+ <1303727180-22212-3-git-send-email-rmanoharan@atheros.com>
+ <19893.21584.569149.22313@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DB5DFBC.3070203@lwfinger.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <19893.21584.569149.22313@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Larry Finger <Larry.Finger@lwfinger.net> [2011-04-25 15:55:24 -0500]:
-
-> On 04/25/2011 03:04 PM, David Miller wrote:
-> > From: David Miller<davem@davemloft.net>
-> > Date: Mon, 25 Apr 2011 12:58:35 -0700 (PDT)
-> >
-> >> From: "John W. Linville"<linville@tuxdriver.com>
-> >> Date: Mon, 25 Apr 2011 15:30:17 -0400
-> >>
-> >>> Here is another big batch of updates intended for 2.6.40...
-> >>>
-> >>> There is the usual huge batch of changes for ath9k, and iwlagn, a bunch
-> >>> for ath9k_htc, rt2x00, and ath5k, a few more for mwifiex, and a handful
-> >>> of others.  Also included is a big batch of Bluetooth updates as well.
-> >>>
-> >>> Please let me know if there are problems!
-> >>
-> >> Pulled, thanks a lot John.
-> >
-> > I guess watching the build logs for new warnings is too old fashioned
-> > for people, and besides Dave will do it for everyone anyways right?
-> >
-> > And this one is a real bug too. :-/
-> >
-> > I'll push this out to net-next-2.6 on top of the wireless-next pull,
-> > but please be more mindful in the future.
+On Mon, Apr 25, 2011 at 04:30:32PM +0530, Sujith wrote:
+> Rajkumar Manoharan wrote:
+> > These warnings are exposed by gcc 4.6.
+> > drivers/net/wireless/ath/ath9k/recv.c: In function 'ath_ant_comb_scan':
+> > drivers/net/wireless/ath/ath9k/recv.c:1342:21: warning: variable
+> > 'curr_bias' set but not used [-Wunused-but-set-variable]
+> > drivers/net/wireless/ath/ath9k/rc.c: In function 'ath_rc_update_ht':
+> > drivers/net/wireless/ath/ath9k/rc.c:1020:7: warning: variable
+> > 'state_change' set but not used [-Wunused-but-set-variable]
+> > drivers/net/wireless/ath/ath9k/ani.c: In function 'ath9k_hw_ani_init':
+> > drivers/net/wireless/ath/ath9k/ani.c:903:37: warning: variable
+> > 'entry_cck' set but not used [-Wunused-but-set-variable]
+> > drivers/net/wireless/ath/ath9k/ani.c:902:38: warning: variable
+> > 'entry_ofdm' set but not used [-Wunused-but-set-variable]
+> > 
 > 
-> Unfortunately, the 64-bit variant of gcc v4.5.1 will miss some of these. I find 
-> I need to compile code on a 32-bit system and using an older compiler to catch 
-> all. Perhaps that explains the error that crept through here.
+> http://marc.info/?l=linux-wireless&m=130327729324100&w=2
+>
+John,
 
-That could be a reason, I have gcc 4.5.2 (64-bit). I've built this code many times
-before send pull request and never saw that warning, and it's clearly a bug,
-indeed. 
+Warnings in ath9k were already address by Sujith.
+Please drop ath9k related warning patches.
 
--- 
-Gustavo F. Padovan
-http://profusion.mobi
+--
+Rajkumar
