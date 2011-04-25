@@ -1,176 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:42302 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932296Ab1DMUzS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 16:55:18 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:3395 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757186Ab1DYWp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 18:45:28 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
+Subject: [PATCH 5/7] staging: brcm80211: Add dhdsdio_chip_detach in
+ dhd_sdio.c
+Date: Mon, 25 Apr 2011 15:45:11 -0700
+Message-ID: <1303771513-18851-6-git-send-email-frankyl@broadcom.com> (sfid-20110426_004532_574800_62E641FA)
+In-Reply-To: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
+References: <1303771513-18851-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1302727516.8015.9.camel@dev.znau.edu.ua>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	<20110413163113.GA24015@kroah.com>
-	<BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-	<1302726703.8015.1.camel@dev.znau.edu.ua>
-	<BANLkTimwZOJ0a5kVfaUzEcsMc39H999u0A@mail.gmail.com>
-	<1302727516.8015.9.camel@dev.znau.edu.ua>
-Date: Wed, 13 Apr 2011 22:55:16 +0200
-Message-ID: <BANLkTi=wzzzeF-PmqLt9o8arW7nRaFRRJw@mail.gmail.com>
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/13 George Kashperko <george@znau.edu.ua>:
->
->> 2011/4/13 George Kashperko <george@znau.edu.ua>:
->> >
->> > В Срд, 13/04/2011 в 21:39 +0200, Rafał Miłecki пишет:
->> >> 2011/4/13 Greg KH <greg@kroah.com>:
->> >> >> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
->> >> >> new file mode 100644
->> >> >> index 0000000..17e882c
->> >> >> --- /dev/null
->> >> >> +++ b/drivers/axi/axi_pci_bridge.c
->> >> >> @@ -0,0 +1,33 @@
->> >> >> +/*
->> >> >> + * AXI PCI bridge module
->> >> >> + *
->> >> >> + * Licensed under the GNU/GPL. See COPYING for details.
->> >> >> + */
->> >> >> +
->> >> >> +#include "axi_private.h"
->> >> >> +
->> >> >> +#include <linux/axi/axi.h>
->> >> >> +#include <linux/pci.h>
->> >> >> +
->> >> >> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
->> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
->> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
->> >> >> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
->> >> >> +     { 0, },
->> >> >> +};
->> >> >> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
->> >> >> +
->> >> >> +static struct pci_driver axi_pci_bridge_driver = {
->> >> >> +     .name = "axi-pci-bridge",
->> >> >> +     .id_table = axi_pci_bridge_tbl,
->> >> >> +};
->> >> >> +
->> >> >> +int __init axi_pci_bridge_init(void)
->> >> >> +{
->> >> >> +     return axi_host_pci_register(&axi_pci_bridge_driver);
->> >> >> +}
->> >> >> +
->> >> >> +void __exit axi_pci_bridge_exit(void)
->> >> >> +{
->> >> >> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
->> >> >> +}
->> >> >
->> >> > You register a pci driver that does nothing?  That's not right, you need
->> >> > to then base your axi bus off of that pci device, so it is hooked up
->> >> > correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
->> >> > the virtual location for your axi bus, right?
->> >>
->> >> Please take a look at:
->> >> driver->probe = axi_host_pci_probe;
->> >> driver->remove = axi_host_pci_remove;
->> >> return pci_register_driver(driver);
->> >>
->> >>
->> >> >> +bool axi_core_is_enabled(struct axi_device *core)
->> >> >> +{
->> >> >> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
->> >> >> +         != AXI_IOCTL_CLK)
->> >> >> +             return false;
->> >> >> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
->> >> >> +             return false;
->> >> >> +     return true;
->> >> >> +}
->> >> >> +EXPORT_SYMBOL(axi_core_is_enabled);
->> >> >
->> >> > EXPORT_SYMBOL_GPL()?
->> >> >
->> >> > What module uses this?  And why would it care?
->> >> >
->> >> >> +EXPORT_SYMBOL(axi_core_enable);
->> >> >
->> >> > EXPORT_SYMBOL_GPL()?
->> >> >
->> >> > Same goes for your other exports, just want you to be sure here.
->> >>
->> >> Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
->> >> drivers from using our bus driver, right? I'm don't have preferences
->> >> on this, if you prefer us to force GPL, I can.
->> >>
->> >>
->> >> >> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
->> >> >> +{
->> >> >> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
->> >> >> +}
->> >> >> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
->> >> >
->> >> > "xaxi"?  Shouldn't that be consistant with the other exports and start
->> >> > with "axi"?
->> >>
->> >> Left from old tests/rewrites/splitting. Thanks.
->> >>
->> >>
->> >> >> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
->> >> >> +{
->> >> >> +     if (unlikely(core->bus->mapped_core != core))
->> >> >
->> >> > Are you sure about the use of unlikely in this, and other functions?
->> >> > The compiler almost always does a better job than we do for these types
->> >> > of calls, just let it do it's job.
->> >> >
->> >> >> +             axi_host_pci_switch_core(core);
->> >> >> +     return ioread8(core->bus->mmio + offset);
->> >> >
->> >> > I think because of that unlikely, you just slowed down all pci devices,
->> >> > right?  That's not very nice :)
->> >>
->> >> Hm, my logic suggests it is alright, but please consider this once
->> >> more with me ;)
->> >>
->> >> For the most of the time mapped_core (active core) do not change. We
->> >> perform few hundreds of operations on one core in a row. This way
->> >> mapped_core points to passed core for most of the time. Condition
->> >> (mapped_core != core) is unlikely to happen.
->> >>
->> >> Is there anything wrong in my logic?
->> >>
->> > Yes, there is. You don't need that "if" at all.
->>
->> Damn, WHY do you make me ask why, why, why, all the time?! Can't you
->> just write word of explanation without being asked for?
->>
-> Errm... Sorry, but I've already explained PCIE host behaviour _several_
-> times several days ago. Personally I like to ask questions. Have
-> absolutely nothing agains anyone else asking good questions. Never try
-> to make people ask me questions I know they would ask anyway. Really you
-> might missed some my messages earlier or maybe my english is too awful ?
->
-> Yet again, for PCIE cores (not only for them, for some PCI cores as
-> well) buscommon, buscore and function core are all available
-> simultaneously. You dont need window sliding when access them.
+Add dhdsdio_chip_detach to replace si_detach for si/sb utils removal
 
-I had no idea what you were referring to. We do not dig into PCIe
-functions yet, so I believe for now we need this "if".
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-I'm getting totally frustrated with that whole situation :|
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 02f6509..ace8909 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -487,6 +487,7 @@ static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
+ static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
+ static void dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus,
+ 					u32 drivestrength);
++static void dhdsdio_chip_detach(struct dhd_bus *bus);
+ 
+ static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
+ {
+@@ -5484,10 +5485,8 @@ static void dhdsdio_release(dhd_bus_t *bus)
+ 		bcmsdh_intr_dereg(bus->sdh);
+ 
+ 		if (bus->dhd) {
+-
+-			dhdsdio_release_dongle(bus);
+-
+ 			dhd_detach(bus->dhd);
++			dhdsdio_release_dongle(bus);
+ 			bus->dhd = NULL;
+ 		}
+ 
+@@ -5530,6 +5529,7 @@ static void dhdsdio_release_dongle(dhd_bus_t *bus)
+ #endif				/* !defined(BCMLXSDMMC) */
+ 		dhdsdio_clkctl(bus, CLK_NONE, false);
+ 		si_detach(bus->sih);
++		dhdsdio_chip_detach(bus);
+ 		if (bus->vars && bus->varsz)
+ 			kfree(bus->vars);
+ 		bus->vars = NULL;
+@@ -6426,3 +6426,12 @@ dhdsdio_sdiod_drive_strength_init(struct dhd_bus *bus, u32 drivestrength) {
+ 			drivestrength, cc_data_temp));
+ 	}
+ }
++
++static void
++dhdsdio_chip_detach(struct dhd_bus *bus)
++{
++	DHD_TRACE(("%s: Enter\n", __func__));
++
++	kfree(bus->ci);
++	bus->ci = NULL;
++}
 -- 
-Rafał
+1.7.1
+
+
