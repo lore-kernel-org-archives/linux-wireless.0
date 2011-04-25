@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:40644 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695Ab1DSRMh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 13:12:37 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH V2 2/4] mwl8k: Add timestamp information for tx packets
-Date: Tue, 19 Apr 2011 22:16:20 +0530
-Message-Id: <1303231582-17333-2-git-send-email-nishants@marvell.com>
-In-Reply-To: <1303231582-17333-1-git-send-email-nishants@marvell.com>
-References: <1303231582-17333-1-git-send-email-nishants@marvell.com>
+Received: from nm14.bullet.mail.bf1.yahoo.com ([98.139.212.173]:35421 "HELO
+	nm14.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756677Ab1DYN3v convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 09:29:51 -0400
+Message-ID: <988465.59385.qm@web161620.mail.bf1.yahoo.com> (sfid-20110425_152953_793058_3577166A)
+Date: Mon, 25 Apr 2011 06:29:49 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Reply-To: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 1/2] compat-wireless: enable default RT33XX support
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pradeep Nemavat <pnemavat@marvell.com>
+Enable rt2x00 support for rt33xx devices 
 
-Timestamp tx packets using a HW micro-second timer.
-This timestamp will be compared to the current timestamp
-in the hardware and if the difference is greater than 500ms,
-the packet will be dropped.
-
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- drivers/net/wireless/mwl8k.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 7968301..aca0139 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1792,6 +1792,14 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
- 		tx_stats->pkts++;
- }
- 
-+/* HW micro second timer register
-+ * located at offset 0xA600. This
-+ * will be used to timestamp tx
-+ * packets.
-+ */
-+
-+#define	MWL8K_HW_TIMER_REGISTER	(priv->regs + 0xA600)
-+
- static void
- mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- {
-@@ -1972,6 +1980,10 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 		tx->peer_id = MWL8K_STA(tx_info->control.sta)->peer_id;
- 	else
- 		tx->peer_id = 0;
-+
-+	if (priv->ap_fw)
-+		tx->timestamp = cpu_to_le32(ioread32(MWL8K_HW_TIMER_REGISTER));
-+
- 	wmb();
- 	tx->status = cpu_to_le32(MWL8K_TXD_STATUS_FW_OWNED | txstatus);
- 
--- 
-1.6.0.3
+--- a/config.mk
++++ b/config.mk
+@@ -326,7 +326,7 @@ CONFIG_RT2400PCI=m
+ CONFIG_RT2500PCI=m
+ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800PCI=m
+-# CONFIG_RT2800PCI_RT33XX=y
++CONFIG_RT2800PCI_RT33XX=y
+ # CONFIG_RT2800PCI_RT35XX=y
+ # CONFIG_RT2800PCI_RT53XX=y
+ endif #CONFIG_CRC_CCITT
+@@ -450,7 +450,7 @@ CONFIG_ATH9K_HTC=m
+ CONFIG_RT2500USB=m
+ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800USB=m
+-# CONFIG_RT2800USB_RT33XX=y
++CONFIG_RT2800USB_RT33XX=y
+ # CONFIG_RT2800USB_RT35XX=y
+ CONFIG_RT2800USB_UNKNOWN=y
+ endif #CONFIG_CRC_CCITT
 
