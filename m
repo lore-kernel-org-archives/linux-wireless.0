@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55759 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab1DKORn (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35694 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758797Ab1DYStd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 10:17:43 -0400
-Received: by wwa36 with SMTP id 36so6704263wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 07:17:42 -0700 (PDT)
+	Mon, 25 Apr 2011 14:49:33 -0400
+Received: by iwn34 with SMTP id 34so2054407iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 11:49:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimNaaUyJ2jKG1gZ3WeWPA9E25y3pw@mail.gmail.com>
-References: <1301658324-11530-1-git-send-email-vnatarajan@atheros.com>
-	<1301658705.3832.21.camel@jlt3.sipsolutions.net>
-	<AANLkTimRgE+Lors_LNFnWH2cVarswfoKYP582+Xwuf_X@mail.gmail.com>
-	<1302172435.3779.2.camel@jlt3.sipsolutions.net>
-	<BANLkTimNaaUyJ2jKG1gZ3WeWPA9E25y3pw@mail.gmail.com>
-Date: Mon, 11 Apr 2011 19:47:41 +0530
-Message-ID: <BANLkTi=mDveMRkvzAZHh-Mse=vBMcDDaGg@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] mac80211: Check for queued frames before entering
- power save.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <916242.83545.qm@web161604.mail.bf1.yahoo.com>
+References: <916242.83545.qm@web161604.mail.bf1.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 25 Apr 2011 11:49:13 -0700
+Message-ID: <BANLkTi=pBwn2EOb+eab_3-8sEPWFh77Zsw@mail.gmail.com> (sfid-20110425_204936_654337_6985B327)
+Subject: Re: [PATCH 2/2] compat-wireless: add rtl8192c/u to driver-select
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 7, 2011 at 5:17 PM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
-> On Thu, Apr 7, 2011 at 4:03 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> I'll agree that entering powersave is pointless if that means you won't
->> be able to transmit all frames. It seems to me that maybe instead we
->> should give flush() a timeout, and if it can't complete in that time, we
->> can postpone the powersave then?
+On Mon, Apr 25, 2011 at 6:30 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> Add rtl8192c & rtl8192cu to rtlwifi/driver-selct
 >
-> This seems better as it addresses both the issues I listed above. The
-> flush() timeout should not be high enough for the application to
-> timeout and also flush() should not drop any frame. Maybe it can
-> return a status if the pending frames are not completed in that
-> timeout so that PS can be deferred. I will check this out.
+> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 
-I tried the following as explained above:
+Content-Transfer-Encoding: quoted-printable
 
-@@ -765,11 +766,15 @@ void ieee80211_dynamic_ps_enable_work(struct
-work_struct *work)
-                 * Flush all the frames queued in the driver before
-                 * going to power save
-                 */
--               drv_flush(local, false);
--               ieee80211_send_nullfunc(local, sdata, 1);
-+               if (drv_flush(local, false))
-   //FLUSH 1
-+                       mod_timer(&local->dynamic_ps_timer, jiffies +
-+                          msecs_to_jiffies(conf->dynamic_ps_timeout));
-+               else {
-+                       ieee80211_send_nullfunc(local, sdata, 1);
+Please fix your mailer.
 
--               /* Flush once again to get the tx status of nullfunc frame */
--               drv_flush(local, false);
-+                       /* Flush to get the tx status of nullfunc frame */
-+                       drv_flush(local, false);                       //FLUSH 2
-+               }
-        }
-
-        if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
-
-When there are pending frames in FLUSH 1, ps_timer is started which
-will execute in 100ms. If FLUSH 2 also takes 200ms(flush timeout in
-ath9k) to complete, dynamic ps timer will be triggered at once and the
-netif queues continue to be stopped. Hence flush timeout should not be
-more than the dynamic ps timeout for this case. So, postponing PS
-based on flush is not working. Can we have the earlier implementation
-of new callback to check for pending frames before stopping the queues
-for PS?
-
-Vivek.
+  Luis
+>
+> --- a/scripts/driver-select
+> +++ b/scripts/driver-select
+> @@ -59,7 +59,7 @@ function usage {
+>      echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ${NORMAL}>"
+>      echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
+>      echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+> -    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
+> +    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192c rtl8192ce rtl8192cu ${NORMAL}>"
+>      echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
+>
+>      echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
+> @@ -327,7 +327,8 @@ case $1 in
+>          disable_var_02
+>          ;;
+>      rtlwifi)
+> -        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI
+> +        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI \
+> +                    CONFIG_RTL8192C CONFIG_RTL8192CU
+>          disable_staging
+>          disable_bt_usb_ethernet_var
+>          ;;
+>
+>
