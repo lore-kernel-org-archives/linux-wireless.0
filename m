@@ -1,75 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:59670 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab1DFVB4 convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:54911 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758396Ab1DYK55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 17:01:56 -0400
+	Mon, 25 Apr 2011 06:57:57 -0400
+Received: by pvg12 with SMTP id 12so1145573pvg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 03:57:57 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1302123428.20093.6.camel@maggie>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	<op.vtisojsk3ri7v4@arend-laptop>
-	<BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	<op.vti9ote53ri7v4@arend-laptop>
-	<BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	<BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	<1302123428.20093.6.camel@maggie>
-Date: Wed, 6 Apr 2011 23:01:55 +0200
-Message-ID: <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19893.21584.569149.22313@gargle.gargle.HOWL> (sfid-20110425_125801_223358_DBAB3314)
+Date: Mon, 25 Apr 2011 16:30:32 +0530
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] ath9k: Fix warnings due to -Wunused-but-set-variable
+In-Reply-To: <1303727180-22212-3-git-send-email-rmanoharan@atheros.com>
+References: <1303727180-22212-1-git-send-email-rmanoharan@atheros.com>
+	<1303727180-22212-3-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 kwietnia 2011 22:57 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Wed, 2011-04-06 at 22:42 +0200, Rafał Miłecki wrote:
->> 2011/4/6 Rafał Miłecki <zajec5@gmail.com>:
->> > If we want to have two drivers working on two (different) cores
->> > simultaneously, we will have to add trivial mutex to group core
->> > switching with core operation (read/write).
->>
->> With a little of work we could avoid switching and mutexes on no-host
->> boards. MMIO is not limited to one core at once in such a case.
->
-> I don't think that this is a problem at all.
-> All that magic does happen inside of the bus I/O handlers.
-> Just like SSB does it.
-> From a driver point of view, the I/O functions just need to
-> be atomic.
->
-> For SSB it's not always 100% atomic, but we're always safe
-> due to some assumptions being made. But this is an SSB implementation
-> detail that is different from AXI. So don't look too closely
-> at the SSB implementation of the I/O functions. You certainly want
-> to implement them slightly differently in AXI. SSB currently doesn't
-> make use of the additional sliding windows, because they are not
-> available in the majority of SSB devices.
->
-> The AXI bus subsystem will manage the sliding windows and the driver
-> doesn't know about the details.
+Rajkumar Manoharan wrote:
+> These warnings are exposed by gcc 4.6.
+> drivers/net/wireless/ath/ath9k/recv.c: In function 'ath_ant_comb_scan':
+> drivers/net/wireless/ath/ath9k/recv.c:1342:21: warning: variable
+> 'curr_bias' set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/ath/ath9k/rc.c: In function 'ath_rc_update_ht':
+> drivers/net/wireless/ath/ath9k/rc.c:1020:7: warning: variable
+> 'state_change' set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/ath/ath9k/ani.c: In function 'ath9k_hw_ani_init':
+> drivers/net/wireless/ath/ath9k/ani.c:903:37: warning: variable
+> 'entry_cck' set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/ath/ath9k/ani.c:902:38: warning: variable
+> 'entry_ofdm' set but not used [-Wunused-but-set-variable]
+> 
 
-Sure, I've meant mutex inside bcmai (or whatever name), not on the driver side!
+http://marc.info/?l=linux-wireless&m=130327729324100&w=2
 
-In BCMAI:
-bcmai_read() {
-mutex_get();
-switch_core();
-ioread();
-mutex_release();
-}
-
--- 
-Rafał
+Sujith
