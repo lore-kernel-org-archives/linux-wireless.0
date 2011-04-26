@@ -1,38 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64460 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab1DKRtw (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:55396 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312Ab1DZFWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 13:49:52 -0400
-Message-ID: <4DA33F3A.6090707@gmail.com>
-Date: Mon, 11 Apr 2011 19:49:46 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Tue, 26 Apr 2011 01:22:13 -0400
+Received: by pzk9 with SMTP id 9so66498pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 22:22:13 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: dwmw2@infradead.org, linux-kernel@vger.kernel.org,
-	gwingerde@gmail.com, ben@decadent.org.uk,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Shiang Tu <shiang_tu@ralinktech.com>
-Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
-References: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1302532043-22934-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19894.22299.697156.637717@gargle.gargle.HOWL> (sfid-20110426_072217_032129_9585B1DE)
+Date: Tue, 26 Apr 2011 10:54:43 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Add new API for rate selection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2011 04:27 PM, Larry Finger wrote:
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-> From: Shiang Tu<shiang_tu@ralinktech.com>
->
-> Update firmware for rt2800pci to Version 34 and firmware for rt2800usb to
-> Version 29.
->
-> Signed-off-by: Shiang Tu<shiang_tu@ralinktech.com>
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ---
->   WHENCE     |    8 ++++----
->   rt2860.bin |  Bin 8192 ->  8192 bytes
->   rt2870.bin |  Bin 4096 ->  8192 bytes
->   3 files changed, 4 insertions(+), 4 deletions(-)
+This patch adds a new API for setting a TX rate mask in
+drivers that have rate control in either the firmware or hardware.
+This can be used for various purposes, for example, masking out the
+11b rates in P2P operation.
 
-links to rt3070.bin rt3071.bin rt3090.bin ???
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ include/net/mac80211.h      |    6 ++++++
+ net/mac80211/cfg.c          |    8 +-------
+ net/mac80211/driver-ops.h   |   18 ++++++++++++++++++
+ net/mac80211/driver-trace.h |   27 +++++++++++++++++++++++++++
+ 4 files changed, 52 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d23dd6c..4c97fc8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1822,6 +1822,10 @@ enum ieee80211_ampdu_mlme_action {
+  *
+  * @tx_frames_pending: Check if there is any pending frame in the hardware
+  *	queues before entering power save.
++ *
++ * @set_bitrate_mask: Set a mask of rates to be used for rate control selection
++ *	when transmitting a frame. Currently only legacy rates are handled.
++ *	The callback can sleep.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1910,6 +1914,8 @@ struct ieee80211_ops {
+ 	void (*get_ringparam)(struct ieee80211_hw *hw,
+ 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+ 	bool (*tx_frames_pending)(struct ieee80211_hw *hw);
++	int (*set_bitrate_mask)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++				const struct cfg80211_bitrate_mask *mask);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a9ddaf6..fdcc789 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1635,14 +1635,8 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	int i;
+ 
+-	/*
+-	 * This _could_ be supported by providing a hook for
+-	 * drivers for this function, but at this point it
+-	 * doesn't seem worth bothering.
+-	 */
+ 	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+-		return -EOPNOTSUPP;
+-
++		return drv_set_bitrate_mask(local, sdata, mask);
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+ 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 00a0685..4ed3013 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -565,4 +565,22 @@ static inline bool drv_tx_frames_pending(struct ieee80211_local *local)
+ 
+ 	return ret;
+ }
++
++static inline int drv_set_bitrate_mask(struct ieee80211_local *local,
++				       struct ieee80211_sub_if_data *sdata,
++				       const struct cfg80211_bitrate_mask *mask)
++{
++	int ret = -ENOTSUPP;
++
++	might_sleep();
++
++	trace_drv_set_bitrate_mask(local, sdata, mask);
++	if (local->ops->set_bitrate_mask)
++		ret = local->ops->set_bitrate_mask(&local->hw,
++						   &sdata->vif, mask);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index c8c934d..191e834 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -989,6 +989,33 @@ DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
+ 	TP_ARGS(local)
+ );
+ 
++TRACE_EVENT(drv_set_bitrate_mask,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 const struct cfg80211_bitrate_mask *mask),
++
++	TP_ARGS(local, sdata, mask),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u32, legacy_2g)
++		__field(u32, legacy_5g)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->legacy_2g = mask->control[IEEE80211_BAND_2GHZ].legacy;
++		__entry->legacy_5g = mask->control[IEEE80211_BAND_5GHZ].legacy;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT " 2G Mask:0x%x 5G Mask:0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->legacy_2g, __entry->legacy_5g
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+-- 
+1.7.4.4
+
