@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37676 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756890Ab1DLKof (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 06:44:35 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 03:44:10 -0700
-Date: Tue, 12 Apr 2011 16:14:39 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ath9k_hw: Fix AR9382 beacon distribution in IBSS
-Message-ID: <20110412104438.GA7436@vmraj-lnx.users.atheros.com>
-References: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
- <1302533551-27462-4-git-send-email-rmanoharan@atheros.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39981 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760Ab1DZFCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 01:02:52 -0400
+Received: by iyb14 with SMTP id 14so224919iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Apr 2011 22:02:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1302533551-27462-4-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1303125749-31967-2-git-send-email-arik@wizery.com>
+References: <1303125749-31967-1-git-send-email-arik@wizery.com> <1303125749-31967-2-git-send-email-arik@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 26 Apr 2011 08:02:37 +0300
+Message-ID: <BANLkTi=pqZaa=Bz65173YP=1anzxL6upow@mail.gmail.com> (sfid-20110426_070302_330051_9A1A4370)
+Subject: Re: [PATCH 2/2] wl12xx: support FW TX inactivity triggers
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 11, 2011 at 08:22:31PM +0530, Rajkumar Manoharan wrote:
-> Update AR9003 mac_core table to fix imbalance
-> beacon distribution of AR9382.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+On Mon, Apr 18, 2011 at 14:22, Arik Nemtsov <arik@wizery.com> wrote:
+> In AP mode register for the MAX_TX_RETRY and INACTIVE_STA events.
+> Both are reported to the upper layers as a TX failure in the offending
+> stations.
+>
+> In STA mode we register only for the MAX_TX_RETRY event. A TX failure is
+> interpreted as a loss of connection.
+>
+> Support for IEEE80211_HW_REPORTS_TX_ACK_STATUS has been removed to avoid
+> the inherent race condition of a mac80211 TX failure counter in addition
+> to the FW counter.
+>
+> This patch depends on "mac80211: allow low level drivers to report packet
+> loss"
+>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
 > ---
->  .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> index f915a3d..46ecb32 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> @@ -1508,9 +1508,9 @@ static const u32 ar9300_2p2_mac_core[][2] = {
->  	{0x000081f8, 0x00000000},
->  	{0x000081fc, 0x00000000},
->  	{0x00008240, 0x00100000},
-> -	{0x00008244, 0x0010f424},
-> +	{0x00008244, 0x0010f400},
->  	{0x00008248, 0x00000800},
-> -	{0x0000824c, 0x0001e848},
-> +	{0x0000824c, 0x0001e800},
->  	{0x00008250, 0x00000000},
->  	{0x00008254, 0x00000000},
->  	{0x00008258, 0x00000000},
-John,
 
-Please drop this patch, since we found IOT issues with this patch.
+It seems there's a bug in this patch. I'll send a v2 shortly. Please
+hold off on the review for now.
 
---
-Rajkumar
+Thanks,
+Arik
