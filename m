@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:46542 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755913Ab1DANsE (ORCPT
+Received: from nougat.ucs.ed.ac.uk ([129.215.13.205]:46237 "EHLO
+	nougat.ucs.ed.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779Ab1DZMw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 09:48:04 -0400
-Received: by bwz15 with SMTP id 15so2534654bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 06:48:02 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Fix duplicate frames on cooked monitor
-Date: Fri,  1 Apr 2011 15:46:05 +0200
-Message-Id: <1301665565-4616-1-git-send-email-helmut.schaa@googlemail.com>
+	Tue, 26 Apr 2011 08:52:57 -0400
+Message-ID: <20110426131026.x5nnp6t24g0g48ck@www.sms.ed.ac.uk> (sfid-20110426_145300_816876_BB12BA66)
+Date: Tue, 26 Apr 2011 13:10:26 +0100
+From: Lito Kriara <L.Kriara@sms.ed.ac.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi <mshajakhan@atheros.com>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
+References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
+	<1303652185.3603.0.camel@jlt3.sipsolutions.net>
+	<4DB4318F.6070801@atheros.com>
+	<1303657150.3603.1.camel@jlt3.sipsolutions.net>
+	<4DB4415F.2070707@atheros.com>
+	<1303659120.3603.3.camel@jlt3.sipsolutions.net>
+	<4DB4F8D5.1060108@atheros.com>
+	<20110426125801.q89ma5n6cgkwog80@www.sms.ed.ac.uk>
+	<4DB6B48D.6080508@atheros.com>
+	<1303819622.4784.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1303819622.4784.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleaning the ieee80211_rx_data.flags field here is wrong, instead the
-flags should be valid accross processing the frame on different
-interfaces. Fix this by removing the incorrect flags=0 assignment.
+Ok! Thank you all very much for your help!
+I will try that very soon.
+Lito :)
 
-Introduced in commit 554891e63a29af35cc6bb403ef34e319518114d0
-(mac80211: move packet flags into packet).
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d47d33d..32cc8ee 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2545,7 +2545,6 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
- 		 * same TID from the same station
- 		 */
- 		rx->skb = skb;
--		rx->flags = 0;
- 
- 		CALL_RXH(ieee80211_rx_h_decrypt)
- 		CALL_RXH(ieee80211_rx_h_check_more_data)
-@@ -2616,6 +2615,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 		.sdata = sta->sdata,
- 		.local = sta->local,
- 		.queue = tid,
-+		.flags = 0,
- 	};
- 	struct tid_ampdu_rx *tid_agg_rx;
- 
+Quoting Johannes Berg <johannes@sipsolutions.net> on Tue, 26 Apr 2011  
+14:07:02 +0200:
+
+> On Tue, 2011-04-26 at 17:33 +0530, Mohammed Shafi wrote:
+>> On Tuesday 26 April 2011 05:28 PM, Lito Kriara wrote:
+>> > Hello,
+>> > I was away the last couple of days and just saw these e-mails. It
+>> > seems really interesting and helpful, but what if we need to know at
+>> > runtime the number of stations connected to the AP?
+>> > Is the first patch sent good to use? Should I do some modification to it?
+>> >
+>> Yes this will be fine.
+>
+> Or you can use what I wrote without patching:
+>
+>> >>> iw wlan0 station dump | grep '^Station ' | wc -l
+>
+> FWIW, I wouldn't mind adding the num_sta to debugfs, but as we discussed
+> in this thread it's a different number.
+>
+> johannes
+>
+>
+>
+
+
+
 -- 
-1.7.3.4
+The University of Edinburgh is a charitable body, registered in
+Scotland, with registration number SC005336.
+
 
