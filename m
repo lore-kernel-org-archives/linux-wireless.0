@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36469 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750698Ab1DOEAQ (ORCPT
+Received: from treacle.ucs.ed.ac.uk ([129.215.16.102]:44238 "EHLO
+	treacle.ucs.ed.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752358Ab1DZMfG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 00:00:16 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	622753@bugs.debian.org, Gunnar Stahl <gunnar.stahl@gunnarstahl.org>
-In-Reply-To: <4DA6EEF8.9090701@t-online.de>
-References: <20110414123925.31837.14741.reportbug@noomadix>
-	 <1302785635.5282.690.camel@localhost>  <4DA6EEF8.9090701@t-online.de>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-M2IHsvKqz37A5zPQa5ag"
-Date: Fri, 15 Apr 2011 05:00:12 +0100
-Message-ID: <1302840012.5282.745.camel@localhost>
-Mime-Version: 1.0
-Subject: Re: ath9k: Connection over wlan slows down and dies
+	Tue, 26 Apr 2011 08:35:06 -0400
+Message-ID: <20110426125801.q89ma5n6cgkwog80@www.sms.ed.ac.uk> (sfid-20110426_143510_754584_C1FC83BE)
+Date: Tue, 26 Apr 2011 12:58:01 +0100
+From: Lito Kriara <L.Kriara@sms.ed.ac.uk>
+To: Mohammed Shafi <mshajakhan@Atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
+References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
+	<1303652185.3603.0.camel@jlt3.sipsolutions.net>
+	<4DB4318F.6070801@atheros.com>
+	<1303657150.3603.1.camel@jlt3.sipsolutions.net>
+	<4DB4415F.2070707@atheros.com>
+	<1303659120.3603.3.camel@jlt3.sipsolutions.net>
+	<4DB4F8D5.1060108@atheros.com>
+In-Reply-To: <4DB4F8D5.1060108@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
+I was away the last couple of days and just saw these e-mails. It  
+seems really interesting and helpful, but what if we need to know at  
+runtime the number of stations connected to the AP?
+Is the first patch sent good to use? Should I do some modification to it?
 
---=-M2IHsvKqz37A5zPQa5ag
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thank you all very much,
+Lito
 
-On Thu, 2011-04-14 at 14:56 +0200, Richard Sch=C3=BCtz wrote:
-> Am 14.04.2011 14:53, schrieb Ben Hutchings:
-> > I received this bug report on ath9k:
-> >
-> > On Thu, 2011-04-14 at 14:39 +0200, Gunnar Stahl wrote:
-> >> Package: linux-2.6
-> >> Version: 2.6.38-3
-> >> Severity: important
-> >>
-> >> Since linux-image-2.6.38-2-amd64 the wlan connections on this machine =
-is 1)
-> >> slow to connection and 2) slows down to a crawl and 3) dies after some=
- seconds
-> >> / mintes and becomes completely unusable.
-[...]
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D31452
 
-Thanks, I've set our bug tracker to follow that bug.
+Quoting Mohammed Shafi <mshajakhan@Atheros.com> on Mon, 25 Apr 2011  
+10:00:13 +0530:
 
-Ben.
+> On Sunday 24 April 2011 09:02 PM, Johannes Berg wrote:
+>> On Sun, 2011-04-24 at 20:57 +0530, Mohammed Shafi wrote:
+>>
+>>> On Sunday 24 April 2011 08:29 PM, Johannes Berg wrote:
+>>>
+>>>> iw wlan0 station dump | grep ... | wc -l
+>>>>
+>>> thanks, that  works! I need to divide by 11 :)
+>>>
+>> Heh, yes, but that might change and/or be HW dependent, hence grep. So
+>> if you do
+>>
+>> iw wlan0 station dump | grep '^Station ' | wc -l
+>>
+>> you won't need to divide and won't be HW dependent.
+>>
+> Oh ok, thanks!
+> regards,
+> shafi
+>
+>> johannes
+>>
+>>
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
 
---=-M2IHsvKqz37A5zPQa5ag
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+-- 
+The University of Edinburgh is a charitable body, registered in
+Scotland, with registration number SC005336.
 
-iQIVAwUATafCwOe/yOyVhhEJAQoqOw//XBGcPauTRC/3FaB7mfwfWiQ/Af/TVVcp
-fw08MqGThkXjfJagOJMupGcRXtyjirsiTmn91sN+29gwaoH2046Zp7IBqmOpgtnb
-l1476SVJMaZ3Ye1t4ApqDrLmvJko9/n8gUBQC4PH2ohpzunJQmJv2hnggPNrVCxN
-n1OMkKoskdysSDsvTmrXIFvyZnTa27y6DesmhjaqjZZDx3sV5t1jDpkngncGHh3x
-wDuHVRr8TFGMwjxUv2oBL8m5GJ/oj9XlLvRcYaBknMrtLnPyCK4LdCQJH4OedKxc
-/Rgg47ZR32hTEPGABh00ps4ugAL49UGMdJuFePPRwHjnOJUkNzI8NV7F67Eax33+
-YDiMIGQtY2xjNRhNtJXLWaRiQKQFzfxXkpxJk6lrdiS7wSzccuXNFSOA3QYCiL0r
-JDDF4fYeK4cQzwgXeEbIvpPCHQM4WgK7n/12wijKgV77HNbAhd2L7fp1gA7CqEtX
-y2izWR+2s1lX7yzZTI7TsI7bPCBesvQWWuzIPcD7aJsHJ7hETCbcMIreGfvCbmXh
-Oes/+Jh6w592mL+nvZN3XgurY174MMeUXM4tnoq44PZcquDbM7Jnb1AeVClqOO2Q
-649DUma8qCZjNRqo0elKeH+X7zbWXXL3oDMnCM+45BKXEyzWkSLY4iqRFU013+Zn
-BjrbKMSFEKQ=
-=17Ot
------END PGP SIGNATURE-----
 
---=-M2IHsvKqz37A5zPQa5ag--
