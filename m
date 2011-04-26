@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37921 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab1DLLoJ (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39116 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908Ab1DZKEh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 07:44:09 -0400
-Subject: Re: [PATCH v2] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Ospite <ospite@studenti.unina.it>
-Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <1302608488.3639.15.camel@jlt3.sipsolutions.net>
-References: <1302082178.3811.7.camel@jlt3.sipsolutions.net>
-	 <1302260395-11872-1-git-send-email-ospite@studenti.unina.it>
-	 <1302608488.3639.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 13:44:02 +0200
-Message-ID: <1302608642.3639.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 26 Apr 2011 06:04:37 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so496575wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 03:04:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 2/2] wl12xx: Revert "wl12xx: disable auto-arp"
+Date: Tue, 26 Apr 2011 13:04:48 +0300
+Message-Id: <1303812288-9388-2-git-send-email-eliad@wizery.com> (sfid-20110426_120451_564552_0D693153)
+In-Reply-To: <1303812288-9388-1-git-send-email-eliad@wizery.com>
+References: <1303812288-9388-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-12 at 13:41 +0200, Johannes Berg wrote:
+This reverts commit e5e2f24b3eec67a7a35d43654a997f98ca21aff2.
 
-> > + * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
-> > + * 	{ .dev_name = "rfkill-regulator.0", supply = "vrfkill" },
-> > + * };
-> 
-> It's a comment, but it should be .supply = (missing the .)
-> 
-> > +	if (pdata->name == NULL || pdata->type == 0) {
-> > +		dev_err(&pdev->dev, "invalid name or type in platform data\n");
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
-> 
-> Wasn't that supposed to use pdata->supply? Actually, there's no member
-> "supply" in the struct?
+The encryption consideration on auto-arp configuration seems
+to resolve the crashes that were occured when auto-arp was enabled,
+so we can re-enable it now.
 
-Oh wait, I think I just misunderstood how this works. But if the name is
-"vrfkill" how does that really work with multiple instances?
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 75397ed..c2ea8fc 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2762,7 +2762,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			}
+ 
+ 			ret = wl1271_acx_arp_ip_filter(wl,
+-				ACX_ARP_FILTER_ARP_FILTERING,
++				(ACX_ARP_FILTER_ARP_FILTERING |
++				 ACX_ARP_FILTER_AUTO_ARP),
+ 				addr);
+ 		} else {
+ 			wl->ip_addr = 0;
+-- 
+1.7.0.4
 
