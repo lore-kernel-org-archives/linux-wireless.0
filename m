@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:60505 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374Ab1DOK7n (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63964 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab1DZU1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 06:59:43 -0400
-Date: Fri, 15 Apr 2011 16:21:44 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
- IEEE80211_HW_CRYPTO_ENABLED
-Message-ID: <20110415105140.GD11576@hertz.marvell.com>
-References: <20110415045321.GA11504@hertz.marvell.com>
- <1302850527.3572.2.camel@jlt3.sipsolutions.net>
- <20110415084005.GC11576@hertz.marvell.com>
- <1302857554.3572.14.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+	Tue, 26 Apr 2011 16:27:30 -0400
+Received: by wwa36 with SMTP id 36so1147917wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 13:27:29 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: report MIC failure for truncated packets in AP mode
+Date: Tue, 26 Apr 2011 23:27:22 +0300
+Message-Id: <1303849642-9014-1-git-send-email-arik@wizery.com> (sfid-20110426_222733_585236_1FDE31FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 15, 2011 at 01:52:34AM -0700, Johannes Berg wrote:
-> On Fri, 2011-04-15 at 14:10 +0530, Yogesh Ashok Powar wrote:
-> 
-> > Define a flag say IEEE80211_CRYPTO_NO_TAILROOM_NEEDED per key. Drivers
-> > need to set this flag in set_key handler for the keys which requires no
-> > extra tailroom.
-> 
-> This isn't necessary. You already know from the existing flags, the only
-> relevant one is IEEE80211_KEY_FLAG_GENERATE_MMIC which must be unset.
-Ok. We will use this flag.
+MIC failure notifications for packets too short to contain a key index
+are currently ignored in AP-mode. Fix the check to only ignore packets
+with an existing non-zero key index.
 
-> 
-> > Then Skip the code which expands the skb iff
-> > IEEE80211_CRYPTO_NO_TAILROOM_NEEDED is set and the key is programmed
-> > into the hardware (checking KEY_FLAG_UPLOADED_TO_HARDWARE).
-> 
-> You don't know the key at this point, so you have to keep track of
-> whether this is true for all keys, which depends on whether or not
-> they're already programmed into the HW (since for SW crypto we need the
-> tailroom)
->From this it seems that we do not reserve tailroom iff
-IEEE80211_KEY_FLAG_GENERATE_MMIC flag is unset for all keys and all the keys
-are programmed into the hardware.
+The wl12xx chip always truncates packets with a failed MIC and requires
+this change to operate correctly in AP-mode.
 
-Also, say in mixed mode if TKIP and CCMP keys are configured and this
-flag is set for TKIP MMIC, we will end up reserving tailroom even for
-CCMP.  Is my understanding correct?
+No such check is made in STA mode. Therefore its relatively safe to assume
+there's no other HW that relies on the current code to avoid spurious
+MIC failures with correct yet truncated packets.
 
-Also, though I have not looked into this part of the code very closely,
-how about deriving key information at this place? Will that be feasible?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks
-Yogesh
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a864890..875fc3c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2391,7 +2391,7 @@ static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return;
+ 
+-	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
++	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx > 0) {
+ 		/*
+ 		 * APs with pairwise keys should never receive Michael MIC
+ 		 * errors for non-zero keyidx because these are reserved for
+-- 
+1.7.1
+
