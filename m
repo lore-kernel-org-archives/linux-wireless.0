@@ -1,148 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:45881 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932094Ab1DMTjz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 15:39:55 -0400
+Received: from mout9.freenet.de ([195.4.92.99]:45112 "EHLO mout9.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751060Ab1DZSe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 14:34:59 -0400
+Received: from [195.4.92.28] (helo=18.mx.freenet.de)
+	by mout9.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
+	id 1QEn69-0000Lv-BS
+	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:57 +0200
+Received: from p54a183c6.dip0.t-ipconnect.de ([84.161.131.198]:39982 helo=mail.maya.org)
+	by 18.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1QEn69-0004gn-5j
+	for linux-wireless@vger.kernel.org; Tue, 26 Apr 2011 20:34:57 +0200
+Message-ID: <4DB710BF.6040700@01019freenet.de> (sfid-20110426_203501_829761_B33C8E0A)
+Date: Tue, 26 Apr 2011 20:36:47 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <20110413163113.GA24015@kroah.com>
-References: <1302634375-2378-1-git-send-email-zajec5@gmail.com>
-	<20110413163113.GA24015@kroah.com>
-Date: Wed, 13 Apr 2011 21:39:54 +0200
-Message-ID: <BANLkTin-4HrJzNrLOxRy_-a98S3ZF4aSQw@mail.gmail.com>
-Subject: Re: [RFC][PATCH V4] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Mark Davis <marked86@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Searching for a good hardware for an AP with hostapd
+References: <4DB54A1D.9030501@01019freenet.de> <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
+In-Reply-To: <BANLkTinQ_JWB4HDbw-QuSQ+dMy25dY_4Bw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/13 Greg KH <greg@kroah.com>:
->> diff --git a/drivers/axi/axi_pci_bridge.c b/drivers/axi/axi_pci_bridge.c
->> new file mode 100644
->> index 0000000..17e882c
->> --- /dev/null
->> +++ b/drivers/axi/axi_pci_bridge.c
->> @@ -0,0 +1,33 @@
->> +/*
->> + * AXI PCI bridge module
->> + *
->> + * Licensed under the GNU/GPL. See COPYING for details.
->> + */
->> +
->> +#include "axi_private.h"
->> +
->> +#include <linux/axi/axi.h>
->> +#include <linux/pci.h>
->> +
->> +static DEFINE_PCI_DEVICE_TABLE(axi_pci_bridge_tbl) = {
->> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
->> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4353) },
->> +     { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
->> +     { 0, },
->> +};
->> +MODULE_DEVICE_TABLE(pci, axi_pci_bridge_tbl);
->> +
->> +static struct pci_driver axi_pci_bridge_driver = {
->> +     .name = "axi-pci-bridge",
->> +     .id_table = axi_pci_bridge_tbl,
->> +};
->> +
->> +int __init axi_pci_bridge_init(void)
->> +{
->> +     return axi_host_pci_register(&axi_pci_bridge_driver);
->> +}
->> +
->> +void __exit axi_pci_bridge_exit(void)
->> +{
->> +     axi_host_pci_unregister(&axi_pci_bridge_driver);
->> +}
->
-> You register a pci driver that does nothing?  That's not right, you need
-> to then base your axi bus off of that pci device, so it is hooked up
-> correctly in the /sys/devices/ tree.  Otherwise you are somewhere up in
-> the virtual location for your axi bus, right?
+Mark Davis wrote:
+> OxfordTec (http://www.oxfordtec.com/) stocks the SparkLAN WPEA-127N
+> full-size Mini PCIe card which sports an AR9380.
+> 
+> Unex also has an AR9390 full-size Mini PCIe card
+> (http://www.unex.com.tw/product/dnxa-h1).
+> 
+> -mark
 
-Please take a look at:
-driver->probe = axi_host_pci_probe;
-driver->remove = axi_host_pci_remove;
-return pci_register_driver(driver);
+Thanks for your advice - I will have a closer look to it.
+
+I found an interesting site, which lists a lot of wlan devices and there
+chipsets and vice verse: http://www.wikidevi.com/wiki/Main_Page
 
 
->> +bool axi_core_is_enabled(struct axi_device *core)
->> +{
->> +     if ((axi_aread32(core, AXI_IOCTL) & (AXI_IOCTL_CLK | AXI_IOCTL_FGC))
->> +         != AXI_IOCTL_CLK)
->> +             return false;
->> +     if (axi_aread32(core, AXI_RESET_CTL) & AXI_RESET_CTL_RESET)
->> +             return false;
->> +     return true;
->> +}
->> +EXPORT_SYMBOL(axi_core_is_enabled);
->
-> EXPORT_SYMBOL_GPL()?
->
-> What module uses this?  And why would it care?
->
->> +EXPORT_SYMBOL(axi_core_enable);
->
-> EXPORT_SYMBOL_GPL()?
->
-> Same goes for your other exports, just want you to be sure here.
-
-Hm, I'm not sure. Using EXPORT_SYMBOL_GPL will forbid closed source
-drivers from using our bus driver, right? I'm don't have preferences
-on this, if you prefer us to force GPL, I can.
-
-
->> +u32 xaxi_chipco_gpio_control(struct axi_drv_cc *cc, u32 mask, u32 value)
->> +{
->> +     return axi_cc_write32_masked(cc, AXI_CC_GPIOCTL, mask, value);
->> +}
->> +EXPORT_SYMBOL(xaxi_chipco_gpio_control);
->
-> "xaxi"?  Shouldn't that be consistant with the other exports and start
-> with "axi"?
-
-Left from old tests/rewrites/splitting. Thanks.
-
-
->> +static u8 axi_host_pci_read8(struct axi_device *core, u16 offset)
->> +{
->> +     if (unlikely(core->bus->mapped_core != core))
->
-> Are you sure about the use of unlikely in this, and other functions?
-> The compiler almost always does a better job than we do for these types
-> of calls, just let it do it's job.
->
->> +             axi_host_pci_switch_core(core);
->> +     return ioread8(core->bus->mmio + offset);
->
-> I think because of that unlikely, you just slowed down all pci devices,
-> right?  That's not very nice :)
-
-Hm, my logic suggests it is alright, but please consider this once
-more with me ;)
-
-For the most of the time mapped_core (active core) do not change. We
-perform few hundreds of operations on one core in a row. This way
-mapped_core points to passed core for most of the time. Condition
-(mapped_core != core) is unlikely to happen.
-
-Is there anything wrong in my logic?
-
--- 
-Rafał
+Andreas
