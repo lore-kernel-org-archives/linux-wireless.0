@@ -1,81 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58787 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141Ab1DEH25 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 03:28:57 -0400
-Subject: Re: [PATCH v7 03/10] mac80211: Support userspace mesh
- authentication
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com
-In-Reply-To: <1301966140-26080-4-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-	 <1301966140-26080-4-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Apr 2011 09:28:55 +0200
-Message-ID: <1301988535.3831.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51229 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755493Ab1DZTSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 15:18:08 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: make patches apply again
+Date: Tue, 26 Apr 2011 21:17:10 +0200
+Message-Id: <1303845431-972-1-git-send-email-hauke@hauke-m.de> (sfid-20110426_211812_301918_7F24556A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-04 at 18:15 -0700, Thomas Pedersen wrote:
-> Also, disallow joining a secure mesh if the wiphy does not support
-> authentication.
 
-> +	/* if the underlying driver supports mesh, mac80211 will (at least)
-> +	 * provide routing of mesh authentication frames to userspace */
-> +	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
-> +		local->hw.wiphy->flags |= WIPHY_FLAG_MESH_AUTH;
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/09-threaded-irq.patch |   35 +++++++++++++++++++++++------------
+ 1 files changed, 23 insertions(+), 12 deletions(-)
 
-I'm getting bored and I'm sure you're also getting annoyed by resending
-this all the time, and I guess it doesn't matter, but strictly speaking
-after this patch mac80211 doesn't even support this feature yet since
-the whole feature needs all the different bits from patches 4-10 too.
-Therefore you should really prepare the feature with a bunch of patches
-and then have a last patch that enables it, if it's split up, so that at
-any point in time the kernel can not only compile but also has a
-consistent feature advertising.
-
-> --- a/net/wireless/mesh.c
-> +++ b/net/wireless/mesh.c
-> @@ -72,6 +72,10 @@ int __cfg80211_join_mesh(struct
-> cfg80211_registered_device *rdev,
->         if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
->                 return -EOPNOTSUPP;
->  
-> +       if (!(rdev->wiphy.flags & WIPHY_FLAG_MESH_AUTH) &&
-> +             setup->is_secure)
-> +               return -EOPNOTSUPP;
-
-However this really should be a part of patch 2 or so since it's not
-related to mac80211 at all.
-
-How about you split this patch, and make the mac80211 bits part of what
-is patch 10, and the nl80211 bits part of what is patch 2, then you have
-only 9 patches, the feature gets enabled cleanly and there's no
-confusion about mac80211 vs. nl80211.
-
-The trivial mac80211 bits in patch 2 should probably be in patch 4,
-since they aren't required to compile the kernel with patch 2 by itself.
-
-Also the description for patch 8 should incorporate that it also
-includes nl80211 API changes, or possibly be split up into
-nl80211/mac80211 bits. I don't really mind combined nl80211/mac80211
-patches, but I think it should be clear when looking over them, like
-e.g.
-
-commit 026331c4d9b526561ea96f95fac4bfc52b69e316
-Author: Jouni Malinen <jouni.malinen@atheros.com>
-Date:   Mon Feb 15 12:53:10 2010 +0200
-
-    cfg80211/mac80211: allow registering for and sending action frames
-
-
-Anyway, I do think the code can be as it is, I just think the patch
-splitting is a bit unfortunate. As such, I'd be OK with it going in now
-anyway.
-
-johannes
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index 9822acb..0e25e21 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -63,28 +63,39 @@ thread in process context as well.
+  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
+ --- a/drivers/net/wireless/wl12xx/spi.c
+ +++ b/drivers/net/wireless/wl12xx/spi.c
+-@@ -408,9 +408,20 @@ static int __devinit wl1271_probe(struct
++@@ -405,10 +405,14 @@ static int __devinit wl1271_probe(struct
++ 	wl->tcxo_clock = pdata->board_tcxo_clock;
++ 	wl->platform_quirks = pdata->platform_quirks;
++ 
+++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+++	irqflags = IRQF_TRIGGER_RISING;
+++#else
++ 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
++ 		irqflags = IRQF_TRIGGER_RISING;
++ 	else
++ 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
+++#endif
++ 
++ 	wl->irq = spi->irq;
++ 	if (wl->irq < 0) {
++@@ -417,9 +421,16 @@ static int __devinit wl1271_probe(struct
+  		goto out_free;
+  	}
+  
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +	ret = compat_request_threaded_irq(&wl->irq_compat, wl->irq,
+ +					  wl1271_hardirq, wl1271_irq,
+-+					  IRQF_TRIGGER_RISING,
+++					  irqflags,
+ +					  DRIVER_NAME, wl);
+ +#else
+  	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
+-+				   IRQF_TRIGGER_RISING,
+-+#else
+- 				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
+-+#endif
++ 				   irqflags,
+  				   DRIVER_NAME, wl);
+ +#endif
+  	if (ret < 0) {
+  		wl1271_error("request_irq() failed: %d", ret);
+  		goto out_free;
+-@@ -431,7 +442,11 @@ static int __devinit wl1271_probe(struct
++@@ -440,7 +451,11 @@ static int __devinit wl1271_probe(struct
+  	return 0;
+  
+   out_irq:
+@@ -96,7 +107,7 @@ thread in process context as well.
+  
+   out_free:
+  	wl1271_free_hw(wl);
+-@@ -444,7 +459,12 @@ static int __devexit wl1271_remove(struc
++@@ -453,7 +468,12 @@ static int __devexit wl1271_remove(struc
+  	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
+  
+  	wl1271_unregister_hw(wl);
+@@ -111,10 +122,10 @@ thread in process context as well.
+  	return 0;
+ --- a/drivers/net/wireless/wl12xx/wl12xx.h
+ +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+-@@ -544,6 +544,10 @@ struct wl1271 {
++@@ -582,6 +582,10 @@ struct wl1271 {
+  
+- 	/* Quirks of specific hardware revisions */
+- 	unsigned int quirks;
++ 	/* Platform limitations */
++ 	unsigned int platform_quirks;
+ +
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +	struct compat_threaded_irq irq_compat;
+-- 
+1.7.1
 
