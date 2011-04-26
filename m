@@ -1,31 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152Ab1DXNgb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38239 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757782Ab1DZUAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2011 09:36:31 -0400
-Subject: Re: [PATCH] mac80211: Add num_stations connected in debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	L.Kriara@sms.ed.ac.uk
-In-Reply-To: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
-References: <1303646133-2809-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Apr 2011 15:36:25 +0200
-Message-ID: <1303652185.3603.0.camel@jlt3.sipsolutions.net> (sfid-20110424_153645_857465_48CFCCB8)
-Mime-Version: 1.0
+	Tue, 26 Apr 2011 16:00:49 -0400
+Date: Tue, 26 Apr 2011 15:45:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/5] ath9k_htc: Fix warnings due to
+ -Wunused-but-set-variable
+Message-ID: <20110426194556.GK2804@tuxdriver.com> (sfid-20110426_220100_176882_8D861787)
+References: <1303727180-22212-1-git-send-email-rmanoharan@atheros.com>
+ <1303727180-22212-4-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303727180-22212-4-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-04-24 at 17:25 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Mon, Apr 25, 2011 at 03:56:19PM +0530, Rajkumar Manoharan wrote:
+> These warnings are exposed by gcc 4.6.
+> drivers/net/wireless/ath/ath9k/htc_drv_txrx.c: In function
+> 'ath9k_htc_tx_process':
+> drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:449:35: warning: variable
+> 'sband' set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/ath/ath9k/htc_drv_beacon.c: In function
+> 'ath9k_htc_beacon_config_sta':
+> drivers/net/wireless/ath/ath9k/htc_drv_main.c: In function
+> 'ath9k_htc_stop':
+> drivers/net/wireless/ath/ath9k/htc_drv_main.c:967:6: warning: variable
+> 'ret' set but not used [-Wunused-but-set-variable]
+> drivers/net/wireless/ath/ath9k/htc_drv_main.c: In function
+> 'ath9k_htc_remove_interface':
+> drivers/net/wireless/ath/ath9k/htc_drv_gpio.c: In function
+> 'ath_btcoex_period_work':
+> drivers/net/wireless/ath/ath9k/htc_drv_gpio.c:67:6: warning: variable
+> 'ret' set but not used [-Wunused-but-set-variable
+>  ...
 > 
-> this will be useful when the device is operating in AP/Ad-Hoc/Mesh
-> mode
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 
-Fine with me, but this counts for all virtual interfaces.
+This doesn't seem to apply -- what tree are you using?
 
-johannes
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
