@@ -1,70 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51718 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754263Ab1DJTZf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2011 15:25:35 -0400
-Received: by wwa36 with SMTP id 36so5899331wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2011 12:25:34 -0700 (PDT)
-Message-ID: <4DA2042A.3010301@gmail.com>
-Date: Sun, 10 Apr 2011 21:25:30 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2523 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932919Ab1DZCef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 22:34:35 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
+Subject: [PATCH 1/5] staging: brcm80211: Remove siutils dependency of
+ dhdsdio_download_state
+Date: Mon, 25 Apr 2011 19:34:04 -0700
+Message-ID: <1303785248-27420-2-git-send-email-frankyl@broadcom.com> (sfid-20110426_043442_817090_F5F51152)
+In-Reply-To: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+References: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	ben@decadent.org.uk
-Subject: Re: Firmware files for Ralink RT28x0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Hutchings wrote:
+Use dhdsdio_chip_disablecore and dhd_sdio_chip_resetcore to replace
+siutils functions used in dhdsdio_download_state
 
-> Ralink provides multiple drivers per bus type for RT28xx and later
-> chips.  For PCI devices they split between RT2860 and RT309x; for USB
-> devices they split between RT2870 and RT307x (I think - the chip model
-> numbers don't seem to be stated consistently).
-> 
-> In addition, the USB drivers have two separate images packed together
-> and they can select different images based on the controller version:
-> 
-> #ifdef RTMP_MAC_USB
-> 		if ((Version != 0x2860) && (Version != 0x2872) && (Version != 0x3070)) 
-> 		{	// Use Firmware V2.
-> 			//printk("KH:Use New Version,part2\n");
-> 			pFirmwareImage = (PUCHAR)&FirmwareImage[FIRMWAREIMAGEV1_LENGTH];
-> 			FileLength = FIRMWAREIMAGEV2_LENGTH;
-> 		}
-> 		else
-> 		{
-> 			//printk("KH:Use New Version,part1\n");
-> 			pFirmwareImage = FirmwareImage;
-> 			FileLength = FIRMWAREIMAGEV1_LENGTH;
-> 		}
-> #endif // RTMP_MAC_USB //
-> 
-> The firmware blobs in RT2870 version 2009-08-20 and RT3070 version
-> 2009-05-25 are all marked as version 17 (or 0.17), but *they all have
-> different contents*.
-> 
-> I attempted to maintain the same version selection logic when converting
-> the staging drivers to use the firmware loader, since I assumed there
-> was a good reason for it.
-> 
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  114 ++++++++++++-------------
+ 1 files changed, 53 insertions(+), 61 deletions(-)
 
-As you can see in the ralink web[1] RT28XX/RT30XX USB devices (RT2870/RT2770/RT3572/RT3070)
-need _only_ the rt2870.bin fw-file.
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 14f4703..2827af2 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -482,7 +482,9 @@ static int dhdsdio_download_nvram(struct dhd_bus *bus);
+ #ifdef BCMEMBEDIMAGE
+ static int dhdsdio_download_code_array(struct dhd_bus *bus);
+ #endif
++static void dhdsdio_chip_disablecore(bcmsdh_info_t *sdh, u32 corebase);
+ static int dhdsdio_chip_attach(struct dhd_bus *bus, void *regs);
++static void dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase);
+ 
+ static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
+ {
+@@ -2615,42 +2617,18 @@ static int dhdsdio_write_vars(dhd_bus_t *bus)
+ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ {
+ 	uint retries;
++	u32 regdata;
+ 	int bcmerror = 0;
+ 
+ 	/* To enter download state, disable ARM and reset SOCRAM.
+ 	 * To exit download state, simply reset ARM (default is RAM boot).
+ 	 */
+ 	if (enter) {
+-
+ 		bus->alp_only = true;
+ 
+-		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
+-		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
+-			bcmerror = BCME_ERROR;
+-			goto fail;
+-		}
++		dhdsdio_chip_disablecore(bus->sdh, bus->ci->armcorebase);
+ 
+-		si_core_disable(bus->sih, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			bcmerror = BCME_SDIO_ERROR;
+-			goto fail;
+-		}
+-
+-		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
+-				   __func__));
+-			bcmerror = BCME_ERROR;
+-			goto fail;
+-		}
+-
+-		si_core_reset(bus->sih, 0, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			DHD_ERROR(("%s: Failure trying reset SOCRAM core?\n",
+-				   __func__));
+-			bcmerror = BCME_SDIO_ERROR;
+-			goto fail;
+-		}
++		dhdsdio_chip_resetcore(bus->sdh, bus->ci->ramcorebase);
+ 
+ 		/* Clear the top bit of memory */
+ 		if (bus->ramsize) {
+@@ -2659,14 +2637,11 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ 					 (u8 *)&zeros, 4);
+ 		}
+ 	} else {
+-		if (!(si_setcore(bus->sih, SOCRAM_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find SOCRAM core!\n",
+-				   __func__));
+-			bcmerror = BCME_ERROR;
+-			goto fail;
+-		}
+-
+-		if (!si_iscoreup(bus->sih)) {
++		regdata = bcmsdh_reg_read(bus->sdh,
++			CORE_SB(bus->ci->ramcorebase, sbtmstatelow), 4);
++		regdata &= (SBTML_RESET | SBTML_REJ_MASK |
++			(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++		if ((SICF_CLOCK_EN << SBTML_SICF_SHIFT) != regdata) {
+ 			DHD_ERROR(("%s: SOCRAM core is down after reset?\n",
+ 				   __func__));
+ 			bcmerror = BCME_ERROR;
+@@ -2679,41 +2654,16 @@ static int dhdsdio_download_state(dhd_bus_t *bus, bool enter)
+ 			bcmerror = 0;
+ 		}
+ 
+-		if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0) &&
+-		    !si_setcore(bus->sih, SDIOD_CORE_ID, 0)) {
+-			DHD_ERROR(("%s: Can't change back to SDIO core?\n",
+-				   __func__));
+-			bcmerror = BCME_ERROR;
+-			goto fail;
+-		}
+ 		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries);
+ 
+-		if (!(si_setcore(bus->sih, ARM7S_CORE_ID, 0)) &&
+-		    !(si_setcore(bus->sih, ARMCM3_CORE_ID, 0))) {
+-			DHD_ERROR(("%s: Failed to find ARM core!\n", __func__));
+-			bcmerror = BCME_ERROR;
+-			goto fail;
+-		}
+-
+-		si_core_reset(bus->sih, 0, 0);
+-		if (bcmsdh_regfail(bus->sdh)) {
+-			DHD_ERROR(("%s: Failure trying to reset ARM core?\n",
+-				   __func__));
+-			bcmerror = BCME_SDIO_ERROR;
+-			goto fail;
+-		}
++		dhdsdio_chip_resetcore(bus->sdh, bus->ci->armcorebase);
+ 
+ 		/* Allow HT Clock now that the ARM is running. */
+ 		bus->alp_only = false;
+ 
+ 		bus->dhd->busstate = DHD_BUS_LOAD;
+ 	}
+-
+ fail:
+-	/* Always return to SDIOD core */
+-	if (!si_setcore(bus->sih, PCMCIA_CORE_ID, 0))
+-		si_setcore(bus->sih, SDIOD_CORE_ID, 0);
+-
+ 	return bcmerror;
+ }
+ 
+@@ -6324,3 +6274,45 @@ fail:
+ 	kfree(ci);
+ 	return err;
+ }
++
++static void
++dhdsdio_chip_resetcore(bcmsdh_info_t *sdh, u32 corebase)
++{
++	u32 regdata;
++
++	/*
++	 * Must do the disable sequence first to work for
++	 * arbitrary current core state.
++	 */
++	dhdsdio_chip_disablecore(sdh, corebase);
++
++	/*
++	 * Now do the initialization sequence.
++	 * set reset while enabling the clock and
++	 * forcing them on throughout the core
++	 */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		((SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
++		SBTML_RESET);
++	udelay(1);
++
++	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbtmstatehigh), 4);
++	if (regdata & SBTMH_SERR)
++		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatehigh), 4, 0);
++
++	regdata = bcmsdh_reg_read(sdh, CORE_SB(corebase, sbimstate), 4);
++	if (regdata & (SBIM_IBE | SBIM_TO))
++		bcmsdh_reg_write(sdh, CORE_SB(corebase, sbimstate), 4,
++			regdata & ~(SBIM_IBE | SBIM_TO));
++
++	/* clear reset and allow it to propagate throughout the core */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		(SICF_FGC << SBTML_SICF_SHIFT) |
++		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++	udelay(1);
++
++	/* leave clock enabled */
++	bcmsdh_reg_write(sdh, CORE_SB(corebase, sbtmstatelow), 4,
++		(SICF_CLOCK_EN << SBTML_SICF_SHIFT));
++	udelay(1);
++}
+-- 
+1.7.1
 
-And RT28XX/RT30XX PCI/mPCI/PCIe/CardBus devices
-(RT2760/RT2790/RT2860/RT2890/RT3060/RT3062/RT3562/RT2860/RT2760/RT2890/RT2790/RT3090)
-need _only_ the rt2860.bin fw-file.
 
-> linux-firmware is supposed to have all firmware files referenced by any
-> version of Linux
-
-That's a good joke!
-linux-firmware is *unmaintained* , a lot of firmwares are missing.
-Even the intel ones(microcode.dat, ipw2{1,2}*), zd1211, etc...
-Others are very old, really it's a mess.
-Fedora puts _forty_ patches on top of linux-firmware.
-
-[1] http://www.ralinktech.com/support.php?s=2
