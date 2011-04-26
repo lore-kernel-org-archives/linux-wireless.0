@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34771 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755691Ab1DOLBu (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:36663 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758496Ab1DZWai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 07:01:50 -0400
-Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
- IEEE80211_HW_CRYPTO_ENABLED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <20110415105140.GD11576@hertz.marvell.com>
-References: <20110415045321.GA11504@hertz.marvell.com>
-	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
-	 <20110415084005.GC11576@hertz.marvell.com>
-	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
-	 <20110415105140.GD11576@hertz.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Apr 2011 13:01:44 +0200
-Message-ID: <1302865304.3572.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 26 Apr 2011 18:30:38 -0400
+Message-ID: <4DB74788.2000908@lwfinger.net> (sfid-20110427_003055_521054_01D6E522)
+Date: Tue, 26 Apr 2011 17:30:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+CC: Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com> <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-15 at 16:21 +0530, Yogesh Ashok Powar wrote:
+>
+> I am trying a different driver now: rt2870sta
+> I've read a few reports this may be the 'proper' one to use.
+> So far so good, no lag or anything and I did not have to set power off
+> either.
 
-> > > Then Skip the code which expands the skb iff
-> > > IEEE80211_CRYPTO_NO_TAILROOM_NEEDED is set and the key is programmed
-> > > into the hardware (checking KEY_FLAG_UPLOADED_TO_HARDWARE).
-> > 
-> > You don't know the key at this point, so you have to keep track of
-> > whether this is true for all keys, which depends on whether or not
-> > they're already programmed into the HW (since for SW crypto we need the
-> > tailroom)
-> From this it seems that we do not reserve tailroom iff
-> IEEE80211_KEY_FLAG_GENERATE_MMIC flag is unset for all keys and all the keys
-> are programmed into the hardware.
-> 
-> Also, say in mixed mode if TKIP and CCMP keys are configured and this
-> flag is set for TKIP MMIC, we will end up reserving tailroom even for
-> CCMP.  Is my understanding correct?
+Driver rtl2870sta is not the proper one to use. In fact, a patch to delete 
+rt2860sta and rt2870sta from the kernel was queued yesterday, and they will be 
+gone by the time 2.6.40 is released.
 
-Yes, correct.
+New firmware for rt2800usb was just accepted into the linux-firmware git tree. 
+Please obtain a copy and try it.
 
-> Also, though I have not looked into this part of the code very closely,
-> how about deriving key information at this place? Will that be feasible?
-
-No, we can't do it here. I suppose we could postpone it for per key
-stuff, but that's more complex and probably good for a separate patch.
-
-johannes
-
+Larry
