@@ -1,105 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:33573 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617Ab1DTF2n (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46431 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753912Ab1DZTgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 01:28:43 -0400
-Received: by pxi2 with SMTP id 2so318654pxi.10
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 22:28:42 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 26 Apr 2011 15:36:10 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so787546iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 12:36:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19886.28574.983271.871943@gargle.gargle.HOWL>
-Date: Wed, 20 Apr 2011 11:01:10 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 4/5] ath9k_htc: Use power save wrappers when accessing HW
+In-Reply-To: <20110426191247.GJ2804@tuxdriver.com>
+References: <1303125749-31967-1-git-send-email-arik@wizery.com>
+ <1303129610.3588.7.camel@jlt3.sipsolutions.net> <BANLkTikc9wrZ__8URZ3ASQ6F=rUHix2iGA@mail.gmail.com>
+ <1303216566.3603.6.camel@jlt3.sipsolutions.net> <BANLkTik81g3NOwHcQk2eqOcMjaubCLdk+w@mail.gmail.com>
+ <1303286933.3619.0.camel@jlt3.sipsolutions.net> <20110426191247.GJ2804@tuxdriver.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 26 Apr 2011 22:35:55 +0300
+Message-ID: <BANLkTi=4eoqJrjfWdoTV0cwVDq0ahsV2Tg@mail.gmail.com> (sfid-20110426_213614_458738_17669453)
+Subject: Re: [PATCH 1/2] mac80211: allow low level drivers to report packet loss
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Tue, Apr 26, 2011 at 22:12, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Apr 20, 2011 at 10:08:53AM +0200, Johannes Berg wrote:
+>> On Wed, 2011-04-20 at 00:54 +0300, Arik Nemtsov wrote:
+>>
+>> > > That's your choice, but I wouldn't do it. You'll have to support TX
+>> > > status when requested, otherwise AP operation won't work, so you need
+>> > > the code anyway.
+>> >
+>> > Can you elaborate why?
+>> >
+>> > I'm assuming you mean the removal of
+>> > IEEE80211_HW_REPORTS_TX_ACK_STATUS (in the second patch of this
+>> > series). Note that it was only added recently, and AP/STA modes seemed
+>> > to work fine without it.
+>> > From a look in the code it seems this flag helps with connection
+>> > monitoring in STA mode. The other use is determining the current PS
+>> > mode when IEEE80211_HW_PS_NULLFUNC_STACK is enabled. These two are
+>> > done by HW in wl12xx cards.
+>>
+>> Well, there's the flag saying "you can rely on it", but there's also the
+>> fact that AP mode relies on status for (some) frames anyway. So if you
+>> just want to remove the flag I guess that's OK, but if you want to
+>> remove all status processing .. that'll cause issues with AP mode.
+>
+> Do the wl12xx guys still want this?
+>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c |   24 +++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    2 ++
- 2 files changed, 23 insertions(+), 3 deletions(-)
+Yes definitely.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index eca7774..894e5ef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -33,9 +33,15 @@ static ssize_t read_file_tgt_int_stats(struct file *file, char __user *user_buf,
- 
- 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
- 
-+	ath9k_htc_ps_wakeup(priv);
-+
- 	WMI_CMD(WMI_INT_STATS_CMDID);
--	if (ret)
-+	if (ret) {
-+		ath9k_htc_ps_restore(priv);
- 		return -EINVAL;
-+	}
-+
-+	ath9k_htc_ps_restore(priv);
- 
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "RX",
-@@ -85,9 +91,15 @@ static ssize_t read_file_tgt_tx_stats(struct file *file, char __user *user_buf,
- 
- 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
- 
-+	ath9k_htc_ps_wakeup(priv);
-+
- 	WMI_CMD(WMI_TX_STATS_CMDID);
--	if (ret)
-+	if (ret) {
-+		ath9k_htc_ps_restore(priv);
- 		return -EINVAL;
-+	}
-+
-+	ath9k_htc_ps_restore(priv);
- 
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "Xretries",
-@@ -149,9 +161,15 @@ static ssize_t read_file_tgt_rx_stats(struct file *file, char __user *user_buf,
- 
- 	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
- 
-+	ath9k_htc_ps_wakeup(priv);
-+
- 	WMI_CMD(WMI_RX_STATS_CMDID);
--	if (ret)
-+	if (ret) {
-+		ath9k_htc_ps_restore(priv);
- 		return -EINVAL;
-+	}
-+
-+	ath9k_htc_ps_restore(priv);
- 
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%20s : %10u\n", "NoBuf",
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index fbc238a..c8577d5 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1582,6 +1582,7 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 	int ret = 0;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
-@@ -1607,6 +1608,7 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 		ath_err(ath9k_hw_common(priv->ah), "Unknown AMPDU action\n");
- 	}
- 
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
- 	return ret;
--- 
-1.7.4.4
+The above is a discussion about providing reliable TX status to
+certain packets. It's not really related.
+But Johannes has a point here and it was noted.
 
+Regards,
+Arik
