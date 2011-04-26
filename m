@@ -1,117 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57264 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752161Ab1DSN70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:26 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:00 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 08/22] ath9k_hw: Initialize tx and rx gain table from initvals.h for ar9340
-Date: Tue, 19 Apr 2011 19:29:06 +0530
-Message-ID: <1303221560-25139-9-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:40398 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751123Ab1DZTEu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 15:04:50 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D0935540154
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 15:10:00 -0400 (EDT)
+Subject: Compat-wireless release for 2011-04-26 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110426190448.B216C40EB7@repository3.orbit-lab.org> (sfid-20110426_210453_184705_E108DFEB)
+Date: Tue, 26 Apr 2011 15:04:48 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   42 ++++++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 6 deletions(-)
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   77081fd..431c59f  master     -> origin/master
+ * [new tag]         compat-wireless-2011-04-26 -> compat-wireless-2011-04-26
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   98d6ba7..d771b0f  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 90c32f0...03fbade akpm-end   -> origin/akpm-end  (forced update)
+   2f666bc..5dd12af  akpm-start -> origin/akpm-start
+   d645622..a34d06d  history    -> origin/history
+ + 104958b...f824816 master     -> origin/master  (forced update)
+   2f666bc..5dd12af  stable     -> origin/stable
+ * [new tag]         next-20110426 -> next-20110426
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 37af721..a55eddb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -220,7 +220,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485_modes_lowest_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485_modes_lowest_ob_db_tx_gain_1_1),
-@@ -232,7 +237,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 1:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_high_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_high_ob_db_tx_gain_1_1),
-@@ -244,7 +254,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 2:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_low_ob_db_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_low_ob_db_tx_gain_1_1),
-@@ -256,7 +271,12 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 3:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-+				       5);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9485Modes_high_power_tx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_1),
-@@ -275,7 +295,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9340Common_rx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
-+				       2);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9485Common_wo_xlna_rx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
-@@ -287,7 +312,12 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 				       2);
- 		break;
- 	case 1:
--		if (AR_SREV_9485_11(ah))
-+		if (AR_SREV_9340(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9340Common_wo_xlna_rx_gain_table_1p0,
-+				       ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
-+				       2);
-+		else if (AR_SREV_9485_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9485Common_wo_xlna_rx_gain_1_1,
- 				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_1),
--- 
-1.7.0.4
+compat-wireless code metrics
 
+    844120 - Total upstream lines of code being pulled
+      2331 - backport code changes
+      2027 - backport code additions
+       304 - backport code deletions
+      8011 - backport from compat module
+     10342 - total backport code
+    1.2252 - % of code consists of backport work
