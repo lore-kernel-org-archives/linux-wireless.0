@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:58661 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757687Ab1DHTqU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 15:46:20 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:3391 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756272Ab1DZCeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2011 22:34:22 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	brudley@broadcom.com, henryp@broadcom.com, hharte@broadcom.com
+Subject: [PATCH 0/5 v2] staging: brcm80211: remove si sb utils
+ dependency from brcmfmac
+Date: Mon, 25 Apr 2011 19:34:03 -0700
+Message-ID: <1303785248-27420-1-git-send-email-frankyl@broadcom.com> (sfid-20110426_043438_545819_F56B7CA1)
 MIME-Version: 1.0
-In-Reply-To: <1302290881.1664.7.camel@Joe-Laptop>
-References: <1302291900-1902-1-git-send-email-zajec5@gmail.com>
-	<1302290881.1664.7.camel@Joe-Laptop>
-Date: Fri, 8 Apr 2011 21:46:19 +0200
-Message-ID: <BANLkTi=QwBOxfxy13PxeX+LRuccV_p06zA@mail.gmail.com>
-Subject: Re: [RFC][WAS:bcmai][PATCH V2] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Joe Perches <joe@perches.com>:
-> On Fri, 2011-04-08 at 21:45 +0200, Rafał Miłecki wrote:
->> diff --git a/include/linux/axi/axi.h b/include/linux/axi/axi.h
-> []
->> +#define axi_info     pr_info
->> +#ifdef CONFIG_AXI_DEBUG
->> +#define axi_debug    pr_debug
->> +#else
->> +#define axi_debug    do { } while (0)
->> +#endif
->> +#define axi_err              pr_err
->
-> I think redefining standard functionality like
-> this doesn't gain anything and loses some basic
-> grep capability.
+Hi Greg,
 
-But on the other hand using:
-pr_info, pr_err, BUT axi_debug
-can easily lead to mistakes.
+I fix the apply error issue of the rest 5 patches. The original path series
+intends to remove si and sb utility from broadcom fullmac driver.
 
-Or is this possible to re-define pr_debug locally?
+Thanks
+Franky
 
--- 
-Rafał
+Franky Lin (5):
+  staging: brcm80211: Remove siutils dependency of
+    dhdsdio_download_state
+  staging: brcm80211: Move sdiod strength init to dhd_sdio.c
+  staging: brcm80211: Add dhdsdio_chip_detach in dhd_sdio.c
+  staging: brcm80211: Remove siutils dependence from dhd_sdio.c
+  staging: brcm80211: Remove si sb utils from brcmfmac
+
+ drivers/staging/brcm80211/brcmfmac/Makefile   |    6 +-
+ drivers/staging/brcm80211/brcmfmac/bcmchip.h  |    1 +
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c   |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |  325 +++++++++++-------
+ drivers/staging/brcm80211/brcmfmac/hndpmu.c   |    1 -
+ drivers/staging/brcm80211/brcmfmac/sbutils.c  |    1 -
+ drivers/staging/brcm80211/brcmfmac/siutils.c  |    1 -
+ drivers/staging/brcm80211/util/bcmutils.c     |    1 -
+ drivers/staging/brcm80211/util/sbutils.c      |  476 -------------------------
+ 9 files changed, 206 insertions(+), 607 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/hndpmu.c
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/sbutils.c
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/siutils.c
+ delete mode 100644 drivers/staging/brcm80211/util/sbutils.c
+
+
