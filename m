@@ -1,140 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59400 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309Ab1D1MJX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 08:09:23 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kyle McMartin <kmcmartin@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.38 4/4] iwlwifi: fix tx_power initialization
-Date: Thu, 28 Apr 2011 14:08:15 +0200
-Message-Id: <1303992495-7337-5-git-send-email-sgruszka@redhat.com> (sfid-20110428_140928_533360_C9E99DF6)
-In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
-References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50021 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932957Ab1DZV5b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 17:57:31 -0400
+Received: by iwn34 with SMTP id 34so886193iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2011 14:57:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1303854584-12297-1-git-send-email-hauke@hauke-m.de>
+References: <1303854584-12297-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 Apr 2011 14:57:11 -0700
+Message-ID: <BANLkTikpNrQkNSt46MMSK3a9BAaFfw-wRA@mail.gmail.com> (sfid-20110426_235734_938543_001C60F1)
+Subject: Re: [PATCH] compat-wireless: fix compile problem with IRQF_ONESHOT
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 332704a51498a7e29aa92c19dc03f11f80b71bfe upstream.
+On Tue, Apr 26, 2011 at 2:49 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> IRQF_ONESHOT was introduced in kernel 2.6.32 and wl12xx uses it.
+> This patch reverts back to the old behavior when older kernels are used.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-priv->tx_power_next is not initialized to max supported power,
-but instead default value is used, what cause errors like
+Applied, thanks!
 
-[   58.597834] iwl3945 0000:03:00.0: Requested user TXPOWER 15 above upper limit 14.
-[   58.597839] iwl3945 0000:03:00.0: Error setting Tx power (-22).
-
-if maximum tx power read from the eeprom is smaller than default.
-In consequence card is unable to initialize properly. Fix the problem
-and cleanup tx power initialization.
-
-Reported-and-tested-by: Robin Dong <hao.bigrat@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    2 --
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 ------
- drivers/net/wireless/iwlwifi/iwl-core.c     |    9 +++++++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    7 -------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ----
- 5 files changed, 7 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index 65b5834..c2dd4cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -74,8 +74,6 @@
- /* RSSI to dBm */
- #define IWL39_RSSI_OFFSET	95
- 
--#define IWL_DEFAULT_TX_POWER	0x0F
--
- /*
-  * EEPROM related constants, enums, and structures.
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c1cfd99..35239f0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3841,12 +3841,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 		priv->dynamic_frag_thresh = BT_FRAG_THRESHOLD_DEF;
- 	}
- 
--	/* Set the tx_power_user_lmt to the lowest power level
--	 * this value will get overwritten by channel max power avg
--	 * from eeprom */
--	priv->tx_power_user_lmt = IWLAGN_TX_POWER_TARGET_POWER_MIN;
--	priv->tx_power_next = IWLAGN_TX_POWER_TARGET_POWER_MIN;
--
- 	ret = iwl_init_channel_map(priv);
- 	if (ret) {
- 		IWL_ERR(priv, "initializing regulatory failed: %d\n", ret);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 91cac6f..294e9fc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -168,6 +168,7 @@ int iwlcore_init_geos(struct iwl_priv *priv)
- 	struct ieee80211_channel *geo_ch;
- 	struct ieee80211_rate *rates;
- 	int i = 0;
-+	s8 max_tx_power = 0;
- 
- 	if (priv->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
- 	    priv->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
-@@ -244,8 +245,8 @@ int iwlcore_init_geos(struct iwl_priv *priv)
- 
- 			geo_ch->flags |= ch->ht40_extension_channel;
- 
--			if (ch->max_power_avg > priv->tx_power_device_lmt)
--				priv->tx_power_device_lmt = ch->max_power_avg;
-+			if (ch->max_power_avg > max_tx_power)
-+				max_tx_power = ch->max_power_avg;
- 		} else {
- 			geo_ch->flags |= IEEE80211_CHAN_DISABLED;
- 		}
-@@ -258,6 +259,10 @@ int iwlcore_init_geos(struct iwl_priv *priv)
- 				 geo_ch->flags);
- 	}
- 
-+	priv->tx_power_device_lmt = max_tx_power;
-+	priv->tx_power_user_lmt = max_tx_power;
-+	priv->tx_power_next = max_tx_power;
-+
- 	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
- 	     priv->cfg->sku & IWL_SKU_A) {
- 		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 358cfd7..8b3c127 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -724,13 +724,6 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 					     flags & EEPROM_CHANNEL_RADAR))
- 				       ? "" : "not ");
- 
--			/* Set the tx_power_user_lmt to the highest power
--			 * supported by any channel */
--			if (eeprom_ch_info[ch].max_power_avg >
--						priv->tx_power_user_lmt)
--				priv->tx_power_user_lmt =
--				    eeprom_ch_info[ch].max_power_avg;
--
- 			ch_info++;
- 		}
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index a8340f7..64917ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3859,10 +3859,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
- 	priv->force_reset[IWL_FW_RESET].reset_duration =
- 		IWL_DELAY_NEXT_FORCE_FW_RELOAD;
- 
--
--	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
--	priv->tx_power_next = IWL_DEFAULT_TX_POWER;
--
- 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
- 		IWL_WARN(priv, "Unsupported EEPROM version: 0x%04X\n",
- 			 eeprom->version);
--- 
-1.7.1
-
+  Luis
