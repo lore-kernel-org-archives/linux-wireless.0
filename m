@@ -1,130 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40764 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752804Ab1DERtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 13:49:08 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2011 10:48:43 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <gregoryx.alagnou@intel.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 1/2] cfg80211: fix regulatory restore upon user hints
-Date: Tue, 5 Apr 2011 10:49:03 -0700
-Message-ID: <1302025744-824-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:50121 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755686Ab1D0Lkg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Apr 2011 07:40:36 -0400
+Received: by mail-pv0-f174.google.com with SMTP id 12so1117897pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 04:40:36 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19896.333.282625.531581@gargle.gargle.HOWL> (sfid-20110427_134039_177705_E299CE9A)
+Date: Wed, 27 Apr 2011 17:13:09 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 2/4] ath9k_htc: Remove unused WMI_AGGR_LIMIT_CMD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we restore regulatory settings its possible CRDA
-will not reply because of a bogus user entry. In this
-case the bogus entry will prevent any further processing
-on cfg80211 for regulatory domains even if we restore
-regulatory settings.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-To prevent this we suck out all pending requests when
-restoring regulatory settings and add them back into the
-queue after we have queued up the reset work.
-
-The impact of not having this applied is that a user
-with privileges can issue a userspace regulatory hint
-while we are disasocciating and this would prevent any
-further processing of regulatory domains.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/wmi.c |    2 --
+ drivers/net/wireless/ath/ath9k/wmi.h |    1 -
+ 2 files changed, 0 insertions(+), 3 deletions(-)
 
-v5:
-Just resending both to be clear, no further feedback has been
-provided, I think these are ready.
-
-v4:
-I removed the uncessary static for the list on the routine.
-The v3 for patch 2 should still apply though.
-
-v3:
-John, since this doesn't kill any kittens I didn't mark this
-as stable but I'll leave it to you to decide, I tried to describe
-the impact as best as possible. Let me know if you have any
-questions.
-
- net/wireless/reg.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 45 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 3332d5b..e759204 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1744,6 +1744,8 @@ static void restore_regulatory_settings(bool reset_user)
- {
- 	char alpha2[2];
- 	struct reg_beacon *reg_beacon, *btmp;
-+	struct regulatory_request *reg_request, *tmp;
-+	LIST_HEAD(tmp_reg_req_list);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 8f095ad..463b76a 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -79,8 +79,6 @@ static const char *wmi_cmd_to_name(enum wmi_cmd_id wmi_cmd)
+ 		return "WMI_TX_STATS_CMDID";
+ 	case WMI_RX_STATS_CMDID:
+ 		return "WMI_RX_STATS_CMDID";
+-	case WMI_AGGR_LIMIT_CMD:
+-		return "WMI_AGGR_LIMIT_CMD";
+ 	}
  
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
-@@ -1751,6 +1753,25 @@ static void restore_regulatory_settings(bool reset_user)
- 	reset_regdomains();
- 	restore_alpha2(alpha2, reset_user);
+ 	return "Bogus";
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 02ecb9f..5dfc213 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -111,7 +111,6 @@ enum wmi_cmd_id {
+ 	WMI_INT_STATS_CMDID,
+ 	WMI_TX_STATS_CMDID,
+ 	WMI_RX_STATS_CMDID,
+-	WMI_AGGR_LIMIT_CMD = 0x0026,
+ };
  
-+	/*
-+	 * If there's any pending requests we simply
-+	 * stash them to a temporary pending queue and
-+	 * add then after we've restored regulatory
-+	 * settings.
-+	 */
-+	spin_lock(&reg_requests_lock);
-+	if (!list_empty(&reg_requests_list)) {
-+		list_for_each_entry_safe(reg_request, tmp,
-+					 &reg_requests_list, list) {
-+			if (reg_request->initiator !=
-+			    NL80211_REGDOM_SET_BY_USER)
-+				continue;
-+			list_del(&reg_request->list);
-+			list_add_tail(&reg_request->list, &tmp_reg_req_list);
-+		}
-+	}
-+	spin_unlock(&reg_requests_lock);
-+
- 	/* Clear beacon hints */
- 	spin_lock_bh(&reg_pending_beacons_lock);
- 	if (!list_empty(&reg_pending_beacons)) {
-@@ -1785,8 +1806,31 @@ static void restore_regulatory_settings(bool reset_user)
- 	 */
- 	if (is_an_alpha2(alpha2))
- 		regulatory_hint_user(user_alpha2);
--}
- 
-+	if (list_empty(&tmp_reg_req_list))
-+		return;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	mutex_lock(&reg_mutex);
-+
-+	spin_lock(&reg_requests_lock);
-+	list_for_each_entry_safe(reg_request, tmp, &tmp_reg_req_list, list) {
-+		REG_DBG_PRINT("Adding request for country %c%c back "
-+			      "into the queue\n",
-+			      reg_request->alpha2[0],
-+			      reg_request->alpha2[1]);
-+		list_del(&reg_request->list);
-+		list_add_tail(&reg_request->list, &reg_requests_list);
-+	}
-+	spin_unlock(&reg_requests_lock);
-+
-+	mutex_unlock(&reg_mutex);
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	REG_DBG_PRINT("Kicking the queue\n");
-+
-+	schedule_work(&reg_work);
-+}
- 
- void regulatory_hint_disconnect(void)
- {
+ enum wmi_event_id {
 -- 
-1.7.4.15.g7811d
+1.7.4.4
 
