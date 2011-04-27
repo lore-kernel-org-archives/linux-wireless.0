@@ -1,74 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4268 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370Ab1DTGkZ convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:49558 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759217Ab1D0NTG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 02:40:25 -0400
-To: "Greg KH" <greg@kroah.com>
-cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Jonas Gorski" <jonas.gorski@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Andy Botting" <andy@andybotting.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom
- bus?
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
- <1302892585.30441.12.camel@dev.znau.edu.ua>
- <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
- <201104171938.12834.arnd@arndb.de> <op.vt6ufu1n3ri7v4@arend-laptop>
- <20110419140257.GA20456@kroah.com>
-Date: Wed, 20 Apr 2011 08:39:59 +0200
+	Wed, 27 Apr 2011 09:19:06 -0400
+Date: Wed, 27 Apr 2011 18:40:29 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Skip tailroom reservation for full HW-crypto
+ devices
+Message-ID: <20110427131017.GA19537@hertz.marvell.com> (sfid-20110427_151910_715151_A6E95433)
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vt74sxvp3ri7v4@arend-laptop>
-In-Reply-To: <20110419140257.GA20456@kroah.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 19 Apr 2011 16:02:57 +0200, Greg KH <greg@kroah.com> wrote:
+In xmit path, devices that do full hardware crypto (including
+TKIP MMIC) need no tailroom. For such devices, tailroom
+reservation can be skipped if all the keys are programmed into
+the hardware (i.e software crypto is not used for any of the
+keys) and none of the keys wants software to generate Michael
+MIC.
 
-> Please don't use a platform device, unless there is no other way for
-> your device to work.  For this device, you are connected to the PCI bus,
-> so a platform device does not make sense at all.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/key.c         |   19 +++++++++++++++++--
+ net/mac80211/tx.c          |    7 +------
+ 3 files changed, 21 insertions(+), 8 deletions(-)
 
-Hi Greg,
-
-This is only true for a particular usage model. There are two models as  
-shown below:
-
-1) PCI(e) card
-                       ...........
-+----------+          :   x y z :     x, y, and z are cores.
-|    uC    |__________:___|_|_| :
-|          |  PCI-bus : axi-bus :
-+----------+          :.........:
-                       bcm chipset
-
-2) SoC
-           ...............
-           : uC    x y z :
-           :  |____|_|_| :
-           :    axi-bus  :
-           :.............:
-             bcm chipset
-
-Your statement is true for 1) but in usage model 2) there is no PCI bus.  
-Also you refer to the chipset when you say 'device'. In the axi bus type  
-each individual core is registered as a device in the linux device tree.
-
-Gr. AvS
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a778499..027c046 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -766,6 +766,9 @@ struct ieee80211_local {
+ 
+ 	int tx_headroom; /* required headroom for hardware/radiotap */
+ 
++	/* count for keys needing tailroom space allocation */
++	int crypto_tx_tailroom_needed_cnt;
++
+ 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
+ 	 * added to skb_queue will be processed, but frames in
+ 	 * skb_queue_unreliable may be dropped if the total length of these
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index af3c564..ca3c626 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -101,6 +101,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 
+ 	if (!ret) {
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++			key->local->crypto_tx_tailroom_needed_cnt--;
++
+ 		return 0;
+ 	}
+ 
+@@ -156,6 +160,9 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+ 
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		key->local->crypto_tx_tailroom_needed_cnt++;
+ }
+ 
+ void ieee80211_key_removed(struct ieee80211_key_conf *key_conf)
+@@ -388,8 +395,10 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+ 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
+ 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
+-	if (key->local)
++	if (key->local) {
+ 		ieee80211_debugfs_key_remove(key);
++		key->local->crypto_tx_tailroom_needed_cnt--;
++	}
+ 
+ 	kfree(key);
+ }
+@@ -451,6 +460,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	ieee80211_debugfs_key_add(key);
+ 
++	key->local->crypto_tx_tailroom_needed_cnt++;
++
+ 	ret = ieee80211_key_enable_hw_accel(key);
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+@@ -492,8 +503,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ 
+ 	mutex_lock(&sdata->local->key_mtx);
+ 
+-	list_for_each_entry(key, &sdata->key_list, list)
++	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
++
++	list_for_each_entry(key, &sdata->key_list, list) {
++		sdata->local->crypto_tx_tailroom_needed_cnt++;
+ 		ieee80211_key_enable_hw_accel(key);
++	}
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a2043e4..e3e3aa1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1476,12 +1476,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ {
+ 	int tail_need = 0;
+ 
+-	/*
+-	 * This could be optimised, devices that do full hardware
+-	 * crypto (including TKIP MMIC) need no tailroom... But we
+-	 * have no drivers for such devices currently.
+-	 */
+-	if (may_encrypt) {
++	if (may_encrypt && local->crypto_tx_tailroom_needed_cnt) {
+ 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
+ 		tail_need -= skb_tailroom(skb);
+ 		tail_need = max_t(int, tail_need, 0);
 -- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
+1.5.4.1
 
