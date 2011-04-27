@@ -1,171 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:21428 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab1DLULH (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:55101 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756125Ab1D0LYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 16:11:07 -0400
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: balbi@ti.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTi=7SiF=1XJYm_qQ0xYoGMK5QbGDuA@mail.gmail.com>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-	 <1302634039.14216.10.camel@dev.znau.edu.ua>
-	 <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
-	 <1302635550.14216.21.camel@dev.znau.edu.ua>
-	 <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
-	 <1302636861.14216.28.camel@dev.znau.edu.ua>
-	 <BANLkTi=7SiF=1XJYm_qQ0xYoGMK5QbGDuA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 12 Apr 2011 23:07:34 +0300
-Message-Id: <1302638854.14216.44.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Wed, 27 Apr 2011 07:24:17 -0400
+Received: by pvg12 with SMTP id 12so1111368pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 04:24:17 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19895.64891.154225.629077@gargle.gargle.HOWL> (sfid-20110427_132420_879055_33B825A2)
+Date: Wed, 27 Apr 2011 16:56:51 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] mac80211: Add new API for rate selection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-> 2011/4/12 George Kashperko <george@znau.edu.ua>:
-> >
-> >> 2011/4/12 George Kashperko <george@znau.edu.ua>:
-> >> >
-> >> >> 2011/4/12 George Kashperko <george@znau.edu.ua>:
-> >> >> >
-> >> >> >> Hi,
-> >> >> >>
-> >> >> >> On Tue, Apr 12, 2011 at 01:57:07AM +0200, Rafał Miłecki wrote:
-> >> >> >> > Cc: Michael Büsch <mb@bu3sch.de>
-> >> >> >> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> >> >> >> > Cc: George Kashperko <george@znau.edu.ua>
-> >> >> >> > Cc: Arend van Spriel <arend@broadcom.com>
-> >> >> >> > Cc: linux-arm-kernel@lists.infradead.org
-> >> >> >> > Cc: Russell King <rmk@arm.linux.org.uk>
-> >> >> >> > Cc: Arnd Bergmann <arnd@arndb.de>
-> >> >> >> > Cc: Andy Botting <andy@andybotting.com>
-> >> >> >> > Cc: linuxdriverproject <devel@linuxdriverproject.org>
-> >> >> >> > Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> >> >> >> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> >> >> >> > ---
-> >> >> >> > V2: Rename to axi
-> >> >> >> >     Use DEFINE_PCI_DEVICE_TABLE in bridge
-> >> >> >> >     Make use of pr_fmt and pr_*
-> >> >> >> >     Store core class
-> >> >> >> >     Rename bridge to not b43 specific
-> >> >> >> >     Replace magic 0x1000 with BCMAI_CORE_SIZE
-> >> >> >> >     Remove some old "ssb" names and defines
-> >> >> >> >     Move BCMAI_ADDR_BASE def
-> >> >> >> >     Add drvdata field
-> >> >> >> > V3: Fix reloading (kfree issue)
-> >> >> >> >     Add 14e4:0x4331
-> >> >> >> >     Fix non-initialized struct issue
-> >> >> >> >     Drop useless inline functions wrappers for pci core drv
-> >> >> >> >     Proper pr_* usage
-> >> >> >> > V3.1: Include forgotten changes (pr_* and include related)
-> >> >> >> >     Explain why we dare to implement empty release function
-> >> >> >>
-> >> >> >> I'm not sure we need this. If you have an IP Core which talks AXI and
-> >> >> >> you want to put it on a PCI bus, you will have a PCI Bus wrapper around
-> >> >> >> that IP Core, so you should go and let the kernel know about that. See
-> >> >> >> [1] for a core IP which talks AXI and [2] for a PCI bus glue layer.
-> >> >> >>
-> >> >> >> Besides, if you introduce this bus layer, it'll be more difficult for
-> >> >> >> other licensees of the same core to re-use the same driver, since it's
-> >> >> >> now talking a PCI emulated on top of AXI. The same can be achieved with
-> >> >> >> the platform_bus which is more widely used, specially on ARM SoCs.
-> >> >> >>
-> >> >> >> [1] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/core.c
-> >> >> >> [2] http://gitorious.org/usb/usb/blobs/dwc3/drivers/usb/dwc3/dwc3-haps.c
-> >> >> >>
-> >> >> >
-> >> >> > Already noticed earlier that AXI isnt really good name for
-> >> >> > Broadcom-specific axi bus customization. As of tech docs available from
-> >> >> > arm, corelink AXI cores use own identification registers which feature
-> >> >> > different format and layout comparing to that we use for Broadcom cores.
-> >> >> >
-> >> >> > Maybe there is something "standartized" by the DMP specs? If so I'm
-> >> >> > curious if that DMP is obligatory for every axi bus ?
-> >> >> >
-> >> >> > Naming particular Broadcom's implementation just axi limits other
-> >> >> > licensees in reusing axi bus name/code or will require hacks/workarounds
-> >> >> > from them to fit Broadcom-like core scanning/identificating techniques.
-> >> >> > You use bus named AXI to group and manage Broadcom cores, while never
-> >> >> > even publish device records for native axi cores Broadcom use to talk to
-> >> >> > the interconnect through. Yet again, something like bcmb/bcmai looks
-> >> >> > like better name for this bus.
-> >> >>
-> >> >> I don't know, I'm really tired of this. Earlier I was told to not use
-> >> >> anything like bcmai, because it is not Broadcom specific. Now it seems
-> >> >> (and I'm afraid I agree) there is quite a lot of Broadcom specific
-> >> >> stuff.
-> >> > Well, _if_ that "magic" EROM core layout is arm's "standard" for axi
-> >> > ports identification _and_ _if_ that EROM core is obligatory axi
-> >> > component then sure axi name is good one as soon as you consider
-> >> > registering master port (agent) cores with device subsystem as well.
-> >> > I have no clue here about how resolve those _if_'s, hopefully Broadcom
-> >> > guys can enlighten us on the subject.
-> >>
-> >> Do you think that in my code only scanning is Broadcom specific? In
-> >> such a case we could keep it "axi", and just s/scan/bcmscan/. This is
-> >> only correct choice if the rest (addressing, core enabling, host
-> >> management) is AXI specific.
-> > We rely on core identification following its id/ven/rev/class layout
-> > from EROM. Corelink cores use different layout/location. Also core
-> > enabling/disabling are DMP related. Another _if_ here -- is DMP
-> > obligatory for all axi buses?
-> 
-> Why do you use "Corelink" name? Do you mean AMBA AXI cores? Please,
-> try to keep it simple, do not introduce more things we need to make
-> clear for this discussion.
-> What do you mean by DMP?
-DMP, Device Management Plugin (mentioned several times here by Broadcom
-guys) - don't know for sure as there are no public docs at ARM regarding
-this thingy. I suppose its arm instrument used to build master ports for
-amba to talk to the interconnect on behalf of non-native (e. g. Broadcom
-proprietary) IP cores. Its my raw guess ofcourse but think I'm not that
-far from actual truth here. All that oobseloxxxx stuff in aidmp.h is
-that DMP. Among those peripherialid and componentid registers are
-documented in public corelink specs.
-Think it would be beneficial for you to do some research among those
-docs available publicly from arm (see Hauke Mertens message few mins ago
-for link) before claiming sumthing just related to axi as actual axi.
-Here I don't mean I know everything on the subject, just the time spent
-on clearing this question for myself make me think we deal with
-Broadcom-specific implementation but not the _real_ axi as it is.
+This patch adds a new API for setting a TX rate mask in
+drivers that have rate control in either the firmware or hardware.
+This can be used for various purposes, for example, masking out the
+11b rates in P2P operation.
 
-> 
-> 
-> >> >> > Also can't figure out how is this implementation supposed to manage
-> >> >> > multicore devices.
-> >> >>
-> >> >> We have got ideas, but let's first find (wait for) such a device ;)
-> >> > bcm4716 usb host ? Don't really know if there are any other multicores.
-> >>
-> >> This is SoC, we do not have any problems supporting multiple cores on
-> >> SoCs. All cores are available at the same time, without any sliding
-> >> windows.
-> >>
-> > Multicores have multiple slave ports bound to single master port
-> > (agent). Individual core driver must be confident of its "partner"
-> > device/driver and both must know who is permitted to
-> > enable/disable/reset and who is not or there should be some other
-> > technique for agent management.
-> 
-> Let's leave that multi-core discussion for later, or I'll freak
-> 
-Sure thing ;)
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+v2 : rc_rateidx_mask has to be updated for drivers using
+     IEEE80211_HW_HAS_RATE_CONTROL since building IEs for
+     a probe request makes use of it.
 
-Have nice day,
-George
+v3 : Replace ENOTSUPP with EOPNOTSUPP.
 
+ include/net/mac80211.h      |    6 ++++++
+ net/mac80211/cfg.c          |   15 ++++++---------
+ net/mac80211/driver-ops.h   |   18 ++++++++++++++++++
+ net/mac80211/driver-trace.h |   27 +++++++++++++++++++++++++++
+ 4 files changed, 57 insertions(+), 9 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d23dd6c..4c97fc8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1822,6 +1822,10 @@ enum ieee80211_ampdu_mlme_action {
+  *
+  * @tx_frames_pending: Check if there is any pending frame in the hardware
+  *	queues before entering power save.
++ *
++ * @set_bitrate_mask: Set a mask of rates to be used for rate control selection
++ *	when transmitting a frame. Currently only legacy rates are handled.
++ *	The callback can sleep.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1910,6 +1914,8 @@ struct ieee80211_ops {
+ 	void (*get_ringparam)(struct ieee80211_hw *hw,
+ 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+ 	bool (*tx_frames_pending)(struct ieee80211_hw *hw);
++	int (*set_bitrate_mask)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++				const struct cfg80211_bitrate_mask *mask);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a9ddaf6..12d52ce 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1633,16 +1633,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+-	int i;
+-
+-	/*
+-	 * This _could_ be supported by providing a hook for
+-	 * drivers for this function, but at this point it
+-	 * doesn't seem worth bothering.
+-	 */
+-	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+-		return -EOPNOTSUPP;
++	int i, ret;
+ 
++	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) {
++		ret = drv_set_bitrate_mask(local, sdata, mask);
++		if (ret)
++			return ret;
++	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+ 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 00a0685..2ddb56e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -565,4 +565,22 @@ static inline bool drv_tx_frames_pending(struct ieee80211_local *local)
+ 
+ 	return ret;
+ }
++
++static inline int drv_set_bitrate_mask(struct ieee80211_local *local,
++				       struct ieee80211_sub_if_data *sdata,
++				       const struct cfg80211_bitrate_mask *mask)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	trace_drv_set_bitrate_mask(local, sdata, mask);
++	if (local->ops->set_bitrate_mask)
++		ret = local->ops->set_bitrate_mask(&local->hw,
++						   &sdata->vif, mask);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index c8c934d..191e834 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -989,6 +989,33 @@ DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
+ 	TP_ARGS(local)
+ );
+ 
++TRACE_EVENT(drv_set_bitrate_mask,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 const struct cfg80211_bitrate_mask *mask),
++
++	TP_ARGS(local, sdata, mask),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u32, legacy_2g)
++		__field(u32, legacy_5g)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->legacy_2g = mask->control[IEEE80211_BAND_2GHZ].legacy;
++		__entry->legacy_5g = mask->control[IEEE80211_BAND_5GHZ].legacy;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT " 2G Mask:0x%x 5G Mask:0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->legacy_2g, __entry->legacy_5g
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+-- 
+1.7.4.4
 
