@@ -1,47 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp30.kymp.net ([80.248.96.181]:1834 "EHLO smtp.kymp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932096Ab1DFPgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 11:36:23 -0400
-Message-ID: <4D9C8826.6070302@saunalahti.fi>
-Date: Wed, 06 Apr 2011 18:35:02 +0300
-From: Kimmo Huoso <kimmo.huoso@saunalahti.fi>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:55000 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758298Ab1D0LlH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Apr 2011 07:41:07 -0400
+Received: by mail-pw0-f46.google.com with SMTP id 15so609306pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 04:41:07 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 7d1:3c10 D-Link System DWA-160 Xtreme N Dual Band USB Adapter(rev.A)
- [Atheros AR9001U-(2)NG] Invalid misc and Tx excessive retries
-References: <4D9B077E.3090106@saunalahti.fi> <201104061438.43678.chunkeey@googlemail.com> <4D9C764E.2040107@saunalahti.fi> <201104061716.43553.chunkeey@googlemail.com>
-In-Reply-To: <201104061716.43553.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19896.364.834633.398595@gargle.gargle.HOWL> (sfid-20110427_134110_569052_6722B9AD)
+Date: Wed, 27 Apr 2011 17:13:40 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 4/4] ath9k_htc: Add set_bitrate_mask() callback
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yep. Thats the reason im in concern, and for a note i did disable the ht 
-by adding this noht=1 to module and problem seems to still persist. My 
-router is running currently openrwrt Backfire (10.03.1-rc4, r24045) 
-which is in dir-825 hardware. There are no problems with router that i 
-have noticed. So only solution for me for now is to wait that someone 
-adds better code for QoS. Right? At the moment im sticking with 
-lts-kernel and ar9170usb.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-06.04.2011 18:16, Christian Lamparter kirjoitti:
-> On Wednesday 06 April 2011 16:18:54 Kimmo Huoso wrote:
->> And for third even the softmac numbers/statistics might be
->> bogus, im still having problems with the driver while trying to run
->> programs that are strict for smooth connection like online games.
-> ah, that's why you are so concerned about excessive tx retries&  invalid
-> misc numbers. Well, one of the worst enemy of programs that rely on low latency,
-> time-critical connection is "bufferbloat". However, by design 11n aggregation
-> needs to do a fair amount of additional caching&  reordering so it's not
-> really suited for rt data anyway... Given that you have already ruled out your
-> router/AP and your environment, etc.. as a culprit, the good news is that
-> someone has already thought about this [QoS + the fact that aggregation is
-> not enabled for AC_VO]. The bad news is that ar9170's QoS [note: I'm talking
-> about the device and not the driver] does not work every well unless 11n is
-> completely disabled [module parameter noht=1 does that].
->
-> Regards,
-> 	Chr
->
+This callback is used to set the minimum rate for management
+frames.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   50 +++++++++++++++++++++++++
+ 1 files changed, 50 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c8577d5..e9746e8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1659,6 +1659,55 @@ static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
++/*
++ * Currently, this is used only for selecting the minimum rate
++ * for management frames, rate selection for data frames remain
++ * unaffected.
++ */
++static int ath9k_htc_set_bitrate_mask(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      const struct cfg80211_bitrate_mask *mask)
++{
++	struct ath9k_htc_priv *priv = hw->priv;
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath9k_htc_target_rate_mask tmask;
++	struct ath9k_htc_vif *avp = (void *)vif->drv_priv;
++	int ret = 0;
++	u8 cmd_rsp;
++
++	memset(&tmask, 0, sizeof(struct ath9k_htc_target_rate_mask));
++
++	tmask.vif_index = avp->index;
++	tmask.band = IEEE80211_BAND_2GHZ;
++	tmask.mask = cpu_to_be32(mask->control[IEEE80211_BAND_2GHZ].legacy);
++
++	WMI_CMD_BUF(WMI_BITRATE_MASK_CMDID, &tmask);
++	if (ret) {
++		ath_err(common,
++			"Unable to set 2G rate mask for "
++			"interface at idx: %d\n", avp->index);
++		goto out;
++	}
++
++	tmask.band = IEEE80211_BAND_5GHZ;
++	tmask.mask = cpu_to_be32(mask->control[IEEE80211_BAND_5GHZ].legacy);
++
++	WMI_CMD_BUF(WMI_BITRATE_MASK_CMDID, &tmask);
++	if (ret) {
++		ath_err(common,
++			"Unable to set 5G rate mask for "
++			"interface at idx: %d\n", avp->index);
++		goto out;
++	}
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"Set bitrate masks: 0x%x, 0x%x\n",
++		mask->control[IEEE80211_BAND_2GHZ].legacy,
++		mask->control[IEEE80211_BAND_5GHZ].legacy);
++out:
++	return ret;
++}
++
+ struct ieee80211_ops ath9k_htc_ops = {
+ 	.tx                 = ath9k_htc_tx,
+ 	.start              = ath9k_htc_start,
+@@ -1681,4 +1730,5 @@ struct ieee80211_ops ath9k_htc_ops = {
+ 	.set_rts_threshold  = ath9k_htc_set_rts_threshold,
+ 	.rfkill_poll        = ath9k_htc_rfkill_poll_state,
+ 	.set_coverage_class = ath9k_htc_set_coverage_class,
++	.set_bitrate_mask   = ath9k_htc_set_bitrate_mask,
+ };
+-- 
+1.7.4.4
 
