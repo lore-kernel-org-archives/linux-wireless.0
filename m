@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3193 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754974Ab1DLNTM convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:64314 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758729Ab1D0Rxq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 09:19:12 -0400
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
- <BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
-Date: Tue, 12 Apr 2011 15:18:55 +0200
+	Wed, 27 Apr 2011 13:53:46 -0400
+Received: by pvg12 with SMTP id 12so1307598pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 10:53:45 -0700 (PDT)
+Message-ID: <4DB85824.9090202@lwfinger.net> (sfid-20110427_195349_744703_E393EBB2)
+Date: Wed, 27 Apr 2011 12:53:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtttxt083ri7v4@arend-laptop>
-In-Reply-To: <BANLkTi=jV12tOR_=idn0z+oO_RQ2xaFhCQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] ssb: pci: early fix for SPROM core index
+References: <1303921294-6591-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1303921294-6591-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 12 Apr 2011 15:04:48 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+On 04/27/2011 11:21 AM, Rafał Miłecki wrote:
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> This was documented in:
+> Message-ID:<4BB81CAD.10602@lwfinger.net>
+> ---
+>   drivers/ssb/driver_pcicore.c |   12 ++++++++++++
+>   1 files changed, 12 insertions(+), 0 deletions(-)
 
-> There is one more change I started to consider. Is "core" correct name
-> for AXI's device? Almost everywhere we can read about *components* on
-> the AXI interconnect.
->
-> Maybe it'd make sense to s/core/comp/? Arend?
+ACK.
 
-I have no strong preference on this. I tried the latest patch and it does  
-not crash anymore with load/unload.
-
-Gr. AvS
--- 
-"The world is indeed comic, but the joke is on mankind." — H.P. Lovecraft
-
+Larry
