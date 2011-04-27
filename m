@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51536 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670Ab1D1ITF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39218 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758613Ab1D0L2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 04:19:05 -0400
-Received: by iwn34 with SMTP id 34so2023007iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 01:19:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1303849311-8817-1-git-send-email-arik@wizery.com>
-References: <1303849311-8817-1-git-send-email-arik@wizery.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 28 Apr 2011 11:18:49 +0300
-Message-ID: <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com> (sfid-20110428_101911_736860_4B107BA3)
-Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 27 Apr 2011 07:28:02 -0400
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20110427110303.GA18370@hertz.marvell.com>
+References: <20110415045321.GA11504@hertz.marvell.com>
+	 <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+	 <20110415084005.GC11576@hertz.marvell.com>
+	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+	 <20110415105140.GD11576@hertz.marvell.com>
+	 <1302865304.3572.15.camel@jlt3.sipsolutions.net>
+	 <20110421121513.GC27527@hertz.marvell.com>
+	 <1303389236.3597.8.camel@jlt3.sipsolutions.net>
+	 <20110421124624.GA29211@hertz.marvell.com>
+	 <1303390788.3597.10.camel@jlt3.sipsolutions.net>
+	 <20110427110303.GA18370@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 27 Apr 2011 13:27:56 +0200
+Message-ID: <1303903676.3542.2.camel@jlt3.sipsolutions.net> (sfid-20110427_132807_124359_F3C8890A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 26, 2011 at 23:21, Arik Nemtsov <arik@wizery.com> wrote:
-> In AP mode we register for the MAX_TX_RETRY and INACTIVE_STA events.
-> Both are reported to the upper layers as a TX failure in the offending
-> stations.
->
-> In STA mode we register only for the MAX_TX_RETRY event. A TX failure is
-> interpreted as a loss of connection.
->
-> Support for IEEE80211_HW_REPORTS_TX_ACK_STATUS has been removed to avoid
-> the inherent race condition of a mac80211 TX failure counter in addition
-> to the FW counter.
->
-> This patch depends on "mac80211: allow low level driver to report packet
-> loss"
->
+On Wed, 2011-04-27 at 16:33 +0530, Yogesh Ashok Powar wrote:
+> On Thu, Apr 21, 2011 at 05:59:48AM -0700, Johannes Berg wrote:
+> > Well, it kinda goes like this:
+> > 
+> > key added           -> need tailroom code
+> > key put into HW     -> no longer need tailroom code
+> > key removed from HW -> need tailroom code again
+> > key deleted         -> no longer need tailroom code
+> > 
+> Following patch takes care of these four states. Kindly review.
 
-Luca please don't take this one for now. It appears the FW sometimes
-misfires the event in STA mode.
-We'll need some more debugging.
+Looks fine, but still I think it might get out of sync when HW restart
+happens?
 
-Arik
+johannes
+
+
