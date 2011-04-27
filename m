@@ -1,132 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757529Ab1DAVg6 (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:46731 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755124Ab1D0LLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:58 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:58 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com, Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v6 10/10] nl80211: report mesh capabilities
-Date: Fri,  1 Apr 2011 13:35:51 -0700
-Message-Id: <1301690151-14979-11-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+	Wed, 27 Apr 2011 07:11:40 -0400
+Date: Wed, 27 Apr 2011 16:33:04 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+Message-ID: <20110427110303.GA18370@hertz.marvell.com> (sfid-20110427_131143_583491_041C9F99)
+References: <20110415045321.GA11504@hertz.marvell.com>
+ <1302850527.3572.2.camel@jlt3.sipsolutions.net>
+ <20110415084005.GC11576@hertz.marvell.com>
+ <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+ <20110415105140.GD11576@hertz.marvell.com>
+ <1302865304.3572.15.camel@jlt3.sipsolutions.net>
+ <20110421121513.GC27527@hertz.marvell.com>
+ <1303389236.3597.8.camel@jlt3.sipsolutions.net>
+ <20110421124624.GA29211@hertz.marvell.com>
+ <1303390788.3597.10.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303390788.3597.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NL80211_CMD_GET_WIPHY now returns a flag NL80211_SUPPORT_MESH_AUTH if
-the wiphy's mesh implementation supports routing of mesh auth frames to
-userspace.  This is useful for forward compatibility between old kernels
-and new userspace tools.
+On Thu, Apr 21, 2011 at 05:59:48AM -0700, Johannes Berg wrote:
+> Well, it kinda goes like this:
+> 
+> key added           -> need tailroom code
+> key put into HW     -> no longer need tailroom code
+> key removed from HW -> need tailroom code again
+> key deleted         -> no longer need tailroom code
+> 
+Following patch takes care of these four states. Kindly review.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    3 +++
- net/mac80211/main.c     |    4 ++++
- net/wireless/mesh.c     |    4 ++++
- net/wireless/nl80211.c  |    3 +++
- 5 files changed, 19 insertions(+), 0 deletions(-)
+Thanks
+Yogesh
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2c0bb8d..5a81b3c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -899,6 +899,9 @@ enum nl80211_commands {
-  *	changed once the mesh is active.
-  * @NL80211_ATTR_MESH_CONFIG: Mesh configuration parameters, a nested attribute
-  *	containing attributes from &enum nl80211_meshconf_params.
-+ * @NL80211_ATTR_SUPPORT_MESH_AUTH: Currently, this means the underlying driver
-+ *	allows auth frames in a mesh to be passed to userspace for processing via
-+ *	the @NL80211_MESH_SETUP_USERSPACE_AUTH flag.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1087,6 +1090,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
- 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a778499..027c046 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -766,6 +766,9 @@ struct ieee80211_local {
  
-+	NL80211_ATTR_SUPPORT_MESH_AUTH,
+ 	int tx_headroom; /* required headroom for hardware/radiotap */
+ 
++	/* count for keys needing tailroom space allocation */
++	int crypto_tx_tailroom_needed_cnt;
 +
- 	/* add attributes here, update the policy in nl80211.c */
+ 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
+ 	 * added to skb_queue will be processed, but frames in
+ 	 * skb_queue_unreliable may be dropped if the total length of these
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index af3c564..e180149 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -101,6 +101,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2bbb89b..affdefd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1416,6 +1416,8 @@ struct cfg80211_ops {
-  *	control port protocol ethertype. The device also honours the
-  *	control_port_no_encrypt flag.
-  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
-+ * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-+ *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-  * @WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS: The device supports separate
-  *	unicast and multicast TX keys.
-  */
-@@ -1430,6 +1432,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
- 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
- 	WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS= BIT(9),
-+	WIPHY_FLAG_MESH_AUTH			= BIT(10),
- };
- 
- struct mac_address {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0ae9b22..55cc521 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -761,6 +761,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	/* mesh depends on Kconfig, but drivers should set it if they want */
- 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
- #endif
-+	/* if the underlying driver supports mesh, mac80211 will (at least)
-+	 * provide routing of mesh authentication frames to userspace */
-+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
-+		local->hw.wiphy->flags |= WIPHY_FLAG_MESH_AUTH;
- 
- 	/* mac80211 supports control port protocol changing */
- 	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index ab036b5..5c11608 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -74,6 +74,10 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
- 		return -EOPNOTSUPP;
- 
-+	if (!(rdev->wiphy.flags & WIPHY_FLAG_MESH_AUTH) &&
-+	      setup->is_secure)
-+		return -EOPNOTSUPP;
+ 	if (!ret) {
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
 +
- 	if (wdev->mesh_id_len)
- 		return -EALREADY;
++		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++			key->local->crypto_tx_tailroom_needed_cnt--;
++
+ 		return 0;
+ 	}
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ee6197..fda52da 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -124,6 +124,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_BSS_HT_OPMODE] = { .type = NLA_U16 },
+@@ -156,6 +160,9 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
  
- 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		key->local->crypto_tx_tailroom_needed_cnt++;
+ }
  
- 	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
- 					 .len = NL80211_HT_CAPABILITY_LEN },
-@@ -594,6 +595,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ void ieee80211_key_removed(struct ieee80211_key_conf *key_conf)
+@@ -388,8 +395,10 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+ 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
+ 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
+-	if (key->local)
++	if (key->local) {
+ 		ieee80211_debugfs_key_remove(key);
++		key->local->crypto_tx_tailroom_needed_cnt--;
++	}
  
- 	if (dev->wiphy.flags & WIPHY_FLAG_IBSS_RSN)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
-+	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
+ 	kfree(key);
+ }
+@@ -451,6 +460,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
  
- 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
- 		sizeof(u32) * dev->wiphy.n_cipher_suites,
+ 	ieee80211_debugfs_key_add(key);
+ 
++	key->local->crypto_tx_tailroom_needed_cnt++;
++
+ 	ret = ieee80211_key_enable_hw_accel(key);
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a2043e4..87456b4 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1481,7 +1481,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 	 * crypto (including TKIP MMIC) need no tailroom... But we
+ 	 * have no drivers for such devices currently.
+ 	 */
+-	if (may_encrypt) {
++	if (may_encrypt && local->crypto_tx_tailroom_needed_cnt) {
+ 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
+ 		tail_need -= skb_tailroom(skb);
+ 		tail_need = max_t(int, tail_need, 0);
 -- 
-1.7.4.1
+1.5.4.1
 
