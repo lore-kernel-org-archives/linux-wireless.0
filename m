@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44484 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752969Ab1D2JSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 05:18:53 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 02:18:25 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH] mac80211: use wake_queue to restart trasmit
-Date: Fri, 29 Apr 2011 14:48:45 +0530
-Message-ID: <1304068725-5254-1-git-send-email-rmanoharan@atheros.com> (sfid-20110429_111856_245382_6F650156)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:40075 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758618Ab1D0Lx5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Apr 2011 07:53:57 -0400
+Subject: Re: [PATCH 1/2] mac80211: Adding HW flag
+ IEEE80211_HW_CRYPTO_ENABLED
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20110427114010.GA18939@hertz.marvell.com>
+References: <20110415084005.GC11576@hertz.marvell.com>
+	 <1302857554.3572.14.camel@jlt3.sipsolutions.net>
+	 <20110415105140.GD11576@hertz.marvell.com>
+	 <1302865304.3572.15.camel@jlt3.sipsolutions.net>
+	 <20110421121513.GC27527@hertz.marvell.com>
+	 <1303389236.3597.8.camel@jlt3.sipsolutions.net>
+	 <20110421124624.GA29211@hertz.marvell.com>
+	 <1303390788.3597.10.camel@jlt3.sipsolutions.net>
+	 <20110427110303.GA18370@hertz.marvell.com>
+	 <1303903676.3542.2.camel@jlt3.sipsolutions.net>
+	 <20110427114010.GA18939@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 27 Apr 2011 13:53:51 +0200
+Message-ID: <1303905231.3542.3.camel@jlt3.sipsolutions.net> (sfid-20110427_135400_143898_396113F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-netif_tx_start_all_queues is used to allow the upper layer
-to transmit frames but it does not restart transmission.
-To restart the trasmission use netif_tx_wake_all_queues.
-Not doing so, sometimes stalls the transmission and the
-application has to be restarted to proceed further.
+On Wed, 2011-04-27 at 17:10 +0530, Yogesh Ashok Powar wrote:
+> On Wed, Apr 27, 2011 at 04:27:56AM -0700, Johannes Berg wrote:
+> > On Wed, 2011-04-27 at 16:33 +0530, Yogesh Ashok Powar wrote:
+> > > On Thu, Apr 21, 2011 at 05:59:48AM -0700, Johannes Berg wrote:
+> > > > Well, it kinda goes like this:
+> > > > 
+> > > > key added           -> need tailroom code
+> > > > key put into HW     -> no longer need tailroom code
+> > > > key removed from HW -> need tailroom code again
+> > > > key deleted         -> no longer need tailroom code
+> > > > 
+> > > Following patch takes care of these four states. Kindly review.
+> > 
+> > Looks fine, but still I think it might get out of sync when HW restart
+> > happens?
+> How about this?
+> 
+> Thanks
+> Yogesh
+> 
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index e180149..ca3c626 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -503,8 +503,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+>  
+>  	mutex_lock(&sdata->local->key_mtx);
+>  
+> -	list_for_each_entry(key, &sdata->key_list, list)
+> +	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
+> +
+> +	list_for_each_entry(key, &sdata->key_list, list) {
+> +		sdata->local->crypto_tx_tailroom_needed_cnt++;
+>  		ieee80211_key_enable_hw_accel(key);
+> +	}
+>  
+>  	mutex_unlock(&sdata->local->key_mtx);
+>  }
 
-This issue was originally found while sending udp traffic
-in higer bandwidth in open environment without bgscan.
+Yeah that looks good.
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+johannes
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a41f234..8d752b4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -781,7 +781,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 	}
- 
--	netif_tx_start_all_queues(sdata->dev);
-+	netif_tx_wake_all_queues(sdata->dev);
- }
- 
- void ieee80211_dynamic_ps_timer(unsigned long data)
--- 
-1.7.5
 
