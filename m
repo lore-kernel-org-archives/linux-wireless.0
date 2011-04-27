@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46995 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab1DSSoI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 14:44:08 -0400
-Subject: [PATCH 2.6.39] mac80211: fix SMPS debugfs locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Apr 2011 20:44:04 +0200
-Message-ID: <1303238644.3489.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nm3-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.154]:40329 "HELO
+	nm3-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752672Ab1D0JB7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Apr 2011 05:01:59 -0400
+Message-ID: <140850.94569.qm@web161612.mail.bf1.yahoo.com> (sfid-20110427_110202_691098_5F5F4CE0)
+Date: Wed, 27 Apr 2011 02:01:58 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Reply-To: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 2/2 re-send] compat-wireless: add rtl8192c/u to driver-select
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-The locking with SMPS requests means that the
-debugs file should lock the mgd mutex, not the
-iflist mutex. Calls to __ieee80211_request_smps()
-need to hold that mutex, so add an assertion.
+Add rtl8192c & rtl8192cu to rtlwifi/driver-selct 
 
-This has always been wrong, but for some reason
-never been noticed, probably because the locking
-error only happens while unassociated.
-
-Cc: stable@kernel.org [2.6.34+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- net/mac80211/cfg.c            |    2 ++
- net/mac80211/debugfs_netdev.c |    4 ++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
 
---- a/net/mac80211/debugfs_netdev.c	2011-04-19 17:41:45.000000000 +0200
-+++ b/net/mac80211/debugfs_netdev.c	2011-04-19 20:38:44.000000000 +0200
-@@ -177,9 +177,9 @@ static int ieee80211_set_smps(struct iee
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 		return -EOPNOTSUPP;
- 
--	mutex_lock(&local->iflist_mtx);
-+	mutex_lock(&sdata->u.mgd.mtx);
- 	err = __ieee80211_request_smps(sdata, smps_mode);
--	mutex_unlock(&local->iflist_mtx);
-+	mutex_unlock(&sdata->u.mgd.mtx);
- 
- 	return err;
- }
---- a/net/mac80211/cfg.c	2011-04-19 20:38:09.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-04-19 20:38:28.000000000 +0200
-@@ -1526,6 +1526,8 @@ int __ieee80211_request_smps(struct ieee
- 	enum ieee80211_smps_mode old_req;
- 	int err;
- 
-+	lockdep_assert_held(&sdata->u.mgd.mtx);
-+
- 	old_req = sdata->u.mgd.req_smps;
- 	sdata->u.mgd.req_smps = smps_mode;
- 
-
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -59,7 +59,7 @@ function usage {
+     echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ${NORMAL}>"
+     echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
+     echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+-    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
++    echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192c rtl8192ce rtl8192cu ${NORMAL}>"
+     echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
+     
+     echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
+@@ -327,7 +327,8 @@ case $1 in
+         disable_var_02
+         ;;
+     rtlwifi)
+-        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI
++        select_drivers        CONFIG_RTL8192CE CONFIG_RTLWIFI \
++                    CONFIG_RTL8192C CONFIG_RTL8192CU
+         disable_staging
+         disable_bt_usb_ethernet_var
+         ;;
 
