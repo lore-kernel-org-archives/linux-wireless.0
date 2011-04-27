@@ -1,86 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:10143 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910Ab1DOTxh (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38277 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846Ab1D0Iq7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2011 15:53:37 -0400
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
-References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
-	 <1302781431.21145.6.camel@dev.znau.edu.ua>
-	 <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
-	 <4DA6E9BD.3090404@hauke-m.de>
-	 <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
-	 <1302786900.21965.52.camel@dev.znau.edu.ua>
-	 <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
-	 <1302892585.30441.12.camel@dev.znau.edu.ua>
-	 <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 15 Apr 2011 22:50:10 +0300
-Message-Id: <1302897010.30441.42.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Wed, 27 Apr 2011 04:46:59 -0400
+Received: by iyb14 with SMTP id 14so1181992iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 01:46:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1303884983.2336.46.camel@cumari>
+References: <1303849642-9014-1-git-send-email-arik@wizery.com>
+	<BANLkTim45NHT3o2mB7Ofb9KvqBDrGjJcaw@mail.gmail.com>
+	<BANLkTikMMMck78MhFuFNqc+CrUBGpG+TxQ@mail.gmail.com>
+	<1303884983.2336.46.camel@cumari>
+Date: Wed, 27 Apr 2011 10:46:58 +0200
+Message-ID: <BANLkTi=WSfA+2-PvH3TPUW+j+y5g0f7ZMQ@mail.gmail.com> (sfid-20110427_104705_479854_227139F0)
+Subject: Re: [PATCH] mac80211: report MIC failure for truncated packets in AP mode
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Apr 27, 2011 at 8:16 AM, Luciano Coelho <coelho@ti.com> wrote:
+> On Wed, 2011-04-27 at 01:03 +0300, Arik Nemtsov wrote:
+>> On Tue, Apr 26, 2011 at 23:55, Christian Lamparter
+>> <chunkeey@googlemail.com> wrote:
+>> > On Tue, Apr 26, 2011 at 10:27 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> >> MIC failure notifications for packets too short to contain a key index
+>> >> are currently ignored in AP-mode.
 
-> W dniu 15 kwietnia 2011 20:36 uÅ¼ytkownik George Kashperko
-> <george@znau.edu.ua> napisaÅ‚:
-> >> >> Arnd: I found you saying:
-> >> >> > I believe the one thing we really want from this driver is the bus
-> >> >> > scan code, which is not present in the amba bus implementation,
-> >> >> I explained how it works, I believe scanning (EPROM in this case) it
-> >> >> Broadcom specific, not really AMBA standard. How do you see it?
-> >> >>
-> >> > It might not Broadcom specific as EPROM core seems to be CoreLink one
-> >> > core and maybe is arm-developed. But it isn't documented publicly and we
-> >> > don't know yet if it is obligatory for all amba (or at least axi)
-> >> > interconnects or not.
-> >>
-> >> Maybe EPROM is not Broadcom specific, but I suspect the content we
-> >> deal with in bcmai/axi is Broadcom specific. I didn't see any notes of
-> >> manuf/id/rev/class we deal with. So I guess everything *we* (out
-> >> driver) read from EPROM is Bcm specific.
-> >>
-> >
-> > Played around amba registers on bcm4716. For all amba cores present
-> > (under all I mean broadcom ip core agents, oob router core, erom core,
-> > and other I-dont-know-what-for cores present at 0x18100000). All those
-> > feature AMBA_CID (0xb105f00d) as PrimeCell ID, and slightly different
-> > PrimeCell PeripheralIDs:
-> > * vendor 0xBB, part_number 0x368 for broadcom cores' agents;
-> > * vendor 0xBB, part_number 0x367 for OOB router core (don't ask me wth
-> > is this please);
-> > * vendor 0xBB, part_number 0x366 for EROM core;
-> >
-> > ARM vendor id is 0x41. Might 0xBB is Broadcom vendor id but I've found
-> > no evidence for that with google.
-> 
-> Yeah, as I suspected, everything except Broadcom specific cores
-> matches AMBA standards quite nicely. Still, I don't see anything in it
-> we could use for driver.
-> 
-> Let's wait for Russell and Arnd to comment.
-> 
+>> > wait! Since you seem able to trigger MIC events frequently, could you
+>> > please test if the following patch:
+>> >
+>> > <http://www.spinics.net/lists/linux-wireless/msg67571.html>
+>> >
+>> > <a little more info:http://www.spinics.net/lists/linux-wireless/msg67461.html>
+>> >
+>> > would help in your case as well?
+>> >
+>>
+>> I seem to have missed this thread entirely :)
+>> The patch you mentioned does indeed help. I tested in STA and AP mode.
+>>
+>> This bit is important for wl12xx:
+>>
+>> +       /*
+>> +        * No way to verify the MIC if the hardware stripped it or
+>> +        * the IV with the key index. In this case we have solely rely
+>> +        * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
+>> +        * MIC failure report.
+>> +        */
+>> +       if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
+>> +               if (status->flag & RX_FLAG_MMIC_ERROR)
+>> +                       goto mic_fail;
+>>
+>> This prevents us from getting to the problematic check that I tried to
+>> remove with my patch.
+>>
+>> Just for the record - generating a MIC failure is pretty easy. I'm
+>> using the (very cool) mac80211 debugfs feature that allows simulating
+>> a MIC failure (see ieee80211_if_parse_tkip_mic_test()).
+>> It works well with a rt2x00 based card and the latest compat. I'm
+>> simulating it from AP as well as STA.
+>>
+>> To summarize - either patch will work for us.
+>
+> Great! If this can be solved in a generic way in mac80211, I'd prefer if
+> that one is used.
+>
+> Christian, are you planning to submit this patch again any time soon? If
+> not, we could include the wl12xx patch for now and revert it later when
+> the proper fix in mac80211 is applied.
+Well, I didn't know about the if_parse_tkip_mic_test() and tried to get
+aircrack-ng's tkip attack working, this was such a waste of time...
 
-Btw, googling for PL366, PL367, PL368 gives nothing relevant except one
-reference to "NIC-301 Interconnect Device Management (PL368)" which is
-restricted to arm partners. Think it have something to do with that
-magic "DMP - Device Management Plugin" Broadcom guys mentioned earlier.
-Might those 0xBB/0x368 cores are produced with that "plugin".
+And yes I plan to resubmit the patch [Friday?!], because carl9170
+(and to some degree ath9k) have similar problems with spurious
+MIC failures.
 
-Have nice day,
-George
-
-
+Thanks,
+   Chr
