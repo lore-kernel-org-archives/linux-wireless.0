@@ -1,186 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63960 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753386Ab1DKOwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 10:52:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 07:52:07 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 2/4] ath9k_hw: update Ar9003 intervals to fix carrier leak
-Date: Mon, 11 Apr 2011 20:22:29 +0530
-Message-ID: <1302533551-27462-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
-References: <1302533551-27462-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:57978 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755278Ab1D0A33 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2011 20:29:29 -0400
+Message-ID: <4DB76363.4080303@gmail.com> (sfid-20110427_022950_859244_3D54CCBB)
+Date: Wed, 27 Apr 2011 02:29:23 +0200
+From: Jano <jano.ita@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
+References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com> <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan> <4DB74788.2000908@lwfinger.net> <alpine.DEB.2.02.1104261923390.3894@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1104261923390.3894@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |   96 ++++++++++----------
- 1 files changed, 48 insertions(+), 48 deletions(-)
+Justin Piszcz ha scritto:
+>
+>
+> On Tue, 26 Apr 2011, Larry Finger wrote:
+>
+>>>
+>>> I am trying a different driver now: rt2870sta
+>>> I've read a few reports this may be the 'proper' one to use.
+>>> So far so good, no lag or anything and I did not have to set power off
+>>> either.
+>>
+>> Driver rtl2870sta is not the proper one to use. In fact, a patch to 
+>> delete rt2860sta and rt2870sta from the kernel was queued yesterday, 
+>> and they will be gone by the time 2.6.40 is released.
+>>
+>> New firmware for rt2800usb was just accepted into the linux-firmware 
+>> git tree. Please obtain a copy and try it.
+>>
+>> Larry
+>>
+>
+> Hello,
+>
+> With latest rt2800usb (and firmware from the git tree ~5 minutes ago)
+>
+> Without wlan0 power off:
+>
+> PING atomw (192.168.0.2) 56(84) bytes of data.
+> 64 bytes from atomw (192.168.0.2): icmp_req=1 ttl=64 time=103 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=2 ttl=64 time=106 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=3 ttl=64 time=99.7 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=4 ttl=64 time=102 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=5 ttl=64 time=98.5 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=6 ttl=64 time=9.74 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=7 ttl=64 time=217 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=8 ttl=64 time=141 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=11 ttl=64 time=13.2 ms
+> ^C
+> --- atomw ping statistics ---
+> 11 packets transmitted, 9 received, 18% packet loss, time 10003ms
+> rtt min/avg/max/mdev = 9.744/99.095/217.349/58.880 ms
+>
+> With latest rt2800usb (and firmware from the git tree ~5 minutes ago)
+>
+> With wlan0 power off:
+>
+> PING atomw (192.168.0.2) 56(84) bytes of data.
+> 64 bytes from atomw (192.168.0.2): icmp_req=3 ttl=64 time=40.6 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=4 ttl=64 time=0.894 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=5 ttl=64 time=0.735 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=6 ttl=64 time=0.693 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=7 ttl=64 time=0.680 ms
+> ^C
+> -- atomw ping statistics ---
+> 7 packets transmitted, 5 received, 28% packet loss, time 6005ms
+> rtt min/avg/max/mdev = 0.680/8.723/40.615/15.946 ms
+>
+> Switching back to rt2870sta, rt2800usb is unusable for me at this time.
+>
+> With rt2870sta and the Media Link 150 / USB stick, (I have two, the 
+> problems
+> occur on both, using different USB ports as well using the rt2800usb 
+> driver)
+>
+> $ ping atomw
+> PING atomw (192.168.0.2) 56(84) bytes of data.
+> 64 bytes from atomw (192.168.0.2): icmp_req=1 ttl=64 time=1.07 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=2 ttl=64 time=0.709 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=3 ttl=64 time=0.921 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=4 ttl=64 time=0.723 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=5 ttl=64 time=0.752 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=6 ttl=64 time=0.718 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=7 ttl=64 time=0.745 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=8 ttl=64 time=0.787 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=9 ttl=64 time=0.835 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=10 ttl=64 time=0.878 ms
+> 64 bytes from atomw (192.168.0.2): icmp_req=11 ttl=64 time=0.704 ms
+> ^C
+> --- atomw ping statistics ---
+> 11 packets transmitted, 11 received, 0% packet loss, time 10010ms
+> rtt min/avg/max/mdev = 0.704/0.804/1.074/0.111 ms
+>
+> Flawless, I hope the issues can be worked out with the rt2800usb 
+> driver, or
+> someone keeps a backport of the rt2870sta driver, thanks!
+>
+> Here is some debug output from when I was using rt2800usb:
+>
+> [  102.432319] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 0
+> [  102.913430] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 1
+> [  103.876437] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 2
+> [  103.918554] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 3
+> [  103.924421] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 5
+> [  103.939051] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 7
+> [  103.944339] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 8
+> [  103.959539] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 9
+> [  103.964800] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 10
+> [  103.973788] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 13
+> [  103.978632] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 14
+> [  103.984294] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 16
+> [  103.989152] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 17
+> [  104.249186] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 19
+> [  104.254079] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 20
+> [  104.259670] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 23
+> [  116.706277] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  116.845043] phy0 -> rt2800_txdone_entry_check: Warning - TX status 
+> report missed for queue 2 entry 24
+> [  122.706346] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  123.706360] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 2 status timed out, invoke forced tx handler
+> [  124.706329] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  126.706328] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  128.706301] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  129.706281] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 2 status timed out, invoke forced tx handler
+> [  130.706403] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 2 status timed out, invoke forced tx handler
+> [  153.706296] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 0 status timed out, invoke forced tx handler
+> [  162.706335] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX 
+> queue 2 status timed out, invoke forced tx handler
+>
+> Justin.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+Hi Justin,
+- I do not have this issue with rt2800usb:
+:~$ modinfo rt2800usb
+filename:       
+/lib/modules/2.6.38-5-generic/updates/drivers/net/wireless/rt2x00/rt2800usb.ko
+license:        GPL
+firmware:       rt2870.bin
+description:    Ralink RT2800 USB Wireless LAN driver.
+version:        2.3.0
+author:         http://rt2x00.serialmonkey.com
+srcversion:     8A52B052043FF2C7E5A8B14
+----------------------------------------------------------------------------------------
+:~$ cat /etc/lsb-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=10.04
+DISTRIB_CODENAME=lucid
+DISTRIB_DESCRIPTION="Ubuntu 10.04.2 LTS"
+-----------------------------------------------------------------------------------------
+jano:~$ ls -l /lib/firmware/rt2870.bin
+-rw-r--r-- 1 root root 4096 2010-11-18 22:20 /lib/firmware/rt2870.bin
+-----------------------------------------------------------------------------------------
+:~$ ping -c 5 www.google.it
+PING www.l.google.com (74.125.232.116) 56(84) bytes of data.
+64 bytes from 74.125.232.116: icmp_seq=1 ttl=54 time=29.8 ms
+64 bytes from 74.125.232.116: icmp_seq=2 ttl=54 time=36.0 ms
+64 bytes from 74.125.232.116: icmp_seq=3 ttl=53 time=36.1 ms
+64 bytes from 74.125.232.116: icmp_seq=4 ttl=54 time=38.6 ms
+64 bytes from 74.125.232.116: icmp_seq=5 ttl=54 time=34.1 ms
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 9ecca93..7f30bc6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -34,10 +34,10 @@ static const u32 ar9300_2p2_radio_postamble[][5] = {
- 
- static const u32 ar9300Modes_lowest_ob_db_tx_gain_table_2p2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
--	{0x0000a2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
--	{0x0000a2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
--	{0x0000a2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
- 	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
-@@ -119,14 +119,14 @@ static const u32 ar9300Modes_lowest_ob_db_tx_gain_table_2p2[][5] = {
- 	{0x0000a634, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
- 	{0x0000a638, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
- 	{0x0000a63c, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
--	{0x0000b2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
--	{0x0000b2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
--	{0x0000b2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000c2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
--	{0x0000c2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
--	{0x0000c2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
--	{0x0000c2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000b2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x0000c2dc, 0x00033800, 0x00033800, 0x03aaa352, 0x03aaa352},
-+	{0x0000c2e0, 0x0003c000, 0x0003c000, 0x03ccc584, 0x03ccc584},
-+	{0x0000c2e4, 0x03fc0000, 0x03fc0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
- 	{0x00016048, 0x62480001, 0x62480001, 0x62480001, 0x62480001},
- 	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-@@ -835,10 +835,10 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
- 
- static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000a2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x0000a410, 0x000050d8, 0x000050d8, 0x000050d9, 0x000050d9},
- 	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x04002222, 0x04002222, 0x04000002, 0x04000002},
-@@ -920,14 +920,14 @@ static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 	{0x0000a634, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
- 	{0x0000a638, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
- 	{0x0000a63c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000b2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000c2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x00016044, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
- 	{0x00016048, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
- 	{0x00016068, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
-@@ -941,10 +941,10 @@ static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 
- static const u32 ar9300Modes_high_ob_db_tx_gain_table_2p2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2dc, 0x01feee00, 0x01feee00, 0x00637800, 0x00637800},
--	{0x0000a2e0, 0x0000f000, 0x0000f000, 0x03838000, 0x03838000},
--	{0x0000a2e4, 0x01ff0000, 0x01ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000a2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a2dc, 0x01feee00, 0x01feee00, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x0000f000, 0x0000f000, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x01ff0000, 0x01ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x0000a410, 0x000050d8, 0x000050d8, 0x000050d9, 0x000050d9},
- 	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x04002222, 0x04002222, 0x04000002, 0x04000002},
-@@ -1026,14 +1026,14 @@ static const u32 ar9300Modes_high_ob_db_tx_gain_table_2p2[][5] = {
- 	{0x0000a634, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
- 	{0x0000a638, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
- 	{0x0000a63c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0x01feee00, 0x01feee00, 0x00637800, 0x00637800},
--	{0x0000b2e0, 0x0000f000, 0x0000f000, 0x03838000, 0x03838000},
--	{0x0000b2e4, 0x01ff0000, 0x01ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000b2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000c2dc, 0x01feee00, 0x01feee00, 0x00637800, 0x00637800},
--	{0x0000c2e0, 0x0000f000, 0x0000f000, 0x03838000, 0x03838000},
--	{0x0000c2e4, 0x01ff0000, 0x01ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000c2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000b2dc, 0x01feee00, 0x01feee00, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x0000f000, 0x0000f000, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x01ff0000, 0x01ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x0000c2dc, 0x01feee00, 0x01feee00, 0x03aaa352, 0x03aaa352},
-+	{0x0000c2e0, 0x0000f000, 0x0000f000, 0x03ccc584, 0x03ccc584},
-+	{0x0000c2e4, 0x01ff0000, 0x01ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x00016044, 0x056db2e4, 0x056db2e4, 0x056db2e4, 0x056db2e4},
- 	{0x00016048, 0x8e480001, 0x8e480001, 0x8e480001, 0x8e480001},
- 	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-@@ -1307,10 +1307,10 @@ static const u32 ar9300Common_rx_gain_table_2p2[][2] = {
- 
- static const u32 ar9300Modes_low_ob_db_tx_gain_table_2p2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000a2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
- 	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
-@@ -1392,14 +1392,14 @@ static const u32 ar9300Modes_low_ob_db_tx_gain_table_2p2[][5] = {
- 	{0x0000a634, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
- 	{0x0000a638, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
- 	{0x0000a63c, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000b2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
--	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
--	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
--	{0x0000c2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
- 	{0x00016048, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
- 	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
--- 
-1.7.4.4
+--- www.l.google.com ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 20355ms
+rtt min/avg/max/mdev = 29.821/34.965/38.603/2.937 ms
 
+-----------------------------------------------------------------------------------
+:~$ ping -c 5 www.google.it
+PING www.l.google.com (74.125.232.112) 56(84) bytes of data.
+64 bytes from 74.125.232.112: icmp_seq=1 ttl=54 time=39.5 ms
+64 bytes from 74.125.232.112: icmp_seq=2 ttl=53 time=36.8 ms
+64 bytes from 74.125.232.112: icmp_seq=3 ttl=53 time=35.4 ms
+64 bytes from 74.125.232.112: icmp_seq=4 ttl=53 time=38.6 ms
+64 bytes from 74.125.232.112: icmp_seq=5 ttl=53 time=34.3 ms
+
+--- www.l.google.com ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 20385ms
+rtt min/avg/max/mdev = 34.302/36.943/39.525/1.945 ms
+----------------------------------------------------------------------------------
+
+Bye Jano
