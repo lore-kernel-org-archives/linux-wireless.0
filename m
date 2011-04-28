@@ -1,127 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47225 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831Ab1DLFwU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 01:52:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1302565473.2163.28.camel@Joe-Laptop>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
-	<1302565473.2163.28.camel@Joe-Laptop>
-Date: Tue, 12 Apr 2011 07:52:19 +0200
-Message-ID: <BANLkTikWSzLoQd_6s-jeL8OfUpekoK9hXA@mail.gmail.com>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Joe Perches <joe@perches.com>
+Received: from mx1.redhat.com ([209.132.183.28]:24040 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752575Ab1D1K7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 06:59:22 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH wireless-2.6] iwl4965: fix "Received BA when not expected"
+Date: Thu, 28 Apr 2011 12:58:24 +0200
+Message-Id: <1303988304-6935-1-git-send-email-sgruszka@redhat.com> (sfid-20110428_125925_275254_2A61F997)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/12 Joe Perches <joe@perches.com>:
-> On Mon, 2011-04-11 at 23:25 +0200, Rafał Miłecki wrote:
->
->>   Proper pr_* usage
->
-> Just trivia...
+Need to use broadcast sta_id for management and multicast frames,
+otherwise we broke BA session and get messages like that:
 
-The patch you were reviewing does not have pr_* stuff included, sorry.
-I published V3 by mistake missing some changes. Patch V3.1 alreay
-fixes that.
+"Received BA when not expected"
 
+or (on older kernels):
 
->> diff --git a/drivers/axi/axi_private.h b/drivers/axi/axi_private.h
->> new file mode 100644
->> index 0000000..1c995f5
->> --- /dev/null
->> +++ b/drivers/axi/axi_private.h
->> @@ -0,0 +1,45 @@
->> +#ifndef LINUX_AXI_PRIVATE_H_
->> +#define LINUX_AXI_PRIVATE_H_
->> +
->> +#include <linux/axi/axi.h>
->> +#include <linux/device.h>
->> +#include <linux/list.h>
->> +#include <linux/types.h>
->> +#include <linux/spinlock.h>
->> +#include <linux/pci.h>
->> +#include <linux/mod_devicetable.h>
->> +#include <linux/dma-mapping.h>
->> +#include <linux/types.h>
->
-> Duplicate include of linux/types.h
+"BA scd_flow 0 does not match txq_id 10"
 
-V3.1
+This fix regression introduced in 2.6.35 during station management
+code rewrite by:
 
+commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Apr 30 11:30:45 2010 -0700
 
->> +
->> +#ifndef pr_fmt
->> +#define pr_fmt(fmt)          "axi: " fmt
->> +#endif
->
-> This needs to be before any include that includes kernel.h
-> and I believe
-> #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> is the same output and more normally used style.
->
-> Right now, you've got no prefix for any format string.
-> Try '$ strings built-in.o | grep "^<.>"' and see.
+    iwlwifi: use iwl_find_station less
 
-V3.1
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   19 +++++++++++++------
+ 1 files changed, 13 insertions(+), 6 deletions(-)
 
->> +void axi_pmu_workarounds(struct axi_drv_cc *cc)
->> +{
->> +     struct axi_bus *bus = cc->core->bus;
->> +
->> +     switch (bus->chipinfo.id) {
->> +     case 0x4313:
->
-> Probably better to use defines.
-
-That magic hex values always match common name of chipsets, so it's
-looks pretty clean/obvious... Not sure if it's worth it?
-
->> +             axi_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
->> +             break;
->> +     case 0x4331:
->> +             axi_err("Enabling Ext PA lines not implemented\n");
->
-> You should still remove axi_err/info/debug and
-> just use pr_<level>.
-
-V3.1
-
->> +             break;
->> +     case 43224:
->> +             if (bus->chipinfo.rev == 0) {
->> +                     axi_err("Workarounds for 43224 rev 0 not fully "
->> +                                     "implemented\n");
->
-> I suggest you don't bother splitting and wrapping
-> format strings > 80 chars.  Splitting makes grep
-> a bit harder.
->
->                        pr_err("Workarounds for 43224 rev 0 not fully implemented\n");
->
-> Some hex and some decimal cases?
-> Maybe some comments for that?
-
-Well, such a trick from Broadcom. I believe wanted to keep 43* names
-for the chipsets, they invented sth like 43224 but they had only
-0xFFFF. So the used 0xA8D8==43224.
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index fbec88d..3c2e117 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -31,6 +31,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/sched.h>
++#include <linux/etherdevice.h>
+ 
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+@@ -316,12 +317,18 @@ int iwl4965_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+-	/* Find index into station table for destination station */
+-	sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+-			       hdr->addr1);
+-		goto drop_unlock;
++	/* If this frame is broadcast or management, use broadcast station id */
++	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
++		sta_id = ctx->bcast_sta_id;
++	else {
++		/* Find index into station table for destination station */
++		sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
++
++		if (sta_id == IWL_INVALID_STATION) {
++			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
++				       hdr->addr1);
++			goto drop_unlock;
++		}
+ 	}
+ 
+ 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
 -- 
-Rafał
+1.7.1
+
