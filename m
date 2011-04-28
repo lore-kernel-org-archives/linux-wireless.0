@@ -1,50 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57268 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752702Ab1DSN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 09:59:33 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2011 06:59:07 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH V2 13/22] ath9k_hw: Don't configure AR_CH0_THERM for AR9340
-Date: Tue, 19 Apr 2011 19:29:11 +0530
-Message-ID: <1303221560-25139-14-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-References: <1303221560-25139-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33263 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753024Ab1D1FeF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 01:34:05 -0400
+Subject: Re: [RFT/PATCH] mwl8k: replace rateinfo bitfields with mask and
+	shift macros
+From: Nishant Sarmukadam <nishants@marvell.com>
+Reply-To: <nishants@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Pradeep Nemavat <pnemavat@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <1303931068-5922-1-git-send-email-linville@tuxdriver.com>
+References: <1303931068-5922-1-git-send-email-linville@tuxdriver.com>
 Content-Type: text/plain
+Date: Thu, 28 Apr 2011 10:58:45 +0530
+Message-ID: <1303968525.10316.5.camel@localhost.localdomain> (sfid-20110428_073409_144930_C364AB22)
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 6eadf97..5138104 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3448,9 +3448,13 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
--		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB,
--			      bias >> 2);
--		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
-+		if (!AR_SREV_9340(ah)) {
-+			REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				      AR_CH0_THERM_XPABIASLVL_MSB,
-+				      bias >> 2);
-+			REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				      AR_CH0_THERM_XPASHORT2GND, 1);
-+		}
- 	}
- }
- 
--- 
-1.7.0.4
+Thanks for looking into this. I have tested this patch and it is working
+fine.  
+
+Regards,
+Nishant
+
+On Wed, 2011-04-27 at 12:04 -0700, John W. Linville wrote:
+> AFAICT, this driver is claiming that 24 bits of rate info fit into a
+> 16-bit field in the Tx descriptor.  Anyway, the use of bitfields is
+> frowned-upon for a variety of well-documented reasons...
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> These masks could be backwards -- someone with the hardware please let
+> me know if that is the case or if this version works?
+> 
+>  drivers/net/wireless/mwl8k.c |   25 +++++--------------------
+>  1 files changed, 5 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index b8f2b12..8a1b262 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -1562,24 +1562,11 @@ static int mwl8k_tid_queue_mapping(u8 tid)
+>  
+>  /* The firmware will fill in the rate information
+>   * for each packet that gets queued in the hardware
+> - * in this structure
+> + * and these macros will interpret that info.
+>   */
+>  
+> -struct rateinfo {
+> -	__le16  format:1;
+> -	__le16  short_gi:1;
+> -	__le16  band_width:1;
+> -	__le16  rate_id_mcs:6;
+> -	__le16  adv_coding:2;
+> -	__le16  antenna:2;
+> -	__le16  act_sub_chan:2;
+> -	__le16  preamble_type:1;
+> -	__le16  power_id:4;
+> -	__le16  antenna2:1;
+> -	__le16  reserved:1;
+> -	__le16  tx_bf_frame:1;
+> -	__le16  green_field:1;
+> -} __packed;
+> +#define RI_FORMAT(a)		  (a & 0x0001)
+> +#define RI_RATE_ID_MCS(a)	 ((a & 0x01f8) >> 3)
+>  
+>  static int
+>  mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+> @@ -1600,7 +1587,6 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+>  		struct ieee80211_sta *sta;
+>  		struct mwl8k_sta *sta_info = NULL;
+>  		u16 rate_info;
+> -		struct rateinfo *rate;
+>  		struct ieee80211_hdr *wh;
+>  
+>  		tx = txq->head;
+> @@ -1643,14 +1629,13 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+>  				sta_info = MWL8K_STA(sta);
+>  				BUG_ON(sta_info == NULL);
+>  				rate_info = le16_to_cpu(tx_desc->rate_info);
+> -				rate = (struct rateinfo *)&rate_info;
+>  				/* If rate is < 6.5 Mpbs for an ht station
+>  				 * do not form an ampdu. If the station is a
+>  				 * legacy station (format = 0), do not form an
+>  				 * ampdu
+>  				 */
+> -				if (rate->rate_id_mcs < 1 ||
+> -				    rate->format == 0) {
+> +				if (RI_RATE_ID_MCS(rate_info) < 1 ||
+> +				    RI_FORMAT(rate_info) == 0) {
+>  					sta_info->is_ampdu_allowed = false;
+>  				} else {
+>  					sta_info->is_ampdu_allowed = true;
 
