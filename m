@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37431 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068Ab1DPON1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2011 10:13:27 -0400
+Received: from mail.atheros.com ([12.19.149.2]:64860 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760527Ab1D1OYG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 10:24:06 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:23:39 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC/RFT 9/9] ath9k: make sure main_rssi is positive
+Date: Thu, 28 Apr 2011 19:52:59 +0530
+Message-ID: <1304000579-5784-10-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162412_583901_6EB9D18B)
+In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinNoX6GBG=6xVC8ZfOO4OyZ_o=sFg@mail.gmail.com>
-References: <1302781431.21145.6.camel@dev.znau.edu.ua> <BANLkTinvpt5vs+rXd3WN-a2JpGtTV+=Gyg@mail.gmail.com>
- <4DA6E9BD.3090404@hauke-m.de> <BANLkTinu+Q367oqQPiUehPcbMs-SBxbwFg@mail.gmail.com>
- <1302786900.21965.52.camel@dev.znau.edu.ua> <BANLkTimM8=-pX+Ea8Eyp4XyvP1APbUof9w@mail.gmail.com>
- <1302892585.30441.12.camel@dev.znau.edu.ua> <BANLkTi=16i+D8frz3X2f+JDtp4hbJKLL3A@mail.gmail.com>
- <1302896541.30441.33.camel@dev.znau.edu.ua> <BANLkTinPVaYC14Y=m5iu7GYodkRb6uTuPw@mail.gmail.com>
- <20110415195642.22440.qmail@stuge.se> <BANLkTinNoX6GBG=6xVC8ZfOO4OyZ_o=sFg@mail.gmail.com>
-From: Jonas Gorski <jonas.gorski+openwrt@gmail.com>
-Date: Sat, 16 Apr 2011 16:13:06 +0200
-Message-ID: <BANLkTinXUt1aNudnRqEG40vcrtMBCc3Nxg@mail.gmail.com>
-Subject: Re: Could I (ab)use bus (struct bus_type) for virtual Broadcom bus?
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg KH <greg@kroah.com>, Russell King <rmk@arm.linux.org.uk>,
-	Arend van Spriel <arend@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-arm-kernel@lists.infradead.org, b43-dev@lists.infradead.org,
-	Peter Stuge <peter@stuge.se>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 April 2011 16:00, Rafał Miłecki <zajec5@gmail.com> wrote:
-> Of the other point there is no sense in calling it
-> bcm_amba_axi_for_wifi as I believe we can meet other devices than just
-> wifi on this architecture.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Current bcm47xx/53xx SoCs from Broadcom also use this architecture for
-the system bus (like the older ones used SSB), and they usually have
-ethernet macs, memory controllers, mips cores on it (and, as far as I
-can see, also always a 802.11 core).
+some times the rssi control descriptor for the main antenna may be
+negative like that of alternate antenna, hence before  incrementing
+packet counts/rssi of main/alternate antenna make sure both main_rssi
+and alt_rssi are positive only. this avoids wrong selection of antenna
+due to diversity
 
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Jonas
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4710830..2441085 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1466,8 +1466,8 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	main_ant_conf = (rs->rs_rssi_ctl2 >> ATH_ANT_RX_MAIN_SHIFT) &
+ 			 ATH_ANT_RX_MASK;
+ 
+-	/* Record packet only when alt_rssi is positive */
+-	if (alt_rssi > 0) {
++	/* Record packet only when both main_rssi and  alt_rssi is positive */
++	if (main_rssi > 0 && alt_rssi > 0) {
+ 		antcomb->total_pkt_count++;
+ 		antcomb->main_total_rssi += main_rssi;
+ 		antcomb->alt_total_rssi  += alt_rssi;
+-- 
+1.7.0.4
+
