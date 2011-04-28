@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40892 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933783Ab1DNSCe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 14:02:34 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1584407bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 11:02:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com>
-References: <BANLkTimreffpSdBUogakk=E6Hn1Lf6KJ_w@mail.gmail.com>
- <BANLkTi=BgKRJXqM+8idBr-txCDPGFQSFhw@mail.gmail.com> <BANLkTi=Dtbhz=kGUSdH57JRG1DoRFP7kLw@mail.gmail.com>
- <201104131843.57676.chunkeey@googlemail.com> <BANLkTi=xyrWoYMeYCJjGhHgi=2W-CCBF7w@mail.gmail.com>
- <BANLkTi=mK2r_ZSStDhMSeHcFrx-jx=pN3A@mail.gmail.com> <BANLkTi=gTS5DvT+JMr35Q4puaqUaUy5Bww@mail.gmail.com>
- <BANLkTingZRChrOtSPbat6D69_nW=6DpADw@mail.gmail.com>
-From: Damian Lesiuk <lesiuk@gmail.com>
-Date: Thu, 14 Apr 2011 20:01:53 +0200
-Message-ID: <BANLkTikX2b+0m23JZTKWuFzzr3rNmWdnqg@mail.gmail.com>
-Subject: Re: carl9170: TP-LINK TL-WN822N slow connection speeds (16 mbps)
- MASTER MODE
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:35687 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754882Ab1D1MJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 08:09:22 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, kernel@lists.fedoraproject.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kyle McMartin <kmcmartin@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.38 3/4] iwl3945: disable hw scan by default
+Date: Thu, 28 Apr 2011 14:08:14 +0200
+Message-Id: <1303992495-7337-4-git-send-email-sgruszka@redhat.com> (sfid-20110428_140926_835865_6414E2E3)
+In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With hostapd 0.6.9 I have:
+commit 0263aa45293838b514b8af674a03faf040991a90 upstream.
 
-Station 74:f0:6d:33:ea:00 (on wlan0)
-       inactive time:  10 ms
-       rx bytes:       1563761
-       rx packets:     18910
-       tx bytes:       52327665
-       tx packets:     34780
-       signal:         -34 dBm
-       tx bitrate:     135.0 MBit/s MCS 6 40Mhz short GI
+After new NetworkManager 0.8.996 changes, hardware scanning is causing
+microcode errors as reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=683571
+and sometimes kernel crashes:
+https://bugzilla.redhat.com/show_bug.cgi?id=688252
 
-But I can only get 16 mbps max.
+Also with hw scan there are very bad performance on some systems
+as reported here:
+https://bugzilla.redhat.com/show_bug.cgi?id=671366
+
+Since Intel no longer supports 3945, there is no chance to get proper
+firmware fixes, we need workaround problems by disable hardware scanning
+by default.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index cf0699a..a8340f7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -94,6 +94,7 @@ MODULE_LICENSE("GPL");
+ struct iwl_mod_params iwl3945_mod_params = {
+ 	.sw_crypto = 1,
+ 	.restart_fw = 1,
++	.disable_hw_scan = 1,
+ 	/* the rest are 0 by default */
+ };
+ 
+@@ -4317,7 +4318,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
+ #endif
+ module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
+ 		   int, S_IRUGO);
+-MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
++MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
+ module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
+ MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
+ 
+-- 
+1.7.1
+
