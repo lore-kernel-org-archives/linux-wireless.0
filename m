@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:56628 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53080 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab1DKP1O (ORCPT
+	with ESMTP id S932963Ab1D1SMy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:27:14 -0400
-Received: by iwn34 with SMTP id 34so5723503iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 08:27:13 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 28 Apr 2011 14:12:54 -0400
+Received: by iwn34 with SMTP id 34so2442195iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 11:12:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19875.7775.388374.784005@gargle.gargle.HOWL>
-Date: Mon, 11 Apr 2011 20:59:35 +0530
-To: Richard Farina <sidhayn@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc oddity
-In-Reply-To: <19875.7684.859710.807182@gargle.gargle.HOWL>
-References: <4D9FCC70.1020805@gmail.com>
-	<19871.62035.829719.402615@gargle.gargle.HOWL>
-	<4DA311F3.6010007@gmail.com>
-	<19875.7684.859710.807182@gargle.gargle.HOWL>
+In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 28 Apr 2011 11:12:33 -0700
+Message-ID: <BANLkTi=8Vc5MGjK=K3=hkFLy=kiFy1osCg@mail.gmail.com> (sfid-20110428_201317_319369_CB9DC6F2)
+Subject: Re: [RFC/RFT 0/9] ath9k: Add Antenna diversity support for AR9485
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Senthilkumar.Balasubramanian@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith wrote:
-> > Either way I can wait on the firmware-version fix but where can I find 
-> > the patch that shows fixes the "driver: usb" issue? Your obviously shows 
-> > properly :-)
-> 
-> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+On Thu, Apr 28, 2011 at 7:22 AM, Mohammed Shafi Shajakhan
+<mshajakhan@atheros.com> wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>
+> *These are purely RFC/RFT patches, none of them are tested.
+>  once tested we will send it as patches.
+> *This patch set adds Antenna diversity support for AR9485, previously
+>  antenna diversity is only supported in AR9285
+> *The basic antenna diversity algorithm remains the same
+> *slight change in the diversity field in eeprom
+> *introduction of main/alt gain table and lna1_lna2 delta fields
+> *initially set LNA1 for main antenna
+> *introduction of diversity group
+> *based on diversity group, fast diversity bias parmaters and
+> lna1_lna2_delta varies
+> *implement an API to take the decision of swapping main/ALT LNA's
+> for AR9485
+> *configure fast diversity bias based on diversity group
 
-In the AP/P2P section.
+Apart from my one comment:
 
-Sujith
+Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+  Luis
