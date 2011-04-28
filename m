@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49905 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756603Ab1DLSAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 14:00:24 -0400
-Received: by vws1 with SMTP id 1so5274851vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 11:00:23 -0700 (PDT)
-Message-ID: <4DA49332.8000403@lwfinger.net>
-Date: Tue, 12 Apr 2011 13:00:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:61082 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758147Ab1D1KCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 06:02:04 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 03:01:37 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	<stable@kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH] ath9k: Fix drain txq failure in flush
+Date: Thu, 28 Apr 2011 15:31:57 +0530
+Message-ID: <1303984917-12340-1-git-send-email-rmanoharan@atheros.com> (sfid-20110428_120209_418957_C88B8023)
 MIME-Version: 1.0
-To: Igor Plyatov <plyatov@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rt2800usb: page allocation failure
-References: <4DA471DC.7080308@gmail.com>
-In-Reply-To: <4DA471DC.7080308@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2011 10:38 AM, Igor Plyatov wrote:
+While draining the txq in flush, the buffers can be
+added into the tx queue by tx_tasklet which leads to
+unneccesary chip reset.
 
-> kworker/u:1: page allocation failure. order:1, mode:0x20
+This issue was originially found with AR9382 and
+running heavy uplink udp traffic with higher bandwidth
+and doing frequent bgscan.
 
---snip--
+Cc: stable@kernel.org
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-> [<c0279450>] (dev_alloc_skb+0x0/0x44) from [<c0226698>]
-> (rt2x00queue_alloc_rxskb+0x4c/0xc4)
-> [<c022664c>] (rt2x00queue_alloc_rxskb+0x0/0xc4) from [<c0223480>]
-> (rt2x00lib_rxdone+0x44/0x298)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c3dbf26..efdafd2 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2261,6 +2261,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	struct ath_softc *sc = hw->priv;
+ 	int timeout = 200; /* ms */
+ 	int i, j;
++	bool drain_txq;
+ 
+ 	mutex_lock(&sc->mutex);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+@@ -2286,7 +2287,10 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	}
+ 
+ 	ath9k_ps_wakeup(sc);
+-	if (!ath_drain_all_txq(sc, false))
++	spin_lock_bh(&sc->sc_pcu_lock);
++	drain_txq = ath_drain_all_txq(sc, false);
++	spin_unlock_bh(&sc->sc_pcu_lock);
++	if (!drain_txq)
+ 		ath_reset(sc, false);
+ 	ath9k_ps_restore(sc);
+ 	ieee80211_wake_queues(hw);
+-- 
+1.7.5
 
---snip--
-
-> Normal: 403*4kB 2*8kB 2*16kB 2*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB
-> 0*2048kB 0*4096kB = 1724kB
-
-Your system is failing to get a receive buffer of size 8kB (order:1). If we look 
-at the last line above, you have quite a bit of memory free, but it is highly 
-fragmented - almost all of it is in 4kB pieces. This condition is not fatal, but 
-it can be avoided by changing the NIC parameters so that each RX buffer fits in 4k.
-
-If you look at the ifconfig output for this device, the MTU is likely 1500. By 
-reducing this, you should be able to get all buffers to be of order 0. I would 
-start with 1400 to see if it makes the problem go away. Reducing this quantity 
-has the potential to slow the network transfers, but you won't see it as the 
-default block size for dd is 512. Any such slowdown will be much less severe 
-than the delay causes by missing a buffer allocation.
-
-Larry
