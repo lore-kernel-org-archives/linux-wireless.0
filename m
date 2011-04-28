@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757350Ab1DAVgl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55658 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756161Ab1D1M4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:41 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:41 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v6 03/10] mac80211: ignore peers if security is enabled for this mesh
-Date: Fri,  1 Apr 2011 13:35:44 -0700
-Message-Id: <1301690151-14979-4-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+	Thu, 28 Apr 2011 08:56:20 -0400
+Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <alexander.simon@saxnet.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20110428T135917-421@post.gmane.org> (sfid-20110428_141415_832084_99A2E356)
+References: <1302604964.2139.5.camel@alex-2>
+	 <loom.20110412T130620-109@post.gmane.org>
+	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
+	 <loom.20110428T135917-421@post.gmane.org>
+	 (sfid-20110428_141415_832084_99A2E356)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Apr 2011 14:56:08 +0200
+Message-ID: <1303995368.3558.9.camel@jlt3.sipsolutions.net> (sfid-20110428_145623_723500_A874553B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Thu, 2011-04-28 at 12:13 +0000, Alexander Simon wrote:
+> > Also what if the IBSS is created with HT40+ and then joins, can it join
+> > HT40-? Is the channel type "advisory" like the frequency? Can it join
+> > HT20 IBSS as well?
+> HT type can`t be advisory, as there may be stations without n.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c       |    4 ++++
- net/mac80211/mesh_plink.c |    4 ++++
- net/wireless/mesh.c       |    1 +
- 3 files changed, 9 insertions(+), 0 deletions(-)
+Yeah, but it's possible to still communicate with them.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1c244c0..47a26c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -573,6 +573,10 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
- 			       &elems);
- 
-+	/* ignore beacons from secure mesh peers if our security is off */
-+	if (elems.rsn_len && !sdata->u.mesh.is_secure)
-+		return;
-+
- 	if (elems.ds_params && elems.ds_params_len == 1)
- 		freq = ieee80211_channel_to_frequency(elems.ds_params[0], band);
- 	else
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index c705b20..bafe255 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -449,6 +449,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		mpl_dbg("Mesh plink: missing necessary peer link ie\n");
- 		return;
- 	}
-+	if (elems.rsn_len && !sdata->u.mesh.is_secure) {
-+		mpl_dbg("Mesh plink: can't establish link with secure peer\n");
-+		return;
-+	}
- 
- 	ftype = mgmt->u.action.u.plink_action.action_code;
- 	ie_len = elems.peer_link_len;
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 0d4b226..c51e3c5 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -55,6 +55,7 @@ const struct mesh_setup default_mesh_setup = {
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
- 	.ie = NULL,
- 	.ie_len = 0,
-+	.is_secure = false,
- };
- 
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
--- 
-1.7.4.1
+> Our card is set to HT40+/- if set by iw.
+> Some other station is added into our internal station list by its HT beacons.
+> E.g. if we have configured HT40- and there is someone with HT40+, minstrel_ht
+> should use HT20 only. But i admit it seems cleaner to AND both caps.
+
+Well. You need to consider more than just this. I have a feeling you're
+only considering fixed channel use cases. But if we configure HT40+, and
+then find a peer on a channel that may only use HT40-, then what?
+
+johannes
 
