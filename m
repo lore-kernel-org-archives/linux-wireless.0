@@ -1,92 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37429 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941Ab1DECQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 22:16:33 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so6347290iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2011 19:16:33 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v7 05/10] nl80211: let userspace authenticate stations
-Date: Mon,  4 Apr 2011 18:15:35 -0700
-Message-Id: <1301966140-26080-6-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
-References: <1301966140-26080-1-git-send-email-thomas@cozybit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37298 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754950Ab1D1LLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 07:11:15 -0400
+Date: Thu, 28 Apr 2011 13:10:23 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH wireless-2.6] iwlagn: fix "Received BA when not expected"
+Message-ID: <20110428111011.GA6967@redhat.com> (sfid-20110428_131118_871724_45CC9A2E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Need to use broadcast sta_id for management and multicast frames,
+otherwise we broke BA session and get messages like that:
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+"Received BA when not expected"
+
+or (on older kernels):
+
+"BA scd_flow 0 does not match txq_id 10"
+
+This fix regression introduced in 2.6.35 during station management
+code rewrite by:
+
+commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Apr 30 11:30:45 2010 -0700
+
+    iwlwifi: use iwl_find_station less
+
+Patch partially resolve:
+https://bugzilla.kernel.org/show_bug.cgi?id=16691
+However, there are still 11n performance problems on 4965 and 5xxx
+devices that need to be ivestigated.
+
+Cc: stable@kernel.org # 2.6.35+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- include/linux/nl80211.h |    2 ++
- net/mac80211/cfg.c      |    6 ++++++
- net/wireless/nl80211.c  |    5 ++++-
- 3 files changed, 12 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 59aa809..43c620e 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1174,6 +1174,7 @@ enum nl80211_iftype {
-  *	with short barker preamble
-  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
-  * @NL80211_STA_FLAG_MFP: station uses management frame protection
-+ * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
-  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
-  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
-  */
-@@ -1183,6 +1184,7 @@ enum nl80211_sta_flags {
- 	NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	NL80211_STA_FLAG_WME,
- 	NL80211_STA_FLAG_MFP,
-+	NL80211_STA_FLAG_AUTHENTICATED,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 494de0e..dfde372 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -31,6 +31,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/sched.h>
++#include <linux/etherdevice.h>
  
- 	/* keep last */
- 	__NL80211_STA_FLAG_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4f73085..c57d653 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -675,6 +675,12 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 		if (set & BIT(NL80211_STA_FLAG_MFP))
- 			sta->flags |= WLAN_STA_MFP;
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+@@ -582,12 +583,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+-	/* Find index into station table for destination station */
+-	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+-			       hdr->addr1);
+-		goto drop_unlock;
++	/* If this frame is broadcast or management, use broadcast station id */
++	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
++		sta_id = ctx->bcast_sta_id;
++	else {
++		/* Find index into station table for destination station */
++		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
++		if (sta_id == IWL_INVALID_STATION) {
++			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
++				       hdr->addr1);
++			goto drop_unlock;
++		}
  	}
-+
-+	if (mask & BIT(NL80211_STA_FLAG_AUTHENTICATED)) {
-+		sta->flags &= ~WLAN_STA_AUTH;
-+		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
-+			sta->flags |= WLAN_STA_AUTH;
-+	}
- 	spin_unlock_irqrestore(&sta->flaglock, flags);
  
- 	/*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f98db56..dba1a21 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1925,6 +1925,7 @@ static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
- 	[NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_WME] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_MFP] = { .type = NLA_FLAG },
-+	[NL80211_STA_FLAG_AUTHENTICATED] = { .type = NLA_FLAG },
- };
- 
- static int parse_station_flags(struct genl_info *info,
-@@ -2265,7 +2266,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			err = -EINVAL;
- 		if (params.supported_rates)
- 			err = -EINVAL;
--		if (params.sta_flags_mask)
-+		if (params.sta_flags_mask &
-+				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-+				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
- 			err = -EINVAL;
- 		break;
- 	default:
+ 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
 -- 
-1.7.4.1
+1.7.1
 
