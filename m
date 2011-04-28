@@ -1,30 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36762 "EHLO coco.kroah.org"
+Received: from mx1.redhat.com ([209.132.183.28]:54926 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758952Ab1DZWsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2011 18:48:06 -0400
-Date: Tue, 26 Apr 2011 15:46:47 -0700
-From: Greg KH <greg@kroah.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org, brudley@broadcom.com,
-	henryp@broadcom.com, hharte@broadcom.com
-Subject: Re: [PATCH 0/5 v2] staging: brcm80211: remove si sb utils dependency
- from brcmfmac
-Message-ID: <20110426224647.GA1355@kroah.com> (sfid-20110427_004811_343854_09209606)
-References: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+	id S1751438Ab1D1MAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 08:00:38 -0400
+Date: Thu, 28 Apr 2011 13:59:48 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless-2.6] iwlagn: fix "Received BA when not expected"
+Message-ID: <20110428115947.GB7030@redhat.com> (sfid-20110428_140041_841578_3358F093)
+References: <20110428111011.GA6967@redhat.com>
+ <1303990661.3558.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1303785248-27420-1-git-send-email-frankyl@broadcom.com>
+In-Reply-To: <1303990661.3558.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 25, 2011 at 07:34:03PM -0700, Franky Lin wrote:
-> Hi Greg,
+On Thu, Apr 28, 2011 at 01:37:41PM +0200, Johannes Berg wrote:
+> On Thu, 2011-04-28 at 13:10 +0200, Stanislaw Gruszka wrote:
+> > Need to use broadcast sta_id for management and multicast frames,
+> > otherwise we broke BA session and get messages like that:
+> > 
+> > "Received BA when not expected"
+> > 
+> > or (on older kernels):
+> > 
+> > "BA scd_flow 0 does not match txq_id 10"
 > 
-> I fix the apply error issue of the rest 5 patches. The original path series
-> intends to remove si and sb utility from broadcom fullmac driver.
+> Hmm. Interesting. I believe you, but it's hard.
 
-That worked much better, thanks.
+To be honest, I expected to get explanations from you (perhaps
+with better fix) :-) However this one is intended to work on older
+kernels, and is tested by me and one other user.
 
-greg k-h
+> > -	/* Find index into station table for destination station */
+> > -	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
+> 
+> info->control.sta should be NULL here, at least for multicast frames
+> (which never really happen in practise unless you use AP mode). And then
+> this should return ctx->bcast_sta_id, just like you use below:
+> 
+> > +	/* If this frame is broadcast or management, use broadcast station id */
+> > +	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
+> > +		sta_id = ctx->bcast_sta_id;
+> 
+> So the reason has to be management frames. But why would those be
+> affecting it? They aren't QoS frames, so there should be no influence on
+> BA handling at all. This is a bit odd.
+>
+> 
+> Maybe we should make it clear here that it's about non-data frames and
+> remove the multicast check since that ought to be handled in the other
+> path?
+
+We call iwl_sta_modify_sleep_tx_count(priv, sta_id, 1); for any frame
+as long as some other conditions are true.
+
+Also multicast frames are important. When we send data and multicast
+frame we probably modify 
+
+priv->stations[sta_id].tid[tid]
+
+with wrong sta_id (other station with unicast address), what make related
+aggregation data wrong for that other station.
+
+Stanislaw
