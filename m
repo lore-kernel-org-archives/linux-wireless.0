@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52390 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809Ab1D2JG3 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51536 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670Ab1D1ITF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 05:06:29 -0400
-Received: by bwz15 with SMTP id 15so2956247bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 02:06:28 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Sujith <m.sujith@gmail.com>
-Subject: Re: [PATCH 1/2] ath9k_htc: Dump base eeprom header for UB91/94/95
-Date: Fri, 29 Apr 2011 11:06:20 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-References: <19897.11321.556139.837633@gargle.gargle.HOWL> <201104290116.26355.chunkeey@googlemail.com> <19898.4633.920683.992470@gargle.gargle.HOWL>
-In-Reply-To: <19898.4633.920683.992470@gargle.gargle.HOWL>
+	Thu, 28 Apr 2011 04:19:05 -0400
+Received: by iwn34 with SMTP id 34so2023007iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 01:19:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104291106.21170.chunkeey@googlemail.com> (sfid-20110429_110634_166504_3A1C3B0D)
+In-Reply-To: <1303849311-8817-1-git-send-email-arik@wizery.com>
+References: <1303849311-8817-1-git-send-email-arik@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 28 Apr 2011 11:18:49 +0300
+Message-ID: <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com> (sfid-20110428_101911_736860_4B107BA3)
+Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 April 2011 03:19:21 Sujith wrote:
-> Christian Lamparter wrote:
-> > On Thursday 28 April 2011 10:58:33 Sujith wrote:
-> > > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > > 
-> > > Debugfs file location: <debugfs_mnt>/ieee80211/phy#/ath9k_htc/base_eeprom
-> > > 
-> > If you just want to dump the eeprom, then why not with a userspace utility?
-> > It's pretty easy to write such a thing with libusb, furthermore it's more
-> > versatile and portable so the *BSD-folks are not left out!
-> 
-> We do have an eeprom dump tool for PCI cards, but hardly any one uses
-> that. 
-Oh, I used ath_info for ath5k a lot. Especially to get around regdom restrictions.
-Sure, your tool won't be able to do that, but never the less.
+On Tue, Apr 26, 2011 at 23:21, Arik Nemtsov <arik@wizery.com> wrote:
+> In AP mode we register for the MAX_TX_RETRY and INACTIVE_STA events.
+> Both are reported to the upper layers as a TX failure in the offending
+> stations.
+>
+> In STA mode we register only for the MAX_TX_RETRY event. A TX failure is
+> interpreted as a loss of connection.
+>
+> Support for IEEE80211_HW_REPORTS_TX_ACK_STATUS has been removed to avoid
+> the inherent race condition of a mac80211 TX failure counter in addition
+> to the FW counter.
+>
+> This patch depends on "mac80211: allow low level driver to report packet
+> loss"
+>
 
-> It's much more convenient to use debugging features that are present
-> in the driver itself. On an embedded board, it makes things a little bit easier.
-Do you really think that everyone will be happy to recompile their stripped & heavily 
-customised embedded kernels/or compat-wireless just to enable DEBUG and
-waste precious resources? Even with a PC, this is not necessarily straightforward,
-especially if the user has never done it before.
+Luca please don't take this one for now. It appears the FW sometimes
+misfires the event in STA mode.
+We'll need some more debugging.
 
-Regards,
-	Chr
+Arik
