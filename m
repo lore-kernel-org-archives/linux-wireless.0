@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37843 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757579Ab1DNJru (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 05:47:50 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 36so1780217wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 02:47:49 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 2/2] wl12xx: Revert "wl12xx: disable auto-arp"
-Date: Thu, 14 Apr 2011 12:47:55 +0300
-Message-Id: <1302774475-2977-2-git-send-email-eliad@wizery.com>
-In-Reply-To: <1302774475-2977-1-git-send-email-eliad@wizery.com>
-References: <1302774475-2977-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56121 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758592Ab1D1Jw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 05:52:56 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 07/10] iwlegacy: comment typo fix diable -> disable
+Date: Thu, 28 Apr 2011 11:51:30 +0200
+Message-Id: <1303984293-6601-7-git-send-email-sgruszka@redhat.com> (sfid-20110428_115307_377013_C8DF9D19)
+In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit e5e2f24b3eec67a7a35d43654a997f98ca21aff2.
-
-The encryption consideration on auto-arp configuration seems
-to resolve the crashes that were occured when auto-arp was enabled,
-so we can re-enable it now.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-core.c     |    2 +-
+ drivers/net/wireless/iwlegacy/iwl4965-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2ec15bf..7ebee3d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2762,7 +2762,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			}
+diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
+index 7211c92..4b244fe 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-core.c
++++ b/drivers/net/wireless/iwlegacy/iwl-core.c
+@@ -2642,7 +2642,7 @@ unplugged:
  
- 			ret = wl1271_acx_arp_ip_filter(wl,
--				ACX_ARP_FILTER_ARP_FILTERING,
-+				(ACX_ARP_FILTER_ARP_FILTERING |
-+				 ACX_ARP_FILTER_AUTO_ARP),
- 				addr);
- 		} else {
- 			wl->ip_addr = 0;
+ none:
+ 	/* re-enable interrupts here since we don't have anything to service. */
+-	/* only Re-enable if diabled by irq */
++	/* only Re-enable if disabled by irq */
+ 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+ 		iwl_legacy_enable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+index 46966e9..871e13b 100644
+--- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+@@ -1069,7 +1069,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
+ 	}
+ 
+ 	/* Re-enable all interrupts */
+-	/* only Re-enable if diabled by irq */
++	/* only Re-enable if disabled by irq */
+ 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+ 		iwl_legacy_enable_interrupts(priv);
+ 	/* Re-enable RF_KILL if it occurred */
 -- 
-1.7.0.4
+1.7.1
 
