@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63252 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758592Ab1D1Jwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2011 05:52:53 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 06/10] iwlegacy: remove scan_tx_antennas
-Date: Thu, 28 Apr 2011 11:51:29 +0200
-Message-Id: <1303984293-6601-6-git-send-email-sgruszka@redhat.com> (sfid-20110428_115300_176854_05D64292)
-In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
-References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756137Ab1D1LlQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 07:41:16 -0400
+Subject: Re: [PATCH wireless-2.6] iwlagn: fix "Received BA when not
+ expected"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1303990661.3558.3.camel@jlt3.sipsolutions.net> (sfid-20110428_133751_772868_CCD82590)
+References: <20110428111011.GA6967@redhat.com>
+	 <1303990661.3558.3.camel@jlt3.sipsolutions.net>
+	 (sfid-20110428_133751_772868_CCD82590)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Apr 2011 13:41:11 +0200
+Message-ID: <1303990871.3558.5.camel@jlt3.sipsolutions.net> (sfid-20110428_134118_773847_093EB0D3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c |    3 ---
- drivers/net/wireless/iwlegacy/iwl-core.h     |    1 -
- 2 files changed, 0 insertions(+), 4 deletions(-)
+On Thu, 2011-04-28 at 13:37 +0200, Johannes Berg wrote:
+> On Thu, 2011-04-28 at 13:10 +0200, Stanislaw Gruszka wrote:
+> > Need to use broadcast sta_id for management and multicast frames,
+> > otherwise we broke BA session and get messages like that:
+> > 
+> > "Received BA when not expected"
+> > 
+> > or (on older kernels):
+> > 
+> > "BA scd_flow 0 does not match txq_id 10"
+> 
+> Hmm. Interesting. I believe you, but it's hard.
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-index 5a8a3cc..7e5e85a 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-@@ -955,9 +955,6 @@ int iwl4965_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	if (priv->cfg->scan_rx_antennas[band])
- 		rx_ant = priv->cfg->scan_rx_antennas[band];
- 
--	if (priv->cfg->scan_tx_antennas[band])
--		scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
--
- 	priv->scan_tx_ant[band] = iwl4965_toggle_tx_ant(priv,
- 						priv->scan_tx_ant[band],
- 						    scan_tx_antennas);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
-index f03b463..bc66c60 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.h
-@@ -287,7 +287,6 @@ struct iwl_cfg {
- 	struct iwl_base_params *base_params;
- 	/* params likely to change within a device family */
- 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
--	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
- 	enum iwl_led_mode led_mode;
- };
- 
--- 
-1.7.1
+You're right of course that my patch changed the behaviour. I just don't
+(yet) understand why it's causing this particular issue.
+
+johannes
+
 
