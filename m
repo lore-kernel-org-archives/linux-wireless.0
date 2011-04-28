@@ -1,54 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53528 "EHLO nbd.name"
+Received: from mail.atheros.com ([12.19.149.2]:64857 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173Ab1DBBjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 21:39:55 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/3] ath9k: fix signal strength of received packets
-Date: Sat,  2 Apr 2011 03:39:46 +0200
-Message-Id: <1301708388-8416-1-git-send-email-nbd@openwrt.org>
+	id S1760370Ab1D1OYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 10:24:00 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:23:32 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC/RFT 8/9] ath9k: configure fast_div_bias based on diversity group
+Date: Thu, 28 Apr 2011 19:52:58 +0530
+Message-ID: <1304000579-5784-9-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162405_102780_FDDFD817)
+In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The reported RSSI values are relative to the calibrated noise floor, not
-relative to a hardcoded value of -95.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+configure fast diversity bias based on the antenna diversity group and
+based on main/alt LNA configurations. also configure main antenna and
+alternate antenna to gain-table 0 for diversity group 2(AR9485)
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |  174 +++++++++++++++++++++++++--------
+ 1 files changed, 131 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a9c3f46..87d96c5 100644
+index 337e018..4710830 100644
 --- a/drivers/net/wireless/ath/ath9k/recv.c
 +++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -959,6 +959,9 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 				   struct ieee80211_rx_status *rx_status,
- 				   bool *decrypt_error)
+@@ -1315,49 +1315,138 @@ static void ath_select_ant_div_from_quick_scan(struct ath_ant_comb *antcomb,
+ 	}
+ }
+ 
+-static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf)
++static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
++		struct ath_ant_comb *antcomb, int alt_ratio)
  {
-+	struct ath_hw *ah = common->ah;
-+	int noise;
+-	/* Adjust the fast_div_bias based on main and alt lna conf */
+-	switch ((ant_conf->main_lna_conf << 4) | ant_conf->alt_lna_conf) {
+-	case (0x01): /* A-B LNA2 */
+-		ant_conf->fast_div_bias = 0x3b;
+-		break;
+-	case (0x02): /* A-B LNA1 */
+-		ant_conf->fast_div_bias = 0x3d;
+-		break;
+-	case (0x03): /* A-B A+B */
+-		ant_conf->fast_div_bias = 0x1;
+-		break;
+-	case (0x10): /* LNA2 A-B */
+-		ant_conf->fast_div_bias = 0x7;
+-		break;
+-	case (0x12): /* LNA2 LNA1 */
+-		ant_conf->fast_div_bias = 0x2;
+-		break;
+-	case (0x13): /* LNA2 A+B */
+-		ant_conf->fast_div_bias = 0x7;
+-		break;
+-	case (0x20): /* LNA1 A-B */
+-		ant_conf->fast_div_bias = 0x6;
+-		break;
+-	case (0x21): /* LNA1 LNA2 */
+-		ant_conf->fast_div_bias = 0x0;
+-		break;
+-	case (0x23): /* LNA1 A+B */
+-		ant_conf->fast_div_bias = 0x6;
+-		break;
+-	case (0x30): /* A+B A-B */
+-		ant_conf->fast_div_bias = 0x1;
+-		break;
+-	case (0x31): /* A+B LNA2 */
+-		ant_conf->fast_div_bias = 0x3b;
+-		break;
+-	case (0x32): /* A+B LNA1 */
+-		ant_conf->fast_div_bias = 0x3d;
+-		break;
+-	default:
+-		break;
++	if (ant_conf->div_group == 0) {
++		/* Adjust the fast_div_bias based on main and alt lna conf */
++		switch ((ant_conf->main_lna_conf << 4) |
++				ant_conf->alt_lna_conf) {
++		case (0x01): /* A-B LNA2 */
++			ant_conf->fast_div_bias = 0x3b;
++			break;
++		case (0x02): /* A-B LNA1 */
++			ant_conf->fast_div_bias = 0x3d;
++			break;
++		case (0x03): /* A-B A+B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case (0x10): /* LNA2 A-B */
++			ant_conf->fast_div_bias = 0x7;
++			break;
++		case (0x12): /* LNA2 LNA1 */
++			ant_conf->fast_div_bias = 0x2;
++			break;
++		case (0x13): /* LNA2 A+B */
++			ant_conf->fast_div_bias = 0x7;
++			break;
++		case (0x20): /* LNA1 A-B */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case (0x21): /* LNA1 LNA2 */
++			ant_conf->fast_div_bias = 0x0;
++			break;
++		case (0x23): /* LNA1 A+B */
++			ant_conf->fast_div_bias = 0x6;
++			break;
++		case (0x30): /* A+B A-B */
++			ant_conf->fast_div_bias = 0x1;
++			break;
++		case (0x31): /* A+B LNA2 */
++			ant_conf->fast_div_bias = 0x3b;
++			break;
++		case (0x32): /* A+B LNA1 */
++			ant_conf->fast_div_bias = 0x3d;
++			break;
++		default:
++			break;
++		}
++	} else if (ant_conf->div_group == 2) {
++		/* Adjust the fast_div_bias based on main and alt_lna_conf */
++		switch ((ant_conf->main_lna_conf << 4) |
++				ant_conf->alt_lna_conf) {
++		case (0x01): /* A-B LNA2 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x02): /* A-B LNA1 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x03): /* A-B A+B */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x10): /* LNA2 A-B */
++			if (!(antcomb->scan) &&
++				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
++				ant_conf->fast_div_bias = 0x1;
++			else
++				ant_conf->fast_div_bias = 0x2;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x12): /* LNA2 LNA1 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x13): /* LNA2 A+B */
++			if (!(antcomb->scan) &&
++				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
++				ant_conf->fast_div_bias = 0x1;
++			else
++				ant_conf->fast_div_bias = 0x2;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x20): /* LNA1 A-B */
++			if (!(antcomb->scan) &&
++				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
++				ant_conf->fast_div_bias = 0x1;
++			else
++				ant_conf->fast_div_bias = 0x2;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x21): /* LNA1 LNA2 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x23): /* LNA1 A+B */
++			if (!(antcomb->scan) &&
++				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
++				ant_conf->fast_div_bias = 0x1;
++			else
++				ant_conf->fast_div_bias = 0x2;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x30): /* A+B A-B */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x31): /* A+B LNA2 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		case (0x32): /* A+B LNA1 */
++			ant_conf->fast_div_bias = 0x1;
++			ant_conf->main_gaintb = 0;
++			ant_conf->alt_gaintb = 0;
++			break;
++		default:
++			break;
++		}
 +
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	/*
-@@ -979,7 +982,13 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
--	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
+ 	}
 +
-+	if (ah->curchan)
-+		noise = ah->curchan->noisefloor;
-+	else
-+		noise = ATH_DEFAULT_NOISE_FLOOR;
-+
-+	rx_status->signal = noise + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
- 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+ }
  
+ /* Antenna diversity and combining */
+@@ -1583,8 +1672,7 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	antcomb->quick_scan_cnt++;
+ 
+ div_comb_done:
+-	ath_ant_div_conf_fast_divbias(&div_ant_conf);
+-
++	ath_ant_div_conf_fast_divbias(&div_ant_conf, antcomb, alt_ratio);
+ 	ath9k_hw_antdiv_comb_conf_set(sc->sc_ah, &div_ant_conf);
+ 
+ 	antcomb->scan_start_time = jiffies;
 -- 
-1.7.3.2
+1.7.0.4
 
