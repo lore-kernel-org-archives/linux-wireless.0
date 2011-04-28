@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:35592 "EHLO lo.gmane.org"
+Received: from mx1.redhat.com ([209.132.183.28]:6238 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751425Ab1DPGxO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2011 02:53:14 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QAzNZ-0000oQ-4y
-	for linux-wireless@vger.kernel.org; Sat, 16 Apr 2011 08:53:13 +0200
-Received: from f052164213.adsl.alicedsl.de ([78.52.164.213])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2011 08:53:13 +0200
-Received: from pommnitz by f052164213.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2011 08:53:13 +0200
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: [iw, ath5k] setting of antennas
-Date: Sat, 16 Apr 2011 06:53:00 +0000 (UTC)
-Message-ID: <loom.20110416T085132-133@post.gmane.org>
-References: <4DA87DFA.1020908@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1758392Ab1D1Jwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 05:52:47 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 04/10] iwlegacy: remove unneeded disable_hw_scan check
+Date: Thu, 28 Apr 2011 11:51:27 +0200
+Message-Id: <1303984293-6601-4-git-send-email-sgruszka@redhat.com> (sfid-20110428_115259_096166_C9C5EC82)
+In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dennis Borgmann <dennis.borgmann@...> writes:
+We never set STATUS_SCANNING in softwre scanning mode, disable_hw_scan
+check is unneeded. Correct debug message while at it.
 
-> Any hints? I could not find documentation about this topic...
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-core.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Hint: http://linuxwireless.org/en/developers/Documentation/nl80211
-
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
+index daf250e..7211c92 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-core.c
++++ b/drivers/net/wireless/iwlegacy/iwl-core.c
+@@ -2114,10 +2114,9 @@ int iwl_legacy_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	IWL_DEBUG_MAC80211(priv, "enter to channel %d changed 0x%X\n",
+ 					channel->hw_value, changed);
+ 
+-	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
+-			test_bit(STATUS_SCANNING, &priv->status))) {
++	if (unlikely(test_bit(STATUS_SCANNING, &priv->status))) {
+ 		scan_active = 1;
+-		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
++		IWL_DEBUG_MAC80211(priv, "scan active\n");
+ 	}
+ 
+ 	if (changed & (IEEE80211_CONF_CHANGE_SMPS |
+-- 
+1.7.1
 
