@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:48480 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753441Ab1DTSqf (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34875 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756008Ab1D1SNM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2011 14:46:35 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Ramesh Radhakrishnan <rramesh@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Wed, 20 Apr 2011 11:44:49 -0700
-Subject: RE: [PATCH v2] wireless: mwifiex: initial commit for Marvell
- mwifiex driver
-Message-ID: <477F20668A386D41ADCC57781B1F704307FAAC2955@SC-VEXCH1.marvell.com>
-References: <1299873746-29484-1-git-send-email-bzhao@marvell.com>
-	 <1299874885.4320.5.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
- <1300190698.5596.15.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1300190698.5596.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 28 Apr 2011 14:13:12 -0400
+Received: by iyb14 with SMTP id 14so2441033iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 11:13:11 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <BANLkTi=8Vc5MGjK=K3=hkFLy=kiFy1osCg@mail.gmail.com>
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <BANLkTi=8Vc5MGjK=K3=hkFLy=kiFy1osCg@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 28 Apr 2011 11:12:51 -0700
+Message-ID: <BANLkTinFYwvWSWreUd66DGdsdyo2uU53Hw@mail.gmail.com> (sfid-20110428_201317_888854_7F22622C)
+Subject: Re: [RFC/RFT 0/9] ath9k: Add Antenna diversity support for AR9485
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Senthilkumar.Balasubramanian@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBJbiBtYWM4MDIxMSBoYXZlIGEgbW9kdWxlIHBhcmFtZXRlciAiaWVlZTgwMjExX2Rpc2FibGVf
-NDBtaHpfMjRnaHoiDQo+IHdoaWNoLCBmb3IgYmFja3dhcmQgY29tcGF0aWJpbGl0eSByZWFzb25z
-LCBhY3R1YWxseSBkZWZhdWx0cyB0byBmYWxzZSwNCj4gc28geW91IG5lZWQgdG8gc2V0IGl0IHRv
-IHRydWUgdG8gZ2V0IGEgY29tcGxpYW50IHN5c3RlbS4gV2hlbiBhIHN5c3RlbQ0KPiBpcyBpbnRl
-Z3JhdGVkLCB0aGlzIHBhcmFtZXRlciBjYW4gYmUgc2V0IGFzIGRlZmF1bHQuDQo+IA0KPiBJIGRv
-bid0IHRoaW5rIGl0IHJlYWxseSBpcyBuZWNlc3NhcnkgdG8gc2V0IHRoaXMgYXQgcnVudGltZS4N
-Cj4gDQo+IEkgZ3Vlc3MgSSBzZWUgdHdvIG9wdGlvbnM6DQo+ICAxKSBtb3ZlIHRoZSBtb2R1bGUg
-cGFyYW1ldGVyIHRvIGNmZzgwMjExLCBhbmQgY2hlY2sgdGhlIHNkYXRhIEhUIGNvbmZpZw0KPiAg
-ICAgaW4gdGhlIGRyaXZlciBhZ2FpbiB3aGVuIHRoaXMgaXMgbmVlZGVkDQoNCkhpIEpvaGFubmVz
-LA0KDQpUaGUgY2hhbmdlIGJlbG93IGFkb3B0cyB5b3VyIGlkZWEgb2YgbW92aW5nIGllZWU4MDIx
-MV9kaXNhYmxlXzQwbWh6XzI0Z2h6IGZyb20gbWFjODAyMTEgdG8gY2ZnODAyMTEuIENvdWxkIHlv
-dSBwbGVhc2UgcmV2aWV3IGl0PyBJIHdpbGwgcmVzZW5kIHRoZSBwYXRjaCBpZiBpdCBsb29rcyBP
-SyBmb3IgeW91Lg0KIA0KLS0tDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9uZXQvY2ZnODAyMTEuaCBi
-L2luY2x1ZGUvbmV0L2NmZzgwMjExLmgNCmluZGV4IGQzMGVhZGEuLjFjZGM0M2UgMTAwNjQ0DQot
-LS0gYS9pbmNsdWRlL25ldC9jZmc4MDIxMS5oDQorKysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5o
-DQpAQCAtMTk3NCw2ICsxOTc0LDcgQEAgZXh0ZXJuIGludCBpZWVlODAyMTFfcmFkaW90YXBfaXRl
-cmF0b3JfbmV4dCgNCiANCiBleHRlcm4gY29uc3QgdW5zaWduZWQgY2hhciByZmMxMDQyX2hlYWRl
-cls2XTsNCiBleHRlcm4gY29uc3QgdW5zaWduZWQgY2hhciBicmlkZ2VfdHVubmVsX2hlYWRlcls2
-XTsNCitleHRlcm4gYm9vbCBjZmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6Ow0KIA0KIC8qKg0K
-ICAqIGllZWU4MDIxMV9nZXRfaGRybGVuX2Zyb21fc2tiIC0gZ2V0IGhlYWRlciBsZW5ndGggZnJv
-bSBkYXRhDQpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL21haW4uYyBiL25ldC9tYWM4MDIxMS9t
-YWluLmMNCmluZGV4IDBhYjJhOGQuLjQyOTBiNTAgMTAwNjQ0DQotLS0gYS9uZXQvbWFjODAyMTEv
-bWFpbi5jDQorKysgYi9uZXQvbWFjODAyMTEvbWFpbi5jDQpAQCAtMzMsMTIgKzMzLDYgQEANCiAj
-aW5jbHVkZSAiY2ZnLmgiDQogI2luY2x1ZGUgImRlYnVnZnMuaCINCiANCi0NCi1zdGF0aWMgYm9v
-bCBpZWVlODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsNCi1tb2R1bGVfcGFyYW0oaWVlZTgwMjEx
-X2Rpc2FibGVfNDBtaHpfMjRnaHosIGJvb2wsIDA2NDQpOw0KLU1PRFVMRV9QQVJNX0RFU0MoaWVl
-ZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHosDQotCQkgIkRpc2FibGUgNDBNSHogc3VwcG9ydCBp
-biB0aGUgMi40R0h6IGJhbmQiKTsNCi0NCiBzdGF0aWMgc3RydWN0IGxvY2tfY2xhc3Nfa2V5IGll
-ZWU4MDIxMV9yeF9za2JfcXVldWVfY2xhc3M7DQogDQogdm9pZCBpZWVlODAyMTFfY29uZmlndXJl
-X2ZpbHRlcihzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCkNCkBAIC03MjksMTEgKzcyMywx
-MSBAQCBpbnQgaWVlZTgwMjExX3JlZ2lzdGVyX2h3KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3KQ0K
-IAkJY2hhbm5lbHMgKz0gc2JhbmQtPm5fY2hhbm5lbHM7DQogDQogCQkvKg0KLQkJICogU2luY2Ug
-aWVlZTgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHogaXMgZ2xvYmFsLCB3ZSBjYW4NCisJCSAqIFNp
-bmNlIGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRnaHogaXMgZ2xvYmFsLCB3ZSBjYW4NCiAJCSAq
-IG1vZGlmeSB0aGUgc2JhbmQncyBodCBkYXRhIGV2ZW4gaWYgdGhlIGRyaXZlciB1c2VzIGENCiAJ
-CSAqIGdsb2JhbCBzdHJ1Y3R1cmUgZm9yIHRoYXQuDQogCQkgKi8NCi0JCWlmIChpZWVlODAyMTFf
-ZGlzYWJsZV80MG1oel8yNGdoeiAmJg0KKwkJaWYgKGNmZzgwMjExX2Rpc2FibGVfNDBtaHpfMjRn
-aHogJiYNCiAJCSAgICBiYW5kID09IElFRUU4MDIxMV9CQU5EXzJHSFogJiYNCiAJCSAgICBzYmFu
-ZC0+aHRfY2FwLmh0X3N1cHBvcnRlZCkgew0KIAkJCXNiYW5kLT5odF9jYXAuY2FwICY9IH5JRUVF
-ODAyMTFfSFRfQ0FQX1NVUF9XSURUSF8yMF80MDsNCmRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3Mv
-bmw4MDIxMS5jIGIvbmV0L3dpcmVsZXNzL25sODAyMTEuYw0KaW5kZXggMGVmYTdmZC4uM2Y0NWQ0
-NiAxMDA2NDQNCi0tLSBhL25ldC93aXJlbGVzcy9ubDgwMjExLmMNCisrKyBiL25ldC93aXJlbGVz
-cy9ubDgwMjExLmMNCkBAIC0yMyw2ICsyMywxMiBAQA0KICNpbmNsdWRlICJubDgwMjExLmgiDQog
-I2luY2x1ZGUgInJlZy5oIg0KIA0KK2Jvb2wgY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoejsN
-Cittb2R1bGVfcGFyYW0oY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeiwgYm9vbCwgMDY0NCk7
-DQorTU9EVUxFX1BBUk1fREVTQyhjZmc4MDIxMV9kaXNhYmxlXzQwbWh6XzI0Z2h6LA0KKwkJICJE
-aXNhYmxlIDQwTUh6IHN1cHBvcnQgaW4gdGhlIDIuNEdIeiBiYW5kIik7DQorRVhQT1JUX1NZTUJP
-TF9HUEwoY2ZnODAyMTFfZGlzYWJsZV80MG1oel8yNGdoeik7DQorDQogc3RhdGljIGludCBubDgw
-MjExX3ByZV9kb2l0KHN0cnVjdCBnZW5sX29wcyAqb3BzLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLA0K
-IAkJCSAgICBzdHJ1Y3QgZ2VubF9pbmZvICppbmZvKTsNCiBzdGF0aWMgdm9pZCBubDgwMjExX3Bv
-c3RfZG9pdChzdHJ1Y3QgZ2VubF9vcHMgKm9wcywgc3RydWN0IHNrX2J1ZmYgKnNrYiwNCg0KDQot
-LS0NCg0KVGhhbmtzLA0KDQpCaW5nDQoNCg==
+On Thu, Apr 28, 2011 at 11:12 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Apr 28, 2011 at 7:22 AM, Mohammed Shafi Shajakhan
+> <mshajakhan@atheros.com> wrote:
+>> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>>
+>> *These are purely RFC/RFT patches, none of them are tested.
+>>  once tested we will send it as patches.
+>> *This patch set adds Antenna diversity support for AR9485, previously
+>>  antenna diversity is only supported in AR9285
+>> *The basic antenna diversity algorithm remains the same
+>> *slight change in the diversity field in eeprom
+>> *introduction of main/alt gain table and lna1_lna2 delta fields
+>> *initially set LNA1 for main antenna
+>> *introduction of diversity group
+>> *based on diversity group, fast diversity bias parmaters and
+>> lna1_lna2_delta varies
+>> *implement an API to take the decision of swapping main/ALT LNA's
+>> for AR9485
+>> *configure fast diversity bias based on diversity group
+>
+> Apart from my one comment:
+>
+> Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Oh yeah and great job on your patch split!
+
+  Luis
