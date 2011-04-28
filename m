@@ -1,84 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.embedromix.ro ([80.96.69.110]:46417 "EHLO
-	mail.embedromix.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376Ab1DUTqv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 15:46:51 -0400
-Received: from mail.embedromix.ro (localhost.localdomain [127.0.0.1])
-	by mail.embedromix.ro (8.14.4/8.14.3) with ESMTP id p3LJP8Q6009982
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 22:25:08 +0300
-Received: from localhost (catab@localhost)
-	by mail.embedromix.ro (8.14.4/8.14.4/Submit) with ESMTP id p3LJP6I0009977
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 22:25:08 +0300
-Date: Thu, 21 Apr 2011 22:25:06 +0300 (EEST)
-From: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Ralink 3090 must load rt3090.bin firmware, not rt2860.bin.
-Message-ID: <alpine.LFD.2.00.1104212222470.9925@mail.embedromix.ro>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="1615883845-659974667-1303413908=:9925"
+Received: from mx1.redhat.com ([209.132.183.28]:30017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752309Ab1D1MJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 08:09:19 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, kernel@lists.fedoraproject.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kyle McMartin <kmcmartin@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.38 1/4] iwlwifi: do not set tx power when channel is changing
+Date: Thu, 28 Apr 2011 14:08:12 +0200
+Message-Id: <1303992495-7337-2-git-send-email-sgruszka@redhat.com> (sfid-20110428_140922_456672_1496AED5)
+In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+commit f844a709a7d8f8be61a571afc31dfaca9e779621 upstream.
 
---1615883845-659974667-1303413908=:9925
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Mac80211 can request for tx power and channel change in one ->config
+call. If that happens, *_send_tx_power functions will try to setup tx
+power for old channel, what can be not correct because we already change
+the band. I.e  error  "Failed to get channel info for channel 140 [0]",
+can be printed frequently when operating in software scanning mode.
 
-Hello.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   13 ++++++++++---
+ 4 files changed, 14 insertions(+), 8 deletions(-)
 
-Please apply it.
-Thank you!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 39b6f16..4e7b58b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1823,7 +1823,7 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 
+ 	/* If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames */
+-	rc = priv->cfg->ops->lib->send_tx_power(priv);
++	rc = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (rc) {
+ 		IWL_ERR(priv, "Error setting Tx power (%d).\n", rc);
+ 		return rc;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 91a9f52..992caa0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1571,7 +1571,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *c
+ 
+ 	/* If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames */
+-	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 6d140bd..ee802fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -288,10 +288,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	 * If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames.
+ 	 *
+-	 * FIXME: which RXON requires a tune? Can we optimise this out in
+-	 *        some cases?
++	 * It's expected we set power here if channel is changing.
+ 	 */
+-	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index efbde1f..91cac6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1161,6 +1161,8 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ {
+ 	int ret;
+ 	s8 prev_tx_power;
++	bool defer;
++	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 
+ 	lockdep_assert_held(&priv->mutex);
+ 
+@@ -1188,10 +1190,15 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 	if (!iwl_is_ready_rf(priv))
+ 		return -EIO;
+ 
+-	/* scan complete use tx_power_next, need to be updated */
++	/* scan complete and commit_rxon use tx_power_next value,
++	 * it always need to be updated for newest request */
+ 	priv->tx_power_next = tx_power;
+-	if (test_bit(STATUS_SCANNING, &priv->status) && !force) {
+-		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
++
++	/* do not set tx power when scanning or channel changing */
++	defer = test_bit(STATUS_SCANNING, &priv->status) ||
++		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
++	if (defer && !force) {
++		IWL_DEBUG_INFO(priv, "Deferring tx power set\n");
+ 		return 0;
+ 	}
+ 
+-- 
+1.7.1
 
-P.S. Please keep me in To/CC.
-
---
-Catalin(ux) M. BOIE
-http://kernel.embedromix.ro/
---1615883845-659974667-1303413908=:9925
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=0001-Ralink-3090-must-load-rt3090.bin-firmware-not-rt2860.patch
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.LFD.2.00.1104212225060.9925@mail.embedromix.ro>
-Content-Description: 
-Content-Disposition: attachment; filename=0001-Ralink-3090-must-load-rt3090.bin-firmware-not-rt2860.patch
-
-RnJvbSBjZjBjNzk5OWYxNjIwYmI1ZGZiYWNmZDgzY2VjYWEzY2I2OWExODk3
-IE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQ0KRnJvbTogQ2F0YWxpbih1eCkg
-TS4gQk9JRSA8Y2F0YWJAZW1iZWRyb21peC5ybz4NCkRhdGU6IFdlZCwgMjAg
-QXByIDIwMTEgMjM6MzI6MTggKzAzMDANClN1YmplY3Q6IFtQQVRDSF0gUmFs
-aW5rIDMwOTAgbXVzdCBsb2FkIHJ0MzA5MC5iaW4gZmlybXdhcmUsIG5vdCBy
-dDI4NjAuYmluLg0KDQpydDI4NjAuYmluIGlzIHdvcmtpbmcsIEkgY2FuIGdl
-dCBhIGxpbmssIGJ1dCB0aGUgbGVkIGZsYXNoZXMgY29udGludW91c2x5Ow0K
-cnQyODYwLmJpbiBpcyB2ZXJzaW9uIDAuMTEsIHJ0MzA5MC5iaW4gaXMgdmVy
-c2lvbiAwLjE5Lg0KSSB0cmFuc2ZlcmVkIGEgbG90IG9mIGRhdGEgYW5kIGlz
-IHN0YWJsZS4NCg0KU2lnbmVkLW9mZi1ieTogQ2F0YWxpbih1eCkgTS4gQk9J
-RSA8Y2F0YWJAZW1iZWRyb21peC5ybz4NCi0tLQ0KIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL3J0MngwMC9ydDI4MDBwY2kuYyB8ICAgIDkgKysrKysrKystDQog
-MSBmaWxlcyBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25z
-KC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4
-MDAvcnQyODAwcGNpLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAv
-cnQyODAwcGNpLmMNCmluZGV4IDgwODA3M2EuLjAxNzQ1ZTMgMTAwNjQ0DQot
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyODAwcGNpLmMN
-CisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDI4MDBwY2ku
-Yw0KQEAgLTI4Miw3ICsyODIsMTMgQEAgc3RhdGljIHZvaWQgcnQyODAwcGNp
-X3N0b3BfcXVldWUoc3RydWN0IGRhdGFfcXVldWUgKnF1ZXVlKQ0KICAqLw0K
-IHN0YXRpYyBjaGFyICpydDI4MDBwY2lfZ2V0X2Zpcm13YXJlX25hbWUoc3Ry
-dWN0IHJ0MngwMF9kZXYgKnJ0MngwMGRldikNCiB7DQotCXJldHVybiBGSVJN
-V0FSRV9SVDI4NjA7DQorCXN3aXRjaCAocnQyeDAwZGV2LT5jaGlwLnJ0KSB7
-DQorCWNhc2UgUlQzMDkwOg0KKwkJcmV0dXJuICJydDMwOTAuYmluIjsNCisN
-CisJZGVmYXVsdDoNCisJCXJldHVybiBGSVJNV0FSRV9SVDI4NjA7DQorCX0N
-CiB9DQogDQogc3RhdGljIGludCBydDI4MDBwY2lfd3JpdGVfZmlybXdhcmUo
-c3RydWN0IHJ0MngwMF9kZXYgKnJ0MngwMGRldiwNCkBAIC0xMTQ2LDYgKzEx
-NTIsNyBAQCBNT0RVTEVfREVTQ1JJUFRJT04oIlJhbGluayBSVDI4MDAgUENJ
-ICYgUENNQ0lBIFdpcmVsZXNzIExBTiBkcml2ZXIuIik7DQogTU9EVUxFX1NV
-UFBPUlRFRF9ERVZJQ0UoIlJhbGluayBSVDI4NjAgUENJICYgUENNQ0lBIGNo
-aXBzZXQgYmFzZWQgY2FyZHMiKTsNCiAjaWZkZWYgQ09ORklHX1BDSQ0KIE1P
-RFVMRV9GSVJNV0FSRShGSVJNV0FSRV9SVDI4NjApOw0KK01PRFVMRV9GSVJN
-V0FSRSgicnQzMDkwLmJpbiIpOw0KIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNp
-LCBydDI4MDBwY2lfZGV2aWNlX3RhYmxlKTsNCiAjZW5kaWYgLyogQ09ORklH
-X1BDSSAqLw0KIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsNCi0tIA0KMS43LjQu
-NA0KDQo=
-
---1615883845-659974667-1303413908=:9925--
