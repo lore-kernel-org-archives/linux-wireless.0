@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:62209 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756464Ab1DGTGX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38293 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756137Ab1D1Lhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 15:06:23 -0400
-Received: by yia27 with SMTP id 27so1158333yia.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2011 12:06:23 -0700 (PDT)
-Message-ID: <4D9E0B2C.1060108@lwfinger.net>
-Date: Thu, 07 Apr 2011 14:06:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jason Conti <jason.conti@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH] p54: Initialize extra_len in p54_tx_80211
-References: <BANLkTimL90zWhpHPzODNAWXKtVVtWFfdmQ@mail.gmail.com>
-In-Reply-To: <BANLkTimL90zWhpHPzODNAWXKtVVtWFfdmQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 28 Apr 2011 07:37:48 -0400
+Subject: Re: [PATCH wireless-2.6] iwlagn: fix "Received BA when not
+ expected"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110428111011.GA6967@redhat.com>
+References: <20110428111011.GA6967@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Apr 2011 13:37:41 +0200
+Message-ID: <1303990661.3558.3.camel@jlt3.sipsolutions.net> (sfid-20110428_133751_772868_CCD82590)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2011 01:05 PM, Jason Conti wrote:
-> When compiling with gcc-4.5 and CONFIG_DEBUG_SECTION_MISMATCH=y (which enables
-> -fno-inline-functions-called-once), p54_tx_80211_header will not be
-> inlined and extra_len will quickly
-> become corrupted because it uninitialized. The outgoing buffer fills
-> up before an attempt
-> to associate with a WPA access point can complete (it goes into an
-> associating 1, 2, 3, timed out
-> direct probe 1, 2, 3 timed out loop with wpa_supplicant and the driver
-> constantly returns ENOMEM).
->
-> I think this was previously hidden because in gcc-4.4, as well a
-> gcc-4.5 without
-> -fno-inline-functions-called-once, p54_tx_80211_header is always
-> inlined, which may have limited
-> the corruption.
->
-> It was suggested I submit this upstream by Stefan Bader to resolve LP: #722185
->
-> This patch is against 2.6.38.2
->
-> Signed-off-by: Jason Conti
-> ---
-> --- a/drivers/net/wireless/p54/txrx.c	2011-04-06 18:05:01.951581773 -0400
-> +++ b/drivers/net/wireless/p54/txrx.c	2011-04-06 18:05:26.195581762 -0400
-> @@ -705,7 +705,7 @@ int p54_tx_80211(struct ieee80211_hw *de
->   	struct p54_tx_info *p54info;
->   	struct p54_hdr *hdr;
->   	struct p54_tx_data *txhdr;
-> -	unsigned int padding, len, extra_len;
-> +	unsigned int padding, len, extra_len = 0;
->   	int i, j, ridx;
->   	u16 hdr_flags = 0, aid = 0;
->   	u8 rate, queue = 0, crypt_offset = 0;
-> --
+On Thu, 2011-04-28 at 13:10 +0200, Stanislaw Gruszka wrote:
+> Need to use broadcast sta_id for management and multicast frames,
+> otherwise we broke BA session and get messages like that:
+> 
+> "Received BA when not expected"
+> 
+> or (on older kernels):
+> 
+> "BA scd_flow 0 does not match txq_id 10"
 
-ACK. Good catch.
+Hmm. Interesting. I believe you, but it's hard.
 
-Larry
+> -	/* Find index into station table for destination station */
+> -	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
+
+info->control.sta should be NULL here, at least for multicast frames
+(which never really happen in practise unless you use AP mode). And then
+this should return ctx->bcast_sta_id, just like you use below:
+
+> +	/* If this frame is broadcast or management, use broadcast station id */
+> +	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
+> +		sta_id = ctx->bcast_sta_id;
+
+So the reason has to be management frames. But why would those be
+affecting it? They aren't QoS frames, so there should be no influence on
+BA handling at all. This is a bit odd.
+
+Maybe we should make it clear here that it's about non-data frames and
+remove the multicast check since that ought to be handled in the other
+path?
+
+johannes
+
