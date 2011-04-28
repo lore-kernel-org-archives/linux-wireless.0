@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49451 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753183Ab1DET3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 15:29:54 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <1302033463-1846-1-git-send-email-zajec5@gmail.com> (sfid-20110405_212040_948160_FFFFFFFFD5D634B4)
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 (sfid-20110405_212040_948160_FFFFFFFFD5D634B4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Apr 2011 21:29:43 +0200
-Message-ID: <1302031783.1923.4.camel@maggie>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:33412 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752309Ab1D1MJU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 08:09:20 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, kernel@lists.fedoraproject.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kyle McMartin <kmcmartin@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.38 2/4] iwl3945: do not deprecate software scan
+Date: Thu, 28 Apr 2011 14:08:13 +0200
+Message-Id: <1303992495-7337-3-git-send-email-sgruszka@redhat.com> (sfid-20110428_140924_532581_5CB3B150)
+In-Reply-To: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-05 at 21:57 +0200, Rafał Miłecki wrote: 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> I believe this driver implements AI support in the proper way. This introduces
-> support for the *bus* and lets drivers register for specific cores. It was
-> tested with b43 and BCM4313, reading PHY info works fine.
+commit 3bda50e3eaf58a4b9c4ce34204e5faa15c8b1b97 upstream.
 
-Looks pretty good.
-I currently don't have the time to go through the stuff in detail, 
-but from it quick look you get a *thumbs up* from me :)
+Software scanning can be used for workaround some performance problems,
+so do not deprecate it.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 371abbf..cf0699a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3995,8 +3995,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	 * "the hard way", rather than using device's scan.
+ 	 */
+ 	if (iwl3945_mod_params.disable_hw_scan) {
+-		dev_printk(KERN_DEBUG, &(pdev->dev),
+-			"sw scan support is deprecated\n");
++		IWL_DEBUG_INFO(priv, "Disabling hw_scan\n");
+ 		iwl3945_hw_ops.hw_scan = NULL;
+ 	}
+ 
+@@ -4318,8 +4317,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
+ #endif
+ module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
+ 		   int, S_IRUGO);
+-MODULE_PARM_DESC(disable_hw_scan,
+-		 "disable hardware scanning (default 0) (deprecated)");
++MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
+ module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
+ MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
+ 
 -- 
-Greetings Michael.
+1.7.1
 
