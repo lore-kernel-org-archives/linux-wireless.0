@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:56477 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752318Ab1DKPdP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:33:15 -0400
-Message-ID: <4DA31F37.90503@lwfinger.net>
-Date: Mon, 11 Apr 2011 10:33:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: dwmw2@infradead.org, linux-kernel@vger.kernel.org,
-	gwingerde@gmail.com, xose.vazquez@gmail.com, ben@decadent.org.uk,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Shiang Tu <shiang_tu@ralinktech.com>
-Subject: Re: [PATCH] rt2800pci: rt2800usb: Firmware update
-References: <779506.13049.qm@web161604.mail.bf1.yahoo.com>
-In-Reply-To: <779506.13049.qm@web161604.mail.bf1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:63252 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758592Ab1D1Jwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 05:52:53 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 06/10] iwlegacy: remove scan_tx_antennas
+Date: Thu, 28 Apr 2011 11:51:29 +0200
+Message-Id: <1303984293-6601-6-git-send-email-sgruszka@redhat.com> (sfid-20110428_115300_176854_05D64292)
+In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2011 10:18 AM, Walter Goldens wrote:
->> Update firmware for rt2800pci to Version 34 and firmware
->> for rt2800usb to
->> Version 29.
->
-> Are there any changelogs for these firmware files? Do they only offer support for newer chips, or are there any actual improvements and bug fixes implemented? Users should know whether updating the firmware will be of any use to them.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965-lib.c |    3 ---
+ drivers/net/wireless/iwlegacy/iwl-core.h     |    1 -
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
-I am not sure of the details and will need info from Ralink on this question. 
-Perhaps Shiang Tu can supply it.
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
+index 5a8a3cc..7e5e85a 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
+@@ -955,9 +955,6 @@ int iwl4965_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	if (priv->cfg->scan_rx_antennas[band])
+ 		rx_ant = priv->cfg->scan_rx_antennas[band];
+ 
+-	if (priv->cfg->scan_tx_antennas[band])
+-		scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
+-
+ 	priv->scan_tx_ant[band] = iwl4965_toggle_tx_ant(priv,
+ 						priv->scan_tx_ant[band],
+ 						    scan_tx_antennas);
+diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
+index f03b463..bc66c60 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-core.h
++++ b/drivers/net/wireless/iwlegacy/iwl-core.h
+@@ -287,7 +287,6 @@ struct iwl_cfg {
+ 	struct iwl_base_params *base_params;
+ 	/* params likely to change within a device family */
+ 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
+-	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
+ 	enum iwl_led_mode led_mode;
+ };
+ 
+-- 
+1.7.1
 
-Larry
