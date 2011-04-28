@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64314 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758729Ab1D0Rxq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 13:53:46 -0400
-Received: by pvg12 with SMTP id 12so1307598pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 10:53:45 -0700 (PDT)
-Message-ID: <4DB85824.9090202@lwfinger.net> (sfid-20110427_195349_744703_E393EBB2)
-Date: Wed, 27 Apr 2011 12:53:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] ssb: pci: early fix for SPROM core index
-References: <1303921294-6591-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1303921294-6591-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:5028 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758577Ab1D1Jwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 05:52:34 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 01/10] iwlegacy: remove duplicate initialization in iwl4956_down()
+Date: Thu, 28 Apr 2011 11:51:24 +0200
+Message-Id: <1303984293-6601-1-git-send-email-sgruszka@redhat.com> (sfid-20110428_115242_223655_8AEF5A51)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/2011 11:21 AM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
-> This was documented in:
-> Message-ID:<4BB81CAD.10602@lwfinger.net>
-> ---
->   drivers/ssb/driver_pcicore.c |   12 ++++++++++++
->   1 files changed, 12 insertions(+), 0 deletions(-)
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl4965-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-ACK.
+diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+index ad05f2e..644bf31 100644
+--- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+@@ -2139,7 +2139,7 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv);
+ static void __iwl4965_down(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+-	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
++	int exit_pending;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-- 
+1.7.1
 
-Larry
