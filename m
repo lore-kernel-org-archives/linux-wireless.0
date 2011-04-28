@@ -1,49 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:55256 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368Ab1DFS3b convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:29:31 -0400
-Received: by qyk7 with SMTP id 7so2724412qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:29:30 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:50778 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752038Ab1D1Wgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 18:36:38 -0400
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: A race in register_netdevice()
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 29 Apr 2011 01:36:37 +0300
+Message-ID: <87y62ugg0a.fsf@purkki.adurom.net> (sfid-20110429_003643_721726_421C3BD5)
 MIME-Version: 1.0
-In-Reply-To: <op.vsad07vh3ri7v4@arend-laptop>
-References: <33960.57403.qm@web34205.mail.mud.yahoo.com>
-	<op.vr99odoz3ri7v4@arend-laptop>
-	<AANLkTinFJt92Ai_DGWDE7VrTV4gb0h7Dz6rW_Hb7nvnt@mail.gmail.com>
-	<op.vsad07vh3ri7v4@arend-laptop>
-Date: Wed, 6 Apr 2011 20:29:29 +0200
-Message-ID: <BANLkTik3Qs0BHpQCYqp0vsS0H-sCcyJ=NA@mail.gmail.com>
-Subject: Re: Broadcom USB Dongle Wifi BCM4323
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: HiEn <vhpham80@yahoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 marca 2011 10:21 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> On Sun, 13 Mar 2011 15:24:15 +0100, Rafał Miłecki <zajec5@gmail.com> wrote:
->
->>
->> Does anyone have some hardware knowledge about that card? Is this
->> standard SSB/AI bus with USB host? Or some totally different hardware?
->>
->
-> This is what you can find on the public page:
->
-> http://www.broadcom.com/products/Wireless-LAN/802.11-Wireless-LAN-Solutions/BCM4323
->
-> We want to add support of more chips to the brcm80211 driver, but for that
-> we first have to get into kernel mainline.
+Hi,
 
-I don't think official Boardom's website provides much info about
-internal hardware layout.
+there seems to be a race in register_netdevice(), which is reported here:
 
-Could you get some more info for us? Is this standard AI board with
-ChipCommon, USB and 802.11 cores? Why PHY version does it use?
+https://bugzilla.kernel.org/show_bug.cgi?id=15606
+
+This is visible at least with flimflam and ath6kl. Basically what
+happens is this:
+
+Apr 29 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device() 
+Apr 29 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
+4): No such device
+Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
+0xbfefda3c len 1004
+Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
+NEWLINK len 1004 type 16 flags 0x0000 seq 0
+
+(ignore the 10 s delay, I added that to reproduce the issue easily)
+
+There are two ways to fix this, first is to move kobject registration
+after the call to list_netdevice():
+
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -5425,11 +5425,6 @@ int register_netdevice(struct net_device *dev)
+        if (ret)
+                goto err_uninit;
+ 
+-       ret = netdev_register_kobject(dev);
+-       if (ret)
+-               goto err_uninit;
+-       dev->reg_state = NETREG_REGISTERED;
+-
+        netdev_update_features(dev);
+ 
+        /*
+@@ -5443,6 +5438,11 @@ int register_netdevice(struct net_device *dev)
+        dev_hold(dev);
+        list_netdevice(dev);
+ 
++       ret = netdev_register_kobject(dev);
++       if (ret)
++               goto err_uninit;
++       dev->reg_state = NETREG_REGISTERED;
++
+        /* Notify protocols, that a new device appeared. */
+        ret = call_netdevice_notifiers(NETDEV_REGISTER, dev);
+        ret = notifier_to_errno(ret);
+
+Other option, noticed by Jouni Malinen, is to take rtnl for
+SIOCGIFNAME. For some reason it's currently unprotected:
+
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -4917,8 +4917,12 @@ int dev_ioctl(struct net *net, unsigned int
+cmd, void __user *arg)
+          rtnl_unlock();
+                return ret;
+                }
+-               if (cmd == SIOCGIFNAME)
+-                  return dev_ifname(net, (struct ifreq __user *)arg);
++                  if (cmd == SIOCGIFNAME) {
++                     rtnl_lock();
++                       ret = dev_ifname(net, (struct ifreq __user
+-                  *)arg);
++                       rtnl_unlock();
++                               return ret;
++                               }
+ 
+        if (copy_from_user(&ifr, arg, sizeof(struct ifreq)))
+           return -EFAULT;
+
+I have confirmed that both of these patches fix the issue. Now I'm
+wondering which one is the best way forward. Or is there a better way
+to fix this?
 
 -- 
-Rafał
+Kalle Valo
