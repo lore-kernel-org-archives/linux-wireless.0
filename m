@@ -1,156 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62387 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178Ab1DMFxR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 01:53:17 -0400
-Received: by iyb14 with SMTP id 14so275754iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 22:53:16 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:64850 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760496Ab1D1OXf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 10:23:35 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 07:23:08 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <linville@tuxdriver.com>, <lrodriguez@atheros.com>,
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC/RFT 4/9] ath9k_hw: config diversity based on eeprom contents
+Date: Thu, 28 Apr 2011 19:52:54 +0530
+Message-ID: <1304000579-5784-5-git-send-email-mshajakhan@atheros.com> (sfid-20110428_162337_878364_96B52F91)
+In-Reply-To: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19877.15069.155157.530796@gargle.gargle.HOWL>
-Date: Wed, 13 Apr 2011 11:25:41 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 27/40] ath9k_htc: Move endpoint header parsing to TX tasklet
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-There is no need to do endpoint header removal in the ISR.
-Also, this is needed when TX slot management is added later on.
-Use a helper function to strip the driver header.
+* enable LNA-diversity, fast-diversity based on the value read from
+  EEPROM content
+* if antenna diversity/combining is supported set LNA1 for the main
+  antenna and LNA2 for the alternate antenna based on the new diversity
+  algorithm
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   68 ++++++++++++++++--------
- 2 files changed, 46 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   50 +++++++++++++++++++++---
+ 1 files changed, 44 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 356f49c..0831ca3 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -277,6 +277,7 @@ struct ath9k_htc_tx {
- struct ath9k_htc_tx_ctl {
- 	u8 type; /* ATH9K_HTC_* */
- 	u8 epid;
-+	u8 txok;
- };
- 
- static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index d17662f..7b218da 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -104,6 +104,30 @@ static enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
- 	return epid;
- }
- 
-+static inline int strip_drv_header(struct ath9k_htc_priv *priv,
-+				   struct sk_buff *skb)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_tx_ctl *tx_ctl;
-+
-+	tx_ctl = HTC_SKB_CB(skb);
-+
-+	if (tx_ctl->epid == priv->mgmt_ep) {
-+		skb_pull(skb, sizeof(struct tx_mgmt_hdr));
-+	} else if ((tx_ctl->epid == priv->data_bk_ep) ||
-+		   (tx_ctl->epid == priv->data_be_ep) ||
-+		   (tx_ctl->epid == priv->data_vi_ep) ||
-+		   (tx_ctl->epid == priv->data_vo_ep) ||
-+		   (tx_ctl->epid == priv->cab_ep)) {
-+		skb_pull(skb, sizeof(struct tx_frame_hdr));
-+	} else {
-+		ath_err(common, "Unsupported EPID: %d\n", tx_ctl->epid);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
- 		       struct ath9k_tx_queue_info *qinfo)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index fb892e5..d43e62c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3500,6 +3500,8 @@ static u16 ar9003_hw_ant_ctrl_chain_get(struct ath_hw *ah,
+ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
  {
-@@ -281,22 +305,40 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-+	struct ath9k_htc_tx_ctl *tx_ctl;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb = NULL;
- 	__le16 fc;
-+	bool txok;
+ 	int chain;
++	u32 regval;
++	u32 ant_div_ctl1;
+ 	static const u32 switch_chain_reg[AR9300_MAX_CHAINS] = {
+ 			AR_PHY_SWITCH_CHAIN_0,
+ 			AR_PHY_SWITCH_CHAIN_1,
+@@ -3525,13 +3527,49 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
  
- 	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
- 
-+		if (strip_drv_header(priv, skb) < 0) {
-+			dev_kfree_skb_any(skb);
-+			continue;
+ 	if (AR_SREV_9485(ah)) {
+ 		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
+-		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_CTRL_ALL,
+-			      value);
+-		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE,
+-			      value >> 6);
+-		REG_RMW_FIELD(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE,
+-			      value >> 7);
++		/*
++		 * main_lnaconf, alt_lnaconf, main_tb, alt_tb
++		 * are the fields present
++		 */
++		regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++		regval &= (~AR_ANT_DIV_CTRL_ALL);
++		regval |= (value & 0x3f) << AR_ANT_DIV_CTRL_ALL_S;
++		/* enable_lnadiv */
++		regval &= (~AR_PHY_9485_ANT_DIV_LNADIV);
++		regval |= ((value >> 6) & 0x1) <<
++				AR_PHY_9485_ANT_DIV_LNADIV_S;
++		REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++
++		/*enable fast_div */
++		regval = REG_READ(ah, AR_PHY_CCK_DETECT);
++		regval &= (~AR_BBB_SIG_DETECT_ANT_FAST_DIV);
++		regval |= ((value >> 7) & 0x1) <<
++				AR_BBB_SIG_DETECT_ANT_FAST_DIV_S;
++		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
++		ant_div_ctl1 =
++			ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
++		/* check whether antenna diversity is enabled */
++		if ((ant_div_ctl1 >> 0x6) == 0x3) {
++			regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++			/*
++			 * clear bits 25-30 main_lnaconf, alt_lnaconf,
++			 * main_tb, alt_tb
++			 */
++			regval &= (~(AR_PHY_9485_ANT_DIV_MAIN_LNACONF |
++					AR_PHY_9485_ANT_DIV_ALT_LNACONF |
++					AR_PHY_9485_ANT_DIV_ALT_GAINTB |
++					AR_PHY_9485_ANT_DIV_MAIN_GAINTB));
++			/* by default use LNA1 for the main antenna */
++			regval |= (AR_PHY_9485_ANT_DIV_LNA1 <<
++					AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S);
++			regval |= (AR_PHY_9485_ANT_DIV_LNA2 <<
++					AR_PHY_9485_ANT_DIV_ALT_LNACONF_S);
++			REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
 +		}
 +
-+		tx_ctl = HTC_SKB_CB(skb);
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		fc = hdr->frame_control;
- 		tx_info = IEEE80211_SKB_CB(skb);
- 		vif = tx_info->control.vif;
-+		txok = tx_ctl->txok;
- 
- 		memset(&tx_info->status, 0, sizeof(tx_info->status));
- 
-+		/*
-+		 * URB submission failed for this frame, it never reached
-+		 * the target.
-+		 */
-+		if (!txok)
-+			goto send_mac80211;
 +
-+		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
 +
- 		if (!vif)
- 			goto send_mac80211;
+ }
  
-@@ -350,30 +392,10 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 		    enum htc_endpoint_id ep_id, bool txok)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) drv_priv;
--	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct ieee80211_tx_info *tx_info;
--
--	if (!skb)
--		return;
--
--	if (ep_id == priv->mgmt_ep) {
--		skb_pull(skb, sizeof(struct tx_mgmt_hdr));
--	} else if ((ep_id == priv->data_bk_ep) ||
--		   (ep_id == priv->data_be_ep) ||
--		   (ep_id == priv->data_vi_ep) ||
--		   (ep_id == priv->data_vo_ep) ||
--		   (ep_id == priv->cab_ep)) {
--		skb_pull(skb, sizeof(struct tx_frame_hdr));
--	} else {
--		ath_err(common, "Unsupported TX EPID: %d\n", ep_id);
--		dev_kfree_skb_any(skb);
--		return;
--	}
--
--	tx_info = IEEE80211_SKB_CB(skb);
-+	struct ath9k_htc_tx_ctl *tx_ctl;
- 
--	if (txok)
--		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+	tx_ctl = HTC_SKB_CB(skb);
-+	tx_ctl->txok = txok;
- 
- 	skb_queue_tail(&priv->tx.tx_queue, skb);
- 	tasklet_schedule(&priv->tx_tasklet);
+ static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
 -- 
-1.7.4.4
+1.7.0.4
 
