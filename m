@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12584 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:27883 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275Ab1DKQ0P convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 12:26:15 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 09:25:50 -0700
-From: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Date: Mon, 11 Apr 2011 21:55:02 +0530
-Subject: RE: [PATCH 2/2] ath9k: Register id table for platform device
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850EF168C0B@CHEXMB-01.global.atheros.com>
-References: <1302520181-11949-1-git-send-email-vasanth@atheros.com>,<1302520181-11949-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302520181-11949-2-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1758271Ab1D1Jw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 05:52:58 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 05/10] iwlegacy: remove unneeded __packed
+Date: Thu, 28 Apr 2011 11:51:28 +0200
+Message-Id: <1303984293-6601-5-git-send-email-sgruszka@redhat.com> (sfid-20110428_115304_452382_35C22DB9)
+In-Reply-To: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
+References: <1303984293-6601-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+struct iwl_queue is not part of firmware interface, so __packed is not
+needed. Remove it since is may affect performance.
 
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Vasanthakumar Thiagarajan [vasanth@atheros.com]
-Sent: Monday, April 11, 2011 4:09 AM
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org; Gabor Juhos
-Subject: [PATCH 2/2] ath9k: Register id table for platform device
-
-Take devid from driver_data of platform_device_id instead of using a hardcoded
-value.
-
-Cc: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-dev.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please drop this patch, this would break the existing board support. I'll send an updated one
-
-Vasanth
+diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
+index 9ee849d..36c01aa 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-dev.h
++++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
+@@ -134,7 +134,7 @@ struct iwl_queue {
+ 				* space more than this */
+ 	int high_mark;         /* high watermark, stop queue if free
+ 				* space less than this */
+-} __packed;
++};
+ 
+ /* One for each TFD */
+ struct iwl_tx_info {
+-- 
+1.7.1
 
