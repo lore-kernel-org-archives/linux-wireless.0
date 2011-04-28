@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:37809 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751391Ab1D2UBK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52738 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755836Ab1D1Spt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2011 16:01:10 -0400
-Received: by mail-ey0-f180.google.com with SMTP id 24so1735324eyg.11
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 13:01:05 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: eliad@wizery.com
-Subject: [PATCH] wl12xx: strict_stroul introduced converted to kstrtoul
-Date: Fri, 29 Apr 2011 23:00:57 +0300
-Message-Id: <1304107257-23215-1-git-send-email-coelho@ti.com> (sfid-20110429_220114_153513_8B84B7DE)
-In-Reply-To: <1303028447-16264-1-git-send-email-eliad@wizery.com>
-References: <1303028447-16264-1-git-send-email-eliad@wizery.com>
+	Thu, 28 Apr 2011 14:45:49 -0400
+Date: Thu, 28 Apr 2011 14:34:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Javier Lopez <jlopex@gmail.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, javier@cozybit.com
+Subject: Re: [PATCH v2] mac80211_hwsim driver support userspace frame tx/rx
+Message-ID: <20110428183435.GB2511@tuxdriver.com> (sfid-20110428_204552_933607_14B3A647)
+References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
+ <1303500703-24157-1-git-send-email-jlopex@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1303500703-24157-1-git-send-email-jlopex@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One new patch applied added a couple of new strict_strtoul calls.
-Converted those to kstroul().
+On Fri, Apr 22, 2011 at 09:31:43PM +0200, Javier Lopez wrote:
+> This is an updated patch that solve the issues found in the previous 
+> patch, it adds frame exchange capabilities with userspace to 
+> mac80211_hwsim driver. Allowing user space applications to decide if a 
+> frame should be dropped or not.
+> 
+> Frame exchange between kernel and userspace is done through a generic 
+> netlink communication protocol, a new family called HWSIM is proposed 
+> in order to communicate with userspace applications. This family 
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> +static struct genl_family hwsim_genl_family = {
+> +	.id = GENL_ID_GENERATE,
+> +	.hdrsize = 0,
+> +	.name = "HWSIM",
+> +	.version = VERSION_NR,
+> +	.maxattr = HWSIM_ATTR_MAX,
+> +};
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 88c6efe..b17cff6 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -321,7 +321,7 @@ static ssize_t dtim_interval_write(struct file *file,
- 		return -EFAULT;
- 	buf[len] = '\0';
- 
--	ret = strict_strtoul(buf, 0, &value);
-+	ret = kstrtoul(buf, 0, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value for dtim_interval");
- 		return -EINVAL;
-@@ -386,7 +386,7 @@ static ssize_t beacon_interval_write(struct file *file,
- 		return -EFAULT;
- 	buf[len] = '\0';
- 
--	ret = strict_strtoul(buf, 0, &value);
-+	ret = kstrtoul(buf, 0, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value for beacon_interval");
- 		return -EINVAL;
+I don't have any big objections to this patch.  But I think that
+"HWSIM" is not a very good name.  Most/all of the other genl_family
+definitions seem to use a name specific to their function.  While
+"HWSIM" is somewhat descriptive, it seems prone to confusion.  I would
+prefer to see a name like "mac80211_hwsim".
+
+John
+
+P.S.  Sorry to "bikeshed" this...
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
