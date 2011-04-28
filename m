@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51607 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656Ab1DHQNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 12:13:21 -0400
-Date: Fri, 8 Apr 2011 09:05:58 -0700
-From: Greg KH <gregkh@suse.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Removal of staging/rt2860sta (and rt2870sta)
-Message-ID: <20110408160558.GA11902@suse.de>
-References: <4D9F2185.10108@lwfinger.net>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52411 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758439Ab1D1RF2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2011 13:05:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D9F2185.10108@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 28 Apr 2011 10:05:08 -0700
+Message-ID: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com> (sfid-20110428_190545_575144_C507D72E)
+Subject: EFF's Open Wireless Movement - solutions for Linux 802.11 APs
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Cc: openwireless@eff.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 08, 2011 at 09:53:57AM -0500, Larry Finger wrote:
-> Greg,
-> 
-> When I looked again at the removal of rt2860sta from staging, it was
-> quickly obvious that unless rt2870sta was also removed, very little
-> of the code could be removed. As I have no experience with
-> rt2800usb, the mainline driver for that device, I went to the
-> wireless mailing list with the question. There was one objection to
-> the removal, but the maintainers were in favor, thus I will be
-> submitting a patch to delete both drivers.
-> 
-> I did the changes on my local git tree, committed them, and used
-> 'git format-patch'. I expected that 'git rm' statements would be
-> used to delete the files, but I got normal patch format. As a
-> result, the resulting patch is over 2.4 GB, and has over 75,000
-> lines. Obviously, I'm reluctant to dump a patch of this size on the
-> lists. Is there a way to force git to use "rm" statements, or is
-> there some way to handle this large patch?
+The EFF announced an effort and desire to promote open wireless
+networks instead of closed encrypted networks to help users with
+connectivity. They have come up with some alternative proposals and
+challenges which they are asking for review / help on. As far as Linux
+is concerned I've started a wiki [2] to cover what we can do for
+802.11 Linux based APs. Feel free to extend the wiki as you see fit
+and / or subscribe for changes.
 
-You can point me at the git tree and I can pull from it :)
+[1] https://www.eff.org/deeplinks/2011/04/open-wireless-movement
+[2] http://wireless.kernel.org/en/developers/OpenWirelessMovement
 
-thanks,
-
-greg k-h
+  Luis
