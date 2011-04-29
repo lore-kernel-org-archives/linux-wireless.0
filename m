@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39919 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753629Ab1DDMVO (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:32971 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754097Ab1D2WfX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2011 08:21:14 -0400
-Subject: Re: [PATCH v6 00/10] {mac|nl}80211: mesh security enhancements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com
-In-Reply-To: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-References: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Apr 2011 14:21:13 +0200
-Message-ID: <1301919673.3870.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 29 Apr 2011 18:35:23 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>
+Date: Fri, 29 Apr 2011 15:32:47 -0700
+Subject: RE: [PATCH] mwifiex: fix copy-n-paste 'thinko' for tsf_val
+Message-ID: <477F20668A386D41ADCC57781B1F704307FCE850F6@SC-VEXCH1.marvell.com> (sfid-20110430_003526_010246_34D72F85)
+References: <1304104067-29124-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1304104067-29124-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-04-01 at 13:35 -0700, Thomas Pedersen wrote:
-> v6:
-> - remove unneeded bits (Johannes)
-> - mesh capabilities returned for a wiphy & check if wiphy supports mesh
->   authentication before joining a secure mesh (Johannes)
-> 
-> Javier Cardona (9):
->   nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
->   nl80211: Add userspace authentication  flag to mesh setup
->   mac80211: ignore peers if security is enabled for this mesh
->   nl80211: let userspace authenticate stations
->   mac80211: Let user space receive and send mesh auth/deauth frames
->   mac80211: ignore peer link requests from unauthenticated stations.
->   mac80211: Perform PLINK_ACTION on new station
->   nl80211: New notification to discover mesh peer candidates.
->   mac80211: send notification on new peer candidate for our secure mesh
-> 
-> Thomas Pedersen (1):
->   nl80211: report mesh capabilities
-
-I don't believe this patchset works, since mac80211 doesn't set
-@WIPHY_FLAG_MESH_AUTH afaict.
-
-johannes
-
+SGkgSm9obiwNCg0KPiBTdWJqZWN0OiBbUEFUQ0hdIG13aWZpZXg6IGZpeCBjb3B5LW4tcGFzdGUg
+J3RoaW5rbycgZm9yIHRzZl92YWwNCj4gDQo+ICAgQ0MgW01dICBkcml2ZXJzL25ldC93aXJlbGVz
+cy9td2lmaWV4L2pvaW4ubw0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2pvaW4uYzog
+SW4gZnVuY3Rpb24g4oCYbXdpZmlleF9jbWRfODAyXzExX2Fzc29jaWF0ZeKAmToNCj4gZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbXdpZmlleC9qb2luLmM6MTE5Ojg6IHdhcm5pbmc6IOKAmHRzZl92YWzi
+gJkgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBpbiB0aGlzDQo+IGZ1bmN0aW9uDQo+IGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvam9pbi5jOjEwMzoxMjogbm90ZTog4oCYdHNmX3ZhbOKA
+mSB3YXMgZGVjbGFyZWQgaGVyZQ0KDQpUaGFua3MgZm9yIHNwb3R0aW5nIHRoaXMgZXJyb3IuIEkg
+d2lsbCB1cGRhdGUgbXkgZ2NjIGFzIG15IGN1cnJlbnQgdmVyc2lvbiA0LjQuMSAyMDA5MDcyNSBj
+YW5ub3QgZmluZCB0aGlzIHdhcm5pbmcuIA0KDQo+IA0KPiBMb29rcyBsaWtlIGEgY29weS1uLXBh
+c3RlIGVycm9yLCBpZGVudGljYWwgbGluZXMgYXJlIGEgZmV3IGxpbmVzIGJlbG93DQo+IHRoZSBv
+bmVzIHJlbW92ZWQsIHdpdGggYW4gYWN0dWFsIG1lbWNweSB0byB0c2ZfdmFsIGluIGJldHdlZW4u
+Li4NCg0KSXQncyBub3QgYSBjb3B5LW4tcGFzdGUgZXJyb3IsIGJ1dCB5b3UgaGl0IGEgYnVnIGhl
+cmUuDQoNCkFjdHVhbGx5IHR3byBzZXRzIG9mIHRzZl92YWwgYXJlIGNvcGllZCB0byB0aGUgYnVm
+ZmVyLiBJIG1pc3NlZCB0aGUgaW5pdGlhbGl6YXRpb24gY29kZSBmb3IgdGhlIGZpcnN0IHRzZl92
+YWwuDQoNCkkgd2lsbCBzZW5kIGEgcGF0Y2ggdG8gZml4IGl0Lg0KDQpUaGFua3MsDQoNCkJpbmcN
+Cg0KDQo=
