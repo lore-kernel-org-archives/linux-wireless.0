@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50134 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757506Ab1DMUZy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2011 16:25:54 -0400
-Message-ID: <4DA606CC.9040609@hauke-m.de>
-Date: Wed, 13 Apr 2011 22:25:48 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:42684 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421Ab1D2Jvq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 05:51:46 -0400
+Received: by pvg12 with SMTP id 12so2221146pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 02:51:46 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Compat-wireless release for 2011-04-07 is baked
-References: <895357.54625.qm@web161601.mail.bf1.yahoo.com>
-In-Reply-To: <895357.54625.qm@web161601.mail.bf1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19898.35529.55613.593784@gargle.gargle.HOWL> (sfid-20110429_115149_490844_59AED538)
+Date: Fri, 29 Apr 2011 15:24:17 +0530
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Luis.Rodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath9k_htc: Dump base eeprom header for UB91/94/95
+In-Reply-To: <201104291106.21170.chunkeey@googlemail.com>
+References: <19897.11321.556139.837633@gargle.gargle.HOWL>
+	<201104290116.26355.chunkeey@googlemail.com>
+	<19898.4633.920683.992470@gargle.gargle.HOWL>
+	<201104291106.21170.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Walter,
+Christian Lamparter wrote:
+> Do you really think that everyone will be happy to recompile their stripped & heavily 
+> customised embedded kernels/or compat-wireless just to enable DEBUG and
+> waste precious resources? Even with a PC, this is not necessarily straightforward,
+> especially if the user has never done it before.
 
-sorry for answering so late.
+Yeah, this was the reasoning that I used to write a tool to dump eeprom
+data for PCI cards (using libpciaccess), and it is languishing internally. :)
 
-On 04/08/2011 12:08 AM, Walter Goldens wrote:
-> 
->>>
->>> Walter
->> Hi Walter,
->>
->> the subject of this message is wrong, compat-wireless
->> release for
->> 2011-04-07 was not baked, because some patches do not
->> apply. ;-)
->> A successful message should look like this:
->> http://www.spinics.net/lists/linux-wireless/msg66930.html
->> When the statistic is included it was successful.
->>
->> compat-wireless is build automatically by a daily cron job
->> and this cron
->> job also sends these mails.
->>
->> You could apply the patches I send to the mailing list some
->> hours ago
->> and generate your own compat-wireless version or wait some
->> time.
->>
->> Hauke
-> 
-> Hello Hauke,
-> 
-> I understand the mechanics of the cron job generating compat-wireless tar balls and emails to the mailing list. I don't understand who /or what/ uploads them in kernel.org and orbit lab?
-> http://www.orbit-lab.org/kernel/compat-wireless-2.6/
-> http://wireless.kernel.org/download/compat-wireless-2.6/
+I agree that there are benefits to having a userspace tool,
+maybe Luis' ath-utils tree can be used. But until then, it would be useful
+to have these in the driver.
 
-The cron job generating compat-wireless places it to a location, so it
-is available for download on orbit, the cron job is running on a server
-at orbit. Now some other cron job copies it to wireless.kernel.org.
-
-The scripts generating compat-wireless can be found here:
-http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-user.git;a=tree
-
-> Walter
-> 
-> PS, I guess this CW bot "baker" needs a little fine-tuning
-Yes that's true. Are you willing to improve it so it generated better
-messages on failure?
-
+Sujith
