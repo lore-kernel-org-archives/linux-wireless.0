@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45483 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755952Ab1DFOcG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 10:32:06 -0400
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Ospite <ospite@studenti.unina.it>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-In-Reply-To: <20110406162901.0efa11ad.ospite@studenti.unina.it>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	 <20110406141131.GC2810@opensource.wolfsonmicro.com>
-	 <20110406162901.0efa11ad.ospite@studenti.unina.it>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Apr 2011 16:32:02 +0200
-Message-ID: <1302100322.4090.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:37046 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024Ab1D2EwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 00:52:16 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 21:51:49 -0700
+Message-ID: <4DBA43FB.6010709@atheros.com> (sfid-20110429_065224_242972_98B1D06E)
+Date: Fri, 29 Apr 2011 10:22:11 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [RFC/RFT 4/9] ath9k_hw: config diversity based on eeprom contents
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <1304000579-5784-5-git-send-email-mshajakhan@atheros.com> <20110428173944.GB29252@tux>
+In-Reply-To: <20110428173944.GB29252@tux>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-04-06 at 16:29 +0200, Antonio Ospite wrote:
-> On Wed, 6 Apr 2011 23:11:33 +0900
-> Mark Brown <broonie@opensource.wolfsonmicro.com> wrote:
-> 
-> > On Wed, Apr 06, 2011 at 11:21:19AM +0200, Antonio Ospite wrote:
-> > 
-> > > +	tristate "Generic rfkill regulator driver"
-> > > +	depends on RFKILL || !RFKILL
-> > 
-> > That looks *odd*.
-> 
-> Taken from Documentation/rfkill.txt section 3.  Kernel API.
-> I guess I can drop it if we want to be stricter and just require RFKILL
-> to be enabled. Johannes?
+On Thursday 28 April 2011 11:09 PM, Luis Rodriguez wrote:
+> On Thu, Apr 28, 2011 at 07:22:54AM -0700, Mohammed Shajakhan wrote:
+>    
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> * enable LNA-diversity, fast-diversity based on the value read from
+>>    EEPROM content
+>> * if antenna diversity/combining is supported set LNA1 for the main
+>>    antenna and LNA2 for the alternate antenna based on the new diversity
+>>    algorithm
+>>      
+> The commit log does not mention this is specifically only for
+> AR9485. Adding this can help reviewers / distributions.
+>    
+Ok Luis, I will address that.
 
-I guess it depends on what you're looking to do. Since all you implement
-is set_block() you might very well not need to be able to have this if
-nothing is ever going to invoke set_block(), in which case you can do
-"depends on RFKILL".
-
-The reason for this usually is that a driver, like a wireless driver,
-should work even if there's no rfkill API available, but it shouldn't
-need to put #ifdefs into the code itself.
-
-johannes
-
+thanks,
+shafi
+>    Luis
+> .
+>
+>    
