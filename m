@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp208.alice.it ([82.57.200.104]:42592 "EHLO smtp208.alice.it"
+Received: from mx1.redhat.com ([209.132.183.28]:2715 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755986Ab1DFOZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 10:25:01 -0400
-Date: Wed, 6 Apr 2011 16:24:31 +0200
-From: Antonio Ospite <ospite@studenti.unina.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, openezx-devel@lists.openezx.org,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Liam Girdwood <lrg@slimlogic.co.uk>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>,
-	Guiming Zhuo <gmzhuo@gmail.com>
-Subject: Re: [PATCH] rfkill: Regulator consumer driver for rfkill
-Message-Id: <20110406162431.cbcb0fd6.ospite@studenti.unina.it>
-In-Reply-To: <1302098968.4090.0.camel@jlt3.sipsolutions.net>
-References: <1302081679-812-1-git-send-email-ospite@studenti.unina.it>
-	<1302082178.3811.7.camel@jlt3.sipsolutions.net>
-	<20110406160654.e629dfde.ospite@studenti.unina.it>
-	<1302098968.4090.0.camel@jlt3.sipsolutions.net>
+	id S1760457Ab1D2RkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 13:40:06 -0400
+Subject: Re: [PATCH 2.6.38 3/4] iwl3945: disable hw scan by default
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: stable@kernel.org, kernel@lists.fedoraproject.org,
+	Kyle McMartin <kmcmartin@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 29 Apr 2011 12:41:32 -0500
+In-Reply-To: <1303992495-7337-4-git-send-email-sgruszka@redhat.com>
+References: <1303992495-7337-1-git-send-email-sgruszka@redhat.com>
+	 <1303992495-7337-4-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1304098893.1921.32.camel@dcbw.foobar.com> (sfid-20110429_194030_630204_505E862A)
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2011-04-28 at 14:08 +0200, Stanislaw Gruszka wrote:
+> commit 0263aa45293838b514b8af674a03faf040991a90 upstream.
+> 
+> After new NetworkManager 0.8.996 changes, hardware scanning is causing
+> microcode errors as reported here:
+> https://bugzilla.redhat.com/show_bug.cgi?id=683571
+> and sometimes kernel crashes:
+> https://bugzilla.redhat.com/show_bug.cgi?id=688252
 
-On Wed, 06 Apr 2011 16:09:28 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Note that the only difference with NM 0.8.996 here is that
+wpa_supplicant 0.7 + nl80211 is used rather than WEXT, so this issue is
+likely related to the change from WEXT -> nl80211, if anything...
 
-> On Wed, 2011-04-06 at 16:06 +0200, Antonio Ospite wrote:
->=20
-> > > > +	if (regulator_is_enabled(vcc)) {
-> > > > +		dev_dbg(&pdev->dev, "Regulator already enabled\n");
-> > > > +		rfkill_data->reg_enabled =3D 1;
-> > > > +	}
-> > > > +	rfkill_init_sw_state(rf_kill, !rfkill_data->reg_enabled);
-> > > > +
-> > > > +	ret =3D rfkill_register(rf_kill);
-> > >=20
-> > > We recently had a thread about how rfkill_init_sw_state() isn't quite
-> > > working the right way. Also, it is indented to be used for devices th=
-at
-> > > keep their state over resume. I think you should remove it here and r=
-ely
-> > > on rfkill to sync you after registration.
-> > >=20
-> > > Cf. the long thread here:
-> > > http://thread.gmane.org/gmane.linux.acpi.devel/49577
-> > >
-> >=20
-> > Ok, but I still need to replace that call with a rfkill_set_sw_state()
-> > to expose the initial status of the regulator to the rfkill system,
-> > right?
->=20
-> Well, you could, but if you don't do that then the rfkill subsystem will
-> simply call set_block() shortly after registration to put it into the
-> state that it thinks it should be in, which is usually more useful.
->=20
+Dan
 
-I see, let's just drop rfkill_init_sw_state() then.
+> Also with hw scan there are very bad performance on some systems
+> as reported here:
+> https://bugzilla.redhat.com/show_bug.cgi?id=671366
+> 
+> Since Intel no longer supports 3945, there is no chance to get proper
+> firmware fixes, we need workaround problems by disable hardware scanning
+> by default.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index cf0699a..a8340f7 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -94,6 +94,7 @@ MODULE_LICENSE("GPL");
+>  struct iwl_mod_params iwl3945_mod_params = {
+>  	.sw_crypto = 1,
+>  	.restart_fw = 1,
+> +	.disable_hw_scan = 1,
+>  	/* the rest are 0 by default */
+>  };
+>  
+> @@ -4317,7 +4318,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
+>  #endif
+>  module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
+>  		   int, S_IRUGO);
+> -MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
+> +MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
+>  module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
+>  MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
+>  
 
-Regards,
-   Antonio
 
---=20
-Antonio Ospite
-http://ao2.it
-
-PGP public key ID: 0x4553B001
-
-A: Because it messes up the order in which people normally read text.
-   See http://en.wikipedia.org/wiki/Posting_style
-Q: Why is top-posting such a bad thing?
-
---Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2cd58ACgkQ5xr2akVTsAF/kQCfbMOLILqwo6ezUCgKUrV7EtcQ
-lKoAnikpZcgtBRBntMph9zxpklX8nREz
-=nDLU
------END PGP SIGNATURE-----
-
---Signature=_Wed__6_Apr_2011_16_24_31_+0200_kM4C5eEmAhm0ndUk--
