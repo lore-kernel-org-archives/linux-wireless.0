@@ -1,271 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52430 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756811Ab1DHTp0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 15:45:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Eugene A. Shatokhin" <dame_eugene@mail.ru>,
-	Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	ath5k-devel@venema.h4ckr.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: improve pcal error handling for ENOMEM case
-Date: Fri,  8 Apr 2011 15:33:12 -0400
-Message-Id: <1302291192-19249-1-git-send-email-linville@tuxdriver.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2430 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759995Ab1D2R3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 13:29:31 -0400
+Date: Fri, 29 Apr 2011 10:29:16 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"openwireless@eff.org" <openwireless@eff.org>
+Subject: Re: EFF's Open Wireless Movement - solutions for Linux 802.11
+ APs
+Message-ID: <20110429172916.GA17775@broadcom.com> (sfid-20110429_192949_168574_4B6FBA57)
+References: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath5k driver does kmalloc allocations for pcal info in a loop.
-But, if one fails it was simply returning -ENOMEM without freeing
-already allocated memory.  This patch corrects that oversight.
+On Thu, Apr 28, 2011 at 10:05:08AM -0700, Luis R. Rodriguez wrote:
+> The EFF announced an effort and desire to promote open wireless
+> networks instead of closed encrypted networks to help users with
+> connectivity. They have come up with some alternative proposals and
+> challenges which they are asking for review / help on. As far as Linux
+> is concerned I've started a wiki [2] to cover what we can do for
+> 802.11 Linux based APs. Feel free to extend the wiki as you see fit
+> and / or subscribe for changes.
+> 
+> [1] https://www.eff.org/deeplinks/2011/04/open-wireless-movement
+> [2] http://wireless.kernel.org/en/developers/OpenWirelessMovement
 
-Reported-by: Eugene A. Shatokhin <dame_eugene@mail.ru>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-The move of ath5k_eeprom_free_pcal_info is just to avoid a forward
-declaration.
 
- drivers/net/wireless/ath/ath5k/eeprom.c |  129 +++++++++++++++++--------------
- 1 files changed, 70 insertions(+), 59 deletions(-)
+The Wi-Fi Alliance currently has a Hotspot program in development:
 
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index b6561f7..fb12027 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -660,6 +660,53 @@ ath5k_get_pcdac_intercepts(struct ath5k_hw *ah, u8 min, u8 max, u8 *vp)
- 		vp[i] = (ip[i] * max + (100 - ip[i]) * min) / 100;
- }
- 
-+static int
-+ath5k_eeprom_free_pcal_info(struct ath5k_hw *ah, int mode)
-+{
-+	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
-+	struct ath5k_chan_pcal_info *chinfo;
-+	u8 pier, pdg;
-+
-+	switch (mode) {
-+	case AR5K_EEPROM_MODE_11A:
-+		if (!AR5K_EEPROM_HDR_11A(ee->ee_header))
-+			return 0;
-+		chinfo = ee->ee_pwr_cal_a;
-+		break;
-+	case AR5K_EEPROM_MODE_11B:
-+		if (!AR5K_EEPROM_HDR_11B(ee->ee_header))
-+			return 0;
-+		chinfo = ee->ee_pwr_cal_b;
-+		break;
-+	case AR5K_EEPROM_MODE_11G:
-+		if (!AR5K_EEPROM_HDR_11G(ee->ee_header))
-+			return 0;
-+		chinfo = ee->ee_pwr_cal_g;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	for (pier = 0; pier < ee->ee_n_piers[mode]; pier++) {
-+		if (!chinfo[pier].pd_curves)
-+			continue;
-+
-+		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
-+			struct ath5k_pdgain_info *pd =
-+					&chinfo[pier].pd_curves[pdg];
-+
-+			if (pd != NULL) {
-+				kfree(pd->pd_step);
-+				kfree(pd->pd_pwr);
-+			}
-+		}
-+
-+		kfree(chinfo[pier].pd_curves);
-+	}
-+
-+	return 0;
-+}
-+
- /* Convert RF5111 specific data to generic raw data
-  * used by interpolation code */
- static int
-@@ -684,7 +731,7 @@ ath5k_eeprom_convert_pcal_info_5111(struct ath5k_hw *ah, int mode,
- 				GFP_KERNEL);
- 
- 		if (!chinfo[pier].pd_curves)
--			return -ENOMEM;
-+			goto err_out;
- 
- 		/* Only one curve for RF5111
- 		 * find out which one and place
-@@ -708,12 +755,12 @@ ath5k_eeprom_convert_pcal_info_5111(struct ath5k_hw *ah, int mode,
- 		pd->pd_step = kcalloc(AR5K_EEPROM_N_PWR_POINTS_5111,
- 					sizeof(u8), GFP_KERNEL);
- 		if (!pd->pd_step)
--			return -ENOMEM;
-+			goto err_out;
- 
- 		pd->pd_pwr = kcalloc(AR5K_EEPROM_N_PWR_POINTS_5111,
- 					sizeof(s16), GFP_KERNEL);
- 		if (!pd->pd_pwr)
--			return -ENOMEM;
-+			goto err_out;
- 
- 		/* Fill raw dataset
- 		 * (convert power to 0.25dB units
-@@ -734,6 +781,10 @@ ath5k_eeprom_convert_pcal_info_5111(struct ath5k_hw *ah, int mode,
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	ath5k_eeprom_free_pcal_info(ah, mode);
-+	return -ENOMEM;
- }
- 
- /* Parse EEPROM data */
-@@ -867,7 +918,7 @@ ath5k_eeprom_convert_pcal_info_5112(struct ath5k_hw *ah, int mode,
- 					GFP_KERNEL);
- 
- 		if (!chinfo[pier].pd_curves)
--			return -ENOMEM;
-+			goto err_out;
- 
- 		/* Fill pd_curves */
- 		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
-@@ -886,14 +937,13 @@ ath5k_eeprom_convert_pcal_info_5112(struct ath5k_hw *ah, int mode,
- 						sizeof(u8), GFP_KERNEL);
- 
- 				if (!pd->pd_step)
--					return -ENOMEM;
-+					goto err_out;
- 
- 				pd->pd_pwr = kcalloc(pd->pd_points,
- 						sizeof(s16), GFP_KERNEL);
- 
- 				if (!pd->pd_pwr)
--					return -ENOMEM;
--
-+					goto err_out;
- 
- 				/* Fill raw dataset
- 				 * (all power levels are in 0.25dB units) */
-@@ -925,13 +975,13 @@ ath5k_eeprom_convert_pcal_info_5112(struct ath5k_hw *ah, int mode,
- 						sizeof(u8), GFP_KERNEL);
- 
- 				if (!pd->pd_step)
--					return -ENOMEM;
-+					goto err_out;
- 
- 				pd->pd_pwr = kcalloc(pd->pd_points,
- 						sizeof(s16), GFP_KERNEL);
- 
- 				if (!pd->pd_pwr)
--					return -ENOMEM;
-+					goto err_out;
- 
- 				/* Fill raw dataset
- 				 * (all power levels are in 0.25dB units) */
-@@ -954,6 +1004,10 @@ ath5k_eeprom_convert_pcal_info_5112(struct ath5k_hw *ah, int mode,
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	ath5k_eeprom_free_pcal_info(ah, mode);
-+	return -ENOMEM;
- }
- 
- /* Parse EEPROM data */
-@@ -1156,7 +1210,7 @@ ath5k_eeprom_convert_pcal_info_2413(struct ath5k_hw *ah, int mode,
- 					GFP_KERNEL);
- 
- 		if (!chinfo[pier].pd_curves)
--			return -ENOMEM;
-+			goto err_out;
- 
- 		/* Fill pd_curves */
- 		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
-@@ -1177,13 +1231,13 @@ ath5k_eeprom_convert_pcal_info_2413(struct ath5k_hw *ah, int mode,
- 					sizeof(u8), GFP_KERNEL);
- 
- 			if (!pd->pd_step)
--				return -ENOMEM;
-+				goto err_out;
- 
- 			pd->pd_pwr = kcalloc(pd->pd_points,
- 					sizeof(s16), GFP_KERNEL);
- 
- 			if (!pd->pd_pwr)
--				return -ENOMEM;
-+				goto err_out;
- 
- 			/* Fill raw dataset
- 			 * convert all pwr levels to
-@@ -1213,6 +1267,10 @@ ath5k_eeprom_convert_pcal_info_2413(struct ath5k_hw *ah, int mode,
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	ath5k_eeprom_free_pcal_info(ah, mode);
-+	return -ENOMEM;
- }
- 
- /* Parse EEPROM data */
-@@ -1534,53 +1592,6 @@ ath5k_eeprom_read_pcal_info(struct ath5k_hw *ah)
- 	return 0;
- }
- 
--static int
--ath5k_eeprom_free_pcal_info(struct ath5k_hw *ah, int mode)
--{
--	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
--	struct ath5k_chan_pcal_info *chinfo;
--	u8 pier, pdg;
--
--	switch (mode) {
--	case AR5K_EEPROM_MODE_11A:
--		if (!AR5K_EEPROM_HDR_11A(ee->ee_header))
--			return 0;
--		chinfo = ee->ee_pwr_cal_a;
--		break;
--	case AR5K_EEPROM_MODE_11B:
--		if (!AR5K_EEPROM_HDR_11B(ee->ee_header))
--			return 0;
--		chinfo = ee->ee_pwr_cal_b;
--		break;
--	case AR5K_EEPROM_MODE_11G:
--		if (!AR5K_EEPROM_HDR_11G(ee->ee_header))
--			return 0;
--		chinfo = ee->ee_pwr_cal_g;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	for (pier = 0; pier < ee->ee_n_piers[mode]; pier++) {
--		if (!chinfo[pier].pd_curves)
--			continue;
--
--		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
--			struct ath5k_pdgain_info *pd =
--					&chinfo[pier].pd_curves[pdg];
--
--			if (pd != NULL) {
--				kfree(pd->pd_step);
--				kfree(pd->pd_pwr);
--			}
--		}
--
--		kfree(chinfo[pier].pd_curves);
--	}
--
--	return 0;
--}
--
- /* Read conformance test limits used for regulatory control */
- static int
- ath5k_eeprom_read_ctl_info(struct ath5k_hw *ah)
--- 
-1.7.4
+	http://www.wi-fi.org/news_articles.php?news_id=1048
+
+While it's mainly targeted at service providers, it seem likely that much of
+the work could be leveraged if you consider the "service provider" in this case
+to be a loosly-coordinated group of people willing to make their APs available
+for public use.
+
+- Henry
+
 
