@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:21603 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757188Ab1DLU0g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 16:26:36 -0400
-Subject: Re: [RFC][PATCH] axi: add AXI bus driver
-From: George Kashperko <george@znau.edu.ua>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: balbi@ti.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <4DA4AC4B.90409@hauke-m.de>
-References: <1302566227-23788-1-git-send-email-zajec5@gmail.com>
-	 <20110412133633.GR15130@legolas.emea.dhcp.ti.com>
-	 <1302634039.14216.10.camel@dev.znau.edu.ua>
-	 <BANLkTi=0sM2+nPYyd09G=Uy9rcEvaFErnA@mail.gmail.com>
-	 <1302635550.14216.21.camel@dev.znau.edu.ua>
-	 <BANLkTi=8mB9ZDTjF4yds6mkx+PmM+B_6Cg@mail.gmail.com>
-	 <4DA4AC4B.90409@hauke-m.de>
-Content-Type: text/plain
-Date: Tue, 12 Apr 2011 23:23:30 +0300
-Message-Id: <1302639810.14216.57.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from mail.perches.com ([173.55.12.10]:1094 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752092Ab1D2FZU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 01:25:20 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] wireless: Make and use const struct ieee80211_channel
+Date: Thu, 28 Apr 2011 22:25:06 -0700
+Message-Id: <cover.1304054543.git.joe@perches.com> (sfid-20110429_072847_623922_2C8F7038)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe Perches (2):
+  wireless: Make struct ieee80211_channel const where possible
+  wireless: Use const struct ieee80211_channel where possible
 
-> The specification for the AMBA AXI Interface is available for free
-> download from ARM if you register to their website and accept their license:
-> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.set.amba/index.html
-> I got it from there without any problems and the license does not look
-> too bad for me, by having a quick look at it. I do not know if it will
-> help you in any way or if it is completely unrelated.
-> 
-> Why is the existing support for the amba bus not extended or used in any
-> way for this? It exists for some time in drivers/amba/. There already
-> was a discussion about this in https://lkml.org/lkml/2011/3/30/186 , but
-> with no result as I see.
-Existing AMBA bus might is the proper place to publish axi master port
-cores but Rafal's implementation manage those internally. Rafal
-introduces separate Broadcom-specific bus intended exclusively for
-Broadcom-specific devices management. Those devices share common
-identification/management techniques which are completely different from
-those implemented by other existant kernel buses and amba bus (at least
-at it current state) as well. Might be there are good and proper ways to
-extend amba bus driver to support axi as well but its a field for guys
-and girls confident with closed proprietary arm docs.
-Therefore IMHO the bus introduced by Rafal deserves its own driver and
-name. But I'm sure that the "axi" tag isn't good one for this bus.
+ drivers/net/wireless/iwlegacy/iwl-4965-lib.c |    2 +-
+ drivers/net/wireless/iwlegacy/iwl3945-base.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |    2 +-
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |    4 +-
+ drivers/net/wireless/libertas/cfg.c          |    2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      |    9 ++++---
+ drivers/net/wireless/orinoco/cfg.c           |    2 +-
+ drivers/net/wireless/rndis_wlan.c            |    9 ++++---
+ drivers/net/wireless/wl1251/cmd.c            |    2 +-
+ drivers/net/wireless/wl1251/cmd.h            |    2 +-
+ include/net/cfg80211.h                       |   34 +++++++++++++-------------
+ net/wireless/chan.c                          |   10 ++++----
+ net/wireless/core.h                          |   14 ++++++----
+ net/wireless/debugfs.c                       |    2 +-
+ net/wireless/ibss.c                          |    6 ++--
+ net/wireless/mlme.c                          |   15 ++++++-----
+ net/wireless/nl80211.c                       |   31 ++++++++++++-----------
+ net/wireless/nl80211.h                       |    9 ++++---
+ net/wireless/reg.c                           |   11 ++++----
+ net/wireless/reg.h                           |    4 +-
+ net/wireless/scan.c                          |    6 ++--
+ net/wireless/wext-sme.c                      |    2 +-
+ 22 files changed, 94 insertions(+), 86 deletions(-)
 
-> 
-> >>>> Also can't figure out how is this implementation supposed to manage
-> >>>> multicore devices.
-> >>>
-> >>> We have got ideas, but let's first find (wait for) such a device ;)
-> >> bcm4716 usb host ? Don't really know if there are any other multicores.
-> > 
-> > This is SoC, we do not have any problems supporting multiple cores on
-> > SoCs. All cores are available at the same time, without any sliding
-> > windows.
-> > 
-> 
-> Hauke
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-Have nice day,
-George
-
+-- 
+1.7.5.rc3.dirty
 
