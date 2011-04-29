@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:47652 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750874Ab1DAHxY (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64768 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760875Ab1D2VJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 03:53:24 -0400
-Received: by mail-wy0-f169.google.com with SMTP id 19so3196476wyf.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 00:53:22 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: rearrange some ELP wake_up/sleep calls
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1300911735-27655-1-git-send-email-eliad@wizery.com>
-References: <1300911735-27655-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Apr 2011 10:53:59 +0300
-Message-ID: <1301644439.1988.412.camel@cumari>
-Mime-Version: 1.0
+	Fri, 29 Apr 2011 17:09:55 -0400
+Received: by iwn34 with SMTP id 34so3369591iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 14:09:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com>
+References: <1303849311-8817-1-git-send-email-arik@wizery.com> <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 30 Apr 2011 00:09:40 +0300
+Message-ID: <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com> (sfid-20110429_230959_115843_0A9E1E97)
+Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-23 at 22:22 +0200, Eliad Peller wrote:
-> ELP (Extremely/Enhanced Low Power, or something like that ;)) refers to
-> the powerstate of the 12xx chip, in which very low power is consumed,
-> and no commands (from the host) can be issued until the chip is woken up.
-> 
-> Wakeup/sleep commands must be protected by a wl->mutex, so it's generally
-> a good idea to call wakeup/sleep along with the mutex lock/unlock (where
-> needed). However, in some places the wl12xx driver calls wakeup/sleep in
-> some "inner" functions. This result in some "nested" wakeup/sleep calls
-> which might end up letting the chip go to sleep prematurely (e.g. during
-> event handling).
-> 
-> Fix it by rearranging the elp calls to come along with mutex_lock/unlock.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+Hey John,
 
-Applied, thanks!
+Looking at the latest git, it seems you've picked up this patch
+(commit 47684808fd89d6809c0886e06f8ac324252499d8).
+This is unfortunate, since there's currently a FW bug that will cause
+many disconnections in STA mode with this patch.
 
--- 
-Cheers,
-Luca.
+How would we go about reverting this?
 
+Thanks,
+Arik
+
+On Thu, Apr 28, 2011 at 11:18, Arik Nemtsov <arik@wizery.com> wrote:
+> On Tue, Apr 26, 2011 at 23:21, Arik Nemtsov <arik@wizery.com> wrote:
+>> In AP mode we register for the MAX_TX_RETRY and INACTIVE_STA events.
+>> Both are reported to the upper layers as a TX failure in the offending
+>> stations.
+>>
+>> In STA mode we register only for the MAX_TX_RETRY event. A TX failure is
+>> interpreted as a loss of connection.
+>>
+>> Support for IEEE80211_HW_REPORTS_TX_ACK_STATUS has been removed to avoid
+>> the inherent race condition of a mac80211 TX failure counter in addition
+>> to the FW counter.
+>>
+>> This patch depends on "mac80211: allow low level driver to report packet
+>> loss"
+>>
+>
+> Luca please don't take this one for now. It appears the FW sometimes
+> misfires the event in STA mode.
+> We'll need some more debugging.
+>
+> Arik
+>
