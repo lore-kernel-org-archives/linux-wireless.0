@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:44464 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754149Ab1DEO7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2011 10:59:38 -0400
-From: Michal Marek <mmarek@suse.cz>
-To: linux-kbuild@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 19/34] rt2x00: Drop __TIME__ usage
-Date: Tue,  5 Apr 2011 16:59:06 +0200
-Message-Id: <1302015561-21047-20-git-send-email-mmarek@suse.cz>
-In-Reply-To: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
-References: <1302015561-21047-1-git-send-email-mmarek@suse.cz>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51191 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758486Ab1D2KuV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 06:50:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com>
+References: <BANLkTinw9KJ5Awow5W6ASZ6ZWS6Hu7n7LA@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 29 Apr 2011 12:50:00 +0200
+Message-ID: <BANLkTikDhhOW-sJ_iwxgzpDME9_XK-e8aQ@mail.gmail.com> (sfid-20110429_125043_517608_1DC9BBCB)
+Subject: Re: EFF's Open Wireless Movement - solutions for Linux 802.11 APs
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, openwireless@eff.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kernel already prints its build timestamp during boot, no need to
-repeat it in random drivers and produce different object files each
-time.
+On Thu, Apr 28, 2011 at 7:05 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> The EFF announced an effort and desire to promote open wireless
+> networks instead of closed encrypted networks to help users with
+> connectivity. They have come up with some alternative proposals and
+> challenges which they are asking for review / help on. As far as Linux
+> is concerned I've started a wiki [2] to cover what we can do for
+> 802.11 Linux based APs. Feel free to extend the wiki as you see fit
+> and / or subscribe for changes.
+>
+> [1] https://www.eff.org/deeplinks/2011/04/open-wireless-movement
+> [2] http://wireless.kernel.org/en/developers/OpenWirelessMovement
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Michal Marek <mmarek@suse.cz>
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+While everyone seems to be talking about people abusing your open
+networks to download child porn, there is another issue: on an open
+network, not only can everyone connect - any user can also snoop on,
+and/or inject fake data into, any other user's communication.
+The solution could be creating a modified version of WPA that does
+encryption, but not authentication (i.e. lets anyone join the network,
+but prevents one user from snooping on another one).
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index c92db32..66166ef 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -568,7 +568,6 @@ static struct dentry *rt2x00debug_create_file_driver(const char *name,
- 	blob->data = data;
- 	data += sprintf(data, "driver:\t%s\n", intf->rt2x00dev->ops->name);
- 	data += sprintf(data, "version:\t%s\n", DRV_VERSION);
--	data += sprintf(data, "compiled:\t%s %s\n", __DATE__, __TIME__);
- 	blob->size = strlen(blob->data);
- 
- 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
 -- 
-1.7.4.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
