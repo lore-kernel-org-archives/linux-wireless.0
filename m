@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52680 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752664Ab1DGOkN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 10:40:13 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: remove sdio_set_host_pm_flags
-Date: Thu,  7 Apr 2011 16:39:18 +0200
-Message-Id: <1302187158-15298-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1302187158-15298-1-git-send-email-hauke@hauke-m.de>
-References: <1302187158-15298-1-git-send-email-hauke@hauke-m.de>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4643 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751673Ab1D2GGk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 02:06:40 -0400
+Message-ID: <4DBA556E.6090602@gmail.com> (sfid-20110429_080646_870424_B74DEC96)
+Date: Fri, 29 Apr 2011 08:06:38 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: Yasushi SHOJI <yashi@atmark-techno.com>,
+	helmut.schaa@googlemail.com, hanada@atmark-techno.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 04/23] rt2x00: Make rt2x00_queue_entry_for_each more flexible
+References: <201104181526.01722.IvDoorn@gmail.com> <201104181526.37747.IvDoorn@gmail.com> <201104181527.06956.IvDoorn@gmail.com> <201104181527.06956.IvDoorn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> <201104181527.44542.IvDoorn@gmail.com> <878vuvt78l.wl@dns1.atmark-techno.com> <BANLkTimY0m+reba-DyPEM7kFWNSEKVyTAg@mail.gmail.com>
+In-Reply-To: <BANLkTimY0m+reba-DyPEM7kFWNSEKVyTAg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/28/11 20:55, Ivo Van Doorn wrote:
+> Hi,
+> 
+>> My colleague just tested this patch set and found out that the in
+>> question makes our 400MHz ARM cpu board with ralink usb dongle non
+>> functional due to high cpu consumption.  it seems for us that exiting
+>> from function every time it finds an entry is too expensive on systems
+>> slower than PCs.
+> 
+> Interesting, I would suspected the patch to reduce the CPU consumption
+> rather then increasing it. I can do some testing regarding this looping
+> during the weekend, but I haven't seen high CPU consumption on my
+> system during my last test. However I wasn't testing on an embedded system...
+> 
+>> To verify our thought, we changed the source code as the patch below.
+>> What we intended to do with this change is to continue processing all
+>> entry without breaking semantics.
+>>
+>> With the patch below our board seem to work fine again, but not sure
+>> exactly why it takes so much time to check the list again.  We are not
+>> against the idea of the patch at all.  We just want to ask you guys
+>> how we should go to track this problem. it might be the slow usb?
+> 
+> Could you try use debugfs and see if some queue and packet counters
+> of mac80211/rt2x00 show excessive values?
+> 
+> Have you been running the test with powersaving enabled or disabled?
+> 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Yeah, I had the same impression as Ivo, that it should save CPU cycles,
+especially since the patch was submitted by Helmut, who is very keen
+on saving CPU cycles, as he tests on an embedded (PCI-based) platform as
+well.
+
+But, if this proves to not be useful for now, then we should revert the
+entire patch, as the patch proposed simply negates the intended behavior
+and leaves a mess.
+
+I believe the offending patch was preparation for another patch which so
+far has not materialized in a usable form, so there should be no harm in
+reverting the offending patch.
+ 
 ---
- include/linux/compat-2.6.34.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 93fc4ef..f6ffde0 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -243,6 +243,9 @@ static inline int usb_enable_autosuspend(struct usb_device *udev)
- static inline int usb_disable_autosuspend(struct usb_device *udev)
- { return 0; }
- 
-+#define MMC_PM_KEEP_POWER	(1 << 0)	/* preserve card power during suspend */
-+#define sdio_set_host_pm_flags(a, b) 0
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
--- 
-1.7.1
-
+Gertjan
