@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out3.tiscali.nl ([195.241.79.178]:53047 "EHLO
-	smtp-out3.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756039Ab1DVS4l (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:37581 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755983Ab1D2T4x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 14:56:41 -0400
-Subject: [IWL4965] TX Power requested while scanning!
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+	Fri, 29 Apr 2011 15:56:53 -0400
+Received: by eyg24 with SMTP id 24so1785640eyg.39
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 12:56:51 -0700 (PDT)
+Subject: Re: [PATCH v2] wl12xx: Update Power Save Exit Retries Packets
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1302695570-14436-1-git-send-email-shahar_levi@ti.com>
+References: <1302695570-14436-1-git-send-email-shahar_levi@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 22 Apr 2011 20:56:22 +0200
-Message-ID: <1303498582.2103.15.camel@x61.thuisdomein>
+Date: Fri, 29 Apr 2011 22:56:47 +0300
+Message-ID: <1304107007.12586.155.camel@cumari> (sfid-20110429_215656_561209_69FEB287)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0) Running v2.6.39-rc4 I ran into this (after a resume):
+On Wed, 2011-04-13 at 14:52 +0300, Shahar Levi wrote:
+> Reducing the retries of sending PS exit packets to the peer AP.
+> That fix is to avoid sending unrealizable number of PS exit packets
+> in case of ap lost.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-WARNING: at drivers/net/wireless/iwlegacy/iwl-4965.c:1128 iwl4965_send_tx_power+0x61/0x102 [iwl4965]()
-Hardware name: [...]
-TX Power requested while scanning!
-Modules linked in: tcp_lp fuse cpufreq_ondemand acpi_cpufreq freq_table mperf ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 kvm_intel kvm uinput btusb arc4 snd_hda_codec_analog bluetooth ecb snd_hda_intel snd_hda_codec iwl4965 snd_hwdep snd_seq iwl_legacy snd_seq_device thinkpad_acpi mac80211 cfg80211 rfkill snd_pcm snd_timer iTCO_wdt snd i2c_i801 snd_page_alloc iTCO_vendor_support soundcore e1000e pcspkr microcode sdhci_pci sdhci firewire_ohci mmc_core firewire_core yenta_socket crc_itu_t i915 drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: scsi_wait_scan]
-Pid: 5723, comm: kworker/u:28 Not tainted 2.6.39-0.rc4.4.fc14.x86_64 #1
-Call Trace:
- [<ffffffff8104e27b>] warn_slowpath_common+0x85/0x9d
- [<ffffffffa02782e0>] ? iwl4965_show_temperature+0x49/0x49 [iwl4965]
- [<ffffffff8104e336>] warn_slowpath_fmt+0x46/0x48
- [<ffffffffa027712f>] iwl4965_send_tx_power+0x61/0x102 [iwl4965]
- [<ffffffff81477e05>] ? mutex_lock+0x36/0x50
- [<ffffffffa0278337>] iwl4965_bg_txpower_work+0x57/0x73 [iwl4965]
- [<ffffffff810647f3>] process_one_work+0x18d/0x286
- [<ffffffff81065a5e>] worker_thread+0xfd/0x181
- [<ffffffff81065961>] ? manage_workers.clone.16+0x172/0x172
- [<ffffffff81069036>] kthread+0x82/0x8a
- [<ffffffff81480524>] kernel_thread_helper+0x4/0x10
- [<ffffffff81068fb4>] ? kthread_worker_fn+0x14b/0x14b
- [<ffffffff81480520>] ? gs_change+0x13/0x13
+Applied, thanks Shahar.
 
-(2.6.39-0.rc4.4.fc14.x86_64 is not a Fedora blessed kernel, but a self
-compiled "vanilla" kernel.) I have similar WARNINGs for rc2 and rc3 in
-my log too.
-
-1) The thing is that this triggers Fedora's "Automatic Bug Reporting
-Tool", and is a bit noisy in dmesg and friends too, but everything seems
-to be running just fine after that. I'm posting this from the session
-that just triggered this! So why is this warning needed?
-
-
-Paul Bolle
+-- 
+Cheers,
+Luca.
 
