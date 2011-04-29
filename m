@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26307 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830Ab1DSOnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 10:43:47 -0400
-Subject: Re: [PATCH 02/10] iwlagn: remove most BUG_ON instances
-From: wwguy <wey-yi.w.guy@intel.com>
-To: "Berg, Johannes" <johannes.berg@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1303214502.3603.1.camel@jlt3.sipsolutions.net>
-References: <1303145057-6545-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1303145057-6545-3-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110419120002.GA2220@redhat.com>
-	 <1303214502.3603.1.camel@jlt3.sipsolutions.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:32887 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab1D2Ihs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 04:37:48 -0400
+Received: by bwz15 with SMTP id 15so2942458bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 01:37:47 -0700 (PDT)
+Subject: Re: [PATCH 4/4] mac80211: Add IEEE802.11n for IBSS
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1304061675.3589.1.camel@jlt3.sipsolutions.net>
+References: <1302604964.2139.5.camel@alex-2>
+	 <loom.20110412T130620-109@post.gmane.org>
+	 <1302607159.3639.8.camel@jlt3.sipsolutions.net>
+	 <loom.20110428T135917-421@post.gmane.org>
+	 (sfid-20110428_141415_832084_99A2E356) <1303995368.3558.9.camel@jlt3.sipsolutions.net>
+	 <loom.20110429T084118-365@post.gmane.org>
+	 (sfid-20110429_085443_970145_470B3272)  <1304061675.3589.1.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Apr 2011 07:40:59 -0700
-Message-ID: <1303224059.13481.0.camel@wwguy-ubuntu>
+Date: Fri, 29 Apr 2011 10:37:44 +0200
+Message-ID: <1304066264.2931.23.camel@alex-2> (sfid-20110429_103754_241147_337C7358)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-19 at 05:01 -0700, Berg, Johannes wrote:
-> On Tue, 2011-04-19 at 14:00 +0200, Stanislaw Gruszka wrote:
-> > On Mon, Apr 18, 2011 at 09:44:09AM -0700, Wey-Yi Guy wrote:
-> > > From: Johannes Berg <johannes.berg@intel.com>
-> > > @@ -394,7 +394,9 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
-> > >  		return -EINVAL;
-> > >  	}
-> > >  
-> > > -	BUG_ON(addr & ~DMA_BIT_MASK(36));
-> > > +	if (WARN_ON(addr & ~DMA_BIT_MASK(36)))
-> > > +		return -EINVAL;
-> > Seems useless.
-> 
-> Better than the BUG_ON, mostly to catch programmer errors though I
-> guess.
-> 
-> > > @@ -169,10 +171,12 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
-> > >  	int cmd_idx;
-> > >  	int ret;
-> > >  
-> > > -	lockdep_assert_held(&priv->mutex);
-> > I think better keep it.
-> 
-> Oh, that must be a merge error, I don't remember doing that.
-> 
-That is a merge error, I will put it back even it is just for debugging.
+> Yeah it would be an option to just always join as HT if HT is available,
+> but not create as HT unless asked.
+Ok. I just had a few thoughts about this:
+This way an ht ibss has to be created from a (patched) mac80211 HT
+hardware. There would be no way to "convert" an existing g network into
+n.
+Additionally, if a non-ht implementation joins the network, it will
+advertise it as non-ht. If a second ht-station joins from one of these
+beacons, it won't use ht.
 
-Wey
-> 
+This way a single non-ht station could destroy a ht ibss.
+
+
+I Think the best way to go would be to obey HT information when joining
+HT but using the HT iw parameter when joining non-ht.
+
+Then we could have the following scenario: Non-HT station A creates
+non-HT.
+HT station B joins and sets HT- (from iw). HT station C joins from A but
+doesn't see B. It's iw parameter says ht+.
+But when B comes closer to C do a "HT merge", comparing TSFs.
+
+Conclusion:
+- Create an ibss with the iw parameter
+- When joining a ht ibss, use its parameters
+- When joining non-ht, add ht from iw parameter
+- When encounter a different ht config, do a ht merge.
 
 
