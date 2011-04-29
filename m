@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50778 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757161Ab1DAVge (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2011 17:36:34 -0400
-Received: by iwn34 with SMTP id 34so3925709iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2011 14:36:33 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com, Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v6 00/10] {mac|nl}80211: mesh security enhancements
-Date: Fri,  1 Apr 2011 13:35:41 -0700
-Message-Id: <1301690151-14979-1-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:37060 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751032Ab1D2Ewo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 00:52:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 21:52:16 -0700
+Message-ID: <4DBA4417.40604@atheros.com> (sfid-20110429_065246_760205_CB6B2712)
+Date: Fri, 29 Apr 2011 10:22:39 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [RFC/RFT 0/9] ath9k: Add Antenna diversity support for AR9485
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <BANLkTi=8Vc5MGjK=K3=hkFLy=kiFy1osCg@mail.gmail.com> <BANLkTinFYwvWSWreUd66DGdsdyo2uU53Hw@mail.gmail.com>
+In-Reply-To: <BANLkTinFYwvWSWreUd66DGdsdyo2uU53Hw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-v6:
-- remove unneeded bits (Johannes)
-- mesh capabilities returned for a wiphy & check if wiphy supports mesh
-  authentication before joining a secure mesh (Johannes)
-
-Javier Cardona (9):
-  nl80211: rename NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE
-  nl80211: Add userspace authentication  flag to mesh setup
-  mac80211: ignore peers if security is enabled for this mesh
-  nl80211: let userspace authenticate stations
-  mac80211: Let user space receive and send mesh auth/deauth frames
-  mac80211: ignore peer link requests from unauthenticated stations.
-  mac80211: Perform PLINK_ACTION on new station
-  nl80211: New notification to discover mesh peer candidates.
-  mac80211: send notification on new peer candidate for our secure mesh
-
-Thomas Pedersen (1):
-  nl80211: report mesh capabilities
-
- include/linux/nl80211.h    |   32 +++++++++++++++++++---
- include/net/cfg80211.h     |   29 +++++++++++++++++---
- net/mac80211/cfg.c         |   22 +++++++++-----
- net/mac80211/ieee80211_i.h |    5 ++-
- net/mac80211/main.c        |    8 +++++-
- net/mac80211/mesh.c        |   14 +++++----
- net/mac80211/mesh.h        |    3 +-
- net/mac80211/mesh_plink.c  |   35 +++++++++++++++++++-----
- net/mac80211/rx.c          |    3 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/mesh.c        |   23 ++++++++++++++-
- net/wireless/nl80211.c     |   64 +++++++++++++++++++++++++++++++++++++++----
- net/wireless/nl80211.h     |    4 +++
- 13 files changed, 201 insertions(+), 43 deletions(-)
-
--- 
-1.7.4.1
-
+On Thursday 28 April 2011 11:42 PM, Luis R. Rodriguez wrote:
+> On Thu, Apr 28, 2011 at 11:12 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com>  wrote:
+>    
+>> On Thu, Apr 28, 2011 at 7:22 AM, Mohammed Shafi Shajakhan
+>> <mshajakhan@atheros.com>  wrote:
+>>      
+>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>
+>>> *These are purely RFC/RFT patches, none of them are tested.
+>>>   once tested we will send it as patches.
+>>> *This patch set adds Antenna diversity support for AR9485, previously
+>>>   antenna diversity is only supported in AR9285
+>>> *The basic antenna diversity algorithm remains the same
+>>> *slight change in the diversity field in eeprom
+>>> *introduction of main/alt gain table and lna1_lna2 delta fields
+>>> *initially set LNA1 for main antenna
+>>> *introduction of diversity group
+>>> *based on diversity group, fast diversity bias parmaters and
+>>> lna1_lna2_delta varies
+>>> *implement an API to take the decision of swapping main/ALT LNA's
+>>> for AR9485
+>>> *configure fast diversity bias based on diversity group
+>>>        
+>> Apart from my one comment:
+>>
+>> Reviewed-by: Luis R. Rodriguez<lrodriguez@atheros.com>
+>>      
+> Oh yeah and great job on your patch split!
+>    
+thanks!
+>    Luis
+>    
