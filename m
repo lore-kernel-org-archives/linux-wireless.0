@@ -1,93 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:54622 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754947Ab1DKVgl convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:39230 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755983Ab1D2VRM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 17:36:41 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110411212513.GA17809@kroah.com>
-References: <1302557114-7880-1-git-send-email-zajec5@gmail.com>
-	<20110411210631.GA28559@kroah.com>
-	<BANLkTim155YxMUVJ=pmVs-rNhkovGPG6OQ@mail.gmail.com>
-	<20110411212513.GA17809@kroah.com>
-Date: Mon, 11 Apr 2011 23:36:39 +0200
-Message-ID: <BANLkTingqXAWTeOhcL6ER0UJfEdQF5Bo2A@mail.gmail.com>
-Subject: Re: [RFC][PATCH V3] axi: add AXI bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Russell King <rmk@arm.linux.org.uk>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 29 Apr 2011 17:17:12 -0400
+Received: by eya28 with SMTP id 28so1714575eya.21
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 14:17:09 -0700 (PDT)
+Subject: Re: [PATCH 01/10] wl12xx: add BT-coexistance for AP
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1304107365.12586.157.camel@cumari>
+References: <1303125329-27214-1-git-send-email-arik@wizery.com>
+	 <1304107365.12586.157.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 30 Apr 2011 00:17:06 +0300
+Message-ID: <1304111826.12586.203.camel@cumari> (sfid-20110429_231715_217180_547BA55E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/11 Greg KH <greg@kroah.com>:
-> On Mon, Apr 11, 2011 at 11:19:13PM +0200, Rafał Miłecki wrote:
->> 2011/4/11 Greg KH <greg@kroah.com>:
->> > On Mon, Apr 11, 2011 at 11:25:14PM +0200, Rafał Miłecki wrote:
->> >> +static void axi_release_core_dev(struct device *dev)
->> >> +{
->> >> +     /* Silent lack-of-release warning */
->> >> +}
->> >
->> > Ok, WTF!!!!
->>
->> Thank you for your kindly words. It's much more enjoyable to work on
->> kernel that way. I definitely made that on purpose.
->
-> I can't tell if you are kidding or not.
+On Fri, 2011-04-29 at 23:02 +0300, Luciano Coelho wrote:
+> On Mon, 2011-04-18 at 14:15 +0300, Arik Nemtsov wrote:
+> > Initialize AP specific BT coexitance parameters to default values and
+> > enable them in AP mode.
+> > 
+> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> > ---
+> 
+> Applied the whole series, thanks Arik!
 
-That was 100% irony. I swear I don't enjoy publishing bad code and
-getting such a comment.
-
-
-> Please read the documentation for how to do this properly.  I find it
-> really hard to believe that you wrote that comment instead of putting in
-> the 2 lines of code required for this function.
->
-> Especially as-it-is, your code does not work properly and leaks memory
-> badly.  Why would you do that on purpose?
-
-I tried to read some documentation about this.
-
-1) driver-mode/device.txt says only that:
-> Callback to free the device after all references have
-> gone away. This should be set by the allocator of the
-> device (i.e. the bus driver that discovered the device).
-I *really* do not know how my driver should "free" core on AXI bus.
-
-2) LDD3 says:
-> The method is called when the last reference to the device is removed; it is called
-> from the embedded kobject’s release method. All device structures registered with
-> the core must have a release method, or the kernel prints out scary complaints.
-Well, I do not register any structs for AXI core.
-
-3) Example code from LDD3:
-static void ldd_bus_release(struct device *dev)
-{
-printk(KERN_DEBUG "lddbus release\n");
-}
-Yeah, that's what I did...
-
-4) SSB in it's ssb_release_dev just calls kfree on struct that was
-allocated when registering drivers. *I do not* allocate such a struct,
-so I believe I do exactly the same memory leak as SSB does.
-
-
-Can you spend 2 more minues in addition to commenting my ideas and
-help me with writing that 2 lines I missed? Where do I leak memory in
-my driver? Which struct should I kfree?
+Ooops, these didn't go in yet.  There were some conflicts and I have
+mistakenly kept them out.  I'll merge them and add them soon.
 
 -- 
-Rafał
+Cheers,
+Luca.
+
