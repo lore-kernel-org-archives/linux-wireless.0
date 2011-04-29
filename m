@@ -1,160 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:55101 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756125Ab1D0LYR (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38334 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758106Ab1D2AKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 07:24:17 -0400
-Received: by pvg12 with SMTP id 12so1111368pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 04:24:17 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 28 Apr 2011 20:10:52 -0400
+Received: by wya21 with SMTP id 21so2493724wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2011 17:10:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19895.64891.154225.629077@gargle.gargle.HOWL> (sfid-20110427_132420_879055_33B825A2)
-Date: Wed, 27 Apr 2011 16:56:51 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] mac80211: Add new API for rate selection
+In-Reply-To: <201104290116.26355.chunkeey@googlemail.com>
+References: <19897.11321.556139.837633@gargle.gargle.HOWL>
+	<201104290116.26355.chunkeey@googlemail.com>
+Date: Fri, 29 Apr 2011 08:10:50 +0800
+Message-ID: <BANLkTin4Efuyz8OYrm+1M94vi9V5sy89pA@mail.gmail.com> (sfid-20110429_021106_873341_2E003C8A)
+Subject: Re: [PATCH 1/2] ath9k_htc: Dump base eeprom header for UB91/94/95
+From: Adrian Chadd <adrian@freebsd.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Sujith <m.sujith@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On 29 April 2011 07:16, Christian Lamparter <chunkeey@googlemail.com> wrote:
 
-This patch adds a new API for setting a TX rate mask in
-drivers that have rate control in either the firmware or hardware.
-This can be used for various purposes, for example, masking out the
-11b rates in P2P operation.
+> If you just want to dump the eeprom, then why not with a userspace utility?
+> It's pretty easy to write such a thing with libusb, furthermore it's more
+> versatile and portable so the *BSD-folks are not left out!
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
-v2 : rc_rateidx_mask has to be updated for drivers using
-     IEEE80211_HW_HAS_RATE_CONTROL since building IEs for
-     a probe request makes use of it.
+I've written a replacement set of userspace tools in freebsd which
+take a raw eeprom dump from the HAL diag API and print out a v14/v4k
+eeprom dump.
 
-v3 : Replace ENOTSUPP with EOPNOTSUPP.
+It isn't pretty but it works.
 
- include/net/mac80211.h      |    6 ++++++
- net/mac80211/cfg.c          |   15 ++++++---------
- net/mac80211/driver-ops.h   |   18 ++++++++++++++++++
- net/mac80211/driver-trace.h |   27 +++++++++++++++++++++++++++
- 4 files changed, 57 insertions(+), 9 deletions(-)
+There were existing tools for the earlier EEPROM formats but they
+worked directly from the diag API rather than an intermediary dump
+file. This way users can email me a text dump and I can check/parse it
+myself.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d23dd6c..4c97fc8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1822,6 +1822,10 @@ enum ieee80211_ampdu_mlme_action {
-  *
-  * @tx_frames_pending: Check if there is any pending frame in the hardware
-  *	queues before entering power save.
-+ *
-+ * @set_bitrate_mask: Set a mask of rates to be used for rate control selection
-+ *	when transmitting a frame. Currently only legacy rates are handled.
-+ *	The callback can sleep.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -1910,6 +1914,8 @@ struct ieee80211_ops {
- 	void (*get_ringparam)(struct ieee80211_hw *hw,
- 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
- 	bool (*tx_frames_pending)(struct ieee80211_hw *hw);
-+	int (*set_bitrate_mask)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+				const struct cfg80211_bitrate_mask *mask);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a9ddaf6..12d52ce 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1633,16 +1633,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	int i;
--
--	/*
--	 * This _could_ be supported by providing a hook for
--	 * drivers for this function, but at this point it
--	 * doesn't seem worth bothering.
--	 */
--	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
--		return -EOPNOTSUPP;
-+	int i, ret;
- 
-+	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) {
-+		ret = drv_set_bitrate_mask(local, sdata, mask);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
- 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 00a0685..2ddb56e 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -565,4 +565,22 @@ static inline bool drv_tx_frames_pending(struct ieee80211_local *local)
- 
- 	return ret;
- }
-+
-+static inline int drv_set_bitrate_mask(struct ieee80211_local *local,
-+				       struct ieee80211_sub_if_data *sdata,
-+				       const struct cfg80211_bitrate_mask *mask)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	might_sleep();
-+
-+	trace_drv_set_bitrate_mask(local, sdata, mask);
-+	if (local->ops->set_bitrate_mask)
-+		ret = local->ops->set_bitrate_mask(&local->hw,
-+						   &sdata->vif, mask);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index c8c934d..191e834 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -989,6 +989,33 @@ DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
- 	TP_ARGS(local)
- );
- 
-+TRACE_EVENT(drv_set_bitrate_mask,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 const struct cfg80211_bitrate_mask *mask),
-+
-+	TP_ARGS(local, sdata, mask),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(u32, legacy_2g)
-+		__field(u32, legacy_5g)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->legacy_2g = mask->control[IEEE80211_BAND_2GHZ].legacy;
-+		__entry->legacy_5g = mask->control[IEEE80211_BAND_5GHZ].legacy;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT " 2G Mask:0x%x 5G Mask:0x%x",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->legacy_2g, __entry->legacy_5g
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
--- 
-1.7.4.4
 
+Adrian
