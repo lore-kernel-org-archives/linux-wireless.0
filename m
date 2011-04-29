@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38773 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52775 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753590Ab1DLM5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 08:57:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 05:57:18 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/22] ath9k_hw: Don't configure AR_CH0_THERM for AR9340
-Date: Tue, 12 Apr 2011 18:27:13 +0530
-Message-ID: <1302613042-1754-14-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
-References: <1302613042-1754-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755970Ab1D2Pw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2011 11:52:26 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH wireless-2.6 v2] iwl4965: fix "Received BA when not expected"
+Date: Fri, 29 Apr 2011 17:51:56 +0200
+Message-Id: <1304092316-11484-1-git-send-email-sgruszka@redhat.com> (sfid-20110429_175228_912810_9503A0DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+Need to use broadcast sta_id for management frames, otherwise we broke
+BA session in the firmware and get messages like that:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 4a92718..685ce91 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3448,9 +3448,13 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
--		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB,
--			      bias >> 2);
--		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
-+		if (!AR_SREV_9340(ah)) {
-+			REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				      AR_CH0_THERM_XPABIASLVL_MSB,
-+				      bias >> 2);
-+			REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				      AR_CH0_THERM_XPASHORT2GND, 1);
+"Received BA when not expected"
+
+or (on older kernels):
+
+"BA scd_flow 0 does not match txq_id 10"
+
+This fix regression introduced in 2.6.35 during station management
+code rewrite by:
+
+commit 2a87c26bbe9587baeb9e56d3ce0b4971bd777643
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Apr 30 11:30:45 2010 -0700
+
+    iwlwifi: use iwl_find_station less
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index fbec88d..79ac081 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -316,12 +316,18 @@ int iwl4965_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+-	/* Find index into station table for destination station */
+-	sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+-			       hdr->addr1);
+-		goto drop_unlock;
++	/* For management frames use broadcast id to do not break aggregation */
++	if (!ieee80211_is_data(fc))
++		sta_id = ctx->bcast_sta_id;
++	else {
++		/* Find index into station table for destination station */
++		sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
++
++		if (sta_id == IWL_INVALID_STATION) {
++			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
++				       hdr->addr1);
++			goto drop_unlock;
 +		}
  	}
- }
  
+ 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
 -- 
-1.7.0.4
+1.7.1
 
