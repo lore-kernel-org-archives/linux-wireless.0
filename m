@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab1DSL40 (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:35103 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752722Ab1D2UEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2011 07:56:26 -0400
-Subject: Re: [PATCH wireless-2.6] iwlwifi: fix frame injection for HT
- channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel Halperin <dhalperi@cs.washington.edu>
-In-Reply-To: <20110419114158.GA3445@redhat.com>
-References: <1303141291-902-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110419114158.GA3445@redhat.com>
+	Fri, 29 Apr 2011 16:04:42 -0400
+Received: by mail-ey0-f173.google.com with SMTP id 6so1415887eyb.32
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2011 13:04:29 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: add debugfs entries for dtim_interval and
+ beacon_interval
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1303028447-16264-1-git-send-email-eliad@wizery.com>
+References: <1303028447-16264-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Apr 2011 13:56:12 +0200
-Message-ID: <1303214172.3603.0.camel@jlt3.sipsolutions.net>
+Date: Fri, 29 Apr 2011 23:04:25 +0300
+Message-ID: <1304107465.12586.158.camel@cumari> (sfid-20110429_220445_209042_6557B31E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-04-19 at 13:41 +0200, Stanislaw Gruszka wrote:
-> On Mon, Apr 18, 2011 at 08:41:31AM -0700, Wey-Yi Guy wrote:
-> > From: Daniel Halperin <dhalperi@cs.washington.edu>
-> > 
-> > For some reason, sending QoS configuration causes transmission to stop
-> > after a single frame on HT channels when not associated. Removing the
-> > extra QoS configuration has no effect on station mode, and fixes
-> > injection mode.
-> > 
-> > Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> > these patches are also available from wireless-2.6 branch on
-> >  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-> 
-> This is basically revert of:
-> 
-> commit 35a6eb36520b938742d8680fd8d821df20982ced
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Wed Nov 10 09:56:43 2010 -0800
-> 
->     iwlwifi: resending QoS command when HT changes
+On Sun, 2011-04-17 at 11:20 +0300, Eliad Peller wrote:
+> +static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
+> +                                   size_t count, loff_t *ppos)
+> +{
+> +       struct wl1271 *wl = file->private_data;
+> +       u8 value;
+> +
+> +       if (wl->conf.conn.wake_up_event == CONF_WAKE_UP_EVENT_BEACON|| 
 
-Indeed.
-    
+I also added one extra space before || here to avoid a checkpatch.pl
+warning.
 
-> Does problem that 35a6eb36520b938742d8680fd8d821df20982ced fixed
-> gone now? How?
-
-Yes, Shanyu had another patch to send QoS info after RXON, so this one
-isn't necessary any more.
-
-johannes
+-- 
+Cheers,
+Luca.
 
