@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:54396 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756608Ab1DGSxH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 14:53:07 -0400
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-From: George Kashperko <george@znau.edu.ua>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Russell King <rmk@arm.linux.org.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <op.vtj8jn133ri7v4@arend-laptop>
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
-	 <op.vtisojsk3ri7v4@arend-laptop>
-	 <BANLkTinubrmryu=Bco5_AVcj_arn7SWZxw@mail.gmail.com>
-	 <op.vti9ote53ri7v4@arend-laptop>
-	 <BANLkTin-u=U_-cUH9oCco0LjEBuQmh4wag@mail.gmail.com>
-	 <BANLkTi=x89+52cMeutOB7J--QQta+mX_wg@mail.gmail.com>
-	 <1302123428.20093.6.camel@maggie>
-	 <BANLkTimGSoYzp0Z4vyCS_H5PDKhgjYuLBA@mail.gmail.com>
-	 <1302124112.20093.11.camel@maggie>
-	 <BANLkTik76dwwnmmPzXL9Kkk7fdt01QPzZA@mail.gmail.com>
-	 <1302124737.27258.7.camel@dev.znau.edu.ua>
-	 <BANLkTi=4-LgrkjG96+Ar3SjMOsKh-dMuLg@mail.gmail.com>
-	 <1302134429.27258.32.camel@dev.znau.edu.ua>
-	 <BANLkTinfM0QLFwcKZXfWQ_jNYfBJg_et-Q@mail.gmail.com>
-	 <1302162886.10725.4.camel@maggie>  <op.vtj8jn133ri7v4@arend-laptop>
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 07 Apr 2011 21:50:40 +0300
-Message-Id: <1302202240.30694.16.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:11717 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756477Ab1D3Qkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:40:47 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/14] iwlagn: remove 5000 from rxon_assoc structure
+Date: Sat, 30 Apr 2011 09:17:31 -0700
+Message-Id: <1304180260-13875-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184054_748027_4F1A2DDB)
+In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The data structure is shared by all _agn devices, remove the reference to 5000
 
-> On Thu, 07 Apr 2011 09:54:46 +0200, Michael Büsch <mb@bu3sch.de> wrote:
-> 
-> >> Ahh, so while talking about 4 windows, I guess you counted fixes
-> >> windows as well. That would be right, matching my knowledge.
-> >>
-> >> When asking question about amount of cores we may want to use
-> >> simultaneously I didn't think about ChipCommon or PCIe. The real
-> >> problem would be to support for example two 802.11 cores and one
-> >> ethernet core at the same time. That gives us 3 cores while we have
-> >> only 2 sliding windows.
-> >
-> > Would that really be a problem? Think of it. This combination
-> > will only be available on embedded devices. But do we have windows
-> > on embedded devices? I guess not. If AXI is similar to SSB, the MMIO
-> > of all cores will always be mapped. So accesses can be done
-> > without switch or lock.
-> 
-> Agree. For embedded systems there is no need to switch cores. Each core  
-> register space and wrapper register space is mapped. In the brcm80211 we  
-> have the concept of fast versus slow host interface. The criteria for fast  
-> host interface is based on following expression:
-> 
-> fast_host_bus = (host_bus_coretype == PCIE_CORE_ID) ||
-> 	((host_bus_coretype == PCI_CORE_ID) && (host_bus_corerev >= 13))
-> 
-> If this is true, chipcommon and pci/pcie registers are accessed without  
-> sliding the window using the fixed offsets Rafał mentioned earlier. The  
-> BAR0 window size is 16KB.
-Well, the major pci window managing concept in your code isn't really
-fast switching but rather smart switching. chipcommon and pci bridge
-core specific processing is well refined in appropriate routines each
-looking like:
-irqdisable switchcore(cc_or_pcie)
-... code ...
-switchcore(back) irqenable
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thus you always have pci window pointing to the function core and can
-ioread/iowrite without spinlocking windowed accesses.
-
-Yes, you use also "fast" switching for pci rev. >= 13 && pcie avoiding
-irq(ena|disa) for such a configurations but, as I've mentioned earlier,
-for axi this is rudimentary from pci rev. < 13 times as both pci bridge
-and chipcommon are available simultaneously with fixed windows.
-
-> 
-> > I do really think that engineers at broadcom are clever enough
-> > to design a hardware that does not require expensive window sliding
-> > all the time while operating.
-> >
-> 
-> If a bigger window is clever enough ;-)
-> 
-> Gr. AvS
-
-Have nice day,
-George
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index aba5bc9..7f52ab8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -125,7 +125,7 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
+ 			   struct iwl_rxon_context *ctx)
+ {
+ 	int ret = 0;
+-	struct iwl5000_rxon_assoc_cmd rxon_assoc;
++	struct iwl_rxon_assoc_cmd rxon_assoc;
+ 	const struct iwl_rxon_cmd *rxon1 = &ctx->staging;
+ 	const struct iwl_rxon_cmd *rxon2 = &ctx->active;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index e125896..5fdad65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -661,7 +661,7 @@ struct iwl_rxon_cmd {
+ /*
+  * REPLY_RXON_ASSOC = 0x11 (command, has simple generic response)
+  */
+-struct iwl5000_rxon_assoc_cmd {
++struct iwl_rxon_assoc_cmd {
+ 	__le32 flags;
+ 	__le32 filter_flags;
+ 	u8 ofdm_basic_rates;
+-- 
+1.7.0.4
 
