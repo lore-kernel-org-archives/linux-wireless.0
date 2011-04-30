@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm22-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.126]:23701 "HELO
-	nm22-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751844Ab1DHJyQ (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:1988 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752742Ab1D3Lah convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 05:54:16 -0400
-Message-ID: <699128.18071.qm@web161601.mail.bf1.yahoo.com>
-Date: Fri, 8 Apr 2011 02:54:15 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Questions about rt2800usb
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Steev Klimaszewski <steev@genesi-usa.com>,
-	Jett Chen <jett_chen@ralinktech.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTi=kkBReSDHcCqyTkbHsAgDLiy7okg@mail.gmail.com>
+	Sat, 30 Apr 2011 07:30:37 -0400
+Message-ID: <4DBBF2CF.8050608@broadcom.com> (sfid-20110430_133040_361889_5C231C96)
+Date: Sat, 30 Apr 2011 13:30:23 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?ISO-8859-1?Q?Wenceslao_Gonz=E1lez-Vi=F1as?= <wens@fisica.unav.es>
+cc: "Ben Hutchings" <ben@decadent.org.uk>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"622842@bugs.debian.org" <622842@bugs.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcm80211 not setting correct country code?
+References: <20110415070730.4178.6175.reportbug@calpurnia>
+ <20110415081334.GD1387@vostochny.stro.at>
+ <20110415161039.15535n2vg4igcykg@webmail.unav.es>
+ <20110429164822.62112d9at4vs5xa8@webmail.unav.es>
+ <1304088874.3105.57.camel@localhost>
+ <20110429173944.10906p14p6bdid4w@webmail.unav.es>
+ <1304139874.2833.29.camel@localhost> <4DBBC4DA.8000101@broadcom.com>
+ <20110430103817.14736hcizu57ujrw@webmail.unav.es>
+In-Reply-To: <20110430103817.14736hcizu57ujrw@webmail.unav.es>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Try:
-> 
-> iwconfig wlan0 power off
-> 
-> to disable powersaving.
-> 
-> Ivo
+On 04/30/2011 10:38 AM, Wenceslao González-Viñas wrote:
+> After
+> iw reg set EU
+> I do not get any answer in dmesg log.
 
-Hi Ivo,
+I assume you did this as root or used sudo. You may have to check 
+whether you have the proper udev rules in place. See 
+http://wireless.kernel.org/en/developers/Regulatory/CRDA#Letting_the_kernel_call_CRDA
 
-Disabling power decreased latency substantially to a normal level, however it paved the way for myriad duplicate packets.
+> and if I do (after)  : iw reg get , I get:
+>
+> country 98:
+> 	(2402 - 2472 @ 40), (N/A, 20)
+> 	(5170 - 5250 @ 40), (N/A, 17)
+> 	(5250 - 5330 @ 40), (N/A, 20), DFS
+> 	(5490 - 5600 @ 40), (N/A, 20), DFS
+> 	(5650 - 5710 @ 40), (N/A, 20), DFS
+>
+> So, something is not working properly.
 
-rt2800usb:
+I get country US (after iw reg set EU). I tried 'iw reg set ES' after 
+that and another message showed up in the log:
+[ 1613.052044] cfg80211: Calling CRDA for country: EU
+[ 1845.365115] cfg80211: Pending regulatory request, waiting for it to 
+be processed...
 
-PING gmail.com (209.85.229.19) 56(84) bytes of data.
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=1 ttl=53 time=52.9 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=2 ttl=53 time=50.2 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=3 ttl=53 time=51.6 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=4 ttl=53 time=52.8 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=5 ttl=53 time=53.3 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=6 ttl=53 time=51.4 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=6 ttl=53 time=52.4 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=6 ttl=53 time=52.5 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=51.8 ms
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=54.8 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=56.5 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=58.2 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=59.9 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=61.3 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=62.9 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=7 ttl=53 time=63.3 ms (DUP!)
-64 bytes from ww-in-f19.1e100.net (209.85.229.19): icmp_req=8 ttl=53 time=51.4 ms
-^C
---- gmail.com ping statistics ---
-8 packets transmitted, 8 received, +9 duplicates, 0% packet loss, time 7011ms
-rtt min/avg/max/mdev = 50.285/55.181/63.304/4.219 ms
+It seems cfg80211 expects CRDA to respond to the country setting for EU. 
+I am not familiar what modules are involved in this usage scenario.
 
-Without these, the rt2800usb is looking to be pretty stellar driver.
+Gr. AvS
 
-Walter
