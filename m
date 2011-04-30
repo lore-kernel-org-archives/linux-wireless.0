@@ -1,90 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54933 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759Ab1DLOe2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 10:34:28 -0400
-Received: by vws1 with SMTP id 1so5086548vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2011 07:34:27 -0700 (PDT)
-Message-ID: <4DA462F0.6090105@lwfinger.net>
-Date: Tue, 12 Apr 2011 09:34:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2800usb: Add three new USB IDs
-References: <4DA1E4ED.6080804@gmail.com> <20110411175810.GB2511@tuxdriver.com> <4DA43D3F.60204@gmail.com>
-In-Reply-To: <4DA43D3F.60204@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:2971 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757913Ab1D3Qkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:40:51 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/14] iwlagn: improve RXON checking
+Date: Sat, 30 Apr 2011 09:17:38 -0700
+Message-Id: <1304180260-13875-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184058_283396_45F4884F)
+In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2011 06:53 AM, Xose Vazquez Perez wrote:
-> On 04/11/2011 07:58 PM, John W. Linville wrote:
->
->> On Sun, Apr 10, 2011 at 07:12:13PM +0200, Xose Vazquez Perez wrote:
->>> Larry Finger wrote:
->>>
->>>> There are three USB IDs supported by staging/rt2870sta that are not in the
->>>> mainline driver rt2800usb.
->>>>
->>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->>>> Cc: Stable<stable@vger.kernel.org>
->>>> ---
->>>>
->>>> Index: wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
->>>> ===================================================================
->>>> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800usb.c
->>>> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2800usb.c
->>>> @@ -758,6 +758,8 @@ static struct usb_device_id rt2800usb_de
->>>> { USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> { USB_DEVICE(0x07d1, 0x3c11), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> { USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> + { USB_DEVICE(0x2001, 0x3c09), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> + { USB_DEVICE(0x2001, 0x3c0a), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> /* Draytek */
->>>> { USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> /* Edimax */
->>>> @@ -828,6 +830,7 @@ static struct usb_device_id rt2800usb_de
->>>> /* Planex */
->>>> { USB_DEVICE(0x2019, 0xab25), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> { USB_DEVICE(0x2019, 0xed06), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> + { USB_DEVICE(0x2019, 0xed14), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> /* Quanta */
->>>> { USB_DEVICE(0x1a32, 0x0304), USB_DEVICE_DATA(&rt2800usb_ops) },
->>>> /* Ralink */
->>>
->>> NACK, unless they also be in the windows driver.
->>> They were eliminated in recent versions of ralink LiNUX drivers.
->>
->> OK, I already had this merged since Ivo and Gertjan had ACKed it.
->>
->> I need to rebase wireless-2.6 anyway, so I'll drop this one too
->> for now. Please come to a consensus on whether or not these should
->> be included and let me know...
->
-> I did a search of 0x2001,0x3c09 0x2001,0x3c0a and 0x2019,0xed14 in
-> latest windows drivers:
-> USB (RT2870 /RT2770 /RT307X /RT2070 /RT357X /RT3370 /RT8070 /RT5370) 12/31/2010
-> 3.1.8.0
-> IS_AP_STA_RT2870_D-3.1.8.0_VA-3.1.8.0_W7-3.1.8.0_RU-4.0.4.0_AU-4.0.4.0_123110_1.5.11.0WP_Free.exe
->
-> and I didn't find any of them
->
-> Also I checked latest linux drivers:
-> 2010_0709_RT2870_Linux_STA_v2.4.0.1.tar.bz2
-> 2010_1215_RT3572_Linux_STA_v2.5.0.0.DPO.bz2
-> 2011_0107_RT3070_RT3370_Linux_STA_v2.5.0.1_DPO.tar.bz2
-> and there is no vestige of any of them.
->
-> NACK.
+From: Johannes Berg <johannes.berg@intel.com>
 
-John,
+The current RXON checking doesn't verify that
+the channel is valid (or at least non-zero),
+so add that. Also, add a WARN() so we get a
+stacktrace, and capture a bitmask of errors
+in order to capture all necessary information
+in the warning itself (in case the previous
+messages are snipped off.)
 
-Kill the patch. It appears these are phantom devices, or their original 
-inclusion was a mistake.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   38 +++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 19 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 1b2a7d9..98cfbb6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -416,72 +416,72 @@ void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ int iwl_check_rxon_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ {
+ 	struct iwl_rxon_cmd *rxon = &ctx->staging;
+-	bool error = false;
++	u32 errors = 0;
+ 
+ 	if (rxon->flags & RXON_FLG_BAND_24G_MSK) {
+ 		if (rxon->flags & RXON_FLG_TGJ_NARROW_BAND_MSK) {
+ 			IWL_WARN(priv, "check 2.4G: wrong narrow\n");
+-			error = true;
++			errors |= BIT(0);
+ 		}
+ 		if (rxon->flags & RXON_FLG_RADAR_DETECT_MSK) {
+ 			IWL_WARN(priv, "check 2.4G: wrong radar\n");
+-			error = true;
++			errors |= BIT(1);
+ 		}
+ 	} else {
+ 		if (!(rxon->flags & RXON_FLG_SHORT_SLOT_MSK)) {
+ 			IWL_WARN(priv, "check 5.2G: not short slot!\n");
+-			error = true;
++			errors |= BIT(2);
+ 		}
+ 		if (rxon->flags & RXON_FLG_CCK_MSK) {
+ 			IWL_WARN(priv, "check 5.2G: CCK!\n");
+-			error = true;
++			errors |= BIT(3);
+ 		}
+ 	}
+ 	if ((rxon->node_addr[0] | rxon->bssid_addr[0]) & 0x1) {
+ 		IWL_WARN(priv, "mac/bssid mcast!\n");
+-		error = true;
++		errors |= BIT(4);
+ 	}
+ 
+ 	/* make sure basic rates 6Mbps and 1Mbps are supported */
+ 	if ((rxon->ofdm_basic_rates & IWL_RATE_6M_MASK) == 0 &&
+ 	    (rxon->cck_basic_rates & IWL_RATE_1M_MASK) == 0) {
+ 		IWL_WARN(priv, "neither 1 nor 6 are basic\n");
+-		error = true;
++		errors |= BIT(5);
+ 	}
+ 
+ 	if (le16_to_cpu(rxon->assoc_id) > 2007) {
+ 		IWL_WARN(priv, "aid > 2007\n");
+-		error = true;
++		errors |= BIT(6);
+ 	}
+ 
+ 	if ((rxon->flags & (RXON_FLG_CCK_MSK | RXON_FLG_SHORT_SLOT_MSK))
+ 			== (RXON_FLG_CCK_MSK | RXON_FLG_SHORT_SLOT_MSK)) {
+ 		IWL_WARN(priv, "CCK and short slot\n");
+-		error = true;
++		errors |= BIT(7);
+ 	}
+ 
+ 	if ((rxon->flags & (RXON_FLG_CCK_MSK | RXON_FLG_AUTO_DETECT_MSK))
+ 			== (RXON_FLG_CCK_MSK | RXON_FLG_AUTO_DETECT_MSK)) {
+ 		IWL_WARN(priv, "CCK and auto detect");
+-		error = true;
++		errors |= BIT(8);
+ 	}
+ 
+ 	if ((rxon->flags & (RXON_FLG_AUTO_DETECT_MSK |
+ 			    RXON_FLG_TGG_PROTECT_MSK)) ==
+ 			    RXON_FLG_TGG_PROTECT_MSK) {
+ 		IWL_WARN(priv, "TGg but no auto-detect\n");
+-		error = true;
++		errors |= BIT(9);
+ 	}
+ 
+-	if (error)
+-		IWL_WARN(priv, "Tuning to channel %d\n",
+-			    le16_to_cpu(rxon->channel));
+-
+-	if (error) {
+-		IWL_ERR(priv, "Invalid RXON\n");
+-		return -EINVAL;
++	if (rxon->channel == 0) {
++		IWL_WARN(priv, "zero channel is invalid\n");
++		errors |= BIT(10);
+ 	}
+-	return 0;
++
++	WARN(errors, "Invalid RXON (%#x), channel %d",
++	     errors, le16_to_cpu(rxon->channel));
++
++	return errors ? -EINVAL : 0;
+ }
+ 
+ /**
+-- 
+1.7.0.4
 
-Larry
