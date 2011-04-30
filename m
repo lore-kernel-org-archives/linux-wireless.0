@@ -1,206 +1,393 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:57144 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557Ab1DUUZR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2011 16:25:17 -0400
-Received: by pwi15 with SMTP id 15so50987pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 13:25:16 -0700 (PDT)
-Message-ID: <4DB092A7.6070100@lwfinger.net>
-Date: Thu, 21 Apr 2011 15:25:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Catalin(ux) M. BOIE" <catab@embedromix.ro>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Ralink 3090 must load rt3090.bin firmware, not rt2860.bin.
-References: <alpine.LFD.2.00.1104212222470.9925@mail.embedromix.ro>
-In-Reply-To: <alpine.LFD.2.00.1104212222470.9925@mail.embedromix.ro>
-Content-Type: multipart/mixed;
- boundary="------------030601080800090908070707"
+Received: from mga02.intel.com ([134.134.136.20]:2971 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757454Ab1D3Qks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:40:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/14] iwlagn: mod param cleanup
+Date: Sat, 30 Apr 2011 09:17:35 -0700
+Message-Id: <1304180260-13875-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184110_720547_1A8B3489)
+In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030601080800090908070707
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Don Fry <donald.h.fry@intel.com>
 
-On 04/21/2011 02:25 PM, Catalin(ux) M. BOIE wrote:
-> Hello.
->
-> Please apply it.
-> Thank you!
->
-> P.S. Please keep me in To/CC.
->
-> --
-> Catalin(ux) M. BOIE
-> http://kernel.embedromix.ro/
+All agn devices use the same module parameter structure.  Delete the
+indirection and access the structure diretly.
 
-NACK. That version of rt2860.bin is really old.
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    8 +++-----
+ drivers/net/wireless/iwlwifi/iwl-2000.c     |   10 +++-------
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   15 ++++++---------
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |   12 +++---------
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 --
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    7 +++----
+ 10 files changed, 27 insertions(+), 44 deletions(-)
 
-Please remove your patch and try with the attached version of rt2860.bin. It is 
-version 29.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index baf8011..d2b1be6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -121,10 +121,10 @@ static struct iwl_sensitivity_ranges iwl1000_sensitivity = {
+ 
+ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ {
+-	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
+-	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
+ 		priv->cfg->base_params->num_of_queues =
+-			priv->cfg->mod_params->num_of_queues;
++			iwlagn_mod_params.num_of_queues;
+ 
+ 	priv->hw_params.max_txq_num = priv->cfg->base_params->num_of_queues;
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+@@ -249,7 +249,6 @@ static struct iwl_ht_params iwl1000_ht_params = {
+ 	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
+ 	.ops = &iwl1000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl1000_base_params,			\
+ 	.led_mode = IWL_LED_BLINK
+ 
+@@ -271,7 +270,6 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
+ 	.ops = &iwl1000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl1000_base_params,			\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.rx_with_siso_diversity = true
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index f90d6af..476150f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -128,10 +128,10 @@ static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
+ 
+ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
+ {
+-	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
+-	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
+ 		priv->cfg->base_params->num_of_queues =
+-			priv->cfg->mod_params->num_of_queues;
++			iwlagn_mod_params.num_of_queues;
+ 
+ 	priv->hw_params.max_txq_num = priv->cfg->base_params->num_of_queues;
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+@@ -383,7 +383,6 @@ static struct iwl_bt_params iwl2030_bt_params = {
+ 	.eeprom_ver = EEPROM_2000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.ops = &iwl2000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl2000_base_params,			\
+ 	.need_dc_calib = true,					\
+ 	.need_temp_offset_calib = true,				\
+@@ -409,7 +408,6 @@ struct iwl_cfg iwl2000_2bg_cfg = {
+ 	.eeprom_ver = EEPROM_2000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.ops = &iwl2030_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl2030_base_params,			\
+ 	.bt_params = &iwl2030_bt_params,			\
+ 	.need_dc_calib = true,					\
+@@ -436,7 +434,6 @@ struct iwl_cfg iwl2030_2bg_cfg = {
+ 	.eeprom_ver = EEPROM_2000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.ops = &iwl105_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl2000_base_params,			\
+ 	.need_dc_calib = true,					\
+ 	.need_temp_offset_calib = true,				\
+@@ -462,7 +459,6 @@ struct iwl_cfg iwl105_bgn_cfg = {
+ 	.eeprom_ver = EEPROM_2000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.ops = &iwl135_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl2030_base_params,			\
+ 	.bt_params = &iwl2030_bt_params,			\
+ 	.need_dc_calib = true,					\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 655afc1..969c91a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -165,10 +165,10 @@ static void iwl5000_set_ct_threshold(struct iwl_priv *priv)
+ 
+ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ {
+-	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
+-	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
+ 		priv->cfg->base_params->num_of_queues =
+-			priv->cfg->mod_params->num_of_queues;
++			iwlagn_mod_params.num_of_queues;
+ 
+ 	priv->hw_params.max_txq_num = priv->cfg->base_params->num_of_queues;
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+@@ -210,10 +210,10 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
+ {
+-	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
+-	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
+ 		priv->cfg->base_params->num_of_queues =
+-			priv->cfg->mod_params->num_of_queues;
++			iwlagn_mod_params.num_of_queues;
+ 
+ 	priv->hw_params.max_txq_num = priv->cfg->base_params->num_of_queues;
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+@@ -468,7 +468,6 @@ static struct iwl_ht_params iwl5000_ht_params = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,	\
+ 	.ops = &iwl5000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl5000_base_params,			\
+ 	.led_mode = IWL_LED_BLINK
+ 
+@@ -512,7 +511,6 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
+ 	.ops = &iwl5000_ops,
+-	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
+ 	.led_mode = IWL_LED_BLINK,
+@@ -526,7 +524,6 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,	\
+ 	.ops = &iwl5150_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl5000_base_params,			\
+ 	.need_dc_calib = true,					\
+ 	.led_mode = IWL_LED_BLINK,				\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 905eb57..91edb57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -154,10 +154,10 @@ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
+ 
+ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ {
+-	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
+-	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
+ 		priv->cfg->base_params->num_of_queues =
+-			priv->cfg->mod_params->num_of_queues;
++			iwlagn_mod_params.num_of_queues;
+ 
+ 	priv->hw_params.max_txq_num = priv->cfg->base_params->num_of_queues;
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+@@ -482,7 +482,6 @@ static struct iwl_bt_params iwl6000_bt_params = {
+ 	.eeprom_ver = EEPROM_6005_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_6005_TX_POWER_VERSION,	\
+ 	.ops = &iwl6000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.need_dc_calib = true,					\
+ 	.need_temp_offset_calib = true,				\
+@@ -511,7 +510,6 @@ struct iwl_cfg iwl6005_2bg_cfg = {
+ 	.eeprom_ver = EEPROM_6030_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
+ 	.ops = &iwl6030_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.bt_params = &iwl6000_bt_params,			\
+ 	.need_dc_calib = true,					\
+@@ -593,7 +591,6 @@ struct iwl_cfg iwl130_bg_cfg = {
+ 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
+ 	.ops = &iwl6000_ops,					\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl6000_base_params,			\
+ 	.pa_type = IWL_PA_INTERNAL,				\
+ 	.led_mode = IWL_LED_BLINK
+@@ -623,7 +620,6 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.ops = &iwl6050_ops,					\
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,	\
+-	.mod_params = &iwlagn_mod_params,			\
+ 	.base_params = &iwl6050_base_params,			\
+ 	.need_dc_calib = true,					\
+ 	.led_mode = IWL_LED_BLINK,				\
+@@ -648,7 +644,6 @@ struct iwl_cfg iwl6150_bgn_cfg = {
+ 	.eeprom_ver = EEPROM_6150_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_6150_TX_POWER_VERSION,
+ 	.ops = &iwl6150_ops,
+-	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl6050_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -664,7 +659,6 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
+ 	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl6000_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 7fe9e0f..8e79653 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -665,7 +665,7 @@ int iwlagn_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ 
+ 	rb_timeout = RX_RB_TIMEOUT;
+ 
+-	if (priv->cfg->mod_params->amsdu_size_8K)
++	if (iwlagn_mod_params.amsdu_size_8K)
+ 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_8K;
+ 	else
+ 		rb_size = FH_RCSR_RX_CONFIG_REG_VAL_RB_SIZE_4K;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 178b2b5..0238743 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -372,7 +372,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 			return ret;
+ 	}
+ 
+-	iwl_set_rxon_hwcrypto(priv, ctx, !priv->cfg->mod_params->sw_crypto);
++	iwl_set_rxon_hwcrypto(priv, ctx, !iwlagn_mod_params.sw_crypto);
+ 
+ 	IWL_DEBUG_INFO(priv,
+ 		       "Going to commit RXON\n"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8232245..003d524 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2834,7 +2834,7 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+-	if (priv->cfg->mod_params->sw_crypto) {
++	if (iwlagn_mod_params.sw_crypto) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - hwcrypto disabled\n");
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -3522,14 +3522,14 @@ static int iwl_set_hw_params(struct iwl_priv *priv)
+ {
+ 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
+ 	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
+-	if (priv->cfg->mod_params->amsdu_size_8K)
++	if (iwlagn_mod_params.amsdu_size_8K)
+ 		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_8K);
+ 	else
+ 		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_4K);
+ 
+ 	priv->hw_params.max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
+ 
+-	if (priv->cfg->mod_params->disable_11n)
++	if (iwlagn_mod_params.disable_11n)
+ 		priv->cfg->sku &= ~IWL_SKU_N;
+ 
+ 	/* Device-specific setup */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 66da1de..1b2a7d9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -41,6 +41,7 @@
+ #include "iwl-power.h"
+ #include "iwl-sta.h"
+ #include "iwl-helpers.h"
++#include "iwl-agn.h"
+ 
+ 
+ /*
+@@ -94,7 +95,7 @@ static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
+ 		max_bit_rate = MAX_BIT_RATE_40_MHZ;
+ 	}
+ 
+-	if (priv->cfg->mod_params->amsdu_size_8K)
++	if (iwlagn_mod_params.amsdu_size_8K)
+ 		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
+ 
+ 	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
+@@ -926,7 +927,7 @@ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
+ 	}
+ 
+ 	if (!test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		if (priv->cfg->mod_params->restart_fw) {
++		if (iwlagn_mod_params.restart_fw) {
+ 			IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
+ 				  "Restarting adapter due to uCode error.\n");
+ 			queue_work(priv->workqueue, &priv->restart);
+@@ -1747,7 +1748,7 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 		 * detect failure), then fw_restart module parameter
+ 		 * need to be check before performing firmware reload
+ 		 */
+-		if (!external && !priv->cfg->mod_params->restart_fw) {
++		if (!external && !iwlagn_mod_params.restart_fw) {
+ 			IWL_DEBUG_INFO(priv, "Cancel firmware reload based on "
+ 				       "module parameter setting\n");
+ 			break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 4cdb85d..ca6bd07 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -325,8 +325,6 @@ struct iwl_cfg {
+ 	u16  eeprom_ver;
+ 	u16  eeprom_calib_ver;
+ 	const struct iwl_ops *ops;
+-	/* module based parameters which can be set from modprobe cmd */
+-	const struct iwl_mod_params *mod_params;
+ 	/* params not likely to change within a device family */
+ 	struct iwl_base_params *base_params;
+ 	/* params likely to change within a device family */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index aca9a1d..0053e9e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -433,7 +433,6 @@ static void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 					struct statistics_tx *tx,
+ 					unsigned long stamp)
+ {
+-	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
+ 	unsigned int msecs;
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+@@ -449,13 +448,13 @@ static void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 	if (msecs < 99)
+ 		return;
+ 
+-	if (mod_params->ack_check && !iwl_good_ack_health(priv, tx)) {
++	if (iwlagn_mod_params.ack_check && !iwl_good_ack_health(priv, tx)) {
+ 		IWL_ERR(priv, "low ack count detected, restart firmware\n");
+ 		if (!iwl_force_reset(priv, IWL_FW_RESET, false))
+ 			return;
+ 	}
+ 
+-	if (mod_params->plcp_check &&
++	if (iwlagn_mod_params.plcp_check &&
+ 	    !iwl_good_plcp_health(priv, cur_ofdm, cur_ofdm_ht, msecs))
+ 		iwl_force_reset(priv, IWL_RF_RESET, false);
+ }
+@@ -846,7 +845,7 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	}
+ 
+ 	/* In case of HW accelerated crypto and bad decryption, drop */
+-	if (!priv->cfg->mod_params->sw_crypto &&
++	if (!iwlagn_mod_params.sw_crypto &&
+ 	    iwl_set_decrypted_flag(priv, hdr, ampdu_status, stats))
+ 		return;
+ 
+-- 
+1.7.0.4
 
-Larry
-
---------------030601080800090908070707
-Content-Type: application/octet-stream;
- name="rt2860.bin"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rt2860.bin"
-
-AgNeAgKxIiL///8CAYL//////wIAHv//////AgEzwODA8MCDwILA0HXQGMKvMEUDEhAJkAQW
-4DDjA3QI8JAEFOAg5wMCAMt0gPCQcBLg9S+QBATgJM9gMBRgQiTiYEcUYFUkIXBg5VUk/mAH
-FGAIJAJwCH0BgCh9AoAkkHAQ4PVQhS9A0gGAPuVVZANgBOVVcAR9AoAJhS9B0gKAKa1Vry8S
-Ao2AIJBwEOD1R5BwEeD1RBIQJYAGkHAQ4PVF5P2vLxICjdIEkHAT5PDSr9DQ0ILQg9Dw0OAy
-kHAq4DDhU8KvkHAo4JAQHPCQcCngkBAd8JBwKuCQEB7wkBAc4PUwkBAe4CDh85AQHOCQcCjw
-kBAd4JBwKfCQEB7gkHAq8DBKDZBwJOBEAfCQAix0//DCBdKvIsDgwPDAg8CCwNDowODpwODq
-wODrwODswODtwODuwODvwODCrzBFAxIQEtKv0OD/0OD+0OD90OD80OD70OD60OD50OD40NDQ
-gtCD0PDQ4DLA4MDwwIPAgsDQddAQwq8wRQMSEAwwWArlVGAEFVSAAsJYMFkK5VBgBBVQgALC
-WdVTBzBgBBVG0gQwRQMSEA/CjdKv0NDQgtCD0PDQ4DISAtMwRQMSEAMwAQYgCQMSEBwwAgYg
-CgMSEB8wAwYgCwMSEB8wBAYgDAMSECIgEwkgEQblK0UsYAPTgAHDkqkSAuyAv8JD0kXk9SD1
-IfVT9Ub1K/UswkL1UfVS9VWQBBh0gPCQBBp0CPDCGcIYwhoiyO/I5voI5kpgDMjvyAjmFhhw
-ARbDIu0k//3sNP/I78j2CMbtxtMi0IPQgvjkk3ASdAGTcA2jo5P4dAGT9YKIg+RzdAKTaGDv
-o6OjgN/v9GAf5P4SA2rgtP8SEgNq7/B0HC71guQ0cPWD7fAiDr4E4yLA4MDwwIPAgsDQddAI
-wq8wRQMSEAbSr9DQ0ILQg9Dw0OAywq8SAAYSAhQSAxzk9SL1R5AEAHSA8NKvIjBFAxIQFeUg
-cAMgEAMwEQNDhwEiwCp0A8DgwILAg3UqCiLAKnQDwODAgsCDdSoYInWJAuT1jPWK9Yj1uPXo
-dZAY0ox1qAUizu/O7mAIf/8SA4AegPUiyO/I5mADFsMi7RT20yLI78jmYAYW5iT/syLDInh/
-5PbY/XWBXwIB0HQULvWC5DRw9YMi75ADfpOQAwBzChjvYAMfgPoi////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////wIQKAIQ
-OwIQPAISuAISuQITPgITP8Mi//8CFlYCF2sCFCoCE0AwBQYgDQMSANgwBgYgDgMSGF4iIpAE
-FOAg5wMCEreQcBLg9VaQBATgEgJnEU4wESUxEIczEKo0EMM1EVdQEXtREYRSEYRTEYRUEcVV
-EdxwEgdxEjRyEl6AEoGDAAASt3UkBXUl3JBwn3QS8NIY0mF1NQ3kkHAT8OVW9HADAhK3AhKq
-whiQARTgVP3w5JBwE/DlVvRwAwIStwISquVVZAJwN5BwEOBgCJABDXQJ8IAl5TQUYAoUYA8U
-YBQkA3AWkAENdAjwgA6QAQ10C/CABpABDXQb8H0BgAJ9Aq9WEgKNkHAR4CT/khuQBBR0gPDk
-kHAT8OVW9HADAhK3AhKqIAIDMAMdfQKvVhICjZAEFHSA8OSQcBPw5Vb0cAMCErcCEqqFVkHS
-AiKQcBHgJP+SGyKQcBDgVH9kAmADAhK3kHAR4GQIYAjgZCBgAwISt3VOA3VPICKQcBHgJP+S
-RyKQBATgJeAkXfVXkHAQ4P90RyVX+MbvxpBwEeD/dEglV/jG78bk/a9WEgKNkAQUdIDw5JBw
-E/DlVvRwAwIStwISquVHtAcIkHAR4FQH9Sbk/a9WEgKN0gQikHAQ4P6QcBHg/e345vVX/a9W
-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
-GY+CjoPgtP8HBTfk9TaAWeT1N4+CjoPwgE/lNnXwBoR0CCXw9YLkNBD1g+D9j4KOg+D8bXAw
-kHCI4ATwo+D905U3QAKAAq03kHCJ7fAFNwU25TZ18AaEdIol8PWC5DRw9YPs8IAD5PU3D78A
-AQ7vVH9gCuU3w5ROUAMCGRDlN7ROA9OAAcMiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALlOs=
---------------030601080800090908070707--
