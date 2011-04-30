@@ -1,96 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4799 "EHLO MMS3.broadcom.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:38707 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756022Ab1DHR3R convert rfc822-to-8bit (ORCPT
+	id S1751322Ab1D3TqA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 13:29:17 -0400
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] bcmai: introduce AI driver
-References: <1302033463-1846-1-git-send-email-zajec5@gmail.com>
- <op.vtisojsk3ri7v4@arend-laptop>
- <BANLkTin1yyow595tcYveB5fh8q3x+U_GOw@mail.gmail.com>
- <op.vtmqm7fw3ri7v4@arend-laptop>
- <BANLkTimy8LEqBqeJQD5SY=e8ZgEy8pRVHw@mail.gmail.com>
-Date: Fri, 8 Apr 2011 19:28:57 +0200
+	Sat, 30 Apr 2011 15:46:00 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.39-rc5-git4: Reported regressions from 2.6.38
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vtmqujir3ri7v4@arend-laptop>
-In-Reply-To: <BANLkTimy8LEqBqeJQD5SY=e8ZgEy8pRVHw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <Xp4OiTz83N.A.O0D.JVGvNB@chimera> (sfid-20110430_214642_178341_3EEACB4E)
+Date: Sat, 30 Apr 2011 21:42:11 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 08 Apr 2011 19:27:11 +0200, Rafał Miłecki <zajec5@gmail.com> wrote:
+[NOTE:
+ I have one request for whoever works on fixing the listed regressions.  While
+ your work is highly appreciated anyway, if you have a patch fixing a listed
+ regression or you know of a commit fixing a listed regression, please drop
+ a notice into the corresponding Bugzilla entry.  This will help us a lot.]  
 
-> 2011/4/8 Arend van Spriel <arend@broadcom.com>:
->> On Fri, 08 Apr 2011 18:56:13 +0200, Rafał Miłecki <zajec5@gmail.com>  
->> wrote:
->>
->>> 2011/4/6 Arend van Spriel <arend@broadcom.com>:
->>>>
->>>> 3. Device identification
->>>>
->>>> The cores are identified by manufacturer, core id and revision in your
->>>> patch. I would not use the revision because 4 out of 5 times a  
->>>> revision
->>>> change does indicate a hardware change but no change in programming
->>>> interface. The enumeration data does contain a more selective field
->>>> indicating the core class (4 bits following the core identifier). I
->>>> suggest
->>>> to replace the revision field by this class field.
->>>
->>> Could you say something more about *class*, please? For my BCM43224 it
->>> seems to be 0x0. WIll check BCM4313 in a moment.
->>>
->>
->> In principal the manufacturer id is unique (defined/assigned by JEDEC
->> www.jedec.org) and the chip id and chip class are defined by the
->> manufacturer. So I can only indicate what classes Broadcom uses in
->> combination with the manufacturer id BRCM, ARM and MIPS.
->>
->> /* Component Classes */
->> #define CC_SIM                  0
->> #define CC_EROM                 1
->> #define CC_CORESIGHT            9
->> #define CC_VERIF                0xb
->> #define CC_OPTIMO               0xd
->> #define CC_GEN                  0xe
->> #define CC_PRIMECELL            0xf
->>
->> Looking at this it seems strange that you see a class value of 0x0. It  
->> may
->> be rarely used or for non-production chips only (for simulation, chip
->> bringup) which may require additional (debug) functions. So question is
->> whether you will need it, but it is specified by ARM and it is up to
->> manufacturers to use it. So I it is better to be safe than sorry and  
->> have
->> this in the device id.
->
-> OK, thanks. I'm compiling kernel with patch V2 right now. Of course
-> class included.
->
+This message contains a list of some regressions from 2.6.38,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Great. I tried to apply you patch on my kernel tree but it did not apply.  
-Which tree are you using. linux-next, wireless-next?
+If you know of any other unresolved regressions from 2.6.38, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-04-30       38       17          16
+  2011-04-17       17       11          10
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34012
+Subject		: 2.6.39-rc4+: oom-killer busy killing tasks
+Submitter	: Christian Kujau <lists@nerdbynature.de>
+Date		: 2011-04-22 1:57 (9 days old)
+Message-ID	: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+References	: http://marc.info/?l=linux-kernel&m=130343744622331&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34002
+Subject		: [REGRESSION] [2.6.39-rc3] Wrong resolution in framebuffer and X Window
+Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
+Date		: 2011-04-17 16:04 (14 days old)
+Message-ID	: <201104171804.04664.maciej.rutecki@gmail.com>
+References	: http://marc.info/?l=linux-fbdev&m=130305625114863&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33842
+Subject		: NULL pointer dereference in ip_fragment
+Submitter	: Tomas Carnecky <tom@dbservice.com>
+Date		: 2011-04-23 07:51 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33812
+Subject		: radeon with modeset option causes oops as secondary adapter (vgaswitcheroo)
+Submitter	: Johannes Engel <jcnengel@googlemail.com>
+Date		: 2011-04-21 23:14 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33792
+Subject		: lockdep trace when unplugging usb audio (.39rc4)
+Submitter	: Dave Jones <davej@redhat.com>
+Date		: 2011-04-19 18:07 (12 days old)
+Message-ID	: <20110419180745.GA438@redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=130323648920431&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33492
+Subject		: [bug] 2.6.39-rc3 fails to boot on Alpha
+Submitter	: Mikael Pettersson <mikpe@it.uu.se>
+Date		: 2011-04-17 15:13 (14 days old)
+Message-ID	: <19883.912.266127.538215@pilspetsen.it.uu.se>
+References	: http://marc.info/?l=linux-kernel&m=130305321212360&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33482
+Subject		: [Regression] Bluetooth pairing does not work anymore in 2.6.39-rc3 (works in 2.6.38.3)
+Submitter	: Gottfried Haider <gottfried.haider@gmail.com>
+Date		: 2011-04-16 16:38 (15 days old)
+Message-ID	: <BANLkTi=LvyZ+7BHfVL849pztfvsYaVM4SQ@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130297197128328&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33432
+Subject		: WARNING at libata-core.c:5015 in 2.6.39-rc3-wl+, then lockup.
+Submitter	: Ben Greear <greearb@candelatech.com>
+Date		: 2011-04-13 16:29 (18 days old)
+Message-ID	: <4DA5CF81.4070908@candelatech.com>
+References	: http://marc.info/?l=linux-kernel&m=130271220809443&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33422
+Subject		: oops in radeon_ddc_get_modes on first boot of rc3
+Submitter	: Steve French <smfrench@gmail.com>
+Date		: 2011-04-12 17:54 (19 days old)
+Message-ID	: <BANLkTikTVuV9eH4GiLDs0DewGJXo_3daeg@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130263086322702&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33402
+Subject		: [regression] 2.6.39-rc[1-3] fail to boot on G5 PowerMac
+Submitter	: Mikael Pettersson <mikpe@it.uu.se>
+Date		: 2011-04-12 17:30 (19 days old)
+Message-ID	: <19876.35918.322649.256455@pilspetsen.it.uu.se>
+References	: http://marc.info/?l=linuxppc-embedded&m=130263128523237&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33302
+Subject		: ACPI reboot broken on HP Compaq nx7300.
+Submitter	: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Date		: 2011-04-15 14:44 (16 days old)
+First-Bad-Commit: http://git.kernel.org/linus/3d35ac346e981162eeba391e496faceed4753e7b
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33272
+Subject		: drm related hard-hang
+Submitter	: Peter Teoh <htmldeveloper@gmail.com>
+Date		: 2011-04-14 01:29 (17 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33242
+Subject		: Lockdep splat in autofs with 2.6.39-rc2
+Submitter	: Nick Bowler <nbowler@elliptictech.com>
+Date		: 2011-04-07 19:44 (24 days old)
+Message-ID	: <20110407194403.GA29404@elliptictech.com>
+References	: http://marc.info/?l=linux-kernel&m=130220545614682&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33142
+Subject		: 2.6.39-rc2 regression: X201s fails to resume b77dcf8460ae57d4eb9fd3633eb4f97b8fb20716
+Submitter	: Keith Packard <keithp@keithp.com>
+Date		: 2011-04-06 7:44 (25 days old)
+Message-ID	: <yun1v1fj024.fsf@aiko.keithp.com>
+References	: http://marc.info/?l=linux-kernel&m=130207593728273&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33092
+Subject		: [regression] 2.6.39-rc1 - Beagleboard usbnet broken
+Submitter	: Mark Jackson <mpfj-list@mimc.co.uk>
+Date		: 2011-04-04 9:22 (27 days old)
+First-Bad-Commit: http://git.kernel.org/linus/087809fce28f50098d9c3ef1a6865c722f23afd2
+Message-ID	: <4D998DC9.3040109@mimc.co.uk>
+References	: http://marc.info/?l=linux-kernel&m=130191386508831&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=32982
+Subject		: Kernel locks up a few minutes after boot
+Submitter	: Bart Van Assche <bart.vanassche@gmail.com>
+Date		: 2011-04-10 19:55 (21 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33802
+Subject		: list_del corruption in sd driver since 2.6.39-rc4
+Submitter	: Christian Casteyde <casteyde.christian@free.fr>
+Date		: 2011-04-21 21:10 (10 days old)
+Handled-By	: James Bottomley <James.Bottomley@suse.de>
+Patch		: http://marc.info/?l=linux-kernel&m=130271409412095
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.38,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=32012
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
