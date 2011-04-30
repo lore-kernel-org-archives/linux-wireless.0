@@ -1,220 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:39978 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab1D1Afa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2011 20:35:30 -0400
-Received: by eyx24 with SMTP id 24so675349eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Apr 2011 17:35:29 -0700 (PDT)
-From: Maciej Mrozowski <reavertm@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] Wrt TP-Link TL-WN821N V3 (confusing/missing info on wiki)
-Date: Thu, 28 Apr 2011 02:35:20 +0200
-References: <201104221852.41733.reavertm@gmail.com> <19891.57900.438639.178988@gargle.gargle.HOWL>
-In-Reply-To: <19891.57900.438639.178988@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2988352.JPacJv5W5z";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201104280235.20751.reavertm@gmail.com> (sfid-20110428_023534_172690_A599910D)
+Received: from mga02.intel.com ([134.134.136.20]:62414 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757722Ab1D3Qks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:40:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/14] iwlagn: use proper good CRC threshold behaviour
+Date: Sat, 30 Apr 2011 09:17:33 -0700
+Message-Id: <1304180260-13875-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184113_696380_EE006444)
+In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2988352.JPacJv5W5z
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Sunday 24 of April 2011 10:41:16 Sujith wrote:
+New microcode versions use the good CRC threshold
+field differently, as a flag, and in that case we
+should set it to 1/0 instead of 1/65535 for an
+active/passive scan.
 
-Hello
+The new behaviour is advertised by the uCode with
+a feature flag.
 
-> > (it stopped working completely recently in wireless-testing though:
-> > ieee80211 phy0: device no longer idle - working
-> > wlan0: direct probe to 68:7f:74:77:36:bc (try 1/3)
-> > wlan0: direct probe to 68:7f:74:77:36:bc (try 2/3)
-> > wlan0: direct probe to 68:7f:74:77:36:bc (try 3/3)
-> > wlan0: direct probe to 68:7f:74:77:36:bc timed out
-> > ieee80211 phy0: device now idle
-> > but that's different a story)
->=20
-> How recent is your wireless-testing tree ?
->=20
-> Can you post the debug log ?
-> See: http://wireless.kernel.org/en/users/Drivers/ath9k/debug
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   12 ++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    7 +++++--
+ 3 files changed, 18 insertions(+), 4 deletions(-)
 
-It was some wireless-testing master from around a week ago.
-Now I've re-cloned it again (since git pull resulted in conflicts for some=
-=20
-reason), I'm at 903e9c0102cb9b4b3b1560df31f9b46650cdea88 and using htc_7010=
-=2Efw=20
-from http://wireless.kernel.org/download/htc_fw/1.1/ - and so far so good :)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 75e1035..7fe9e0f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1294,9 +1294,17 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	 * mean we never reach it, but at the same time work around
+ 	 * the aforementioned issue. Thus use IWL_GOOD_CRC_TH_NEVER
+ 	 * here instead of IWL_GOOD_CRC_TH_DISABLED.
++	 *
++	 * This was fixed in later versions along with some other
++	 * scan changes, and the threshold behaves as a flag in those
++	 * versions.
+ 	 */
+-	scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
+-					IWL_GOOD_CRC_TH_NEVER;
++	if (priv->new_scan_threshold_behaviour)
++		scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
++						IWL_GOOD_CRC_TH_DISABLED;
++	else
++		scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
++						IWL_GOOD_CRC_TH_NEVER;
+ 
+ 	band = priv->scan_band;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c27147c..395d1ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1716,6 +1716,9 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 			priv->cfg->base_params->max_event_log_size;
+ 	priv->_agn.inst_errlog_ptr = pieces.inst_errlog_ptr;
+ 
++	priv->new_scan_threshold_behaviour =
++		!!(ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
++
+ 	if (ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
+ 		priv->valid_contexts |= BIT(IWL_RXON_CTX_PAN);
+ 		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 197fa74..f098eff 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -547,12 +547,13 @@ enum iwl_ucode_tlv_type {
+  * enum iwl_ucode_tlv_flag - ucode API flags
+  * @IWL_UCODE_TLV_FLAGS_PAN: This is PAN capable microcode; this previously
+  *	was a separate TLV but moved here to save space.
+- * @IWL_UCODE_TLV_FLAGS_RESERVED_1: reserved
++ * @IWL_UCODE_TLV_FLAGS_NEWSCAN: new uCode scan behaviour on hidden SSID,
++ *	treats good CRC threshold as a boolean
+  * @IWL_UCODE_TLV_FLAGS_MFP: This uCode image supports MFP (802.11w).
+  */
+ enum iwl_ucode_tlv_flag {
+ 	IWL_UCODE_TLV_FLAGS_PAN		= BIT(0),
+-	IWL_UCODE_TLV_FLAGS_RESERVED_1	= BIT(1),
++	IWL_UCODE_TLV_FLAGS_NEWSCAN	= BIT(1),
+ 	IWL_UCODE_TLV_FLAGS_MFP		= BIT(2),
+ };
+ 
+@@ -1263,6 +1264,8 @@ struct iwl_priv {
+ 	/* max number of station keys */
+ 	u8 sta_key_max_num;
+ 
++	bool new_scan_threshold_behaviour;
++
+ 	/* EEPROM MAC addresses */
+ 	struct mac_address addresses[2];
+ 
+-- 
+1.7.0.4
 
-I'll testfield it for a while and see whether it drops connection after som=
-e=20
-time or after "some bandwidth is exceeded" like it appeared to in a past (b=
-ut=20
-if was at times when the most recent firmware was still sitting in linux-
-firmware repo, I think I experienced the same results with stock kernel 2.6=
-=2E37=20
-ath9k_htc driver and corresponding wireless-testing, many things has change=
-s=20
-since then and I'm optimistic)
-
-regards
-MM
-
-(that's not exactly full debug, just I quick look, if there are to be any=20
-issues, I'll provide full debug respectively)
-
-usb 1-2: new high speed USB device number 5 using ehci_hcd
-usb 1-2: ath9k_htc: Transferred FW: htc_7010.fw, size: 72996
-ath9k_htc 1-2:1.0: ath9k_htc: HTC initialized with 45 credits
-ath9k_htc 1-2:1.0: ath9k_htc: FW Version: 1.1
-ath: EEPROM regdomain: 0x809c
-ath: EEPROM indicates we should expect a country code
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x52
-ath: Country alpha2 being used: CN
-ath: Regpair used: 0x52
-cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-cfg80211: Disabling freq 2467 MHz as custom regd has no rule that fits a 20=
-=20
-MHz wide channel
-cfg80211: Disabling freq 2472 MHz as custom regd has no rule that fits a 20=
-=20
-MHz wide channel
-cfg80211: Disabling freq 2484 MHz as custom regd has no rule that fits a 20=
-=20
-MHz wide channel
-cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Updating information on frequency 2484 MHz for a 20 MHz width=20
-channel with regulatory rule:
-cfg80211: 2474000 KHz - 2494000 KHz @  KHz), (600 mBi, 2000 mBm)
-cfg80211: Pending regulatory request, waiting for it to be processed...
-ieee80211 phy2: Atheros AR9287 Rev:2
-Registered led device: ath9k-phy2::radio
-Registered led device: ath9k-phy2::assoc
-Registered led device: ath9k-phy2::tx
-Registered led device: ath9k-phy2::rx
-usb 1-2: ath9k_htc: USB layer initialized
-ieee80211 phy2: device now idle
-cfg80211: Pending regulatory request, waiting for it to be processed...
-ieee80211 phy2: device no longer idle - scanning
-ieee80211 phy2: device now idle
-ieee80211 phy2: device no longer idle - working
-wlan0: authenticate with 68:7f:74:77:36:bc (try 1)
-wlan0: authenticated
-wlan0: associate with 68:7f:74:77:36:bc (try 1)
-wlan0: RX AssocResp from 68:7f:74:77:36:bc (capab=3D0x531 status=3D0 aid=3D=
-1)
-wlan0: associated
-ieee80211 phy2: Allocated STA 68:7f:74:77:36:bc
-ieee80211 phy2: Inserted STA 68:7f:74:77:36:bc
-ieee80211 phy2: WMM queue=3D2 aci=3D0 acm=3D0 aifs=3D3 cWmin=3D15 cWmax=3D1=
-023 txop=3D0=20
-uapsd=3D0
-ieee80211 phy2: WMM queue=3D3 aci=3D1 acm=3D0 aifs=3D7 cWmin=3D15 cWmax=3D1=
-023 txop=3D0=20
-uapsd=3D0
-ieee80211 phy2: WMM queue=3D1 aci=3D2 acm=3D0 aifs=3D2 cWmin=3D7 cWmax=3D15=
- txop=3D94=20
-uapsd=3D0
-ieee80211 phy2: WMM queue=3D0 aci=3D3 acm=3D0 aifs=3D2 cWmin=3D3 cWmax=3D7 =
-txop=3D47 uapsd=3D0
-cfg80211: Pending regulatory request, waiting for it to be processed...
-Rx A-MPDU request on tid 7 result 0
-Open BA session requested for 68:7f:74:77:36:bc tid 0
-activated addBA response timer on tid 0
-switched off addBA timer for tid 0
-Aggregation is on for tid 0
-Rx A-MPDU request on tid 0 result 0
-
-=2D-=20
-regards
-MM
-
---nextPart2988352.JPacJv5W5z
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iEYEABECAAYFAk24tkgACgkQFuHa/bHpVdsmNwCfYBAi3Mm8teX7K50Gxy0A+F5i
-T6sAnivQchKYlBTBPGfJHZFZAaTHQZMH
-=V3rD
------END PGP SIGNATURE-----
-
---nextPart2988352.JPacJv5W5z--
