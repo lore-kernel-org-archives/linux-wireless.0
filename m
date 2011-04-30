@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54366 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756530Ab1DFSt0 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55400 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757337Ab1D3PSt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2011 14:49:26 -0400
-Received: by qwk3 with SMTP id 3so1060856qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2011 11:49:25 -0700 (PDT)
+	Sat, 30 Apr 2011 11:18:49 -0400
+Received: by eyx24 with SMTP id 24so1390656eyx.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:18:48 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/6] rt2x00: Fix optimize register access for rt2800pci
+Date: Sat, 30 Apr 2011 17:14:49 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104301713.47545.IvDoorn@gmail.com> <201104301714.24685.IvDoorn@gmail.com>
+In-Reply-To: <201104301714.24685.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1302099854.14995.115.camel@wwguy-huron>
-References: <1301945671.14995.110.camel@wwguy-huron> <20110406141258.GA11941@tuxdriver.com>
- <1302099870.4090.3.camel@jlt3.sipsolutions.net> <20110406142711.GB11941@tuxdriver.com>
- <1302099854.14995.115.camel@wwguy-huron>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 6 Apr 2011 20:49:05 +0200
-Message-ID: <BANLkTi=mrU7mgiB=E6tJN1Z1Qz_g8RdEUw@mail.gmail.com>
-Subject: Re: new maintenance release of iwlwifi 1000 uCode available
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104301714.49872.IvDoorn@gmail.com> (sfid-20110430_171854_447936_8E68BB47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 6, 2011 at 4:24 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Wed, 2011-04-06 at 07:27 -0700, John W. Linville wrote:
->> On Wed, Apr 06, 2011 at 04:24:30PM +0200, Johannes Berg wrote:
->> > On Wed, 2011-04-06 at 10:12 -0400, John W. Linville wrote:
->> > > On Mon, Apr 04, 2011 at 12:34:31PM -0700, Guy, Wey-Yi wrote:
->> > > > Hi,
->> > > >
->> > > >         Maintenance release version 39.31.5.1 of uCode for Intel 1000BGN
->> > > >         Series
->> > > >         WiFi Adapter is now available for download from
->> > > >         http://intellinuxwireless.org/?n=Downloads
->> > > >
->> > > >         Changes:
->> > > >         - Fix "tid mismatch" issue
->> > > >
->> > > >         Wey-Yi
->> > >
->> > > Hmmm...the previous release was 128.50.3.1...
->> > >
->> > > I realize that the API portion advanced from 3.1 to 5.1, but the
->> > > overall release number appears to be moving backwards.  Is this
->> > > intentional?
->> >
->> > They're all over the place and basically random ... I *think* they
->> > depend on the branch it comes from internally, but I'm not even sure.
->>
->> OK, I can cope.  But if you (i.e. your team) can influence them
->> towards a sane numbering scheme, it will probably make packagers
->> and/or release engineers happier in the distros...
->>
-> I will give feedback to our build engineer team, thanks
->
-> Wey
->
+The patch
+	rt2x00: Optimize register access in rt2800pci
+from Helmut Schaa missed one register call, namely
+the rt2800_register_multiwrite which should be changed
+to rt2x00pci_register_multiwrite.
 
-Perhaps formatting the number as "3.1.128.50" and "5.1.39.31" would be
-a saner idea.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 08d3947..cc4a54f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -302,8 +302,8 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Write firmware to device.
+ 	 */
+-	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
+-				   data, len);
++	rt2x00pci_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
++				      data, len);
+ 
+ 	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
+ 	rt2x00pci_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.2.3
+
