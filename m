@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:32923 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932492Ab1DNTNc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2011 15:13:32 -0400
-Received: by fxm17 with SMTP id 17so1385474fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2011 12:13:31 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [RFT] p54: implement multicast + arp req PS filter
-Date: Thu, 14 Apr 2011 21:13:27 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <201104020058.17232.chunkeey@googlemail.com> <201104100441.37852.jcmvbkbc@gmail.com> <201104140148.56798.jcmvbkbc@gmail.com>
-In-Reply-To: <201104140148.56798.jcmvbkbc@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201104142113.27392.chunkeey@googlemail.com>
+Received: from mga11.intel.com ([192.55.52.93]:28350 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754834Ab1D3QBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:01:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6] iwlagn: led stay solid on when no traffic
+Date: Sat, 30 Apr 2011 08:38:16 -0700
+Message-Id: <1304177896-23403-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_180123_982474_554A29D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 April 2011 23:48:54 Max Filippov wrote:
-> Hello, Christian.
-> 
-> > > > "sagred stuff" ?
-> > > yeah, it was a while ago... 
-> > > "p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)"
-> > > http://www.spinics.net/lists/linux-wireless/msg55967.html
-> > > 
-> > > AFAIK they have another p54spi firmware
-> > > "phy0: FW rev 2.19.0.0.A.14 Private - Softmac protocol 5.6"
-> > 
-> > Ok, I'll try to test it with firmware images other than nokia's native.
-> 
-> The results are the following:
-> 
-> 2.19.0.0.A.14 -- ARP and multicast filters are completely ignored in both normal mode and PSM.
-> 2.13.12.0.a.5.2 -- ARP and multicast filters are completely ignored in both normal mode and PSM.
-> 2.13.0.0.a.23 -- ARP and multicast filters are completely ignored in both normal mode and PSM.
-> 2.13.0.0.a.22.0 -- same as with nokia's native
-> 2.13.0.0.a.13.14 -- ARP and multicast filters are completely ignored in both normal mode and PSM.
+commit 5ed540aecc2aae92d5c97b9a9306a5bf88ad5574 change the led behavior
+for iwlwifi driver; the side effect cause led blink all the time.
 
-thanks,
+Modify the led blink table to fix this problem
 
-so the sagrad firmwares do work on the n8xx? Maybe it would be a good idea
-to send them over to maxi@daemonizer.de. Do you still have the binaries?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Regards,
-	Chr
+ drivers/net/wireless/iwlwifi/iwl-led.c |   20 +++++++++++++++++++-
+ 1 files changed, 19 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index d7f2a0b..6d7b41b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -48,8 +48,21 @@ module_param(led_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(led_mode, "0=system default, "
+ 		"1=On(RF On)/Off(RF Off), 2=blinking");
+ 
++/* Throughput		OFF time(ms)	ON time (ms)
++ *	>300			25		25
++ *	>200 to 300		40		40
++ *	>100 to 200		55		55
++ *	>70 to 100		65		65
++ *	>50 to 70		75		75
++ *	>20 to 50		85		85
++ *	>10 to 20		95		95
++ *	>5 to 10		110		110
++ *	>1 to 5			130		130
++ *	>0 to 1			167		167
++ *	<=0					SOLID ON
++ */
+ static const struct ieee80211_tpt_blink iwl_blink[] = {
+-	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
++	{ .throughput = 0, .blink_time = 334 },
+ 	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
+ 	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
+ 	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
+@@ -101,6 +114,11 @@ static int iwl_led_cmd(struct iwl_priv *priv,
+ 	if (priv->blink_on == on && priv->blink_off == off)
+ 		return 0;
+ 
++	if (off == 0) {
++		/* led is SOLID_ON */
++		on = IWL_LED_SOLID;
++	}
++
+ 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
+ 			priv->cfg->base_params->led_compensation);
+ 	led_cmd.on = iwl_blink_compensation(priv, on,
+-- 
+1.7.0.4
+
