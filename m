@@ -1,110 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53097 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab1DRNfc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 09:35:32 -0400
-Received: by fxm17 with SMTP id 17so2833789fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 06:35:31 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 01/23] Enable WLAN LED on Ralink SoC (rt305x) devices
-Date: Mon, 18 Apr 2011 15:26:00 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Received: from mms1.broadcom.com ([216.31.210.17]:4141 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751733Ab1D3IOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 04:14:34 -0400
+Message-ID: <4DBBC4DA.8000101@broadcom.com> (sfid-20110430_101440_457034_27094028)
+Date: Sat, 30 Apr 2011 10:14:18 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201104181526.01722.IvDoorn@gmail.com>
+To: "Ben Hutchings" <ben@decadent.org.uk>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	=?UTF-8?B?V2VuY2VzbGFvIEdvbnrDoWxlei1WacOxYXM=?=
+	<wens@fisica.unav.es>,
+	"622842@bugs.debian.org" <622842@bugs.debian.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcm80211 not setting correct country code?
+References: <20110415070730.4178.6175.reportbug@calpurnia>
+ <20110415081334.GD1387@vostochny.stro.at>
+ <20110415161039.15535n2vg4igcykg@webmail.unav.es>
+ <20110429164822.62112d9at4vs5xa8@webmail.unav.es>
+ <1304088874.3105.57.camel@localhost>
+ <20110429173944.10906p14p6bdid4w@webmail.unav.es>
+ <1304139874.2833.29.camel@localhost>
+In-Reply-To: <1304139874.2833.29.camel@localhost>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Layne Edwards <ledwards@astrumtech.net>
+On 04/30/2011 07:04 AM, Ben Hutchings wrote:
 
-This patch adds WLAN LED support to the mac80211 rt2x00 driver for
-Ralink SoC (rt305x) devices.  The current WLAN LED drivers in
-rt2800lib.c set the LED brightness via an MCU request, but do nothing
-for SoC.  This patch checks for SoC and sets the register to enable the
-WLAN LED (instead of an MCU request).  This enables the WLAN LED for
-RT305x devices.
+> I looked at the driver source code and there is certainly an attempt to
+> use a country code from NVRAM.  But maybe it hasn't actually been read
+> from NVRAM at the point this is done.  'US' seems to be the default if
+> the country code is blank.
+>
+> Ben.
 
-Signed-off-by: Layne Edwards <ledwards@astrumtech.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   60 +++++++++++++++++++++---------
- 1 files changed, 42 insertions(+), 18 deletions(-)
+Please refer to the information on wireless.kernel.org:
+http://wireless.kernel.org/en/users/Drivers/brcm80211#Regulatory_Implementation
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 769c05c..13ccc1b 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -949,25 +949,49 @@ static void rt2800_brightness_set(struct led_classdev *led_cdev,
- 	unsigned int ledmode =
- 		rt2x00_get_field16(led->rt2x00dev->led_mcu_reg,
- 				   EEPROM_FREQ_LED_MODE);
-+	u32 reg;
- 
--	if (led->type == LED_TYPE_RADIO) {
--		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
--				      enabled ? 0x20 : 0);
--	} else if (led->type == LED_TYPE_ASSOC) {
--		rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
--				      enabled ? (bg_mode ? 0x60 : 0xa0) : 0x20);
--	} else if (led->type == LED_TYPE_QUALITY) {
--		/*
--		 * The brightness is divided into 6 levels (0 - 5),
--		 * The specs tell us the following levels:
--		 *	0, 1 ,3, 7, 15, 31
--		 * to determine the level in a simple way we can simply
--		 * work with bitshifting:
--		 *	(1 << level) - 1
--		 */
--		rt2800_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
--				      (1 << brightness / (LED_FULL / 6)) - 1,
--				      polarity);
-+	/* Check for SoC (SOC devices don't support MCU requests) */
-+	if (rt2x00_is_soc(led->rt2x00dev)) {
-+		rt2800_register_read(led->rt2x00dev, LED_CFG, &reg);
-+
-+		/* Set LED Polarity */
-+		rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, polarity);
-+
-+		/* Set LED Mode */
-+		if (led->type == LED_TYPE_RADIO) {
-+			rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE,
-+					   enabled ? 3 : 0);
-+		} else if (led->type == LED_TYPE_ASSOC) {
-+			rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE,
-+					   enabled ? 3 : 0);
-+		} else if (led->type == LED_TYPE_QUALITY) {
-+			rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE,
-+					   enabled ? 3 : 0);
-+		}
-+
-+		rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
-+
-+	} else {
-+		if (led->type == LED_TYPE_RADIO) {
-+			rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
-+					      enabled ? 0x20 : 0);
-+		} else if (led->type == LED_TYPE_ASSOC) {
-+			rt2800_mcu_request(led->rt2x00dev, MCU_LED, 0xff, ledmode,
-+					      enabled ? (bg_mode ? 0x60 : 0xa0) : 0x20);
-+		} else if (led->type == LED_TYPE_QUALITY) {
-+			/*
-+			 * The brightness is divided into 6 levels (0 - 5),
-+			 * The specs tell us the following levels:
-+			 *	0, 1 ,3, 7, 15, 31
-+			 * to determine the level in a simple way we can simply
-+			 * work with bitshifting:
-+			 *	(1 << level) - 1
-+			 */
-+			rt2800_mcu_request(led->rt2x00dev, MCU_LED_STRENGTH, 0xff,
-+					      (1 << brightness / (LED_FULL / 6)) - 1,
-+					      polarity);
-+		}
- 	}
- }
- 
--- 
-1.7.2.3
+You could investigate whether the NVRAM/SROM country code is indeed 
+blank or really configured with 'US'. For the driver itself channel 13 
+can be used as long as your access point is transmitting beacons, 
+because it is regarded as a passive channel.
+
+Reading the logs listed in bug #622842 I would suggest running the 
+following command after loading the brcm80211 driver:
+$ iw set reg EU
+
+You should see following in the log:
+Apr 30 10:05:22 myhost kernel: [ 3967.072332] cfg80211: Calling CRDA for 
+country: EU
+
+Gr. AvS
 
