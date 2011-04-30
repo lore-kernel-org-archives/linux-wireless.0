@@ -1,53 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48901 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756421Ab1DGRaX (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34058 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918Ab1D3PSs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2011 13:30:23 -0400
-Date: Thu, 7 Apr 2011 13:13:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Cong Wang <amwang@redhat.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [Patch V2] wireless: remove obsolete ar9170usb driver
-Message-ID: <20110407171334.GA9692@tuxdriver.com>
-References: <1302086729.3811.14.camel@jlt3.sipsolutions.net>
- <1302162181-24065-1-git-send-email-amwang@redhat.com>
- <201104071056.01191.chunkeey@googlemail.com>
- <4D9D7E7C.4040703@redhat.com>
+	Sat, 30 Apr 2011 11:18:48 -0400
+Received: by eyx24 with SMTP id 24so1390654eyx.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:18:46 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/6] rt2x00: Optimize TX_STA_FIFO register reading
+Date: Sat, 30 Apr 2011 17:14:23 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201104301713.47545.IvDoorn@gmail.com>
+In-Reply-To: <201104301713.47545.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4D9D7E7C.4040703@redhat.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201104301714.24685.IvDoorn@gmail.com> (sfid-20110430_171852_185466_439424A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 07, 2011 at 05:06:04PM +0800, Cong Wang wrote:
-> 于 2011年04月07日 16:56, Christian Lamparter 写道:
-> >On Thursday 07 April 2011 09:43:01 Amerigo Wang wrote:
-> >>V2: against wireless-next-2.6 and really compile tested.
-> >>
-> >>AR9170USB is scheduled to be removed in 2.6.40.
-> >>
-> >>Cc: Christian Lamparter<chunkeey@googlemail.com>
-> >>Cc: Johannes Berg<johannes@sipsolutions.net>
-> >>Cc: "Luis R. Rodriguez"<lrodriguez@atheros.com>
-> >>Cc: "John W. Linville"<linville@tuxdriver.com>
-> >>Signed-off-by: WANG Cong<amwang@redhat.com>
-> >another duplicate?
-> >
-> >please see:
-> >http://www.spinics.net/lists/linux-wireless/msg66871.html
-> >[the patch from last week in case you missed that one too.]
-> 
-> Ah, I am not in wireless list, so didn't know this.
-> Why it is not in wireless-next-2.6?
+Add recycling functionality to rt2x00usb_register_read_async.
+When the callback function returns true, resubmit the urb to
+read the register again.
 
-Because I haven't merged it yet -- it's as simple as that.
+This optimizes the rt2800usb driver when multiple TX status reports
+are pending in the register, because now we don't need to allocate
+the rt2x00_async_read_data and urb structure each time.
 
-Anyone else want to quibble over my schedule???
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    9 +++++----
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   11 +++++++----
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    4 +++-
+ 3 files changed, 15 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index e4f82d2..b5d5f22 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -114,12 +114,12 @@ static bool rt2800usb_txstatus_pending(struct rt2x00_dev *rt2x00dev)
+ 	return false;
+ }
+ 
+-static void rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
++static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 						 int urb_status, u32 tx_status)
+ {
+ 	if (urb_status) {
+ 		WARNING(rt2x00dev, "rt2x00usb_register_read_async failed: %d\n", urb_status);
+-		return;
++		return false;
+ 	}
+ 
+ 	/* try to read all TX_STA_FIFO entries before scheduling txdone_work */
+@@ -129,13 +129,14 @@ static void rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 				"drop tx status report.\n");
+ 			queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ 		} else
+-			rt2x00usb_register_read_async(rt2x00dev, TX_STA_FIFO,
+-						      rt2800usb_tx_sta_fifo_read_completed);
++			return true;
+ 	} else if (!kfifo_is_empty(&rt2x00dev->txstatus_fifo)) {
+ 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ 	} else if (rt2800usb_txstatus_pending(rt2x00dev)) {
+ 		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
+ 	}
++
++	return false;
+ }
+ 
+ static void rt2800usb_tx_dma_done(struct queue_entry *entry)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 570184e..e027ebd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -170,19 +170,22 @@ struct rt2x00_async_read_data {
+ 	__le32 reg;
+ 	struct usb_ctrlrequest cr;
+ 	struct rt2x00_dev *rt2x00dev;
+-	void (*callback)(struct rt2x00_dev *,int,u32);
++	bool (*callback)(struct rt2x00_dev *, int, u32);
+ };
+ 
+ static void rt2x00usb_register_read_async_cb(struct urb *urb)
+ {
+ 	struct rt2x00_async_read_data *rd = urb->context;
+-	rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg));
+-	kfree(urb->context);
++	if (rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg))) {
++		if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
++			kfree(rd);
++	} else
++		kfree(rd);
+ }
+ 
+ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
+ 				   const unsigned int offset,
+-				   void (*callback)(struct rt2x00_dev*,int,u32))
++				   bool (*callback)(struct rt2x00_dev*, int, u32))
+ {
+ 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	struct urb *urb;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index 52b09d2..a69f187 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -349,10 +349,12 @@ int rt2x00usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+  * be called from atomic context.  The callback will be called
+  * when the URB completes. Otherwise the function is similar
+  * to rt2x00usb_register_read().
++ * When the callback function returns false, the memory will be cleaned up,
++ * when it returns true, the urb will be fired again.
+  */
+ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
+ 				   const unsigned int offset,
+-				   void (*callback)(struct rt2x00_dev*,int,u32));
++				   bool (*callback)(struct rt2x00_dev*, int, u32));
+ 
+ /*
+  * Radio handlers
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.3
+
