@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43907 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757055Ab1DLJ6r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2011 05:58:47 -0400
-Subject: Re: [RFC v2] mac80211: consolidate MIC failure report handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <201104111816.22932.chunkeey@googlemail.com>
-References: <201104091234.27305.chunkeey@googlemail.com>
-	 <1302529173.6487.8.camel@jlt3.sipsolutions.net>
-	 <201104111816.22932.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Apr 2011 11:58:45 +0200
-Message-ID: <1302602325.3639.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:62414 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756477Ab1D3Qkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 12:40:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/14] iwlagn: prefer BSS context
+Date: Sat, 30 Apr 2011 09:17:39 -0700
+Message-Id: <1304180260-13875-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110430_184057_759929_62B369DE)
+In-Reply-To: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304180260-13875-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-04-11 at 18:16 +0200, Christian Lamparter wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > +	if (!ieee80211_has_protected(hdr->frame_control) ||
-> > > +	    !ieee80211_is_data_present(hdr->frame_control)) {
-> > > +		return RX_CONTINUE;
-> > > +	}
-> > 
-> > But is this check correct? What if the driver _completely_ pretends that the
-> > frame wasn't encrypted? Do we strictly require that it leaves the protected
-> > bit set?
-> 
-> OnT: It looks like this patch might also help to relieve ath9k & ath9k_htc of
-> some workarounds. see: 56363ddeeed "ath9k: fix spurious MIC failure reports".
-> (ath5k seems to be fine though?!)
+If an interface type changes from a type that is
+only supported on the PAN context (e.g. P2P GO)
+to a type that is supported on the BSS context,
+and the BSS context is not in use, then we need
+to use the BSS context instead of changing the
+device type within the context. To achieve this,
+refuse the type change, which causes a down/up
+cycle that will allocate the BSS context for the
+interface.
 
-Yeah, it looks like if we do it in the TKIP path we could revert that.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-> BTW: what to do about this?
-> -       if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
-> -               /*
-> -                * APs with pairwise keys should never receive Michael MIC
-> -                * errors for non-zero keyidx because these are reserved for
-> -                * group keys and only the AP is sending real multicast
-> -                * frames in the BSS.
-> -                */
-> -               return; [Drop Unusable]
-> -       }
-> for now, I've kept the code. But I'm not quite sure why, at least
-> I couldn't find the passage in the spec that says "GTK MIC failures in AP mode
-> can be ignored" [Although, 8.5.1 (see "196 hole")& 8.3.2.3 (last sentence)
-> hint in this direction]?
-
-Well, hmm? APs never receive anything with a key that has a non-zero at
-all, since pairwise keys have key index 0 and group keys are never used
-for RX.
-
-
-Also, I think we should run some actual TKIP testing :-)
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 98cfbb6..4653dea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1765,6 +1765,7 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
++	struct iwl_rxon_context *bss_ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	struct iwl_rxon_context *tmp;
+ 	u32 interface_modes;
+ 	int err;
+@@ -1789,6 +1790,19 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
++	/*
++	 * Refuse a change that should be done by moving from the PAN
++	 * context to the BSS context instead, if the BSS context is
++	 * available and can support the new interface type.
++	 */
++	if (ctx->ctxid == IWL_RXON_CTX_PAN && !bss_ctx->vif &&
++	    (bss_ctx->interface_modes & BIT(newtype) ||
++	     bss_ctx->exclusive_interface_modes & BIT(newtype))) {
++		BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
++		err = -EBUSY;
++		goto out;
++	}
++
+ 	if (ctx->exclusive_interface_modes & BIT(newtype)) {
+ 		for_each_context(priv, tmp) {
+ 			if (ctx == tmp)
+-- 
+1.7.0.4
 
