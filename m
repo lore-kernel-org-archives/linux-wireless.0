@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:52702 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832Ab1DRLIR (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42845 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927Ab1D3Vle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2011 07:08:17 -0400
-Received: by pvg12 with SMTP id 12so2111576pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2011 04:08:17 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Sat, 30 Apr 2011 17:41:34 -0400
+Received: by bwz15 with SMTP id 15so3846111bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 14:41:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19884.7222.186200.867910@gargle.gargle.HOWL>
-Date: Mon, 18 Apr 2011 16:40:46 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, jouni.malinen@atheros.com
-Subject: Re: [PATCH 1/2] ath9k: fix powersave frame filtering/buffering in AP mode
-In-Reply-To: <4DABFC54.8030502@openwrt.org>
-References: <1303075690-53804-1-git-send-email-nbd@openwrt.org>
-	<19883.48525.986878.991570@gargle.gargle.HOWL>
-	<4DABFC54.8030502@openwrt.org>
+Date: Sat, 30 Apr 2011 17:41:31 -0400
+Message-ID: <BANLkTi=OiZu4i7S_N5Y8oiom--N2B3L1Hg@mail.gmail.com> (sfid-20110430_234149_830452_25E4395F)
+Subject: bug: implicit declaration error in nightly build compat-wireless-2011-04-29
+From: George Nychis <gnychis@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> The driver calls ieee80211_sta_set_tim on STA_NOTIFY_SLEEP whenever it 
-> still has some buffered frames that it intends to keep until the client 
-> wakes up again (i.e. frames that will not be returned to mac80211 as 
-> filtered).
+Hi all,
 
-Why should ieee80211_sta_set_tim() be called from complete_aggr() ?
+After checking linux-wireless.org, I think this is the right place to
+report a bug (albiet simple).
 
-Sujith
+I believe there is a missing header file in the nightly build for
+compat-wireless-2011-04-29, which pops up when trying to cross-compile
+compat-wireless to the arm architecture.  It does not show when
+building not cross-compiling.
+
+compat-wireless-2011-04-29/compat/compat-2.6.37.c: In function 'vzalloc':
+compat-wireless-2011-04-29/compat/compat-2.6.37.c:350: error: implicit
+declaration of function 'vmalloc'
+
+I believe compat-2.6.37.c is missing:
+#include <linux/vmalloc.h>
+
+... which fixed my compilation.
+
+- George
