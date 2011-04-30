@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53890 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757650Ab1DHWL4 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:43423 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918Ab1D3PSq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2011 18:11:56 -0400
-Received: by qwk3 with SMTP id 3so2352896qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2011 15:11:55 -0700 (PDT)
+	Sat, 30 Apr 2011 11:18:46 -0400
+Received: by ewy4 with SMTP id 4so1390988ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:18:45 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/6] rt2x00: Reduce tx status reading timeout
+Date: Sat, 30 Apr 2011 17:13:46 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-In-Reply-To: <1302299890.28673.1.camel@maggie>
-References: <1302267632-2326-1-git-send-email-zajec5@gmail.com> <1302299890.28673.1.camel@maggie>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 9 Apr 2011 00:11:35 +0200
-Message-ID: <BANLkTik_QTuAG+c7LnHt87_kKRy4HM6zvQ@mail.gmail.com>
-Subject: Re: [PATCH][2.6.39?] b43: trivial: update module info about firmware
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201104301713.47545.IvDoorn@gmail.com> (sfid-20110430_171848_808402_5C568668)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/4/8 Michael Büsch <mb@bu3sch.de>:
-> On Fri, 2011-04-08 at 15:00 +0200, Rafał Miłecki wrote:
->> We do not use ucode9,
->
-> Well, but we should.
-> There are only minor differences between r5 and r9 firmware.
-> r9 basically is a r5 firmware with workarounds added that are
-> needed for r9 devices.
->
-> So I think we should start using r9 instead of removing it here.
->
+When no TX status was available, the default timeout
+of 20ms is a bit high. The frame is highly likely already
+send out, so the TX status should be available within
+only a few milliseconds.
 
-With a fallback to r5 if no r9 firmware can be found... just to keep
-OpenFWWF working.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> --
-> Greetings Michael.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 0d4e8fa..e4f82d2 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -134,7 +134,7 @@ static void rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 	} else if (!kfifo_is_empty(&rt2x00dev->txstatus_fifo)) {
+ 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ 	} else if (rt2800usb_txstatus_pending(rt2x00dev)) {
+-		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(20));
++		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
+ 	}
+ }
+ 
+@@ -493,7 +493,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ 	 * also delayed -> use a timer to retrieve it.
+ 	 */
+ 	if (rt2800usb_txstatus_pending(rt2x00dev))
+-		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(20));
++		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
+ }
+ 
+ /*
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.2.3
+
