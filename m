@@ -1,115 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35963 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751765Ab1DVGDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2011 02:03:00 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2011 23:02:34 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 5/5] ath9k: Add power save wrappers and modularize hw_pll handler
-Date: Fri, 22 Apr 2011 11:32:12 +0530
-Message-ID: <1303452132-5436-5-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
-References: <1303452132-5436-1-git-send-email-senthilkumar@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44113 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757144Ab1D3PQU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Apr 2011 11:16:20 -0400
+Received: by fxm17 with SMTP id 17so3002388fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 08:16:19 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 30 Apr 2011 15:24:30 +0200
+Subject: [PATCH] mac80211: consolidate MIC failure report handling
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com, coelho@ti.com,
+	arik@wizery.com
+Message-Id: <E1QGBu4-0004S0-G9@debian64.daheim> (sfid-20110430_171632_333832_313DE37F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should protect hw_pll handler with power save wrappers and
-also modularize hw_pll handler properly for better readability.
+Currently, mac80211 handles MIC failures differently
+depending on whenever they are detected by the stack's
+own software crypto or when are handed down from the
+driver.
 
-Also add a debug message to track chip resets on pll hang condition.
+This patch tries to unify both by moving the special
+branch out of mac80211 rx hotpath and into into the
+software crypto part. This has the advantage that we
+can run a few more sanity checks on the data and verify
+if the key type was TKIP. This is very handy because
+several devices generate false postive MIC failure
+reports. Like carl9170, ath9k and wl12xx:
+<http://www.spinics.net/lists/linux-wireless/msg68494.html>
+"mac80211: report MIC failure for truncated packets in AP mode"
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: Luciano Coelho <coelho@ti.com>
+Cc: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h   |    2 +-
- drivers/net/wireless/ath/ath9k/main.c |   36 ++++++++++++++++++++++----------
- 3 files changed, 27 insertions(+), 13 deletions(-)
+On Mon, 2011-04-12 at 11:58 +0200, Johannes Berg wrote:
+> Also, I think we should run some actual TKIP testing :-)
+define "actual" :-D
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 289c03e..dfea703 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -673,7 +673,7 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
- 	REGWRITE_BUFFER_FLUSH(ah);
+I've done some testing [with and without the patch] with the
+help of tkip_mic_test and I can report that I was notified and
+kicked both times in the same situations.
+---
+ net/mac80211/rx.c  |   47 ---------------------------------------
+ net/mac80211/wpa.c |   62 ++++++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 48 insertions(+), 61 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 599fa90..13a6697 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2368,47 +2368,6 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 	return RX_QUEUED;
  }
  
--unsigned long ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
-+u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
- {
- 	REG_CLR_BIT(ah, PLL3, PLL3_DO_MEAS_MASK);
- 	udelay(100);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 29a745c..6a028bd 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -932,7 +932,7 @@ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
- void ath9k_hw_reset_tsf(struct ath_hw *ah);
- void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting);
- void ath9k_hw_init_global_settings(struct ath_hw *ah);
--unsigned long ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
-+u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
- void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fa80e13..475009b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -624,23 +624,37 @@ out:
- 	ath9k_ps_restore(sc);
+-static void ieee80211_rx_michael_mic_report(struct ieee80211_hdr *hdr,
+-					    struct ieee80211_rx_data *rx)
+-{
+-	int keyidx;
+-	unsigned int hdrlen;
+-
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-	if (rx->skb->len >= hdrlen + 4)
+-		keyidx = rx->skb->data[hdrlen + 3] >> 6;
+-	else
+-		keyidx = -1;
+-
+-	if (!rx->sta) {
+-		/*
+-		 * Some hardware seem to generate incorrect Michael MIC
+-		 * reports; ignore them to avoid triggering countermeasures.
+-		 */
+-		return;
+-	}
+-
+-	if (!ieee80211_has_protected(hdr->frame_control))
+-		return;
+-
+-	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && keyidx) {
+-		/*
+-		 * APs with pairwise keys should never receive Michael MIC
+-		 * errors for non-zero keyidx because these are reserved for
+-		 * group keys and only the AP is sending real multicast
+-		 * frames in the BSS.
+-		 */
+-		return;
+-	}
+-
+-	if (!ieee80211_is_data(hdr->frame_control) &&
+-	    !ieee80211_is_auth(hdr->frame_control))
+-		return;
+-
+-	mac80211_ev_michael_mic_failure(rx->sdata, keyidx, hdr, NULL,
+-					GFP_ATOMIC);
+-}
+-
+ /* TODO: use IEEE80211_RX_FRAGMENTED */
+ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 					struct ieee80211_rate *rate)
+@@ -2752,12 +2711,6 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+ 	if (!prepares)
+ 		return false;
+ 
+-	if (status->flag & RX_FLAG_MMIC_ERROR) {
+-		if (status->rx_flags & IEEE80211_RX_RA_MATCH)
+-			ieee80211_rx_michael_mic_report(hdr, rx);
+-		return false;
+-	}
+-
+ 	if (!consume) {
+ 		skb = skb_copy(skb, GFP_ATOMIC);
+ 		if (!skb) {
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index f1765de..9dc3b5f 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -87,42 +87,76 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 
+-	/* No way to verify the MIC if the hardware stripped it */
+-	if (status->flag & RX_FLAG_MMIC_STRIPPED)
++	/*
++	 * it makes no sense to check for MIC errors on anything other
++	 * than data frames.
++	 */
++	if (!ieee80211_is_data_present(hdr->frame_control))
++		return RX_CONTINUE;
++
++	/*
++	 * No way to verify the MIC if the hardware stripped it or
++	 * the IV with the key index. In this case we have solely rely
++	 * on the driver to set RX_FLAG_MMIC_ERROR in the event of a
++	 * MIC failure report.
++	 */
++	if (status->flag & (RX_FLAG_MMIC_STRIPPED | RX_FLAG_IV_STRIPPED)) {
++		if (status->flag & RX_FLAG_MMIC_ERROR)
++			goto mic_fail;
++
++		if (!(status->flag & RX_FLAG_IV_STRIPPED))
++			goto update_iv;
++
+ 		return RX_CONTINUE;
++	}
+ 
++	/*
++	 * Some hardware seems to generate Michael MIC failure reports; even
++	 * though, the frame was not encrypted with TKIP and therefore has no
++	 * MIC. Ignore the flag them to avoid triggering countermeasures.
++	 */
+ 	if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_TKIP ||
+-	    !ieee80211_has_protected(hdr->frame_control) ||
+-	    !ieee80211_is_data_present(hdr->frame_control))
++	    !(status->flag & RX_FLAG_DECRYPTED))
+ 		return RX_CONTINUE;
+ 
++	if (rx->sdata->vif.type == NL80211_IFTYPE_AP && rx->key->conf.keyidx) {
++		/*
++		 * APs with pairwise keys should never receive Michael MIC
++		 * errors for non-zero keyidx because these are reserved for
++		 * group keys and only the AP is sending real multicast
++		 * frames in the BSS. (
++		 */
++		return RX_DROP_UNUSABLE;
++	}
++
++	if (status->flag & RX_FLAG_MMIC_ERROR)
++		goto mic_fail;
++
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len < hdrlen + MICHAEL_MIC_LEN)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	data = skb->data + hdrlen;
+ 	data_len = skb->len - hdrlen - MICHAEL_MIC_LEN;
+-
+ 	key = &rx->key->conf.key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY];
+ 	michael_mic(key, hdr, data, data_len, mic);
+-	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0) {
+-		if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+-			return RX_DROP_UNUSABLE;
+-
+-		mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
+-						(void *) skb->data, NULL,
+-						GFP_ATOMIC);
+-		return RX_DROP_UNUSABLE;
+-	}
++	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0)
++		goto mic_fail;
+ 
+ 	/* remove Michael MIC from payload */
+ 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
+ 
++update_iv:
+ 	/* update IV in key information to be able to detect replays */
+ 	rx->key->u.tkip.rx[rx->queue].iv32 = rx->tkip_iv32;
+ 	rx->key->u.tkip.rx[rx->queue].iv16 = rx->tkip_iv16;
+ 
+ 	return RX_CONTINUE;
++
++mic_fail:
++	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
++					(void *) skb->data, NULL, GFP_ATOMIC);
++	return RX_DROP_UNUSABLE;
  }
  
-+static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
-+{
-+	static int count;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	if (pll_sqsum >= 0x40000) {
-+		count++;
-+		if (count == 3) {
-+			/* Rx is hung for more than 500ms. Reset it */
-+			ath_dbg(common, ATH_DBG_RESET,
-+				"Possible RX hang, resetting");
-+			ath_reset(sc, true);
-+			count = 0;
-+		}
-+	} else
-+		count = 0;
-+}
-+
- void ath_hw_pll_work(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc,
- 					    hw_pll_work.work);
--	static int count;
-+	u32 pll_sqsum;
  
- 	if (AR_SREV_9485(sc->sc_ah)) {
--		if (ar9003_get_pll_sqsum_dvc(sc->sc_ah) >= 0x40000) {
--			count++;
- 
--			if (count == 3) {
--				/* Rx is hung for more than 500ms. Reset it */
--				ath_reset(sc, true);
--				count = 0;
--			}
--		} else
--			count = 0;
-+		ath9k_ps_wakeup(sc);
-+		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
-+		ath9k_ps_restore(sc);
-+
-+		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
- 
- 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
- 	}
 -- 
-1.7.0.4
+1.7.4.4
 
