@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:40751 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427Ab1EPUEz convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56429 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752122Ab1EAIDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 16:04:55 -0400
+	Sun, 1 May 2011 04:03:01 -0400
+Received: by wwa36 with SMTP id 36so5458184wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 May 2011 01:03:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTin_stn+7Ja3hbuaOgtrEVJEoT9Lhw@mail.gmail.com>
-References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
-	<BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
-	<BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com>
-	<BANLkTi=xJbL-26Hzg0Pp5zKPUi35bV6VmA@mail.gmail.com>
-	<BANLkTin_stn+7Ja3hbuaOgtrEVJEoT9Lhw@mail.gmail.com>
-Date: Mon, 16 May 2011 23:04:54 +0300
-Message-ID: <BANLkTimvCVcQX-7teQgG7EQV9eeLgG3JnQ@mail.gmail.com> (sfid-20110516_220504_598521_9CE58F7D)
-Subject: Re: several packets in a single buffer in Rx
-From: Tomas Winkler <tomasw@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <BANLkTikqoWm0gk4Bo1Wr7JP3c=x4YLxB2A@mail.gmail.com>
+References: <BANLkTikqoWm0gk4Bo1Wr7JP3c=x4YLxB2A@mail.gmail.com>
+Date: Sun, 1 May 2011 01:02:59 -0700
+Message-ID: <BANLkTimhHJYNdP98w4xkB9=K6ShCVC2+rw@mail.gmail.com> (sfid-20110501_100307_527139_BE274AE9)
+Subject: Re: (no subject)
+From: Dan Carpenter <error27@gmail.com>
+To: Naveen Singh <nsingh@atheros.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
-> 2011/5/16 Michał Mirosław <mirqus@gmail.com>:
->> W dniu 16 maja 2011 14:59 użytkownik Emmanuel Grumbach
->> <egrumbach@gmail.com> napisał:
->>> 2011/5/16 Michał Mirosław <mirqus@gmail.com>:
->>>> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
->>>>> I would like to be able to deliver the same page several times to the
->>>>> stack without having the stack consume it before the last time I
->>>>> deliver it.
->>>>> Of course I would like to avoid cloning it.
->>>>
->>>> Just do get_page() on the page having another packet in it before
->>>> passing skb up.
->>>>
->>>
->>> I can see the path:
->>> __kfree_skb -> skb_release_all -> skb_release_data -> put_page
->>> put_page will free the page iff the _count variable reaches 0. Of course,
->>> _count is incremented by get_page.
->>>
->>> I will give it try.
->>>
->>> I understand that this will work regardless the order given to
->>> alloc_pages right ?
+On 5/1/11, Dan Carpenter <error27@gmail.com> wrote:
+> On 4/30/11, Naveen Singh <sningh@atheros.com> wrote:
+>> --- a/drivers/staging/ath6kl/os/linux/cfg80211.c
+>> +++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+>> @@ -1455,6 +1455,11 @@ ar6k_cfg80211_init(struct device *dev)
+>>      wdev->wiphy->cipher_suites = cipher_suites;
+>>      wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 >>
->> Yes. Remember that if you put a lot of packets in a big-order page
->> then the memory will be freed only after all packets are freed.
+>> +    /*Support the seprate keys for unicast and multicast packets
+>> +     *This flag is needed because because nl80211 checks for this
+>> +     *flag before calling cfg ops for setting the key.*/
+>> +    wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS;
+>> +
 >
-> Sure. Thanks for the help.
+> No subject.  Comment style wrong.  Please read CodingStyle and resend.
+>
 
-How it is ensured that skb manipulation won't corrupt another packet
-on the same page?
+Also your email address is wrong so my reply bounced.  (The 'n' and 's'
+were transposed).
 
-Thanks
-Tomas
+regards,
+dan carpenter
