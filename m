@@ -1,43 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52730 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755772Ab1EXPUc (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:35035 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755844Ab1EATCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 11:20:32 -0400
-Subject: Re: [PATCH] wireless: Default to 'n' for 2 new added devices in
- Kconfig.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tao Ma <tm@tao.ma>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1306249916-6638-1-git-send-email-tm@tao.ma> (sfid-20110524_171245_254728_54F9DE6B)
-References: <1306249916-6638-1-git-send-email-tm@tao.ma>
-	 (sfid-20110524_171245_254728_54F9DE6B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 May 2011 08:19:01 -0700
-Message-ID: <1306250341.3839.0.camel@jlt3.sipsolutions.net> (sfid-20110524_172049_440969_D826AA87)
-Mime-Version: 1.0
+	Sun, 1 May 2011 15:02:45 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id E287C5403F4
+	for <linux-wireless@vger.kernel.org>; Sun,  1 May 2011 15:08:06 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110501190244.6CE4140EBB@repository3.orbit-lab.org> (sfid-20110501_210248_953078_1048B2F5)
+Date: Sun,  1 May 2011 15:02:44 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-24 at 23:11 +0800, Tao Ma wrote:
 
->  config ATH9K_PCI
->  	bool "Atheros ath9k PCI/PCIe bus support"
-> +	default n
->  	depends on ATH9K && PCI
->  	default PCI
+compat-wireless code metrics
 
-should just remove the "default PCI" instead, "default n" is the default
-if no default is given.
-
->  config RT2800USB_RT53XX
->         bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
->         depends on EXPERIMENTAL
-> -       default y
-> +       default n
-
-ditto just remove "default y"
-
-johannes
-
+    846440 - Total upstream lines of code being pulled
+      2355 - backport code changes
+      2048 - backport code additions
+       307 - backport code deletions
+      8033 - backport from compat module
+     10388 - total backport code
+    1.2273 - % of code consists of backport work
