@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53426 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378Ab1EYTyK (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59822 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934Ab1EAOVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 15:54:10 -0400
-Received: by wwa36 with SMTP id 36so7001wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 12:54:09 -0700 (PDT)
-From: Stevie Trujillo <stevie.trujillo@gmail.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware limit?
-Date: Wed, 25 May 2011 21:54:06 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <201105251813.36804.stevie.trujillo@gmail.com> <1306352560.20732.0.camel@wwguy-ubuntu>
-In-Reply-To: <1306352560.20732.0.camel@wwguy-ubuntu>
+	Sun, 1 May 2011 10:21:04 -0400
+Received: by bwz15 with SMTP id 15so4063838bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 May 2011 07:21:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201105252154.06204.stevie.trujillo@gmail.com> (sfid-20110525_215414_559917_3FCD3009)
+In-Reply-To: <BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+Date: Sun, 1 May 2011 10:21:01 -0400
+Message-ID: <BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com> (sfid-20110501_162122_938707_E1C6C6ED)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Mark Davis <marked86@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Steven <srumney@sbcglobal.net>,
+	m.sujith@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 May 2011 21:42:40 wwguy wrote:
-> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
-> > Hello,
-> > 
-> > I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
-> > and I was wondering if the card could do more than that.
-> 
-> the card should not and will not do more than what required by
-> regulatory
+Hi Sujith and Mark,
 
-I'm allowed to do 20dBm here and was wondering if I could make the card do 
-that.
+Thanks for the responses!
 
-Thanks
-Stevie
+I can definitely help with any sort of debugging of new firmware for
+the device.  I thought it was UB94 based, but I guess not :)
+
+Any firmware changes you make, I will definitely test.  I did some
+digging around about the firmware, but it appears the firmware is
+closed-source.  So, I'm not sure I can help out with any of the actual
+coding/modifications to it.  You must be on the Atheros-in, whereas I
+am on the Atheros-out ;)
+
+Is there something I can get to you initially to be of some help?  Any
+usbmon output or some state from the device?
+
+- George
