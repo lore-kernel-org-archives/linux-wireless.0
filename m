@@ -1,66 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2371 "EHLO mms2.broadcom.com"
+Received: from mout0.freenet.de ([195.4.92.90]:53650 "EHLO mout0.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755111Ab1EXKBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 06:01:43 -0400
-Message-ID: <4DDB81FD.2020903@broadcom.com> (sfid-20110524_120200_395506_4F6063FD)
-Date: Tue, 24 May 2011 12:01:33 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752122Ab1EAHtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 May 2011 03:49:09 -0400
+Received: from [195.4.92.27] (helo=17.mx.freenet.de)
+	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
+	id 1QGROs-00022T-Js
+	for linux-wireless@vger.kernel.org; Sun, 01 May 2011 09:49:06 +0200
+Received: from p54a1868d.dip0.t-ipconnect.de ([84.161.134.141]:47679 helo=mail.maya.org)
+	by 17.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1QGROs-0001rM-8Y
+	for linux-wireless@vger.kernel.org; Sun, 01 May 2011 09:49:06 +0200
+Message-ID: <4DBD10E8.2010308@01019freenet.de> (sfid-20110501_094913_470316_70A9F071)
+Date: Sun, 01 May 2011 09:51:04 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
-cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Carpenter" <error27@gmail.com>
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8
- algorithm
-References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
- <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
- <4DD905CC.8040407@broadcom.com>
- <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
- <4DDB622B.1050005@broadcom.com>
- <20110524104404.336c765f@lxorguk.ukuu.org.uk>
-In-Reply-To: <20110524104404.336c765f@lxorguk.ukuu.org.uk>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: linux-wireless@vger.kernel.org
+CC: users@rt2x00.serialmonkey.com
+Subject: compat_wireless rt2x00 broken with 2.6.34.9: Invalid module format
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/24/2011 11:44 AM, Alan Cox wrote:
-> On Tue, 24 May 2011 09:45:47 +0200
-> "Arend van Spriel"<arend@broadcom.com>  wrote:
->
->> On 05/22/2011 04:19 PM, Alan Cox wrote:
->>> Is it just used for wireless in this form ?
->>>
->>> See the n_gsm and bluetooth code for what I think is the same crc
->>> algorithm but in reverse bit order .
->> Hi Alan,
->>
->> Look into the code in n_gsm and bluetooth code. The algorithm is the
->> same, but except for the bit order it also is using a different
->> polynomial. My current implementation has a fixed table. I could do the
->> table generation runtime with the polynomial and the bit order as
->> parameters. That would make it more general purpose.
-> Probably not worth it - its so tiny a piece of code anyway (<  500 bytes
-> or so) that it's going to be bigger not smaller if you do that !
+Hello,
 
-Hi Alan,
+the drivers rt2x00 can be compiled under linux 2.6.34.9 (OpenSuSE
+kernel-desktop-2.6.34.9-4.1.x86_64) only with these warnings:
 
-Not sure whether you mean the source code or the object code. I build 
-kernel with debug symbols so the sizes are bit higher.
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/wireless/core.o
+/raid/home/andreas/compat-wireless-2011-04-29/net/wireless/core.c:7:1:
+warning: "pr_fmt" redefined
+In file included from /usr/src/linux-2.6.34.9-4/include/linux/skbuff.h:17,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/if_ether.h:124,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/netdevice.h:29,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.29.h:5,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.h:24,
+                 from <command-line>:0:
+/usr/src/linux-2.6.34.9-4/include/linux/kernel.h:387:1: warning: this is
+the location of the previous definition
+/raid/home/andreas/compat-wireless-2011-04-29/net/wireless/core.c:7:1:
+warning: "pr_fmt" redefined
+In file included from /usr/src/linux-2.6.34.9-4/include/linux/skbuff.h:17,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/if_ether.h:124,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/netdevice.h:29,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.29.h:5,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.h:24,
+                 from <command-line>:0:
+/usr/src/linux-2.6.34.9-4/include/linux/kernel.h:387:1: warning: this is
+the location of the previous definition
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/wireless/sysfs.o
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/mac80211/work.o
+  CC [M]
+/raid/home/andreas/compat-wireless-2011-04-29/net/wireless/radiotap.o
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/mac80211/iface.o
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/wireless/util.o
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/mac80211/rate.o
+  CC [M]  /raid/home/andreas/compat-wireless-2011-04-29/net/wireless/reg.o
+  CC [M]
+/raid/home/andreas/compat-wireless-2011-04-29/net/mac80211/michael.o
+/raid/home/andreas/compat-wireless-2011-04-29/net/wireless/reg.c:36:1:
+warning: "pr_fmt" redefined
+In file included from /usr/src/linux-2.6.34.9-4/include/linux/skbuff.h:17,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/if_ether.h:124,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/netdevice.h:29,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.29.h:5,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.h:24,
+                 from <command-line>:0:
+/usr/src/linux-2.6.34.9-4/include/linux/kernel.h:387:1: warning: this is
+the location of the previous definition
+/raid/home/andreas/compat-wireless-2011-04-29/net/wireless/reg.c:36:1:
+warning: "pr_fmt" redefined
+In file included from /usr/src/linux-2.6.34.9-4/include/linux/skbuff.h:17,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/if_ether.h:124,
+                 from
+/usr/src/linux-2.6.34.9-4/include/linux/netdevice.h:29,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.29.h:5,
+                 from
+/raid/home/andreas/compat-wireless-2011-04-29/include/linux/compat-2.6.h:24,
+                 from <command-line>:0:
+/usr/src/linux-2.6.34.9-4/include/linux/kernel.h:387:1: warning: this is
+the location of the previous definition
 
-fixed table:        -rw-r--r-- 1 arend arend 1859 2011-05-24 11:53 crc8.o
-custom table:    -rw-r--r-- 1 arend arend 2215 2011-05-24 11:58 crc8.o
 
-The size increase is not that big.
+Afterwards, the modules can't be loaded at all:
 
-Gr. AvS
+modprobe rt2800pci
+WARNING: Error inserting rfkill
+(/lib/modules/2.6.34.9-4-desktop/kernel/net/rfkill/rfkill.ko): Invalid
+module format
+WARNING: Error inserting cfg80211
+(/lib/modules/2.6.34.9-4-desktop/updates/net/wireless/cfg80211.ko):
+Invalid module format
+WARNING: Error inserting mac80211
+(/lib/modules/2.6.34.9-4-desktop/updates/net/mac80211/mac80211.ko):
+Invalid module format
+WARNING: Error inserting rt2x00lib
+(/lib/modules/2.6.34.9-4-desktop/updates/drivers/net/wireless/rt2x00/rt2x00lib.ko):
+Invalid module format
+WARNING: Error inserting rt2x00pci
+(/lib/modules/2.6.34.9-4-desktop/updates/drivers/net/wireless/rt2x00/rt2x00pci.ko):
+Invalid module format
+WARNING: Error inserting crc_ccitt
+(/lib/modules/2.6.34.9-4-desktop/kernel/lib/crc-ccitt.ko): Invalid
+module format
+WARNING: Error inserting rt2800lib
+(/lib/modules/2.6.34.9-4-desktop/updates/drivers/net/wireless/rt2x00/rt2800lib.ko):
+Invalid module format
+FATAL: Error inserting rt2800pci
+(/lib/modules/2.6.34.9-4-desktop/updates/drivers/net/wireless/rt2x00/rt2800pci.ko):
+Invalid module format
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+I tested version compat-wireless-2011-04-22 and compat-wireless-2011-04-30.
 
 
+compat-wireless-2.6.39-rc1-3 modules can be loaded fine!
+
+
+Regards,
+Andreas
