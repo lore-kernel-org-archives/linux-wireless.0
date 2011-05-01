@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nexicom.net ([216.168.96.13]:34080 "EHLO smtp.nexicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751902Ab1EFFgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 01:36:02 -0400
-Received: from mail.lockie.ca (dyn-dsl-mb-66-79-239-161.nexicom.net [66.79.239.161])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p465Qq6r015772
-	for <linux-wireless@vger.kernel.org>; Fri, 6 May 2011 01:26:55 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id F29961E015F
-	for <linux-wireless@vger.kernel.org>; Fri,  6 May 2011 01:26:51 -0400 (EDT)
-Message-ID: <4DC386BB.4010106@lockie.ca> (sfid-20110506_073608_690055_DB9CAF18)
-Date: Fri, 06 May 2011 01:27:23 -0400
-From: James <bjlockie@lockie.ca>
+Received: from mail.tdb.com ([216.99.214.4]:35030 "HELO mail.tdb.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755475Ab1EATqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 May 2011 15:46:09 -0400
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: kernel panic on MIPS + ath5k + Wistron CM9 radio
+From: Russell Senior <seniorr@aracnet.com>
+Date: Sun, 01 May 2011 12:39:16 -0700
+Message-ID: <861v0igqhn.fsf@coulee.tdb.com> (sfid-20110501_214613_950427_D5B467EF)
 MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: scan not working or limited
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-I get the errors:
-ath: Failed to stop TX DMA in 100 msec after killing last frame
-ath: Failed to stop TX DMA!
-on all the kernels that my scans don't work right.
+Recently trying to abandon madwifi for good on some embedded devices
+with OpenWrt, encountered kernel panics.  Same radio on an x86
+platform (Soekris net4826), no kernel panic.  Different atheros radio,
+no kernel panic.  Tried two different MIPS boards (Netgear WGT634U and
+Ubiquiti RouterStation), both panic'd.
 
-I did:
-$ git clone
-git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
-$ cd linux-2.6.37.y
-$ git bisect start
-$ git bisect good v2.6.36
-$ git bisect bad v2.6.37.6
-It said 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+Netgear WGT634U:  http://pastebin.ca/2051127
+Ubiquiti RouterStation: http://pastebin.ca/2052610
 
-I typed that number. :-(
-How do I make git print it again?
-How do I find the details of that commit?
-How do I reverse what that commit did?
+Both cases were firmwares built from r26771 of OpenWrt, and both seem
+to have panic'd from hostapd.  While researching this, I encountered a
+similar report from last June:
 
+  http://www.mail-archive.com/openwrt-users@lists.openwrt.org/msg01001.html
+  http://www.spinics.net/lists/linux-wireless/msg52502.html
+
+Another person reported some issues with the CM9 earlier this year in
+client mode:
+
+  http://permalink.gmane.org/gmane.linux.drivers.ath5k.devel/4722
+
+I am happy to do some leg work on getting this fixed, if someone can
+provide some guidance.  Thanks!
+
+
+-- 
+Russell Senior         ``I have nine fingers; you have ten.''
+seniorr@aracnet.com
