@@ -1,55 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44979 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757823Ab1EZPVU convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47468 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287Ab1EBSay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 11:21:20 -0400
-Received: by bwz15 with SMTP id 15so516605bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 08:21:18 -0700 (PDT)
+	Mon, 2 May 2011 14:30:54 -0400
+Date: Mon, 2 May 2011 14:20:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2011-05-02
+Message-ID: <20110502182013.GA6768@tuxdriver.com> (sfid-20110502_203117_543897_6DB3DE53)
 MIME-Version: 1.0
-In-Reply-To: <1306421442.14995.325.camel@wwguy-huron>
-References: <20110526151422.GA2382@redhat.com> <1306421442.14995.325.camel@wwguy-huron>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Thu, 26 May 2011 08:20:58 -0700
-Message-ID: <BANLkTimoDkE0Cad4cYm2n2B83RxU3GC5zQ@mail.gmail.com> (sfid-20110526_172123_739735_AFA0A843)
-Subject: Re: [PATCH v2] iwlagn: use cts-to-self protection on 5000 adapters series
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 26, 2011 at 7:50 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Thu, 2011-05-26 at 08:14 -0700, Stanislaw Gruszka wrote:
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
->> index b12c72d..23fa93d 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
->> @@ -163,17 +163,9 @@ static void iwlagn_tx_cmd_protection(struct iwl_priv *priv,
->>                                    __le16 fc, __le32 *tx_flags)
->>  {
->>       if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS ||
->> -         info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
->> +         info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT ||
->> +         info->flags & IEEE80211_TX_CTL_AMPDU)
->>               *tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
->> -             return;
->> -     }
->> -
->> -     if (priv->cfg->ht_params &&
->> -         priv->cfg->ht_params->use_rts_for_aggregation &&
->> -         info->flags & IEEE80211_TX_CTL_AMPDU) {
->> -             *tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
->> -             return;
->> -     }
->>  }
+Dave,
 
-Shouldn't there be a new "use_cts_for_aggregation" flag and one that
-dominates (looks like use_rts in your setup), rather than this? I'm
-still a bit confused as to why CTS-to-self should help (as opposed to
-masking some other bug).
+Here are a few more intended for 2.6.39.  There is a one-liner for b43
+which adds a missing MODULE_FIRMWARE declaration (so maybe someone's
+initrd will get generated correctly), an iwlegacy fix from Wey-Yi that
+corrects an LED flashing change that people are complaining about,
+an iwl4965 WARNING fix from Stanislaw, and a matching pair of iwlagn
+and iwl4965 regression fixes also from Stanislaw that correct problems
+with using the wrong station ID for block ACK sessions.
 
-Dan
+Please let me know if there are problems!
+
+John
+
+P.S.  I know the LED flashing fix is questionable, but it is an
+annoyance and it should not effect any other hardware.
+
+---
+
+The following changes since commit 7cfd260910b881250cde76ba92ebe3cbf8493a8f:
+
+  ipv4: don't spam dmesg with "Using LC-trie" messages (2011-05-01 23:17:50 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+RafaÅ‚ MiÅ‚ecki (1):
+      b43: trivial: update module info about ucode16_mimo firmware
+
+Stanislaw Gruszka (3):
+      iwl4965: fix "TX Power requested while scanning"
+      iwlagn: fix "Received BA when not expected"
+      iwl4965: fix "Received BA when not expected"
+
+Wey-Yi Guy (1):
+      iwlegacy: led stay solid on when no traffic
+
+ drivers/net/wireless/b43/main.c              |    1 +
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c  |   18 ++++++++++++------
+ drivers/net/wireless/iwlegacy/iwl-led.c      |   20 +++++++++++++++++++-
+ drivers/net/wireless/iwlegacy/iwl4965-base.c |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   17 +++++++++++------
+ 5 files changed, 47 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 57eb5b6..7841b95 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -72,6 +72,7 @@ MODULE_FIRMWARE("b43/ucode11.fw");
+ MODULE_FIRMWARE("b43/ucode13.fw");
+ MODULE_FIRMWARE("b43/ucode14.fw");
+ MODULE_FIRMWARE("b43/ucode15.fw");
++MODULE_FIRMWARE("b43/ucode16_mimo.fw");
+ MODULE_FIRMWARE("b43/ucode5.fw");
+ MODULE_FIRMWARE("b43/ucode9.fw");
+ 
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index fbec88d..79ac081 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -316,12 +316,18 @@ int iwl4965_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+-	/* Find index into station table for destination station */
+-	sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+-			       hdr->addr1);
+-		goto drop_unlock;
++	/* For management frames use broadcast id to do not break aggregation */
++	if (!ieee80211_is_data(fc))
++		sta_id = ctx->bcast_sta_id;
++	else {
++		/* Find index into station table for destination station */
++		sta_id = iwl_legacy_sta_id_or_broadcast(priv, ctx, info->control.sta);
++
++		if (sta_id == IWL_INVALID_STATION) {
++			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
++				       hdr->addr1);
++			goto drop_unlock;
++		}
+ 	}
+ 
+ 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
+diff --git a/drivers/net/wireless/iwlegacy/iwl-led.c b/drivers/net/wireless/iwlegacy/iwl-led.c
+index 15eb8b7..bda0d61 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-led.c
++++ b/drivers/net/wireless/iwlegacy/iwl-led.c
+@@ -48,8 +48,21 @@ module_param(led_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(led_mode, "0=system default, "
+ 		"1=On(RF On)/Off(RF Off), 2=blinking");
+ 
++/* Throughput		OFF time(ms)	ON time (ms)
++ *	>300			25		25
++ *	>200 to 300		40		40
++ *	>100 to 200		55		55
++ *	>70 to 100		65		65
++ *	>50 to 70		75		75
++ *	>20 to 50		85		85
++ *	>10 to 20		95		95
++ *	>5 to 10		110		110
++ *	>1 to 5			130		130
++ *	>0 to 1			167		167
++ *	<=0					SOLID ON
++ */
+ static const struct ieee80211_tpt_blink iwl_blink[] = {
+-	{ .throughput = 0 * 1024 - 1, .blink_time = 334 },
++	{ .throughput = 0, .blink_time = 334 },
+ 	{ .throughput = 1 * 1024 - 1, .blink_time = 260 },
+ 	{ .throughput = 5 * 1024 - 1, .blink_time = 220 },
+ 	{ .throughput = 10 * 1024 - 1, .blink_time = 190 },
+@@ -101,6 +114,11 @@ static int iwl_legacy_led_cmd(struct iwl_priv *priv,
+ 	if (priv->blink_on == on && priv->blink_off == off)
+ 		return 0;
+ 
++	if (off == 0) {
++		/* led is SOLID_ON */
++		on = IWL_LED_SOLID;
++	}
++
+ 	IWL_DEBUG_LED(priv, "Led blink time compensation=%u\n",
+ 			priv->cfg->base_params->led_compensation);
+ 	led_cmd.on = iwl_legacy_blink_compensation(priv, on,
+diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+index d484c36..a62fe24 100644
+--- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
+@@ -2984,15 +2984,15 @@ static void iwl4965_bg_txpower_work(struct work_struct *work)
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv,
+ 			txpower_work);
+ 
++	mutex_lock(&priv->mutex);
++
+ 	/* If a scan happened to start before we got here
+ 	 * then just return; the statistics notification will
+ 	 * kick off another scheduled work to compensate for
+ 	 * any temperature delta we missed here. */
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
+ 	    test_bit(STATUS_SCANNING, &priv->status))
+-		return;
+-
+-	mutex_lock(&priv->mutex);
++		goto out;
+ 
+ 	/* Regardless of if we are associated, we must reconfigure the
+ 	 * TX power since frames can be sent on non-radar channels while
+@@ -3002,7 +3002,7 @@ static void iwl4965_bg_txpower_work(struct work_struct *work)
+ 	/* Update last_temperature to keep is_calib_needed from running
+ 	 * when it isn't needed... */
+ 	priv->last_temperature = priv->temperature;
+-
++out:
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 2dd7d54..0712b67 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -568,12 +568,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+-	/* Find index into station table for destination station */
+-	sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
+-	if (sta_id == IWL_INVALID_STATION) {
+-		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+-			       hdr->addr1);
+-		goto drop_unlock;
++	/* For management frames use broadcast id to do not break aggregation */
++	if (!ieee80211_is_data(fc))
++		sta_id = ctx->bcast_sta_id;
++	else {
++		/* Find index into station table for destination station */
++		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
++		if (sta_id == IWL_INVALID_STATION) {
++			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
++				       hdr->addr1);
++			goto drop_unlock;
++		}
+ 	}
+ 
+ 	IWL_DEBUG_TX(priv, "station Id %d\n", sta_id);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
