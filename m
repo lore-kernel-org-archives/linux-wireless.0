@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49960 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755384Ab1EGP2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 11:28:13 -0400
-Received: by eyx24 with SMTP id 24so1215677eyx.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 08:28:12 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:37960 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882Ab1EBEeY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 00:34:24 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 01 May 2011 21:33:56 -0700
+Date: Mon, 2 May 2011 10:04:16 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix rmmod hang of rt2800pci
-Date: Sat, 7 May 2011 17:27:46 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [PATCH] ath9k: Fix drain txq failure in flush
+Message-ID: <20110502043415.GA2855@vmraj-lnx.users.atheros.com> (sfid-20110502_063438_958236_17E2215A)
+References: <1303984917-12340-1-git-send-email-rmanoharan@atheros.com>
+ <20110429192751.GE25999@tuxdriver.com>
 MIME-Version: 1.0
-Message-Id: <201105071727.46998.IvDoorn@gmail.com> (sfid-20110507_172816_668841_4AB0BE75)
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110429192751.GE25999@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Sat, Apr 30, 2011 at 12:57:51AM +0530, John W. Linville wrote:
+> On Thu, Apr 28, 2011 at 03:31:57PM +0530, Rajkumar Manoharan wrote:
+> > While draining the txq in flush, the buffers can be
+> > added into the tx queue by tx_tasklet which leads to
+> > unneccesary chip reset.
+> > 
+> > This issue was originially found with AR9382 and
+> > running heavy uplink udp traffic with higher bandwidth
+> > and doing frequent bgscan.
+> > 
+> > Cc: stable@kernel.org
+> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> 
+> Should this be a fix for 2.6.39?
+>
+Yes. This patch is meant for 2.6.39 only.
 
-txstatus_timer should only be deleted for USB devices, as it is only
-initialized for USB devices.
-
-Reported-by: Andreas Hartmann <andihartmann@01019freenet.de>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 2eb5196..c018d67 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1159,9 +1159,9 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Stop all work.
- 	 */
--	del_timer_sync(&rt2x00dev->txstatus_timer);
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	if (rt2x00_is_usb(rt2x00dev)) {
-+		del_timer_sync(&rt2x00dev->txstatus_timer);
- 		cancel_work_sync(&rt2x00dev->rxdone_work);
- 		cancel_work_sync(&rt2x00dev->txdone_work);
- 	}
--- 
-1.7.2.3
-
+--
+Rajkumar
