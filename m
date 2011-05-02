@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from defaultvalue.org ([70.85.129.156]:36294 "EHLO defaultvalue.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab1EPFSn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 01:18:43 -0400
-From: Rob Browning <rlb@defaultvalue.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
-References: <87pqnl5i81.fsf@raven.defaultvalue.org>
-	<4DD074E3.3090502@lwfinger.net>
-	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
-	<4DD09C78.2010304@lwfinger.net>
-Date: Mon, 16 May 2011 00:18:41 -0500
-In-Reply-To: <4DD09C78.2010304@lwfinger.net> (Larry Finger's message of "Sun,
-	15 May 2011 22:39:36 -0500")
-Message-ID: <8762pbkytq.fsf@trouble.defaultvalue.org> (sfid-20110516_071847_128815_CDA90A27)
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42507 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528Ab1EBTYR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 15:24:17 -0400
+Received: by eyx24 with SMTP id 24so1848508eyx.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 12:24:16 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Yasushi SHOJI <yashi@atmark-techno.com>
+Subject: Re: [PATCH 04/23] rt2x00: Make rt2x00_queue_entry_for_each more flexible
+Date: Mon, 2 May 2011 21:24:09 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	helmut.schaa@googlemail.com, hanada@atmark-techno.com,
+	linux-wireless@vger.kernel.org
+References: <201104181526.01722.IvDoorn@gmail.com> <201104301601.15558.IvDoorn@gmail.com> <87d3k1rzuw.wl@dns1.atmark-techno.com>
+In-Reply-To: <87d3k1rzuw.wl@dns1.atmark-techno.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201105022124.10614.IvDoorn@gmail.com> (sfid-20110502_212421_015549_DD6C8BA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Hi,
+ 
+>  - CPU consumption was not an issue (sorry for wrong info. my bad)
+>  -- but network throughput performance is bad
+>  - USB controller on the CPU is not fast
+>  -- max throughput for USB memory read is about 50 Mbps on our test
+>  -- max client mode transfer rate is about 20 Mbps (at best)
 
-> You could patch either the linux-2.6 kernel (2.6.39-rc7), the
-> wireless-testing git tree, or get the source from your distro. You
-> will have to build the entire kernel as I do not have the necessary
-> make files to build the driver as an out of kernel module.
+Ah ok, as CPU consumption is not the problem, then I better understand the problem.
+My previous patch missed one fix for a return value. Could you try this one.
 
-That patch didn't seem to have an effect -- the receive rate still
-settles at about 60Kb/s.
+> BTW, we are in the big holiday week[10] right now.  so please bear
+> with us. we might not reply promptly.
 
-I patched the Debian linux-2.6 source package and rebuilt the kernel.
-The Debian kernel appeared to already have the wifi.h diff.
+Not a problem. Have fun this week. :)
 
-Please let me know if I can help further.
+Thanks,
 
-Thanks
--- 
-Rob Browning
-rlb @defaultvalue.org and @debian.org
-GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
+Ivo
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index e027ebd..dc6b662 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -298,7 +298,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void* data)
+ 
+ 	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags) ||
+ 	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
+-		return true;
++		return false;
+ 
+ 	/*
+ 	 * USB devices cannot blindly pass the skb->len as the
+@@ -392,7 +392,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void* data)
+ 
+ 	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+ 	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
+-		return true;
++		return false;
+ 
+ 	rt2x00lib_dmastart(entry);
+ 
+@@ -447,7 +447,7 @@ static bool rt2x00usb_flush_entry(struct queue_entry *entry, void* data)
+ 	struct queue_entry_priv_usb_bcn *bcn_priv = entry->priv_data;
+ 
+ 	if (!test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+-		return true;
++		return false;
+ 
+ 	usb_kill_urb(entry_priv->urb);
+ 
