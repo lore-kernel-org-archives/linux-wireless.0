@@ -1,61 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:55003 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756048Ab1EKQYP (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:51914 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755062Ab1EBCYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:24:15 -0400
-Received: by wya21 with SMTP id 21so512787wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:24:14 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] wl12xx: add ps completion event
-Date: Wed, 11 May 2011 11:54:27 +0300
-Message-Id: <1305104068-32240-7-git-send-email-eliad@wizery.com> (sfid-20110511_182424_447616_B007E904)
-In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+	Sun, 1 May 2011 22:24:47 -0400
+Subject: Re: Frequent spurious tx_timeouts for libertas
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
+References: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 May 2011 03:24:42 +0100
+Message-ID: <1304303082.2833.159.camel@localhost> (sfid-20110502_042508_148851_AE1BB944)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signal when psm was entered successfully, if the completion
-variable is being set.
+On Sun, 2011-05-01 at 22:21 +0100, Daniel Drake wrote:
+[...]
+> Sometimes the TX queue is stopped and started from other places (e.g.
+> while scanning for networks, which NetworkManager triggers every
+> couple of minutes)
+> 
+> Thus the TX queue is stopped and started very often.
+> 
+> The libertas tx_timeout handler is being called quite a lot, and quite
+> soon after boot we get this in the kernel logs (the first time it
+> happens):
+> 
+> [   97.050101] ------------[ cut here ]------------
+> [   97.054866] WARNING: at net/sched/sch_generic.c:258 dev_watchdog+0x102/0x17c
+> [   97.062277] Hardware name: XO
+> [   97.065335] NETDEV WATCHDOG: eth0 (libertas_sdio): transmit queue 0 timed out
+> <snip large trace>
+> 
+> This message seems bogus - all the recent transmissions happened correctly.
+> 
+> What is this watchdog trying to detect exactly? Using what criteria?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/event.c  |    7 +++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 2 files changed, 8 insertions(+), 0 deletions(-)
+I'll repeat my answer from the last time this was asked on netdev:
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index ae69330..21e52ed 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -135,6 +135,13 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 
- 		/* enable beacon early termination */
- 		ret = wl1271_acx_bet_enable(wl, true);
-+		if (ret < 0)
-+			break;
-+
-+		if (wl->ps_compl) {
-+			complete(wl->ps_compl);
-+			wl->ps_compl = NULL;
-+		}
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index daf941d..cf08a9d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -512,6 +512,7 @@ struct wl1271 {
- 	unsigned int rx_filter;
- 
- 	struct completion *elp_compl;
-+	struct completion *ps_compl;
- 	struct delayed_work elp_work;
- 	struct delayed_work pspoll_work;
- 
+The watchdog fires when the software queue has been stopped *and* the
+link has been reported as up for over dev->watchdog_timeo ticks.
+
+The software queue should be stopped iff the hardware queue is full or
+nearly full.  If the software queue remains stopped and the link is
+still reported up, then one of these things is happening:
+
+1. The link went down but the driver didn't notice
+2. TX completions are not being indicated or handled correctly
+3. The hardware TX path has locked up
+4. The link is stalled by excessive pause frames or collisions
+5. Timeout is too low and/or low watermark is too high
+(there may be other explanations)
+
+I think the watchdog is primarily meant to deal with case 3, though all
+of cases 1-3 may be worked around by resetting the hardware.
+
+And now, for the specific case of libertas:
+
+It appears that libertas reports carrier off (link down) while scanning,
+so that should mean the watchdog does not fire.  However:
+
+1. The watchdog will only check the current link state, which might be
+up again when it runs.
+2. The watchdog assumes that TX queues only fill up in response to
+packets sent by the TX scheduler.
+
+[...]
+> Is libertas doing something wrong, or is this a bug/oddity in the network layer?
+
+Since the TX scheduler doesn't know about the extra packets you are
+injecting to do channel scanning, I think you need to call
+txq_trans_update() when you do that.  And I don't think it's a good idea
+to call netif_carrier_off() there at all.  If it has any effect at all
+(which I don't think it will, as channel scanning is being done under
+RTNL lock and link change notifications also require that lock) it will
+be to confuse userland.
+
+> Also, while looking at this code, I spotted a bug in dev_watchdog():
+> 				/*
+> 				 * old device drivers set dev->trans_start
+> 				 */
+> 				trans_start = txq->trans_start ? : dev->trans_start;
+> 
+> i.e. it is trying to figure out whether to read trans_start from txq
+> or dev. In both cases, trans_start is updated based on the value of
+> jiffies, which will occasionally be 0 (as it wraps around). Therefore
+> this line of code will occasionally make the wrong decision.
+
+No, I don't think so.
+
+If only dev->trans_start is being updated then the watchdog reads that.
+If both txq->trans_start and dev->trans_start are being updated then it
+doesn't matter much which the watchdog reads.
+If only txq->trans_start is being updated then dev->trans_start is
+always set to 0, so when txq->trans_start is 0 the watchdog still gets
+0.
+
+Ben.
+
 -- 
-1.7.0.4
+Ben Hutchings, Senior Software Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
