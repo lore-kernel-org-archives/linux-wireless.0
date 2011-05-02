@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from defaultvalue.org ([70.85.129.156]:45941 "EHLO defaultvalue.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753124Ab1EXGSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 02:18:49 -0400
-From: Rob Browning <rlb@defaultvalue.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:43042 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754122Ab1EBJvD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 05:51:03 -0400
+Received: by mail-ew0-f47.google.com with SMTP id 5so1672990ewy.6
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 02:51:01 -0700 (PDT)
+Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
-References: <87pqnl5i81.fsf@raven.defaultvalue.org>
-	<4DD074E3.3090502@lwfinger.net>
-	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
-	<4DD09C78.2010304@lwfinger.net>
-	<8762pbkytq.fsf@trouble.defaultvalue.org>
-	<4DD13EF0.2070803@lwfinger.net>
-	<87iptaj8nf.fsf@trouble.defaultvalue.org>
-	<87fwoehtd7.fsf@trouble.defaultvalue.org>
-	<4DD2A3A9.90003@lwfinger.net> <87pqnhj5e7.fsf@raven.defaultvalue.org>
-Date: Tue, 24 May 2011 01:18:34 -0500
-In-Reply-To: <87pqnhj5e7.fsf@raven.defaultvalue.org> (Rob Browning's message
-	of "Tue, 17 May 2011 18:04:16 -0500")
-Message-ID: <87r57otydh.fsf@raven.defaultvalue.org> (sfid-20110524_081852_350895_0D31B586)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com>
+References: <1303849311-8817-1-git-send-email-arik@wizery.com>
+	 <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com>
+	 <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 May 2011 12:50:55 +0300
+Message-ID: <1304329855.12586.234.camel@cumari> (sfid-20110502_115107_585989_1F7E51DA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John and Arik,
 
-I just tested Debian's 2.6.38-1 kernel, and it has the same problem,
-though I just noticed something potentially interesting.
+On Sat, 2011-04-30 at 00:09 +0300, Arik Nemtsov wrote:
+> Hey John,
+> 
+> Looking at the latest git, it seems you've picked up this patch
+> (commit 47684808fd89d6809c0886e06f8ac324252499d8).
+> This is unfortunate, since there's currently a FW bug that will cause
+> many disconnections in STA mode with this patch.
+> 
+> How would we go about reverting this?
 
-Right after booting the system, I started a wget which ran at a steady
-800+K/s.  Then I started an "lftp get -c" to grab a kernel image, and
-both connections settled at about 400K/s.
+I have reverted this patch in the wl12xx.git tree.  This required a bit
+of merging and we needed the revert in order to proceed with our tests.
 
-After a minute or so, I killed the ftp connection; from then on all
-transfers were limited to 60K/s.
+So, John, please don't revert this in your tree.  My revert will come in
+my next pull-request which will come in a couple of days, after our
+internal test round is done.
 
-Now that I think about it, that's consistent with what I've seen up to
-this point.
+Thanks!
 
-Hope this helps
 -- 
-Rob Browning
-rlb @defaultvalue.org and @debian.org
-GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
+Cheers,
+Luca.
+
