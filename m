@@ -1,118 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:49896 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932582Ab1EJOFy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 10:05:54 -0400
-Received: by ewy4 with SMTP id 4so1838560ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 07:05:53 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: move MAC PHY clock controling function
-Date: Tue, 10 May 2011 16:05:33 +0200
-Message-Id: <1305036333-11246-1-git-send-email-zajec5@gmail.com> (sfid-20110510_160603_579853_64B8BDA9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:42027 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752374Ab1EBUZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 16:25:06 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QGzg0-0008Dq-B3
+	for linux-wireless@vger.kernel.org; Mon, 02 May 2011 22:25:04 +0200
+Received: from 128.4.35.58 ([128.4.35.58])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 22:25:04 +0200
+Received: from jonghyun by 128.4.35.58 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 22:25:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Jonghyun Kim <jonghyun@udel.edu>
+Subject: Re: looking for more details on BCM4329, access to 802.11 header
+Date: Mon, 2 May 2011 20:17:42 +0000 (UTC)
+Message-ID: <loom.20110502T221352-549@post.gmane.org> (sfid-20110502_222510_207731_82F3F8DE)
+References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not N-PHY specific function, we partially duplicate code.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c  |   17 +++++++++++++----
- drivers/net/wireless/b43/main.h  |    1 +
- drivers/net/wireless/b43/phy_n.c |   13 +------------
- 3 files changed, 15 insertions(+), 16 deletions(-)
+I can answer the question about the per-packet RSSI.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index fd8bd98..53d109b 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2686,6 +2686,17 @@ out:
- 	dev->mac_suspended++;
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MacPhyClkSet */
-+void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on)
-+{
-+	u32 tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
-+	if (on)
-+		tmslow |= B43_TMSLOW_MACPHYCLKEN;
-+	else
-+		tmslow &= ~B43_TMSLOW_MACPHYCLKEN;
-+	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
-+}
-+
- static void b43_adjust_opmode(struct b43_wldev *dev)
- {
- 	struct b43_wl *wl = dev->wl;
-@@ -2842,7 +2853,7 @@ static int b43_chip_init(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	int err;
--	u32 value32, macctl;
-+	u32 macctl;
- 	u16 value16;
- 
- 	/* Initialize the MAC control */
-@@ -2920,9 +2931,7 @@ static int b43_chip_init(struct b43_wldev *dev)
- 	b43_write32(dev, B43_MMIO_DMA4_IRQ_MASK, 0x0000DC00);
- 	b43_write32(dev, B43_MMIO_DMA5_IRQ_MASK, 0x0000DC00);
- 
--	value32 = ssb_read32(dev->dev, SSB_TMSLOW);
--	value32 |= 0x00100000;
--	ssb_write32(dev->dev, SSB_TMSLOW, value32);
-+	b43_mac_phy_clock_set(dev, true);
- 
- 	b43_write16(dev, B43_MMIO_POWERUP_DELAY,
- 		    dev->dev->bus->chipco.fast_pwrup_delay);
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index 40db036..a0d327f 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -133,6 +133,7 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags);
- 
- void b43_mac_suspend(struct b43_wldev *dev);
- void b43_mac_enable(struct b43_wldev *dev);
-+void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on);
- 
- 
- struct b43_request_fw_context;
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 6755063..b075a3f 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3540,17 +3540,6 @@ static int b43_nphy_cal_rx_iq(struct b43_wldev *dev,
- 		return b43_nphy_rev2_cal_rx_iq(dev, target, type, debug);
- }
- 
--/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MacPhyClkSet */
--static void b43_nphy_mac_phy_clock_set(struct b43_wldev *dev, bool on)
--{
--	u32 tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
--	if (on)
--		tmslow |= B43_TMSLOW_MACPHYCLKEN;
--	else
--		tmslow &= ~B43_TMSLOW_MACPHYCLKEN;
--	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
--}
--
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RxCoreSetState */
- static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
- {
-@@ -3691,7 +3680,7 @@ int b43_phy_initn(struct b43_wldev *dev)
- 	b43_phy_write(dev, B43_NPHY_BBCFG, tmp & ~B43_NPHY_BBCFG_RSTCCA);
- 	b43_nphy_bmac_clock_fgc(dev, 0);
- 
--	b43_nphy_mac_phy_clock_set(dev, true);
-+	b43_mac_phy_clock_set(dev, true);
- 
- 	b43_nphy_pa_override(dev, false);
- 	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RX2TX);
--- 
-1.7.1
+Each frame consists of 
+ HW header, SW header, BDC header, MAC header, and MSDU,
+where HW is hareware and SW is software.
+
+BDC header includes rssi as a member.
+MAC header consists of DA, SA, and proto, 
+where DA is the destination address and SA is the source address.
+
+When proto is IP (0x0800) or ARP (0x0806), 
+rssi in BDC header is greater than zero.
+To obtain the correct value of rssi, 
+you must subtract 256 (=0x100) from it.
+For some other protocols, rssi in BDC header is zero,
+meaning we cannot get
+correct rssi for them.
+
+The following kernel messages are the examples that I produced.
+----------------
+<2>[  477.763885] Jong: rssi=-54, SSID=Sender
+<4>[  477.892425] Jong: HW  : 110 0 145 255
+<4>[  477.893188] Jong: SW  : seq=185 chan=2 0 doff=14 0 
+txmax=154 0 0 0 0
+<4>[  477.893615] Jong: BDC : fl=16 pri=0 fl=0 rssi=202 --> -54 dBm
+<4>[  477.894287] Jong: MAC : DA=ff ff ff ff ff ff 
+SA=00 1f c6 d6 3 19 proto=0800 (IP)
+<4>[  477.894744] Jong: MSDU: 45 0 0 4e 1d a5 0 0 80 11
+
+<4>[  477.895782] Jong: HW  : 78 0 177 255
+<4>[  477.896179] Jong: SW  : seq=186 chan=2 0 doff=14 0 
+txmax=154 0 0 0 0
+<4>[  477.896606] Jong: BDC : fl=16 pri=0 fl=0 rssi=202 --> -54 dBm
+<4>[  477.897277] Jong: MAC : DA=ff ff ff ff ff ff 
+SA=00 04 96 1d 80 a0 proto=0806 (ARP)
+<4>[  477.897705] Jong: MSDU: 0 1 8 0 6 4 0 1 0 4
+----------------
+
+The code to produce the above kernel messages is as follows.
+In dhdsdio_readframes() function,
+add
+        struct sk_buff *TmpPkt;
+        uchar *HW_header_p;
+and right before the comment
+	/* Fill in packet len and prio, deliver upward */
+add
+	TmpPkt = (struct sk_buff *)pkt;
+	HW_header_p = (uchar *)TmpPkt->data;	
+and right before the comment
+	/* Unlock during rx call */
+add
+
+{
+    uchar *A = HW_header_p;  
+    
+    printk("Jong: HW   : %d %d %d %d\n", A[0], A[1], A[2], A[3]);
+    printk("Jong: SW   : seq=%d chan=%d %d doff=%d %d 
+           txmax=%d %d %d %d %d\n", 
+A[4], A[5], A[6], A[7], A[8], A[9], A[10], A[11], A[12], A[13]);
+    printk("Jong: BDC  : fl=%d pri=%d fl=%d rssi=%d\n", 
+A[14], A[15], A[16], A[17]);
+    printk("Jong: MAC  : DA=%02x %02x %02x %02x %02x %02x 
+SA=%02x %02x %02x %02x %02x %02x proto=%02x%02x\n", 
+              A[18], A[19], A[20], A[21], A[22], A[23],
+              A[24], A[25], A[26], A[27], A[28], A[29],
+A[30], A[31]);
+printk("Jong: MSDU : %02x %02x %02x %02x %02x %02x %02x
+ %02x %02x %02x\n",
+A[32], A[33], A[34], A[35], A[36], A[37], A[38],
+A[39], A[40], A[41]);
+}
+
+
+
+I have been tried to modify driver codes to get a monitor mode.
+But it did not work since I guess that the firmware does not
+support it. What I tried is follows.
+
+In wl_iw_set_mode() function,
+I addded
+        int monitor = htod32(1);
+	error = dev_wlc_ioctl(dev, WLC_SET_MONITOR,
+         &monitor, sizeof(monitor));
+
+The result of error is -95 that means EOPNOTSUPP 
+(error operation not supported).
+
+I hope that the developers of the firmware for bcm4329
+release a new firmware providing monitor mode.
+
+
+
+
 
