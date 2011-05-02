@@ -1,148 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:54488 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755761Ab1EPOqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 10:46:44 -0400
-Subject: [PATCH v3 1/2] driver core: add device_add_noevent() and
-	device_uevent()
-To: netdev@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 16 May 2011 17:46:39 +0300
-Message-ID: <20110516144638.13838.28971.stgit@localhost6.localdomain6> (sfid-20110516_164717_164552_EB58F876)
-In-Reply-To: <20110516143913.13838.85357.stgit@localhost6.localdomain6>
-References: <20110516143913.13838.85357.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:42367 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755499Ab1EBV2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 17:28:07 -0400
+Subject: Re: [PATCH] libertas: remove tx_timeout handler
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org, bhutchings@solarflare.com
+Date: Mon, 02 May 2011 16:29:45 -0500
+In-Reply-To: <20110502203816.6AAAD9D401C@zog.reactivated.net>
+References: <20110502203816.6AAAD9D401C@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1304371787.2217.14.camel@dcbw.foobar.com> (sfid-20110502_232811_228097_DE15D9AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@atheros.com>
+On Mon, 2011-05-02 at 21:38 +0100, Daniel Drake wrote:
+> As described at http://marc.info/?l=linux-netdev&m=130428493104730&w=2
+> libertas frequently generates spurious tx timeouts, because the tx
+> queue is brought down for extended periods during scanning. The net
+> layer takes a look and incorrectly assumes the queue has been down for
+> several seconds, and generates a tx_timeout.
+> 
+> One way to fix this is to bump the trans_start counter while scanning
+> so that the network layer knows that the device is still alive, but
+> I think the tx_timeout handler is implemented wrongly here and not of
+> any real use, so I vote to remove it.
+> 
+> As explained at http://marc.info/?l=linux-wireless&m=130430311115755&w=2
+> the watchdog is primarily meant to deal with lockup on the hardware TX
+> path (detected by the tx queue being stopped for an extended period of
+> time), but this is unlikely to happen with libertas. In this case, the tx
+> queue is stopped only while waiting for lbs_thread to send the queued frame
+> to the driver, and lbs_thread wakes up the queue immediately after, even
+> if the frame could not be sent correctly.
+> 
+> So, the only hardware-related possibility that this catches is if
+> hw_host_to_card hangs - this is something I have never seen. And if it
+> were to happen, nothing done by lbs_tx_timeout would actually wake up
+> lbs_thread any quicker than otherwise.
+> 
+> Removing this oddly-behaving spuriously-firing tx_timeout handler should
+> fix an occasional kernel crash during resume
+> (http://dev.laptop.org/ticket/10748)
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-To make it possible to postpone uevent after the device is registered
-create the two new functions: device_add_noevent() and device_uevent().
-This is needed by register_netdevice() to fix a race where the netdevice
-is not ready until the initialisation has finished.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
----
- drivers/base/core.c    |   76 +++++++++++++++++++++++++++++++++++++-----------
- include/linux/device.h |    2 +
- 2 files changed, 61 insertions(+), 17 deletions(-)
+If we actually find a case where the timeout handler is useful, then we
+probably want to recode it to operate correctly on that case, yeah.
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 81b78ed..54208e0 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -872,22 +872,7 @@ int device_private_init(struct device *dev)
- 	return 0;
- }
- 
--/**
-- * device_add - add device to device hierarchy.
-- * @dev: device.
-- *
-- * This is part 2 of device_register(), though may be called
-- * separately _iff_ device_initialize() has been called separately.
-- *
-- * This adds @dev to the kobject hierarchy via kobject_add(), adds it
-- * to the global and sibling lists for the device, then
-- * adds it to the other relevant subsystems of the driver model.
-- *
-- * NOTE: _Never_ directly free @dev after calling this function, even
-- * if it returned an error! Always use put_device() to give up your
-- * reference instead.
-- */
--int device_add(struct device *dev)
-+static int __device_add(struct device *dev, bool event)
- {
- 	struct device *parent = NULL;
- 	struct class_interface *class_intf;
-@@ -974,7 +959,9 @@ int device_add(struct device *dev)
- 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
- 					     BUS_NOTIFY_ADD_DEVICE, dev);
- 
--	kobject_uevent(&dev->kobj, KOBJ_ADD);
-+	if (event)
-+		kobject_uevent(&dev->kobj, KOBJ_ADD);
-+
- 	bus_probe_device(dev);
- 	if (parent)
- 		klist_add_tail(&dev->p->knode_parent,
-@@ -1026,6 +1013,61 @@ name_error:
- }
- 
- /**
-+ * device_add - add device to device hierarchy.
-+ * @dev: device.
-+ *
-+ * This is part 2 of device_register(), though may be called
-+ * separately _iff_ device_initialize() has been called separately.
-+ *
-+ * This adds @dev to the kobject hierarchy via kobject_add(), adds it
-+ * to the global and sibling lists for the device, then
-+ * adds it to the other relevant subsystems of the driver model.
-+ *
-+ * NOTE: _Never_ directly free @dev after calling this function, even
-+ * if it returned an error! Always use put_device() to give up your
-+ * reference instead.
-+ */
-+int device_add(struct device *dev)
-+{
-+	return __device_add(dev, true);
-+}
-+
-+/**
-+ * device_add - add device to device hierarchy but omit uevent
-+ * @dev: device.
-+ *
-+ * This is part 2 of device_register(), though may be called
-+ * separately _iff_ device_initialize() has been called separately.
-+ *
-+ * This adds @dev to the kobject hierarchy via kobject_add(), adds it
-+ * to the global and sibling lists for the device, then
-+ * adds it to the other relevant subsystems of the driver model.
-+ *
-+ * This version differs from device_add() so that it does not emit uevent.
-+ * Instead call device_uevent() separately.
-+ *
-+ * NOTE: _Never_ directly free @dev after calling this function, even
-+ * if it returned an error! Always use put_device() to give up your
-+ * reference instead.
-+ */
-+int device_add_noevent(struct device *dev)
-+{
-+	return __device_add(dev, false);
-+}
-+
-+/**
-+ * device_uevent - emit uevent for device addition
-+ * @dev: device.
-+ *
-+ * This is part 2 of device_add_noevent(). It emits the signal which was
-+ * not sent when device_add_noevent() was called.
-+ */
-+void device_uevent(struct device *dev)
-+{
-+	kobject_uevent(&dev->kobj, KOBJ_ADD);
-+}
-+
-+/**
-  * device_register - register a device with the system.
-  * @dev: pointer to the device structure
-  *
-diff --git a/include/linux/device.h b/include/linux/device.h
-index ab8dfc0..408d4f0 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -546,6 +546,8 @@ extern int __must_check device_register(struct device *dev);
- extern void device_unregister(struct device *dev);
- extern void device_initialize(struct device *dev);
- extern int __must_check device_add(struct device *dev);
-+extern int __must_check device_add_noevent(struct device *dev);
-+extern void device_uevent(struct device *dev);
- extern void device_del(struct device *dev);
- extern int device_for_each_child(struct device *dev, void *data,
- 		     int (*fn)(struct device *dev, void *data));
+For reference, the only thing the old sd8385 and sd8686 Marvell vendor
+drivers do in the TX timeout handler is wake up the main thread,
+presumably to shoot the card in the head in case it really does hang.
+
+> ---
+>  drivers/net/wireless/libertas/main.c |   23 -----------------------
+>  1 files changed, 0 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index ca8149c..8e5e7af 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -147,28 +147,6 @@ static int lbs_eth_stop(struct net_device *dev)
+>  	return 0;
+>  }
+>  
+> -static void lbs_tx_timeout(struct net_device *dev)
+> -{
+> -	struct lbs_private *priv = dev->ml_priv;
+> -
+> -	lbs_deb_enter(LBS_DEB_TX);
+> -
+> -	lbs_pr_err("tx watch dog timeout\n");
+> -
+> -	dev->trans_start = jiffies; /* prevent tx timeout */
+> -
+> -	if (priv->currenttxskb)
+> -		lbs_send_tx_feedback(priv, 0);
+> -
+> -	/* XX: Shouldn't we also call into the hw-specific driver
+> -	   to kick it somehow? */
+> -	lbs_host_to_card_done(priv);
+> -
+> -	/* FIXME: reset the card */
+> -
+> -	lbs_deb_leave(LBS_DEB_TX);
+> -}
+> -
+>  void lbs_host_to_card_done(struct lbs_private *priv)
+>  {
+>  	unsigned long flags;
+> @@ -785,7 +763,6 @@ static const struct net_device_ops lbs_netdev_ops = {
+>  	.ndo_stop		= lbs_eth_stop,
+>  	.ndo_start_xmit		= lbs_hard_start_xmit,
+>  	.ndo_set_mac_address	= lbs_set_mac_address,
+> -	.ndo_tx_timeout 	= lbs_tx_timeout,
+>  	.ndo_set_multicast_list = lbs_set_multicast_list,
+>  	.ndo_change_mtu		= eth_change_mtu,
+>  	.ndo_validate_addr	= eth_validate_addr,
+
 
