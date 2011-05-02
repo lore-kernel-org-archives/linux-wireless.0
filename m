@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48314 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755849Ab1ERXYg convert rfc822-to-8bit (ORCPT
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:58980 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753164Ab1EBUil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 19:24:36 -0400
-Received: by iwn34 with SMTP id 34so1714226iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 16:24:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201105182025.05979.IvDoorn@gmail.com>
-References: <201105182025.05979.IvDoorn@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 19 May 2011 09:24:15 +1000
-Message-ID: <BANLkTim7MSG7NYJ8Kk7Nm=1V=bx=55z60Q@mail.gmail.com> (sfid-20110519_012439_609548_3911751F)
-Subject: Re: [PATCH 1/7] rt2x00: Enable PA_PE bits in TX_PIN_CFG according to
- active band.
-To: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 2 May 2011 16:38:41 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Cc: bhutchings@solarflare.com
+Subject: [PATCH] libertas: remove tx_timeout handler
+Message-Id: <20110502203816.6AAAD9D401C@zog.reactivated.net> (sfid-20110502_223844_333411_4080316C)
+Date: Mon,  2 May 2011 21:38:16 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gertjan, Ivo,
+As described at http://marc.info/?l=linux-netdev&m=130428493104730&w=2
+libertas frequently generates spurious tx timeouts, because the tx
+queue is brought down for extended periods during scanning. The net
+layer takes a look and incorrectly assumes the queue has been down for
+several seconds, and generates a tx_timeout.
 
-Minor nit
+One way to fix this is to bump the trans_start counter while scanning
+so that the network layer knows that the device is still alive, but
+I think the tx_timeout handler is implemented wrongly here and not of
+any real use, so I vote to remove it.
 
-On Thu, May 19, 2011 at 04:25, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 93fb674..1cad89e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1795,8 +1795,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->
->        /* Turn on unused PA or LNA when not using 1T or 1R */
->        if (rt2x00dev->default_ant.tx_chain_num == 2) {
-> -               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
-> -               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN, 1);
-> +               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
-> +                                  rf->channel > 14);
-> +               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
-> +                                  rf->channel <= 14);
+As explained at http://marc.info/?l=linux-wireless&m=130430311115755&w=2
+the watchdog is primarily meant to deal with lockup on the hardware TX
+path (detected by the tx queue being stopped for an extended period of
+time), but this is unlikely to happen with libertas. In this case, the tx
+queue is stopped only while waiting for lbs_thread to send the queued frame
+to the driver, and lbs_thread wakes up the queue immediately after, even
+if the frame could not be sent correctly.
 
-Aren't there better ways to determine the band from the channel?
+So, the only hardware-related possibility that this catches is if
+hw_host_to_card hangs - this is something I have never seen. And if it
+were to happen, nothing done by lbs_tx_timeout would actually wake up
+lbs_thread any quicker than otherwise.
 
-I recall that there were some patches floating around relating to
-supporting Japanese channels (802.11j ?) which (IIRC) use channel 14
-in both bands - I'm not sure if this is applicable here, but would it
-not be better to get the actual band from mac/cfg80211 and switch
-based on that instead of on the channel number?
+Removing this oddly-behaving spuriously-firing tx_timeout handler should
+fix an occasional kernel crash during resume
+(http://dev.laptop.org/ticket/10748)
 
-Thanks,
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/libertas/main.c |   23 -----------------------
+ 1 files changed, 0 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index ca8149c..8e5e7af 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -147,28 +147,6 @@ static int lbs_eth_stop(struct net_device *dev)
+ 	return 0;
+ }
+ 
+-static void lbs_tx_timeout(struct net_device *dev)
+-{
+-	struct lbs_private *priv = dev->ml_priv;
+-
+-	lbs_deb_enter(LBS_DEB_TX);
+-
+-	lbs_pr_err("tx watch dog timeout\n");
+-
+-	dev->trans_start = jiffies; /* prevent tx timeout */
+-
+-	if (priv->currenttxskb)
+-		lbs_send_tx_feedback(priv, 0);
+-
+-	/* XX: Shouldn't we also call into the hw-specific driver
+-	   to kick it somehow? */
+-	lbs_host_to_card_done(priv);
+-
+-	/* FIXME: reset the card */
+-
+-	lbs_deb_leave(LBS_DEB_TX);
+-}
+-
+ void lbs_host_to_card_done(struct lbs_private *priv)
+ {
+ 	unsigned long flags;
+@@ -785,7 +763,6 @@ static const struct net_device_ops lbs_netdev_ops = {
+ 	.ndo_stop		= lbs_eth_stop,
+ 	.ndo_start_xmit		= lbs_hard_start_xmit,
+ 	.ndo_set_mac_address	= lbs_set_mac_address,
+-	.ndo_tx_timeout 	= lbs_tx_timeout,
+ 	.ndo_set_multicast_list = lbs_set_multicast_list,
+ 	.ndo_change_mtu		= eth_change_mtu,
+ 	.ndo_validate_addr	= eth_validate_addr,
 -- 
-Julian Calaby
+1.7.4.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
