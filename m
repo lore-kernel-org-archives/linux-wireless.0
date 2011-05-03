@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:65455 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932730Ab1EXWw0 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60537 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264Ab1ECVJk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 18:52:26 -0400
-Date: 24 May 2011 18:52:24 -0400
-Message-ID: <20110524225224.32163.qmail@science.horizon.com> (sfid-20110525_005243_847188_B1CEB153)
-From: "George Spelvin" <linux@horizon.com>
-To: akpm@linux-foundation.org, arend@broadcom.com
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8 algorithm
-Cc: error27@gmail.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux@horizon.com,
-	linville@tuxdriver.com
-In-Reply-To: <1306268601-10729-1-git-send-email-arend@broadcom.com>
+	Tue, 3 May 2011 17:09:40 -0400
+MIME-Version: 1.0
+In-Reply-To: <4DC06BF3.6070208@lwfinger.net>
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
+ <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
+ <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 3 May 2011 23:09:19 +0200
+Message-ID: <BANLkTim89BHU-0P6TkepLgDBPNfEhiaB-w@mail.gmail.com> (sfid-20110503_231030_628062_C7482B17)
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Walter Goldens <goldenstranger@yahoo.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> V3:
-> - added function crc8_create().
-> - crc8_create() takes polynomial and bit direction as parameters.
+2011/5/3 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/03/2011 03:38 PM, Gábor Stefanik wrote:
+>>
+>> 2011/5/3 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>
+>>> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
+>>>>
+>>>> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
+>>>>  wrote:
+>>>>>
+>>>>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
+>>>>>>
+>>>>>>> This set of patches introduces a driver for the RTL8192SE PCI
+>>>>>>> devices.
+>>>>>>
+>>>>>> Any estimates on the *SU driver? :)
+>>>>>
+>>>>> Now that rtl8192se is submitted, I will start work on the driver for
+>>>>> the
+>>>>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
+>>>>> priority
+>>>>> because r8712u from staging handles those devices. It is not based on
+>>>>> mac80211, but it works.
+>>>>
+>>>> Again, may I remind you that the preferred behavior in the Linux world
+>>>> is release-early, release-often? :-)
+>>>
+>>> That I know, but "code first" still applies. If the comparison between
+>>> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties,
+>>> roughly
+>>> half of this driver will be shared. In addition, we do have all the USB
+>>> plumbing in place, but we are still talking about a few thousand lines of
+>>> code. At last contact, Realtek has no interest in this project, thus I
+>>> will
+>>> be on my own.
+>>>
+>>> Larry
+>>
+>> I do not mean immediately submitting everything for inclusion -
+>> however, a publicly accessible Git tree would be nice. A non-rtlwifi,
+>> badly coded but functional and GPL-compatible driver is still better
+>> than having to use ndiswrapper/load a binary blob.
+>
+> We are in better shape than having to use ndiswrapper or any non-GPL code.
+> The r8712u driver in staging is for the RTL8192SU, and it works perfectly
+> well.
 
-May I suggest that crc8_create is A Stupid Idea.  Since the bit order
-(and polynomial) will always be compile-time constants, just let the
-call sites call crc8_create_[lm]sb_first() directly.
+What about RTL8192DE?
 
-That way there's no need for the enum, and specifying something
-other than lsb_first and msb_first is a compile-time error rather than
-a run-time one.
-
-It might be nice to add some const declarations, and use size_t
-for the buffer length:
-u8 crc8(u8 const *table, u8 const *pdata, size_t nbytes, u8 crc)
-or
-u8 crc8(u8 const table[256], u8 const *pdata, size_t nbytes, u8 crc)
+> It just doesn't use mac80211, which is why it needs to be replaced.
+>
+> Larry
+>
 
 
-Style points you might consider, but I do not consider essential:
 
-Personally, when a function parameter is a pointer to
-a fixed-size array, I prefer to declare it as
-	void crc8_create_lsb_first(u8 table[256], u8 poly)
-for better documentation, but that's your choice.
-
-The CRC8_GOOD_VALUE could be explained if you like.  "If a CRC is inverted
-before transmission, the CRC computed over the while (message+crc)
-is _table[x], when x is the bit pattern of the modification (almost
-always 0xff)."
-
-Thanks!
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
