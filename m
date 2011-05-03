@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:48273 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752565Ab1EQHNM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 03:13:12 -0400
-Received: by mail-px0-f173.google.com with SMTP id 16so161947pxi.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 00:13:12 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1711 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752279Ab1ECJgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 46/61] staging: brcm80211: move aiutils source files to
+ brcmsmac folder
+Date: Tue, 3 May 2011 11:35:46 +0200
+Message-ID: <1304415361-7813-47-git-send-email-arend@broadcom.com> (sfid-20110503_113649_525769_2C561C0F)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19922.8109.329667.441117@gargle.gargle.HOWL> (sfid-20110517_091315_881477_45560B22)
-Date: Tue, 17 May 2011 12:41:41 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 3/8] ath9k_htc: Recalculate the BSSID mask on interface
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
- removal
+The aiutils functions are only used by the brcmsmac driver so it has
+been moved to the driver specific folder.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    2 +-
+ .../staging/brcm80211/{util => brcmsmac}/aiutils.c |    0
+ .../brcm80211/{include => brcmsmac}/aiutils.h      |    0
+ 3 files changed, 1 insertions(+), 1 deletions(-)
+ rename drivers/staging/brcm80211/{util => brcmsmac}/aiutils.c (100%)
+ rename drivers/staging/brcm80211/{include => brcmsmac}/aiutils.h (100%)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index b1b8613..8a82e82 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1164,6 +1164,8 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_htc_set_opmode(priv);
- 
-+	ath9k_htc_set_bssid_mask(priv, vif);
-+
- 	/*
- 	 * Stop ANI only if there are no associated station interfaces.
- 	 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
+index 3d9e04b..8dc234d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/Makefile
++++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+@@ -41,12 +41,12 @@ BRCMSMAC_OFILES := \
+ 	wlc_pmu.o \
+ 	wlc_rate.o \
+ 	wlc_stf.o \
++	aiutils.o \
+ 	phy/wlc_phy_cmn.o \
+ 	phy/wlc_phy_lcn.o \
+ 	phy/wlc_phy_n.o \
+ 	phy/wlc_phytbl_lcn.o \
+ 	phy/wlc_phytbl_n.o \
+-	../util/aiutils.o \
+ 	../util/bcmutils.o \
+ 	../util/bcmwifi.o \
+ 	../util/bcmotp.o \
+diff --git a/drivers/staging/brcm80211/util/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+similarity index 100%
+rename from drivers/staging/brcm80211/util/aiutils.c
+rename to drivers/staging/brcm80211/brcmsmac/aiutils.c
+diff --git a/drivers/staging/brcm80211/include/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/aiutils.h
+rename to drivers/staging/brcm80211/brcmsmac/aiutils.h
 -- 
-1.7.5.1
+1.7.4.1
+
 
