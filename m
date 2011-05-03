@@ -1,43 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56549 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754727Ab1EDRbC (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49940 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab1ECG46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 13:31:02 -0400
-Date: Wed, 4 May 2011 13:27:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k regression associating with APs in 2.6.38
-Message-ID: <20110504172716.GC18541@tuxdriver.com> (sfid-20110504_193133_904515_A6728318)
-References: <20110504153819.GA4551@thinkpad-t410>
+	Tue, 3 May 2011 02:56:58 -0400
+Received: by pzk9 with SMTP id 9so3371703pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 23:56:57 -0700 (PDT)
+Message-ID: <4DBFA735.6050901@gmail.com> (sfid-20110503_085706_028808_FB7241E6)
+Date: Tue, 03 May 2011 16:56:53 +1000
+From: Peizhao Hu <peizhao.research@gmail.com>
+Reply-To: peizhao.research@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110504153819.GA4551@thinkpad-t410>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Russell Senior <seniorr@aracnet.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] kernel panic on MIPS + ath5k + Wistron CM9 radio
+References: <861v0igqhn.fsf@coulee.tdb.com> <BANLkTi=mK9dh5AAQtqKVWvTjXfLS-y=7Ng@mail.gmail.com>
+In-Reply-To: <BANLkTi=mK9dh5AAQtqKVWvTjXfLS-y=7Ng@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 04, 2011 at 10:38:19AM -0500, Seth Forshee wrote:
-> I've been investigating some reports of a regression in associating with
-> APs with AR2413 in 2.6.38. Association repeatedly fails with some
-> "direct probe to x timed out" messages (see syslog excerpt below),
-> although it will generally associate eventually, after many tries.
-> 
-> Bisection identifies 8aec7af (ath5k: Support synth-only channel change
-> for AR2413/AR5413) as offending commit. Prior to this commit there are
-> no direct probe messages at all in the logs. I've also found that
-> forcing fast to false at the top of ath5k_hw_reset() fixes the issue.
-> I'm not sure what the connection is between this commit and the
-> timeouts. Any suggestions?
+Hi
 
-Have you tried reverting that commit on top of 2.6.38?  Can you
-recreate the issue with 2.6.39-rc6 (or later)?
+Would the issue I posted help to resolve this?
+http://www.mail-archive.com/openwrt-users@lists.openwrt.org/msg01001.html
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+regards;
+
+Peizhao
+
+
+On 03/05/11 16:18, Adrian Chadd wrote:
+> Well, I see the same on FreeBSD/MIPS whenever an Atheros device is
+> fondled incorrectly. Either because the chip isn't yet fully awake or
+> the register plainly doesn't exist.
+>
+> See if you can add some debugging in ath5k_hw_reset_tx_queue() to see
+> which register is being read/written before the PCI bus error occurs.
+>
+> I have that hardware (routerstation/rspro) and the CM-9 card but I
+> don't currently have any spare time to run it up and test, sorry.
+>
+>
+> Adrian
+>
+> On 2 May 2011 03:39, Russell Senior<seniorr@aracnet.com>  wrote:
+>> Recently trying to abandon madwifi for good on some embedded devices
+>> with OpenWrt, encountered kernel panics.  Same radio on an x86
+>> platform (Soekris net4826), no kernel panic.  Different atheros radio,
+>> no kernel panic.  Tried two different MIPS boards (Netgear WGT634U and
+>> Ubiquiti RouterStation), both panic'd.
+>>
+>> Netgear WGT634U:  http://pastebin.ca/2051127
+>> Ubiquiti RouterStation: http://pastebin.ca/2052610
+>>
+>> Both cases were firmwares built from r26771 of OpenWrt, and both seem
+>> to have panic'd from hostapd.  While researching this, I encountered a
+>> similar report from last June:
+>>
+>>   http://www.mail-archive.com/openwrt-users@lists.openwrt.org/msg01001.html
+>>   http://www.spinics.net/lists/linux-wireless/msg52502.html
+>>
+>> Another person reported some issues with the CM9 earlier this year in
+>> client mode:
+>>
+>>   http://permalink.gmane.org/gmane.linux.drivers.ath5k.devel/4722
+>>
+>> I am happy to do some leg work on getting this fixed, if someone can
+>> provide some guidance.  Thanks!
+>>
+>>
+>> --
+>> Russell Senior         ``I have nine fingers; you have ten.''
+>> seniorr@aracnet.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> _______________________________________________
+> ath5k-devel mailing list
+> ath5k-devel@lists.ath5k.org
+> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
