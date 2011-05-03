@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43430 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932614Ab1ETCos (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 22:44:48 -0400
-Date: Thu, 19 May 2011 22:37:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless-next-2.6 freezing for merge window --
- [sfr@canb.auug.org.au: linux-next: merge window reminder]
-Message-ID: <20110520023734.GA15919@tuxdriver.com> (sfid-20110520_044452_700796_0A57C08D)
-References: <20110519140421.GB2575@tuxdriver.com>
- <BANLkTi=Qve-02HPB_c6WZMaE1f0qWCBTwA@mail.gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1296 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751224Ab1ECNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 09:09:43 -0400
+Message-ID: <4DBFFE80.3030305@broadcom.com> (sfid-20110503_150946_590018_A303806C)
+Date: Tue, 3 May 2011 15:09:20 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <BANLkTi=Qve-02HPB_c6WZMaE1f0qWCBTwA@mail.gmail.com>
+To: "Greg KH" <gregkh@suse.de>
+cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
+References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
+ <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
+ <20110503121522.GB22674@suse.de> <4DBFF628.6040502@broadcom.com>
+ <20110503130049.GA29438@suse.de>
+In-Reply-To: <20110503130049.GA29438@suse.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 19, 2011 at 11:47:21PM +0200, Rafał Miłecki wrote:
-> 2011/5/19 John W. Linville <linville@tuxdriver.com>:
-> > Please take note -- I will not be merging any additional patches
-> > in wireless-next-2.6 until the end of the merge window.  In fact,
-> > I will probably be backing-out a few that are already there.
-> >
-> > Fixes are, of course, still welcome for wireless-2.6.
-> 
-> I've tried asking on IRC and finding answer on
-> http://wireless.kernel.org/en/developers/process but without a
-> success.
-> 
-> Can I expect recent/current patches to land in any tree before merge
-> window closes?
+On 05/03/2011 03:00 PM, Greg KH wrote:
+> On Tue, May 03, 2011 at 02:33:44PM +0200, Arend van Spriel wrote:
+>> On 05/03/2011 02:15 PM, Greg KH wrote:
+>>> On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
+>>>>   #if defined(CONFIG_PM_SLEEP)
+>>>>
+>>>> +extern volatile bool dhd_mmc_suspend;
+>>> This does not do what you think it does.
+>> Hi Greg,
+>>
+>> I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2]
+>> brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two
+>> patches I saw on the linuxdriver list are:
+> You rebased on a 1/2 patch in a series with an invalid 0/2 email?
+>
+> {sigh}
+Sorry.
+> I dropped that patch as the whole series needed to be resent, do you
+> want me to apply that one patch before yours?
+I can resend my series if that is more convenient for you.
 
-If they are not fixes and are not already in wireless-next-2.6 then
-probably not.
+Gr. AvS
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
