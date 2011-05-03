@@ -1,153 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932336Ab1ESP5z (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60921 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383Ab1ECLor convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 11:57:55 -0400
-Subject: Re: [PATCH v4] mac80211_hwsim driver support userspace frame tx/rx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Lopez <jlopex@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com, j@w1.fi,
-	javier@cozybit.com
-In-Reply-To: <1305149577-2636-1-git-send-email-jlopex@gmail.com> (sfid-20110511_233323_840596_E9B7F988)
-References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
-	 <1305149577-2636-1-git-send-email-jlopex@gmail.com>
-	 (sfid-20110511_233323_840596_E9B7F988)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 19 May 2011 09:00:28 -0700
-Message-ID: <1305820828.8237.10.camel@jlt3.sipsolutions.net> (sfid-20110519_175758_804771_C8869B65)
-Mime-Version: 1.0
+	Tue, 3 May 2011 07:44:47 -0400
+Received: by wwa36 with SMTP id 36so7330759wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 04:44:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
+References: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
+Date: Tue, 3 May 2011 17:14:46 +0530
+Message-ID: <BANLkTim3-ve4BD6wghA=F-asEqJmcDip6Q@mail.gmail.com> (sfid-20110503_134450_791068_EF66219F)
+Subject: Re: WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x52/0x150
+ [mac80211]()
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "rossi.f@inwind.it" <rossi.f@inwind.it>, yogeshp@marvell.com
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, May 3, 2011 at 4:57 PM, rossi.f@inwind.it <rossi.f@inwind.it> wrote:
+>>Da: yogeshp@marvell.com
+>>Data: 03/05/2011 12.51
+>>A: "rossi.f@inwind.it"<rossi.f@inwind.it>, "johannes@sipsolutions.net"
+> <johannes@sipsolutions.net>
+>>Cc: "linux-wireless@vger.kernel.org"<linux-wireless@vger.kernel.org>
+>>Ogg: RE: WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x52/0x150
+> [mac80211]()
+>>
+>>>I get the warning every few seconds.
+>>>
+>>>Fabio
+>>I failed to regenerate the issue on my setup. I am using WEP40 on
+>>Ath5k as station on 32 bit machine. I even tried disabling hw encryption.
+>>
+>>Some more details would be helpful.
+>>
+>>Thanks
+>>Yogesh
+>
+> I'm using WEP with 128bit key on a 64bit system using ath5k driver. The hw
+> encryption is configured with the default value. I don't have access right now
+> to the machine, I can provide more details tonight if needed. I can test
+> patches to diagnose the problem.
+>
+> Regards,
+> Fabio
 
-Sorry for the late reply, I was travelling and had so much other stuff
-to do as well. I like what you did with the pending, but have some
-further comments:
+this also hits ath9k i think.
+just running a traffic between WEP secured AP will reproduce this issue.
+saw in set_key call back in ath9k/ath5k
 
-> +	/* We get the flags for this transmission, wmediumd maybe
-> +	   changes its behaviour depending on the flags */
-> +	NLA_PUT_U32(skb, HWSIM_ATTR_FLAGS, info->flags);
+            key->hw_key_idx = ret;
+                        /* push IV and Michael MIC generation to stack */
+                        key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+                        if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+                                key->flags |= IEEE80211_KEY_FLAG_GENERATE_MM
 
-I'm not sure that we want to tie wmediumd to a precise version of
-mac80211? This would make the mac80211 internals ABI for wmediumd rather
-than API for the drivers, which I'd like to avoid. What flags does it
-actually need? I think you should translate those flags into hwsim
-netlink flags.
+so may will this help? I don't know whether its a correct and with a
+quick test the warning gets fixed.
 
-> +	/* We get the tx control (rate and retries) info*/
-> +	NLA_PUT(skb, HWSIM_ATTR_TX_INFO,
-> +		     sizeof(struct ieee80211_tx_rate)*IEEE80211_TX_MAX_RATES,
-> +		     info->control.rates);
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ca3c626..49444c8 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -102,7 +102,8 @@ static int ieee80211_key_enable_hw_accel(struct
+ieee80211_key *key)
+        if (!ret) {
+                key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
 
-The same applies here, Felix is indeed planning to change this. I know
-it's a lot of code and not very efficient, but I think you should wrap
-this stuff in a real netlink attribute so it has a chance of not
-breaking when mac80211 APIs change.
+-               if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++               if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)||
++                                       (key->conf.flags &
+IEEE80211_KEY_FLAG_GENERATE_IV)))
+                        key->local->crypto_tx_tailroom_needed_cnt--;
 
-> +	/* We create a cookie to identify this skb */
-> +	NLA_PUT_U32(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb);
+                return 0;
+@@ -161,7 +162,8 @@ static void ieee80211_key_disable_hw_accel(struct
+ieee80211_key *key)
 
-This needs to be a U64 so that 64-bit systems work.
+        key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
 
-> +static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-> +				    struct sk_buff *skb)
-> +{
-> +	if (atomic_read(&wmediumd_pid)) {
-
-This reminds me -- why is that thing atomic? It doesn't seem necessary
-since there will be locking (rtnl) on the callbacks setting it anyway?
-
-> @@ -571,6 +671,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
->  		txi->flags |= IEEE80211_TX_STAT_ACK;
->  	ieee80211_tx_status_irqsafe(hw, skb);
-> +
->  }
-
-spurious whitespace change
-
-> @@ -650,7 +751,6 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
->  
->  	mac80211_hwsim_monitor_rx(hw, skb);
->  	mac80211_hwsim_tx_frame(hw, skb);
-> -	dev_kfree_skb(skb);
->  }
-
-Where are frames freed in the no-wmediumd case?
- 
-> @@ -966,12 +1066,9 @@ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
->  
->  static void mac80211_hwsim_flush(struct ieee80211_hw *hw, bool drop)
->  {
-> -	/*
-> -	 * In this special case, there's nothing we need to
-> -	 * do because hwsim does transmission synchronously.
-> -	 * In the future, when it does transmissions via
-> -	 * userspace, we may need to do something.
-> -	 */
-> +	/* Let's purge the pending queue */
-> +	struct mac80211_hwsim_data *data = hw->priv;
-> +	skb_queue_purge(&data->pending);
->  }
-
-This doesn't seem right, but unless you do buffering in wmediumd you
-don't really have to worry much. I guess a real implementation would
-send a notification to wmediumd to flush and then wait for the queue to
-become empty (with some timeout I guess).
+-       if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++               if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)||
++                                       (key->conf.flags &
+IEEE80211_KEY_FLAG_GENERATE_IV)))
+                key->local->crypto_tx_tailroom_needed_cnt++;
+ }
 
 
-> +	if (!_found) {
-> +		printk(KERN_DEBUG "mac80211_hwsim: invalid radio ID\n");
-> +		return NULL;
-> +	}
 
-I think you're generally erring a bit on the side of too much debug
-printing, but since it's a debug driver I don't really care :)
-
-> +	return data;
-> +}
-> +
-> +static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
-> +					   struct genl_info *info)
-> +{
-> +
-> +	struct ieee80211_hdr *hdr;
-> +	struct mac80211_hwsim_data *data2;
-> +	struct ieee80211_tx_info *txi;
-> +	struct ieee80211_tx_rate *tx_attempts;
-> +	struct sk_buff __user *ret_skb;
-> +	struct sk_buff *skb = NULL, *tmp;
-> +
-> +	int i;
-> +	bool found = false;
-> +
-> +	struct mac_address *dst = (struct mac_address *)nla_data(
-> +				   info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-> +	int flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
-
-Maybe I'm missing it, but I don't see where you verified that the
-attributes actually exist? This might otherwise crash. Same for other
-attributes too.
-
-> +	ret_skb = (struct sk_buff __user *)
-> +		  (unsigned long) nla_get_u32(info->attrs[HWSIM_ATTR_COOKIE]);
-
-Like this one, also u64.
-
-> +	tx_attempts = (struct ieee80211_tx_rate *)nla_data(
-> +		       info->attrs[HWSIM_ATTR_TX_INFO]);
-
-Again, translation between structs and netlink would be good so we don't
-tie this to internal mac80211 APIs.
-
-> +	if (tx_attempts == NULL)
-> +		goto out;
-
-That can never happen ... either nla_data() already crashed because the
-attribute didn't exist, or tx_attempts is non-NULL. However, you need to
-check nla_len().
-
-johannes
-
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
