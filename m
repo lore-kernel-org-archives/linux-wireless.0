@@ -1,107 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45012 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757434Ab1EKRAy (ORCPT
+Received: from muse.oxfordinspire.co.uk ([93.93.128.48]:60046 "EHLO
+	muse.oxfordinspire.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752532Ab1ECNh0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 13:00:54 -0400
-Date: Wed, 11 May 2011 12:57:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/2] wireless: Make and use const struct ieee80211_channel
-Message-ID: <20110511165742.GE2490@tuxdriver.com> (sfid-20110511_190116_309298_6019640B)
-References: <cover.1304054543.git.joe@perches.com>
- <20110505184934.GB3005@tuxdriver.com>
- <1304634107.1788.171.camel@Joe-Laptop>
- <20110506131922.GA2252@tuxdriver.com>
- <1304698221.11874.6.camel@Joe-Laptop>
+	Tue, 3 May 2011 09:37:26 -0400
+Message-ID: <4DBFFE64.6000306@exotica.org.uk> (sfid-20110503_153744_642635_8F0F6A61)
+Date: Tue, 03 May 2011 14:08:52 +0100
+From: Jools Wills <buzz@exotica.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1304698221.11874.6.camel@Joe-Laptop>
+To: Walter Goldens <goldenstranger@yahoo.com>
+CC: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
+References: <484421.61252.qm@web161619.mail.bf1.yahoo.com>
+In-Reply-To: <484421.61252.qm@web161619.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 06, 2011 at 09:10:21AM -0700, Joe Perches wrote:
-> On Fri, 2011-05-06 at 09:19 -0400, John W. Linville wrote:
-> > On Thu, May 05, 2011 at 03:21:47PM -0700, Joe Perches wrote:
-> > > On Thu, 2011-05-05 at 14:49 -0400, John W. Linville wrote:
-> > > > These patches generated a lot of warnings in net/mac80211.  Did you
-> > > > actually build them?
-> > > Yes.
-> > > Did you apply patch 1/2 first?
-> > > It's a dependent patch.
-> > That's the one that cause most of the warnings...
-> 
-> Consider the 2 patches as a single patch.
-> Do you have new build warnings after applying both
-> patches 1 and 2?
+in case it is useful:
 
-Yes, of course.
+I am currently using the vendor driver on a device I have (O2 Joggler).
+The rt2800usb driver didn't work well and the staging rt2870sta driver
+didn't seem to work with wireless N and users reported to me that it
+drops the connection and is unreliable. The vendor driver does seem to
+work best.
 
-  CC [M]  net/mac80211/scan.o
-net/mac80211/scan.c: In function ‘ieee80211_scan_state_decision’:
-net/mac80211/scan.c:509:12: warning: assignment discards qualifiers from pointer target type
-net/mac80211/scan.c: In function ‘ieee80211_scan_state_set_channel’:
-net/mac80211/scan.c:610:7: warning: assignment discards qualifiers from pointer target type
-  CC [M]  net/mac80211/offchannel.o
-  CC [M]  net/mac80211/ht.o
-  CC [M]  net/mac80211/agg-tx.o
-  CC [M]  net/mac80211/agg-rx.o
-  CC [M]  net/mac80211/ibss.o
-net/mac80211/ibss.c: In function ‘ieee80211_sta_join_ibss’:
-net/mac80211/ibss.c:250:7: warning: passing argument 4 of ‘__ieee80211_sta_join_ibss’ discards qualifiers from pointer target type
-net/mac80211/ibss.c:64:13: note: expected ‘struct ieee80211_channel *’ but argument is of type ‘const struct ieee80211_channel *’
-net/mac80211/ibss.c: In function ‘ieee80211_ibss_join’:
-net/mac80211/ibss.c:918:24: warning: assignment discards qualifiers from pointer target type
-net/mac80211/ibss.c:923:30: warning: assignment discards qualifiers from pointer target type
-  CC [M]  net/mac80211/mlme.o
-net/mac80211/mlme.c: In function ‘ieee80211_mgd_auth’:
-net/mac80211/mlme.c:2350:11: warning: assignment discards qualifiers from pointer target type
-net/mac80211/mlme.c: In function ‘ieee80211_mgd_assoc’:
-net/mac80211/mlme.c:2500:11: warning: assignment discards qualifiers from pointer target type
-  CC [M]  net/mac80211/work.o
-  CC [M]  net/mac80211/iface.o
-  CC [M]  net/mac80211/rate.o
-  CC [M]  net/mac80211/tkip.o
-  CC [M]  net/mac80211/aes_ccm.o
-  CC [M]  net/mac80211/aes_cmac.o
-  CC [M]  net/mac80211/cfg.o
-net/mac80211/cfg.c:2083:2: warning: initialization from incompatible pointer type
-net/mac80211/cfg.c:2101:2: warning: initialization from incompatible pointer type
-net/mac80211/cfg.c:2103:2: warning: initialization from incompatible pointer type
-  CC [M]  net/mac80211/rx.o
+I made a debian package (using dkms) of the vendor driver on my joggler
+ppa. tested working wiht 2.6.37/2.6.38
 
-commit 07daa458f14226deff1e464f594a44111168e7ee
-Author: Joe Perches <joe@perches.com>
-Date:   Thu Apr 28 22:25:08 2011 -0700
+https://launchpad.net/~jools/+archive/joggler
 
-    wireless: Use const struct ieee80211_channel where possible
-    
-    Make some structure uses const.
-    
-    Signed-off-by: Joe Perches <joe@perches.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+note it doesn't automatically install the newer firmware so that will
+need to be done manually.
 
-commit 5c9adfae8855fc744f77b24df322060a7117c521
-Author: Joe Perches <joe@perches.com>
-Date:   Thu Apr 28 22:25:07 2011 -0700
+Best Regards
 
-    wireless: Make struct ieee80211_channel const where possible
-    
-    Useful for declarations of static const.
-    
-    Signed-off-by: Joe Perches <joe@perches.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-<commits were temporary, not applied now>
-
-I'm dropping these patches -- feel free to repost if/when the warnings
-disappear.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jools
