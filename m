@@ -1,105 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48525 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620Ab1EIIZo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34271 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213Ab1ECOAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 04:25:44 -0400
-Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <1304529896-20934-1-git-send-email-javier@cozybit.com> (sfid-20110504_192531_804820_3D752A00)
-References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
-	 <1304529896-20934-1-git-send-email-javier@cozybit.com>
-	 (sfid-20110504_192531_804820_3D752A00)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 10:25:38 +0200
-Message-ID: <1304929538.3475.11.camel@jlt3.sipsolutions.net> (sfid-20110509_102556_812636_EBE61C33)
-Mime-Version: 1.0
+	Tue, 3 May 2011 10:00:54 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1QHG9j-0003vJ-3v
+	for linux-wireless@vger.kernel.org; Tue, 03 May 2011 10:00:51 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p43Dl5HR003545
+	for <linux-wireless@vger.kernel.org>; Tue, 3 May 2011 09:47:05 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p43Dl4Ot003543
+	for linux-wireless@vger.kernel.org; Tue, 3 May 2011 09:47:04 -0400
+Date: Tue, 3 May 2011 09:30:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: [davem@davemloft.net: net-2.6 state...]
+Message-ID: <20110503133009.GA2467@tuxdriver.com> (sfid-20110503_160057_492572_4CAA65AF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-04 at 10:24 -0700, Javier Cardona wrote:
-> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
-> infrastructure BSS, or IBSS are differentiated by the Capability
-> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
-> subfields to 0 in transmitted Beacon or Probe Response management
-> frames.
+FYI...obviously, this affects wireless-2.6 as well...
 
-Sorry for the late reply, yeah, I think that looks good.
+----- Forwarded message from David Miller <davem@davemloft.net> -----
 
-johannes
-
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
->  include/linux/ieee80211.h |    5 +++++
->  net/wireless/scan.c       |   14 +++++++-------
->  2 files changed, 12 insertions(+), 7 deletions(-)
+> Date: Mon, 02 May 2011 15:20:44 -0700 (PDT)
+> From: David Miller <davem@davemloft.net>
+> To: netdev@vger.kernel.org
+> Subject: net-2.6 state...
+> X-Mailer: Mew version 6.3 on Emacs 23.1 / Mule 6.0 (HANACHIRUSATO)
 > 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index a26dcb8..b2eee58 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -1002,6 +1002,11 @@ struct ieee80211_ht_info {
->  
->  #define WLAN_CAPABILITY_ESS		(1<<0)
->  #define WLAN_CAPABILITY_IBSS		(1<<1)
-> +
-> +/* A mesh STA sets the ESS and IBSS capability bits to zero */
-> +#define WLAN_CAPABILITY_IS_MBSS(cap)	\
-> +	(!((cap) & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)))
-> +
->  #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
->  #define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
->  #define WLAN_CAPABILITY_PRIVACY		(1<<4)
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index fbf6f33..62e542a 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -210,7 +210,7 @@ static bool is_mesh(struct cfg80211_bss *a,
->  {
->  	const u8 *ie;
->  
-> -	if (!is_zero_ether_addr(a->bssid))
-> +	if (!WLAN_CAPABILITY_IS_MBSS(a->capability))
->  		return false;
->  
->  	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
-> @@ -248,11 +248,7 @@ static int cmp_bss(struct cfg80211_bss *a,
->  	if (a->channel != b->channel)
->  		return b->channel->center_freq - a->channel->center_freq;
->  
-> -	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
-> -	if (r)
-> -		return r;
-> -
-> -	if (is_zero_ether_addr(a->bssid)) {
-> +	if (WLAN_CAPABILITY_IS_MBSS(a->capability | b->capability)) {
->  		r = cmp_ies(WLAN_EID_MESH_ID,
->  			    a->information_elements,
->  			    a->len_information_elements,
-> @@ -267,6 +263,10 @@ static int cmp_bss(struct cfg80211_bss *a,
->  			       b->len_information_elements);
->  	}
->  
-> +	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
-> +	if (r)
-> +		return r;
-> +
->  	return cmp_ies(WLAN_EID_SSID,
->  		       a->information_elements,
->  		       a->len_information_elements,
-> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->  
->  	res->ts = jiffies;
->  
-> -	if (is_zero_ether_addr(res->pub.bssid)) {
-> +	if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
->  		/* must be mesh, verify */
->  		meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
->  					  res->pub.information_elements,
+> 
+> Right now I'm sorting through patchwork to make sure anything that
+> belongs in net-2.6, is there.
+> 
+> Then I'm going to push things out to Linus.
+> 
+> We will be in a more serious lock down mode after that.  So I really
+> only want to see obvious critical fixes going into net-2.6.  Even
+> comment typos will be put into net-next-2.6.
+> 
+> Please cooperate with this policy and everything will go smoothly.
+> 
+> There is nothing I like more than seeing people work on bug fixes at
+> this point in the -rc* series, so if you want to make me (as well as
+> the users reporting these things) really happy, fix some bugs. :-)
+> 
+> Thanks!
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
+----- End forwarded message -----
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
