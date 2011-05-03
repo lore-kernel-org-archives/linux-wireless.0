@@ -1,30 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38713 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756029Ab1EGUOx convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:60620 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669Ab1ECUjN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 16:14:53 -0400
+	Tue, 3 May 2011 16:39:13 -0400
 MIME-Version: 1.0
-In-Reply-To: <1304771519.2227.6.camel@x61.thuisdomein>
-References: <1304771519.2227.6.camel@x61.thuisdomein>
-Date: Sat, 7 May 2011 21:14:52 +0100
-Message-ID: <BANLkTinE4zDXE6VDS=yc1SmCCEbAn70Rcw@mail.gmail.com> (sfid-20110507_221520_272211_B7B6EEF1)
-Subject: Re: [PATCH] [RESEND] iwl4965: drop a lone pr_err()
-From: julie Sullivan <kernelmail.jms@gmail.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <4DC0669E.4040100@lwfinger.net>
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
+ <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 3 May 2011 22:38:52 +0200
+Message-ID: <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> (sfid-20110503_223929_353981_DC7F5C74)
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Walter Goldens <goldenstranger@yahoo.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> iwl4965_rate_control_register() prints a message at KERN_ERR level.
+2011/5/3 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
+>>
+>> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
+>>  wrote:
+>>>
+>>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
+>>>>
+>>>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
+>>>>
+>>>> Any estimates on the *SU driver? :)
+>>>
+>>> Now that rtl8192se is submitted, I will start work on the driver for the
+>>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
+>>> priority
+>>> because r8712u from staging handles those devices. It is not based on
+>>> mac80211, but it works.
+>>
+>> Again, may I remind you that the preferred behavior in the Linux world
+>> is release-early, release-often? :-)
+>
+> That I know, but "code first" still applies. If the comparison between
+> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties, roughly
+> half of this driver will be shared. In addition, we do have all the USB
+> plumbing in place, but we are still talking about a few thousand lines of
+> code. At last contact, Realtek has no interest in this project, thus I will
+> be on my own.
+>
+> Larry
 
-> -       pr_err("Registering 4965 rate control operations\n");
+I do not mean immediately submitting everything for inclusion -
+however, a publicly accessible Git tree would be nice. A non-rtlwifi,
+badly coded but functional and GPL-compatible driver is still better
+than having to use ndiswrapper/load a binary blob.
 
-Yes, I noticed this message on boot too and found it a tad confusing...
-('Rate control operations'?? 4,965 of them?)
-:-)  At least I know what it is now. Thanks, Paul.
-
-Julie
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
