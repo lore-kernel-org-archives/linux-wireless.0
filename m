@@ -1,42 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54593 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898Ab1EKVYB (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:53630 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579Ab1ECOth (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 17:24:01 -0400
-Received: by ewy4 with SMTP id 4so258482ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 14:23:59 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: pci: trivial: correct amount of maximum retries
-Date: Thu, 12 May 2011 00:01:47 +0200
-Message-Id: <1305151307-4100-1-git-send-email-zajec5@gmail.com> (sfid-20110511_232406_472028_0C78B3D3)
+	Tue, 3 May 2011 10:49:37 -0400
+Date: Tue, 03 May 2011 09:49:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Subject: [PATCH 12/12] rtlwifi: rtl8192se: Modify Kconfig and Makefile
+ routines for new driver
+Message-ID: <4dc01600.O4h1dvzo0KYqHbol%Larry.Finger@lwfinger.net> (sfid-20110503_164955_132263_2B697DC8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Modify rtlwifi routines for rtl8192se and set up Kconfig
+and Makefile for new driver.
+
+This patch also disables ASPM for the RTL8192SE to prevent some strange
+crashes on LF's system.
+
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/bcma/driver_pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index b98b835..e757e4e 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -81,7 +81,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u8 device, u8 address)
- 	pcicore_write32(pc, mdio_data, v);
- 	/* Wait for the device to complete the transaction */
- 	udelay(10);
--	for (i = 0; i < 200; i++) {
-+	for (i = 0; i < max_retries; i++) {
- 		v = pcicore_read32(pc, mdio_control);
- 		if (v & 0x100 /* Trans complete */) {
- 			udelay(10);
--- 
-1.7.3.4
-
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Kconfig
++++ wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+@@ -10,6 +10,17 @@ config RTL8192CE
+ 
+ 	If you choose to build it as a module, it will be called rtl8192ce
+ 
++config RTL8192SE
++	tristate "Realtek RTL8192SE/RTL8191SE PCIe Wireless Network Adapter"
++	depends on MAC80211 && EXPERIMENTAL
++	select FW_LOADER
++	select RTLWIFI
++	---help---
++	This is the driver for Realtek RTL8192SE/RTL8191SE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8192se
++
+ config RTL8192CU
+ 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
+ 	depends on MAC80211 && USB && EXPERIMENTAL
+@@ -24,10 +35,10 @@ config RTL8192CU
+ 
+ config RTLWIFI
+ 	tristate
+-	depends on RTL8192CE || RTL8192CU
++	depends on RTL8192CE || RTL8192CU || RTL8192SE
+ 	default m
+ 
+ config RTL8192C_COMMON
+ 	tristate
+-	depends on RTL8192CE || RTL8192CU
++	depends on RTL8192CE || RTL8192CU || RTL8192SE
+ 	default m
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Makefile
++++ wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+@@ -22,5 +22,6 @@ endif
+ obj-$(CONFIG_RTL8192C_COMMON)	+= rtl8192c/
+ obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
+ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
++obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/Makefile
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/Makefile
+@@ -0,0 +1,15 @@
++rtl8192se-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		phy.o		\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o
++
++obj-$(CONFIG_RTL8192SE) += rtl8192se.o
++
++ccflags-y += -D__CHECK_ENDIAN__
++
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -58,7 +58,7 @@ static void rtl92s_init_aspm_vars(struct
+ 	 * 4 - Always Enable ASPM without Clock Req.
+ 	 * set defult to RTL8192CE:3 RTL8192E:2
+ 	 * */
+-	rtlpci->const_pci_aspm = 2;
++	rtlpci->const_pci_aspm = 0; /* changed from 2 due to crashes */
+ 
+ 	/*Setting for PCI-E device */
+ 	rtlpci->const_devicepci_aspm_setting = 0x03;
