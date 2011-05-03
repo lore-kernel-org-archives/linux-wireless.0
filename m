@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45154 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970Ab1EOBXG convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:47536 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab1ECU6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 21:23:06 -0400
-Received: by bwz15 with SMTP id 15so2947641bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 18:23:04 -0700 (PDT)
+	Tue, 3 May 2011 16:58:09 -0400
+Message-ID: <4DC06BF3.6070208@lwfinger.net> (sfid-20110503_225831_030183_D70514C6)
+Date: Tue, 03 May 2011 15:56:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4DCE9DB8.7080404@lwfinger.net>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
-	<4DCB3DFF.1030809@lockie.ca>
-	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
-	<4DCE9DB8.7080404@lwfinger.net>
-Date: Sat, 14 May 2011 20:23:04 -0500
-Message-ID: <BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com> (sfid-20110515_032330_702710_1ED592B4)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-From: Flaminigo <sunnyiez@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Walter Goldens <goldenstranger@yahoo.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
+In-Reply-To: <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much. I've forwarded your mail to administrator. But he
-didn't reply me. I am still waiting. I will let you know asap when he
-replies me.
-Regards
-Sunny
-
-On Sat, May 14, 2011 at 10:20 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> On 05/12/2011 08:59 AM, Flaminigo wrote:
+On 05/03/2011 03:38 PM, Gábor Stefanik wrote:
+> 2011/5/3 Larry Finger<Larry.Finger@lwfinger.net>:
+>> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
+>>>
+>>> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
+>>>   wrote:
+>>>>
+>>>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
+>>>>>
+>>>>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
+>>>>>
+>>>>> Any estimates on the *SU driver? :)
+>>>>
+>>>> Now that rtl8192se is submitted, I will start work on the driver for the
+>>>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
+>>>> priority
+>>>> because r8712u from staging handles those devices. It is not based on
+>>>> mac80211, but it works.
+>>>
+>>> Again, may I remind you that the preferred behavior in the Linux world
+>>> is release-early, release-often? :-)
 >>
->> Thank you for the reply. I think N network in the university is OK.
->> Because,  old computer connected it without any problem. The windows
->> system can also connect it. From the output of wpa_supplicant, the
->> authentication part works well. I've tried to use the latest drive
->> from realtek. The firmware distribute is exactly the same as that in
->> Ubuntu 11.04. But this will make core dump.
+>> That I know, but "code first" still applies. If the comparison between
+>> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties, roughly
+>> half of this driver will be shared. In addition, we do have all the USB
+>> plumbing in place, but we are still talking about a few thousand lines of
+>> code. At last contact, Realtek has no interest in this project, thus I will
+>> be on my own.
+>>
+>> Larry
 >
-> There is a problem with driver rtl8192ce with 802.11n networks that use a 40
-> MHz bandwidth. As you never answered my questions, I don't know if that is
-> the problem that you are seeing. If you go to
-> http://bugzilla.kernel.org/show_bug.cgi?id=35082, there is a patch that may
-> fix your problem. At least it worked here.
->
-> Larry
->
->
+> I do not mean immediately submitting everything for inclusion -
+> however, a publicly accessible Git tree would be nice. A non-rtlwifi,
+> badly coded but functional and GPL-compatible driver is still better
+> than having to use ndiswrapper/load a binary blob.
+
+We are in better shape than having to use ndiswrapper or any non-GPL code. The 
+r8712u driver in staging is for the RTL8192SU, and it works perfectly well. It 
+just doesn't use mac80211, which is why it needs to be replaced.
+
+Larry
