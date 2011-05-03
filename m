@@ -1,173 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:39144 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab1EWBtx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:49:53 -0400
-Date: Sun, 22 May 2011 20:49:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <4dd9bd3e.wtj56KiDWIzs7RUR%Larry.Finger@lwfinger.net> (sfid-20110523_034956_900446_92C11E3F)
+Received: from mms3.broadcom.com ([216.31.210.19]:2177 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752042Ab1ECHBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 03:01:10 -0400
+From: sukeshs@broadcom.com
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
+Date: Tue, 3 May 2011 00:00:57 -0700
+Message-ID: <1304406057-8722-3-git-send-email-sukeshs@broadcom.com> (sfid-20110503_090114_954639_923669A6)
+In-Reply-To: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
+References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for rtlwifi:
+From: Sukesh Srikakula <sukeshs@xl-sj1-20.sj.broadcom.com>
 
-  CC [M]  drivers/net/wireless/rtlwifi/base.o
-drivers/net/wireless/rtlwifi/base.c: In function ‘rtl_tx_agg_stop’:
-drivers/net/wireless/rtlwifi/base.c:891:23: warning: variable ‘tid_data’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/base.c: In function ‘rtl_tx_agg_oper’:
-drivers/net/wireless/rtlwifi/base.c:921:23: warning: variable ‘tid_data’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/efuse.o
-drivers/net/wireless/rtlwifi/efuse.c: In function ‘efuse_pg_packet_write’:
-drivers/net/wireless/rtlwifi/efuse.c:928:24: warning: variable ‘dataempty’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/efuse.c: In function ‘efuse_get_current_size’:
-drivers/net/wireless/rtlwifi/efuse.c:1179:5: warning: variable ‘hoffset’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/ps.o
-drivers/net/wireless/rtlwifi/ps.c: In function ‘rtl_ps_set_rf_state’:
-drivers/net/wireless/rtlwifi/ps.c:85:19: warning: variable ‘rtstate’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/regd.o
-drivers/net/wireless/rtlwifi/regd.c: In function ‘_rtl_dump_channel_map’:
-drivers/net/wireless/rtlwifi/regd.c:310:28: warning: variable ‘ch’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/usb.o
-drivers/net/wireless/rtlwifi/usb.c: In function ‘_rtl_usb_transmit’:
-drivers/net/wireless/rtlwifi/usb.c:826:21: warning: variable ‘urb_list’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/usb.c:825:23: warning: variable ‘skb_list’ set but not used [-Wunused-but-set-variable]
+Currently, there are 2 callbacks registered with OS for getting notifications when system goes to suspend/resume.
+Racing between these 2 callbacks leads to failure in the suspend/resume path.
+With this fix, we avoid registering dhd callback for suspend/resume notification when cfg80211 is used. Relevant functionality in dhd suspend/resume callback function is moved to cfg80211 suspend/resume functions.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
+Signed-off-by: Sukesh Srikakula <sukeshs@xl-sj1-20.sj.broadcom.com>
 ---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    4 ----
+ drivers/staging/brcm80211/brcmfmac/dhd.h          |    3 +++
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |    6 ++++--
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |    8 ++++++++
+ 4 files changed, 15 insertions(+), 6 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
-@@ -888,7 +888,6 @@ int rtl_tx_agg_stop(struct ieee80211_hw
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 05f50d3..54ba30d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -30,10 +30,6 @@
+ #include <dngl_stats.h>
+ #include <dhd.h>
+ 
+-#if defined(CONFIG_PM_SLEEP)
+-#include <linux/suspend.h>
+-extern volatile bool dhd_mmc_suspend;
+-#endif
+ #include "bcmsdh_sdmmc.h"
+ 
+ extern int sdio_function_init(void);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 99c38dd..41c55a6 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -31,6 +31,7 @@
+ #include <linux/random.h>
+ #include <linux/spinlock.h>
+ #include <linux/ethtool.h>
++#include <linux/suspend.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+ /* The kernel threading is sdio-specific */
+@@ -123,6 +124,8 @@ typedef struct dhd_pub {
+ 
+ #if defined(CONFIG_PM_SLEEP)
+ 
++extern volatile bool dhd_mmc_suspend;
++
+ #define DHD_PM_RESUME_WAIT_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
+ #define _DHD_PM_RESUME_WAIT(a, b) do {\
+ 			int retry = 0; \
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index b34c4ea..37b2c0c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -2015,7 +2015,8 @@ dhd_pub_t *dhd_attach(struct dhd_bus *bus, uint bus_hdrlen)
+ 	g_bus = bus;
+ #endif
+ #if defined(CONFIG_PM_SLEEP)
+-	register_pm_notifier(&dhd_sleep_pm_notifier);
++	if (!IS_CFG80211_FAVORITE())
++		register_pm_notifier(&dhd_sleep_pm_notifier);
+ #endif	/* defined(CONFIG_PM_SLEEP) */
+ 	/* && defined(DHD_GPL) */
+ 	/* Init lock suspend to prevent kernel going to suspend */
+@@ -2325,7 +2326,8 @@ void dhd_detach(dhd_pub_t *dhdp)
+ 				wl_cfg80211_detach();
+ 
+ #if defined(CONFIG_PM_SLEEP)
+-			unregister_pm_notifier(&dhd_sleep_pm_notifier);
++			if (!IS_CFG80211_FAVORITE())
++				unregister_pm_notifier(&dhd_sleep_pm_notifier);
+ #endif	/* defined(CONFIG_PM_SLEEP) */
+ 			/* && defined(DHD_GPL) */
+ 			free_netdev(ifp->net);
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index c60fc7c..db77e60 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1971,6 +1971,10 @@ static s32 wl_cfg80211_resume(struct wiphy *wiphy)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	struct rtl_tid_data *tid_data;
- 	struct rtl_sta_info *sta_entry = NULL;
+ 	s32 err = 0;
  
- 	if (sta == NULL)
-@@ -906,7 +905,6 @@ int rtl_tx_agg_stop(struct ieee80211_hw
- 		return -EINVAL;
++#if defined(CONFIG_PM_SLEEP)
++	dhd_mmc_suspend = false;
++#endif /*  defined(CONFIG_PM_SLEEP) */
++
+ 	CHECK_SYS_UP();
+ 	wl_invoke_iscan(wiphy_to_wl(wiphy));
  
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
--	tid_data = &sta_entry->tids[tid];
- 	sta_entry->tids[tid].agg.agg_state = RTL_AGG_STOP;
+@@ -1996,6 +2000,10 @@ static s32 wl_cfg80211_suspend(struct wiphy *wiphy)
  
- 	ieee80211_stop_tx_ba_cb_irqsafe(mac->vif, sta->addr, tid);
-@@ -918,7 +916,6 @@ int rtl_tx_agg_oper(struct ieee80211_hw
- 		struct ieee80211_sta *sta, u16 tid)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_tid_data *tid_data;
- 	struct rtl_sta_info *sta_entry = NULL;
+ 	sdioh_sdio_set_host_pm_flags(MMC_PM_KEEP_POWER);
  
- 	if (sta == NULL)
-@@ -936,7 +933,6 @@ int rtl_tx_agg_oper(struct ieee80211_hw
- 		return -EINVAL;
- 
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
--	tid_data = &sta_entry->tids[tid];
- 	sta_entry->tids[tid].agg.agg_state = RTL_AGG_OPERATIONAL;
- 
- 	return 0;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/efuse.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
-@@ -925,7 +925,7 @@ static int efuse_pg_packet_write(struct
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct pgpkt_struct target_pkt;
- 	u8 write_state = PG_STATE_HEADER;
--	int continual = true, dataempty = true, result = true;
-+	int continual = true, result = true;
- 	u16 efuse_addr = 0;
- 	u8 efuse_data;
- 	u8 target_word_cnts = 0;
-@@ -953,7 +953,6 @@ static int efuse_pg_packet_write(struct
- 	       (EFUSE_MAX_SIZE - EFUSE_OOB_PROTECT_BYTES))) {
- 
- 		if (write_state == PG_STATE_HEADER) {
--			dataempty = true;
- 			badworden = 0x0F;
- 			RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,
- 				("efuse PG_STATE_HEADER\n"));
-@@ -1176,13 +1175,12 @@ static u16 efuse_get_current_size(struct
- {
- 	int continual = true;
- 	u16 efuse_addr = 0;
--	u8 hoffset, hworden;
-+	u8 hworden;
- 	u8 efuse_data, word_cnts;
- 
- 	while (continual && efuse_one_byte_read(hw, efuse_addr, &efuse_data)
- 	       && (efuse_addr < EFUSE_MAX_SIZE)) {
- 		if (efuse_data != 0xFF) {
--			hoffset = (efuse_data >> 4) & 0x0F;
- 			hworden = efuse_data & 0x0F;
- 			word_cnts = efuse_calculate_word_cnts(hworden);
- 			efuse_addr = efuse_addr + (word_cnts * 2) + 1;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/ps.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/ps.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/ps.c
-@@ -82,7 +82,6 @@ bool rtl_ps_set_rf_state(struct ieee8021
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	enum rf_pwrstate rtstate;
- 	bool actionallowed = false;
- 	u16 rfwait_cnt = 0;
- 	unsigned long flag;
-@@ -129,8 +128,6 @@ bool rtl_ps_set_rf_state(struct ieee8021
- 	}
- 
- no_protect:
--	rtstate = ppsc->rfpwr_state;
--
- 	switch (state_toset) {
- 	case ERFON:
- 		ppsc->rfoff_reason &= (~changesource);
-Index: wireless-testing/drivers/net/wireless/rtlwifi/regd.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/regd.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/regd.c
-@@ -303,22 +303,6 @@ static void _rtl_reg_apply_world_flags(s
- 	return;
++#if defined(CONFIG_PM_SLEEP)
++	dhd_mmc_suspend = true;
++#endif /*  defined(CONFIG_PM_SLEEP) */
++
+ 	return err;
  }
  
--static void _rtl_dump_channel_map(struct wiphy *wiphy)
--{
--	enum ieee80211_band band;
--	struct ieee80211_supported_band *sband;
--	struct ieee80211_channel *ch;
--	unsigned int i;
--
--	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
--		if (!wiphy->bands[band])
--			continue;
--		sband = wiphy->bands[band];
--		for (i = 0; i < sband->n_channels; i++)
--			ch = &sband->channels[i];
--	}
--}
--
- static int _rtl_reg_notifier_apply(struct wiphy *wiphy,
- 				   struct regulatory_request *request,
- 				   struct rtl_regulatory *reg)
-@@ -336,8 +320,6 @@ static int _rtl_reg_notifier_apply(struc
- 		break;
- 	}
- 
--	_rtl_dump_channel_map(wiphy);
--
- 	return 0;
- }
- 
+-- 
+1.7.3.2
+
 
