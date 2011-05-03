@@ -1,89 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3390 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/32] staging: brcm80211: got rid of #ifdef __mips__ by
- new dma_spin_for_len()
-Date: Fri, 13 May 2011 11:59:25 +0200
-Message-ID: <1305280792-9475-5-git-send-email-arend@broadcom.com> (sfid-20110513_120011_950058_6691F044)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:36771 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab1ECOs1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 10:48:27 -0400
+Date: Tue, 03 May 2011 09:48:25 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Subject: [PATCH 05/12] rtlwifi: rtl8192se: Merge led routines
+Message-ID: <4dc015b9.jr0NACuUzKzGcRr1%Larry.Finger@lwfinger.net> (sfid-20110503_165134_203981_CEEA0001)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-Code cleanup.
+Merge routines led.c and led.h for RTL8192SE.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/staging/brcm80211/brcmsmac/hnddma.c |   11 +----------
- drivers/staging/brcm80211/include/hnddma.h  |   19 +++++++++++++++++++
- 2 files changed, 20 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/hnddma.c b/drivers/staging/brcm80211/brcmsmac/hnddma.c
-index 33432e6..5f11147 100644
---- a/drivers/staging/brcm80211/brcmsmac/hnddma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/hnddma.c
-@@ -721,16 +721,7 @@ static void *_dma_rx(dma_info_t *di)
- 
- 	len = le16_to_cpu(*(u16 *) (head->data));
- 	DMA_TRACE(("%s: dma_rx len %d\n", di->name, len));
--
--#if defined(__mips__)
--#define OSL_UNCACHED(va)        ((void *)KSEG1ADDR((va)))
--	if (!len) {
--		while (!(len = *(u16 *) OSL_UNCACHED(head->data)))
--			udelay(1);
--
--		*(u16 *) (head->data) = cpu_to_le16((u16) len);
--	}
--#endif				/* defined(__mips__) */
-+	dma_spin_for_len(len, head);
- 
- 	/* set actual length */
- 	pkt_len = min((di->rxoffset + len), di->rxbufsize);
-diff --git a/drivers/staging/brcm80211/include/hnddma.h b/drivers/staging/brcm80211/include/hnddma.h
-index 5d079e7..fbbcb9b 100644
---- a/drivers/staging/brcm80211/include/hnddma.h
-+++ b/drivers/staging/brcm80211/include/hnddma.h
-@@ -204,4 +204,23 @@ extern const di_fcn_t dma64proc;
- extern uint dma_addrwidth(si_t *sih, void *dmaregs);
- void dma_walk_packets(struct hnddma_pub *dmah, void (*callback_fnc)
- 		      (void *pkt, void *arg_a), void *arg_a);
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/led.c
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/led.c
+@@ -0,0 +1,149 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
-+/*
-+ * DMA(Bug) on some chips seems to declare that the packet is ready, but the
-+ * packet length is not updated yet (by DMA) on the expected time.
-+ * Workaround is to hold processor till DMA updates the length, and stay off
-+ * the bus to allow DMA update the length in buffer
-+ */
-+static inline void dma_spin_for_len(uint len, struct sk_buff *head)
++#include "../wifi.h"
++#include "../pci.h"
++#include "reg.h"
++#include "led.h"
++
++static void _rtl92se_init_led(struct ieee80211_hw *hw,
++			      struct rtl_led *pled, enum rtl_led_pin ledpin)
 +{
-+#if defined(__mips__)
-+	if (!len) {
-+		while (!(len = *(u16 *) KSEG1ADDR(head->data)))
-+			udelay(1);
-+
-+		*(u16 *) (head->data) = cpu_to_le16((u16) len);
-+	}
-+#endif				/* defined(__mips__) */
++	pled->hw = hw;
++	pled->ledpin = ledpin;
++	pled->ledon = false;
 +}
 +
- #endif				/* _hnddma_h_ */
--- 
-1.7.4.1
-
-
++void rtl92se_init_sw_leds(struct ieee80211_hw *hw)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	_rtl92se_init_led(hw, &(pcipriv->ledctl.sw_led0), LED_PIN_LED0);
++	_rtl92se_init_led(hw, &(pcipriv->ledctl.sw_led1), LED_PIN_LED1);
++}
++
++void rtl92se_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	u8 ledcfg;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", LEDCFG, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, LEDCFG);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		rtl_write_byte(rtlpriv, LEDCFG, ledcfg & 0xf0);
++		break;
++	case LED_PIN_LED1:
++		rtl_write_byte(rtlpriv, LEDCFG, ledcfg & 0x0f);
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->ledon = true;
++}
++
++void rtl92se_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	u8 ledcfg;
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", LEDCFG, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, LEDCFG);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg &= 0xf0;
++		if (pcipriv->ledctl.led_opendrain == true)
++			rtl_write_byte(rtlpriv, LEDCFG, (ledcfg | BIT(1)));
++		else
++			rtl_write_byte(rtlpriv, LEDCFG, (ledcfg | BIT(3)));
++		break;
++	case LED_PIN_LED1:
++		ledcfg &= 0x0f;
++		rtl_write_byte(rtlpriv, LEDCFG, (ledcfg | BIT(3)));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->ledon = false;
++}
++
++static void _rtl92se_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_led *pLed0 = &(pcipriv->ledctl.sw_led0);
++	switch (ledaction) {
++	case LED_CTL_POWER_ON:
++	case LED_CTL_LINK:
++	case LED_CTL_NO_LINK:
++		rtl92se_sw_led_on(hw, pLed0);
++		break;
++	case LED_CTL_POWER_OFF:
++		rtl92se_sw_led_off(hw, pLed0);
++		break;
++	default:
++		break;
++	}
++}
++
++void rtl92se_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
++	    (ledaction == LED_CTL_TX ||
++	    ledaction == LED_CTL_RX ||
++	    ledaction == LED_CTL_SITE_SURVEY ||
++	    ledaction == LED_CTL_LINK ||
++	    ledaction == LED_CTL_NO_LINK ||
++	    ledaction == LED_CTL_START_TO_LINK ||
++	    ledaction == LED_CTL_POWER_ON)) {
++		return;
++	}
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, ("ledaction %d,\n",
++		 ledaction));
++
++	_rtl92se_sw_led_control(hw, ledaction);
++}
++
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/led.h
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/led.h
+@@ -0,0 +1,37 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++#ifndef __REALTEK_PCI92SE_LED_H__
++#define __REALTEK_PCI92SE_LED_H__
++
++void rtl92se_init_sw_leds(struct ieee80211_hw *hw);
++void rtl92se_sw_led_on(struct ieee80211_hw *hw,	struct rtl_led *pled);
++void rtl92se_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl92se_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
++
++#endif
