@@ -1,69 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30913 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2410 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758703Ab1EMO7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 10:59:40 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 07:59:11 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
-	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: [PATCH 2/9] ath9k_hw: enable Antenna diversity for AR9485
-Date: Fri, 13 May 2011 20:29:31 +0530
-Message-ID: <1305298771-3343-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_165943_405418_7D55CEB8)
+	id S1752128Ab1ECJgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 37/61] staging: brcm80211: separate hndpmu functionality
+ for brcmsmac driver
+Date: Tue, 3 May 2011 11:35:37 +0200
+Message-ID: <1304415361-7813-38-git-send-email-arend@broadcom.com> (sfid-20110503_113837_179500_084E39C9)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+The hndpmu source file has functions for brcmfmac and brcmsmac driver
+but it turns out that on function level there is no reuse so for
+the brcmsmac its set of functions now reside in wlc_pmu.c.
 
-read antenna diversity and combining information from the EEPROM.
-Enable antenna diversity/combining feature only when both LNA
-diversity and fast diversity are supported
-
-Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
-Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
-Tested-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    2 +-
+ drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c  |    2 +-
+ .../{util/hndpmu.c => brcmsmac/wlc_pmu.c}          |    2 +-
+ .../{include/hndpmu.h => brcmsmac/wlc_pmu.h}       |    0
+ drivers/staging/brcm80211/util/siutils.c           |    2 +-
+ 9 files changed, 8 insertions(+), 8 deletions(-)
+ rename drivers/staging/brcm80211/{util/hndpmu.c => brcmsmac/wlc_pmu.c} (99%)
+ rename drivers/staging/brcm80211/{include/hndpmu.h => brcmsmac/wlc_pmu.h} (100%)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 58f3d42..b75b5dc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2022,6 +2022,22 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
+diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
+index c4aafe5..65a1a25 100644
+--- a/drivers/staging/brcm80211/brcmsmac/Makefile
++++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+@@ -38,6 +38,7 @@ BRCMSMAC_OFILES := \
+ 	wlc_channel.o \
+ 	wlc_main.o \
+ 	wlc_phy_shim.o \
++	wlc_pmu.o \
+ 	wlc_rate.o \
+ 	wlc_stf.o \
+ 	phy/wlc_phy_cmn.o \
+@@ -52,7 +53,6 @@ BRCMSMAC_OFILES := \
+ 	../util/bcmotp.o \
+ 	../util/bcmsrom.o \
+ 	../util/hnddma.o \
+-	../util/hndpmu.o \
+ 	../util/nicpci.o \
+ 	../util/qmath.o \
+ 	../util/nvram/nvram_ro.o
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index 4e7a20a..d9f6254 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -22,7 +22,7 @@
+ #include <qmath.h>
+ #include <linux/pci.h>
+ #include <siutils.h>
+-#include <hndpmu.h>
++#include <wlc_pmu.h>
  
+ #include <bcmdevs.h>
+ #include <sbhnddma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
+index 34a7b4e..111b8e9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
+@@ -22,7 +22,7 @@
+ #include <linux/pci.h>
+ #include <siutils.h>
+ #include <sbchipc.h>
+-#include <hndpmu.h>
++#include <wlc_pmu.h>
  
-+	if (AR_SREV_9485(ah)) {
-+		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+		/*
-+		 * enable the diversity-combining algorithm only when
-+		 * both enable_lna_div and enable_fast_div are set
-+		 *		Table for Diversity
-+		 * ant_div_alt_lnaconf		bit 0-1
-+		 * ant_div_main_lnaconf		bit 2-3
-+		 * ant_div_alt_gaintb		bit 4
-+		 * ant_div_main_gaintb		bit 5
-+		 * enable_ant_div_lnadiv	bit 6
-+		 * enable_ant_fast_div		bit 7
-+		 */
-+		if ((ant_div_ctl1 >> 0x6) == 0x3)
-+			pCap->hw_caps |= ATH9K_HW_CAP_ANT_DIV_COMB;
-+	}
+ #include <bcmdevs.h>
+ #include <sbhnddma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index daeb363..e9867ea 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -35,9 +35,9 @@
+ #include <pcicfg.h>
+ #include <sbhnddma.h>
+ #include <hnddma.h>
+-#include <hndpmu.h>
  
- 	if (AR_SREV_9485_10(ah)) {
- 		pCap->pcie_lcr_extsync_en = true;
+ #include "wlc_types.h"
++#include "wlc_pmu.h"
+ #include "d11.h"
+ #include "wlc_cfg.h"
+ #include "wlc_rate.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index b56d613..ea12749 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -29,8 +29,8 @@
+ #include <wlioctl.h>
+ #include <sbhnddma.h>
+ #include <hnddma.h>
+-#include <hndpmu.h>
+ 
++#include "wlc_pmu.h"
+ #include "d11.h"
+ #include "wlc_types.h"
+ #include "wlc_cfg.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
+index 0c4780d..b008582 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
+@@ -36,7 +36,7 @@
+ #include <pcicfg.h>
+ #include <sbhnddma.h>
+ #include <hnddma.h>
+-#include <hndpmu.h>
++#include <wlc_pmu.h>
+ 
+ #include "wlc_types.h"
+ #include "wl_dbg.h"
+diff --git a/drivers/staging/brcm80211/util/hndpmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+similarity index 99%
+rename from drivers/staging/brcm80211/util/hndpmu.c
+rename to drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+index 566e030..98ba874 100644
+--- a/drivers/staging/brcm80211/util/hndpmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+@@ -24,7 +24,7 @@
+ #include <bcmdevs.h>
+ #include <hndsoc.h>
+ #include <sbchipc.h>
+-#include <hndpmu.h>
++#include <wlc_pmu.h>
+ #include "siutils_priv.h"
+ 
+ #define	PMU_ERROR(args)
+diff --git a/drivers/staging/brcm80211/include/hndpmu.h b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/hndpmu.h
+rename to drivers/staging/brcm80211/brcmsmac/wlc_pmu.h
+diff --git a/drivers/staging/brcm80211/util/siutils.c b/drivers/staging/brcm80211/util/siutils.c
+index 202a8cff..2097482 100644
+--- a/drivers/staging/brcm80211/util/siutils.c
++++ b/drivers/staging/brcm80211/util/siutils.c
+@@ -40,7 +40,7 @@
+ #include <sbsdpcmdev.h>
+ #include <bcmsdpcm.h>
+ #endif				/* BCMSDIO */
+-#include <hndpmu.h>
++#include <wlc_pmu.h>
+ 
+ /* this file now contains only definitions for sb functions, only necessary
+ *for devices using Sonics backplanes (bcm4329)
 -- 
-1.7.0.4
+1.7.4.1
+
 
