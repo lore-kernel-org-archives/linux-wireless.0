@@ -1,108 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53497 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758230Ab1EaTru (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:50 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 07/32] ath9k: initialize tx gain table for AR9330
-Date: Tue, 31 May 2011 21:36:58 +0200
-Message-Id: <1306870643-7935-8-git-send-email-juhosg@openwrt.org> (sfid-20110531_214855_599045_6AEE4A12)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.vyatta.com ([76.74.103.46]:56822 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754088Ab1ECXmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 19:42:05 -0400
+Date: Tue, 3 May 2011 16:41:59 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: A race in register_netdevice()
+Message-ID: <20110503164159.6664fa48@nehalam> (sfid-20110504_014210_336370_26CC1B15)
+In-Reply-To: <878vungyq4.fsf@purkki.adurom.net>
+References: <87y62ugg0a.fsf@purkki.adurom.net>
+	<20110428165237.0c1eddbc@nehalam>
+	<878vungyq4.fsf@purkki.adurom.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   48 +++++++++++++++++++++++++--
- 1 files changed, 44 insertions(+), 4 deletions(-)
+On Wed, 04 May 2011 02:18:11 +0300
+Kalle Valo <kvalo@adurom.com> wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index dc0ad4a..264a7ea 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -328,7 +328,17 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_lowest_ob_db_tx_gain_1p2,
-+				ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p2),
-+				5);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_lowest_ob_db_tx_gain_1p1,
-+				ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p1),
-+				5);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-@@ -345,7 +355,17 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 1:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_high_ob_db_tx_gain_1p2,
-+				ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p2),
-+				5);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_high_ob_db_tx_gain_1p1,
-+				ARRAY_SIZE(ar9331_modes_high_ob_db_tx_gain_1p1),
-+				5);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-@@ -362,7 +382,17 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 2:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_low_ob_db_tx_gain_1p2,
-+				ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p2),
-+				5);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_low_ob_db_tx_gain_1p1,
-+				ARRAY_SIZE(ar9331_modes_low_ob_db_tx_gain_1p1),
-+				5);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
-@@ -379,7 +409,17 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 				       5);
- 		break;
- 	case 3:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_high_power_tx_gain_1p2,
-+				ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p2),
-+				5);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				ar9331_modes_high_power_tx_gain_1p1,
-+				ARRAY_SIZE(ar9331_modes_high_power_tx_gain_1p1),
-+				5);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 					ar9340Modes_lowest_ob_db_tx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Modes_lowest_ob_db_tx_gain_table_1p0),
--- 
-1.7.2.1
+> Hi Stephen,
+> 
+> Stephen Hemminger <shemminger@vyatta.com> writes:
+> 
+> > On Fri, 29 Apr 2011 01:36:37 +0300
+> > Kalle Valo <kvalo@adurom.com> wrote:
+> >
+> >> there seems to be a race in register_netdevice(), which is reported here:
+> >> 
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=15606
+> >> 
+> >> This is visible at least with flimflam and ath6kl. Basically what
+> >> happens is this:
+> >> 
+> >> Apr 29 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device() 
+> >> Apr 29 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
+> >> 4): No such device
+> >> Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
+> >> 0xbfefda3c len 1004
+> >> Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
+> >> NEWLINK len 1004 type 16 flags 0x0000 seq 0
+> 
+> [...]
+> 
+> >> I have confirmed that both of these patches fix the issue. Now I'm
+> >> wondering which one is the best way forward. Or is there a better way
+> >> to fix this?
+> >> 
+> >
+> > I see no problem with moving this.
+> > SIOCGIFNAME should not need to hold rtnl.
+> 
+> I'm having difficulties of fixing the race and exploring other
+> options. Is there any particular issue why SIOCGIFNAME should not take
+> rtnl?
 
+None really, but the answer given by SIOCGIFNAME is going to race
+anyway. I.e if ioctl returns a value, by the time user space sees it
+the result may have changed.
