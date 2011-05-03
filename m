@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43794 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab1EKSbX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 14:31:23 -0400
-Subject: Re: GIT net-2.6 rolled back 8 commits...
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-In-Reply-To: <20110511.112909.226795883.davem@davemloft.net>
-References: <20110510.150814.226778453.davem@davemloft.net>
-	 <1305084687.2437.44.camel@edumazet-laptop>
-	 <20110511.112909.226795883.davem@davemloft.net>
+Received: from mga09.intel.com ([134.134.136.24]:50650 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752264Ab1ECOpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 10:45:08 -0400
+Subject: Re: iwlagn: crash when unloading the module
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87iptsgk5y.fsf@purkki.adurom.net>
+References: <87iptsgk5y.fsf@purkki.adurom.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 May 2011 20:31:19 +0200
-Message-ID: <1305138679.4341.8.camel@edumazet-laptop> (sfid-20110511_203133_697463_4AEF1F42)
+Date: Tue, 03 May 2011 07:42:07 -0700
+Message-ID: <1304433727.5744.107.camel@wwguy-ubuntu> (sfid-20110503_164512_782430_D6ED552C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mercredi 11 mai 2011 à 11:29 -0700, David Miller a écrit :
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Wed, 11 May 2011 05:31:27 +0200
+On Tue, 2011-05-03 at 03:20 -0700, Kalle Valo wrote:
+> Hi,
 > 
-> > Would it be possible you sync net-next-2.6 and pull net-2.6 in it ?
+> I noticed today a crash when removing iwlagn module. I can see the
+> crash everytime on my lenovo x201 (x86 64bit, i5) with this wireless
+> chip:
 > 
-> I'm taking care of this right now.
+> [   19.484551] iwlagn 0000:02:00.0: Detected Intel(R) Centrino(R)
+> Ultimate-N 6300 AGN, REV=0x74
+> 
+> As I'm travelling I only have two bad quality screenshots and 40 MB
+> video of the crash :) From the stacktrace it looks that this is iommu
+> related:
+> 
+> http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/1.png
+> http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/2.png
+> 
+> This is a new laptop and most likely I haven't removed iwlagn module
+> before. So this shouldn't be a regression.
+> 
 
-Wow excellent timing (for me at least), thanks !
+it is new to me as well, I never see that happen on my system. Could you
+share some more information with me? such as laptop model, kernel
+version, 32 or 64 bits.
 
+Also is there any activity while you unload the iwlagn, is it in connect
+state or not? 
 
+Thanks
+Wey
 
