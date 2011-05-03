@@ -1,43 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52787 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266Ab1ECNj4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:39:56 -0400
-Received: by bwz15 with SMTP id 15so117007bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 06:39:55 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:44709 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751064Ab1ECWNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 18:13:35 -0400
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: fix rtnl even race in register_netdevice()
+References: <20110429172634.27130.25375.stgit@x201>
+	<20110429.135339.200375209.davem@davemloft.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 04 May 2011 01:13:33 +0300
+In-Reply-To: <20110429.135339.200375209.davem@davemloft.net> (David Miller's message of "Fri\, 29 Apr 2011 13\:53\:39 -0700 \(PDT\)")
+Message-ID: <87ei4fh1pu.fsf@purkki.adurom.net> (sfid-20110504_001343_838471_FA0437FB)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-Date: Tue, 3 May 2011 09:39:55 -0400
-Message-ID: <BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com> (sfid-20110503_153959_463937_D16B8B70)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, missed a 5 at the end of the panasonic model: N5HBZ0000055
+David Miller <davem@davemloft.net> writes:
 
-On Tue, May 3, 2011 at 9:30 AM, George Nychis <gnychis@gmail.com> wrote:
->> Thanks, but unfortunately, the only option is for someone to port all
->> the HW support to htc_7010.fw. And I don't know if and when it would be done.
->>
+> From: Kalle Valo <kvalo@adurom.com>
+> Date: Fri, 29 Apr 2011 20:26:34 +0300
 >
-> Your last e-mail sounded a little more hopeful, this e-mail makes it
-> sound like I should jump ship on this hardware and track down another
-> AR7010+AR9280 solution...
+>> From: Kalle Valo <kalle.valo@atheros.com>
+>> 
+>> There's a race in register_netdevice so that the rtnl event is sent before
+>> the device is actually ready. This was visible with flimflam, chrome os
+>> connection manager:
+>> 
+>> 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device()
+>> 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
+>>    4): No such device
+>> 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
+>>    0xbfefda3c len 1004
+>> 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
+>>    NEWLINK len 1004 type 16 flags 0x0000 seq 0
+
+[...]
+
+>> The fix is to call netdev_register_kobject() after the device is added
+>> to the list.
+>> 
+>> Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
 >
-> It seems like the combo in production with UB94 is still not widely
-> available.  The Panasonic N5HBZ000005 is the only UB94 that seems is
-> semi-available in the US.  Maybe I'll jump back to AR9271+AR7010.
+> This is not correct.
 >
-> - George
+> If you move the kobject registry around, you have to change the
+> error handling cleanup to match.
 >
+> This change will leave the netdevice on all sorts of lists, it will
+> also leak a reference to the device.
+>
+> I also think this points a fundamental problem with this change, in
+> that you can't register the kobject after the device is added to
+> the various lists in list_netdevice().
+>
+> Once it's in those lists, any thread of control can find the device
+> and those threads of control may try to get at the data backed by
+> the kobject and therefore they really expect it to be there by
+> then.
+>
+> What you can do instead is try to delay the NETREG_REGISTERED
+> setting, and block the problematic notifications by testing
+> reg_state or similar.
+
+I'm having difficulties to find a proper fix for the race. The uevent
+is emitted from device_add() and I don't see how to block the event in
+a clean way.
+
+I tried to delay calling device_add() (patch below), but it didn't
+work because register_queue_kobjects() expects that the parent device
+is already added. I still need to investigate if I can delay creating
+(or registering) queue kobjects.
+
+This is a tricky problem and it's very easy to break something. I
+would appreciate any help here. Maybe there's a better way to do this?
+
+BTW, I can now easily reproduce the race on my laptop with e1000e and
+a small test application. More info here:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15606#c8
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index c2ac599..8882eaf 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -5158,6 +5158,7 @@ static void rollback_registered_many(struct list_head *head)
+ 
+ 		/* Remove entries from kobject tree */
+ 		netdev_unregister_kobject(dev);
++		netdev_del_kobject(dev);
+ 	}
+ 
+ 	/* Process any work delayed until the end of the batch */
+@@ -5432,7 +5433,6 @@ int register_netdevice(struct net_device *dev)
+ 	ret = netdev_register_kobject(dev);
+ 	if (ret)
+ 		goto err_uninit;
+-	dev->reg_state = NETREG_REGISTERED;
+ 
+ 	netdev_update_features(dev);
+ 
+@@ -5447,6 +5447,12 @@ int register_netdevice(struct net_device *dev)
+ 	dev_hold(dev);
+ 	list_netdevice(dev);
+ 
++	ret = netdev_add_kobject(dev);
++	if (ret)
++		goto err_unregister;
++
++	dev->reg_state = NETREG_REGISTERED;
++
+ 	/* Notify protocols, that a new device appeared. */
+ 	ret = call_netdevice_notifiers(NETDEV_REGISTER, dev);
+ 	ret = notifier_to_errno(ret);
+@@ -5465,6 +5471,9 @@ int register_netdevice(struct net_device *dev)
+ out:
+ 	return ret;
+ 
++err_unregister:
++	netdev_unregister_kobject(dev);
++
+ err_uninit:
+ 	if (dev->netdev_ops->ndo_uninit)
+ 		dev->netdev_ops->ndo_uninit(dev);
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index 5ceb257..db35137 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -1303,8 +1303,6 @@ void netdev_unregister_kobject(struct net_device * net)
+ 	kobject_get(&dev->kobj);
+ 
+ 	remove_queue_kobjects(net);
+-
+-	device_del(dev);
+ }
+ 
+ /* Create sysfs entries for network device. */
+@@ -1312,7 +1310,6 @@ int netdev_register_kobject(struct net_device *net)
+ {
+ 	struct device *dev = &(net->dev);
+ 	const struct attribute_group **groups = net->sysfs_groups;
+-	int error = 0;
+ 
+ 	device_initialize(dev);
+ 	dev->class = &net_class;
+@@ -1337,17 +1334,21 @@ int netdev_register_kobject(struct net_device *net)
+ #endif
+ #endif /* CONFIG_SYSFS */
+ 
+-	error = device_add(dev);
+-	if (error)
+-		return error;
++	return register_queue_kobjects(net);
++}
+ 
+-	error = register_queue_kobjects(net);
+-	if (error) {
+-		device_del(dev);
+-		return error;
+-	}
++void netdev_del_kobject(struct net_device *net)
++{
++	struct device *dev = &(net->dev);
+ 
+-	return error;
++	device_del(dev);
++}
++
++int netdev_add_kobject(struct net_device *net)
++{
++	struct device *dev = &(net->dev);
++
++	return device_add(dev);
+ }
+ 
+ int netdev_class_create_file(struct class_attribute *class_attr)
+diff --git a/net/core/net-sysfs.h b/net/core/net-sysfs.h
+index bd7751e..ead06a1 100644
+--- a/net/core/net-sysfs.h
++++ b/net/core/net-sysfs.h
+@@ -4,6 +4,8 @@
+ int netdev_kobject_init(void);
+ int netdev_register_kobject(struct net_device *);
+ void netdev_unregister_kobject(struct net_device *);
++int netdev_add_kobject(struct net_device *net);
++void netdev_del_kobject(struct net_device *net);
+ int net_rx_queue_update_kobjects(struct net_device *, int old_num, int new_num);
+ int netdev_queue_update_kobjects(struct net_device *net,
+ 				 int old_num, int new_num);
