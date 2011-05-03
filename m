@@ -1,146 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:37752 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756128Ab1EKP4w (ORCPT
+Received: from nm4.bullet.mail.bf1.yahoo.com ([98.139.212.163]:31082 "HELO
+	nm4.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750748Ab1ECMxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 11:56:52 -0400
-Received: by mail-ww0-f45.google.com with SMTP id 36so598014wwi.2
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:56:50 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	eliad@wizery.com
-Subject: [PATCH v3 3/3] cfg80211/nl80211: add interval attribute for scheduled scans
-Date: Wed, 11 May 2011 17:09:37 +0300
-Message-Id: <1305122977-6740-4-git-send-email-coelho@ti.com> (sfid-20110511_175708_103334_A94EB141)
-In-Reply-To: <1305122977-6740-1-git-send-email-coelho@ti.com>
-References: <1305122977-6740-1-git-send-email-coelho@ti.com>
+	Tue, 3 May 2011 08:53:10 -0400
+Message-ID: <484421.61252.qm@web161619.mail.bf1.yahoo.com> (sfid-20110503_145331_203318_B432AC5B)
+Date: Tue, 3 May 2011 05:53:09 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
+To: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <4DBF574E.80309@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
-NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
-intervals the scheduled scan cycles should be executed.
+> > Just an update, this driver has been solid so far:
+> > rt2870sta
+> > 
+> > With the Media Link 150 USB stick, not a single crash
+> yet--
+> > The rt2800usb driver is laggy and crashes the kernel
+> (as of 2.6.38.x)--
+> > Is there a possiblity to get rtl2870sta into the
+> mainline?
+> 
+> Not a chance. As of 2.6.39, it is gone.
+> 
+> > It is the best wireless driver I've used for Linux
+> with various usb wifi
+> > adapters--
+> 
+> That driver was in staging because it does not use
+> mac80211, which is an absolute requirement for a new
+> mainline driver. Keeping things like rt2870sta that contain
+> their own MAC layer just bloats the kernel and has code
+> persist that no one really understands.
+> 
+> Please try the version of rt2800usb from compat-wireless
+> with the latest firmware. If it still crashes the kernel,
+> then post the bugs.
+> 
+> Larry
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- include/linux/nl80211.h |   25 ++++++++++++++++---------
- include/net/cfg80211.h  |    2 ++
- net/wireless/nl80211.c  |   10 ++++++++++
- 3 files changed, 28 insertions(+), 9 deletions(-)
+I agree to some extent that rt2870sta performs better compared to rt2800usb, as of now. However, significant strides have been made towards improving the rt2800usb as it pertains to these chips and I'm sure in due time, problems will be resolved.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8f02fac..5912529 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -203,15 +203,17 @@
-  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
-  *	partial scan results may be available
-  *
-- * @NL80211_CMD_START_SCHED_SCAN: start a scheduled scan.  Like with normal
-- *	scans, if SSIDs (%NL80211_ATTR_SCAN_SSIDS) are passed, they are used
-- *	in the probe requests.  For broadcast, a broadcast SSID must be
-- *	passed (ie. an empty string).  If no SSID is passed, no probe
-- *	requests are sent and a passive scan is performed.
-- *	%NL80211_ATTR_SCAN_FREQUENCIES, if passed, define which channels
-- *	should be scanned; if not passed, all channels allowed for the
-- *	current regulatory domain are used.  Extra IEs can also be passed
-- *	from the userspace by using the %NL80211_ATTR_IE attribute.
-+ * @NL80211_CMD_START_SCHED_SCAN: start a scheduled scan at certain
-+ *	intervals, as specified by %NL80211_ATTR_SCHED_SCAN_INTERVAL.
-+ *	Like with normal scans, if SSIDs (%NL80211_ATTR_SCAN_SSIDS)
-+ *	are passed, they are used in the probe requests.  For
-+ *	broadcast, a broadcast SSID must be passed (ie. an empty
-+ *	string).  If no SSID is passed, no probe requests are sent and
-+ *	a passive scan is performed.  %NL80211_ATTR_SCAN_FREQUENCIES,
-+ *	if passed, define which channels should be scanned; if not
-+ *	passed, all channels allowed for the current regulatory domain
-+ *	are used.  Extra IEs can also be passed from the userspace by
-+ *	using the %NL80211_ATTR_IE attribute.
-  * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan
-  * @NL80211_CMD_SCHED_SCAN_RESULTS: indicates that there are scheduled scan
-  *	results available.
-@@ -945,6 +947,9 @@ enum nl80211_commands {
-  *	indicate which WoW triggers should be enabled. This is also
-  *	used by %NL80211_CMD_GET_WOWLAN to get the currently enabled WoWLAN
-  *	triggers.
-+
-+ * @NL80211_ATTR_SCHED_SCAN_INTERVAL: Interval between scheduled scan
-+ *	cycles, in msecs.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1138,6 +1143,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WOWLAN_TRIGGERS,
- 	NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED,
- 
-+	NL80211_ATTR_SCHED_SCAN_INTERVAL,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d9b92c4..b18327f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -798,6 +798,7 @@ struct cfg80211_scan_request {
-  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
-  * @n_ssids: number of SSIDs
-  * @n_channels: total number of channels to scan
-+ * @interval: interval between each scheduled scan cycle
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-  * @wiphy: the wiphy this was for
-@@ -808,6 +809,7 @@ struct cfg80211_sched_scan_request {
- 	struct cfg80211_ssid *ssids;
- 	int n_ssids;
- 	u32 n_channels;
-+	u32 interval;
- 	const u8 *ie;
- 	size_t ie_len;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0c32faf..b95436a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -174,6 +174,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_OFFCHANNEL_TX_OK] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_KEY_DEFAULT_TYPES] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_WOWLAN_TRIGGERS] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -3362,6 +3363,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	struct nlattr *attr;
- 	struct wiphy *wiphy;
- 	int err, tmp, n_ssids = 0, n_channels, i;
-+	u32 interval;
- 	enum ieee80211_band band;
- 	size_t ie_len;
- 
-@@ -3375,6 +3377,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	if (rdev->sched_scan_req)
- 		return -EINPROGRESS;
- 
-+	if (!info->attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
-+		return -EINVAL;
-+
-+	interval = nla_get_u32(info->attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
-+	if (interval == 0)
-+		return -EINVAL;
-+
- 	wiphy = &rdev->wiphy;
- 
- 	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
-@@ -3497,6 +3506,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
-+	request->interval = interval;
- 
- 	err = rdev->ops->sched_scan_start(&rdev->wiphy, dev, request);
- 	if (!err) {
--- 
-1.7.1
+The staging driver had to be removed in part because it collided with the rt2800usb, which in essence constitutes a race condition between the two drivers. When you plug your USB dongle, both of them load and both of them try to service your chip. The result isn't pretty. You have to manually blacklist one to enable the other to operate properly.
 
+Now, if you're bent on using the staging driver, you can always grab it from Ralink's web site and ignore the future default rt2800usb.
+
+
+Walter
