@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752998Ab1ELIbj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 04:31:39 -0400
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: olof@lixom.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 10:31:32 +0200
-Message-ID: <1305189092.3461.10.camel@jlt3.sipsolutions.net> (sfid-20110512_103158_227818_F1FC6806)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2396 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752112Ab1ECJgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 36/61] staging: brcm80211: remove use of si_* functions
+ from wlc_phy_lcn.c
+Date: Tue, 3 May 2011 11:35:36 +0200
+Message-ID: <1304415361-7813-37-git-send-email-arend@broadcom.com> (sfid-20110503_113637_988037_8C189E52)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-11 at 17:21 -0700, Rhyland Klein wrote:
+The source file used si_alp_clock to determine crystal frequency.
+It now uses the si_pmu_alp_clock call instead to remove dependency from
+siutils functionality.
 
-> +enum rfkill_gpio_clk_state {
-> +	UNSPECIFIED = 0,
-> +	PWR_ENABLED,
-> +	PWR_DISABLED
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    2 +-
+ drivers/staging/brcm80211/util/hndpmu.c            |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-Are you sure starting out with UNSPECIFIED works? Then you'll always
-change, but if the clock was enabled already you still enable it on the
-first set_block() from rfkill, which still has the refcount problem, no?
-It seems to me that the original state has to be passed in from the
-platform?
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index 9f5ee40..4e7a20a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -5053,7 +5053,7 @@ bool wlc_phy_attach_lcnphy(phy_info_t *pi)
+ 		pi->hwpwrctrl_capable = true;
+ 	}
+ 
+-	pi->xtalfreq = si_alp_clock(pi->sh->sih);
++	pi->xtalfreq = si_pmu_alp_clock(pi->sh->sih);
+ 	pi_lcn->lcnphy_papd_rxGnCtrl_init = 0;
+ 
+ 	pi->pi_fptr.init = wlc_phy_init_lcnphy;
+diff --git a/drivers/staging/brcm80211/util/hndpmu.c b/drivers/staging/brcm80211/util/hndpmu.c
+index ffa2e2d..566e030 100644
+--- a/drivers/staging/brcm80211/util/hndpmu.c
++++ b/drivers/staging/brcm80211/util/hndpmu.c
+@@ -1425,6 +1425,9 @@ u32 si_pmu_alp_clock(si_t *sih)
+ #ifdef BCMDBG
+ 	char chn[8];
+ #endif
++	/* bail out with default */
++	if (!PMUCTL_ENAB(sih))
++		return clock;
+ 
+ 	/* Remember original core before switch to chipc */
+ 	origidx = si_coreidx(sih);
+-- 
+1.7.4.1
 
-johannes
 
