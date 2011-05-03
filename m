@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:1286 "EHLO c60.cesmail.net"
+Received: from cantor.suse.de ([195.135.220.2]:46156 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752714Ab1EXVVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 17:21:01 -0400
-Message-ID: <4DDC213C.1080708@gnu.org> (sfid-20110524_232106_290629_AFE23948)
-Date: Tue, 24 May 2011 17:21:00 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1750740Ab1ECNMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 09:12:19 -0400
+Date: Tue, 3 May 2011 06:11:57 -0700
+From: Greg KH <gregkh@suse.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Sukesh Srikakula <sukeshs@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
+Message-ID: <20110503131157.GA29915@suse.de> (sfid-20110503_151221_976597_E799BF1F)
+References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
+ <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
+ <20110503121522.GB22674@suse.de>
+ <4DBFF628.6040502@broadcom.com>
+ <20110503130049.GA29438@suse.de>
+ <4DBFFE80.3030305@broadcom.com>
 MIME-Version: 1.0
-To: Eduard GV <eduardgv@gmail.com>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-Subject: Re: Initial automatic channel selection implementation
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>	<201105241627.49201.helmut.schaa@googlemail.com> <BANLkTi=o5XFTK8d3B-PsKh95ELbWMuVPwA@mail.gmail.com>
-In-Reply-To: <BANLkTi=o5XFTK8d3B-PsKh95ELbWMuVPwA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DBFFE80.3030305@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/24/2011 02:07 PM, Eduard GV wrote:
->
->> Speaking of channels, I think only some channels should be eligible for
->> automatic selection (that would be 1, 6 and 11 in the 2.4 GHz range).
->
-> I disagree. Sometimes it is better to have adjacent channel
-> interference (from partially overlapping channels) than co-channel
-> interference. I could provide some references if you're interested.
+On Tue, May 03, 2011 at 03:09:20PM +0200, Arend van Spriel wrote:
+> On 05/03/2011 03:00 PM, Greg KH wrote:
+> >On Tue, May 03, 2011 at 02:33:44PM +0200, Arend van Spriel wrote:
+> >>On 05/03/2011 02:15 PM, Greg KH wrote:
+> >>>On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
+> >>>>  #if defined(CONFIG_PM_SLEEP)
+> >>>>
+> >>>>+extern volatile bool dhd_mmc_suspend;
+> >>>This does not do what you think it does.
+> >>Hi Greg,
+> >>
+> >>I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2]
+> >>brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two
+> >>patches I saw on the linuxdriver list are:
+> >You rebased on a 1/2 patch in a series with an invalid 0/2 email?
+> >
+> >{sigh}
+> Sorry.
+> >I dropped that patch as the whole series needed to be resent, do you
+> >want me to apply that one patch before yours?
+> I can resend my series if that is more convenient for you.
 
-My point is that we should play safe, at least when the algorithm is 
-simple.  We should try to avoid the situation when our AP chooses a 
-channel with no other APs but with a lot of cross-channel interference 
-(either at the time of the scanning or later).
+Please, but just send it to me, I doubt everyone wants to see 60+
+patches again on the list.
 
--- 
-Regards,
-Pavel Roskin
+thanks,
+
+greg k-h
