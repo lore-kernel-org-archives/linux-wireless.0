@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2334 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2396 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148Ab1ECJgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:18 -0400
+	id S1752309Ab1ECJg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:29 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
 To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
 	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 43/61] staging: brcm80211: fix checkpatch warning in
- si_pmu_otp_power
-Date: Tue, 3 May 2011 11:35:43 +0200
-Message-ID: <1304415361-7813-44-git-send-email-arend@broadcom.com> (sfid-20110503_113816_580127_8F854E5A)
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH 60/61] staging: brcm80211: got rid of WL_FFPLD message
+ log macro
+Date: Tue, 3 May 2011 11:36:00 +0200
+Message-ID: <1304415361-7813-61-git-send-email-arend@broadcom.com> (sfid-20110503_113657_313963_9C1BD6F3)
 In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
@@ -20,8 +20,9 @@ Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch "remove dependency between aiutils and siutils sources" introduced
-several checkpatch warnings. This patch remove those in si_pmu_otp_power().
+From: Roland Vossen <rvossen@broadcom.com>
+
+Code cleanup. Partially removed, remaining replaced with BCMMSG.
 
 Cc: devel@linuxdriverproject.org
 Cc: linux-wireless@vger.kernel.org
@@ -30,24 +31,109 @@ Cc: Henry Ptasinski <henryp@broadcom.com>
 Cc: Roland Vossen <rvossen@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_pmu.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wl_dbg.h    |    8 --------
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |   13 ++++++-------
+ drivers/staging/brcm80211/include/wlioctl.h    |    2 --
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-index e98ace6..4b2095f 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-@@ -1886,9 +1886,8 @@ void si_pmu_otp_power(si_t *sih, bool on)
- 	u32 rsrcs = 0;	/* rsrcs to turn on/off OTP power */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+index 8beeefe..5582de3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
++++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
+@@ -22,12 +22,6 @@
+ /* wl_msg_level is a bit vector with defs in wlioctl.h */
+ extern u32 wl_msg_level;
  
- 	/* Don't do anything if OTP is disabled */
--	if (si_is_otp_disabled(sih)) {
-+	if (si_is_otp_disabled(sih))
- 		return;
--	}
+-#define WL_PRINT(level, fmt, args...)		\
+-do {						\
+-	if (wl_msg_level & level)		\
+-		printk(fmt, ##args);		\
+-} while (0)
+-
+ #define BCMMSG(dev, fmt, args...)		\
+ do {						\
+ 	if (wl_msg_level & WL_TRACE_VAL)	\
+@@ -36,7 +30,6 @@ do {						\
  
- 	/* Remember original core before switch to chipc */
- 	origidx = ai_coreidx(sih);
+ #ifdef BCMDBG
+ 
+-#define WL_FFPLD(fmt, args...)	WL_PRINT(WL_FFPLD_VAL, fmt, ##args)
+ 
+ /* Extra message control for AMPDU debugging */
+ #define   WL_AMPDU_UPDN_VAL	0x00000001	/* Config up/down related  */
+@@ -79,7 +72,6 @@ do {						\
+ 
+ #else				/* BCMDBG */
+ 
+-#define WL_FFPLD(fmt, args...)		no_printk(fmt, ##args)
+ 
+ #define WL_AMPDU_UPDN(fmt, args...)	no_printk(fmt, ##args)
+ #define WL_AMPDU_RX(fmt, args...)	no_printk(fmt, ##args)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index dbdbe85..876e523 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -314,7 +314,7 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 			 M_UCODE_MACSTAT + offsetof(macstat_t, txfunfl[fid]));
+ 	new_txunfl = (u16) (cur_txunfl - fifo->prev_txfunfl);
+ 	if (new_txunfl == 0) {
+-		WL_FFPLD("check_txunfl : TX status FRAG set but no tx underflows\n");
++		BCMMSG(wlc->wiphy, "TX status FRAG set but no tx underflows\n");
+ 		return -1;
+ 	}
+ 	fifo->prev_txfunfl = cur_txunfl;
+@@ -324,7 +324,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 
+ 	/* check if fifo is big enough */
+ 	if (wlc_xmtfifo_sz_get(wlc, fid, &xmtfifo_sz)) {
+-		WL_FFPLD("check_txunfl : get xmtfifo_sz failed\n");
+ 		return -1;
+ 	}
+ 
+@@ -338,8 +337,8 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 	if (fifo->accum_txfunfl < 10)
+ 		return 0;
+ 
+-	WL_FFPLD("ampdu_count %d  tx_underflows %d\n",
+-		 current_ampdu_cnt, fifo->accum_txfunfl);
++	BCMMSG(wlc->wiphy, "ampdu_count %d  tx_underflows %d\n",
++		current_ampdu_cnt, fifo->accum_txfunfl);
+ 
+ 	/*
+ 	   compute the current ratio of tx unfl per ampdu.
+@@ -366,7 +365,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 	 */
+ 
+ 	if (fifo->ampdu_pld_size >= max_mpdu * FFPLD_MPDU_SIZE) {
+-		WL_FFPLD(("tx fifo pld : max ampdu fits in fifo\n)"));
+ 		fifo->accum_txfunfl = 0;
+ 		return 0;
+ 	}
+@@ -392,8 +390,9 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
+ 		      (max_mpdu * FFPLD_MPDU_SIZE - fifo->ampdu_pld_size))
+ 		     / (max_mpdu * FFPLD_MPDU_SIZE)) * 100;
+ 
+-		WL_FFPLD("DMA estimated transfer rate %d; pre-load size %d\n",
+-			 fifo->dmaxferrate, fifo->ampdu_pld_size);
++		BCMMSG(wlc->wiphy, "DMA estimated transfer rate %d; "
++			"pre-load size %d\n",
++			fifo->dmaxferrate, fifo->ampdu_pld_size);
+ 	} else {
+ 
+ 		/* decrease ampdu size */
+diff --git a/drivers/staging/brcm80211/include/wlioctl.h b/drivers/staging/brcm80211/include/wlioctl.h
+index 5e2b11b..1e11c42 100644
+--- a/drivers/staging/brcm80211/include/wlioctl.h
++++ b/drivers/staging/brcm80211/include/wlioctl.h
+@@ -1247,8 +1247,6 @@ typedef struct tx_inst_power {
+ /* Message levels */
+ #define WL_ERROR_VAL		0x00000001
+ #define WL_TRACE_VAL		0x00000002
+-#define WL_AMPDU_VAL		0x20000000
+-#define WL_FFPLD_VAL		0x40000000
+ 
+ /* maximum channels returned by the get valid channels iovar */
+ #define WL_NUMCHANNELS		64
 -- 
 1.7.4.1
 
