@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44209 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2278 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704Ab1EIEaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 00:30:23 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 21:29:54 -0700
-Message-ID: <4DC76DD9.5010000@atheros.com> (sfid-20110509_063027_755234_562838A3)
-Date: Mon, 9 May 2011 10:00:17 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+	id S1752446Ab1ECJhE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:37:04 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 55/61] staging: brcm80211: remove CRC_INNER_LOOP macro
+Date: Tue, 3 May 2011 11:35:55 +0200
+Message-ID: <1304415361-7813-56-git-send-email-arend@broadcom.com> (sfid-20110503_114020_095520_CD63B47A)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC] ath9k: make npending frames check as bool
-References: <1304697291-6850-1-git-send-email-mshajakhan@atheros.com> <20110506161541.GB6002@vasanth-laptop>
-In-Reply-To: <20110506161541.GB6002@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 May 2011 09:45 PM, Vasanth Thiagarajan wrote:
-> On Fri, May 06, 2011 at 09:24:51PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/main.c |    7 +++++--
->>   1 files changed, 5 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index 3de115d..2b78ea2 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -2267,7 +2267,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
->>   		timeout = 1;
->>
->>   	for (j = 0; j<  timeout; j++) {
->> -		int npend = 0;
->> +		bool npend = false;
->>
->>   		if (j)
->>   			usleep_range(1000, 2000);
->> @@ -2276,7 +2276,10 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
->>   			if (!ATH_TXQ_SETUP(sc, i))
->>   				continue;
->>
->> -			npend += ath9k_has_pending_frames(sc,&sc->tx.txq[i]);
->> +			npend = ath9k_has_pending_frames(sc,&sc->tx.txq[i]);
->> +
->> +			if (npend)
->> +				break;
->
-> We need not bail out as soon as there is a pending frame in a queue.
-> There is a possibility that it could be transmitted successfully by
-> the time the given timeout expires.
+With the removal of hndcrc16 and hndcrc32 this macro is not needed
+anymore. Also the crc-ccitt library functions provide an equivalent
+static inline function for this operation.
 
-Hi Vasanth,
-	the timeout is before we enter into the loop for checking pending 
-frames, so I thought it won't be affecting it. am I missing something? 
-please tell me.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/util/bcmutils.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-thanks,
-shafi
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index bcaf911..7337a75 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -564,16 +564,11 @@ static const u8 crc8_table[256] = {
+ 	0xF4, 0x03, 0x4D, 0xBA, 0xD1, 0x26, 0x68, 0x9F
+ };
+ 
+-#define CRC_INNER_LOOP(n, c, x) \
+-	((c) = ((c) >> 8) ^ crc##n##_table[((c) ^ (x)) & 0xff])
+-
+ u8 hndcrc8(u8 *pdata,	/* pointer to array of data to process */
+ 			 uint nbytes,	/* number of input data bytes to process */
+ 			 u8 crc	/* either CRC8_INIT_VALUE or previous return value */
+     ) {
+-	/* hard code the crc loop instead of using CRC_INNER_LOOP macro
+-	 * to avoid the undefined and unnecessary (u8 >> 8) operation.
+-	 */
++	/* loop over the buffer data */
+ 	while (nbytes-- > 0)
+ 		crc = crc8_table[(crc ^ *pdata++) & 0xff];
+ 
+-- 
+1.7.4.1
 
->
-> Vasanth
-> .
->
+
