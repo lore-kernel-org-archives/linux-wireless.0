@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42234 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934830Ab1ESVfz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 17:35:55 -0400
-Date: Thu, 19 May 2011 16:35:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: zajec5@gmail.com, John W Linville <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix bogus compilation warning for phy_n
-Message-ID: <4dd58d39.ev8WALmbdvCfJmAJ%Larry.Finger@lwfinger.net> (sfid-20110519_233658_391766_B99DDA1C)
+Received: from purkki.adurom.net ([80.68.90.206]:48410 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753931Ab1ECXSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 19:18:13 -0400
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: A race in register_netdevice()
+References: <87y62ugg0a.fsf@purkki.adurom.net>
+	<20110428165237.0c1eddbc@nehalam>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 04 May 2011 02:18:11 +0300
+In-Reply-To: <20110428165237.0c1eddbc@nehalam> (Stephen Hemminger's message of "Thu\, 28 Apr 2011 16\:52\:37 -0700")
+Message-ID: <878vungyq4.fsf@purkki.adurom.net> (sfid-20110504_011829_440223_16A9147D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cross-compiling the 2.6.39 wireless-testing source using GCC version
-(SUSE Linux) 4.3.2 [gcc-4_3-branch revision 141291] on an x86_64 system,
-the following warning is issued:
+Hi Stephen,
 
-  CC [M]  drivers/net/wireless/b43/phy_n.o
-drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_cal_tx_iq_lo’:
-drivers/net/wireless/b43/phy_n.c:3096: warning: ‘last’ may be used
-        uninitialized in this function
+Stephen Hemminger <shemminger@vyatta.com> writes:
 
-A quick look at the code shows that the warning is bogus and a gcc bug,
-but to ensure clean compilation for all users, mark the offending variable
-as uninitialized.
+> On Fri, 29 Apr 2011 01:36:37 +0300
+> Kalle Valo <kvalo@adurom.com> wrote:
+>
+>> there seems to be a race in register_netdevice(), which is reported here:
+>> 
+>> https://bugzilla.kernel.org/show_bug.cgi?id=15606
+>> 
+>> This is visible at least with flimflam and ath6kl. Basically what
+>> happens is this:
+>> 
+>> Apr 29 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device() 
+>> Apr 29 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
+>> 4): No such device
+>> Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
+>> 0xbfefda3c len 1004
+>> Apr 29 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
+>> NEWLINK len 1004 type 16 flags 0x0000 seq 0
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+[...]
 
-Index: wireless-testing-new/drivers/net/wireless/b43/phy_n.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/phy_n.c
-+++ wireless-testing-new/drivers/net/wireless/b43/phy_n.c
-@@ -3093,7 +3093,7 @@ static int b43_nphy_cal_tx_iq_lo(struct
- 	int freq;
- 	bool avoid = false;
- 	u8 length;
--	u16 tmp, core, type, count, max, numb, last, cmd;
-+	u16 tmp, core, type, count, max, numb, uninitialized_var(last), cmd;
- 	const u16 *table;
- 	bool phy6or5x;
- 
+>> I have confirmed that both of these patches fix the issue. Now I'm
+>> wondering which one is the best way forward. Or is there a better way
+>> to fix this?
+>> 
+>
+> I see no problem with moving this.
+> SIOCGIFNAME should not need to hold rtnl.
+
+I'm having difficulties of fixing the race and exploring other
+options. Is there any particular issue why SIOCGIFNAME should not take
+rtnl?
+
+-- 
+Kalle Valo
