@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59703 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:1715 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753912Ab1EDOmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 10:42:43 -0400
-Message-ID: <4DC165D7.50403@openwrt.org> (sfid-20110504_164246_838924_CD33BBE7)
-Date: Wed, 04 May 2011 16:42:31 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752282Ab1ECJgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 48/61] staging: brcm80211: use local variable for
+ socitype during ai_scan
+Date: Tue, 3 May 2011 11:35:48 +0200
+Message-ID: <1304415361-7813-49-git-send-email-arend@broadcom.com> (sfid-20110503_113650_079380_0E331F1D)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Javier Cardona <javier@cozybit.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: Re: [PATCH 13/13] ath9k: fix beaconing for mesh interfaces
-References: <1304467039-7730-1-git-send-email-javier@cozybit.com> <1304467039-7730-14-git-send-email-javier@cozybit.com>
-In-Reply-To: <1304467039-7730-14-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-04 1:57 AM, Javier Cardona wrote:
-> Mesh beaconing on ath9k was broken by this commit:
->
-> commit 4801416c76a3a355076d6d371c00270dfe332e1c
-> Author: Ben Greear<greearb@candelatech.com>
-> Date:   Sat Jan 15 19:13:48 2011 +0000
->
-> This patch assigns the right opmode when the device is used in mesh
-> mode.
->
-> Reported-by: Fabrice Deyber fabricedeyber@agilemesh.com
-> Signed-off-by: Javier Cardona<javier@cozybit.com>
-Any idea why exactly ath9k needs to use this opmode? If I understand the 
-specs correctly, 802.11s does not use distributed beacons like ad-hoc 
-mode, so theoretically it should be fine with using the AP iftype.
-If beacons don't work at all in this opmode for 802.11s then this patch 
-may just be covering up an underlying bug rather than fixing the real issue.
+The SOC interface type is only needed to verify that we are accessing
+a chip with AMBA AXI interconnect during ai_scan function. Therefor
+this can be done with a local variable.
 
-- Felix
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 2ee4236..c57b6c7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -761,6 +761,7 @@ static si_info_t *ai_doattach(si_info_t *sii, uint devid,
+ 	u32 w, savewin;
+ 	chipcregs_t *cc;
+ 	char *pvars = NULL;
++	uint socitype;
+ 	uint origidx;
+ 
+ 	ASSERT(GOODREGS(regs));
+@@ -814,7 +815,7 @@ static si_info_t *ai_doattach(si_info_t *sii, uint devid,
+ 	 *   be added here.
+ 	 */
+ 	w = R_REG(&cc->chipid);
+-	sih->socitype = (w & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
++	socitype = (w & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
+ 	/* Might as wll fill in chip id rev & pkg */
+ 	sih->chip = w & CID_ID_MASK;
+ 	sih->chiprev = (w & CID_REV_MASK) >> CID_REV_SHIFT;
+@@ -823,7 +824,7 @@ static si_info_t *ai_doattach(si_info_t *sii, uint devid,
+ 	sih->issim = IS_SIM(sih->chippkg);
+ 
+ 	/* scan for cores */
+-	if (sii->pub.socitype == SOCI_AI) {
++	if (socitype == SOCI_AI) {
+ 		SI_MSG(("Found chip type AI (0x%08x)\n", w));
+ 		/* pass chipc address instead of original core base */
+ 		ai_scan(&sii->pub, (void *)cc, devid);
+-- 
+1.7.4.1
+
+
