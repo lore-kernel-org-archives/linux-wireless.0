@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:64790 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759851Ab1ENDlG convert rfc822-to-8bit (ORCPT
+Received: from s15228384.onlinehome-server.info ([87.106.30.177]:45745 "EHLO
+	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab1ECPBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 23:41:06 -0400
-Received: by gwaa18 with SMTP id a18so1086853gwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 20:41:04 -0700 (PDT)
+	Tue, 3 May 2011 11:01:11 -0400
+Date: Tue, 3 May 2011 17:01:05 +0200
+From: Borislav Petkov <bp@amd64.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn,
+	Andreas Herrmann <andreas.herrmann3@amd.com>
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+Message-ID: <20110503150105.GC18648@gere.osrc.amd.com> (sfid-20110503_170143_456723_B50DF694)
+References: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4DCDC7A0.2020504@candelatech.com>
-References: <4DCDC068.9060307@candelatech.com>
-	<4DCDC7A0.2020504@candelatech.com>
-Date: Sat, 14 May 2011 11:41:04 +0800
-Message-ID: <BANLkTikv9jhZaC=+Rtn5DmHADEJkvqo3KQ@mail.gmail.com> (sfid-20110514_054504_468745_68C54539)
-Subject: Re: Can't get hostapd to start, channels are all passive-scanning?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What's the regulatory domain of the NIC?
+On Tue, May 03, 2011 at 09:47:35AM -0500, Larry Finger wrote:
+> This set of patches introduces a driver for the RTL8192SE PCI devices.
+> 
+> The patches are as follows:
+> 
+> 01/12: Introduce file def.h
+> 02/12: Introduce dynamic management routines dm.c and dm.h
+> 03/12: Introduce firmware routines fw.c and fw.h
+> 04/12: Introduce hardware control routines hw.c and hw.h
+> 05/12: Introduce LED routines led.c and led.h
+> 06/12: Introduce PHY routines phy.c and phy.h
+> 07/12: Introduce register definition header
+> 08/12: Introduce radio control routines
+> 09/12: Introduce main routine (sw.c and sw.h)
+> 10/12: Introduce tables
+> 11/12: Introduce TX/RX routines
+> 12/12: Modify Kconfig and Makefiles to build rtl8192se
 
-Is it some strange race condition with CRDA?
+I think I have such a device in my Thinkpad:
 
+03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
 
-Adrian
+I could give them a run soon. Do you have them in a tree somewhere I
+could pull?
 
-On 14 May 2011 08:06, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/13/2011 04:36 PM, Ben Greear wrote:
->>
->> Any idea what would cause all of my 5Ghz channels to be passive
->> scanning (which keeps hostapd from being able to use them, evidently)
->>
->> Frequencies:
->> * 5180 MHz [36] (17.0 dBm) (passive scanning, no IBSS)
->> * 5200 MHz [40] (17.0 dBm) (passive scanning, no IBSS)
->> * 5220 MHz [44] (17.0 dBm) (passive scanning, no IBSS)
->> * 5240 MHz [48] (17.0 dBm) (passive scanning, no IBSS)
->> * 5260 MHz [52] (18.0 dBm) (passive scanning, no IBSS, radar detection)
->> * 5280 MHz [56] (18.0 dBm) (passive scanning, no IBSS, radar detection)
->> * 5300 MHz [60] (18.0 dBm) (passive scanning, no IBSS, radar detection)
->> * 5320 MHz [64] (18.0 dBm) (passive scanning, no IBSS, radar detection)
->
-> Bleh...reboot and it comes up looking more normal (first 4 are usable, at
-> least).
->
-> Will post again if I can reproduce it.
->
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
+
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Gemeinde Aschheim, Landkreis Muenchen
+Registergericht Muenchen, HRB Nr. 43632
