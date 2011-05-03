@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33384 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961Ab1E3KvY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 06:51:24 -0400
-Received: by gxk21 with SMTP id 21so1361642gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 03:51:23 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1685 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752213Ab1ECJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 32/61] staging: brcm80211: remove tsf retrieval from
+ wlc_bmac.c
+Date: Tue, 3 May 2011 11:35:32 +0200
+Message-ID: <1304415361-7813-33-git-send-email-arend@broadcom.com> (sfid-20110503_113751_686338_FE5FFC08)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1304529896-20934-1-git-send-email-javier@cozybit.com>
-References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
-	<1304529896-20934-1-git-send-email-javier@cozybit.com>
-Date: Mon, 30 May 2011 16:21:23 +0530
-Message-ID: <BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com> (sfid-20110530_125127_440969_07612A08)
-Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
-> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
-> infrastructure BSS, or IBSS are differentiated by the Capability
-> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
-> subfields to 0 in transmitted Beacon or Probe Response management
-> frames.
+Upon receiving a packet the lowest 32 bits of tsf are filled in
+by wlc_bmac in wlc_bmac_recv, but this is not useful as wlc_main
+needs to reconstruct 64 bit tsf which is retrieves to recover the
+actual tsf value at which packet is received. Therefore tsf
+retrieval is removed from wlc_bmac.c.
 
-This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
-to zero. Is there any other way to find if it is a mesh other than
-this check?
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-> index fbf6f33..62e542a 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index 8dbf388..daeb363 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -265,7 +265,6 @@ wlc_bmac_recv(struct wlc_hw_info *wlc_hw, uint fifo, bool bound)
+ 	struct sk_buff *tail = NULL;
+ 	uint n = 0;
+ 	uint bound_limit = bound ? wlc_hw->wlc->pub->tunables->rxbnd : -1;
+-	u32 tsf_h, tsf_l;
+ 	wlc_d11rxhdr_t *wlc_rxhdr = NULL;
+ 
+ 	WL_TRACE("wl%d: %s\n", wlc_hw->unit, __func__);
+@@ -284,9 +283,6 @@ wlc_bmac_recv(struct wlc_hw_info *wlc_hw, uint fifo, bool bound)
+ 			break;
+ 	}
+ 
+-	/* get the TSF REG reading */
+-	wlc_bmac_read_tsf(wlc_hw, &tsf_l, &tsf_h);
+-
+ 	/* post more rbufs */
+ 	dma_rxfill(wlc_hw->di[fifo]);
+ 
+@@ -295,9 +291,7 @@ wlc_bmac_recv(struct wlc_hw_info *wlc_hw, uint fifo, bool bound)
+ 		head = head->prev;
+ 		p->prev = NULL;
+ 
+-		/* record the tsf_l in wlc_rxd11hdr */
+ 		wlc_rxhdr = (wlc_d11rxhdr_t *) p->data;
+-		wlc_rxhdr->tsf_l = cpu_to_le32(tsf_l);
+ 
+ 		/* compute the RSSI from d11rxhdr and record it in wlc_rxd11hr */
+ 		wlc_phy_rssi_compute(wlc_hw->band->pi, wlc_rxhdr);
+-- 
+1.7.4.1
 
-> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->
->        res->ts = jiffies;
->
-> -       if (is_zero_ether_addr(res->pub.bssid)) {
-> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
->                /* must be mesh, verify */
 
-Reverting the above change, makes P2P work. Any other better fix?
-
->                meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
->                                          res->pub.information_elements,
-> --
-
-Vivek.
