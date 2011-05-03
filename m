@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35571 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757773Ab1EKQwx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:52:53 -0400
-Received: by ewy4 with SMTP id 4so196990ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:52:52 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:3223 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752571Ab1ECMd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 08:33:59 -0400
+Message-ID: <4DBFF628.6040502@broadcom.com> (sfid-20110503_143404_231935_92F90273)
+Date: Tue, 3 May 2011 14:33:44 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1305104269.12586.746.camel@cumari>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com> <1305104269.12586.746.camel@cumari>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 11 May 2011 09:52:32 -0700
-Message-ID: <BANLkTimuZpe4ifV9NO6qgCw4fkWhfojf9g@mail.gmail.com> (sfid-20110511_185257_254880_8F873A47)
-Subject: Re: [PATCH 0/7] wl12xx: add initial wowlan support
-To: Luciano Coelho <coelho@ti.com>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Greg KH" <gregkh@suse.de>
+cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
+References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
+ <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
+ <20110503121522.GB22674@suse.de>
+In-Reply-To: <20110503121522.GB22674@suse.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+On 05/03/2011 02:15 PM, Greg KH wrote:
+> On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
+>>   #if defined(CONFIG_PM_SLEEP)
+>>
+>> +extern volatile bool dhd_mmc_suspend;
+> This does not do what you think it does.
 
-On Wed, May 11, 2011 at 1:57 AM, Luciano Coelho <coelho@ti.com> wrote:
-> On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
->> Note that this patchset needs some additional omap/mmc patches in
->> order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
->> (however, if the MMC_PM_KEEP_POWER flag is not being supported we
->> don't advertise support for wowlan triggers, so this patchset alone
->> shouldn't harm).
->
-> Do you know if these patches are queued in linux-omap for 2.6.40?
+Hi Greg,
 
-Not yet, we wanted first to get driver support for this, and then we'd
-start adding the required platform support (for several platforms btw,
-not only omap. so we'll start adding them one by one now).
+I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2] 
+brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two patches 
+I saw on the linuxdriver list are:
 
-Thanks,
-Ohad.
+staging: brcm80211: brcmfmac: Add and use dhd_dbg [joe@perches.com] => 
+he rejected it himself.
+STAGING: brcm80211 SDIO/MMC cleanups [grundler@chromium.org] => does not 
+apply.
+
+So I discarded those two as well.
+
+Gr. AvS
+
