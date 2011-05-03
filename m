@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48254 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751452Ab1EPQhx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 12:37:53 -0400
-To: Julia Lawall <julia@diku.dk>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	kernel-janitors@vger.kernel.org, Vipin Mehta <vmehta@atheros.com>,
-	Joe Perches <joe@perches.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Naveen Singh <nsingh@atheros.com>, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] drivers/staging/ath6kl/os/linux/cfg80211.c: Add missing call to cfg80211_put_bss
-References: <1305537629-29876-1-git-send-email-julia@diku.dk>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 16 May 2011 19:37:46 +0300
-In-Reply-To: <1305537629-29876-1-git-send-email-julia@diku.dk> (Julia Lawall's message of "Mon\, 16 May 2011 11\:20\:29 +0200")
-Message-ID: <87wrhqd2jp.fsf@purkki.adurom.net> (sfid-20110516_183759_103937_48157BE6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:58082 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab1ECPHx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 11:07:53 -0400
+Subject: Re: iwlagn: crash when unloading the module
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1304435232.3720.6.camel@jlt3.sipsolutions.net> (sfid-20110503_170717_917904_FD5145B3)
+References: <87iptsgk5y.fsf@purkki.adurom.net>
+	 <1304433727.5744.107.camel@wwguy-ubuntu>
+	 (sfid-20110503_164512_782430_D6ED552C)  <1304435232.3720.6.camel@jlt3.sipsolutions.net>
+	 (sfid-20110503_170717_917904_FD5145B3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 03 May 2011 17:07:52 +0200
+Message-ID: <1304435272.3720.7.camel@jlt3.sipsolutions.net> (sfid-20110503_170758_754525_273FF694)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+On Tue, 2011-05-03 at 17:07 +0200, Johannes Berg wrote:
+> On Tue, 2011-05-03 at 07:42 -0700, wwguy wrote:
+> 
+> > > http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/1.png
+> > > http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/2.png
+> > > 
+> > > This is a new laptop and most likely I haven't removed iwlagn module
+> > > before. So this shouldn't be a regression.
+> > > 
+> > 
+> > it is new to me as well, I never see that happen on my system. Could you
+> > share some more information with me? such as laptop model, kernel
+> > version, 32 or 64 bits.
+> > 
+> > Also is there any activity while you unload the iwlagn, is it in connect
+> > state or not? 
+> 
+> Dave looked at this and it turned out to most likely be a bug in the
+> intel-iommu code. A tentative patch to fix it from him is here:
+> http://david.woodhou.se/double-unmap-check.patch
 
-Julia Lawall <julia@diku.dk> writes:
+Err, no, http://david.woodhou.se/flush-unmaps-on-unbind.patch
 
-> From: Julia Lawall <julia@diku.dk>
->
-> A call to cfg80211_get_bss hould be accompanied by a call to
-> cfg80211_put_bss in error-handling code.
+johannes
 
-[...]
-
-> ---
-> I don't really understand the use of the bss variable later.  Afterwards,
-> along the normal execution path, there is also a call to cfg80211_put_bss,
-> but at this point bss has been redefined, and I don't have the impression
-> that it still points to the same value.
-
-The original code looks buggy to me:
-
-    /* Before informing the join/connect event, make sure that
-     * bss entry is present in scan list, if it not present
-     * construct and insert into scan list, otherwise that
-     * event will be dropped on the way by cfg80211, due to
-     * this keys will not be plumbed in case of WEP and
-     * application will not be aware of join/connect status. */
-    bss = cfg80211_get_bss(ar->wdev->wiphy, NULL, bssid,
-                           ar->wdev->ssid, ar->wdev->ssid_len,
-                           ((ADHOC_NETWORK & networkType) ?
-    WLAN_CAPABILITY_IBSS : WLAN_CAPABILITY_ESS),
-                           ((ADHOC_NETWORK & networkType) ?
-    WLAN_CAPABILITY_IBSS : WLAN_CAPABILITY_ESS));
-
-But, as you point out, the bss is not used for anything. I think the
-call and the comment should be just removed.
-
--- 
-Kalle Valo
