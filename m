@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:32931 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441Ab1EHBsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 21:48:25 -0400
-Subject: Re: ssb: where to reject dangling cores?
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <BANLkTimRasoDAbK+tLNFx8zK96Xe1hnHXg@mail.gmail.com>
-References: <BANLkTimRasoDAbK+tLNFx8zK96Xe1hnHXg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 08 May 2011 03:48:22 +0200
-Message-ID: <1304819302.21680.10.camel@maggie> (sfid-20110508_034828_034939_C4E424C0)
-Mime-Version: 1.0
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54947 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754974Ab1ECUDq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 16:03:46 -0400
+Message-ID: <4DC05F9C.2070802@lwfinger.net> (sfid-20110503_220405_257895_19AC0FA6)
+Date: Tue, 03 May 2011 15:03:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@amd64.org>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn,
+	Andreas Herrmann <andreas.herrmann3@amd.com>
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+References: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net> <20110503150105.GC18648@gere.osrc.amd.com>
+In-Reply-To: <20110503150105.GC18648@gere.osrc.amd.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-05-07 at 22:40 +0200, Rafał Miłecki wrote: 
-> Michael, I can see code for ignoring dangling cores in both: ssb and b43.
-> 
-> In ssb it's quite common, we have:
-> 1) we_support_multiple_80211_cores for 80211
-> 2) inline checks in ssb_bus_scan for PCI(E)
-> 3) inline check in ssb_bus_scan for ETHERNET
-> 
-> However there is also check in b43 at the beginning of b43_one_core_attach:
-> if (!pdev ||
-> 	((pdev->device != 0x4321) &&
-> 	(pdev->device != 0x4313) && (pdev->device != 0x431A))) {
-> 	b43dbg(wl, "Ignoring unconnected 802.11 core\n");
-> 	return -ENODEV;
-> }
-> 
-> Should I move this check into ssb?
+On 05/03/2011 10:01 AM, Borislav Petkov wrote:
+> I think I have such a device in my Thinkpad:
+>
+> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
+>
+> I could give them a run soon. Do you have them in a tree somewhere I
+> could pull?
 
-Well, I'm not sure. _Neither_ place looks fine. It's a dirty workaround
-for broken hardware.
+Your device is claimed by the new driver.
 
-If you really want to touch this mess, then yes. Move it into ssb.
+You can get the code from
 
--- 
-Greetings Michael.
+git://git.kernel.org/pub/scm/linux/kernel/git/lwfinger/rtl8192se.git
 
+This tree is based on Linville's wireless-testing tree with these 12 patches 
+applied.
+
+Larry
