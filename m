@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43261 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793Ab1ECQgp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 12:36:45 -0400
-Message-ID: <4DC02F1A.7010402@candelatech.com> (sfid-20110503_183659_019405_1F68660C)
-Date: Tue, 03 May 2011 09:36:42 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2394 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752111Ab1ECJgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 33/61] staging: brcm80211: remove retrieval function for
+ tsf in wlc_main.c
+Date: Tue, 3 May 2011 11:35:33 +0200
+Message-ID: <1304415361-7813-34-git-send-email-arend@broadcom.com> (sfid-20110503_113833_064354_C6611F47)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com> <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-In-Reply-To: <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2011 11:13 PM, Adrian Chadd wrote:
-> The AR9160/SR71-A should be supported by ath9k. They're just 2x2
-> stream devices using 3 radios.
->
-> What do you mean by "not even supported" ?
->
-> If the SR71-A isn't working for you then please email the ath9k list
-> and I'll take a look. I have a bunch of SR71-A hardware here to tinker
-> with.
+wlc_main.c provides a function to read the tsf, but it is not used.
+Consequently, it is removed.
 
-The ath9k didn't even recognize the NIC, and lspci showed some 5xxx
-chipset.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c |    5 -----
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h |    2 --
+ 2 files changed, 0 insertions(+), 7 deletions(-)
 
-Other SR71-A NICs work just fine, so it's just a subset that is
-broken.  I'll put it in a system later today and get you
-a verbose lspci listing.
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 0213844..b56d613 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -7868,11 +7868,6 @@ void wlc_set_rcmta(struct wlc_info *wlc, int idx, const u8 *addr)
+ 	wlc_bmac_set_rcmta(wlc->hw, idx, addr);
+ }
+ 
+-void wlc_read_tsf(struct wlc_info *wlc, u32 *tsf_l_ptr, u32 *tsf_h_ptr)
+-{
+-	wlc_bmac_read_tsf(wlc->hw, tsf_l_ptr, tsf_h_ptr);
+-}
+-
+ void wlc_set_cwmin(struct wlc_info *wlc, u16 newmin)
+ {
+ 	wlc->band->CWmin = newmin;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+index 4f0db6c..23130bb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+@@ -813,8 +813,6 @@ extern void wlc_get_rcmta(struct wlc_info *wlc, int idx,
+ #endif
+ extern void wlc_set_rcmta(struct wlc_info *wlc, int idx,
+ 			  const u8 *addr);
+-extern void wlc_read_tsf(struct wlc_info *wlc, u32 *tsf_l_ptr,
+-			 u32 *tsf_h_ptr);
+ extern void wlc_set_cwmin(struct wlc_info *wlc, u16 newmin);
+ extern void wlc_set_cwmax(struct wlc_info *wlc, u16 newmax);
+ extern void wlc_fifoerrors(struct wlc_info *wlc);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.4.1
+
 
