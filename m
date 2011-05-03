@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8667 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2450 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752961Ab1EDNZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 09:25:53 -0400
-Date: Wed, 4 May 2011 15:26:03 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: crash when unloading the module
-Message-ID: <20110504132602.GA2183@redhat.com> (sfid-20110504_152557_712732_5E745274)
-References: <87iptsgk5y.fsf@purkki.adurom.net>
+	id S1752144Ab1ECJgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 40/61] staging: brcm80211: remove zero initialization of
+ static in si_pmu_ilp_clock
+Date: Tue, 3 May 2011 11:35:40 +0200
+Message-ID: <1304415361-7813-41-git-send-email-arend@broadcom.com> (sfid-20110503_113825_587162_18CC39B4)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87iptsgk5y.fsf@purkki.adurom.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 03, 2011 at 01:20:25PM +0300, Kalle Valo wrote:
-> I noticed today a crash when removing iwlagn module. I can see the
-> crash everytime on my lenovo x201 (x86 64bit, i5) with this wireless
-> chip:
-> 
-> [   19.484551] iwlagn 0000:02:00.0: Detected Intel(R) Centrino(R)
-> Ultimate-N 6300 AGN, REV=0x74
-> 
-> As I'm travelling I only have two bad quality screenshots and 40 MB
-> video of the crash :) From the stacktrace it looks that this is iommu
-> related:
-> 
-> http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/1.png
-> http://www.adurom.com/~kvalo/tmp/iwlagn/rmmod-iommu-crash/2.png
-> 
-> This is a new laptop and most likely I haven't removed iwlagn module
-> before. So this shouldn't be a regression.
+The static variable ilpcycles_per_sec was initialized with zero value, which
+is not necessary (checkpatch error). Initialization has been removed.
 
-We can not exclude iwlagn problem only triggered with intel iommu,
-because problem does not happen with other modules, or does it?
-Except test patch pointed by Johannes, I suggest turning on
-CONFIG_DMA_API_DEBUG and test with intel_iommu=on and intel_iommu=off.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_pmu.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Stanislaw
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+index 603172a..cd42a77 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+@@ -1211,7 +1211,7 @@ static void si_pmu1_pllinit0(si_t *sih, chipcregs_t *cc, u32 xtal)
+ 
+ u32 si_pmu_ilp_clock(si_t *sih)
+ {
+-	static u32 ilpcycles_per_sec = 0;
++	static u32 ilpcycles_per_sec;
+ 
+ 	if (ISSIM_ENAB(sih))
+ 		return ILP_CLOCK;
+-- 
+1.7.4.1
+
+
