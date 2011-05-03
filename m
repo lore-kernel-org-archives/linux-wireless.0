@@ -1,191 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:44709 "EHLO purkki.adurom.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:2394 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064Ab1ECWNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 18:13:35 -0400
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: fix rtnl even race in register_netdevice()
-References: <20110429172634.27130.25375.stgit@x201>
-	<20110429.135339.200375209.davem@davemloft.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 04 May 2011 01:13:33 +0300
-In-Reply-To: <20110429.135339.200375209.davem@davemloft.net> (David Miller's message of "Fri\, 29 Apr 2011 13\:53\:39 -0700 \(PDT\)")
-Message-ID: <87ei4fh1pu.fsf@purkki.adurom.net> (sfid-20110504_001343_838471_FA0437FB)
+	id S1752311Ab1ECJga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 56/61] staging: brcm80211: move qmath sources to phy
+ directory
+Date: Tue, 3 May 2011 11:35:56 +0200
+Message-ID: <1304415361-7813-57-git-send-email-arend@broadcom.com> (sfid-20110503_113654_363998_F7724F2E)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+The functions provided by qmath sources are only used by the
+phy source code so qmath sources have been moved there.
 
-> From: Kalle Valo <kvalo@adurom.com>
-> Date: Fri, 29 Apr 2011 20:26:34 +0300
->
->> From: Kalle Valo <kalle.valo@atheros.com>
->> 
->> There's a race in register_netdevice so that the rtnl event is sent before
->> the device is actually ready. This was visible with flimflam, chrome os
->> connection manager:
->> 
->> 00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device()
->> 00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
->>    4): No such device
->> 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message() buf
->>    0xbfefda3c len 1004
->> 00:21:45 roska flimflamd[2598]: src/rtnl.c:rtnl_message()
->>    NEWLINK len 1004 type 16 flags 0x0000 seq 0
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |   10 +++++-----
+ .../{util/qmath.c => brcmsmac/phy/wlc_phy_qmath.c} |    3 ++-
+ .../qmath.h => brcmsmac/phy/wlc_phy_qmath.h}       |    0
+ 4 files changed, 8 insertions(+), 7 deletions(-)
+ rename drivers/staging/brcm80211/{util/qmath.c => brcmsmac/phy/wlc_phy_qmath.c} (99%)
+ rename drivers/staging/brcm80211/{include/qmath.h => brcmsmac/phy/wlc_phy_qmath.h} (100%)
 
-[...]
-
->> The fix is to call netdev_register_kobject() after the device is added
->> to the list.
->> 
->> Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
->
-> This is not correct.
->
-> If you move the kobject registry around, you have to change the
-> error handling cleanup to match.
->
-> This change will leave the netdevice on all sorts of lists, it will
-> also leak a reference to the device.
->
-> I also think this points a fundamental problem with this change, in
-> that you can't register the kobject after the device is added to
-> the various lists in list_netdevice().
->
-> Once it's in those lists, any thread of control can find the device
-> and those threads of control may try to get at the data backed by
-> the kobject and therefore they really expect it to be there by
-> then.
->
-> What you can do instead is try to delay the NETREG_REGISTERED
-> setting, and block the problematic notifications by testing
-> reg_state or similar.
-
-I'm having difficulties to find a proper fix for the race. The uevent
-is emitted from device_add() and I don't see how to block the event in
-a clean way.
-
-I tried to delay calling device_add() (patch below), but it didn't
-work because register_queue_kobjects() expects that the parent device
-is already added. I still need to investigate if I can delay creating
-(or registering) queue kobjects.
-
-This is a tricky problem and it's very easy to break something. I
-would appreciate any help here. Maybe there's a better way to do this?
-
-BTW, I can now easily reproduce the race on my laptop with e1000e and
-a small test application. More info here:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=15606#c8
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index c2ac599..8882eaf 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -5158,6 +5158,7 @@ static void rollback_registered_many(struct list_head *head)
+diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
+index 8dc234d..2179774 100644
+--- a/drivers/staging/brcm80211/brcmsmac/Makefile
++++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+@@ -47,13 +47,13 @@ BRCMSMAC_OFILES := \
+ 	phy/wlc_phy_n.o \
+ 	phy/wlc_phytbl_lcn.o \
+ 	phy/wlc_phytbl_n.o \
++	phy/wlc_phy_qmath.o \
+ 	../util/bcmutils.o \
+ 	../util/bcmwifi.o \
+ 	../util/bcmotp.o \
+ 	../util/bcmsrom.o \
+ 	../util/hnddma.o \
+ 	../util/nicpci.o \
+-	../util/qmath.o \
+ 	../util/nvram/nvram_ro.o
  
- 		/* Remove entries from kobject tree */
- 		netdev_unregister_kobject(dev);
-+		netdev_del_kobject(dev);
- 	}
+ MODULEPFX := brcmsmac
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index 0722097..8fc1bef 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -19,7 +19,6 @@
+ #include <linux/bitops.h>
+ #include <linux/delay.h>
+ #include <wlc_cfg.h>
+-#include <qmath.h>
+ #include <linux/pci.h>
+ #include <aiutils.h>
+ #include <wlc_pmu.h>
+@@ -27,10 +26,11 @@
+ #include <bcmdevs.h>
+ #include <sbhnddma.h>
  
- 	/* Process any work delayed until the end of the batch */
-@@ -5432,7 +5433,6 @@ int register_netdevice(struct net_device *dev)
- 	ret = netdev_register_kobject(dev);
- 	if (ret)
- 		goto err_uninit;
--	dev->reg_state = NETREG_REGISTERED;
+-#include <wlc_phy_radio.h>
+-#include <wlc_phy_int.h>
+-#include <wlc_phy_lcn.h>
+-#include <wlc_phytbl_lcn.h>
++#include "wlc_phy_radio.h"
++#include "wlc_phy_int.h"
++#include "wlc_phy_qmath.h"
++#include "wlc_phy_lcn.h"
++#include "wlc_phytbl_lcn.h"
  
- 	netdev_update_features(dev);
+ #define PLL_2064_NDIV		90
+ #define PLL_2064_LOW_END_VCO 	3000
+diff --git a/drivers/staging/brcm80211/util/qmath.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_qmath.c
+similarity index 99%
+rename from drivers/staging/brcm80211/util/qmath.c
+rename to drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_qmath.c
+index 8b4a5b1..0617292 100644
+--- a/drivers/staging/brcm80211/util/qmath.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_qmath.c
+@@ -15,7 +15,8 @@
+  */
  
-@@ -5447,6 +5447,12 @@ int register_netdevice(struct net_device *dev)
- 	dev_hold(dev);
- 	list_netdevice(dev);
- 
-+	ret = netdev_add_kobject(dev);
-+	if (ret)
-+		goto err_unregister;
+ #include <linux/types.h>
+-#include "qmath.h"
 +
-+	dev->reg_state = NETREG_REGISTERED;
-+
- 	/* Notify protocols, that a new device appeared. */
- 	ret = call_netdevice_notifiers(NETDEV_REGISTER, dev);
- 	ret = notifier_to_errno(ret);
-@@ -5465,6 +5471,9 @@ int register_netdevice(struct net_device *dev)
- out:
- 	return ret;
++#include "wlc_phy_qmath.h"
  
-+err_unregister:
-+	netdev_unregister_kobject(dev);
-+
- err_uninit:
- 	if (dev->netdev_ops->ndo_uninit)
- 		dev->netdev_ops->ndo_uninit(dev);
-diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
-index 5ceb257..db35137 100644
---- a/net/core/net-sysfs.c
-+++ b/net/core/net-sysfs.c
-@@ -1303,8 +1303,6 @@ void netdev_unregister_kobject(struct net_device * net)
- 	kobject_get(&dev->kobj);
- 
- 	remove_queue_kobjects(net);
--
--	device_del(dev);
- }
- 
- /* Create sysfs entries for network device. */
-@@ -1312,7 +1310,6 @@ int netdev_register_kobject(struct net_device *net)
- {
- 	struct device *dev = &(net->dev);
- 	const struct attribute_group **groups = net->sysfs_groups;
--	int error = 0;
- 
- 	device_initialize(dev);
- 	dev->class = &net_class;
-@@ -1337,17 +1334,21 @@ int netdev_register_kobject(struct net_device *net)
- #endif
- #endif /* CONFIG_SYSFS */
- 
--	error = device_add(dev);
--	if (error)
--		return error;
-+	return register_queue_kobjects(net);
-+}
- 
--	error = register_queue_kobjects(net);
--	if (error) {
--		device_del(dev);
--		return error;
--	}
-+void netdev_del_kobject(struct net_device *net)
-+{
-+	struct device *dev = &(net->dev);
- 
--	return error;
-+	device_del(dev);
-+}
-+
-+int netdev_add_kobject(struct net_device *net)
-+{
-+	struct device *dev = &(net->dev);
-+
-+	return device_add(dev);
- }
- 
- int netdev_class_create_file(struct class_attribute *class_attr)
-diff --git a/net/core/net-sysfs.h b/net/core/net-sysfs.h
-index bd7751e..ead06a1 100644
---- a/net/core/net-sysfs.h
-+++ b/net/core/net-sysfs.h
-@@ -4,6 +4,8 @@
- int netdev_kobject_init(void);
- int netdev_register_kobject(struct net_device *);
- void netdev_unregister_kobject(struct net_device *);
-+int netdev_add_kobject(struct net_device *net);
-+void netdev_del_kobject(struct net_device *net);
- int net_rx_queue_update_kobjects(struct net_device *, int old_num, int new_num);
- int netdev_queue_update_kobjects(struct net_device *net,
- 				 int old_num, int new_num);
+ /*
+ Description: This function saturate input 32 bit number into a 16 bit number.
+diff --git a/drivers/staging/brcm80211/include/qmath.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_qmath.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/qmath.h
+rename to drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_qmath.h
+-- 
+1.7.4.1
+
+
