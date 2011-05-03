@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32437 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757634Ab1EZRYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 13:24:36 -0400
-Subject: Re: [iwl4965] Microcode SW error detected
-From: Dan Williams <dcbw@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>, linux-wireless@vger.kernel.org
-Date: Thu, 26 May 2011 12:26:48 -0500
-In-Reply-To: <20110525131130.GA3260@redhat.com>
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-	 <20110524070941.GA2189@redhat.com>
-	 <1306255853.12267.14.camel@x61.thuisdomein>
-	 <20110525131130.GA3260@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1306430810.3151.4.camel@dcbw.foobar.com> (sfid-20110526_192439_537174_3A223EE3)
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:59421 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754258Ab1ECTFx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 15:05:53 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 24E14540157
+	for <linux-wireless@vger.kernel.org>; Tue,  3 May 2011 15:11:19 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-03 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110503190552.748E440EC5@repository3.orbit-lab.org> (sfid-20110503_210556_989932_55C67D46)
+Date: Tue,  3 May 2011 15:05:52 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-25 at 15:11 +0200, Stanislaw Gruszka wrote:
-> On Tue, May 24, 2011 at 06:50:53PM +0200, Paul Bolle wrote:
-> > On Tue, 2011-05-24 at 09:09 +0200, Stanislaw Gruszka wrote:
-> > > What is your configuration (mode,
-> > > encryption, do you use wpa_supplicant or NetworkManager, which version,
-> > > etc ...)?
-> > 
-> > 0) Mode as is displayed in iwconfig output? That is "Managed".
-> > 
-> > 1) Encryption is wep (so, no wpa_supplicant).
-> > 
-> > 2) Currently using NetworkManager-0.8.4-1.fc14.x86_64.
-> 
-> I try to use WEP with one AP, no microcode errors. However with different
-> NetworkManager version, not sure if it is important. I'll try lately on F-14. 
-> What channel do you use? Is network 11n or 11g or mixed ? WEP is 40 bits or
-> other?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + deb1f4e...4333b4b akpm-end   -> origin/akpm-end  (forced update)
+   3fd9952..adadfe4  akpm-start -> origin/akpm-start
+   56ccf59..8748375  history    -> origin/history
+ + f361450...295f62d master     -> origin/master  (forced update)
+   3fd9952..adadfe4  stable     -> origin/stable
+ * [new tag]         next-20110503 -> next-20110503
 
-If it makes a difference, NM 0.8.x uses only the 'wext' supplicant
-driver and uses wpa_supplicant 0.6.x.  NM still requests periodic scans
-about every 2 minutes as usual.
+compat-wireless code metrics
 
-(F15+, ie NM 0.9, uses "nl80211,wext" and supplicant 0.7.3+git)
-
-Dan
-
-> > > I will try to reproduce locally. If I'll be not able to reproduce,
-> > > I'll ask you for debug logs on broken, and working (i.e. 2.6.38) version
-> > > for compare.
-> > 
-> > 3) Sure, no problem. But isn't 2.6.38 from before the iwlegacy split?
-> Yes, it is. If the problem was introduced during driver split (that
-> happen in 2.6.39), one way to find a fix would be compare driver
-> behaviour before the split and after.
-> 
-> Stanislaw
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+    846702 - Total upstream lines of code being pulled
+      2355 - backport code changes
+      2048 - backport code additions
+       307 - backport code deletions
+      8033 - backport from compat module
+     10388 - total backport code
+    1.2269 - % of code consists of backport work
