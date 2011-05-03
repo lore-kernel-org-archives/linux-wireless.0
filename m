@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52502 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab1EFRj0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 13:39:26 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:2334 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752148Ab1ECJgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:18 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 43/61] staging: brcm80211: fix checkpatch warning in
+ si_pmu_otp_power
+Date: Tue, 3 May 2011 11:35:43 +0200
+Message-ID: <1304415361-7813-44-git-send-email-arend@broadcom.com> (sfid-20110503_113816_580127_8F854E5A)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Date: Fri, 6 May 2011 19:39:24 +0200
-Message-ID: <BANLkTimMwXVHQtHtgukFvYKcWOuo=tv9ig@mail.gmail.com> (sfid-20110506_193930_267818_09B9B9A1)
-Subject: [next] net/mac80211/main.c:700: error: 'const struct ieee80211_ops'
- has no member named 'suspend'
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux-Next <linux-next@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/4143029/
+Patch "remove dependency between aiutils and siutils sources" introduced
+several checkpatch warnings. This patch remove those in si_pmu_otp_power().
 
-net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no
-member named 'suspend'
-net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no
-member named 'resume'
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_pmu.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-The existence of these two members depends on CONFIG_PM.
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+index e98ace6..4b2095f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+@@ -1886,9 +1886,8 @@ void si_pmu_otp_power(si_t *sih, bool on)
+ 	u32 rsrcs = 0;	/* rsrcs to turn on/off OTP power */
+ 
+ 	/* Don't do anything if OTP is disabled */
+-	if (si_is_otp_disabled(sih)) {
++	if (si_is_otp_disabled(sih))
+ 		return;
+-	}
+ 
+ 	/* Remember original core before switch to chipc */
+ 	origidx = ai_coreidx(sih);
+-- 
+1.7.4.1
 
-Funny, as both the members and these users were added in the same
-commit eecc48000afe2ca6da22122d553b7cad294e42fc ("mac80211: add basic
-support
-for WoWLAN").
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
