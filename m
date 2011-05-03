@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3059 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755869Ab1EJKHQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 06:07:16 -0400
-Message-ID: <4DC90E45.2010703@broadcom.com> (sfid-20110510_120721_017508_1D343244)
-Date: Tue, 10 May 2011 12:07:01 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	devel <devel@driverdev.osuosl.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Fix memset using
- sizeof(ptr) not sizeof(*ptr)
-References: <1304956289.19586.35.camel@Joe-Laptop>
-In-Reply-To: <1304956289.19586.35.camel@Joe-Laptop>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:64694 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268Ab1ECX5k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 19:57:40 -0400
+Received: by mail-pw0-f46.google.com with SMTP id 15so278996pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 16:57:40 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH 07/13] nl80211: allow setting MFP flag for a meshif
+Date: Tue,  3 May 2011 16:57:13 -0700
+Message-Id: <1304467039-7730-8-git-send-email-javier@cozybit.com> (sfid-20110504_015747_200435_06C73BE0)
+In-Reply-To: <1304467039-7730-1-git-send-email-javier@cozybit.com>
+References: <1304467039-7730-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nice catch!
+From: Thomas Pedersen <thomas@cozybit.com>
 
-Acked-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/wireless/nl80211.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On 05/09/2011 05:51 PM, Joe Perches wrote:
-> Found via coccinelle script
->
-> @@
-> type T;
-> T* ptr;
-> expression E1;
-> @@
->
-> * memset(E1, 0, sizeof(ptr));
->
-> Signed-off-by: Joe Perches<joe@perches.com>
-> ---
->   drivers/staging/brcm80211/brcmfmac/wl_iw.c |    4 +---
->   1 files changed, 1 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-> index a16b46c..4b810ed 100644
-> --- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-> +++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-> @@ -498,9 +498,7 @@ wl_iw_get_range(struct net_device *dev,
->   	list = (wl_u32_list_t *) channels;
->
->   	dwrq->length = sizeof(struct iw_range);
-> -	memset(range, 0, sizeof(range));
-> -
-> -	range->min_nwid = range->max_nwid = 0;
-> +	memset(range, 0, sizeof(*range));
->
->   	list->count = cpu_to_le32(MAXCHANNEL);
->   	error = dev_wlc_ioctl(dev, WLC_GET_VALID_CHANNELS, channels,
->
->
->
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 176d118..da1cdbe 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2297,6 +2297,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 			err = -EINVAL;
+ 		if (params.sta_flags_mask &
+ 				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				  BIT(NL80211_STA_FLAG_MFP) |
+ 				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
+ 			err = -EINVAL;
+ 		break;
+-- 
+1.7.1
 
