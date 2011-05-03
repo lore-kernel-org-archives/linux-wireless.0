@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59009 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257Ab1EIQqi (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52787 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab1ECNj4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:46:38 -0400
-Message-ID: <4DC81A61.9080101@candelatech.com> (sfid-20110509_184641_702205_F225443A)
-Date: Mon, 09 May 2011 09:46:25 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 3 May 2011 09:39:56 -0400
+Received: by bwz15 with SMTP id 15so117007bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 06:39:55 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
-References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+Date: Tue, 3 May 2011 09:39:55 -0400
+Message-ID: <BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com> (sfid-20110503_153959_463937_D16B8B70)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 09:41 AM, Johannes Berg wrote:
-> From: Johannes Berg<johannes.berg@intel.com>
+Sorry, missed a 5 at the end of the panasonic model: N5HBZ0000055
+
+On Tue, May 3, 2011 at 9:30 AM, George Nychis <gnychis@gmail.com> wrote:
+>> Thanks, but unfortunately, the only option is for someone to port all
+>> the HW support to htc_7010.fw. And I don't know if and when it would be done.
+>>
 >
-> Multiple virtual AP interfaces can currently try
-> to use different beacon intervals, but that just
-> leads to problems since it won't actually be done
-> that way by drivers. Return an error in this case
-> to make sure it won't be done wrong.
-
-I think there is no problem with having different beacon
-intervals, as long as they are all a multiple of
-the smallest interval and the driver does things properly.
-
-I'm not sure ath9k or ath5k currently supports this properly,
-but there was a patch floating around for a while that did
-this for ath9k I think...
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> Your last e-mail sounded a little more hopeful, this e-mail makes it
+> sound like I should jump ship on this hardware and track down another
+> AR7010+AR9280 solution...
+>
+> It seems like the combo in production with UB94 is still not widely
+> available.  The Panasonic N5HBZ000005 is the only UB94 that seems is
+> semi-available in the US.  Maybe I'll jump back to AR9271+AR7010.
+>
+> - George
+>
