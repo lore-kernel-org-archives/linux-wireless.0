@@ -1,190 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:59058 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754683Ab1ECX5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 19:57:31 -0400
-Received: by pvg12 with SMTP id 12so258431pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 16:57:31 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH 01/13] nl80211: Introduce NL80211_MESH_SETUP_USERSPACE_AMPE
-Date: Tue,  3 May 2011 16:57:07 -0700
-Message-Id: <1304467039-7730-2-git-send-email-javier@cozybit.com> (sfid-20110504_015737_521520_177F332C)
-In-Reply-To: <1304467039-7730-1-git-send-email-javier@cozybit.com>
-References: <1304467039-7730-1-git-send-email-javier@cozybit.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1681 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211Ab1ECJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH 24/61] staging: brcm80211: delete ASSERTs in 4 files in
+ brcmsmac dir
+Date: Tue, 3 May 2011 11:35:24 +0200
+Message-ID: <1304415361-7813-25-git-send-email-arend@broadcom.com> (sfid-20110503_113757_165715_02E04E2F)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a new configuration option to support AMPE from userspace.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Prior to this series we only supported authentication in userspace: an
-authentication daemon would authenticate peer candidates in userspace
-and hand them over to the kernel.  From that point the mesh stack would
-take over and establish a peer link (Mesh Peering Management).
+wlc_antsel.c, wlc_channel.c, wlc_rate.c and wlc_stf.c are now
+ASSERT free.
 
-These patches introduce support for Authenticated Mesh Peering Exchange
-in userspace.  The userspace daemon implements the AMPE protocol and on
-successfull completion create mesh peers and install encryption keys.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/linux/nl80211.h    |   10 ++++++++++
- include/net/cfg80211.h     |    4 +++-
- net/mac80211/cfg.c         |    6 +++++-
- net/mac80211/ieee80211_i.h |    6 +++++-
- net/mac80211/mesh.c        |    2 +-
- net/mac80211/mesh_plink.c  |    5 +++--
- net/wireless/nl80211.c     |    4 +++-
- 7 files changed, 30 insertions(+), 7 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wlc_antsel.c  |    3 ---
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c |   18 ++----------------
+ drivers/staging/brcm80211/brcmsmac/wlc_rate.c    |    6 ++----
+ drivers/staging/brcm80211/brcmsmac/wlc_stf.c     |   19 ++-----------------
+ 4 files changed, 6 insertions(+), 40 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 216b1d8..8684c0a 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1748,6 +1748,15 @@ enum nl80211_meshconf_params {
-  * @NL80211_MESH_SETUP_USERSPACE_AUTH: Enable this option if an authentication
-  * daemon will be authenticating mesh candidates.
-  *
-+ * @NL80211_MESH_SETUP_USERSPACE_AMPE: Enable this option if an authentication
-+ * daemon will be securing peer link frames.  AMPE is a secured version of Mesh
-+ * Peering Management (MPM) and is implemented with the assistance of a
-+ * userspace daemon.  When this flag is set, the kernel will send peer
-+ * management frames to a userspace daemon that will implement AMPE
-+ * functionality (security capabilities selection, key confirmation, and key
-+ * management).  When the flag is unset (default), the kernel can autonomously
-+ * complete (unsecured) mesh peering without the need of a userspace daemon.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-  */
-@@ -1757,6 +1766,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
- 	NL80211_MESH_SETUP_IE,
- 	NL80211_MESH_SETUP_USERSPACE_AUTH,
-+	NL80211_MESH_SETUP_USERSPACE_AMPE,
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+index 0121ce3..89346fe 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+@@ -130,7 +130,6 @@ struct antsel_info *wlc_antsel_attach(struct wlc_info *wlc)
+ 				asi->antsel_avail = false;
+ 				wiphy_err(wlc->wiphy, "wlc_antsel_attach: 2o3 "
+ 					  "board cfg invalid\n");
+-				ASSERT(0);
+ 			}
+ 			break;
+ 		default:
+@@ -298,8 +297,6 @@ static int wlc_antsel_cfgupd(struct antsel_info *asi, wlc_antselcfg_t *antsel)
+ 	u8 ant_cfg;
+ 	u16 mimo_antsel;
  
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d30eada..5e4f87b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -695,7 +695,8 @@ struct mesh_config {
-  * @path_metric: which metric to use
-  * @ie: vendor information elements (optional)
-  * @ie_len: length of vendor information elements
-- * @is_secure: or not
-+ * @is_authenticated: this mesh requires authentication
-+ * @is_secure: this mesh uses security
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -706,6 +707,7 @@ struct mesh_setup {
- 	u8  path_metric;
- 	const u8 *ie;
- 	u8 ie_len;
-+	bool is_authenticated;
- 	bool is_secure;
- };
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 12d52ce..7ea13d3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1064,7 +1064,11 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->is_secure = setup->is_secure;
-+	ifmsh->security = IEEE80211_MESH_SEC_NONE;
-+	if (setup->is_authenticated)
-+		ifmsh->security |= IEEE80211_MESH_SEC_AUTHED;
-+	if (setup->is_secure)
-+		ifmsh->security |= IEEE80211_MESH_SEC_SECURED;
- 
- 	return 0;
+-	ASSERT(asi->antsel_type != ANTSEL_NA);
+-
+ 	/* 1) Update TX antconfig for all frames that are not unicast data
+ 	 *    (aka default TX)
+ 	 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+index ec55ea5..345c197 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+@@ -594,8 +594,7 @@ struct chan20_info chan20_info[] = {
+ static const locale_info_t *wlc_get_locale_2g(u8 locale_idx)
+ {
+ 	if (locale_idx >= ARRAY_SIZE(g_locale_2g_table)) {
+-		ASSERT(locale_idx < ARRAY_SIZE(g_locale_2g_table));
+-		return NULL;
++		return NULL; /* error condition */
+ 	}
+ 	return g_locale_2g_table[locale_idx];
  }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 027c046..ec360fb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -490,7 +490,11 @@ struct ieee80211_if_mesh {
- 	bool accepting_plinks;
- 	const u8 *ie;
- 	u8 ie_len;
--	bool is_secure;
-+	enum {
-+		IEEE80211_MESH_SEC_NONE = 0x0,
-+		IEEE80211_MESH_SEC_AUTHED = 0x1,
-+		IEEE80211_MESH_SEC_SECURED = 0x2,
-+	} security;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index c1299e2..2a59eb3 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -574,7 +574,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 			       &elems);
- 
- 	/* ignore beacons from secure mesh peers if our security is off */
--	if (elems.rsn_len && !sdata->u.mesh.is_secure)
-+	if (elems.rsn_len && sdata->u.mesh.security == IEEE80211_MESH_SEC_NONE)
- 		return;
- 
- 	if (elems.ds_params && elems.ds_params_len == 1)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 84e5b05..87abf8d 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -251,7 +251,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 		rcu_read_unlock();
- 		/* Userspace handles peer allocation when security is enabled
- 		 * */
--		if (sdata->u.mesh.is_secure)
-+		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED)
- 			cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
- 					elems->ie_start, elems->total_len,
- 					GFP_KERNEL);
-@@ -460,7 +460,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		mpl_dbg("Mesh plink: missing necessary peer link ie\n");
- 		return;
+@@ -603,8 +602,7 @@ static const locale_info_t *wlc_get_locale_2g(u8 locale_idx)
+ static const locale_info_t *wlc_get_locale_5g(u8 locale_idx)
+ {
+ 	if (locale_idx >= ARRAY_SIZE(g_locale_5g_table)) {
+-		ASSERT(locale_idx < ARRAY_SIZE(g_locale_5g_table));
+-		return NULL;
++		return NULL; /* error condition */
  	}
--	if (elems.rsn_len && !sdata->u.mesh.is_secure) {
-+	if (elems.rsn_len &&
-+			sdata->u.mesh.security == IEEE80211_MESH_SEC_NONE) {
- 		mpl_dbg("Mesh plink: can't establish link with secure peer\n");
- 		return;
- 	}
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0efa7fd..7c1c4de 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2840,6 +2840,7 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
- };
- 
- static int nl80211_parse_mesh_config(struct genl_info *info,
-@@ -2949,7 +2950,8 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		setup->ie = nla_data(ieattr);
- 		setup->ie_len = nla_len(ieattr);
- 	}
--	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
-+	setup->is_authenticated = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
-+	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AMPE]);
- 
- 	return 0;
+ 	return g_locale_5g_table[locale_idx];
  }
+@@ -656,8 +654,6 @@ wlc_cm_info_t *wlc_channel_mgr_attach(struct wlc_info *wlc)
+ 	strncpy(country_abbrev, "X2", sizeof(country_abbrev) - 1);
+ 	country = wlc_country_lookup(wlc, country_abbrev);
+ 
+-	ASSERT(country != NULL);
+-
+ 	/* save default country for exiting 11d regulatory mode */
+ 	strncpy(wlc->country_default, country_abbrev, WLC_CNTRY_BUF_SZ - 1);
+ 
+@@ -708,7 +704,6 @@ wlc_set_countrycode_rev(wlc_cm_info_t *wlc_cm,
+ 					&mapped_regrev);
+ 	} else {
+ 		/* find the matching built-in country definition */
+-		ASSERT(0);
+ 		country = wlc_country_lookup_direct(ccode, regrev);
+ 		strncpy(mapped_ccode, ccode, WLC_CNTRY_BUF_SZ);
+ 		mapped_regrev = regrev;
+@@ -738,8 +733,6 @@ wlc_set_country_common(wlc_cm_info_t *wlc_cm,
+ 	struct wlc_info *wlc = wlc_cm->wlc;
+ 	char prev_country_abbrev[WLC_CNTRY_BUF_SZ];
+ 
+-	ASSERT(country != NULL);
+-
+ 	/* save current country state */
+ 	wlc_cm->country = country;
+ 
+@@ -824,7 +817,6 @@ static const country_info_t *wlc_countrycode_map(wlc_cm_info_t *wlc_cm,
+ 		*mapped_regrev = srom_regrev;
+ 		mapped = 0;
+ 		wiphy_err(wlc->wiphy, "srom_code == ccode %s\n", __func__);
+-		ASSERT(0);
+ 	} else {
+ 		mapped =
+ 		    wlc_country_aggregate_map(wlc_cm, ccode, mapped_ccode,
+@@ -837,7 +829,6 @@ static const country_info_t *wlc_countrycode_map(wlc_cm_info_t *wlc_cm,
+ 	/* if there is not an exact rev match, default to rev zero */
+ 	if (country == NULL && *mapped_regrev != 0) {
+ 		*mapped_regrev = 0;
+-		ASSERT(0);
+ 		country =
+ 		    wlc_country_lookup_direct(mapped_ccode, *mapped_regrev);
+ 	}
+@@ -874,8 +865,6 @@ static const country_info_t *wlc_country_lookup_direct(const char *ccode,
+ 			return &cntry_locales[i].country;
+ 		}
+ 	}
+-
+-	ASSERT(0);
+ 	return NULL;
+ }
+ 
+@@ -896,12 +885,10 @@ wlc_channels_init(wlc_cm_info_t *wlc_cm, const country_info_t *country)
+ 		li = BAND_5G(band->bandtype) ?
+ 		    wlc_get_locale_5g(country->locale_5G) :
+ 		    wlc_get_locale_2g(country->locale_2G);
+-		ASSERT(li);
+ 		wlc_cm->bandstate[band->bandunit].locale_flags = li->flags;
+ 		li_mimo = BAND_5G(band->bandtype) ?
+ 		    wlc_get_mimo_5g(country->locale_mimo_5G) :
+ 		    wlc_get_mimo_2g(country->locale_mimo_2G);
+-		ASSERT(li_mimo);
+ 
+ 		/* merge the mimo non-mimo locale flags */
+ 		wlc_cm->bandstate[band->bandunit].locale_flags |=
+@@ -1509,7 +1496,6 @@ wlc_valid_chanspec_ext(wlc_cm_info_t *wlc_cm, chanspec_t chspec, bool dualband)
+ 	if (wf_chspec_malformed(chspec)) {
+ 		wiphy_err(wlc->wiphy, "wl%d: malformed chanspec 0x%x\n",
+ 			wlc->pub->unit, chspec);
+-		ASSERT(0);
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_rate.c b/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
+index 8c1b8f0..50a9fb5 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
+@@ -315,7 +315,6 @@ wlc_rate_hwrs_filter_sort_validate(wlc_rateset_t *rs,
+ 	count = 0;
+ 	for (i = 0; i < hw_rs->count; i++) {
+ 		r = hw_rs->rates[i] & WLC_RATE_MASK;
+-		ASSERT(r <= WLC_MAXRATE);
+ 		if (rateset[r])
+ 			rs->rates[count++] = rateset[r];
+ 	}
+@@ -364,8 +363,7 @@ ratespec_t BCMFASTPATH wlc_compute_rspec(d11rxhdr_t *rxh, u8 *plcp)
+ 		case PRXS0_STDN:
+ 			/* fallthru */
+ 		default:
+-			/* not supported */
+-			ASSERT(0);
++			/* not supported, error condition */
+ 			break;
+ 		}
+ 		if (PLCP3_ISSGI(plcp[3]))
+@@ -451,7 +449,7 @@ wlc_rateset_default(wlc_rateset_t *rs_tgt, const wlc_rateset_t *rs_hw,
+ 	} else if (PHYTYPE_IS(phy_type, PHY_TYPE_G)) {
+ 		rs_dflt = &cck_ofdm_rates;
+ 	} else {
+-		ASSERT(0);	/* should not happen */
++		/* should not happen, error condition */
+ 		rs_dflt = &cck_rates;	/* force cck */
+ 	}
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+index c006ab5..6eff7ef 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+@@ -69,9 +69,6 @@ const u8 txcore_default[5] = {
+ 
+ static void wlc_stf_stbc_rx_ht_update(struct wlc_info *wlc, int val)
+ {
+-	ASSERT((val == HT_CAP_RX_STBC_NO)
+-	       || (val == HT_CAP_RX_STBC_ONE_STREAM));
+-
+ 	/* MIMOPHYs rev3-6 cannot receive STBC with only one rx core active */
+ 	if (WLC_STF_SS_STBC_RX(wlc)) {
+ 		if ((wlc->stf->rxstreams == 1) && (val != HT_CAP_RX_STBC_NO))
+@@ -196,8 +193,6 @@ static int wlc_stf_txcore_set(struct wlc_info *wlc, u8 Nsts, u8 core_mask)
+ 	WL_TRACE("wl%d: %s: Nsts %d core_mask %x\n",
+ 		 wlc->pub->unit, __func__, Nsts, core_mask);
+ 
+-	ASSERT((Nsts > 0) && (Nsts <= MAX_STREAMS_SUPPORTED));
+-
+ 	if (WLC_BITSCNT(core_mask) > wlc->stf->txstreams) {
+ 		core_mask = 0;
+ 	}
+@@ -208,8 +203,6 @@ static int wlc_stf_txcore_set(struct wlc_info *wlc, u8 Nsts, u8 core_mask)
+ 		core_mask = wlc->stf->txchain;
+ 	}
+ 
+-	ASSERT(!core_mask || Nsts <= WLC_BITSCNT(core_mask));
+-
+ 	wlc->stf->txcore[Nsts] = core_mask;
+ 	/* Nsts = 1..4, txcore index = 1..4 */
+ 	if (Nsts == 1) {
+@@ -323,9 +316,6 @@ int wlc_stf_ss_update(struct wlc_info *wlc, struct wlcband *band)
+ 	if (WLC_STBC_CAP_PHY(wlc) &&
+ 	    wlc->stf->ss_algosel_auto
+ 	    && (wlc->stf->ss_algo_channel != (u16) -1)) {
+-		ASSERT(isset(&wlc->stf->ss_algo_channel, PHY_TXC1_MODE_CDD)
+-		       || isset(&wlc->stf->ss_algo_channel,
+-				PHY_TXC1_MODE_SISO));
+ 		upd_stf_ss = (wlc->stf->no_cddstbc || (wlc->stf->txstreams == 1)
+ 			      || isset(&wlc->stf->ss_algo_channel,
+ 				       PHY_TXC1_MODE_SISO)) ? PHY_TXC1_MODE_SISO
+@@ -425,9 +415,6 @@ static void _wlc_stf_phy_txant_upd(struct wlc_info *wlc)
+ 	s8 txant;
+ 
+ 	txant = (s8) wlc->stf->txant;
+-	ASSERT(txant == ANT_TX_FORCE_0 || txant == ANT_TX_FORCE_1
+-	       || txant == ANT_TX_LAST_RX);
+-
+ 	if (WLC_PHY_11N_CAP(wlc->band)) {
+ 		if (txant == ANT_TX_FORCE_0) {
+ 			wlc->stf->phytxant = PHY_TXC_ANT_0;
+@@ -443,8 +430,8 @@ static void _wlc_stf_phy_txant_upd(struct wlc_info *wlc)
+ 			if (WLCISLCNPHY(wlc->band) || WLCISSSLPNPHY(wlc->band))
+ 				wlc->stf->phytxant = PHY_TXC_LCNPHY_ANT_LAST;
+ 			else {
+-				/* keep this assert to catch out of sync wlc->stf->txcore */
+-				ASSERT(wlc->stf->txchain > 0);
++				/* catch out of sync wlc->stf->txcore */
++				WARN_ON(wlc->stf->txchain <= 0);
+ 				wlc->stf->phytxant =
+ 				    wlc->stf->txchain << PHY_TXC_ANT_SHIFT;
+ 			}
+@@ -508,7 +495,6 @@ static u16 _wlc_stf_phytxchain_sel(struct wlc_info *wlc, ratespec_t rspec)
+ 	u16 phytxant = wlc->stf->phytxant;
+ 
+ 	if (RSPEC_STF(rspec) != PHY_TXC1_MODE_SISO) {
+-		ASSERT(wlc->stf->txstreams > 1);
+ 		phytxant = wlc->stf->txchain << PHY_TXC_ANT_SHIFT;
+ 	} else if (wlc->stf->txant == ANT_TX_DEF)
+ 		phytxant = wlc->stf->txchain << PHY_TXC_ANT_SHIFT;
+@@ -528,7 +514,6 @@ u16 wlc_stf_d11hdrs_phyctl_txant(struct wlc_info *wlc, ratespec_t rspec)
+ 
+ 	/* for non-siso rates or default setting, use the available chains */
+ 	if (WLCISNPHY(wlc->band)) {
+-		ASSERT(wlc->stf->txchain != 0);
+ 		phytxant = _wlc_stf_phytxchain_sel(wlc, rspec);
+ 		mask = PHY_TXC_HTANT_MASK;
+ 	}
 -- 
-1.7.1
+1.7.4.1
+
 
