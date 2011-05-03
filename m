@@ -1,430 +1,1263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57574 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411Ab1E0UBJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 16:01:09 -0400
-Date: Fri, 27 May 2011 15:50:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2011-05-27
-Message-ID: <20110527195008.GA5092@tuxdriver.com> (sfid-20110527_220118_033647_52F2E454)
+Received: from mms3.broadcom.com ([216.31.210.19]:1666 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752201Ab1ECJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH 19/61] staging: brcm80211: replace error codes part 1
+Date: Tue, 3 May 2011 11:35:19 +0200
+Message-ID: <1304415361-7813-20-git-send-email-arend@broadcom.com> (sfid-20110503_113809_015634_77FD6AEE)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+From: Roland Vossen <rvossen@broadcom.com>
 
-This is a quick batch of fixes intended for 2.6.40.  They are all
-small(-ish), and several of them fix either build breakage or some
-sort of regression.  At least one fixes an uninitialized variable
-that could potentially cause a crash.
+Replacing part of the proprietary error code values with native error
+code values.
 
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    8 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   14 ++--
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |    4 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   24 +++---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   10 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   40 ++++----
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c     |   10 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c   |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |  104 ++++++++++----------
+ drivers/staging/brcm80211/include/bcmutils.h       |   14 ---
+ drivers/staging/brcm80211/util/bcmotp.c            |   14 ++--
+ drivers/staging/brcm80211/util/bcmsrom.c           |   10 +-
+ drivers/staging/brcm80211/util/bcmutils.c          |    8 +-
+ drivers/staging/brcm80211/util/nvram/nvram_ro.c    |    6 +-
+ 15 files changed, 128 insertions(+), 142 deletions(-)
 
-The following changes since commit c5c177b4aca83338781e72be2e6dd1601c560cb3:
-
-  net: Kill ratelimit.h dependency in linux/net.h (2011-05-27 13:41:33 -0400)
-
-are available in the git repository at:
-  ssh://master.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git for-davem
-
-Adrian Chadd (1):
-      ath9k: Fix AR9287 calibration
-
-Eliad Peller (1):
-      mac80211: clear local->ps_data on disassoc
-
-Jesper Juhl (1):
-      mac80211: Remove duplicate linux/slab.h include from net/mac80211/scan.c
-
-John W. Linville (1):
-      Merge git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
-
-Larry Finger (2):
-      rtlwifi: Fix kernel panic resulting from RX buffer allocation failure
-      rtlwifi: Use order 2 RX buffer allocation only if necessary
-
-Luciano Coelho (1):
-      nl80211: fix check for valid SSID size in scan operations
-
-Rafał Miłecki (1):
-      b43: N-PHY: initialize last var in calibration function
-
-Rajkumar Manoharan (4):
-      ath9k: Reset chip on baseband hang
-      ath9k_hw: disable phy restart on baseband panic caused by RXSM
-      ath9k: set 40 Mhz rate only if hw is configured in ht40
-      mac80211: stop queues before rate control updation
-
-Stanislaw Gruszka (1):
-      iwl4965: fix 5GHz operation
-
-Tao Ma (1):
-      wireless: Default to 'n' for 2 new added devices in Kconfig.
-
-Yogesh Ashok Powar (1):
-      mwifiex: correct event header length
-
- drivers/net/wireless/ath/ath9k/Kconfig        |    1 -
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c   |   22 +++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c           |    5 +++-
- drivers/net/wireless/ath/ath9k/hw.h           |    2 +
- drivers/net/wireless/ath/ath9k/main.c         |    4 ++-
- drivers/net/wireless/ath/ath9k/rc.c           |    3 +-
- drivers/net/wireless/b43/phy_n.c              |    2 +-
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c  |    4 +-
- drivers/net/wireless/mwifiex/sdio.h           |    4 +-
- drivers/net/wireless/rt2x00/Kconfig           |    1 -
- drivers/net/wireless/rtlwifi/pci.c            |   35 +++++++++++++++---------
- net/mac80211/mlme.c                           |    7 +++++
- net/mac80211/scan.c                           |    1 -
- net/wireless/nl80211.c                        |    4 +-
- 15 files changed, 70 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index d9ff841..d9c08c6 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -26,7 +26,6 @@ config ATH9K
- config ATH9K_PCI
- 	bool "Atheros ath9k PCI/PCIe bus support"
- 	depends on ATH9K && PCI
--	default PCI
- 	---help---
- 	  This option enables the PCI bus support in ath9k.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 745e3c2..9ff6413 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -174,7 +174,7 @@ int bcmsdh_devremove_reg(void *sdh, bcmsdh_cb_fn_t fn, void *argh)
+ 	ASSERT(sdh);
  
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 015d974..2d4c091 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -829,7 +829,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (AR_SREV_9271(ah)) {
- 		if (!ar9285_hw_cl_cal(ah, chan))
- 			return false;
--	} else if (AR_SREV_9285_12_OR_LATER(ah)) {
-+	} else if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
- 		if (!ar9285_hw_clc(ah, chan))
- 			return false;
- 	} else {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index eee23ec..892c48b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1381,3 +1381,25 @@ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
- 		"==== BB update: done ====\n\n");
+ 	/* don't support yet */
+-	return -BCME_UNSUPPORTED;
++	return -ENOTSUPP;
  }
- EXPORT_SYMBOL(ar9003_hw_bb_watchdog_dbg_info);
-+
-+void ar9003_hw_disable_phy_restart(struct ath_hw *ah)
-+{
-+	u32 val;
-+
-+	/* While receiving unsupported rate frame rx state machine
-+	 * gets into a state 0xb and if phy_restart happens in that
-+	 * state, BB would go hang. If RXSM is in 0xb state after
-+	 * first bb panic, ensure to disable the phy_restart.
-+	 */
-+	if (!((MS(ah->bb_watchdog_last_status,
-+		  AR_PHY_WATCHDOG_RX_OFDM_SM) == 0xb) ||
-+	    ah->bb_hang_rx_ofdm))
-+		return;
-+
-+	ah->bb_hang_rx_ofdm = true;
-+	val = REG_READ(ah, AR_PHY_RESTART);
-+	val &= ~AR_PHY_RESTART_ENA;
-+
-+	REG_WRITE(ah, AR_PHY_RESTART, val);
-+}
-+EXPORT_SYMBOL(ar9003_hw_disable_phy_restart);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 72543ce..1be7c8b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1555,9 +1555,12 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ah->btcoex_hw.enabled)
- 		ath9k_hw_btcoex_enable(ah);
  
--	if (AR_SREV_9300_20_OR_LATER(ah))
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ar9003_hw_bb_watchdog_config(ah);
+ u8 bcmsdh_cfg_read(void *sdh, uint fnc_num, u32 addr, int *err)
+@@ -317,7 +317,7 @@ int bcmsdh_cis_read(void *sdh, uint func, u8 * cis, uint length)
+ 		tmp_buf = kmalloc(length, GFP_ATOMIC);
+ 		if (tmp_buf == NULL) {
+ 			BCMSDH_ERROR(("%s: out of memory\n", __func__));
+-			return -BCME_NOMEM;
++			return -ENOMEM;
+ 		}
+ 		memcpy(tmp_buf, cis, length);
+ 		for (tmp_ptr = tmp_buf, ptr = cis; ptr < (cis + length - 4);
+@@ -467,7 +467,7 @@ bcmsdh_recv_buf(void *sdh, u32 addr, uint fn, uint flags,
+ 	/* Async not implemented yet */
+ 	ASSERT(!(flags & SDIO_REQ_ASYNC));
+ 	if (flags & SDIO_REQ_ASYNC)
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
  
-+		ar9003_hw_disable_phy_restart(ah);
-+	}
-+
- 	ath9k_hw_apply_gpio_override(ah);
+ 	if (bar0 != bcmsdh->sbwad) {
+ 		err = bcmsdhsdio_set_sbaddr_window(bcmsdh, bar0);
+@@ -512,7 +512,7 @@ bcmsdh_send_buf(void *sdh, u32 addr, uint fn, uint flags,
+ 	/* Async not implemented yet */
+ 	ASSERT(!(flags & SDIO_REQ_ASYNC));
+ 	if (flags & SDIO_REQ_ASYNC)
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
  
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 57435ce..4b157c5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -842,6 +842,7 @@ struct ath_hw {
+ 	if (bar0 != bcmsdh->sbwad) {
+ 		err = bcmsdhsdio_set_sbaddr_window(bcmsdh, bar0);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 9212fcd..fab3853 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -423,7 +423,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
  
- 	u32 bb_watchdog_last_status;
- 	u32 bb_watchdog_timeout_ms; /* in ms, 0 to disable */
-+	u8 bb_hang_rx_ofdm; /* true if bb hang due to rx_ofdm */
- 
- 	unsigned int paprd_target_power;
- 	unsigned int paprd_training_power;
-@@ -990,6 +991,7 @@ void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_config(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_read(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah);
-+void ar9003_hw_disable_phy_restart(struct ath_hw *ah);
- void ar9003_paprd_enable(struct ath_hw *ah, bool val);
- void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- 					struct ath9k_hw_cal_data *caldata,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a198ee3..2ca351f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -670,7 +670,8 @@ void ath9k_tasklet(unsigned long data)
- 	u32 status = sc->intrstatus;
- 	u32 rxmask;
- 
--	if (status & ATH9K_INT_FATAL) {
-+	if ((status & ATH9K_INT_FATAL) ||
-+	    (status & ATH9K_INT_BB_WATCHDOG)) {
- 		ath_reset(sc, true);
- 		return;
+ 	vi = bcm_iovar_lookup(sdioh_iovars, name);
+ 	if (vi == NULL) {
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		goto exit;
  	}
-@@ -737,6 +738,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+@@ -472,7 +472,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 
+ 	case IOV_GVAL(IOV_BLOCKSIZE):
+ 		if ((u32) int_val > si->num_funcs) {
+-			bcmerror = -BCME_BADARG;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 		int_val = (s32) si->client_block_size[int_val];
+@@ -486,7 +486,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 			uint maxsize;
+ 
+ 			if (func > si->num_funcs) {
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -504,7 +504,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 				maxsize = 0;
+ 			}
+ 			if (blksize > maxsize) {
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 			if (!blksize)
+@@ -607,7 +607,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 			    || sd_ptr->offset > SD_MaxCurCap) {
+ 				sd_err(("%s: bad offset 0x%x\n", __func__,
+ 					sd_ptr->offset));
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -637,7 +637,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 			    || sd_ptr->offset > SD_MaxCurCap) {
+ 				sd_err(("%s: bad offset 0x%x\n", __func__,
+ 					sd_ptr->offset));
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -679,7 +679,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 		}
+ 
+ 	default:
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		break;
+ 	}
+ exit:
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+index 0d72dd4..a91684e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+@@ -151,7 +151,7 @@ int sdioh_sdmmc_osinit(sdioh_info_t *sd)
+ 	sdos = kmalloc(sizeof(struct sdos_info), GFP_ATOMIC);
+ 	sd->sdos_info = (void *)sdos;
+ 	if (sdos == NULL)
+-		return -BCME_NOMEM;
++		return -ENOMEM;
+ 
+ 	sdos->sd = sd;
+ 	spin_lock_init(&sdos->lock);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
+index 456b5db..95872f0 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
+@@ -309,7 +309,7 @@ int
+ dhd_prot_iovar_op(dhd_pub_t *dhdp, const char *name,
+ 		  void *params, int plen, void *arg, int len, bool set)
  {
- #define SCHED_INTR (				\
- 		ATH9K_INT_FATAL |		\
-+		ATH9K_INT_BB_WATCHDOG |		\
- 		ATH9K_INT_RXORN |		\
- 		ATH9K_INT_RXEOL |		\
- 		ATH9K_INT_RX |			\
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 1754221..ba7f36a 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -689,7 +689,8 @@ static void ath_rc_rate_set_series(const struct ath_rate_table *rate_table,
+-	return -BCME_UNSUPPORTED;
++	return -ENOTSUPP;
+ }
  
- 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy)) {
- 		rate->flags |= IEEE80211_TX_RC_MCS;
--		if (WLAN_RC_PHY_40(rate_table->info[rix].phy))
-+		if (WLAN_RC_PHY_40(rate_table->info[rix].phy) &&
-+		    conf_is_ht40(&txrc->hw->conf))
- 			rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 		if (WLAN_RC_PHY_SGI(rate_table->info[rix].phy))
- 			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 9ed6515..05960dd 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3093,7 +3093,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
- 	int freq;
- 	bool avoid = false;
- 	u8 length;
--	u16 tmp, core, type, count, max, numb, last, cmd;
-+	u16 tmp, core, type, count, max, numb, last = 0, cmd;
- 	const u16 *table;
- 	bool phy6or5x;
+ void dhd_prot_dump(dhd_pub_t *dhdp, struct bcmstrbuf *strbuf)
+@@ -416,7 +416,7 @@ int dhd_prot_attach(dhd_pub_t *dhd)
  
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-index 7e5e85a..a7a4739 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-@@ -628,11 +628,11 @@ void iwl4965_rx_reply_rx(struct iwl_priv *priv,
+ fail:
+ 	kfree(cdc);
+-	return -BCME_NOMEM;
++	return -ENOMEM;
+ }
  
- 	/* rx_status carries information about the packet to mac80211 */
- 	rx_status.mactime = le64_to_cpu(phy_res->timestamp);
-+	rx_status.band = (phy_res->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
-+				IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
- 	rx_status.freq =
- 		ieee80211_channel_to_frequency(le16_to_cpu(phy_res->channel),
- 							rx_status.band);
--	rx_status.band = (phy_res->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
--				IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
- 	rx_status.rate_idx =
- 		iwl4965_hwrate_to_mac80211_idx(rate_n_flags, rx_status.band);
- 	rx_status.flag = 0;
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index a0e9bc5..4e97e90 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -167,8 +167,8 @@
- /* Rx unit register */
- #define CARD_RX_UNIT_REG		0x63
+ /* ~NOTE~ What if another thread is waiting on the semaphore?  Holding it? */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index acdd985..eda0935 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -189,7 +189,7 @@ static int dhd_dump(dhd_pub_t *dhdp, char *buf, int buflen)
+ 	/* Add any bus info */
+ 	dhd_bus_dump(dhdp, strbuf);
  
--/* Event header Len*/
--#define MWIFIEX_EVENT_HEADER_LEN           8
-+/* Event header len w/o 4 bytes of interface header */
-+#define MWIFIEX_EVENT_HEADER_LEN           4
+-	return !strbuf->size ? -BCME_BUFTOOSHORT : 0;
++	return !strbuf->size ? -EOVERFLOW : 0;
+ }
  
- /* Max retry number of CMD53 write */
- #define MAX_WRITE_IOMEM_RETRY		2
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 9def1e5..b2f8b8f 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -166,7 +166,6 @@ config RT2800USB_RT35XX
- config RT2800USB_RT53XX
-        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
-        depends on EXPERIMENTAL
--       default y
-        ---help---
-          This adds support for rt53xx wireless chipset family to the
-          rt2800pci driver.
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index a409528..89100e7 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -669,11 +669,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 							 &rx_status,
- 							 (u8 *) pdesc, skb);
+ static int
+@@ -242,7 +242,7 @@ dhd_doiovar(dhd_pub_t *dhd_pub, const bcm_iovar_t *vi, u32 actionid,
  
--			pci_unmap_single(rtlpci->pdev,
--					 *((dma_addr_t *) skb->cb),
--					 rtlpci->rxbuffersize,
--					 PCI_DMA_FROMDEVICE);
--
- 			skb_put(skb, rtlpriv->cfg->ops->get_desc((u8 *) pdesc,
- 							 false,
- 							 HW_DESC_RXPKT_LEN));
-@@ -690,6 +685,21 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 			hdr = rtl_get_hdr(skb);
- 			fc = rtl_get_fc(skb);
+ 	case IOV_SVAL(IOV_WDTICK):
+ 		if (!dhd_pub->up) {
+-			bcmerror = -BCME_NOTUP;
++			bcmerror = -ENOLINK;
+ 			break;
+ 		}
+ 		dhd_os_wd_timer(dhd_pub, (uint) int_val);
+@@ -289,7 +289,7 @@ dhd_doiovar(dhd_pub_t *dhd_pub, const bcm_iovar_t *vi, u32 actionid,
  
-+			/* try for new buffer - if allocation fails, drop
-+			 * frame and reuse old buffer
-+			 */
-+			new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
-+			if (unlikely(!new_skb)) {
-+				RT_TRACE(rtlpriv, (COMP_INTR | COMP_RECV),
-+					 DBG_DMESG,
-+					 ("can't alloc skb for rx\n"));
-+				goto done;
-+			}
-+			pci_unmap_single(rtlpci->pdev,
-+					 *((dma_addr_t *) skb->cb),
-+					 rtlpci->rxbuffersize,
-+					 PCI_DMA_FROMDEVICE);
-+
- 			if (!stats.crc || !stats.hwerror) {
- 				memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
- 				       sizeof(rx_status));
-@@ -758,15 +768,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 				rtl_lps_leave(hw);
+ 	case IOV_SVAL(IOV_IOCTLTIMEOUT):{
+ 			if (int_val <= 0)
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 			else
+ 				dhd_os_set_ioctl_resp_timeout((unsigned int)
+ 							      int_val);
+@@ -297,7 +297,7 @@ dhd_doiovar(dhd_pub_t *dhd_pub, const bcm_iovar_t *vi, u32 actionid,
+ 		}
+ 
+ 	default:
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		break;
+ 	}
+ 
+@@ -381,7 +381,7 @@ dhd_iovar_op(dhd_pub_t *dhd_pub, const char *name,
+ 
+ 	vi = bcm_iovar_lookup(dhd_iovars, name);
+ 	if (vi == NULL) {
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		goto exit;
+ 	}
+ 
+@@ -420,19 +420,19 @@ int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf, uint buflen)
+ 	DHD_TRACE(("%s: Enter\n", __func__));
+ 
+ 	if (!buf)
+-		return -BCME_BADARG;
++		return -EINVAL;
+ 
+ 	switch (ioc->cmd) {
+ 	case DHD_GET_MAGIC:
+ 		if (buflen < sizeof(int))
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 		else
+ 			*(int *)buf = DHD_IOCTL_MAGIC;
+ 		break;
+ 
+ 	case DHD_GET_VERSION:
+ 		if (buflen < sizeof(int))
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 		else
+ 			*(int *)buf = DHD_IOCTL_VERSION;
+ 		break;
+@@ -448,7 +448,7 @@ int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf, uint buflen)
+ 				;
+ 
+ 			if (*arg) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
  			}
  
--			new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
--			if (unlikely(!new_skb)) {
--				RT_TRACE(rtlpriv, (COMP_INTR | COMP_RECV),
--					 DBG_DMESG,
--					 ("can't alloc skb for rx\n"));
--				goto done;
--			}
- 			skb = new_skb;
--			/*skb->dev = dev; */
+@@ -464,7 +464,7 @@ int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf, uint buflen)
+ 				bcmerror =
+ 				    dhd_iovar_op(dhd_pub, buf, NULL, 0, arg,
+ 						 arglen, IOV_SET);
+-			if (bcmerror != -BCME_UNSUPPORTED)
++			if (bcmerror != -ENOTSUPP)
+ 				break;
  
- 			rtlpci->rx_ring[rx_queue_idx].rx_buf[rtlpci->
- 							     rx_ring
-@@ -1113,6 +1115,13 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
+ 			/* not in generic table, try protocol module */
+@@ -476,7 +476,7 @@ int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf, uint buflen)
+ 				bcmerror = dhd_prot_iovar_op(dhd_pub, buf,
+ 							     NULL, 0, arg,
+ 							     arglen, IOV_SET);
+-			if (bcmerror != -BCME_UNSUPPORTED)
++			if (bcmerror != -ENOTSUPP)
+ 				break;
  
- 		rtlpci->rx_ring[rx_queue_idx].idx = 0;
+ 			/* if still not found, try bus module */
+@@ -493,7 +493,7 @@ int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf, uint buflen)
+ 		}
  
-+		/* If amsdu_8k is disabled, set buffersize to 4096. This
-+		 * change will reduce memory fragmentation.
-+		 */
-+		if (rtlpci->rxbuffersize > 4096 &&
-+		    rtlpriv->rtlhal.disable_amsdu_8k)
-+			rtlpci->rxbuffersize = 4096;
-+
- 		for (i = 0; i < rtlpci->rxringcount; i++) {
- 			struct sk_buff *skb =
- 			    dev_alloc_skb(rtlpci->rxbuffersize);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4f6b267..456cccf 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -232,6 +232,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
+ 	default:
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
  	}
  
-+	ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
-+
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
+ 	return bcmerror;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index b43ac8a..8f38fa8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -1699,7 +1699,7 @@ static int dhd_ioctl_entry(struct net_device *net, struct ifreq *ifr, int cmd)
  
-@@ -245,6 +248,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
+ 	/* Copy the ioc control structure part of ioctl request */
+ 	if (copy_from_user(&ioc, ifr->ifr_data, sizeof(wl_ioctl_t))) {
+-		bcmerror = -BCME_BADADDR;
++		bcmerror = -EINVAL;
+ 		goto done;
  	}
  
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
-+
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
-@@ -1089,6 +1095,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 		config_changed |= IEEE80211_CONF_CHANGE_PS;
- 	}
-+	local->ps_sdata = NULL;
- 
- 	ieee80211_hw_config(local, config_changed);
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 27af672..58ffa7d 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -15,7 +15,6 @@
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
- #include <linux/pm_qos_params.h>
--#include <linux/slab.h>
- #include <net/sch_generic.h>
- #include <linux/slab.h>
- #include <net/mac80211.h>
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ec83f41..88a565f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3406,12 +3406,12 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	i = 0;
- 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
-+			request->ssids[i].ssid_len = nla_len(attr);
- 			if (request->ssids[i].ssid_len > IEEE80211_MAX_SSID_LEN) {
- 				err = -EINVAL;
- 				goto out_free;
+@@ -1715,11 +1715,11 @@ static int dhd_ioctl_entry(struct net_device *net, struct ifreq *ifr, int cmd)
+ 		{
+ 			buf = kmalloc(buflen, GFP_ATOMIC);
+ 			if (!buf) {
+-				bcmerror = -BCME_NOMEM;
++				bcmerror = -ENOMEM;
+ 				goto done;
  			}
- 			memcpy(request->ssids[i].ssid, nla_data(attr), nla_len(attr));
--			request->ssids[i].ssid_len = nla_len(attr);
- 			i++;
+ 			if (copy_from_user(buf, ioc.buf, buflen)) {
+-				bcmerror = -BCME_BADADDR;
++				bcmerror = -EINVAL;
+ 				goto done;
+ 			}
+ 		}
+@@ -1728,12 +1728,12 @@ static int dhd_ioctl_entry(struct net_device *net, struct ifreq *ifr, int cmd)
+ 	/* To differentiate between wl and dhd read 4 more byes */
+ 	if ((copy_from_user(&driver, (char *)ifr->ifr_data + sizeof(wl_ioctl_t),
+ 			    sizeof(uint)) != 0)) {
+-		bcmerror = -BCME_BADADDR;
++		bcmerror = -EINVAL;
+ 		goto done;
+ 	}
+ 
+ 	if (!capable(CAP_NET_ADMIN)) {
+-		bcmerror = -BCME_EPERM;
++		bcmerror = -EPERM;
+ 		goto done;
+ 	}
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 12379d2..2c25e89 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -819,7 +819,7 @@ int dhdsdio_bussleep(dhd_bus_t *bus, bool sleep)
+ 	if (sleep) {
+ 		/* Don't sleep if something is pending */
+ 		if (bus->dpc_sched || bus->rxskip || pktq_len(&bus->txq))
+-			return -BCME_BUSY;
++			return -EBUSY;
+ 
+ 		/* Disable SDIO interrupts (no longer interested) */
+ 		bcmsdh_intr_disable(bus->sdh);
+@@ -961,7 +961,7 @@ static int dhdsdio_txpkt(dhd_bus_t *bus, struct sk_buff *pkt, uint chan,
+ 				DHD_ERROR(("%s: couldn't allocate new %d-byte "
+ 					"packet\n",
+ 					__func__, pkt->len + DHD_SDALIGN));
+-				ret = -BCME_NOMEM;
++				ret = -ENOMEM;
+ 				goto done;
+ 			}
+ 
+@@ -1133,7 +1133,7 @@ int dhd_bus_txdata(struct dhd_bus *bus, struct sk_buff *pkt)
+ 			dhd_txcomplete(bus->dhd, pkt, false);
+ 			pkt_buf_free_skb(pkt);
+ 			DHD_ERROR(("%s: out of bus->txq !!!\n", __func__));
+-			ret = -BCME_NORESOURCE;
++			ret = -ENOSR;
+ 		} else {
+ 			ret = 0;
+ 		}
+@@ -1690,7 +1690,7 @@ static int dhdsdio_pktgen_set(dhd_bus_t *bus, u8 *arg)
+ 
+ 	memcpy(&pktgen, arg, sizeof(pktgen));
+ 	if (pktgen.version != DHD_PKTGEN_VERSION)
+-		return -BCME_BADARG;
++		return -EINVAL;
+ 
+ 	oldcnt = bus->pktgen_count;
+ 	oldmode = bus->pktgen_mode;
+@@ -1851,7 +1851,7 @@ static int dhdsdio_checkdied(dhd_bus_t *bus, u8 *data, uint size)
+ 		if (mbuffer == NULL) {
+ 			DHD_ERROR(("%s: kmalloc(%d) failed\n", __func__,
+ 				   msize));
+-			bcmerror = -BCME_NOMEM;
++			bcmerror = -ENOMEM;
+ 			goto done;
  		}
  	}
-@@ -3572,6 +3572,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS],
- 				    tmp) {
-+			request->ssids[i].ssid_len = nla_len(attr);
- 			if (request->ssids[i].ssid_len >
- 			    IEEE80211_MAX_SSID_LEN) {
- 				err = -EINVAL;
-@@ -3579,7 +3580,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+@@ -1859,7 +1859,7 @@ static int dhdsdio_checkdied(dhd_bus_t *bus, u8 *data, uint size)
+ 	str = kmalloc(maxstrlen, GFP_ATOMIC);
+ 	if (str == NULL) {
+ 		DHD_ERROR(("%s: kmalloc(%d) failed\n", __func__, maxstrlen));
+-		bcmerror = -BCME_NOMEM;
++		bcmerror = -ENOMEM;
+ 		goto done;
+ 	}
+ 
+@@ -2028,7 +2028,7 @@ static int dhdsdio_readconsole(dhd_bus_t *bus)
+ 		c->bufsize = le32_to_cpu(c->log.buf_size);
+ 		c->buf = kmalloc(c->bufsize, GFP_ATOMIC);
+ 		if (c->buf == NULL)
+-			return -BCME_NOMEM;
++			return -ENOMEM;
+ 	}
+ 
+ 	idx = le32_to_cpu(c->log.idx);
+@@ -2094,7 +2094,7 @@ int dhdsdio_downloadvars(dhd_bus_t *bus, void *arg, int len)
+ 		goto err;
+ 	}
+ 	if (!len) {
+-		bcmerror = -BCME_BUFTOOSHORT;
++		bcmerror = -EOVERFLOW;
+ 		goto err;
+ 	}
+ 
+@@ -2104,7 +2104,7 @@ int dhdsdio_downloadvars(dhd_bus_t *bus, void *arg, int len)
+ 	bus->vars = kmalloc(len, GFP_ATOMIC);
+ 	bus->varsz = bus->vars ? len : 0;
+ 	if (bus->vars == NULL) {
+-		bcmerror = -BCME_NOMEM;
++		bcmerror = -ENOMEM;
+ 		goto err;
+ 	}
+ 
+@@ -2203,7 +2203,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 
+ 	case IOV_SVAL(IOV_IDLETIME):
+ 		if ((int_val < 0) && (int_val != DHD_IDLE_IMMEDIATE))
+-			bcmerror = -BCME_BADARG;
++			bcmerror = -EINVAL;
+ 		else
+ 			bus->idletime = int_val;
+ 		break;
+@@ -2249,7 +2249,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 				"0x%08x size %d dsize %d\n",
+ 				__func__, (set ? "set" : "get"),
+ 				address, size, dsize));
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
  			}
- 			memcpy(request->ssids[i].ssid, nla_data(attr),
- 			       nla_len(attr));
--			request->ssids[i].ssid_len = nla_len(attr);
- 			i++;
+ 
+@@ -2264,7 +2264,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 				DHD_ERROR(("%s: ramsize 0x%08x doesn't have %d "
+ 				"bytes at 0x%08x\n",
+ 				__func__, bus->orig_ramsize, size, address));
+-				bcmerror = -BCME_BADARG;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -2322,7 +2322,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 
+ 	case IOV_SVAL(IOV_SDRXCHAIN):
+ 		if (bool_val && !bus->sd_rxchain)
+-			bcmerror = -BCME_UNSUPPORTED;
++			bcmerror = -ENOTSUPP;
+ 		else
+ 			bus->use_rxchain = bool_val;
+ 		break;
+@@ -2345,7 +2345,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 		if (bus->varsz < (uint) len)
+ 			memcpy(arg, bus->vars, bus->varsz);
+ 		else
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 		break;
+ #endif				/* DHD_DEBUG */
+ 
+@@ -2509,7 +2509,7 @@ dhdsdio_doiovar(dhd_bus_t *bus, const bcm_iovar_t *vi, u32 actionid,
+ 		break;
+ 
+ 	default:
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		break;
+ 	}
+ 
+@@ -2546,7 +2546,7 @@ static int dhdsdio_write_vars(dhd_bus_t *bus)
+ 	if (bus->vars) {
+ 		vbuffer = kzalloc(varsize, GFP_ATOMIC);
+ 		if (!vbuffer)
+-			return -BCME_NOMEM;
++			return -ENOMEM;
+ 
+ 		memcpy(vbuffer, bus->vars, bus->varsz);
+ 
+@@ -2558,7 +2558,7 @@ static int dhdsdio_write_vars(dhd_bus_t *bus)
+ 		DHD_INFO(("Compare NVRAM dl & ul; varsize=%d\n", varsize));
+ 		nvram_ularray = kmalloc(varsize, GFP_ATOMIC);
+ 		if (!nvram_ularray)
+-			return -BCME_NOMEM;
++			return -ENOMEM;
+ 
+ 		/* Upload image to verify downloaded contents. */
+ 		memset(nvram_ularray, 0xaa, varsize);
+@@ -4918,7 +4918,7 @@ extern int dhd_bus_console_in(dhd_pub_t *dhdp, unsigned char *msg, uint msglen)
+ 
+ 	/* Address could be zero if CONSOLE := 0 in dongle Makefile */
+ 	if (bus->console_addr == 0)
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
+ 
+ 	/* Exclusive bus access */
+ 	dhd_os_sdlock(bus->dhd);
+@@ -5145,7 +5145,7 @@ static void *dhdsdio_probe(u16 venid, u16 devid, u16 bus_no,
+ 	/* if firmware path present try to download and bring up bus */
+ 	ret = dhd_bus_start(bus->dhd);
+ 	if (ret != 0) {
+-		if (ret == -BCME_NOTUP) {
++		if (ret == -ENOLINK) {
+ 			DHD_ERROR(("%s: dongle is not responding\n", __func__));
+ 			goto fail;
+ 		}
+@@ -5588,7 +5588,7 @@ static int dhdsdio_download_code_array(struct dhd_bus *bus)
+ 
+ 		ularray = kmalloc(bus->ramsize, GFP_ATOMIC);
+ 		if (!ularray) {
+-			bcmerror = -BCME_NOMEM;
++			bcmerror = -ENOMEM;
+ 			goto err;
+ 		}
+ 		/* Upload image to verify downloaded contents. */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index fce2906..b3e12f7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -528,14 +528,14 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 	/* Let pressure continue to build ... */
+ 	qlen = pktq_plen(&qi->q, prec);
+ 	if (ini->tx_in_transit > 0 && qlen < scb_ampdu->max_pdu) {
+-		return -BCME_BUSY;
++		return -EBUSY;
+ 	}
+ 
+ 	wlc_ampdu_agg(ampdu, scb, p, tid);
+ 
+ 	if (wlc->block_datafifo) {
+ 		wiphy_err(wiphy, "%s: Fifo blocked\n", __func__);
+-		return -BCME_BUSY;
++		return -EBUSY;
+ 	}
+ 	rr_retry_limit = ampdu->rr_retry_limit_tid[tid];
+ 	ampdu_len = 0;
+@@ -556,7 +556,7 @@ wlc_sendampdu(struct ampdu_info *ampdu, struct wlc_txq_info *qi,
+ 		}
+ 
+ 		if (err) {
+-			if (err == BCME_BUSY) {
++			if (err == -EBUSY) {
+ 				wiphy_err(wiphy, "wl%d: wlc_sendampdu: "
+ 					  "prep_xdu retry; seq 0x%x\n",
+ 					  wlc->pub->unit, seq);
+@@ -1198,12 +1198,12 @@ static int wlc_ampdu_set(struct ampdu_info *ampdu, bool on)
+ 		if (!N_ENAB(wlc->pub)) {
+ 			WL_AMPDU_ERR("wl%d: driver not nmode enabled\n",
+ 				     wlc->pub->unit);
+-			return -BCME_UNSUPPORTED;
++			return -ENOTSUPP;
+ 		}
+ 		if (!wlc_ampdu_cap(ampdu)) {
+ 			WL_AMPDU_ERR("wl%d: device not ampdu capable\n",
+ 				     wlc->pub->unit);
+-			return -BCME_UNSUPPORTED;
++			return -ENOTSUPP;
+ 		}
+ 		wlc->pub->_ampdu = on;
+ 	}
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+index 6f5e103..ec55ea5 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+@@ -715,7 +715,7 @@ wlc_set_countrycode_rev(wlc_cm_info_t *wlc_cm,
+ 	}
+ 
+ 	if (country == NULL)
+-		return -BCME_BADARG;
++		return -EINVAL;
+ 
+ 	/* set the driver state for the country */
+ 	wlc_set_country_common(wlc_cm, country_abbrev, mapped_ccode,
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index c70ee52..dd0ed7a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -830,7 +830,7 @@ static int wlc_get_current_txpwr(struct wlc_info *wlc, void *pwr, uint len)
+ 	if (len == sizeof(tx_power_legacy_t))
+ 		old_power = (tx_power_legacy_t *) pwr;
+ 	else if (len < sizeof(tx_power_t))
+-		return -BCME_BUFTOOSHORT;
++		return -EOVERFLOW;
+ 
+ 	memset(&power, 0, sizeof(tx_power_t));
+ 
+@@ -2555,7 +2555,7 @@ int wlc_set_gmode(struct wlc_info *wlc, u8 gmode, bool config)
+ 	 * Gmode is not GMODE_LEGACY_B
+ 	 */
+ 	if (N_ENAB(wlc->pub) && gmode == GMODE_LEGACY_B)
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
+ 
+ 	/* verify that we are dealing with 2G band and grab the band pointer */
+ 	if (wlc->band->bandtype == WLC_BAND_2G)
+@@ -2564,7 +2564,7 @@ int wlc_set_gmode(struct wlc_info *wlc, u8 gmode, bool config)
+ 		 (wlc->bandstate[OTHERBANDUNIT(wlc)]->bandtype == WLC_BAND_2G))
+ 		band = wlc->bandstate[OTHERBANDUNIT(wlc)];
+ 	else
+-		return -BCME_BADBAND;
++		return -EINVAL;
+ 
+ 	/* Legacy or bust when no OFDM is supported by regulatory */
+ 	if ((wlc_channel_locale_flags_in_band(wlc->cmi, band->bandunit) &
+@@ -2619,7 +2619,7 @@ int wlc_set_gmode(struct wlc_info *wlc, u8 gmode, bool config)
+ 		/* Error */
+ 		wiphy_err(wlc->wiphy, "wl%d: %s: invalid gmode %d\n",
+ 			  wlc->pub->unit, __func__, gmode);
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
+ 	}
+ 
+ 	/*
+@@ -2698,7 +2698,7 @@ static int wlc_nmode_validate(struct wlc_info *wlc, s32 nmode)
+ 	case WL_11N_2x2:
+ 	case WL_11N_3x3:
+ 		if (!(WLC_PHY_11N_CAP(wlc->band)))
+-			err = -BCME_BADBAND;
++			err = -EINVAL;
+ 		break;
+ 
+ 	default:
+@@ -2774,7 +2774,7 @@ static int wlc_set_rateset(struct wlc_info *wlc, wlc_rateset_t *rs_arg)
+ 
+ 	/* check for bad count value */
+ 	if ((rs.count == 0) || (rs.count > WLC_NUMRATES))
+-		return -BCME_BADRATESET;
++		return -EINVAL;
+ 
+ 	/* try the current band */
+ 	bandunit = wlc->band->bandunit;
+@@ -2906,7 +2906,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			wiphy_err(wlc->wiphy, "wl%d: %s: Command %d needs "
+ 				  "arguments\n",
+ 				  wlc->pub->unit, __func__, cmd);
+-			bcmerror = -BCME_BADARG;
++			bcmerror = -EINVAL;
+ 			goto done;
  		}
  	}
+@@ -2931,7 +2931,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			channel_info_t *ci = (channel_info_t *) arg;
+ 
+ 			if (len <= (int)sizeof(ci)) {
+-				bcmerror = BCME_BUFTOOSHORT;
++				bcmerror = EOVERFLOW;
+ 				goto done;
+ 			}
+ 
+@@ -2948,12 +2948,12 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			chanspec_t chspec = CH20MHZ_CHSPEC(val);
+ 
+ 			if (val < 0 || val > MAXCHANNEL) {
+-				bcmerror = -BCME_OUTOFRANGECHAN;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+ 			if (!wlc_valid_chanspec_db(wlc->cmi, chspec)) {
+-				bcmerror = -BCME_BADCHAN;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -2980,7 +2980,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ #if defined(BCMDBG)
+ 	case WLC_GET_UCFLAGS:
+ 		if (!wlc->pub->up) {
+-			bcmerror = -BCME_NOTUP;
++			bcmerror = -ENOLINK;
+ 			break;
+ 		}
+ 
+@@ -3004,7 +3004,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 
+ 	case WLC_SET_UCFLAGS:
+ 		if (!wlc->pub->up) {
+-			bcmerror = -BCME_NOTUP;
++			bcmerror = -ENOLINK;
+ 			break;
+ 		}
+ 
+@@ -3042,7 +3042,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			break;
+ 
+ 		if (val & 1) {
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 
+@@ -3063,7 +3063,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			break;
+ 
+ 		if (val & 1) {
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 
+@@ -3077,7 +3077,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		band = WLC_BAND_AUTO;
+ 
+ 		if (len < (int)(sizeof(rw_reg_t) - sizeof(uint))) {
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 			break;
+ 		}
+ 
+@@ -3090,7 +3090,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			break;
+ 
+ 		if ((r->byteoff + r->size) > sizeof(d11regs_t)) {
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 		if (r->size == sizeof(u32))
+@@ -3102,7 +3102,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			    R_REG((u16 *)((unsigned char *)(unsigned long)regs +
+ 					      r->byteoff));
+ 		else
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 		break;
+ 
+ 	case WLC_W_REG:
+@@ -3111,7 +3111,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		band = WLC_BAND_AUTO;
+ 
+ 		if (len < (int)(sizeof(rw_reg_t) - sizeof(uint))) {
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 			break;
+ 		}
+ 
+@@ -3124,7 +3124,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			break;
+ 
+ 		if (r->byteoff + r->size > sizeof(d11regs_t)) {
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 		if (r->size == sizeof(u32))
+@@ -3134,7 +3134,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			W_REG((u16 *)((unsigned char *)(unsigned long) regs +
+ 					  r->byteoff), r->val);
+ 		else
+-			bcmerror = -BCME_BADADDR;
++			bcmerror = -EINVAL;
+ 		break;
+ #endif				/* BCMDBG */
+ 
+@@ -3197,7 +3197,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			u16 rxstatus;
+ 
+ 			if (!wlc->pub->up) {
+-				bcmerror = -BCME_NOTUP;
++				bcmerror = -ENOLINK;
+ 				break;
+ 			}
+ 
+@@ -3224,7 +3224,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 
+ 	case WLC_SET_UCANTDIV:{
+ 			if (!wlc->pub->up) {
+-				bcmerror = -BCME_NOTUP;
++				bcmerror = -ENOLINK;
+ 				break;
+ 			}
+ 
+@@ -3355,7 +3355,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			wsec_key_t *src_key = wlc->wsec_keys[val];
+ 
+ 			if (len < (int)sizeof(key)) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3375,7 +3375,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 
+ 			memcpy(arg, &key, sizeof(key));
+ 		} else
+-			bcmerror = -BCME_BADKEYIDX;
++			bcmerror = -EINVAL;
+ 		break;
+ #endif				/* defined(BCMDBG) */
+ 
+@@ -3389,7 +3389,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			wsec_key_t *key;
+ 
+ 			if (len < DOT11_WPA_KEY_RSC_LEN) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3426,7 +3426,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 
+ 				memcpy(arg, seq, sizeof(seq));
+ 			} else {
+-				bcmerror = -BCME_BADKEYIDX;
++				bcmerror = -EINVAL;
+ 			}
+ 			break;
+ 		}
+@@ -3441,7 +3441,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 				rs = &wlc->default_bss->rateset;
+ 
+ 			if (len < (int)(rs->count + sizeof(rs->count))) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3459,7 +3459,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			wlc_default_rateset(wlc, (wlc_rateset_t *) &rs);
+ 
+ 			if (len < (int)(rs.count + sizeof(rs.count))) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3474,7 +3474,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			wl_rateset_t *in_rs = (wl_rateset_t *) arg;
+ 
+ 			if (len < (int)(in_rs->count + sizeof(in_rs->count))) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3665,7 +3665,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		{
+ 			unsigned char *cp = arg;
+ 			if (len < 3) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 
+@@ -3797,14 +3797,14 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 
+ 			/* copyin */
+ 			if (len < (int)sizeof(wlc_rateset_t)) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 			memcpy(&rs, arg, sizeof(wlc_rateset_t));
+ 
+ 			/* check for bad count value */
+ 			if (rs.count > WLC_NUMRATES) {
+-				bcmerror = -BCME_BADRATESET;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -3813,7 +3813,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			      ((NBANDS(wlc) > 1)
+ 			       && wlc->bandstate[OTHERBANDUNIT(wlc)]->gmode))) {
+ 				/* gmode only command when not in gmode */
+-				bcmerror = -BCME_BADBAND;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -3836,7 +3836,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 							   false,
+ 							   wlc->stf->txstreams);
+ 			if (rs.count != new.count) {
+-				bcmerror = -BCME_BADRATESET;
++				bcmerror = -EINVAL;
+ 				break;
+ 			}
+ 
+@@ -3859,11 +3859,11 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		      ((NBANDS(wlc) > 1)
+ 		       && wlc->bandstate[OTHERBANDUNIT(wlc)]->gmode))) {
+ 			/* gmode only command when not in gmode */
+-			bcmerror = -BCME_BADBAND;
++			bcmerror = -EINVAL;
+ 			break;
+ 		}
+ 		if (len < (int)sizeof(wlc_rateset_t)) {
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 			break;
+ 		}
+ 		memcpy(arg, &wlc->sup_rates_override, sizeof(wlc_rateset_t));
+@@ -3894,7 +3894,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 			if (key != NULL) {
+ 				*pval = key->id == val ? true : false;
+ 			} else {
+-				bcmerror = -BCME_BADKEYIDX;
++				bcmerror = -EINVAL;
+ 			}
+ 			break;
+ 		}
+@@ -3902,7 +3902,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 	case WLC_SET_KEY_PRIMARY:{
+ 			wsec_key_t *key, *old_key;
+ 
+-			bcmerror = -BCME_BADKEYIDX;
++			bcmerror = -EINVAL;
+ 
+ 			/* treat the 'val' parm as the key id */
+ 			for (i = 0; i < WSEC_MAX_DEFAULT_KEYS; i++) {
+@@ -3936,7 +3936,7 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 				;
+ 
+ 			if (i == (uint) len) {
+-				bcmerror = -BCME_BUFTOOSHORT;
++				bcmerror = -EOVERFLOW;
+ 				break;
+ 			}
+ 			i++;	/* include the null in the string length */
+@@ -3957,13 +3957,13 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		}
+ 
+ 	case WLC_SET_WSEC_PMK:
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 		break;
+ 
+ #if defined(BCMDBG)
+ 	case WLC_CURRENT_PWR:
+ 		if (!wlc->pub->up)
+-			bcmerror = -BCME_NOTUP;
++			bcmerror = -ENOLINK;
+ 		else
+ 			bcmerror = wlc_get_current_txpwr(wlc, arg, len);
+ 		break;
+@@ -3992,7 +3992,7 @@ int wlc_iocregchk(struct wlc_info *wlc, uint band)
+ {
+ 	/* if band is specified, it must be the current band */
+ 	if ((band != WLC_BAND_AUTO) && (band != (uint) wlc->band->bandtype))
+-		return -BCME_BADBAND;
++		return -EINVAL;
+ 
+ 	/* if multiband and band is not specified, band must be locked */
+ 	if ((band == WLC_BAND_AUTO) && IS_MBAND_UNLOCKED(wlc))
+@@ -4011,7 +4011,7 @@ int wlc_iocregchk(struct wlc_info *wlc, uint band)
+ int wlc_iocpichk(struct wlc_info *wlc, uint phytype)
+ {
+ 	if (wlc->band->phytype != phytype)
+-		return -BCME_BADBAND;
++		return -EINVAL;
+ 	return 0;
+ }
+ #endif
+@@ -4094,7 +4094,7 @@ int wlc_module_register(struct wlc_pub *pub, const bcm_iovar_t *iovars,
+ 		}
+ 	}
+ 
+-	return -BCME_NORESOURCE;
++	return -ENOSR;
+ }
+ 
+ /* unregister module callbacks */
+@@ -4155,7 +4155,7 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 	    !(IS_ALIGNED((unsigned long)(arg), (uint) sizeof(int)))) {
+ 		wiphy_err(wlc->wiphy, "wl%d: %s unaligned get ptr for %s\n",
+ 			  wlc->pub->unit, __func__, name);
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
+ 	}
+ 
+ 	/* find the given iovar name */
+@@ -4168,7 +4168,7 @@ wlc_iovar_op(struct wlc_info *wlc, const char *name,
+ 	}
+ 	/* iovar name not found */
+ 	if (i >= WLC_MAXMODULES) {
+-		return -BCME_UNSUPPORTED;
++		return -ENOTSUPP;
+ 	}
+ 
+ 	/* set up 'params' pointer in case this is a set command so that
+@@ -4208,7 +4208,7 @@ wlc_iovar_check(struct wlc_pub *pub, const bcm_iovar_t *vi, void *arg, int len,
+ 	if (set) {
+ 		if (((vi->flags & IOVF_SET_DOWN) && wlc->pub->up) ||
+ 		    ((vi->flags & IOVF_SET_UP) && !wlc->pub->up)) {
+-			err = (wlc->pub->up ? -BCME_NOTDOWN : -BCME_NOTUP);
++			err = (wlc->pub->up ? -BCME_NOTDOWN : -ENOLINK);
+ 		} else if ((vi->flags & IOVF_SET_BAND)
+ 			   && IS_MBAND_UNLOCKED(wlc)) {
+ 			err = -BCME_NOTBANDLOCKED;
+@@ -4218,7 +4218,7 @@ wlc_iovar_check(struct wlc_pub *pub, const bcm_iovar_t *vi, void *arg, int len,
+ 	} else {
+ 		if (((vi->flags & IOVF_GET_DOWN) && wlc->pub->up) ||
+ 		    ((vi->flags & IOVF_GET_UP) && !wlc->pub->up)) {
+-			err = (wlc->pub->up ? -BCME_NOTDOWN : -BCME_NOTUP);
++			err = (wlc->pub->up ? -BCME_NOTDOWN : -ENOLINK);
+ 		} else if ((vi->flags & IOVF_GET_BAND)
+ 			   && IS_MBAND_UNLOCKED(wlc)) {
+ 			err = -BCME_NOTBANDLOCKED;
+@@ -4366,7 +4366,7 @@ wlc_doiovar(void *hdl, const bcm_iovar_t *vi, u32 actionid,
+ 	default:
+ 		wiphy_err(wlc->wiphy, "wl%d: %s: unsupported\n",
+ 			  wlc->pub->unit, __func__);
+-		err = -BCME_UNSUPPORTED;
++		err = -ENOTSUPP;
+ 		break;
+ 	}
+ 
+@@ -4985,7 +4985,7 @@ void BCMFASTPATH wlc_send_q(struct wlc_info *wlc, struct wlc_txq_info *qi)
+ 			}
+ 		}
+ 
+-		if (err == -BCME_BUSY) {
++		if (err == -EBUSY) {
+ 			pktq_penq_head(q, prec, pkt[0]);
+ 			/* If send failed due to any other reason than a change in
+ 			 * HW FIFO condition, quit. Otherwise, read the new prec_map!
+@@ -7481,7 +7481,7 @@ int wlc_prep_pdu(struct wlc_info *wlc, struct sk_buff *pdu, uint *fifop)
+ 	if (TXAVAIL(wlc, fifo) < MAX_DMA_SEGS) {
+ 		/* Mark precedences related to this FIFO, unsendable */
+ 		WLC_TX_FIFO_CLEAR(wlc, fifo);
+-		return -BCME_BUSY;
++		return -EBUSY;
+ 	}
+ 
+ 	if (!ieee80211_is_data(txh->MacFrameControl))
+@@ -7516,7 +7516,7 @@ int wlc_get_revision_info(struct wlc_info *wlc, void *buf, uint len)
+ 	wlc_rev_info_t *rinfo = (wlc_rev_info_t *) buf;
+ 
+ 	if (len < WL_REV_INFO_LEGACY_LENGTH)
+-		return -BCME_BUFTOOSHORT;
++		return -EOVERFLOW;
+ 
+ 	rinfo->vendorid = wlc->vendorid;
+ 	rinfo->deviceid = wlc->deviceid;
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index 2c37dcd..a026356 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -252,26 +252,12 @@ extern struct sk_buff *pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
+ */
+ 
+ #define BCME_ERROR			1	/* Error generic */
+-#define BCME_BADARG			2	/* Bad Argument */
+-#define BCME_NOTUP			4	/* Not up */
+ #define BCME_NOTDOWN			5	/* Not down */
+-#define BCME_BADKEYIDX			8	/* BAD Key Index */
+ #define BCME_RADIOOFF			9	/* Radio Off */
+ #define BCME_NOTBANDLOCKED		10	/* Not  band locked */
+ #define BCME_NOCLK			11	/* No Clock */
+-#define BCME_BADRATESET			12	/* BAD Rate valueset */
+-#define BCME_BADBAND			13	/* BAD Band */
+-#define BCME_BUFTOOSHORT		14	/* Buffer too short */
+ #define BCME_BUFTOOLONG			15	/* Buffer too long */
+-#define BCME_BUSY			16	/* Busy */
+-#define BCME_OUTOFRANGECHAN		19	/* Out of Range Channel */
+-#define BCME_BADCHAN			20	/* Bad Channel */
+-#define BCME_BADADDR			21	/* Bad Address */
+-#define BCME_NORESOURCE			22	/* Not Enough Resources */
+-#define BCME_UNSUPPORTED		23	/* Unsupported */
+ #define BCME_NOTREADY			25	/* Not Ready */
+-#define BCME_EPERM			26	/* Not Permitted */
+-#define BCME_NOMEM			27	/* No Memory */
+ #define BCME_ASSOCIATED			28	/* Associated */
+ #define BCME_RANGE			29	/* Not In Range */
+ #define BCME_NOTFOUND			30	/* Not Found */
+diff --git a/drivers/staging/brcm80211/util/bcmotp.c b/drivers/staging/brcm80211/util/bcmotp.c
+index 41c9c43..8907841 100644
+--- a/drivers/staging/brcm80211/util/bcmotp.c
++++ b/drivers/staging/brcm80211/util/bcmotp.c
+@@ -388,7 +388,7 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 		}
+ 		if (*wlen < sz) {
+ 			*wlen = sz;
+-			return -BCME_BUFTOOSHORT;
++			return -EOVERFLOW;
+ 		}
+ 		base = oi->hwbase;
+ 		break;
+@@ -400,7 +400,7 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 		}
+ 		if (*wlen < sz) {
+ 			*wlen = sz;
+-			return -BCME_BUFTOOSHORT;
++			return -EOVERFLOW;
+ 		}
+ 		base = oi->swbase;
+ 		break;
+@@ -412,7 +412,7 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 		}
+ 		if (*wlen < sz) {
+ 			*wlen = sz;
+-			return -BCME_BUFTOOSHORT;
++			return -EOVERFLOW;
+ 		}
+ 		base = oi->otpgu_base + OTPGU_CI_OFF;
+ 		break;
+@@ -424,7 +424,7 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 		}
+ 		if (*wlen < sz) {
+ 			*wlen = sz;
+-			return -BCME_BUFTOOSHORT;
++			return -EOVERFLOW;
+ 		}
+ 		base = oi->fbase;
+ 		break;
+@@ -436,12 +436,12 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 		}
+ 		if (*wlen < sz) {
+ 			*wlen = sz;
+-			return -BCME_BUFTOOSHORT;
++			return -EOVERFLOW;
+ 		}
+ 		base = oi->hwbase;
+ 		break;
+ 	default:
+-		return -BCME_BADARG;
++		return -EINVAL;
+ 	}
+ 
+ 	idx = si_coreidx(oi->sih);
+@@ -459,7 +459,7 @@ static int ipxotp_read_region(void *oh, int region, u16 *data, uint *wlen)
+ 
+ static int ipxotp_nvread(void *oh, char *data, uint *len)
+ {
+-	return -BCME_UNSUPPORTED;
++	return -ENOTSUPP;
+ }
+ 
+ static otp_fn_t ipxotp_fn = {
+diff --git a/drivers/staging/brcm80211/util/bcmsrom.c b/drivers/staging/brcm80211/util/bcmsrom.c
+index 6b5a13d..d61753d 100644
+--- a/drivers/staging/brcm80211/util/bcmsrom.c
++++ b/drivers/staging/brcm80211/util/bcmsrom.c
+@@ -324,7 +324,7 @@ static int initvars_table(char *start, char *end,
+ 		char *vp = kmalloc(c, GFP_ATOMIC);
+ 		ASSERT(vp != NULL);
+ 		if (!vp)
+-			return -BCME_NOMEM;
++			return -ENOMEM;
+ 		memcpy(vp, start, c);
+ 		*vars = vp;
+ 		*count = c;
+@@ -353,7 +353,7 @@ static int initvars_flash(si_t *sih, char **base, uint len)
+ 	/* allocate memory and read in flash */
+ 	flash = kmalloc(NVRAM_SPACE, GFP_ATOMIC);
+ 	if (!flash)
+-		return -BCME_NOMEM;
++		return -ENOMEM;
+ 	err = nvram_getall(flash, NVRAM_SPACE);
+ 	if (err)
+ 		goto exit;
+@@ -372,7 +372,7 @@ static int initvars_flash(si_t *sih, char **base, uint len)
+ 		/* is there enough room to copy? */
+ 		copy_len = l - dl + 1;
+ 		if (len < copy_len) {
+-			err = -BCME_BUFTOOSHORT;
++			err = -EOVERFLOW;
+ 			goto exit;
+ 		}
+ 
+@@ -384,7 +384,7 @@ static int initvars_flash(si_t *sih, char **base, uint len)
+ 
+ 	/* add null string as terminator */
+ 	if (len < 1) {
+-		err = -BCME_BUFTOOSHORT;
++		err = -EOVERFLOW;
+ 		goto exit;
+ 	}
+ 	*vp++ = '\0';
+@@ -410,7 +410,7 @@ static int initvars_flash_si(si_t *sih, char **vars, uint *count)
+ 	base = vp = kmalloc(MAXSZ_NVRAM_VARS, GFP_ATOMIC);
+ 	ASSERT(vp != NULL);
+ 	if (!vp)
+-		return -BCME_NOMEM;
++		return -ENOMEM;
+ 
+ 	err = initvars_flash(sih, &vp, MAXSZ_NVRAM_VARS);
+ 	if (err == 0)
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index 0c40911..9448881 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -502,21 +502,21 @@ int bcm_iovar_lencheck(const bcm_iovar_t *vi, void *arg, int len, bool set)
+ 	case IOVT_UINT32:
+ 		/* all integers are s32 sized args at the ioctl interface */
+ 		if (len < (int)sizeof(int)) {
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 		}
+ 		break;
+ 
+ 	case IOVT_BUFFER:
+ 		/* buffer must meet minimum length requirement */
+ 		if (len < vi->minlen) {
+-			bcmerror = -BCME_BUFTOOSHORT;
++			bcmerror = -EOVERFLOW;
+ 		}
+ 		break;
+ 
+ 	case IOVT_VOID:
+ 		if (!set) {
+ 			/* Cannot return nil... */
+-			bcmerror = -BCME_UNSUPPORTED;
++			bcmerror = -ENOTSUPP;
+ 		} else if (len) {
+ 			/* Set is an action w/o parameters */
+ 			bcmerror = -BCME_BUFTOOLONG;
+@@ -526,7 +526,7 @@ int bcm_iovar_lencheck(const bcm_iovar_t *vi, void *arg, int len, bool set)
+ 	default:
+ 		/* unknown type for length check in iovar info */
+ 		ASSERT(0);
+-		bcmerror = -BCME_UNSUPPORTED;
++		bcmerror = -ENOTSUPP;
+ 	}
+ 
+ 	return bcmerror;
+diff --git a/drivers/staging/brcm80211/util/nvram/nvram_ro.c b/drivers/staging/brcm80211/util/nvram/nvram_ro.c
+index 3361e1a..ab31f2d 100644
+--- a/drivers/staging/brcm80211/util/nvram/nvram_ro.c
++++ b/drivers/staging/brcm80211/util/nvram/nvram_ro.c
+@@ -89,7 +89,7 @@ int nvram_append(void *si, char *varlst, uint varsz)
+ 
+ 	new = kmalloc(bufsz, GFP_ATOMIC);
+ 	if (new == NULL)
+-		return -BCME_NOMEM;
++		return -ENOMEM;
+ 
+ 	new->vars = varlst;
+ 	new->bufsz = bufsz;
+@@ -188,7 +188,7 @@ int nvram_getall(char *buf, int count)
+ 		while ((from < lim) && (*from)) {
+ 			len = strlen(from) + 1;
+ 			if (resid < (acc + len))
+-				return -BCME_BUFTOOSHORT;
++				return -EOVERFLOW;
+ 			memcpy(to, from, len);
+ 			acc += len;
+ 			from += len;
+@@ -200,7 +200,7 @@ int nvram_getall(char *buf, int count)
+ 		this = this->next;
+ 	}
+ 	if (resid < 1)
+-		return -BCME_BUFTOOSHORT;
++		return -EOVERFLOW;
+ 	*buf = '\0';
+ 	return 0;
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
