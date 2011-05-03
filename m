@@ -1,106 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9004 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754116Ab1EITWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 15:22:30 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2.6.35] iwlwifi: add {ack,plpc}_check module parameters
-Date: Mon,  9 May 2011 21:22:23 +0200
-Message-Id: <1304968943-27633-1-git-send-email-sgruszka@redhat.com> (sfid-20110509_212237_060862_1AC82352)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53669 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754661Ab1ECUUR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 16:20:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <4DC0312A.4040303@lwfinger.net>
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 3 May 2011 22:19:57 +0200
+Message-ID: <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> (sfid-20110503_222033_842136_9106E3C6)
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Walter Goldens <goldenstranger@yahoo.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit b7977ffaab5187ad75edaf04ac854615cea93828 upstream.
+On Tue, May 3, 2011 at 6:45 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/03/2011 10:59 AM, Walter Goldens wrote:
+>>
+>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
+>>
+>> Any estimates on the *SU driver? :)
+>
+> Now that rtl8192se is submitted, I will start work on the driver for the
+> RTL8192DE devices. After that will be the RTL8191SU. It has lower priority
+> because r8712u from staging handles those devices. It is not based on
+> mac80211, but it works.
 
-Add module ack_check, and plcp_check parameters. Ack_check is disabled
-by default since is proved that check ack health can cause troubles.
-Plcp_check is enabled by default.
+Again, may I remind you that the preferred behavior in the Linux world
+is release-early, release-often? :-)
 
-This prevent connection hangs with "low ack count detected" messages.
+>
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Resolves:
-https://bugzilla.redhat.com/show_bug.cgi?id=666646
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 ++
- drivers/net/wireless/iwlwifi/iwl-rx.c      |    8 ++++++--
- 4 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 0f292a2..3a79907 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -387,6 +387,7 @@ const u8 *iwlagn_eeprom_query_addr(const struct iwl_priv *priv,
- struct iwl_mod_params iwlagn_mod_params = {
- 	.amsdu_size_8K = 1,
- 	.restart_fw = 1,
-+	.plcp_check = true,
- 	/* the rest are 0 by default */
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8a2c4d7..6bd11c7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4180,3 +4180,9 @@ module_param_named(ucode_alternative, iwlagn_wanted_ucode_alternative, int,
- 		   S_IRUGO);
- MODULE_PARM_DESC(ucode_alternative,
- 		 "specify ucode alternative to use from ucode file");
-+
-+module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
-+MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
-+
-+module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
-+MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e8ef317..ef03c24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -226,6 +226,8 @@ struct iwl_mod_params {
- 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
- 	int antenna;  		/* def: 0 = both antennas (use diversity) */
- 	int restart_fw;		/* def: 1 = restart firmware */
-+	bool plcp_check;	/* def: true = enable plcp health check */
-+	bool ack_check;		/* def: false = disable ack health check */
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 0a5d7cf..d6c5927 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -401,10 +401,13 @@ EXPORT_SYMBOL(iwl_good_plcp_health);
- void iwl_recover_from_statistics(struct iwl_priv *priv,
- 				struct iwl_rx_packet *pkt)
- {
-+	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
-+
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 	if (iwl_is_associated(priv)) {
--		if (priv->cfg->ops->lib->check_ack_health) {
-+		if (mod_params->ack_check &&
-+		    priv->cfg->ops->lib->check_ack_health) {
- 			if (!priv->cfg->ops->lib->check_ack_health(
- 			    priv, pkt)) {
- 				/*
-@@ -417,7 +420,8 @@ void iwl_recover_from_statistics(struct iwl_priv *priv,
- 					return;
- 			}
- 		}
--		if (priv->cfg->ops->lib->check_plcp_health) {
-+		if (mod_params->plcp_check &&
-+		    priv->cfg->ops->lib->check_plcp_health) {
- 			if (!priv->cfg->ops->lib->check_plcp_health(
- 			    priv, pkt)) {
- 				/*
 -- 
-1.7.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
