@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45793 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470Ab1EKRQO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 13:16:14 -0400
-Date: Wed, 11 May 2011 13:12:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH V2 0/3] ssb/b43(legacy): clean dangling cores workarounds
-Message-ID: <20110511171217.GF2490@tuxdriver.com> (sfid-20110511_191618_016160_666DF6FE)
-References: <1304879433-7096-1-git-send-email-zajec5@gmail.com>
- <BANLkTimecZ0uB4V_b-8F784Tnbkqo71ORA@mail.gmail.com>
- <BANLkTinfMbkyh9kB+hsmka-JcWXAYEPynw@mail.gmail.com>
- <4DC9BC6E.2090804@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2357 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752308Ab1ECJg0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:36:26 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>
+Subject: [PATCH 42/61] staging: brcm80211: fix checkpatch issues in
+ si_pmu_measure_alpclk
+Date: Tue, 3 May 2011 11:35:42 +0200
+Message-ID: <1304415361-7813-43-git-send-email-arend@broadcom.com> (sfid-20110503_113646_900583_924832B1)
+In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4DC9BC6E.2090804@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 10, 2011 at 05:30:06PM -0500, Larry Finger wrote:
-> On 05/10/2011 05:08 PM, Rafał Miłecki wrote:
-> >W dniu 8 maja 2011 19:54 użytkownik Rafał Miłecki<zajec5@gmail.com>  napisał:
-> >>W dniu 8 maja 2011 20:30 użytkownik Rafał Miłecki<zajec5@gmail.com>  napisał:
-> >>>There is no perfect place for this workarounds, but keeping it in ssb sounds
-> >>>more reasonable.
-> >>
-> >>Uups, I didn't save edition fixing this grammatical mistake. I'm lucky
-> >>it won't be visible anywhere in git log :)
-> >
-> >John: something went wrong there. You applied b43 and b43legacy
-> >patches, but they should applied *after* ssb patch I don't see in your
-> >tree.
-> >
-> >I don't know how many people can be affected by this... Can not tell
-> >you if we should rebase or just commit ssb patch quickly.
-> 
-> My BCM4306 card is probably one of the few affected. No rebase will
-> be needed as long as the ssb patch is available in 2.6.40-rc1.
-> Fortunately, kernel building is not impacted.
+Patch "remove dependency between aiutils and siutils sources" introduced
+several checkpatch warnings. This patch removes those in the function
+si_pmu_measure_alpclk().
 
-Sorry, not sure what happened -- I'll go ahead and commit it.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_pmu.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+index 2c3d42fd..e98ace6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+@@ -1792,7 +1792,10 @@ u32 si_pmu_measure_alpclk(si_t *sih)
+ 	if (R_REG(&cc->pmustatus) & PST_EXTLPOAVAIL) {
+ 		u32 ilp_ctr, alp_hz;
+ 
+-		/* Enable the reg to measure the freq, in case disabled before */
++		/*
++		 * Enable the reg to measure the freq,
++		 * in case it was disabled before
++		 */
+ 		W_REG(&cc->pmu_xtalfreq,
+ 		      1U << PMU_XTALFREQ_REG_MEASURE_SHIFT);
+ 
+@@ -1803,13 +1806,19 @@ u32 si_pmu_measure_alpclk(si_t *sih)
+ 		ilp_ctr =
+ 		    R_REG(&cc->pmu_xtalfreq) & PMU_XTALFREQ_REG_ILPCTR_MASK;
+ 
+-		/* Turn off the PMU_XTALFREQ_REG_MEASURE_SHIFT bit to save power */
++		/*
++		 * Turn off the PMU_XTALFREQ_REG_MEASURE_SHIFT
++		 * bit to save power
++		 */
+ 		W_REG(&cc->pmu_xtalfreq, 0);
+ 
+ 		/* Calculate ALP frequency */
+ 		alp_hz = (ilp_ctr * EXT_ILP_HZ) / 4;
+ 
+-		/* Round to nearest 100KHz, and at the same time convert to KHz */
++		/*
++		 * Round to nearest 100KHz, and at
++		 * the same time convert to KHz
++		 */
+ 		alp_khz = (alp_hz + 50000) / 100000 * 100;
+ 	} else
+ 		alp_khz = 0;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
