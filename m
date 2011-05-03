@@ -1,97 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:38637 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757535Ab1EYAjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 20:39:47 -0400
-Received: by mail-pv0-f174.google.com with SMTP id 12so3196876pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 17:39:47 -0700 (PDT)
-Message-ID: <4DDC4FBB.4010407@ring3k.org> (sfid-20110525_023949_455628_EB288779)
-Date: Wed, 25 May 2011 09:39:23 +0900
-From: Mike McCormack <mikem@ring3k.org>
+Received: from purkki.adurom.net ([80.68.90.206]:47548 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753014Ab1ECCip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2011 22:38:45 -0400
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: fix rtnl even race in register_netdevice()
+References: <20110429172634.27130.25375.stgit@x201>
+	<20110429.135339.200375209.davem@davemloft.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 03 May 2011 05:38:43 +0300
+In-Reply-To: <20110429.135339.200375209.davem@davemloft.net> (David Miller's message of "Fri\, 29 Apr 2011 13\:53\:39 -0700 \(PDT\)")
+Message-ID: <87mxj4h5jg.fsf@purkki.adurom.net> (sfid-20110503_043855_977755_2210E6FC)
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] rtlwifi: Store loop index in local variable
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-_rtl_pci_rx_interrupt uses rtlpci->rx_ring[rx_queue_idx].idx a
-few times, so store it in a separate variable.
+David Miller <davem@davemloft.net> writes:
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c |   20 ++++++++------------
- 1 files changed, 8 insertions(+), 12 deletions(-)
+> From: Kalle Valo <kvalo@adurom.com>
+> Date: Fri, 29 Apr 2011 20:26:34 +0300
+>
+>> From: Kalle Valo <kalle.valo@atheros.com>
+>> 
+>> There's a race in register_netdevice so that the rtnl event is sent before
+>> the device is actually ready. This was visible with flimflam, chrome os
+>> connection manager:
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index a409528..5eedb91 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -644,22 +644,23 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 		.noise = -98,
- 		.rate = 0,
- 	};
-+	int index = rtlpci->rx_ring[rx_queue_idx].idx;
- 
- 	/*RX NORMAL PKT */
- 	while (count--) {
- 		/*rx descriptor */
- 		struct rtl_rx_desc *pdesc = &rtlpci->rx_ring[rx_queue_idx].desc[
--				rtlpci->rx_ring[rx_queue_idx].idx];
-+				index];
- 		/*rx pkt */
- 		struct sk_buff *skb = rtlpci->rx_ring[rx_queue_idx].rx_buf[
--				rtlpci->rx_ring[rx_queue_idx].idx];
-+				index];
- 
- 		own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc,
- 						       false, HW_DESC_OWN);
- 
- 		if (own) {
- 			/*wait data to be filled by hardware */
--			return;
-+			break;
- 		} else {
- 			struct ieee80211_hdr *hdr;
- 			__le16 fc;
-@@ -768,10 +769,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 			skb = new_skb;
- 			/*skb->dev = dev; */
- 
--			rtlpci->rx_ring[rx_queue_idx].rx_buf[rtlpci->
--							     rx_ring
--							     [rx_queue_idx].
--							     idx] = skb;
-+			rtlpci->rx_ring[rx_queue_idx].rx_buf[index] = skb;
- 			*((dma_addr_t *) skb->cb) =
- 			    pci_map_single(rtlpci->pdev, skb_tail_pointer(skb),
- 					   rtlpci->rxbuffersize,
-@@ -790,17 +788,15 @@ done:
- 					    HW_DESC_RXPKT_LEN,
- 					    (u8 *)&rtlpci->rxbuffersize);
- 
--		if (rtlpci->rx_ring[rx_queue_idx].idx ==
--		    rtlpci->rxringcount - 1)
-+		if (index == rtlpci->rxringcount - 1)
- 			rtlpriv->cfg->ops->set_desc((u8 *)pdesc, false,
- 						    HW_DESC_RXERO,
- 						    (u8 *)&tmp_one);
- 
--		rtlpci->rx_ring[rx_queue_idx].idx =
--		    (rtlpci->rx_ring[rx_queue_idx].idx + 1) %
--		    rtlpci->rxringcount;
-+		index = (index + 1) % rtlpci->rxringcount;
- 	}
- 
-+	rtlpci->rx_ring[rx_queue_idx].idx = index;
- }
- 
- static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+[...]
+
+>> The fix is to call netdev_register_kobject() after the device is added
+>> to the list.
+>> 
+>> Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+>
+> This is not correct.
+>
+> If you move the kobject registry around, you have to change the
+> error handling cleanup to match.
+>
+> This change will leave the netdevice on all sorts of lists, it will
+> also leak a reference to the device.
+>
+> I also think this points a fundamental problem with this change, in
+> that you can't register the kobject after the device is added to
+> the various lists in list_netdevice().
+>
+> Once it's in those lists, any thread of control can find the device
+> and those threads of control may try to get at the data backed by
+> the kobject and therefore they really expect it to be there by
+> then.
+>
+> What you can do instead is try to delay the NETREG_REGISTERED
+> setting, and block the problematic notifications by testing
+> reg_state or similar.
+
+Thanks for the review. I'll investigate more about this and send v2
+once I found a better solution.
+
 -- 
-1.7.4.1
-
-
+Kalle Valo
