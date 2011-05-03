@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53495 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758189Ab1EaTru (ORCPT
+Received: from mail-px0-f170.google.com ([209.85.212.170]:35729 "EHLO
+	mail-px0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754580Ab1ECUdi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:50 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 08/32] ath9k: initialize rx gain table for AR9330
-Date: Tue, 31 May 2011 21:36:59 +0200
-Message-Id: <1306870643-7935-9-git-send-email-juhosg@openwrt.org> (sfid-20110531_214756_919704_4AF45EC8)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Tue, 3 May 2011 16:33:38 -0400
+Message-ID: <4DC0669E.4040100@lwfinger.net> (sfid-20110503_223359_731091_B2CD5FAB)
+Date: Tue, 03 May 2011 15:33:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Walter Goldens <goldenstranger@yahoo.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com>
+In-Reply-To: <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   24 ++++++++++++++++++++++--
- 1 files changed, 22 insertions(+), 2 deletions(-)
+On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
+> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
+>>>
+>>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
+>>>
+>>> Any estimates on the *SU driver? :)
+>>
+>> Now that rtl8192se is submitted, I will start work on the driver for the
+>> RTL8192DE devices. After that will be the RTL8191SU. It has lower priority
+>> because r8712u from staging handles those devices. It is not based on
+>> mac80211, but it works.
+>
+> Again, may I remind you that the preferred behavior in the Linux world
+> is release-early, release-often? :-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 264a7ea..8efdec2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -443,7 +443,17 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+					ar9331_common_rx_gain_1p2,
-+					ARRAY_SIZE(ar9331_common_rx_gain_1p2),
-+					2);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+					ar9331_common_rx_gain_1p1,
-+					ARRAY_SIZE(ar9331_common_rx_gain_1p1),
-+					2);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9340Common_rx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Common_rx_gain_table_1p0),
-@@ -460,7 +470,17 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 				       2);
- 		break;
- 	case 1:
--		if (AR_SREV_9340(ah))
-+		if (AR_SREV_9330_12(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_wo_xlna_rx_gain_1p2,
-+				ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p2),
-+				2);
-+		else if (AR_SREV_9330_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_wo_xlna_rx_gain_1p1,
-+				ARRAY_SIZE(ar9331_common_wo_xlna_rx_gain_1p1),
-+				2);
-+		else if (AR_SREV_9340(ah))
- 			INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				       ar9340Common_wo_xlna_rx_gain_table_1p0,
- 				       ARRAY_SIZE(ar9340Common_wo_xlna_rx_gain_table_1p0),
--- 
-1.7.2.1
+That I know, but "code first" still applies. If the comparison between rtl8192ce 
+and rtl8192cu has any validity for the rtl8192s varieties, roughly half of this 
+driver will be shared. In addition, we do have all the USB plumbing in place, 
+but we are still talking about a few thousand lines of code. At last contact, 
+Realtek has no interest in this project, thus I will be on my own.
+
+Larry
+
 
