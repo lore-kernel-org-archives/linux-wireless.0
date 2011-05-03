@@ -1,88 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51512 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758Ab1ERNER convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 09:04:17 -0400
-Received: by wya21 with SMTP id 21so1161076wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 06:04:16 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:57577 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750852Ab1ECHoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 03:44:17 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 00:43:49 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k_hw: remove aggregation protection mode
+Date: Tue, 3 May 2011 13:14:06 +0530
+Message-ID: <1304408646-9411-1-git-send-email-mshajakhan@atheros.com> (sfid-20110503_094423_199167_8FAFE797)
 MIME-Version: 1.0
-In-Reply-To: <4DD3C0B9.5070400@gmail.com>
-References: <BANLkTi=3i6LEYFivGYB0OZDKmjXxeo+yrQ@mail.gmail.com>
-	<294183.47547.qm@web161601.mail.bf1.yahoo.com>
-	<BANLkTimwBB35HhOBjOq=OyhrVWq9MOZ3tA@mail.gmail.com>
-	<4DD3C0B9.5070400@gmail.com>
-Date: Wed, 18 May 2011 18:34:15 +0530
-Message-ID: <BANLkTinj6CyWPipu0BuZtrug6ajvqedC7Q@mail.gmail.com> (sfid-20110518_150421_109831_D5BF619B)
-Subject: Re: rt2x00: rt2800usb causing kernel panic /compat-wireless/
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Walter Goldens <goldenstranger@yahoo.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2011 at 6:21 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On 05/18/11 14:41, Mohammed Shafi wrote:
->> On Wed, May 18, 2011 at 5:26 PM, Walter Goldens
->> <goldenstranger@yahoo.com> wrote:
->>>>> A very peculiar bug.
->>>>>
->>>>> With compat-wireless from 16.05 a nasty bug started to
->>>> manifest itself. Right around association time, the
->>>> rt2800usb causes kernel panic. The system freezes and the
->>>> Caps Lock and Num Lock leds on the keyboard begin to flash.
->>>>
->>>> also ath9k, iwlagn.
->>>>
->>>>>
->>>>> Unfortunately there are no recoverable traces after
->>>> the system failure to aid this bug report or to indicate its
->>>> origin.
->>>>>
->>>>> I believe it may somehow be related to Ubuntu's
->>>> network-manager. If I turn off the network-manager service,
->>>> I can go into monitor mode for example, but if
->>>> network-manager is running and I plug my USB dongle, it
->>>> starts to associate, a second or two later the system is in
->>>> complete meltdown.
->>>>
->>>> same thing, monitor mode worked perfectly fine.
->>>>
->>>>>
->>>>> Nothing concrete, but a hunch is telling me this has
->>>> something to do with the association mechanism of the
->>>> rt2800usb. Compat-wireless from few days back exhibits no
->>>> such foul play.
->>>>
->>>> yes just right at the association complete freeze.
->>>>
->>>
->>> That's strange. I wonder what's the connection with this bug and network-manager. Because when I manually tried to associate, dmesg reported the association attempt timed out.
->>
->> no even when we use iw dev connect command we can see the panic.
->
-> Yeah, I've seen this freeze as well using one of the later compat-wireless packages using just iw and wpa_supplicant to bring up the card. This is on all sorts of rt2x00 supported devices.
->
-> However, I don't believe this to be an rt2x00-specific bug, as exactly the same rt2x00 sources inside a compat-wireless-2.6.39rc7 package do not produce the freeze.
->
->> some expert suspected that there is a chance of kfree_rcu in
->> compat-wireless may have caused the problem
->>
->
-> That's where my suspicion is as well, but I didn't have the time to further investigate. Since my focus was on rt2x00 I used the compat-wireless-2.6.39rc7 package to test my patches. I only did a quick check, and the kfree_rcu compatibility fix that was done in compat-wireless did seem to match the kfree_rcu code is present in linux-next, but maybe there is an odd side-effect.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-I could not exactly remember this panic came just after kfree_rcu backported..
+when aggregation protection mode is enabled the hardware needs
+to send RTS/CTS for each HT frame. Currently its disabled so
+remove the unused call backs.
 
->
-> ---
-> Gertjan
->
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |   10 ----------
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   11 -----------
+ drivers/net/wireless/ath/ath9k/ath9k.h      |    1 -
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ------
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 --
+ drivers/net/wireless/ath/ath9k/main.c       |    3 ---
+ drivers/net/wireless/ath/ath9k/xmit.c       |    5 +----
+ 7 files changed, 1 insertions(+), 37 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index c338efb..7a332f1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -415,15 +415,6 @@ static void ar9002_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
+ 	ads->ds_ctl1 &= (~AR_IsAggr & ~AR_MoreAggr);
+ }
+ 
+-static void ar9002_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
+-					   u32 burstDuration)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_ctl2 &= ~AR_BurstDur;
+-	ads->ds_ctl2 |= SM(burstDuration, AR_BurstDur);
+-}
+-
+ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			  u32 size, u32 flags)
+ {
+@@ -456,6 +447,5 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+ 	ops->set11n_aggr_middle = ar9002_hw_set11n_aggr_middle;
+ 	ops->set11n_aggr_last = ar9002_hw_set11n_aggr_last;
+ 	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
+-	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
+ 	ops->set_clrdmask = ar9002_hw_set_clrdmask;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index c1264d6..be6adec 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -484,16 +484,6 @@ static void ar9003_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
+ 	ads->ctl12 &= (~AR_IsAggr & ~AR_MoreAggr);
+ }
+ 
+-static void ar9003_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
+-					   u32 burstDuration)
+-{
+-	struct ar9003_txc *ads = (struct ar9003_txc *) ds;
+-
+-	ads->ctl13 &= ~AR_BurstDur;
+-	ads->ctl13 |= SM(burstDuration, AR_BurstDur);
+-
+-}
+-
+ void ar9003_hw_set_paprd_txdesc(struct ath_hw *ah, void *ds, u8 chains)
+ {
+ 	struct ar9003_txc *ads = ds;
+@@ -518,7 +508,6 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
+ 	ops->set11n_aggr_middle = ar9003_hw_set11n_aggr_middle;
+ 	ops->set11n_aggr_last = ar9003_hw_set11n_aggr_last;
+ 	ops->clr11n_aggr = ar9003_hw_clr11n_aggr;
+-	ops->set11n_burstduration = ar9003_hw_set11n_burstduration;
+ 	ops->set_clrdmask = ar9003_hw_set_clrdmask;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0312aa0..1bffd15 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -62,7 +62,6 @@ struct ath_node;
+ #define	ATH_TXQ_SETUP(sc, i)        ((sc)->tx.txqsetup & (1<<i))
+ 
+ struct ath_config {
+-	u32 ath_aggr_prot;
+ 	u16 txpowlimit;
+ 	u8 cabqReadytime;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 9dd90a8..99f8334 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -116,12 +116,6 @@ static inline void ath9k_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
+ 	ath9k_hw_ops(ah)->clr11n_aggr(ah, ds);
+ }
+ 
+-static inline void ath9k_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
+-						 u32 burstDuration)
+-{
+-	ath9k_hw_ops(ah)->set11n_burstduration(ah, ds, burstDuration);
+-}
+-
+ static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
+ {
+ 	ath9k_hw_ops(ah)->set_clrdmask(ah, ds, val);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 34ed1bd..b2248bb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -628,8 +628,6 @@ struct ath_hw_ops {
+ 				   u32 numDelims);
+ 	void (*set11n_aggr_last)(struct ath_hw *ah, void *ds);
+ 	void (*clr11n_aggr)(struct ath_hw *ah, void *ds);
+-	void (*set11n_burstduration)(struct ath_hw *ah, void *ds,
+-				     u32 burstDuration);
+ 	void (*set_clrdmask)(struct ath_hw *ah, void *ds, bool val);
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c3dbf26..d3a3c89 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2039,9 +2039,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		ath9k_config_bss(sc, vif);
+ 
+-		/* Set aggregation protection mode parameters */
+-		sc->config.ath_aggr_prot = 0;
+-
+ 		ath_dbg(common, ATH_DBG_CONFIG, "BSSID: %pM aid: 0x%x\n",
+ 			common->curbssid, common->curaid);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 7b91b2a..744779d 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1663,8 +1663,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 		rix = rates[i].idx;
+ 		series[i].Tries = rates[i].count;
+ 
+-		if ((sc->config.ath_aggr_prot && bf_isaggr(bf)) ||
+-		    (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
++		    if (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 			series[i].RateFlags |= ATH9K_RATESERIES_RTS_CTS;
+ 			flags |= ATH9K_TXDESC_RTSENA;
+ 		} else if (rates[i].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+@@ -1733,8 +1732,6 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 				     !is_pspoll, ctsrate,
+ 				     0, series, 4, flags);
+ 
+-	if (sc->config.ath_aggr_prot && flags)
+-		ath9k_hw_set11n_burstduration(sc->sc_ah, bf->bf_desc, 8192);
+ }
+ 
+ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
 -- 
-shafi
+1.7.0.4
+
