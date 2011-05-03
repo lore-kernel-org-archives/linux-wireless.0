@@ -1,61 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2278 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752446Ab1ECJhE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:37:04 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 55/61] staging: brcm80211: remove CRC_INNER_LOOP macro
-Date: Tue, 3 May 2011 11:35:55 +0200
-Message-ID: <1304415361-7813-56-git-send-email-arend@broadcom.com> (sfid-20110503_114020_095520_CD63B47A)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+Received: from aurora.create-net.org ([193.206.22.116]:59573 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406Ab1ECJjl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 05:39:41 -0400
+Message-ID: <4DBFCD59.3030505@create-net.org> (sfid-20110503_113944_694748_7130FBA4)
+Date: Tue, 03 May 2011 11:39:37 +0200
+From: Roberto Riggio <roberto.riggio@create-net.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
+References: <4DBF1967.9010604@candelatech.com> <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
+In-Reply-To: <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the removal of hndcrc16 and hndcrc32 this macro is not needed
-anymore. Also the crc-ccitt library functions provide an equivalent
-static inline function for this operation.
+well i'm also having troubles in injecting traffic at 11n rates over a 
+raw interface,
+instead everything is working fine if I try to inject traffic at 11bga 
+rates. I'm using
+the patch recently posted by matteo croce in order to specify 11n mcs codes.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/util/bcmutils.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+the card that i;m using is exactly an sr71a. I hear that packet 
+injection is working
+fine for people using the ubiquiti rocket M devices.
 
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index bcaf911..7337a75 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -564,16 +564,11 @@ static const u8 crc8_table[256] = {
- 	0xF4, 0x03, 0x4D, 0xBA, 0xD1, 0x26, 0x68, 0x9F
- };
- 
--#define CRC_INNER_LOOP(n, c, x) \
--	((c) = ((c) >> 8) ^ crc##n##_table[((c) ^ (x)) & 0xff])
--
- u8 hndcrc8(u8 *pdata,	/* pointer to array of data to process */
- 			 uint nbytes,	/* number of input data bytes to process */
- 			 u8 crc	/* either CRC8_INIT_VALUE or previous return value */
-     ) {
--	/* hard code the crc loop instead of using CRC_INNER_LOOP macro
--	 * to avoid the undefined and unnecessary (u8 >> 8) operation.
--	 */
-+	/* loop over the buffer data */
- 	while (nbytes-- > 0)
- 		crc = crc8_table[(crc ^ *pdata++) & 0xff];
- 
+R.
+
+Il 03/05/2011 08:13, Adrian Chadd ha scritto:
+> The AR9160/SR71-A should be supported by ath9k. They're just 2x2
+> stream devices using 3 radios.
+>
+> What do you mean by "not even supported" ?
+>
+> If the SR71-A isn't working for you then please email the ath9k list
+> and I'll take a look. I have a bunch of SR71-A hardware here to tinker
+> with.
+>
+>
+>
+>
+> Adrian
+>
+> On 3 May 2011 04:51, Ben Greear<greearb@candelatech.com>  wrote:
+>> Hello!
+>>
+>> We are trying to find some Atheros NICs that support 3x3
+>> MIMO, but we are having a hard time.
+>>
+>> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
+>> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
+>> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
+>> hard to order that specific version.
+>>
+>> Sparklan seems to make one based on AR9380, but they are not
+>> in stock any place we could find.
+>>
+>> Anyone know of any others that are available to the public
+>> in small quantities?
+>>
+>> Thanks,
+>> Ben
+>>
+>> --
+>> Ben Greear<greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 -- 
-1.7.4.1
+--------------------------------------------------------
+Roberto Riggio, Ph.D.
+CREATE-NET
+Network&  Security Solutions for Pervasive Computing Systems (iNSPIRE)
+Senior Researcher
+Via alla Cascata 56/D - 38123 Povo Trento (Italy)
+e-mail: roberto.riggio@create-net.org
+Tel: (+39) 0461 408400 - interno/extension 708
+Fax: (+39) 0461 421157
+www.create-net.org/~rriggio
+--------------------------------------------------------
 
+The information transmitted is intended only for the person or entity to
+which it is addressed and may contain confidential and/or privileged
+material. Any review, retransmission, dissemination or other use of, or
+taking of any action in reliance upon, this information by persons or
+entities other than the intended recipient is prohibited according to
+the Italian Law 196/2003 of the Legislature. If you received this in
+error, please contact the sender and delete the material from any
+computer.
+
+Le informazioni contenute in questo messaggio di posta elettronica e nei
+file allegati sono da considerarsi strettamente riservate. Il loro
+utilizzo e' consentito esclusivamente al destinatario del messaggio, per
+le finalita' indicate nel messaggio stesso. Qualora riceveste questo
+messaggio senza esserne il destinatario, Vi preghiamo cortesemente di
+darcene notizia via e-mail e di procedere alla cancellazione del
+messaggio stesso dal Vostro sistema. Trattenere il messaggio stesso,
+divulgarlo anche in parte, distribuirlo ad altri soggetti, copiarlo,
+od utilizzarlo per finalita' diverse, costituisce comportamento
+contrario ai principi dettati dal D. Lgs. 196/2003.
 
