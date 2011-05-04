@@ -1,62 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45474 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753999Ab1EEW7n convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49906 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753544Ab1EDRZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 18:59:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 6 May 2011 08:59:23 +1000
-Message-ID: <BANLkTi=epFN2EZBj9n8pac6h7F4RWmyk+Q@mail.gmail.com> (sfid-20110506_010027_213935_FF0DBAEC)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-2
+	Wed, 4 May 2011 13:25:07 -0400
+Received: by pwi15 with SMTP id 15so608984pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 10:25:07 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH] cfg80211: Use capability info to detect mesh beacons.
+Date: Wed,  4 May 2011 10:24:56 -0700
+Message-Id: <1304529896-20934-1-git-send-email-javier@cozybit.com> (sfid-20110504_192512_519248_E5EDC844)
+In-Reply-To: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
+References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa³,
+Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
+infrastructure BSS, or IBSS are differentiated by the Capability
+Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
+subfields to 0 in transmitted Beacon or Probe Response management
+frames.
 
-A minor nit:
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/ieee80211.h |    5 +++++
+ net/wireless/scan.c       |   14 +++++++-------
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-On Fri, May 6, 2011 at 07:59, Rafa³ Mi³ecki <zajec5@gmail.com> wrote:
-> diff --git a/Documentation/ABI/testing/sysfs-bus-bcma b/Documentation/ABI/testing/sysfs-bus-bcma
-> new file mode 100644
-> index 0000000..ad3cd69
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/sysfs-bus-bcma
-> @@ -0,0 +1,31 @@
-> +What:          /sys/bus/bcma/devices/.../class
-> +Date:          May 2011
-> +KernelVersion: 2.6.40
-> +Contact:       Rafa³ Mi³ecki <zajec5@gmail.com>
-> +Description:
-> +               Each AXI core is identified by few fields, including class it
-> +               belongs to. See include/linux/bcma/bcma.h for possible values.
-
-Should this not read BCMA or something similar, not AXI?
-
-Ditto for the rest of the changes to this file.
-
-Thanks,
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a26dcb8..b2eee58 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1002,6 +1002,11 @@ struct ieee80211_ht_info {
+ 
+ #define WLAN_CAPABILITY_ESS		(1<<0)
+ #define WLAN_CAPABILITY_IBSS		(1<<1)
++
++/* A mesh STA sets the ESS and IBSS capability bits to zero */
++#define WLAN_CAPABILITY_IS_MBSS(cap)	\
++	(!((cap) & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)))
++
+ #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
+ #define WLAN_CAPABILITY_CF_POLL_REQUEST	(1<<3)
+ #define WLAN_CAPABILITY_PRIVACY		(1<<4)
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index fbf6f33..62e542a 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -210,7 +210,7 @@ static bool is_mesh(struct cfg80211_bss *a,
+ {
+ 	const u8 *ie;
+ 
+-	if (!is_zero_ether_addr(a->bssid))
++	if (!WLAN_CAPABILITY_IS_MBSS(a->capability))
+ 		return false;
+ 
+ 	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
+@@ -248,11 +248,7 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 	if (a->channel != b->channel)
+ 		return b->channel->center_freq - a->channel->center_freq;
+ 
+-	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
+-	if (r)
+-		return r;
+-
+-	if (is_zero_ether_addr(a->bssid)) {
++	if (WLAN_CAPABILITY_IS_MBSS(a->capability | b->capability)) {
+ 		r = cmp_ies(WLAN_EID_MESH_ID,
+ 			    a->information_elements,
+ 			    a->len_information_elements,
+@@ -267,6 +263,10 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 			       b->len_information_elements);
+ 	}
+ 
++	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
++	if (r)
++		return r;
++
+ 	return cmp_ies(WLAN_EID_SSID,
+ 		       a->information_elements,
+ 		       a->len_information_elements,
+@@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 
+ 	res->ts = jiffies;
+ 
+-	if (is_zero_ether_addr(res->pub.bssid)) {
++	if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+ 		/* must be mesh, verify */
+ 		meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
+ 					  res->pub.information_elements,
 -- 
-Julian Calaby
+1.7.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
