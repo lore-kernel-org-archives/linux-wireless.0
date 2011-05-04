@@ -1,88 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42240 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759568Ab1EMRSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 13:18:54 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 10:18:25 -0700
-Date: Fri, 13 May 2011 22:48:49 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: cancel scan_work in ieee80211_unregister_hw
-Message-ID: <20110513171849.GA2760@vmraj-lnx.users.atheros.com> (sfid-20110513_191858_814882_41682109)
-References: <1305220188-13098-1-git-send-email-rmanoharan@atheros.com>
- <1305221121.3461.32.camel@jlt3.sipsolutions.net>
- <20110513053533.GA20459@vmraj-lnx.users.atheros.com>
- <1305301416.3468.9.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1305301416.3468.9.camel@jlt3.sipsolutions.net>
+Received: from external1.orbit-lab.org ([128.6.192.131]:46162 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755023Ab1EDTFD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 15:05:03 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 44E5A540157
+	for <linux-wireless@vger.kernel.org>; Wed,  4 May 2011 15:10:31 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110504190502.771B840EC5@repository3.orbit-lab.org> (sfid-20110504_210514_360503_28A9D8E1)
+Date: Wed,  4 May 2011 15:05:02 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 09:13:36PM +0530, Johannes Berg wrote:
-> On Fri, 2011-05-13 at 11:05 +0530, Rajkumar Manoharan wrote:
-> 
-> > > How did you come to that conclusion? ieee80211_do_stop() does stop the
-> > > scan.
-> > >
-> > True. But Sometimes ieee80211_scan_cancel is waiting for mutex where
-> > the lock was already aquired by scan work and scan_work never releases
-> > the lock till scan completion whenever next_delay == 0.
-> 
-> But that shouldn't take a long time. And if it's "stuck" there, then
-> cancel_delayed_work_sync() will also wait for it.
->
-Agree. cancel_delayed_work_sync does not help to abort scan when
-scan_work is in next_scan_state loop.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 4333b4b...b7e57bf akpm-end   -> origin/akpm-end  (forced update)
+   adadfe4..609cfda  akpm-start -> origin/akpm-start
+   8748375..d30f125  history    -> origin/history
+ + 295f62d...5c3d629 master     -> origin/master  (forced update)
+   adadfe4..609cfda  stable     -> origin/stable
+ * [new tag]         next-20110504 -> next-20110504
 
-> > This scenario was observed while unplug the card during scan.
-> 
-> If this happens then mac80211 will still make calls to the driver, I
-> don't think we can avoid this and drivers will need to handle it. Maybe
-> the driver is repeatedly timing out somewhere?
->
-These unneccesary driver calls has to be avoided. How about the following
-change to abort scan during scan loop.
+compat-wireless code metrics
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 4054399..9d18c43 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -384,11 +384,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
-        int i;
-        enum nl80211_channel_type orig_ct;
- 
-+       clear_bit(SDATA_STATE_RUNNING, &sdata->state);
-+
-        if (local->scan_sdata == sdata)
-                ieee80211_scan_cancel(local);
- 
--       clear_bit(SDATA_STATE_RUNNING, &sdata->state);
--
-        /*
-         * Stop TX on this interface first.
-         */
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ea44a8e..6353f93 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -719,6 +719,11 @@ void ieee80211_scan_work(struct work_struct *work)
-         * without scheduling a new work
-         */
-        do {
-+               if (!test_bit(SDATA_STATE_RUNNING, &sdata->state)) {
-+                       aborted = true;
-+                       goto out_complete;
-+               }
-+
-                switch (local->next_scan_state) {
-                case SCAN_DECISION:
-                        /* if no more bands/channels left, complete scan */
-
---
-Rajkumar
+    814910 - Total upstream lines of code being pulled
+      2355 - backport code changes
+      2048 - backport code additions
+       307 - backport code deletions
+      8033 - backport from compat module
+     10388 - total backport code
+    1.2747 - % of code consists of backport work
