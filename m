@@ -1,122 +1,780 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42027 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:32981 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752374Ab1EBUZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 16:25:06 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QGzg0-0008Dq-B3
-	for linux-wireless@vger.kernel.org; Mon, 02 May 2011 22:25:04 +0200
-Received: from 128.4.35.58 ([128.4.35.58])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 22:25:04 +0200
-Received: from jonghyun by 128.4.35.58 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 22:25:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Jonghyun Kim <jonghyun@udel.edu>
-Subject: Re: looking for more details on BCM4329, access to 802.11 header
-Date: Mon, 2 May 2011 20:17:42 +0000 (UTC)
-Message-ID: <loom.20110502T221352-549@post.gmane.org> (sfid-20110502_222510_207731_82F3F8DE)
-References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752504Ab1EDIuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 04:50:01 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 01:49:33 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <greg@kroah.com>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<Vipin.Mehta@Atheros.com>, <Naveen.Singh@Atheros.com>,
+	"Vasanthakumar Thiagarajan" <vasanth@atheros.com>
+Subject: [PATCH 5/5] ath6kl: Remove ununsed macros from gpio_reg.h
+Date: Wed, 4 May 2011 14:23:56 +0530
+Message-ID: <1304499236-10092-5-git-send-email-vasanth@atheros.com> (sfid-20110504_105039_359135_B0D2E653)
+In-Reply-To: <1304499236-10092-1-git-send-email-vasanth@atheros.com>
+References: <1304499236-10092-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+After this there is no difference between hw2.0/hw/gpio_reg.h
+and hw4.0/hw/gpio_reg.h, so remove the duplication.
 
-I can answer the question about the per-packet RSSI.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ .../include/common/AR6002/hw2.0/hw/gpio_reg.h      |  172 -------------
+ .../common/AR6002/hw4.0/hw/gpio_athr_wlan_reg.h    |  255 --------------------
+ .../include/common/AR6002/hw4.0/hw/gpio_reg.h      |  251 -------------------
+ drivers/staging/ath6kl/include/common/gpio_reg.h   |    9 +
+ drivers/staging/ath6kl/miscdrv/common_drv.c        |    2 +-
+ .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    2 +-
+ 6 files changed, 11 insertions(+), 680 deletions(-)
+ delete mode 100644 drivers/staging/ath6kl/include/common/AR6002/hw2.0/hw/gpio_reg.h
+ delete mode 100644 drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_athr_wlan_reg.h
+ delete mode 100644 drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_reg.h
+ create mode 100644 drivers/staging/ath6kl/include/common/gpio_reg.h
 
-Each frame consists of 
- HW header, SW header, BDC header, MAC header, and MSDU,
-where HW is hareware and SW is software.
-
-BDC header includes rssi as a member.
-MAC header consists of DA, SA, and proto, 
-where DA is the destination address and SA is the source address.
-
-When proto is IP (0x0800) or ARP (0x0806), 
-rssi in BDC header is greater than zero.
-To obtain the correct value of rssi, 
-you must subtract 256 (=0x100) from it.
-For some other protocols, rssi in BDC header is zero,
-meaning we cannot get
-correct rssi for them.
-
-The following kernel messages are the examples that I produced.
-----------------
-<2>[  477.763885] Jong: rssi=-54, SSID=Sender
-<4>[  477.892425] Jong: HW  : 110 0 145 255
-<4>[  477.893188] Jong: SW  : seq=185 chan=2 0 doff=14 0 
-txmax=154 0 0 0 0
-<4>[  477.893615] Jong: BDC : fl=16 pri=0 fl=0 rssi=202 --> -54 dBm
-<4>[  477.894287] Jong: MAC : DA=ff ff ff ff ff ff 
-SA=00 1f c6 d6 3 19 proto=0800 (IP)
-<4>[  477.894744] Jong: MSDU: 45 0 0 4e 1d a5 0 0 80 11
-
-<4>[  477.895782] Jong: HW  : 78 0 177 255
-<4>[  477.896179] Jong: SW  : seq=186 chan=2 0 doff=14 0 
-txmax=154 0 0 0 0
-<4>[  477.896606] Jong: BDC : fl=16 pri=0 fl=0 rssi=202 --> -54 dBm
-<4>[  477.897277] Jong: MAC : DA=ff ff ff ff ff ff 
-SA=00 04 96 1d 80 a0 proto=0806 (ARP)
-<4>[  477.897705] Jong: MSDU: 0 1 8 0 6 4 0 1 0 4
-----------------
-
-The code to produce the above kernel messages is as follows.
-In dhdsdio_readframes() function,
-add
-        struct sk_buff *TmpPkt;
-        uchar *HW_header_p;
-and right before the comment
-	/* Fill in packet len and prio, deliver upward */
-add
-	TmpPkt = (struct sk_buff *)pkt;
-	HW_header_p = (uchar *)TmpPkt->data;	
-and right before the comment
-	/* Unlock during rx call */
-add
-
-{
-    uchar *A = HW_header_p;  
-    
-    printk("Jong: HW   : %d %d %d %d\n", A[0], A[1], A[2], A[3]);
-    printk("Jong: SW   : seq=%d chan=%d %d doff=%d %d 
-           txmax=%d %d %d %d %d\n", 
-A[4], A[5], A[6], A[7], A[8], A[9], A[10], A[11], A[12], A[13]);
-    printk("Jong: BDC  : fl=%d pri=%d fl=%d rssi=%d\n", 
-A[14], A[15], A[16], A[17]);
-    printk("Jong: MAC  : DA=%02x %02x %02x %02x %02x %02x 
-SA=%02x %02x %02x %02x %02x %02x proto=%02x%02x\n", 
-              A[18], A[19], A[20], A[21], A[22], A[23],
-              A[24], A[25], A[26], A[27], A[28], A[29],
-A[30], A[31]);
-printk("Jong: MSDU : %02x %02x %02x %02x %02x %02x %02x
- %02x %02x %02x\n",
-A[32], A[33], A[34], A[35], A[36], A[37], A[38],
-A[39], A[40], A[41]);
-}
-
-
-
-I have been tried to modify driver codes to get a monitor mode.
-But it did not work since I guess that the firmware does not
-support it. What I tried is follows.
-
-In wl_iw_set_mode() function,
-I addded
-        int monitor = htod32(1);
-	error = dev_wlc_ioctl(dev, WLC_SET_MONITOR,
-         &monitor, sizeof(monitor));
-
-The result of error is -95 that means EOPNOTSUPP 
-(error operation not supported).
-
-I hope that the developers of the firmware for bcm4329
-release a new firmware providing monitor mode.
-
-
-
-
+diff --git a/drivers/staging/ath6kl/include/common/AR6002/hw2.0/hw/gpio_reg.h b/drivers/staging/ath6kl/include/common/AR6002/hw2.0/hw/gpio_reg.h
+deleted file mode 100644
+index a466b45..0000000
+--- a/drivers/staging/ath6kl/include/common/AR6002/hw2.0/hw/gpio_reg.h
++++ /dev/null
+@@ -1,172 +0,0 @@
+-#ifndef _GPIO_REG_REG_H_
+-#define _GPIO_REG_REG_H_
+-
+-#define GPIO_PIN0_ADDRESS                        0x00000028
+-#define GPIO_PIN0_OFFSET                         0x00000028
+-#define GPIO_PIN0_CONFIG_MSB                     12
+-#define GPIO_PIN0_CONFIG_LSB                     11
+-#define GPIO_PIN0_CONFIG_MASK                    0x00001800
+-#define GPIO_PIN0_CONFIG_GET(x)                  (((x) & GPIO_PIN0_CONFIG_MASK) >> GPIO_PIN0_CONFIG_LSB)
+-#define GPIO_PIN0_CONFIG_SET(x)                  (((x) << GPIO_PIN0_CONFIG_LSB) & GPIO_PIN0_CONFIG_MASK)
+-#define GPIO_PIN0_WAKEUP_ENABLE_MSB              10
+-#define GPIO_PIN0_WAKEUP_ENABLE_LSB              10
+-#define GPIO_PIN0_WAKEUP_ENABLE_MASK             0x00000400
+-#define GPIO_PIN0_WAKEUP_ENABLE_GET(x)           (((x) & GPIO_PIN0_WAKEUP_ENABLE_MASK) >> GPIO_PIN0_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN0_WAKEUP_ENABLE_SET(x)           (((x) << GPIO_PIN0_WAKEUP_ENABLE_LSB) & GPIO_PIN0_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN0_INT_TYPE_MSB                   9
+-#define GPIO_PIN0_INT_TYPE_LSB                   7
+-#define GPIO_PIN0_INT_TYPE_MASK                  0x00000380
+-#define GPIO_PIN0_INT_TYPE_GET(x)                (((x) & GPIO_PIN0_INT_TYPE_MASK) >> GPIO_PIN0_INT_TYPE_LSB)
+-#define GPIO_PIN0_INT_TYPE_SET(x)                (((x) << GPIO_PIN0_INT_TYPE_LSB) & GPIO_PIN0_INT_TYPE_MASK)
+-#define GPIO_PIN0_PAD_DRIVER_MSB                 2
+-#define GPIO_PIN0_PAD_DRIVER_LSB                 2
+-#define GPIO_PIN0_PAD_DRIVER_MASK                0x00000004
+-#define GPIO_PIN0_PAD_DRIVER_GET(x)              (((x) & GPIO_PIN0_PAD_DRIVER_MASK) >> GPIO_PIN0_PAD_DRIVER_LSB)
+-#define GPIO_PIN0_PAD_DRIVER_SET(x)              (((x) << GPIO_PIN0_PAD_DRIVER_LSB) & GPIO_PIN0_PAD_DRIVER_MASK)
+-#define GPIO_PIN0_SOURCE_MSB                     0
+-#define GPIO_PIN0_SOURCE_LSB                     0
+-#define GPIO_PIN0_SOURCE_MASK                    0x00000001
+-#define GPIO_PIN0_SOURCE_GET(x)                  (((x) & GPIO_PIN0_SOURCE_MASK) >> GPIO_PIN0_SOURCE_LSB)
+-#define GPIO_PIN0_SOURCE_SET(x)                  (((x) << GPIO_PIN0_SOURCE_LSB) & GPIO_PIN0_SOURCE_MASK)
+-
+-#define GPIO_PIN1_ADDRESS                        0x0000002c
+-#define GPIO_PIN1_OFFSET                         0x0000002c
+-#define GPIO_PIN1_CONFIG_MSB                     12
+-#define GPIO_PIN1_CONFIG_LSB                     11
+-#define GPIO_PIN1_CONFIG_MASK                    0x00001800
+-#define GPIO_PIN1_CONFIG_GET(x)                  (((x) & GPIO_PIN1_CONFIG_MASK) >> GPIO_PIN1_CONFIG_LSB)
+-#define GPIO_PIN1_CONFIG_SET(x)                  (((x) << GPIO_PIN1_CONFIG_LSB) & GPIO_PIN1_CONFIG_MASK)
+-#define GPIO_PIN1_WAKEUP_ENABLE_MSB              10
+-#define GPIO_PIN1_WAKEUP_ENABLE_LSB              10
+-#define GPIO_PIN1_WAKEUP_ENABLE_MASK             0x00000400
+-#define GPIO_PIN1_WAKEUP_ENABLE_GET(x)           (((x) & GPIO_PIN1_WAKEUP_ENABLE_MASK) >> GPIO_PIN1_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN1_WAKEUP_ENABLE_SET(x)           (((x) << GPIO_PIN1_WAKEUP_ENABLE_LSB) & GPIO_PIN1_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN1_INT_TYPE_MSB                   9
+-#define GPIO_PIN1_INT_TYPE_LSB                   7
+-#define GPIO_PIN1_INT_TYPE_MASK                  0x00000380
+-#define GPIO_PIN1_INT_TYPE_GET(x)                (((x) & GPIO_PIN1_INT_TYPE_MASK) >> GPIO_PIN1_INT_TYPE_LSB)
+-#define GPIO_PIN1_INT_TYPE_SET(x)                (((x) << GPIO_PIN1_INT_TYPE_LSB) & GPIO_PIN1_INT_TYPE_MASK)
+-#define GPIO_PIN1_PAD_DRIVER_MSB                 2
+-#define GPIO_PIN1_PAD_DRIVER_LSB                 2
+-#define GPIO_PIN1_PAD_DRIVER_MASK                0x00000004
+-#define GPIO_PIN1_PAD_DRIVER_GET(x)              (((x) & GPIO_PIN1_PAD_DRIVER_MASK) >> GPIO_PIN1_PAD_DRIVER_LSB)
+-#define GPIO_PIN1_PAD_DRIVER_SET(x)              (((x) << GPIO_PIN1_PAD_DRIVER_LSB) & GPIO_PIN1_PAD_DRIVER_MASK)
+-#define GPIO_PIN1_SOURCE_MSB                     0
+-#define GPIO_PIN1_SOURCE_LSB                     0
+-#define GPIO_PIN1_SOURCE_MASK                    0x00000001
+-#define GPIO_PIN1_SOURCE_GET(x)                  (((x) & GPIO_PIN1_SOURCE_MASK) >> GPIO_PIN1_SOURCE_LSB)
+-#define GPIO_PIN1_SOURCE_SET(x)                  (((x) << GPIO_PIN1_SOURCE_LSB) & GPIO_PIN1_SOURCE_MASK)
+-
+-#define GPIO_PIN10_ADDRESS                       0x00000050
+-#define GPIO_PIN10_OFFSET                        0x00000050
+-#define GPIO_PIN10_CONFIG_MSB                    12
+-#define GPIO_PIN10_CONFIG_LSB                    11
+-#define GPIO_PIN10_CONFIG_MASK                   0x00001800
+-#define GPIO_PIN10_CONFIG_GET(x)                 (((x) & GPIO_PIN10_CONFIG_MASK) >> GPIO_PIN10_CONFIG_LSB)
+-#define GPIO_PIN10_CONFIG_SET(x)                 (((x) << GPIO_PIN10_CONFIG_LSB) & GPIO_PIN10_CONFIG_MASK)
+-#define GPIO_PIN10_WAKEUP_ENABLE_MSB             10
+-#define GPIO_PIN10_WAKEUP_ENABLE_LSB             10
+-#define GPIO_PIN10_WAKEUP_ENABLE_MASK            0x00000400
+-#define GPIO_PIN10_WAKEUP_ENABLE_GET(x)          (((x) & GPIO_PIN10_WAKEUP_ENABLE_MASK) >> GPIO_PIN10_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN10_WAKEUP_ENABLE_SET(x)          (((x) << GPIO_PIN10_WAKEUP_ENABLE_LSB) & GPIO_PIN10_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN10_INT_TYPE_MSB                  9
+-#define GPIO_PIN10_INT_TYPE_LSB                  7
+-#define GPIO_PIN10_INT_TYPE_MASK                 0x00000380
+-#define GPIO_PIN10_INT_TYPE_GET(x)               (((x) & GPIO_PIN10_INT_TYPE_MASK) >> GPIO_PIN10_INT_TYPE_LSB)
+-#define GPIO_PIN10_INT_TYPE_SET(x)               (((x) << GPIO_PIN10_INT_TYPE_LSB) & GPIO_PIN10_INT_TYPE_MASK)
+-#define GPIO_PIN10_PAD_DRIVER_MSB                2
+-#define GPIO_PIN10_PAD_DRIVER_LSB                2
+-#define GPIO_PIN10_PAD_DRIVER_MASK               0x00000004
+-#define GPIO_PIN10_PAD_DRIVER_GET(x)             (((x) & GPIO_PIN10_PAD_DRIVER_MASK) >> GPIO_PIN10_PAD_DRIVER_LSB)
+-#define GPIO_PIN10_PAD_DRIVER_SET(x)             (((x) << GPIO_PIN10_PAD_DRIVER_LSB) & GPIO_PIN10_PAD_DRIVER_MASK)
+-#define GPIO_PIN10_SOURCE_MSB                    0
+-#define GPIO_PIN10_SOURCE_LSB                    0
+-#define GPIO_PIN10_SOURCE_MASK                   0x00000001
+-#define GPIO_PIN10_SOURCE_GET(x)                 (((x) & GPIO_PIN10_SOURCE_MASK) >> GPIO_PIN10_SOURCE_LSB)
+-#define GPIO_PIN10_SOURCE_SET(x)                 (((x) << GPIO_PIN10_SOURCE_LSB) & GPIO_PIN10_SOURCE_MASK)
+-
+-#define GPIO_PIN11_ADDRESS                       0x00000054
+-#define GPIO_PIN11_OFFSET                        0x00000054
+-#define GPIO_PIN11_CONFIG_MSB                    12
+-#define GPIO_PIN11_CONFIG_LSB                    11
+-#define GPIO_PIN11_CONFIG_MASK                   0x00001800
+-#define GPIO_PIN11_CONFIG_GET(x)                 (((x) & GPIO_PIN11_CONFIG_MASK) >> GPIO_PIN11_CONFIG_LSB)
+-#define GPIO_PIN11_CONFIG_SET(x)                 (((x) << GPIO_PIN11_CONFIG_LSB) & GPIO_PIN11_CONFIG_MASK)
+-#define GPIO_PIN11_WAKEUP_ENABLE_MSB             10
+-#define GPIO_PIN11_WAKEUP_ENABLE_LSB             10
+-#define GPIO_PIN11_WAKEUP_ENABLE_MASK            0x00000400
+-#define GPIO_PIN11_WAKEUP_ENABLE_GET(x)          (((x) & GPIO_PIN11_WAKEUP_ENABLE_MASK) >> GPIO_PIN11_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN11_WAKEUP_ENABLE_SET(x)          (((x) << GPIO_PIN11_WAKEUP_ENABLE_LSB) & GPIO_PIN11_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN11_INT_TYPE_MSB                  9
+-#define GPIO_PIN11_INT_TYPE_LSB                  7
+-#define GPIO_PIN11_INT_TYPE_MASK                 0x00000380
+-#define GPIO_PIN11_INT_TYPE_GET(x)               (((x) & GPIO_PIN11_INT_TYPE_MASK) >> GPIO_PIN11_INT_TYPE_LSB)
+-#define GPIO_PIN11_INT_TYPE_SET(x)               (((x) << GPIO_PIN11_INT_TYPE_LSB) & GPIO_PIN11_INT_TYPE_MASK)
+-#define GPIO_PIN11_PAD_DRIVER_MSB                2
+-#define GPIO_PIN11_PAD_DRIVER_LSB                2
+-#define GPIO_PIN11_PAD_DRIVER_MASK               0x00000004
+-#define GPIO_PIN11_PAD_DRIVER_GET(x)             (((x) & GPIO_PIN11_PAD_DRIVER_MASK) >> GPIO_PIN11_PAD_DRIVER_LSB)
+-#define GPIO_PIN11_PAD_DRIVER_SET(x)             (((x) << GPIO_PIN11_PAD_DRIVER_LSB) & GPIO_PIN11_PAD_DRIVER_MASK)
+-#define GPIO_PIN11_SOURCE_MSB                    0
+-#define GPIO_PIN11_SOURCE_LSB                    0
+-#define GPIO_PIN11_SOURCE_MASK                   0x00000001
+-#define GPIO_PIN11_SOURCE_GET(x)                 (((x) & GPIO_PIN11_SOURCE_MASK) >> GPIO_PIN11_SOURCE_LSB)
+-#define GPIO_PIN11_SOURCE_SET(x)                 (((x) << GPIO_PIN11_SOURCE_LSB) & GPIO_PIN11_SOURCE_MASK)
+-
+-#define GPIO_PIN12_ADDRESS                       0x00000058
+-#define GPIO_PIN12_OFFSET                        0x00000058
+-#define GPIO_PIN12_CONFIG_MSB                    12
+-#define GPIO_PIN12_CONFIG_LSB                    11
+-#define GPIO_PIN12_CONFIG_MASK                   0x00001800
+-#define GPIO_PIN12_CONFIG_GET(x)                 (((x) & GPIO_PIN12_CONFIG_MASK) >> GPIO_PIN12_CONFIG_LSB)
+-#define GPIO_PIN12_CONFIG_SET(x)                 (((x) << GPIO_PIN12_CONFIG_LSB) & GPIO_PIN12_CONFIG_MASK)
+-#define GPIO_PIN12_WAKEUP_ENABLE_MSB             10
+-#define GPIO_PIN12_WAKEUP_ENABLE_LSB             10
+-#define GPIO_PIN12_WAKEUP_ENABLE_MASK            0x00000400
+-#define GPIO_PIN12_WAKEUP_ENABLE_GET(x)          (((x) & GPIO_PIN12_WAKEUP_ENABLE_MASK) >> GPIO_PIN12_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN12_WAKEUP_ENABLE_SET(x)          (((x) << GPIO_PIN12_WAKEUP_ENABLE_LSB) & GPIO_PIN12_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN12_INT_TYPE_MSB                  9
+-#define GPIO_PIN12_INT_TYPE_LSB                  7
+-#define GPIO_PIN12_INT_TYPE_MASK                 0x00000380
+-#define GPIO_PIN12_INT_TYPE_GET(x)               (((x) & GPIO_PIN12_INT_TYPE_MASK) >> GPIO_PIN12_INT_TYPE_LSB)
+-#define GPIO_PIN12_INT_TYPE_SET(x)               (((x) << GPIO_PIN12_INT_TYPE_LSB) & GPIO_PIN12_INT_TYPE_MASK)
+-#define GPIO_PIN12_PAD_DRIVER_MSB                2
+-#define GPIO_PIN12_PAD_DRIVER_LSB                2
+-#define GPIO_PIN12_PAD_DRIVER_MASK               0x00000004
+-#define GPIO_PIN12_PAD_DRIVER_GET(x)             (((x) & GPIO_PIN12_PAD_DRIVER_MASK) >> GPIO_PIN12_PAD_DRIVER_LSB)
+-#define GPIO_PIN12_PAD_DRIVER_SET(x)             (((x) << GPIO_PIN12_PAD_DRIVER_LSB) & GPIO_PIN12_PAD_DRIVER_MASK)
+-#define GPIO_PIN12_SOURCE_MSB                    0
+-#define GPIO_PIN12_SOURCE_LSB                    0
+-#define GPIO_PIN12_SOURCE_MASK                   0x00000001
+-#define GPIO_PIN12_SOURCE_GET(x)                 (((x) & GPIO_PIN12_SOURCE_MASK) >> GPIO_PIN12_SOURCE_LSB)
+-#define GPIO_PIN12_SOURCE_SET(x)                 (((x) << GPIO_PIN12_SOURCE_LSB) & GPIO_PIN12_SOURCE_MASK)
+-
+-#define GPIO_PIN13_ADDRESS                       0x0000005c
+-#define GPIO_PIN13_OFFSET                        0x0000005c
+-#define GPIO_PIN13_CONFIG_MSB                    12
+-#define GPIO_PIN13_CONFIG_LSB                    11
+-#define GPIO_PIN13_CONFIG_MASK                   0x00001800
+-#define GPIO_PIN13_CONFIG_GET(x)                 (((x) & GPIO_PIN13_CONFIG_MASK) >> GPIO_PIN13_CONFIG_LSB)
+-#define GPIO_PIN13_CONFIG_SET(x)                 (((x) << GPIO_PIN13_CONFIG_LSB) & GPIO_PIN13_CONFIG_MASK)
+-#define GPIO_PIN13_WAKEUP_ENABLE_MSB             10
+-#define GPIO_PIN13_WAKEUP_ENABLE_LSB             10
+-#define GPIO_PIN13_WAKEUP_ENABLE_MASK            0x00000400
+-#define GPIO_PIN13_WAKEUP_ENABLE_GET(x)          (((x) & GPIO_PIN13_WAKEUP_ENABLE_MASK) >> GPIO_PIN13_WAKEUP_ENABLE_LSB)
+-#define GPIO_PIN13_WAKEUP_ENABLE_SET(x)          (((x) << GPIO_PIN13_WAKEUP_ENABLE_LSB) & GPIO_PIN13_WAKEUP_ENABLE_MASK)
+-#define GPIO_PIN13_INT_TYPE_MSB                  9
+-#define GPIO_PIN13_INT_TYPE_LSB                  7
+-#define GPIO_PIN13_INT_TYPE_MASK                 0x00000380
+-#define GPIO_PIN13_INT_TYPE_GET(x)               (((x) & GPIO_PIN13_INT_TYPE_MASK) >> GPIO_PIN13_INT_TYPE_LSB)
+-#define GPIO_PIN13_INT_TYPE_SET(x)               (((x) << GPIO_PIN13_INT_TYPE_LSB) & GPIO_PIN13_INT_TYPE_MASK)
+-#define GPIO_PIN13_PAD_DRIVER_MSB                2
+-#define GPIO_PIN13_PAD_DRIVER_LSB                2
+-#define GPIO_PIN13_PAD_DRIVER_MASK               0x00000004
+-#define GPIO_PIN13_PAD_DRIVER_GET(x)             (((x) & GPIO_PIN13_PAD_DRIVER_MASK) >> GPIO_PIN13_PAD_DRIVER_LSB)
+-#define GPIO_PIN13_PAD_DRIVER_SET(x)             (((x) << GPIO_PIN13_PAD_DRIVER_LSB) & GPIO_PIN13_PAD_DRIVER_MASK)
+-#define GPIO_PIN13_SOURCE_MSB                    0
+-#define GPIO_PIN13_SOURCE_LSB                    0
+-#define GPIO_PIN13_SOURCE_MASK                   0x00000001
+-#define GPIO_PIN13_SOURCE_GET(x)                 (((x) & GPIO_PIN13_SOURCE_MASK) >> GPIO_PIN13_SOURCE_LSB)
+-#define GPIO_PIN13_SOURCE_SET(x)                 (((x) << GPIO_PIN13_SOURCE_LSB) & GPIO_PIN13_SOURCE_MASK)
+-
+-#endif /* _GPIO_REG_H_ */
+diff --git a/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_athr_wlan_reg.h b/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_athr_wlan_reg.h
+deleted file mode 100644
+index 8c4e44f..0000000
+--- a/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_athr_wlan_reg.h
++++ /dev/null
+@@ -1,255 +0,0 @@
+-// ------------------------------------------------------------------
+-// Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+-// 
+-//
+-// Permission to use, copy, modify, and/or distribute this software for any
+-// purpose with or without fee is hereby granted, provided that the above
+-// copyright notice and this permission notice appear in all copies.
+-//
+-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-//
+-//
+-// ------------------------------------------------------------------
+-//===================================================================
+-// Author(s): ="Atheros"
+-//===================================================================
+-
+-
+-#ifndef _GPIO_ATHR_WLAN_REG_REG_H_
+-#define _GPIO_ATHR_WLAN_REG_REG_H_
+-
+-#define WLAN_GPIO_PIN0_ADDRESS                   0x00000028
+-#define WLAN_GPIO_PIN0_OFFSET                    0x00000028
+-#define WLAN_GPIO_PIN0_CONFIG_MSB                13
+-#define WLAN_GPIO_PIN0_CONFIG_LSB                11
+-#define WLAN_GPIO_PIN0_CONFIG_MASK               0x00003800
+-#define WLAN_GPIO_PIN0_CONFIG_GET(x)             (((x) & WLAN_GPIO_PIN0_CONFIG_MASK) >> WLAN_GPIO_PIN0_CONFIG_LSB)
+-#define WLAN_GPIO_PIN0_CONFIG_SET(x)             (((x) << WLAN_GPIO_PIN0_CONFIG_LSB) & WLAN_GPIO_PIN0_CONFIG_MASK)
+-#define WLAN_GPIO_PIN0_WAKEUP_ENABLE_MSB         10
+-#define WLAN_GPIO_PIN0_WAKEUP_ENABLE_LSB         10
+-#define WLAN_GPIO_PIN0_WAKEUP_ENABLE_MASK        0x00000400
+-#define WLAN_GPIO_PIN0_WAKEUP_ENABLE_GET(x)      (((x) & WLAN_GPIO_PIN0_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN0_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN0_WAKEUP_ENABLE_SET(x)      (((x) << WLAN_GPIO_PIN0_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN0_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN0_INT_TYPE_MSB              9
+-#define WLAN_GPIO_PIN0_INT_TYPE_LSB              7
+-#define WLAN_GPIO_PIN0_INT_TYPE_MASK             0x00000380
+-#define WLAN_GPIO_PIN0_INT_TYPE_GET(x)           (((x) & WLAN_GPIO_PIN0_INT_TYPE_MASK) >> WLAN_GPIO_PIN0_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN0_INT_TYPE_SET(x)           (((x) << WLAN_GPIO_PIN0_INT_TYPE_LSB) & WLAN_GPIO_PIN0_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN0_PAD_PULL_MSB              6
+-#define WLAN_GPIO_PIN0_PAD_PULL_LSB              5
+-#define WLAN_GPIO_PIN0_PAD_PULL_MASK             0x00000060
+-#define WLAN_GPIO_PIN0_PAD_PULL_GET(x)           (((x) & WLAN_GPIO_PIN0_PAD_PULL_MASK) >> WLAN_GPIO_PIN0_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN0_PAD_PULL_SET(x)           (((x) << WLAN_GPIO_PIN0_PAD_PULL_LSB) & WLAN_GPIO_PIN0_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN0_PAD_STRENGTH_MSB          4
+-#define WLAN_GPIO_PIN0_PAD_STRENGTH_LSB          3
+-#define WLAN_GPIO_PIN0_PAD_STRENGTH_MASK         0x00000018
+-#define WLAN_GPIO_PIN0_PAD_STRENGTH_GET(x)       (((x) & WLAN_GPIO_PIN0_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN0_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN0_PAD_STRENGTH_SET(x)       (((x) << WLAN_GPIO_PIN0_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN0_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN0_PAD_DRIVER_MSB            2
+-#define WLAN_GPIO_PIN0_PAD_DRIVER_LSB            2
+-#define WLAN_GPIO_PIN0_PAD_DRIVER_MASK           0x00000004
+-#define WLAN_GPIO_PIN0_PAD_DRIVER_GET(x)         (((x) & WLAN_GPIO_PIN0_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN0_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN0_PAD_DRIVER_SET(x)         (((x) << WLAN_GPIO_PIN0_PAD_DRIVER_LSB) & WLAN_GPIO_PIN0_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN0_SOURCE_MSB                0
+-#define WLAN_GPIO_PIN0_SOURCE_LSB                0
+-#define WLAN_GPIO_PIN0_SOURCE_MASK               0x00000001
+-#define WLAN_GPIO_PIN0_SOURCE_GET(x)             (((x) & WLAN_GPIO_PIN0_SOURCE_MASK) >> WLAN_GPIO_PIN0_SOURCE_LSB)
+-#define WLAN_GPIO_PIN0_SOURCE_SET(x)             (((x) << WLAN_GPIO_PIN0_SOURCE_LSB) & WLAN_GPIO_PIN0_SOURCE_MASK)
+-
+-#define WLAN_GPIO_PIN1_ADDRESS                   0x0000002c
+-#define WLAN_GPIO_PIN1_OFFSET                    0x0000002c
+-#define WLAN_GPIO_PIN1_CONFIG_MSB                13
+-#define WLAN_GPIO_PIN1_CONFIG_LSB                11
+-#define WLAN_GPIO_PIN1_CONFIG_MASK               0x00003800
+-#define WLAN_GPIO_PIN1_CONFIG_GET(x)             (((x) & WLAN_GPIO_PIN1_CONFIG_MASK) >> WLAN_GPIO_PIN1_CONFIG_LSB)
+-#define WLAN_GPIO_PIN1_CONFIG_SET(x)             (((x) << WLAN_GPIO_PIN1_CONFIG_LSB) & WLAN_GPIO_PIN1_CONFIG_MASK)
+-#define WLAN_GPIO_PIN1_WAKEUP_ENABLE_MSB         10
+-#define WLAN_GPIO_PIN1_WAKEUP_ENABLE_LSB         10
+-#define WLAN_GPIO_PIN1_WAKEUP_ENABLE_MASK        0x00000400
+-#define WLAN_GPIO_PIN1_WAKEUP_ENABLE_GET(x)      (((x) & WLAN_GPIO_PIN1_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN1_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN1_WAKEUP_ENABLE_SET(x)      (((x) << WLAN_GPIO_PIN1_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN1_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN1_INT_TYPE_MSB              9
+-#define WLAN_GPIO_PIN1_INT_TYPE_LSB              7
+-#define WLAN_GPIO_PIN1_INT_TYPE_MASK             0x00000380
+-#define WLAN_GPIO_PIN1_INT_TYPE_GET(x)           (((x) & WLAN_GPIO_PIN1_INT_TYPE_MASK) >> WLAN_GPIO_PIN1_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN1_INT_TYPE_SET(x)           (((x) << WLAN_GPIO_PIN1_INT_TYPE_LSB) & WLAN_GPIO_PIN1_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN1_PAD_PULL_MSB              6
+-#define WLAN_GPIO_PIN1_PAD_PULL_LSB              5
+-#define WLAN_GPIO_PIN1_PAD_PULL_MASK             0x00000060
+-#define WLAN_GPIO_PIN1_PAD_PULL_GET(x)           (((x) & WLAN_GPIO_PIN1_PAD_PULL_MASK) >> WLAN_GPIO_PIN1_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN1_PAD_PULL_SET(x)           (((x) << WLAN_GPIO_PIN1_PAD_PULL_LSB) & WLAN_GPIO_PIN1_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN1_PAD_STRENGTH_MSB          4
+-#define WLAN_GPIO_PIN1_PAD_STRENGTH_LSB          3
+-#define WLAN_GPIO_PIN1_PAD_STRENGTH_MASK         0x00000018
+-#define WLAN_GPIO_PIN1_PAD_STRENGTH_GET(x)       (((x) & WLAN_GPIO_PIN1_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN1_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN1_PAD_STRENGTH_SET(x)       (((x) << WLAN_GPIO_PIN1_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN1_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN1_PAD_DRIVER_MSB            2
+-#define WLAN_GPIO_PIN1_PAD_DRIVER_LSB            2
+-#define WLAN_GPIO_PIN1_PAD_DRIVER_MASK           0x00000004
+-#define WLAN_GPIO_PIN1_PAD_DRIVER_GET(x)         (((x) & WLAN_GPIO_PIN1_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN1_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN1_PAD_DRIVER_SET(x)         (((x) << WLAN_GPIO_PIN1_PAD_DRIVER_LSB) & WLAN_GPIO_PIN1_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN1_SOURCE_MSB                0
+-#define WLAN_GPIO_PIN1_SOURCE_LSB                0
+-#define WLAN_GPIO_PIN1_SOURCE_MASK               0x00000001
+-#define WLAN_GPIO_PIN1_SOURCE_GET(x)             (((x) & WLAN_GPIO_PIN1_SOURCE_MASK) >> WLAN_GPIO_PIN1_SOURCE_LSB)
+-#define WLAN_GPIO_PIN1_SOURCE_SET(x)             (((x) << WLAN_GPIO_PIN1_SOURCE_LSB) & WLAN_GPIO_PIN1_SOURCE_MASK)
+-
+-#define WLAN_GPIO_PIN10_ADDRESS                  0x00000050
+-#define WLAN_GPIO_PIN10_OFFSET                   0x00000050
+-#define WLAN_GPIO_PIN10_CONFIG_MSB               13
+-#define WLAN_GPIO_PIN10_CONFIG_LSB               11
+-#define WLAN_GPIO_PIN10_CONFIG_MASK              0x00003800
+-#define WLAN_GPIO_PIN10_CONFIG_GET(x)            (((x) & WLAN_GPIO_PIN10_CONFIG_MASK) >> WLAN_GPIO_PIN10_CONFIG_LSB)
+-#define WLAN_GPIO_PIN10_CONFIG_SET(x)            (((x) << WLAN_GPIO_PIN10_CONFIG_LSB) & WLAN_GPIO_PIN10_CONFIG_MASK)
+-#define WLAN_GPIO_PIN10_WAKEUP_ENABLE_MSB        10
+-#define WLAN_GPIO_PIN10_WAKEUP_ENABLE_LSB        10
+-#define WLAN_GPIO_PIN10_WAKEUP_ENABLE_MASK       0x00000400
+-#define WLAN_GPIO_PIN10_WAKEUP_ENABLE_GET(x)     (((x) & WLAN_GPIO_PIN10_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN10_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN10_WAKEUP_ENABLE_SET(x)     (((x) << WLAN_GPIO_PIN10_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN10_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN10_INT_TYPE_MSB             9
+-#define WLAN_GPIO_PIN10_INT_TYPE_LSB             7
+-#define WLAN_GPIO_PIN10_INT_TYPE_MASK            0x00000380
+-#define WLAN_GPIO_PIN10_INT_TYPE_GET(x)          (((x) & WLAN_GPIO_PIN10_INT_TYPE_MASK) >> WLAN_GPIO_PIN10_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN10_INT_TYPE_SET(x)          (((x) << WLAN_GPIO_PIN10_INT_TYPE_LSB) & WLAN_GPIO_PIN10_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN10_PAD_PULL_MSB             6
+-#define WLAN_GPIO_PIN10_PAD_PULL_LSB             5
+-#define WLAN_GPIO_PIN10_PAD_PULL_MASK            0x00000060
+-#define WLAN_GPIO_PIN10_PAD_PULL_GET(x)          (((x) & WLAN_GPIO_PIN10_PAD_PULL_MASK) >> WLAN_GPIO_PIN10_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN10_PAD_PULL_SET(x)          (((x) << WLAN_GPIO_PIN10_PAD_PULL_LSB) & WLAN_GPIO_PIN10_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN10_PAD_STRENGTH_MSB         4
+-#define WLAN_GPIO_PIN10_PAD_STRENGTH_LSB         3
+-#define WLAN_GPIO_PIN10_PAD_STRENGTH_MASK        0x00000018
+-#define WLAN_GPIO_PIN10_PAD_STRENGTH_GET(x)      (((x) & WLAN_GPIO_PIN10_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN10_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN10_PAD_STRENGTH_SET(x)      (((x) << WLAN_GPIO_PIN10_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN10_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN10_PAD_DRIVER_MSB           2
+-#define WLAN_GPIO_PIN10_PAD_DRIVER_LSB           2
+-#define WLAN_GPIO_PIN10_PAD_DRIVER_MASK          0x00000004
+-#define WLAN_GPIO_PIN10_PAD_DRIVER_GET(x)        (((x) & WLAN_GPIO_PIN10_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN10_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN10_PAD_DRIVER_SET(x)        (((x) << WLAN_GPIO_PIN10_PAD_DRIVER_LSB) & WLAN_GPIO_PIN10_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN10_SOURCE_MSB               0
+-#define WLAN_GPIO_PIN10_SOURCE_LSB               0
+-#define WLAN_GPIO_PIN10_SOURCE_MASK              0x00000001
+-#define WLAN_GPIO_PIN10_SOURCE_GET(x)            (((x) & WLAN_GPIO_PIN10_SOURCE_MASK) >> WLAN_GPIO_PIN10_SOURCE_LSB)
+-#define WLAN_GPIO_PIN10_SOURCE_SET(x)            (((x) << WLAN_GPIO_PIN10_SOURCE_LSB) & WLAN_GPIO_PIN10_SOURCE_MASK)
+-
+-#define WLAN_GPIO_PIN11_ADDRESS                  0x00000054
+-#define WLAN_GPIO_PIN11_OFFSET                   0x00000054
+-#define WLAN_GPIO_PIN11_CONFIG_MSB               13
+-#define WLAN_GPIO_PIN11_CONFIG_LSB               11
+-#define WLAN_GPIO_PIN11_CONFIG_MASK              0x00003800
+-#define WLAN_GPIO_PIN11_CONFIG_GET(x)            (((x) & WLAN_GPIO_PIN11_CONFIG_MASK) >> WLAN_GPIO_PIN11_CONFIG_LSB)
+-#define WLAN_GPIO_PIN11_CONFIG_SET(x)            (((x) << WLAN_GPIO_PIN11_CONFIG_LSB) & WLAN_GPIO_PIN11_CONFIG_MASK)
+-#define WLAN_GPIO_PIN11_WAKEUP_ENABLE_MSB        10
+-#define WLAN_GPIO_PIN11_WAKEUP_ENABLE_LSB        10
+-#define WLAN_GPIO_PIN11_WAKEUP_ENABLE_MASK       0x00000400
+-#define WLAN_GPIO_PIN11_WAKEUP_ENABLE_GET(x)     (((x) & WLAN_GPIO_PIN11_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN11_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN11_WAKEUP_ENABLE_SET(x)     (((x) << WLAN_GPIO_PIN11_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN11_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN11_INT_TYPE_MSB             9
+-#define WLAN_GPIO_PIN11_INT_TYPE_LSB             7
+-#define WLAN_GPIO_PIN11_INT_TYPE_MASK            0x00000380
+-#define WLAN_GPIO_PIN11_INT_TYPE_GET(x)          (((x) & WLAN_GPIO_PIN11_INT_TYPE_MASK) >> WLAN_GPIO_PIN11_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN11_INT_TYPE_SET(x)          (((x) << WLAN_GPIO_PIN11_INT_TYPE_LSB) & WLAN_GPIO_PIN11_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN11_PAD_PULL_MSB             6
+-#define WLAN_GPIO_PIN11_PAD_PULL_LSB             5
+-#define WLAN_GPIO_PIN11_PAD_PULL_MASK            0x00000060
+-#define WLAN_GPIO_PIN11_PAD_PULL_GET(x)          (((x) & WLAN_GPIO_PIN11_PAD_PULL_MASK) >> WLAN_GPIO_PIN11_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN11_PAD_PULL_SET(x)          (((x) << WLAN_GPIO_PIN11_PAD_PULL_LSB) & WLAN_GPIO_PIN11_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN11_PAD_STRENGTH_MSB         4
+-#define WLAN_GPIO_PIN11_PAD_STRENGTH_LSB         3
+-#define WLAN_GPIO_PIN11_PAD_STRENGTH_MASK        0x00000018
+-#define WLAN_GPIO_PIN11_PAD_STRENGTH_GET(x)      (((x) & WLAN_GPIO_PIN11_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN11_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN11_PAD_STRENGTH_SET(x)      (((x) << WLAN_GPIO_PIN11_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN11_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN11_PAD_DRIVER_MSB           2
+-#define WLAN_GPIO_PIN11_PAD_DRIVER_LSB           2
+-#define WLAN_GPIO_PIN11_PAD_DRIVER_MASK          0x00000004
+-#define WLAN_GPIO_PIN11_PAD_DRIVER_GET(x)        (((x) & WLAN_GPIO_PIN11_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN11_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN11_PAD_DRIVER_SET(x)        (((x) << WLAN_GPIO_PIN11_PAD_DRIVER_LSB) & WLAN_GPIO_PIN11_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN11_SOURCE_MSB               0
+-#define WLAN_GPIO_PIN11_SOURCE_LSB               0
+-#define WLAN_GPIO_PIN11_SOURCE_MASK              0x00000001
+-#define WLAN_GPIO_PIN11_SOURCE_GET(x)            (((x) & WLAN_GPIO_PIN11_SOURCE_MASK) >> WLAN_GPIO_PIN11_SOURCE_LSB)
+-#define WLAN_GPIO_PIN11_SOURCE_SET(x)            (((x) << WLAN_GPIO_PIN11_SOURCE_LSB) & WLAN_GPIO_PIN11_SOURCE_MASK)
+-
+-#define WLAN_GPIO_PIN12_ADDRESS                  0x00000058
+-#define WLAN_GPIO_PIN12_OFFSET                   0x00000058
+-#define WLAN_GPIO_PIN12_CONFIG_MSB               13
+-#define WLAN_GPIO_PIN12_CONFIG_LSB               11
+-#define WLAN_GPIO_PIN12_CONFIG_MASK              0x00003800
+-#define WLAN_GPIO_PIN12_CONFIG_GET(x)            (((x) & WLAN_GPIO_PIN12_CONFIG_MASK) >> WLAN_GPIO_PIN12_CONFIG_LSB)
+-#define WLAN_GPIO_PIN12_CONFIG_SET(x)            (((x) << WLAN_GPIO_PIN12_CONFIG_LSB) & WLAN_GPIO_PIN12_CONFIG_MASK)
+-#define WLAN_GPIO_PIN12_WAKEUP_ENABLE_MSB        10
+-#define WLAN_GPIO_PIN12_WAKEUP_ENABLE_LSB        10
+-#define WLAN_GPIO_PIN12_WAKEUP_ENABLE_MASK       0x00000400
+-#define WLAN_GPIO_PIN12_WAKEUP_ENABLE_GET(x)     (((x) & WLAN_GPIO_PIN12_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN12_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN12_WAKEUP_ENABLE_SET(x)     (((x) << WLAN_GPIO_PIN12_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN12_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN12_INT_TYPE_MSB             9
+-#define WLAN_GPIO_PIN12_INT_TYPE_LSB             7
+-#define WLAN_GPIO_PIN12_INT_TYPE_MASK            0x00000380
+-#define WLAN_GPIO_PIN12_INT_TYPE_GET(x)          (((x) & WLAN_GPIO_PIN12_INT_TYPE_MASK) >> WLAN_GPIO_PIN12_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN12_INT_TYPE_SET(x)          (((x) << WLAN_GPIO_PIN12_INT_TYPE_LSB) & WLAN_GPIO_PIN12_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN12_PAD_PULL_MSB             6
+-#define WLAN_GPIO_PIN12_PAD_PULL_LSB             5
+-#define WLAN_GPIO_PIN12_PAD_PULL_MASK            0x00000060
+-#define WLAN_GPIO_PIN12_PAD_PULL_GET(x)          (((x) & WLAN_GPIO_PIN12_PAD_PULL_MASK) >> WLAN_GPIO_PIN12_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN12_PAD_PULL_SET(x)          (((x) << WLAN_GPIO_PIN12_PAD_PULL_LSB) & WLAN_GPIO_PIN12_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN12_PAD_STRENGTH_MSB         4
+-#define WLAN_GPIO_PIN12_PAD_STRENGTH_LSB         3
+-#define WLAN_GPIO_PIN12_PAD_STRENGTH_MASK        0x00000018
+-#define WLAN_GPIO_PIN12_PAD_STRENGTH_GET(x)      (((x) & WLAN_GPIO_PIN12_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN12_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN12_PAD_STRENGTH_SET(x)      (((x) << WLAN_GPIO_PIN12_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN12_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN12_PAD_DRIVER_MSB           2
+-#define WLAN_GPIO_PIN12_PAD_DRIVER_LSB           2
+-#define WLAN_GPIO_PIN12_PAD_DRIVER_MASK          0x00000004
+-#define WLAN_GPIO_PIN12_PAD_DRIVER_GET(x)        (((x) & WLAN_GPIO_PIN12_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN12_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN12_PAD_DRIVER_SET(x)        (((x) << WLAN_GPIO_PIN12_PAD_DRIVER_LSB) & WLAN_GPIO_PIN12_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN12_SOURCE_MSB               0
+-#define WLAN_GPIO_PIN12_SOURCE_LSB               0
+-#define WLAN_GPIO_PIN12_SOURCE_MASK              0x00000001
+-#define WLAN_GPIO_PIN12_SOURCE_GET(x)            (((x) & WLAN_GPIO_PIN12_SOURCE_MASK) >> WLAN_GPIO_PIN12_SOURCE_LSB)
+-#define WLAN_GPIO_PIN12_SOURCE_SET(x)            (((x) << WLAN_GPIO_PIN12_SOURCE_LSB) & WLAN_GPIO_PIN12_SOURCE_MASK)
+-
+-#define WLAN_GPIO_PIN13_ADDRESS                  0x0000005c
+-#define WLAN_GPIO_PIN13_OFFSET                   0x0000005c
+-#define WLAN_GPIO_PIN13_CONFIG_MSB               13
+-#define WLAN_GPIO_PIN13_CONFIG_LSB               11
+-#define WLAN_GPIO_PIN13_CONFIG_MASK              0x00003800
+-#define WLAN_GPIO_PIN13_CONFIG_GET(x)            (((x) & WLAN_GPIO_PIN13_CONFIG_MASK) >> WLAN_GPIO_PIN13_CONFIG_LSB)
+-#define WLAN_GPIO_PIN13_CONFIG_SET(x)            (((x) << WLAN_GPIO_PIN13_CONFIG_LSB) & WLAN_GPIO_PIN13_CONFIG_MASK)
+-#define WLAN_GPIO_PIN13_WAKEUP_ENABLE_MSB        10
+-#define WLAN_GPIO_PIN13_WAKEUP_ENABLE_LSB        10
+-#define WLAN_GPIO_PIN13_WAKEUP_ENABLE_MASK       0x00000400
+-#define WLAN_GPIO_PIN13_WAKEUP_ENABLE_GET(x)     (((x) & WLAN_GPIO_PIN13_WAKEUP_ENABLE_MASK) >> WLAN_GPIO_PIN13_WAKEUP_ENABLE_LSB)
+-#define WLAN_GPIO_PIN13_WAKEUP_ENABLE_SET(x)     (((x) << WLAN_GPIO_PIN13_WAKEUP_ENABLE_LSB) & WLAN_GPIO_PIN13_WAKEUP_ENABLE_MASK)
+-#define WLAN_GPIO_PIN13_INT_TYPE_MSB             9
+-#define WLAN_GPIO_PIN13_INT_TYPE_LSB             7
+-#define WLAN_GPIO_PIN13_INT_TYPE_MASK            0x00000380
+-#define WLAN_GPIO_PIN13_INT_TYPE_GET(x)          (((x) & WLAN_GPIO_PIN13_INT_TYPE_MASK) >> WLAN_GPIO_PIN13_INT_TYPE_LSB)
+-#define WLAN_GPIO_PIN13_INT_TYPE_SET(x)          (((x) << WLAN_GPIO_PIN13_INT_TYPE_LSB) & WLAN_GPIO_PIN13_INT_TYPE_MASK)
+-#define WLAN_GPIO_PIN13_PAD_PULL_MSB             6
+-#define WLAN_GPIO_PIN13_PAD_PULL_LSB             5
+-#define WLAN_GPIO_PIN13_PAD_PULL_MASK            0x00000060
+-#define WLAN_GPIO_PIN13_PAD_PULL_GET(x)          (((x) & WLAN_GPIO_PIN13_PAD_PULL_MASK) >> WLAN_GPIO_PIN13_PAD_PULL_LSB)
+-#define WLAN_GPIO_PIN13_PAD_PULL_SET(x)          (((x) << WLAN_GPIO_PIN13_PAD_PULL_LSB) & WLAN_GPIO_PIN13_PAD_PULL_MASK)
+-#define WLAN_GPIO_PIN13_PAD_STRENGTH_MSB         4
+-#define WLAN_GPIO_PIN13_PAD_STRENGTH_LSB         3
+-#define WLAN_GPIO_PIN13_PAD_STRENGTH_MASK        0x00000018
+-#define WLAN_GPIO_PIN13_PAD_STRENGTH_GET(x)      (((x) & WLAN_GPIO_PIN13_PAD_STRENGTH_MASK) >> WLAN_GPIO_PIN13_PAD_STRENGTH_LSB)
+-#define WLAN_GPIO_PIN13_PAD_STRENGTH_SET(x)      (((x) << WLAN_GPIO_PIN13_PAD_STRENGTH_LSB) & WLAN_GPIO_PIN13_PAD_STRENGTH_MASK)
+-#define WLAN_GPIO_PIN13_PAD_DRIVER_MSB           2
+-#define WLAN_GPIO_PIN13_PAD_DRIVER_LSB           2
+-#define WLAN_GPIO_PIN13_PAD_DRIVER_MASK          0x00000004
+-#define WLAN_GPIO_PIN13_PAD_DRIVER_GET(x)        (((x) & WLAN_GPIO_PIN13_PAD_DRIVER_MASK) >> WLAN_GPIO_PIN13_PAD_DRIVER_LSB)
+-#define WLAN_GPIO_PIN13_PAD_DRIVER_SET(x)        (((x) << WLAN_GPIO_PIN13_PAD_DRIVER_LSB) & WLAN_GPIO_PIN13_PAD_DRIVER_MASK)
+-#define WLAN_GPIO_PIN13_SOURCE_MSB               0
+-#define WLAN_GPIO_PIN13_SOURCE_LSB               0
+-#define WLAN_GPIO_PIN13_SOURCE_MASK              0x00000001
+-#define WLAN_GPIO_PIN13_SOURCE_GET(x)            (((x) & WLAN_GPIO_PIN13_SOURCE_MASK) >> WLAN_GPIO_PIN13_SOURCE_LSB)
+-#define WLAN_GPIO_PIN13_SOURCE_SET(x)            (((x) << WLAN_GPIO_PIN13_SOURCE_LSB) & WLAN_GPIO_PIN13_SOURCE_MASK)
+-
+-#endif /* _GPIO_ATHR_WLAN_REG_H_ */
+diff --git a/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_reg.h b/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_reg.h
+deleted file mode 100644
+index 37cebe9..0000000
+--- a/drivers/staging/ath6kl/include/common/AR6002/hw4.0/hw/gpio_reg.h
++++ /dev/null
+@@ -1,251 +0,0 @@
+-// ------------------------------------------------------------------
+-// Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+-// 
+-//
+-// Permission to use, copy, modify, and/or distribute this software for any
+-// purpose with or without fee is hereby granted, provided that the above
+-// copyright notice and this permission notice appear in all copies.
+-//
+-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-//
+-//
+-// ------------------------------------------------------------------
+-//===================================================================
+-// Author(s): ="Atheros"
+-//===================================================================
+-
+-
+-#include "gpio_athr_wlan_reg.h"
+-
+-#ifndef BT_HEADERS
+-
+-#define GPIO_PIN0_ADDRESS WLAN_GPIO_PIN0_ADDRESS
+-#define GPIO_PIN0_OFFSET WLAN_GPIO_PIN0_OFFSET
+-#define GPIO_PIN0_CONFIG_MSB WLAN_GPIO_PIN0_CONFIG_MSB
+-#define GPIO_PIN0_CONFIG_LSB WLAN_GPIO_PIN0_CONFIG_LSB
+-#define GPIO_PIN0_CONFIG_MASK WLAN_GPIO_PIN0_CONFIG_MASK
+-#define GPIO_PIN0_CONFIG_GET(x) WLAN_GPIO_PIN0_CONFIG_GET(x)
+-#define GPIO_PIN0_CONFIG_SET(x) WLAN_GPIO_PIN0_CONFIG_SET(x)
+-#define GPIO_PIN0_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN0_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN0_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN0_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN0_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN0_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN0_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN0_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN0_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN0_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN0_INT_TYPE_MSB WLAN_GPIO_PIN0_INT_TYPE_MSB
+-#define GPIO_PIN0_INT_TYPE_LSB WLAN_GPIO_PIN0_INT_TYPE_LSB
+-#define GPIO_PIN0_INT_TYPE_MASK WLAN_GPIO_PIN0_INT_TYPE_MASK
+-#define GPIO_PIN0_INT_TYPE_GET(x) WLAN_GPIO_PIN0_INT_TYPE_GET(x)
+-#define GPIO_PIN0_INT_TYPE_SET(x) WLAN_GPIO_PIN0_INT_TYPE_SET(x)
+-#define GPIO_PIN0_PAD_PULL_MSB WLAN_GPIO_PIN0_PAD_PULL_MSB
+-#define GPIO_PIN0_PAD_PULL_LSB WLAN_GPIO_PIN0_PAD_PULL_LSB
+-#define GPIO_PIN0_PAD_PULL_MASK WLAN_GPIO_PIN0_PAD_PULL_MASK
+-#define GPIO_PIN0_PAD_PULL_GET(x) WLAN_GPIO_PIN0_PAD_PULL_GET(x)
+-#define GPIO_PIN0_PAD_PULL_SET(x) WLAN_GPIO_PIN0_PAD_PULL_SET(x)
+-#define GPIO_PIN0_PAD_STRENGTH_MSB WLAN_GPIO_PIN0_PAD_STRENGTH_MSB
+-#define GPIO_PIN0_PAD_STRENGTH_LSB WLAN_GPIO_PIN0_PAD_STRENGTH_LSB
+-#define GPIO_PIN0_PAD_STRENGTH_MASK WLAN_GPIO_PIN0_PAD_STRENGTH_MASK
+-#define GPIO_PIN0_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN0_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN0_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN0_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN0_PAD_DRIVER_MSB WLAN_GPIO_PIN0_PAD_DRIVER_MSB
+-#define GPIO_PIN0_PAD_DRIVER_LSB WLAN_GPIO_PIN0_PAD_DRIVER_LSB
+-#define GPIO_PIN0_PAD_DRIVER_MASK WLAN_GPIO_PIN0_PAD_DRIVER_MASK
+-#define GPIO_PIN0_PAD_DRIVER_GET(x) WLAN_GPIO_PIN0_PAD_DRIVER_GET(x)
+-#define GPIO_PIN0_PAD_DRIVER_SET(x) WLAN_GPIO_PIN0_PAD_DRIVER_SET(x)
+-#define GPIO_PIN0_SOURCE_MSB WLAN_GPIO_PIN0_SOURCE_MSB
+-#define GPIO_PIN0_SOURCE_LSB WLAN_GPIO_PIN0_SOURCE_LSB
+-#define GPIO_PIN0_SOURCE_MASK WLAN_GPIO_PIN0_SOURCE_MASK
+-#define GPIO_PIN0_SOURCE_GET(x) WLAN_GPIO_PIN0_SOURCE_GET(x)
+-#define GPIO_PIN0_SOURCE_SET(x) WLAN_GPIO_PIN0_SOURCE_SET(x)
+-#define GPIO_PIN1_ADDRESS WLAN_GPIO_PIN1_ADDRESS
+-#define GPIO_PIN1_OFFSET WLAN_GPIO_PIN1_OFFSET
+-#define GPIO_PIN1_CONFIG_MSB WLAN_GPIO_PIN1_CONFIG_MSB
+-#define GPIO_PIN1_CONFIG_LSB WLAN_GPIO_PIN1_CONFIG_LSB
+-#define GPIO_PIN1_CONFIG_MASK WLAN_GPIO_PIN1_CONFIG_MASK
+-#define GPIO_PIN1_CONFIG_GET(x) WLAN_GPIO_PIN1_CONFIG_GET(x)
+-#define GPIO_PIN1_CONFIG_SET(x) WLAN_GPIO_PIN1_CONFIG_SET(x)
+-#define GPIO_PIN1_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN1_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN1_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN1_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN1_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN1_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN1_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN1_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN1_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN1_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN1_INT_TYPE_MSB WLAN_GPIO_PIN1_INT_TYPE_MSB
+-#define GPIO_PIN1_INT_TYPE_LSB WLAN_GPIO_PIN1_INT_TYPE_LSB
+-#define GPIO_PIN1_INT_TYPE_MASK WLAN_GPIO_PIN1_INT_TYPE_MASK
+-#define GPIO_PIN1_INT_TYPE_GET(x) WLAN_GPIO_PIN1_INT_TYPE_GET(x)
+-#define GPIO_PIN1_INT_TYPE_SET(x) WLAN_GPIO_PIN1_INT_TYPE_SET(x)
+-#define GPIO_PIN1_PAD_PULL_MSB WLAN_GPIO_PIN1_PAD_PULL_MSB
+-#define GPIO_PIN1_PAD_PULL_LSB WLAN_GPIO_PIN1_PAD_PULL_LSB
+-#define GPIO_PIN1_PAD_PULL_MASK WLAN_GPIO_PIN1_PAD_PULL_MASK
+-#define GPIO_PIN1_PAD_PULL_GET(x) WLAN_GPIO_PIN1_PAD_PULL_GET(x)
+-#define GPIO_PIN1_PAD_PULL_SET(x) WLAN_GPIO_PIN1_PAD_PULL_SET(x)
+-#define GPIO_PIN1_PAD_STRENGTH_MSB WLAN_GPIO_PIN1_PAD_STRENGTH_MSB
+-#define GPIO_PIN1_PAD_STRENGTH_LSB WLAN_GPIO_PIN1_PAD_STRENGTH_LSB
+-#define GPIO_PIN1_PAD_STRENGTH_MASK WLAN_GPIO_PIN1_PAD_STRENGTH_MASK
+-#define GPIO_PIN1_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN1_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN1_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN1_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN1_PAD_DRIVER_MSB WLAN_GPIO_PIN1_PAD_DRIVER_MSB
+-#define GPIO_PIN1_PAD_DRIVER_LSB WLAN_GPIO_PIN1_PAD_DRIVER_LSB
+-#define GPIO_PIN1_PAD_DRIVER_MASK WLAN_GPIO_PIN1_PAD_DRIVER_MASK
+-#define GPIO_PIN1_PAD_DRIVER_GET(x) WLAN_GPIO_PIN1_PAD_DRIVER_GET(x)
+-#define GPIO_PIN1_PAD_DRIVER_SET(x) WLAN_GPIO_PIN1_PAD_DRIVER_SET(x)
+-#define GPIO_PIN1_SOURCE_MSB WLAN_GPIO_PIN1_SOURCE_MSB
+-#define GPIO_PIN1_SOURCE_LSB WLAN_GPIO_PIN1_SOURCE_LSB
+-#define GPIO_PIN1_SOURCE_MASK WLAN_GPIO_PIN1_SOURCE_MASK
+-#define GPIO_PIN1_SOURCE_GET(x) WLAN_GPIO_PIN1_SOURCE_GET(x)
+-#define GPIO_PIN1_SOURCE_SET(x) WLAN_GPIO_PIN1_SOURCE_SET(x)
+-#define GPIO_PIN10_ADDRESS WLAN_GPIO_PIN10_ADDRESS
+-#define GPIO_PIN10_OFFSET WLAN_GPIO_PIN10_OFFSET
+-#define GPIO_PIN10_CONFIG_MSB WLAN_GPIO_PIN10_CONFIG_MSB
+-#define GPIO_PIN10_CONFIG_LSB WLAN_GPIO_PIN10_CONFIG_LSB
+-#define GPIO_PIN10_CONFIG_MASK WLAN_GPIO_PIN10_CONFIG_MASK
+-#define GPIO_PIN10_CONFIG_GET(x) WLAN_GPIO_PIN10_CONFIG_GET(x)
+-#define GPIO_PIN10_CONFIG_SET(x) WLAN_GPIO_PIN10_CONFIG_SET(x)
+-#define GPIO_PIN10_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN10_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN10_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN10_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN10_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN10_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN10_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN10_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN10_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN10_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN10_INT_TYPE_MSB WLAN_GPIO_PIN10_INT_TYPE_MSB
+-#define GPIO_PIN10_INT_TYPE_LSB WLAN_GPIO_PIN10_INT_TYPE_LSB
+-#define GPIO_PIN10_INT_TYPE_MASK WLAN_GPIO_PIN10_INT_TYPE_MASK
+-#define GPIO_PIN10_INT_TYPE_GET(x) WLAN_GPIO_PIN10_INT_TYPE_GET(x)
+-#define GPIO_PIN10_INT_TYPE_SET(x) WLAN_GPIO_PIN10_INT_TYPE_SET(x)
+-#define GPIO_PIN10_PAD_PULL_MSB WLAN_GPIO_PIN10_PAD_PULL_MSB
+-#define GPIO_PIN10_PAD_PULL_LSB WLAN_GPIO_PIN10_PAD_PULL_LSB
+-#define GPIO_PIN10_PAD_PULL_MASK WLAN_GPIO_PIN10_PAD_PULL_MASK
+-#define GPIO_PIN10_PAD_PULL_GET(x) WLAN_GPIO_PIN10_PAD_PULL_GET(x)
+-#define GPIO_PIN10_PAD_PULL_SET(x) WLAN_GPIO_PIN10_PAD_PULL_SET(x)
+-#define GPIO_PIN10_PAD_STRENGTH_MSB WLAN_GPIO_PIN10_PAD_STRENGTH_MSB
+-#define GPIO_PIN10_PAD_STRENGTH_LSB WLAN_GPIO_PIN10_PAD_STRENGTH_LSB
+-#define GPIO_PIN10_PAD_STRENGTH_MASK WLAN_GPIO_PIN10_PAD_STRENGTH_MASK
+-#define GPIO_PIN10_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN10_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN10_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN10_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN10_PAD_DRIVER_MSB WLAN_GPIO_PIN10_PAD_DRIVER_MSB
+-#define GPIO_PIN10_PAD_DRIVER_LSB WLAN_GPIO_PIN10_PAD_DRIVER_LSB
+-#define GPIO_PIN10_PAD_DRIVER_MASK WLAN_GPIO_PIN10_PAD_DRIVER_MASK
+-#define GPIO_PIN10_PAD_DRIVER_GET(x) WLAN_GPIO_PIN10_PAD_DRIVER_GET(x)
+-#define GPIO_PIN10_PAD_DRIVER_SET(x) WLAN_GPIO_PIN10_PAD_DRIVER_SET(x)
+-#define GPIO_PIN10_SOURCE_MSB WLAN_GPIO_PIN10_SOURCE_MSB
+-#define GPIO_PIN10_SOURCE_LSB WLAN_GPIO_PIN10_SOURCE_LSB
+-#define GPIO_PIN10_SOURCE_MASK WLAN_GPIO_PIN10_SOURCE_MASK
+-#define GPIO_PIN10_SOURCE_GET(x) WLAN_GPIO_PIN10_SOURCE_GET(x)
+-#define GPIO_PIN10_SOURCE_SET(x) WLAN_GPIO_PIN10_SOURCE_SET(x)
+-#define GPIO_PIN11_ADDRESS WLAN_GPIO_PIN11_ADDRESS
+-#define GPIO_PIN11_OFFSET WLAN_GPIO_PIN11_OFFSET
+-#define GPIO_PIN11_CONFIG_MSB WLAN_GPIO_PIN11_CONFIG_MSB
+-#define GPIO_PIN11_CONFIG_LSB WLAN_GPIO_PIN11_CONFIG_LSB
+-#define GPIO_PIN11_CONFIG_MASK WLAN_GPIO_PIN11_CONFIG_MASK
+-#define GPIO_PIN11_CONFIG_GET(x) WLAN_GPIO_PIN11_CONFIG_GET(x)
+-#define GPIO_PIN11_CONFIG_SET(x) WLAN_GPIO_PIN11_CONFIG_SET(x)
+-#define GPIO_PIN11_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN11_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN11_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN11_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN11_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN11_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN11_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN11_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN11_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN11_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN11_INT_TYPE_MSB WLAN_GPIO_PIN11_INT_TYPE_MSB
+-#define GPIO_PIN11_INT_TYPE_LSB WLAN_GPIO_PIN11_INT_TYPE_LSB
+-#define GPIO_PIN11_INT_TYPE_MASK WLAN_GPIO_PIN11_INT_TYPE_MASK
+-#define GPIO_PIN11_INT_TYPE_GET(x) WLAN_GPIO_PIN11_INT_TYPE_GET(x)
+-#define GPIO_PIN11_INT_TYPE_SET(x) WLAN_GPIO_PIN11_INT_TYPE_SET(x)
+-#define GPIO_PIN11_PAD_PULL_MSB WLAN_GPIO_PIN11_PAD_PULL_MSB
+-#define GPIO_PIN11_PAD_PULL_LSB WLAN_GPIO_PIN11_PAD_PULL_LSB
+-#define GPIO_PIN11_PAD_PULL_MASK WLAN_GPIO_PIN11_PAD_PULL_MASK
+-#define GPIO_PIN11_PAD_PULL_GET(x) WLAN_GPIO_PIN11_PAD_PULL_GET(x)
+-#define GPIO_PIN11_PAD_PULL_SET(x) WLAN_GPIO_PIN11_PAD_PULL_SET(x)
+-#define GPIO_PIN11_PAD_STRENGTH_MSB WLAN_GPIO_PIN11_PAD_STRENGTH_MSB
+-#define GPIO_PIN11_PAD_STRENGTH_LSB WLAN_GPIO_PIN11_PAD_STRENGTH_LSB
+-#define GPIO_PIN11_PAD_STRENGTH_MASK WLAN_GPIO_PIN11_PAD_STRENGTH_MASK
+-#define GPIO_PIN11_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN11_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN11_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN11_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN11_PAD_DRIVER_MSB WLAN_GPIO_PIN11_PAD_DRIVER_MSB
+-#define GPIO_PIN11_PAD_DRIVER_LSB WLAN_GPIO_PIN11_PAD_DRIVER_LSB
+-#define GPIO_PIN11_PAD_DRIVER_MASK WLAN_GPIO_PIN11_PAD_DRIVER_MASK
+-#define GPIO_PIN11_PAD_DRIVER_GET(x) WLAN_GPIO_PIN11_PAD_DRIVER_GET(x)
+-#define GPIO_PIN11_PAD_DRIVER_SET(x) WLAN_GPIO_PIN11_PAD_DRIVER_SET(x)
+-#define GPIO_PIN11_SOURCE_MSB WLAN_GPIO_PIN11_SOURCE_MSB
+-#define GPIO_PIN11_SOURCE_LSB WLAN_GPIO_PIN11_SOURCE_LSB
+-#define GPIO_PIN11_SOURCE_MASK WLAN_GPIO_PIN11_SOURCE_MASK
+-#define GPIO_PIN11_SOURCE_GET(x) WLAN_GPIO_PIN11_SOURCE_GET(x)
+-#define GPIO_PIN11_SOURCE_SET(x) WLAN_GPIO_PIN11_SOURCE_SET(x)
+-#define GPIO_PIN12_ADDRESS WLAN_GPIO_PIN12_ADDRESS
+-#define GPIO_PIN12_OFFSET WLAN_GPIO_PIN12_OFFSET
+-#define GPIO_PIN12_CONFIG_MSB WLAN_GPIO_PIN12_CONFIG_MSB
+-#define GPIO_PIN12_CONFIG_LSB WLAN_GPIO_PIN12_CONFIG_LSB
+-#define GPIO_PIN12_CONFIG_MASK WLAN_GPIO_PIN12_CONFIG_MASK
+-#define GPIO_PIN12_CONFIG_GET(x) WLAN_GPIO_PIN12_CONFIG_GET(x)
+-#define GPIO_PIN12_CONFIG_SET(x) WLAN_GPIO_PIN12_CONFIG_SET(x)
+-#define GPIO_PIN12_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN12_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN12_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN12_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN12_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN12_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN12_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN12_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN12_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN12_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN12_INT_TYPE_MSB WLAN_GPIO_PIN12_INT_TYPE_MSB
+-#define GPIO_PIN12_INT_TYPE_LSB WLAN_GPIO_PIN12_INT_TYPE_LSB
+-#define GPIO_PIN12_INT_TYPE_MASK WLAN_GPIO_PIN12_INT_TYPE_MASK
+-#define GPIO_PIN12_INT_TYPE_GET(x) WLAN_GPIO_PIN12_INT_TYPE_GET(x)
+-#define GPIO_PIN12_INT_TYPE_SET(x) WLAN_GPIO_PIN12_INT_TYPE_SET(x)
+-#define GPIO_PIN12_PAD_PULL_MSB WLAN_GPIO_PIN12_PAD_PULL_MSB
+-#define GPIO_PIN12_PAD_PULL_LSB WLAN_GPIO_PIN12_PAD_PULL_LSB
+-#define GPIO_PIN12_PAD_PULL_MASK WLAN_GPIO_PIN12_PAD_PULL_MASK
+-#define GPIO_PIN12_PAD_PULL_GET(x) WLAN_GPIO_PIN12_PAD_PULL_GET(x)
+-#define GPIO_PIN12_PAD_PULL_SET(x) WLAN_GPIO_PIN12_PAD_PULL_SET(x)
+-#define GPIO_PIN12_PAD_STRENGTH_MSB WLAN_GPIO_PIN12_PAD_STRENGTH_MSB
+-#define GPIO_PIN12_PAD_STRENGTH_LSB WLAN_GPIO_PIN12_PAD_STRENGTH_LSB
+-#define GPIO_PIN12_PAD_STRENGTH_MASK WLAN_GPIO_PIN12_PAD_STRENGTH_MASK
+-#define GPIO_PIN12_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN12_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN12_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN12_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN12_PAD_DRIVER_MSB WLAN_GPIO_PIN12_PAD_DRIVER_MSB
+-#define GPIO_PIN12_PAD_DRIVER_LSB WLAN_GPIO_PIN12_PAD_DRIVER_LSB
+-#define GPIO_PIN12_PAD_DRIVER_MASK WLAN_GPIO_PIN12_PAD_DRIVER_MASK
+-#define GPIO_PIN12_PAD_DRIVER_GET(x) WLAN_GPIO_PIN12_PAD_DRIVER_GET(x)
+-#define GPIO_PIN12_PAD_DRIVER_SET(x) WLAN_GPIO_PIN12_PAD_DRIVER_SET(x)
+-#define GPIO_PIN12_SOURCE_MSB WLAN_GPIO_PIN12_SOURCE_MSB
+-#define GPIO_PIN12_SOURCE_LSB WLAN_GPIO_PIN12_SOURCE_LSB
+-#define GPIO_PIN12_SOURCE_MASK WLAN_GPIO_PIN12_SOURCE_MASK
+-#define GPIO_PIN12_SOURCE_GET(x) WLAN_GPIO_PIN12_SOURCE_GET(x)
+-#define GPIO_PIN12_SOURCE_SET(x) WLAN_GPIO_PIN12_SOURCE_SET(x)
+-#define GPIO_PIN13_ADDRESS WLAN_GPIO_PIN13_ADDRESS
+-#define GPIO_PIN13_OFFSET WLAN_GPIO_PIN13_OFFSET
+-#define GPIO_PIN13_CONFIG_MSB WLAN_GPIO_PIN13_CONFIG_MSB
+-#define GPIO_PIN13_CONFIG_LSB WLAN_GPIO_PIN13_CONFIG_LSB
+-#define GPIO_PIN13_CONFIG_MASK WLAN_GPIO_PIN13_CONFIG_MASK
+-#define GPIO_PIN13_CONFIG_GET(x) WLAN_GPIO_PIN13_CONFIG_GET(x)
+-#define GPIO_PIN13_CONFIG_SET(x) WLAN_GPIO_PIN13_CONFIG_SET(x)
+-#define GPIO_PIN13_WAKEUP_ENABLE_MSB WLAN_GPIO_PIN13_WAKEUP_ENABLE_MSB
+-#define GPIO_PIN13_WAKEUP_ENABLE_LSB WLAN_GPIO_PIN13_WAKEUP_ENABLE_LSB
+-#define GPIO_PIN13_WAKEUP_ENABLE_MASK WLAN_GPIO_PIN13_WAKEUP_ENABLE_MASK
+-#define GPIO_PIN13_WAKEUP_ENABLE_GET(x) WLAN_GPIO_PIN13_WAKEUP_ENABLE_GET(x)
+-#define GPIO_PIN13_WAKEUP_ENABLE_SET(x) WLAN_GPIO_PIN13_WAKEUP_ENABLE_SET(x)
+-#define GPIO_PIN13_INT_TYPE_MSB WLAN_GPIO_PIN13_INT_TYPE_MSB
+-#define GPIO_PIN13_INT_TYPE_LSB WLAN_GPIO_PIN13_INT_TYPE_LSB
+-#define GPIO_PIN13_INT_TYPE_MASK WLAN_GPIO_PIN13_INT_TYPE_MASK
+-#define GPIO_PIN13_INT_TYPE_GET(x) WLAN_GPIO_PIN13_INT_TYPE_GET(x)
+-#define GPIO_PIN13_INT_TYPE_SET(x) WLAN_GPIO_PIN13_INT_TYPE_SET(x)
+-#define GPIO_PIN13_PAD_PULL_MSB WLAN_GPIO_PIN13_PAD_PULL_MSB
+-#define GPIO_PIN13_PAD_PULL_LSB WLAN_GPIO_PIN13_PAD_PULL_LSB
+-#define GPIO_PIN13_PAD_PULL_MASK WLAN_GPIO_PIN13_PAD_PULL_MASK
+-#define GPIO_PIN13_PAD_PULL_GET(x) WLAN_GPIO_PIN13_PAD_PULL_GET(x)
+-#define GPIO_PIN13_PAD_PULL_SET(x) WLAN_GPIO_PIN13_PAD_PULL_SET(x)
+-#define GPIO_PIN13_PAD_STRENGTH_MSB WLAN_GPIO_PIN13_PAD_STRENGTH_MSB
+-#define GPIO_PIN13_PAD_STRENGTH_LSB WLAN_GPIO_PIN13_PAD_STRENGTH_LSB
+-#define GPIO_PIN13_PAD_STRENGTH_MASK WLAN_GPIO_PIN13_PAD_STRENGTH_MASK
+-#define GPIO_PIN13_PAD_STRENGTH_GET(x) WLAN_GPIO_PIN13_PAD_STRENGTH_GET(x)
+-#define GPIO_PIN13_PAD_STRENGTH_SET(x) WLAN_GPIO_PIN13_PAD_STRENGTH_SET(x)
+-#define GPIO_PIN13_PAD_DRIVER_MSB WLAN_GPIO_PIN13_PAD_DRIVER_MSB
+-#define GPIO_PIN13_PAD_DRIVER_LSB WLAN_GPIO_PIN13_PAD_DRIVER_LSB
+-#define GPIO_PIN13_PAD_DRIVER_MASK WLAN_GPIO_PIN13_PAD_DRIVER_MASK
+-#define GPIO_PIN13_PAD_DRIVER_GET(x) WLAN_GPIO_PIN13_PAD_DRIVER_GET(x)
+-#define GPIO_PIN13_PAD_DRIVER_SET(x) WLAN_GPIO_PIN13_PAD_DRIVER_SET(x)
+-#define GPIO_PIN13_SOURCE_MSB WLAN_GPIO_PIN13_SOURCE_MSB
+-#define GPIO_PIN13_SOURCE_LSB WLAN_GPIO_PIN13_SOURCE_LSB
+-#define GPIO_PIN13_SOURCE_MASK WLAN_GPIO_PIN13_SOURCE_MASK
+-#define GPIO_PIN13_SOURCE_GET(x) WLAN_GPIO_PIN13_SOURCE_GET(x)
+-#define GPIO_PIN13_SOURCE_SET(x) WLAN_GPIO_PIN13_SOURCE_SET(x)
+-
+-#endif
+diff --git a/drivers/staging/ath6kl/include/common/gpio_reg.h b/drivers/staging/ath6kl/include/common/gpio_reg.h
+new file mode 100644
+index 0000000..f9d425d
+--- /dev/null
++++ b/drivers/staging/ath6kl/include/common/gpio_reg.h
+@@ -0,0 +1,9 @@
++#ifndef _GPIO_REG_REG_H_
++#define _GPIO_REG_REG_H_
++
++#define GPIO_PIN10_ADDRESS                       0x00000050
++#define GPIO_PIN11_ADDRESS                       0x00000054
++#define GPIO_PIN12_ADDRESS                       0x00000058
++#define GPIO_PIN13_ADDRESS                       0x0000005c
++
++#endif /* _GPIO_REG_H_ */
+diff --git a/drivers/staging/ath6kl/miscdrv/common_drv.c b/drivers/staging/ath6kl/miscdrv/common_drv.c
+index b7b09b7..1ce539a 100644
+--- a/drivers/staging/ath6kl/miscdrv/common_drv.c
++++ b/drivers/staging/ath6kl/miscdrv/common_drv.c
+@@ -25,7 +25,7 @@
+ #include "athdefs.h"
+ 
+ #include "hw/mbox_host_reg.h"
+-#include "AR6002/hw2.0/hw/gpio_reg.h"
++#include "gpio_reg.h"
+ #include "hw/rtc_reg.h"
+ #include "hw/mbox_reg.h"
+ #include "hw/apb_map.h"
+diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+index 5bb45c9..22453b0 100644
+--- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
++++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+@@ -71,7 +71,7 @@
+ #include "hw/apb_map.h"
+ #include "hw/rtc_reg.h"
+ #include "hw/mbox_reg.h"
+-#include "hw/gpio_reg.h"
++#include "gpio_reg.h"
+ 
+ #define  ATH_DEBUG_DBG_LOG       ATH_DEBUG_MAKE_MODULE_MASK(0)
+ #define  ATH_DEBUG_WLAN_CONNECT  ATH_DEBUG_MAKE_MODULE_MASK(1)
+-- 
+1.7.0.4
 
