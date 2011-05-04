@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:54483 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754761Ab1EVMee convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753941Ab1EDQu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 08:34:34 -0400
-Received: by gxk21 with SMTP id 21so1860180gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 05:34:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1305321990-22041-4-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
-	<1305321990-22041-4-git-send-email-balbi@ti.com>
-Date: Sun, 22 May 2011 15:34:33 +0300
-Message-ID: <BANLkTinPipSVdsH5cTb24HKex_h7pOwpAg@mail.gmail.com> (sfid-20110522_143438_367354_E6956B1D)
-Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
-From: Eliad Peller <eliad@wizery.com>
-To: Felipe Balbi <balbi@ti.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 4 May 2011 12:50:58 -0400
+Subject: Re: [RFC] mac80211: reestablish mis-configured existing Rx BA
+ sessions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <1304413928-17673-1-git-send-email-arik@wizery.com> (sfid-20110503_111236_686946_877B0C73)
+References: <1304413928-17673-1-git-send-email-arik@wizery.com>
+	 (sfid-20110503_111236_686946_877B0C73)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 May 2011 18:50:57 +0200
+Message-ID: <1304527857.3563.24.camel@jlt3.sipsolutions.net> (sfid-20110504_185103_668897_C0CA52A4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 14, 2011 at 12:26 AM, Felipe Balbi <balbi@ti.com> wrote:
-> Those have little value. Remove those to make
-> the driver less noisy.
->
-> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> ---
-[...]
-> @@ -287,8 +287,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
->        /* Tell PM core that we don't need the card to be powered now */
->        pm_runtime_put_noidle(&func->dev);
->
-> -       wl1271_notice("initialized");
-> -
->        return 0;
->
+On Tue, 2011-05-03 at 12:12 +0300, Arik Nemtsov wrote:
+> When forming a Rx BA session, sometimes the ADDBA response gets lost.
+> This leads to a situation where the session is configured locally, but
+> doesn't exist on the remote side. Subsequent ADDBA requests are declined
+> by mac80211.
+> 
+> Fix this by assuming the session state of the initiator is the correct
+> one. When receiving an unexpected ADDBA request on a TID with an active
+> Rx BA session, delete the existing one and establish a new session.
 
->  static void __exit wl1271_exit(void)
->  {
->        sdio_unregister_driver(&wl1271_sdio_driver);
-> -
-> -       wl1271_notice("unloaded");
->  }
->
+I thought about this for a while but I don't really have an opinion I
+think. Maybe the behaviour could be avoided by checking the ack status,
+but that wouldn't be good enough for devices that don't have that...
 
-in fact, i find these prints pretty useful.
-does changing wl1271_notice to wl1271_debug(DEBUG_MAC80211) will solve
-the "nosiness"?
-(i use DEBUG_MAC80211 rather than DEBUG_SDIO, as DEBUG_SDIO is really
-*very* noisy)
+johannes
 
-(i'll send it as a new patch as the original patch was already applied)
-
-Eliad.
