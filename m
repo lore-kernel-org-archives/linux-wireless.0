@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49641 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962Ab1EXPt7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 11:49:59 -0400
-Subject: Re: netlink reverts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTim+boto9xStdaAyWeTR1+Fw=ADjwA@mail.gmail.com> (sfid-20110521_174122_827310_AE5DEA52)
-References: <1305917869.4640.15.camel@jlt3.sipsolutions.net>
-	 <1305917949.4640.16.camel@jlt3.sipsolutions.net>
-	 <BANLkTikjDhdYMssyivgRxAyB5-_FctQbSg@mail.gmail.com>
-	 <2eafee5b7a180c891df4a9ca53e90d7d@secure.sipsolutions.net>
-	 <BANLkTim+boto9xStdaAyWeTR1+Fw=ADjwA@mail.gmail.com>
-	 (sfid-20110521_174122_827310_AE5DEA52)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 May 2011 08:49:52 -0700
-Message-ID: <1306252192.3839.1.camel@jlt3.sipsolutions.net> (sfid-20110524_175002_738785_B24A0D68)
-Mime-Version: 1.0
+Received: from ext.lri.fr ([129.175.15.4]:55693 "EHLO ext.lri.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754486Ab1EDL7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 07:59:40 -0400
+Message-ID: <4DC13CC5.9050909@lri.fr> (sfid-20110504_135942_968947_AAE1129D)
+Date: Wed, 04 May 2011 13:47:17 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: [PATCH] carl9170: fix allmulticast mode
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-05-21 at 08:40 -0700, Javier Cardona wrote:
+Currently, the driver only disable multicast filtering when the
+FIF_ALLMULTI driver flag has been just set (ie,
+if changed_flags& FIF_ALLMULTI and *new_flags& FIF_ALLMULTI) or else
+it will reenable multicast filtering.
 
-> It's ok to move the plink_state attribute.  There are only a handful
-> of users of the secured mesh at this point.
+But next time, this condition will be false and multicast filtering
+will be reenabled, even through FIF_ALLMULTI is still set.
 
-Let's stick to what we have and all copy a new nl80211.h from the
-current tree, I had this in iw but nobody could really be using it since
-no driver has wowlan.
+This mean that allmulticast only works for less than two minutes in
+ad-hoc mode.  This patch fixes that to disable multicast filtering
+as long as FIF_ALLMULTI is set.
 
-johannes
+Signed-off-by: Nicolas Cavallari  <cavallar@lri.fr>
+
+---
+
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 1638468..7d5c65e 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -883,7 +883,7 @@ static void carl9170_op_configure_filter(struct
+ieee80211_hw *hw,
+	 * then checking the error flags, later.
+	 */
+
+-	if (changed_flags&  FIF_ALLMULTI&&  *new_flags&  FIF_ALLMULTI)
++	if (*new_flags&  FIF_ALLMULTI)
+		multicast = ~0ULL;
+
+	if (multicast != ar->cur_mc_hash)
 
