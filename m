@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46129 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325Ab1EYOhw convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45624 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab1EDQYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 10:37:52 -0400
-Received: by iwn34 with SMTP id 34so6484767iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 07:37:51 -0700 (PDT)
+	Wed, 4 May 2011 12:24:16 -0400
+Message-ID: <4DC17DAE.9020808@candelatech.com> (sfid-20110504_182420_728896_096C7375)
+Date: Wed, 04 May 2011 09:24:14 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com>
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
- <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
- <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 25 May 2011 07:37:31 -0700
-Message-ID: <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com> (sfid-20110525_163755_334200_F1725064)
-Subject: Re: Initial automatic channel selection implementation
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
+References: <4DBF1967.9010604@candelatech.com>	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>	<4DC042A5.9050806@candelatech.com> <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
+In-Reply-To: <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> Yes, thanks this is a lot of work already done. Now we just need a
->> basic algorithm to parse this, quantify how ideal this channel is and
->> then spit out a desired optimal channel.
+On 05/04/2011 09:16 AM, Adrian Chadd wrote:
+> On 4 May 2011 02:00, Ben Greear<greearb@candelatech.com>  wrote:
 >
-> That's what I've hacked some time ago (in form of the attached _ugly_ shell
-> script that does auto channel selection with rt2x00, not sure if it works
-> correct with other drivers as the survey dump differs somehow between
-> rt2x00, ath5k and ath9k, and it only does channel 1-11):
+>> Here's the lspci for the SR71-A that doesn't work with ath9k:
+>>
+>> 03:00.0 Ethernet controller: Atheros Communications Inc. AR5008 Wireless
+>> Network Adapter (rev 01)
+>>         Subsystem: Atheros Communications Inc. Device ee1c
 >
-> - Iterate over all channels and stay on each channel for some time
+> ... ee1c? Err, that isn't right. Not by a very, very long shot.
+>
+> What board are you putting this into?
+>
+>> From FreeBSD on a RSPRO (ar71xx mips):
+>
+> ath0@pci0:0:17:0:       class=0x028000 card=0x40820777 chip=0x0027168c
+> rev=0x01 hdr=0x00
+>      vendor     = 'Atheros Communications Inc.'
+>      class      = network
+>
+> That definitely, positively is the same AC1A revision that you have.
+> It even does 11n(ag) too. Honest. I've seen it. :-)
+>
+> This and the previous AR93xx "0xabcd" device id post is starting to
+> sound a lot like something's not waking up the PCI bus and/or chip
+> "right" in order to get the PCI vendor id init'ed from the EEPROM..
 
-Nice, yeah I was thinking of using the offchannel operation if we want
-to spend more time there for inspection and if associated. For first
-iteration it should be possible to just move around. In fact for AP
-purposes I suppose one will want to just start AP mode ASAP and then
-later do offchannel operations to do the inspection on the ideal
-channel. Otherwise we sit there idle until we complete the Automatic
-Channel Selection thingy.
+Well, I put in one NIC, it works fine, I put in the other, and it doesn't.
 
-> - Store busy time stats for each channel
-> - Choose the channel with the lowest busy time (and on 2.4Ghz also
->  check the busy times on adjacent channels)
+Same system, reproducible on other systems from same manufacturer (Lanner, LEC 2010E).
 
-So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
-we should skip that time from the busy time, otherwise the "busy" time
-includes time we induced on TX'ing or RX'ing ourselves. So I was
-thinking of using the:
+Haven't tried it on a totally different motherboard.  I'll send you this
+broken NIC if you want...I'm too tight on time to hack on it now...
 
-  (active time - rx time - tx time)  / busy time
+Ben
 
-as a factor for impact on the given frequency. Then somehow we just
-need to add to this the channel noise.
 
-> Btw. is the idea to get the auto channel selection into hostapd/supplicant
-> or in a new userspace tool?
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Yup.
-
-  Luis
