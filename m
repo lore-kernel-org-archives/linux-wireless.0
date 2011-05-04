@@ -1,309 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49483 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754627Ab1E2UGF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:06:05 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 565E813B8CC
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:06:02 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 21E0F27D86
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:06:01 +0300 (EEST)
-Subject: [RFC PATCH 16/27] mac80211: rename ieee80211_work_type to
-	mac80211_work_type
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 29 May 2011 23:06:00 +0300
-Message-ID: <20110529200600.16479.47044.stgit@localhost6.localdomain6> (sfid-20110529_220609_280528_2770FDB4)
-In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.perches.com ([173.55.12.10]:1246 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755822Ab1EDVBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 17:01:08 -0400
+Subject: Re: [PATCH 1/2] libertas: Convert lbs_pr_<level> to pr_<level>
+From: Joe Perches <joe@perches.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1304537949.1097.8.camel@dcbw.foobar.com>
+References: <cover.1304379925.git.joe@perches.com>
+	 <353dfb1607172b5a3dbaccddbe52c24312d42af4.1304379925.git.joe@perches.com>
+	 <1304537949.1097.8.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 May 2011 14:01:06 -0700
+Message-ID: <1304542866.1788.102.camel@Joe-Laptop> (sfid-20110504_230136_893729_F000DFB3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/cfg.c        |    4 ++--
- net/mac80211/mac80211_i.h |   18 +++++++++---------
- net/mac80211/mlme.c       |   30 +++++++++++++++---------------
- net/mac80211/status.c     |    2 +-
- net/mac80211/work.c       |   34 +++++++++++++++++-----------------
- 5 files changed, 44 insertions(+), 44 deletions(-)
+On Wed, 2011-05-04 at 14:39 -0500, Dan Williams wrote:
+> On Mon, 2011-05-02 at 16:49 -0700, Joe Perches wrote:
+> > Use the standard pr_<level> functions eases grep a bit.
+> > Added a few missing terminating newlines to messages.
+> > Coalesced long formats.
+> Is there any reason to not put the pr_fmt() definition into 'defs.h'
+> instead of C&P at the top of every file?  I don't really care either way
+> but that seems cleaner since almost all the libertas files are going to
+> use logging.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 593c07d..4d1dc36 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1963,7 +1963,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 		return -ENOMEM;
- 	}
- 
--	wk->type = IEEE80211_WORK_OFFCHANNEL_TX;
-+	wk->type = MAC80211_WORK_OFFCHANNEL_TX;
- 	wk->chan = chan;
- 	wk->chan_type = channel_type;
- 	wk->sdata = sdata;
-@@ -2019,7 +2019,7 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
- 		if (wk->sdata != sdata)
- 			continue;
- 
--		if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
-+		if (wk->type != MAC80211_WORK_OFFCHANNEL_TX)
- 			continue;
- 
- 		if (cookie != (unsigned long) wk->offchan_tx.frame)
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index dc30f13..ad654de 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -257,14 +257,14 @@ struct mesh_preq_queue {
- 	u8 flags;
- };
- 
--enum ieee80211_work_type {
--	IEEE80211_WORK_ABORT,
--	IEEE80211_WORK_DIRECT_PROBE,
--	IEEE80211_WORK_AUTH,
--	IEEE80211_WORK_ASSOC_BEACON_WAIT,
--	IEEE80211_WORK_ASSOC,
--	IEEE80211_WORK_REMAIN_ON_CHANNEL,
--	IEEE80211_WORK_OFFCHANNEL_TX,
-+enum mac80211_work_type {
-+	MAC80211_WORK_ABORT,
-+	MAC80211_WORK_DIRECT_PROBE,
-+	MAC80211_WORK_AUTH,
-+	MAC80211_WORK_ASSOC_BEACON_WAIT,
-+	MAC80211_WORK_ASSOC,
-+	MAC80211_WORK_REMAIN_ON_CHANNEL,
-+	MAC80211_WORK_OFFCHANNEL_TX,
- };
- 
- /**
-@@ -293,7 +293,7 @@ struct ieee80211_work {
- 	enum nl80211_channel_type chan_type;
- 
- 	unsigned long timeout;
--	enum ieee80211_work_type type;
-+	enum mac80211_work_type type;
- 
- 	u8 filter_ta[ETH_ALEN];
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4e24610..fb72946 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1971,8 +1971,8 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 			if (wk->sdata != sdata)
- 				continue;
- 
--			if (wk->type != IEEE80211_WORK_ASSOC &&
--			    wk->type != IEEE80211_WORK_ASSOC_BEACON_WAIT)
-+			if (wk->type != MAC80211_WORK_ASSOC &&
-+			    wk->type != MAC80211_WORK_ASSOC_BEACON_WAIT)
- 				continue;
- 
- 			if (memcmp(mgmt->bssid, wk->filter_ta, ETH_ALEN))
-@@ -2282,7 +2282,7 @@ ieee80211_probe_auth_done(struct ieee80211_work *wk,
- 		return WORK_DONE_DESTROY;
- 	}
- 
--	if (wk->type == IEEE80211_WORK_AUTH) {
-+	if (wk->type == MAC80211_WORK_AUTH) {
- 		cfg80211_send_rx_auth(wk->sdata->dev, skb->data, skb->len);
- 		return WORK_DONE_DESTROY;
- 	}
-@@ -2291,7 +2291,7 @@ ieee80211_probe_auth_done(struct ieee80211_work *wk,
- 	ieee80211_rx_mgmt_probe_resp(wk->sdata, skb);
- 	mutex_unlock(&wk->sdata->u.mgd.mtx);
- 
--	wk->type = IEEE80211_WORK_AUTH;
-+	wk->type = MAC80211_WORK_AUTH;
- 	wk->probe_auth.tries = 0;
- 	return WORK_DONE_REQUEUE;
- }
-@@ -2351,9 +2351,9 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	/* if we already have a probe, don't probe again */
- 	if (req->bss->proberesp_ies)
--		wk->type = IEEE80211_WORK_AUTH;
-+		wk->type = MAC80211_WORK_AUTH;
- 	else
--		wk->type = IEEE80211_WORK_DIRECT_PROBE;
-+		wk->type = MAC80211_WORK_DIRECT_PROBE;
- 	wk->chan = req->bss->channel;
- 	wk->chan_type = NL80211_CHAN_NO_HT;
- 	wk->sdata = sdata;
-@@ -2376,7 +2376,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 		return WORK_DONE_DESTROY;
- 	}
- 
--	if (wk->type == IEEE80211_WORK_ASSOC_BEACON_WAIT) {
-+	if (wk->type == MAC80211_WORK_ASSOC_BEACON_WAIT) {
- 		mutex_lock(&wk->sdata->u.mgd.mtx);
- 		rx_status = (void *) skb->cb;
- 		ieee802_11_parse_elems(skb->data + 24 + 12, skb->len - 24 - 12, &elems);
-@@ -2384,7 +2384,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 				      &elems, true);
- 		mutex_unlock(&wk->sdata->u.mgd.mtx);
- 
--		wk->type = IEEE80211_WORK_ASSOC;
-+		wk->type = MAC80211_WORK_ASSOC;
- 		/* not really done yet */
- 		return WORK_DONE_REQUEUE;
- 	}
-@@ -2510,9 +2510,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	wk->done = ieee80211_assoc_done;
- 	if (!bss->dtim_period &&
- 	    sdata->local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
--		wk->type = IEEE80211_WORK_ASSOC_BEACON_WAIT;
-+		wk->type = MAC80211_WORK_ASSOC_BEACON_WAIT;
- 	else
--		wk->type = IEEE80211_WORK_ASSOC;
-+		wk->type = MAC80211_WORK_ASSOC;
- 
- 	if (req->use_mfp) {
- 		ifmgd->mfp = IEEE80211_MFP_REQUIRED;
-@@ -2561,16 +2561,16 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			if (wk->sdata != sdata)
- 				continue;
- 
--			if (wk->type != IEEE80211_WORK_DIRECT_PROBE &&
--			    wk->type != IEEE80211_WORK_AUTH &&
--			    wk->type != IEEE80211_WORK_ASSOC &&
--			    wk->type != IEEE80211_WORK_ASSOC_BEACON_WAIT)
-+			if (wk->type != MAC80211_WORK_DIRECT_PROBE &&
-+			    wk->type != MAC80211_WORK_AUTH &&
-+			    wk->type != MAC80211_WORK_ASSOC &&
-+			    wk->type != MAC80211_WORK_ASSOC_BEACON_WAIT)
- 				continue;
- 
- 			if (memcmp(req->bss->bssid, wk->filter_ta, ETH_ALEN))
- 				continue;
- 
--			not_auth_yet = wk->type == IEEE80211_WORK_DIRECT_PROBE;
-+			not_auth_yet = wk->type == MAC80211_WORK_DIRECT_PROBE;
- 			list_del_rcu(&wk->list);
- 			free_work(wk);
- 			break;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 26d2c40..108e6b1 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -332,7 +332,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 		rcu_read_lock();
- 		list_for_each_entry_rcu(wk, &local->work_list, list) {
--			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
-+			if (wk->type != MAC80211_WORK_OFFCHANNEL_TX)
- 				continue;
- 			if (wk->offchan_tx.frame != skb)
- 				continue;
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 8856c5e..3a14bb8 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -612,7 +612,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_work *wk,
- {
- 	u16 auth_alg, auth_transaction, status_code;
- 
--	if (wk->type != IEEE80211_WORK_AUTH)
-+	if (wk->type != MAC80211_WORK_AUTH)
- 		return WORK_ACT_MISMATCH;
- 
- 	if (len < 24 + 6)
-@@ -664,7 +664,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_work *wk,
- 	struct ieee802_11_elems elems;
- 	u8 *pos;
- 
--	if (wk->type != IEEE80211_WORK_ASSOC)
-+	if (wk->type != MAC80211_WORK_ASSOC)
- 		return WORK_ACT_MISMATCH;
- 
- 	/*
-@@ -722,7 +722,7 @@ ieee80211_rx_mgmt_probe_resp(struct ieee80211_work *wk,
- 
- 	ASSERT_WORK_MTX(local);
- 
--	if (wk->type != IEEE80211_WORK_DIRECT_PROBE)
-+	if (wk->type != MAC80211_WORK_DIRECT_PROBE)
- 		return WORK_ACT_MISMATCH;
- 
- 	if (len < 24 + 12)
-@@ -745,7 +745,7 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_work *wk,
- 
- 	ASSERT_WORK_MTX(local);
- 
--	if (wk->type != IEEE80211_WORK_ASSOC_BEACON_WAIT)
-+	if (wk->type != MAC80211_WORK_ASSOC_BEACON_WAIT)
- 		return WORK_ACT_MISMATCH;
- 
- 	if (len < 24 + 12)
-@@ -774,10 +774,10 @@ static void ieee80211_work_rx_queued_mgmt(struct mac80211_local *local,
- 		const u8 *bssid = NULL;
- 
- 		switch (wk->type) {
--		case IEEE80211_WORK_DIRECT_PROBE:
--		case IEEE80211_WORK_AUTH:
--		case IEEE80211_WORK_ASSOC:
--		case IEEE80211_WORK_ASSOC_BEACON_WAIT:
-+		case MAC80211_WORK_DIRECT_PROBE:
-+		case MAC80211_WORK_AUTH:
-+		case MAC80211_WORK_ASSOC:
-+		case MAC80211_WORK_ASSOC_BEACON_WAIT:
- 			bssid = wk->filter_ta;
- 			break;
- 		default:
-@@ -1023,25 +1023,25 @@ static void ieee80211_work_work(struct work_struct *work)
- 			/* nothing */
- 			rma = WORK_ACT_NONE;
- 			break;
--		case IEEE80211_WORK_ABORT:
-+		case MAC80211_WORK_ABORT:
- 			rma = WORK_ACT_TIMEOUT;
- 			break;
--		case IEEE80211_WORK_DIRECT_PROBE:
-+		case MAC80211_WORK_DIRECT_PROBE:
- 			rma = ieee80211_direct_probe(wk);
- 			break;
--		case IEEE80211_WORK_AUTH:
-+		case MAC80211_WORK_AUTH:
- 			rma = ieee80211_authenticate(wk);
- 			break;
--		case IEEE80211_WORK_ASSOC:
-+		case MAC80211_WORK_ASSOC:
- 			rma = ieee80211_associate(wk);
- 			break;
--		case IEEE80211_WORK_REMAIN_ON_CHANNEL:
-+		case MAC80211_WORK_REMAIN_ON_CHANNEL:
- 			rma = ieee80211_remain_on_channel_timeout(wk);
- 			break;
--		case IEEE80211_WORK_OFFCHANNEL_TX:
-+		case MAC80211_WORK_OFFCHANNEL_TX:
- 			rma = ieee80211_offchannel_tx(wk);
- 			break;
--		case IEEE80211_WORK_ASSOC_BEACON_WAIT:
-+		case MAC80211_WORK_ASSOC_BEACON_WAIT:
- 			rma = ieee80211_assoc_beacon_wait(wk);
- 			break;
- 		}
-@@ -1163,7 +1163,7 @@ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
- 		if (wk->sdata != sdata)
- 			continue;
- 		cleanup = true;
--		wk->type = IEEE80211_WORK_ABORT;
-+		wk->type = MAC80211_WORK_ABORT;
- 		wk->started = true;
- 		wk->timeout = jiffies;
- 	}
-@@ -1244,7 +1244,7 @@ int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
- 	if (!wk)
- 		return -ENOMEM;
- 
--	wk->type = IEEE80211_WORK_REMAIN_ON_CHANNEL;
-+	wk->type = MAC80211_WORK_REMAIN_ON_CHANNEL;
- 	wk->chan = chan;
- 	wk->chan_type = channel_type;
- 	wk->sdata = sdata;
+It has to be before any #include <linux/kernel.h>
+or any other #include that uses it.
+
+At some point, all of the uses of
+
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
+should be removed as I intend to have that
+or an equivalent become the default.
+
 
