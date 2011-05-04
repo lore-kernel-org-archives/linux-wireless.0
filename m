@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:51100 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753986Ab1EMV0r (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60338 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755595Ab1EDUAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 17:26:47 -0400
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
-Subject: [RFC/PATCH 01/13] net: wl12xx: sdio: id_tables should be __devinitconst
-Date: Sat, 14 May 2011 00:26:18 +0300
-Message-Id: <1305321990-22041-2-git-send-email-balbi@ti.com> (sfid-20110513_232713_213047_FF86F403)
-In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	Wed, 4 May 2011 16:00:55 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1QHiFg-0002s3-1f
+	for linux-wireless@vger.kernel.org; Wed, 04 May 2011 16:00:52 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p44Jl5JD009881
+	for <linux-wireless@vger.kernel.org>; Wed, 4 May 2011 15:47:05 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p44Jl5EJ009879
+	for linux-wireless@vger.kernel.org; Wed, 4 May 2011 15:47:05 -0400
+Date: Wed, 4 May 2011 15:47:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Linux wireless mini-summit -- Vancouver, Canada August 15-16, 2011
+Message-ID: <20110504194704.GD18541@tuxdriver.com> (sfid-20110504_220104_021918_E390E1B2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That's only needed during init anyway, let's free
-some space after we're done probing.
+Just a brief announcement...a mini-summit for Linux wireless is
+being planned for just prior to LinuxCon North America this August
+in Vancouver.
 
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- drivers/net/wireless/wl12xx/sdio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Attendees will be required to register for LinuxCon.  More details
+here:
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index b1c7d03..1268efe 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -45,7 +45,7 @@
- #define SDIO_DEVICE_ID_TI_WL1271	0x4076
- #endif
- 
--static const struct sdio_device_id wl1271_devices[] = {
-+static const struct sdio_device_id wl1271_devices[] __devinitconst = {
- 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
- 	{}
- };
+	http://wireless.kernel.org/en/developers/Summits/Vancouver-2011
+
+Space is reasonable, but not unlimited.  If you are interested in
+attending, please add your name to the list on the wiki page cited
+above ASAP.  Also, feel free to add your proposals for discussions
+topics.
+
+Thanks for your attention and participation!
+
+John
 -- 
-1.7.4.1.343.ga91df
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
