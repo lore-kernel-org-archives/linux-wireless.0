@@ -1,58 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:31037 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759399Ab1EMPBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 11:01:49 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:01:20 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
-	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: [PATCH 9/9] ath9k: make sure main_rssi is positive
-Date: Fri, 13 May 2011 20:31:40 +0530
-Message-ID: <1305298900-3620-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_170153_413778_164CAF0A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:57127 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742Ab1EDDHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2011 23:07:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: fix simultaneous assoc and scan issue
+Date: Tue,  3 May 2011 20:11:45 -0700
+Message-Id: <1304478706-31673-1-git-send-email-bzhao@marvell.com> (sfid-20110504_050724_795684_42779908)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-some times the rssi control descriptor for the main antenna may be
-negative like that of alternate antenna, hence before  incrementing
-packet counts/rssi of main/alternate antenna make sure both main_rssi
-and alt_rssi are positive only. this avoids wrong selection of antenna
-due to diversity
+When scan and assoc (infra/ibss) commands are simultaneously
+given in two terminals, association response is erroneously
+served while serving the scan response.
 
-Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
-Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+mwifiex_cfg80211_results() is the common routine for sending
+ioctl (scan, assoc etc.) results to cfg80211 stack. In above
+scenario even if the common routine is called for scan ioctl
+context, it also tries to send information about assoc ioctl to
+cfg80211 because "priv->assoc_request/priv->ibss_join_request"
+flag is on at that time.
+
+Fix the issue by updating request variable after assoc handling
+and modifying the variable check in mwifiex_cfg80211_results.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   11 +++++++----
+ drivers/net/wireless/mwifiex/main.h     |    4 ++--
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 2fecfcb..4f52e04 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1468,8 +1468,8 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
- 	main_ant_conf = (rs->rs_rssi_ctl2 >> ATH_ANT_RX_MAIN_SHIFT) &
- 			 ATH_ANT_RX_MASK;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 98009e2..77a8029 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1044,7 +1044,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		goto done;
+ 	}
  
--	/* Record packet only when alt_rssi is positive */
--	if (alt_rssi > 0) {
-+	/* Record packet only when both main_rssi and  alt_rssi is positive */
-+	if (main_rssi > 0 && alt_rssi > 0) {
- 		antcomb->total_pkt_count++;
- 		antcomb->main_total_rssi += main_rssi;
- 		antcomb->alt_total_rssi  += alt_rssi;
+-	priv->assoc_request = 1;
++	priv->assoc_request = -EINPROGRESS;
+ 
+ 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
+ 	       (char *) sme->ssid, sme->bssid);
+@@ -1052,6 +1052,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
+ 				     priv->bss_mode, sme->channel, sme, 0);
+ 
++	priv->assoc_request = 1;
+ done:
+ 	priv->assoc_result = ret;
+ 	queue_work(priv->workqueue, &priv->cfg_workqueue);
+@@ -1080,7 +1081,7 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 		goto done;
+ 	}
+ 
+-	priv->ibss_join_request = 1;
++	priv->ibss_join_request = -EINPROGRESS;
+ 
+ 	wiphy_dbg(wiphy, "info: trying to join to %s and bssid %pM\n",
+ 	       (char *) params->ssid, params->bssid);
+@@ -1088,6 +1089,8 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 	ret = mwifiex_cfg80211_assoc(priv, params->ssid_len, params->ssid,
+ 				params->bssid, priv->bss_mode,
+ 				params->channel, NULL, params->privacy);
++
++	priv->ibss_join_request = 1;
+ done:
+ 	priv->ibss_join_result = ret;
+ 	queue_work(priv->workqueue, &priv->cfg_workqueue);
+@@ -1380,7 +1383,7 @@ done:
+ 		kfree(scan_req);
+ 	}
+ 
+-	if (priv->assoc_request) {
++	if (priv->assoc_request == 1) {
+ 		if (!priv->assoc_result) {
+ 			cfg80211_connect_result(priv->netdev, priv->cfg_bssid,
+ 						NULL, 0, NULL, 0,
+@@ -1399,7 +1402,7 @@ done:
+ 		priv->assoc_result = 0;
+ 	}
+ 
+-	if (priv->ibss_join_request) {
++	if (priv->ibss_join_request == 1) {
+ 		if (!priv->ibss_join_result) {
+ 			cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid,
+ 					     GFP_KERNEL);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5043fcd..b4bb5ec 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -479,9 +479,9 @@ struct mwifiex_private {
+ 	u8 report_scan_result;
+ 	struct cfg80211_scan_request *scan_request;
+ 	int scan_result_status;
+-	bool assoc_request;
++	int assoc_request;
+ 	u16 assoc_result;
+-	bool ibss_join_request;
++	int ibss_join_request;
+ 	u16 ibss_join_result;
+ 	bool disconnect;
+ 	u8 cfg_bssid[6];
 -- 
-1.7.0.4
+1.7.0.2
 
