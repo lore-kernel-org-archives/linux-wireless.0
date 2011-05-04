@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:36705 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab1EJCCf (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58637 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755393Ab1EDTz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 22:02:35 -0400
-Received: by pvg12 with SMTP id 12so2616264pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 19:02:35 -0700 (PDT)
-Message-ID: <4DC89CB7.7030409@lwfinger.net> (sfid-20110510_040239_160328_6752D08D)
-Date: Mon, 09 May 2011 21:02:31 -0500
+	Wed, 4 May 2011 15:55:57 -0400
+Received: by pzk9 with SMTP id 9so647750pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 12:55:57 -0700 (PDT)
+Message-ID: <4DC1AF49.7080204@lwfinger.net> (sfid-20110504_215600_352107_FAC3642B)
+Date: Wed, 04 May 2011 14:55:53 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Firmware problem for iwl6000
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: WARNING from mac80211
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am helping a user on the openSUSE forum. His dmesg output is as follows:
+Johannes and John,
 
- > iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 6000 Series 2x2 AGN 
-REV=0x74
- > iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
- > iwlagn 0000:03:00.0: irq 36 for MSI/MSI-X
- > phy0: Selected rate control algorithm 'iwl-agn-rs'
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-3.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-3.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-2.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-2.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-1.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-1.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: Could not read microcode: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-3.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-3.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-2.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-2.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-1.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-1.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: Could not read microcode: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-3.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-3.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-2.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-2.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-6000-1.ucode
- > iwlagn 0000:03:00.0: iwlwifi-6000-1.ucode firmware file req failed: -2
- > iwlagn 0000:03:00.0: Could not read microcode: -2
+A regression in recent versions of mac80211 are generating the WARNING at 
+net/mac80211/wep.c:101, because the skb headroom is less than WEP_IV_LEN or the 
+tailroom is less than WEP_ICV_LEN. My testing indicates that it is a headroom 
+problem as the following hack "fixes" it:
 
-The kernel in question is 2.6.37. The only firmware for the iwl6000 in the 
-openSUSE packages is iwlwifi-6000-4.ucode, and that is all I find in linux-firmware.
+Index: wireless-testing-new/net/mac80211/tx.c
+===================================================================
+--- wireless-testing-new.orig/net/mac80211/tx.c
++++ wireless-testing-new/net/mac80211/tx.c
+@@ -1935,6 +1935,8 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+                 head_need += IEEE80211_ENCRYPT_HEADROOM;
+                 head_need += local->tx_headroom;
+                 head_need = max_t(int, 0, head_need);
++               if (head_need < WEP_IV_LEN)
++                       head_need = WEP_IV_LEN;
+                 if (ieee80211_skb_resize(local, skb, head_need, true))
+                         goto fail;
+         }
 
-What advice should I give? Apparently, he tried a link of iwlwifi-6000-3.ucode 
-to the .4 variety, but got an invalid firmware message.
-
-Thanks,
+I'm certain that this is too simple minded, but it at least points to a place to 
+look. I have not bisected the problem to see which commit caused the regression, 
+but I can if you want.
 
 Larry
-
