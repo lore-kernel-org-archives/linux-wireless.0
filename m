@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45678 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757614Ab1EXV3U (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36029 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082Ab1EDXR3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 17:29:20 -0400
-Message-ID: <4DDC232F.7080005@codeaurora.org> (sfid-20110524_232948_224181_39F4F1D7)
-Date: Tue, 24 May 2011 14:29:19 -0700
-From: Stephen Boyd <sboyd@codeaurora.org>
+	Wed, 4 May 2011 19:17:29 -0400
+Received: by iyb14 with SMTP id 14so1369401iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 16:17:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-scsi@vger.kernel.org, x86@kernel.org,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH 0/9] strict user copy checks on x86_64
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+In-Reply-To: <BANLkTinB7cAmCahuK-qqejVWzO7T3Xq4Gg@mail.gmail.com>
+References: <1304413928-17673-1-git-send-email-arik@wizery.com>
+ <1304527857.3563.24.camel@jlt3.sipsolutions.net> <BANLkTinB7cAmCahuK-qqejVWzO7T3Xq4Gg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 5 May 2011 02:17:14 +0300
+Message-ID: <BANLkTi=S1X1RRaeNmqAoqugoB-dByDsaSQ@mail.gmail.com> (sfid-20110505_011733_390842_89D6D898)
+Subject: Re: [RFC] mac80211: reestablish mis-configured existing Rx BA sessions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
-
-(I don't know who to pick on sorry)
-
-On 05/12/2011 04:50 PM, Stephen Boyd wrote:
-> It turns out that strict user copy checks (also known as
-> CONFIG_DEBUG_STRICT_USER_COPY_CHECKS) isn't actually implemented
-> on x86_64 and thus we aren't catching potential security holes
-> at compile time.
+On Thu, May 5, 2011 at 02:15, Arik Nemtsov <arik@wizery.com> wrote:
 >
-> This series adds support for strict user copy checks on x86_64
-> and silences all the benign warnings in the x86_64 allyesconfig.
 >
-> The final patch consolidates the config option as its duplicated
-> across mutliple arches. I don't know what tree this series should
-> go through so I tried to send the individual driver patches to the
-> respective maintainers.
+> On Wed, May 4, 2011 at 19:50, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+>>
+>> On Tue, 2011-05-03 at 12:12 +0300, Arik Nemtsov wrote:
+>> > When forming a Rx BA session, sometimes the ADDBA response gets lost.
+>> > This leads to a situation where the session is configured locally, but
+>> > doesn't exist on the remote side. Subsequent ADDBA requests are declined
+>> > by mac80211.
+>> >
+>> > Fix this by assuming the session state of the initiator is the correct
+>> > one. When receiving an unexpected ADDBA request on a TID with an active
+>> > Rx BA session, delete the existing one and establish a new session.
+>>
+>> I thought about this for a while but I don't really have an opinion I
+>> think. Maybe the behaviour could be avoided by checking the ack status,
+>> but that wouldn't be good enough for devices that don't have that...
 >
-> Stephen Boyd (9):
->   iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   debugfs: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   kprobes: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   ASoC: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   x86: Implement strict user copy checks for x86_64
->   Consolidate CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
+> It helped me with at least two APs (when I put them far enough from the
+> station). I guess it won't hurt anything.
+> Checking the ack won't do any actual good - if the AP doesn't send another
+> ADDBA request we won't have a session up anyway. It just saves a little
+> memory on the reorder buffer.
+> Arik
 
-It looks like 1, 2, 4, 6, and 7 got picked up. Should I resend the left
-over patches with appropriate acked-bys and tags? Would it be
-appropriate to push this through your tree?
-
--- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
-
+[replying again with a plain text email]
