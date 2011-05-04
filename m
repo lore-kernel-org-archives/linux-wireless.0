@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36169 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757525Ab1EKQZW (ORCPT
+Received: from w1.fi ([128.177.27.249]:33835 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752969Ab1EDGrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:25:22 -0400
-Received: by wwa36 with SMTP id 36so796804wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:25:21 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
-Date: Wed, 11 May 2011 11:54:24 +0300
-Message-Id: <1305104068-32240-4-git-send-email-eliad@wizery.com> (sfid-20110511_182606_615423_78F11861)
-In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+	Wed, 4 May 2011 02:47:45 -0400
+Date: Tue, 3 May 2011 22:45:16 -0700
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Fix set_key regression with some drivers
+Message-ID: <20110504054516.GA10455@jm.kir.nu> (sfid-20110504_084750_955414_29AE4B1F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if a wow trigger was configured, set the MMC_PM_KEEP_POWER flag
-on suspend, so our power will be kept while the system is suspended.
+Commit dbd2fd656f2060abfd3a16257f8b51ec60f6d2ed added a mechanism for
+user space to indicate whether a default key is being configured for
+only unicast or only multicast frames instead of all frames. This
+commit added a driver capability flag for indicating whether separate
+default keys are supported and validation of the set_key command based
+on that capability.
 
-We needed to set this flag on each suspend attempt (when we want
-to keep power)
+However, this single capability flag is not enough to cover possible
+difference based on mode (AP/IBSS/STA) and the way this change was
+introduced resulted in a regression with drivers that do not indicate
+the new capability (i.e.., more or less any non-mac80211 driver using
+cfg80211) when using a recent wpa_supplicant snapshot.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/sdio.c |   29 ++++++++++++++++++++++++++++-
- 1 files changed, 28 insertions(+), 1 deletions(-)
+Fix the regression by removing the new check which is not strictly
+speaking needed. The new separate default key functionality is needed
+only for RSN IBSS which has a separate capability indication.
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 1298461..5b03fd5 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -314,7 +314,34 @@ static int wl1271_suspend(struct device *dev)
- {
- 	/* Tell MMC/SDIO core it's OK to power down the card
- 	 * (if it isn't already), but not to remove it completely */
--	return 0;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct wl1271 *wl = sdio_get_drvdata(func);
-+	mmc_pm_flag_t sdio_flags;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_MAC80211, "wl1271 suspend. wow_enabled: %d",
-+		     wl->wow_enabled);
-+
-+	/* check whether sdio should keep power */
-+	if (wl->wow_enabled) {
-+		sdio_flags = sdio_get_host_pm_caps(func);
-+
-+		if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-+			wl1271_error("can't keep power while host "
-+				     "is suspended");
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		/* keep power while host suspended */
-+		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+		if (ret) {
-+			wl1271_error("error while trying to keep power");
-+			goto out;
-+		}
-+	}
-+out:
-+	return ret;
- }
+Cc: stable@kernel.org
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c	2011-05-03 09:51:44.718988609 -0700
++++ wireless-testing/net/wireless/nl80211.c	2011-05-03 09:52:27.114455629 -0700
+@@ -1682,14 +1682,6 @@
+ 		if (err)
+ 			goto out;
  
- static int wl1271_resume(struct device *dev)
--- 
-1.7.0.4
+-		if (!(rdev->wiphy.flags &
+-				WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS)) {
+-			if (!key.def_uni || !key.def_multi) {
+-				err = -EOPNOTSUPP;
+-				goto out;
+-			}
+-		}
+-
+ 		err = rdev->ops->set_default_key(&rdev->wiphy, dev, key.idx,
+ 						 key.def_uni, key.def_multi);
+ 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
