@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:48679 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756353Ab1EWQta (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:47412 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090Ab1EDUJE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 12:49:30 -0400
-Received: by vws1 with SMTP id 1so4239763vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 09:49:29 -0700 (PDT)
-Message-ID: <4DDA9016.3090701@lwfinger.net> (sfid-20110523_184933_873750_2970A4D9)
-Date: Mon, 23 May 2011 11:49:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 May 2011 16:09:04 -0400
 MIME-Version: 1.0
-To: Mike McCormack <mikem@ring3k.org>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/8] rtl8192ce stability improvements
-References: <4DDA66D5.2090801@ring3k.org>
-In-Reply-To: <4DDA66D5.2090801@ring3k.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110504192639.GB4551@thinkpad-t410>
+References: <20110504153819.GA4551@thinkpad-t410>
+	<20110504172716.GC18541@tuxdriver.com>
+	<20110504192639.GB4551@thinkpad-t410>
+Date: Wed, 4 May 2011 23:09:03 +0300
+Message-ID: <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com> (sfid-20110504_220928_141866_84BA9BF6)
+Subject: Re: ath5k regression associating with APs in 2.6.38
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 08:53 AM, Mike McCormack wrote:
-> The following patch series is aimed at improving the stability
-> of the rtl8192ce driver, with a bit of cleanup thrown in.
+2011/5/4 Seth Forshee <seth.forshee@canonical.com>:
+> On Wed, May 04, 2011 at 01:27:17PM -0400, John W. Linville wrote:
+>> On Wed, May 04, 2011 at 10:38:19AM -0500, Seth Forshee wrote:
+>> > I've been investigating some reports of a regression in associating with
+>> > APs with AR2413 in 2.6.38. Association repeatedly fails with some
+>> > "direct probe to x timed out" messages (see syslog excerpt below),
+>> > although it will generally associate eventually, after many tries.
+>> >
+>> > Bisection identifies 8aec7af (ath5k: Support synth-only channel change
+>> > for AR2413/AR5413) as offending commit. Prior to this commit there are
+>> > no direct probe messages at all in the logs. I've also found that
+>> > forcing fast to false at the top of ath5k_hw_reset() fixes the issue.
+>> > I'm not sure what the connection is between this commit and the
+>> > timeouts. Any suggestions?
+>>
+>> Have you tried reverting that commit on top of 2.6.38?  Can you
+>> recreate the issue with 2.6.39-rc6 (or later)?
 >
-> thanks,
+> I started to revert that commit, but it wasn't straight-forward due to
+> later changes. Forcing fast to false in ath5k_hw_reset() acts as a
+> functional revert of sorts since that should force it back to a full
+> reset for all channel changes, and it's much simpler than working out
+> the right way to revert the commit. I think the results suggest strongly
+> that a revert is likely to fix the problem. I can finish the work to
+> revert if you'd still like to see the results.
 >
-> Mike
+> Testing a previous .39-rc kernel still exhibited the failure. I don't
+> recall which one it was and apparently forgot to make note of it. I'll
+> request testing against rc6.
 >
-> Mike McCormack (8):
->    rtlwifi: Synchronize IRQ after disabling it
->    rtlwifi: Remove set_rfpowerstate_inprogress
->    rtlwifi: Store loop index in local variable
->    rtlwifi: Run IPS leave work in a tasklet
->    rtlwifi: Don't block interrupts in spinlocks
->    rtlwifi: Assign rx buffer ownership to hardware last
->    rtlwifi: Use write barrier when assigning ownership
->    rtlwifi: Fix logic in rx_interrupt
+> Thanks,
+> Seth
 >
->   drivers/net/wireless/rtlwifi/pci.c           |   41 ++++++++++++++----------
->   drivers/net/wireless/rtlwifi/ps.c            |   45 +++++++++++---------------
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    1 +
->   drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |   12 ++----
->   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    2 +
->   drivers/net/wireless/rtlwifi/rtl8192cu/phy.c |    2 -
->   drivers/net/wireless/rtlwifi/rtl8192se/phy.c |   14 ++------
->   drivers/net/wireless/rtlwifi/wifi.h          |    2 +-
->   8 files changed, 55 insertions(+), 64 deletions(-)
 
-Thanks for your changes. I have not yet tested them, but I noticed a few points 
-that I want you to address.
+Do you get scan results ?
+Can you enable ATH5K_DEBUG_RESET and see what you get ?
 
-Are you using wireless-testing for your patches? There are some patches pending 
-in John's queue, but your patches got offsets and fuzz in files that those 
-patches do not touch. Everything seemed to apply despite the fuzz and everything 
-compiled, but I always get nervous about patches with anything more serious than 
-offsets.
-
-Patches 3, 4, 6 and 8 do modify driver rtlwifi, but patches 1 and 7 change 
-driver rtl8192ce. Similarly, #2 changes rtl8192ce, rtl8192cu, and rtl8192se, and 
-#5 changes rtl8192ce and rtl8192se. The subject line for the patch should 
-indicate the driver that gets modified. I usually do it as "rtlwifi: rtl8192ce: 
-blah-blah", etc. The rtlwifi is included even though it does not get changed by 
-the patch.
-
-I do not see anything serious in the body of the patches and I expect that I 
-will be giving them an ACK, but I want to test first.
-
-Thanks,
-
-Larry
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
