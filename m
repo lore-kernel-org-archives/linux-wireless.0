@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:34248 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751380Ab1EDUIu (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37317 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253Ab1EDUJb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 16:08:50 -0400
-Received: by mail-ey0-f172.google.com with SMTP id 13so527530eye.31
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 13:08:48 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: don't start the dynamic ps timer if not
- associated
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	ido@wizery.com
-In-Reply-To: <1304448008-7816-1-git-send-email-coelho@ti.com>
-References: <1304448008-7816-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 May 2011 23:08:45 +0300
-Message-ID: <1304539725.12586.382.camel@cumari> (sfid-20110504_220853_401768_BC55EA50)
-Mime-Version: 1.0
+	Wed, 4 May 2011 16:09:31 -0400
+Received: by eyx24 with SMTP id 24so468890eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 13:09:29 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Andrew V. Stepanov" <stanv@altlinux.org>
+Subject: Re: carl9170.ko RX - DMA, TX - COPY
+Date: Wed, 4 May 2011 22:09:29 +0000
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTiniamP_zXeGkW2TgatdkSv1+rdfeg@mail.gmail.com> <201105041558.00377.chunkeey@googlemail.com> <BANLkTin3nks48iCQw34kFfMAwT3QyhG08A@mail.gmail.com>
+In-Reply-To: <BANLkTin3nks48iCQw34kFfMAwT3QyhG08A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201105042209.29950.chunkeey@googlemail.com> (sfid-20110504_220935_137843_240637E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-03 at 21:40 +0300, Luciano Coelho wrote:
-> When we are disconnecting, we set PS off, but this happens before we
-> send the deauth/disassoc request.  When the deauth/disassoc frames are
-> sent, we trigger the dynamic ps timer, which then times out and turns
-> PS back on.  Thus, PS remains on after disconnecting, causing problems
-> when associating again.
+On Wednesday 04 May 2011 18:52:58 Andrew V. Stepanov wrote:
+> I think it is possible to align SKB frames in carl9170.ko driver.
 > 
-> This can be fixed by preventing the timer to start when we're not
-> associated anymore.
+> rt2800usb do such think in next way:
 > 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  net/mac80211/tx.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
+> void rt2x00queue_align_frame(struct sk_buff *skb)
+> {
+> 环贩unsigned int frame_length = skb->len;
+> 环贩unsigned int align = ALIGN_SIZE(skb, 0);
 > 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index e3e3aa1..21accf8 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -237,6 +237,10 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
->  				     &local->dynamic_ps_disable_work);
->  	}
->  
-> +	/* Don't restart the timer if we're not disassociated */
-> +	if (!ifmgd->associated)
-> +		return TX_CONTINUE;
-> +
->  	mod_timer(&local->dynamic_ps_timer, jiffies +
->  		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
->  
+> 环贩if (!align)
+> 环贩环贩return;
+> 
+> 环贩skb_push(skb, align);
+> 环贩memmove(skb->data, skb->data + align, frame_length);
+> 环贩skb_trim(skb, frame_length);
+> }
+> 
+> What do you think about this?
+No that's wrong, here's the comment from rt2x00queue.c
 
-Do you people think this should go into 2.6.39?
+"When DMA allocation is required we should guarantee to the
+ driver that the DMA is aligned to a 4-byte boundary.
+ However some drivers require L2 padding to pad the payload
+ rather then the header. This could be a requirement for
+ PCI and USB devices, while header alignment only is valid
+ for PCI devices."
 
--- 
-Cheers,
-Luca.
+Do you see the difference there; header alignment is only needed
+for PCI whereas rt2800usb hw/fw allows just the L2 data to be
+padded and sadly AR9170 hw does not have this feature. 
 
+Also, someone <https://patchwork.kernel.org/patch/98997/> added
+bounce buffers to musb some time ago, so why not use this approach
+instead? The advantage is that you won't need to modify any other
+drivers when you will (inevitable) replace the device with a
+better one, right?
+
+Regards,
+	Chr
