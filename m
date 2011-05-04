@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38894 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756332Ab1EFQYI convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f173.google.com ([209.85.212.173]:41594 "EHLO
+	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753999Ab1EDTPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 12:24:08 -0400
-Received: by bwz15 with SMTP id 15so2622934bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 09:24:07 -0700 (PDT)
+	Wed, 4 May 2011 15:15:05 -0400
+Message-ID: <4DC1A5B5.4050605@lwfinger.net> (sfid-20110504_211529_560585_499B19F2)
+Date: Wed, 04 May 2011 14:15:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-Date: Fri, 6 May 2011 12:24:06 -0400
-Message-ID: <BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com> (sfid-20110506_182413_078661_4229BCCA)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Borislav Petkov <bp@amd64.org>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn,
+	Andreas Herrmann <andreas.herrmann3@amd.com>
+Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+References: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net> <20110503150105.GC18648@gere.osrc.amd.com> <4DC05F9C.2070802@lwfinger.net> <20110504170131.GA12126@gere.osrc.amd.com> <4DC18AE5.4010708@lwfinger.net> <20110504180605.GB12126@gere.osrc.amd.com>
+In-Reply-To: <20110504180605.GB12126@gere.osrc.amd.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I decided to get the Sony BR100 and try it out, given that the
-WikiDevi page for the device seems to suggest that it works with
-ath9k_htc:
-http://www.wikidevi.com/wiki/Sony_UWA-BR100
-
-My confidence is also a little higher given that someone has it
-working in Windows, also.
-
-But, using the most recent firmware and compat-wireless, I get the
-same exact error that I did with the Xbox adapter:
-[ 1277.228258] usb 2-2: ath9k_htc: Transferred FW: htc_7010.fw, size: 72996
-[ 1278.228930] ath9k_htc 2-2:1.0: ath9k_htc: Target is unresponsive
-[ 1278.229788] Failed to initialize the device
-[ 1279.029952] ath9k_htc: probe of 2-2:1.0 failed with error -22
-
-The WikiDev page mentions that it worked as of Jan. 8, 2011.  So I
-rolled back compat-wireless to that date and grabbed the old firmware
-from the old tree.
-
-Unfortunately, I still get the same error:
-[  386.398366] usb 1-1: USB disconnect, address 4
-[  388.412466] usb 1-1: new high speed USB device using ehci_hcd and address 5
-[  389.113687] usb 1-1: ath9k_htc: Transferred FW: ar7010_1_1.fw, size: 70624
-[  390.112282] usb 1-1: ath9k_htc: Target is unresponsive
-[  390.112308] Failed to initialize the device
-[  390.113658] ath9k_hif_usb: probe of 1-1:1.0 failed with error -22
-
-So, either this person had some form of magic, or I am missing
-something... I'd be curious to try it in Windows.  BTW, it shows up in
-Mac OSX as "Buffalo" ...
-
-(CEWL 1):
-
-  Product ID:	0x017f
-  Vendor ID:	0x0411  (BUFFALO INC.)
-  Version:	 2.02
-  Serial Number:	12345
-  Speed:	Up to 480 Mb/sec
-  Manufacturer:	BUFFALO
-  Location ID:	0xfd100000
-  Current Available (mA):	500
-  Current Required (mA):	Unknown (Device has not been configured)
-
-
-On Tue, May 3, 2011 at 2:39 PM, George Nychis <gnychis@gmail.com> wrote:
-> Has anyone tried either of these with ath9k_htc:
-> Sony UWA-BR100
-> TiVo AN0100
+On 05/04/2011 01:06 PM, Borislav Petkov wrote:
+> On Wed, May 04, 2011 at 12:20:37PM -0500, Larry Finger wrote:
+>> You are very welcome. I'm glad to hear that it works for you. That
+>> driver missed the 2.6.39 merge window due to an ASPM problem that
+>> crashed my computer without any possibility of seeing what caused
+>> the blowup. I was somewhat afraid that others would get similar
+>> results even though Realsil did not see the problem.
 >
-> I'm curious if anyone has had success with them, and if they are UB94
-> based.  It'd be great to know.
+> Right, so I saw the oops below while playing with the driver earlier
+> but I attribute it to the fact that radio was switched off in the BIOS
+> (rfkill show said "Hard blocked: yes" for the wireless device). After
+> changing that I'm running smoothly so far. I'll keep you posted if I see
+> anything while using it in the next weeks.
 >
+> Thanks.
+
+Thanks for the dump. I don't think the oops was due to the wireless being 
+switched off. It looks as if you do not have the CRDA package installed, thus 
+the regulatory domain was not setup correctly. That is a condition I realize 
+that I have not tested. As soon as I have a fix, I'll let you know. BTW, if my 
+analysis is correct, this bug has been around since 2.6.37 when rtl8192ce was 
+merged.
+
+Larry
