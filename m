@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:39323 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442Ab1EEXst (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49057 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138Ab1EDM3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 19:48:49 -0400
-Date: Thu, 05 May 2011 18:48:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix build error when CONFIG_PM is not defined
-Message-ID: <4dc3375f.3VdEfQKL1lidemOn%Larry.Finger@lwfinger.net> (sfid-20110506_014853_920653_A302E59A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 4 May 2011 08:29:03 -0400
+Subject: Re: [PATCH 05/13] nl80211: Let userspace drive the peer link
+ management states.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1304467039-7730-6-git-send-email-javier@cozybit.com> (sfid-20110504_015801_001265_A955B26B)
+References: <1304467039-7730-1-git-send-email-javier@cozybit.com>
+	 <1304467039-7730-6-git-send-email-javier@cozybit.com>
+	 (sfid-20110504_015801_001265_A955B26B)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 May 2011 14:28:27 +0200
+Message-ID: <1304512107.3563.13.camel@jlt3.sipsolutions.net> (sfid-20110504_142907_480884_E9B16C5C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 is built without CONFIG_PM being defined, the following errors
-are output:
+On Tue, 2011-05-03 at 16:57 -0700, Javier Cardona wrote:
 
-net/mac80211/main.c: In function ‘ieee80211_register_hw’:
-net/mac80211/main.c:700: error: ‘const struct ieee80211_ops’ has no member named ‘suspend’
-net/mac80211/main.c:700: error: ‘const struct ieee80211_ops’ has no member named ‘resume’
-make[2]: *** [net/mac80211/main.o] Error 1
-make[1]: *** [net/mac80211] Error 2
-make[1]: *** Waiting for unfinished jobs....
-make: *** [net] Error 2
+> +++ b/include/linux/nl80211.h
+> @@ -902,6 +902,9 @@ enum nl80211_commands {
+>   * @NL80211_ATTR_SUPPORT_MESH_AUTH: Currently, this means the underlying driver
+>   *	allows auth frames in a mesh to be passed to userspace for processing via
+>   *	the @NL80211_MESH_SETUP_USERSPACE_AUTH flag.
+> + * @NL80211_ATTR_STA_PLINK_STATE: The state of a mesh peer link. Used when
+> + *      userspace is driving the peer link management state machine.
+> + *      @NL80211_MESH_SETUP_USERSPACE_AMPE must be enabled.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+What values are contained in this field?
 
-Index: wireless-testing/net/mac80211/main.c
-===================================================================
---- wireless-testing.orig/net/mac80211/main.c
-+++ wireless-testing/net/mac80211/main.c
-@@ -696,8 +696,11 @@ int ieee80211_register_hw(struct ieee802
- 		WLAN_CIPHER_SUITE_AES_CMAC
- 	};
- 
--	if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns) &&
--	    (!local->ops->suspend || !local->ops->resume))
-+	if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
-+#ifdef CONFIG_PM
-+	    && (!local->ops->suspend || !local->ops->resume)
-+#endif
-+	    )
- 		return -EINVAL;
- 
- 	if (hw->max_report_rates == 0)
+
+> +++ b/include/net/cfg80211.h
+> @@ -372,6 +372,33 @@ enum plink_actions {
+>  };
+>  
+>  /**
+> + * enum plink_states - state of a mesh peer link finite state machine
+
+Looks like you want these, but they're definitely in the wrong file
+then.
+
+johannes
+
