@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40338 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555Ab1ESEOY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 00:14:24 -0400
-To: Javier Cardona <javier@cozybit.com>
-Subject: Re: [PATCH] mac80211: fix and simplify mesh locking
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Thu, 19 May 2011 06:14:20 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTi=0RMrBKVFFC7UUnVPyZpZvfGvK6g@mail.gmail.com>
- (sfid-20110519_034116_480982_F4415B84)
-References: <1305363652.3437.8.camel@jlt3.sipsolutions.net>
- <1305364803.3437.10.camel@jlt3.sipsolutions.net>
- <BANLkTikyymbnXHANmB3N0ecJWdkY9xCG=Q@mail.gmail.com>
- <1305758752.8827.1.camel@jlt3.sipsolutions.net>
- <BANLkTi=0RMrBKVFFC7UUnVPyZpZvfGvK6g@mail.gmail.com>
- (sfid-20110519_034116_480982_F4415B84)
-Message-ID: <336458d50895bb0b63e77ad24ce54c82@secure.sipsolutions.net>
+Received: from lri.lri.fr ([129.175.15.1]:58041 "EHLO lri.lri.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753711Ab1EDNgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 09:36:00 -0400
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: [PATCH] carl9170: fix allmulticast mode
+Message-Id: <20110504132652.DB29C40055@pc11-132.lri.fr> (sfid-20110504_153605_090082_A83E6638)
+Date: Wed,  4 May 2011 15:26:52 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 18 May 2011 18:40:33 -0700, Javier Cardona wrote:
->>> I'm seeing this after trying your patch, probably because the
->>> allocations mesh_table_alloc() can block.  In the past I had tried 
->>> to
->>> allocate the table before entering the critical section.  If that 
->>> is
->>> not possible for the race condition you mention,  then I guess 
->>> we'll
->>> have to make those allocations GFP_ATOMIC?
->>
->> Err, now I'm confused, how could the code have done non-atomic
->> allocations while under rcu_read_lock()? I guess there was just no
->> verification there?
->
-> I'm not sure.  I can tell you that the bug message is only triggered
-> after your patch was applied, same .config.
-> Maybe i have an rcu configuration that does not check that.
->
-> Is making the allocations atomic an acceptable solution?
+Currently, the driver only disable multicast filtering when the
+FIF_ALLMULTI driver flag has been just set (ie,
+if changed_flags& FIF_ALLMULTI and *new_flags& FIF_ALLMULTI) or else
+it will reenable multicast filtering.
 
-It looks like it's the only solution :-)
-Anyway they should've been atomic even before already, not sure why RCU 
-didn't complain but it was definitely not right to do GFP_KERNEL 
-allocations under RCU lock, but now that I think about it ISTR that 
-whether it warns or not might depend on the RCU implementation you 
-selected in the config.
+But next time, this condition will be false and multicast filtering
+will be reenabled, even through FIF_ALLMULTI is still set.
 
-johannes
+This mean that allmulticast only works for less than two minutes in
+ad-hoc mode.  This patch fixes that to disable multicast filtering
+as long as FIF_ALLMULTI is set.
+
+Signed-off-by: Nicolas Cavallari  <cavallar@lri.fr>
+
+---
+
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 0b370fe..7697445 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -901,7 +901,7 @@ static void carl9170_op_configure_filter(struct ieee80211_hw *hw,
+ 	 * then checking the error flags, later.
+ 	 */
+ 
+-	if (changed_flags & FIF_ALLMULTI && *new_flags & FIF_ALLMULTI)
++	if (*new_flags & FIF_ALLMULTI)
+ 		multicast = ~0ULL;
+ 
+ 	if (multicast != ar->cur_mc_hash)
