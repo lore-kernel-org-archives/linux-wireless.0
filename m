@@ -1,79 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44864 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753118Ab1EFWx7 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61846 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753912Ab1EDMnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:53:59 -0400
-Message-ID: <4DC47C04.1080604@candelatech.com> (sfid-20110507_005402_980476_D3FDD64B)
-Date: Fri, 06 May 2011 15:53:56 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 4 May 2011 08:43:25 -0400
+Received: by eyx24 with SMTP id 24so338104eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 05:43:24 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Subject: Re: [PATCH] carl9170: fix allmulticast mode
+Date: Wed, 4 May 2011 14:43:25 +0000
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <4DC13CC5.9050909@lri.fr>
+In-Reply-To: <4DC13CC5.9050909@lri.fr>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com>	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>	<4DC042A5.9050806@candelatech.com> <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com> <4DC17DAE.9020808@candelatech.com>
-In-Reply-To: <4DC17DAE.9020808@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201105041443.25501.chunkeey@googlemail.com> (sfid-20110504_144328_343419_5EF5BF54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/04/2011 09:24 AM, Ben Greear wrote:
-> On 05/04/2011 09:16 AM, Adrian Chadd wrote:
->> On 4 May 2011 02:00, Ben Greear<greearb@candelatech.com> wrote:
->>
->>> Here's the lspci for the SR71-A that doesn't work with ath9k:
->>>
->>> 03:00.0 Ethernet controller: Atheros Communications Inc. AR5008 Wireless
->>> Network Adapter (rev 01)
->>> Subsystem: Atheros Communications Inc. Device ee1c
->>
->> ... ee1c? Err, that isn't right. Not by a very, very long shot.
->>
->> What board are you putting this into?
->>
->>> From FreeBSD on a RSPRO (ar71xx mips):
->>
->> ath0@pci0:0:17:0: class=0x028000 card=0x40820777 chip=0x0027168c
->> rev=0x01 hdr=0x00
->> vendor = 'Atheros Communications Inc.'
->> class = network
->>
->> That definitely, positively is the same AC1A revision that you have.
->> It even does 11n(ag) too. Honest. I've seen it. :-)
->>
->> This and the previous AR93xx "0xabcd" device id post is starting to
->> sound a lot like something's not waking up the PCI bus and/or chip
->> "right" in order to get the PCI vendor id init'ed from the EEPROM..
->
-> Well, I put in one NIC, it works fine, I put in the other, and it doesn't.
->
-> Same system, reproducible on other systems from same manufacturer
-> (Lanner, LEC 2010E).
->
-> Haven't tried it on a totally different motherboard. I'll send you this
-> broken NIC if you want...I'm too tight on time to hack on it now...
+On Wednesday 04 May 2011 11:47:17 Nicolas Cavallari wrote:
+> Currently, the driver only disable multicast filtering when the
+> FIF_ALLMULTI driver flag has been just set (ie,
+> if changed_flags& FIF_ALLMULTI and *new_flags& FIF_ALLMULTI) or else
+> it will reenable multicast filtering.
+> 
+> But next time, this condition will be false and multicast filtering
+> will be reenabled, even through FIF_ALLMULTI is still set.
+> 
+> This mean that allmulticast only works for less than two minutes in
+> ad-hoc mode.  This patch fixes that to disable multicast filtering
+> as long as FIF_ALLMULTI is set.
+> 
+> Signed-off-by: Nicolas Cavallari  <cavallar@lri.fr>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+[Just a minor niggle]
 
-So, you were right.  I put this NIC in another system (VIA C3) and it comes up
-as AR9160 and loads ath9k driver just fine.
-
-00:0c.0 Network controller: Atheros Communications Inc. AR9160 802.11abgn Wireless PCI Adapter (rev 01)
-	Subsystem: Device 0777:4082
-	Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
-	Memory at f6000000 (32-bit, non-prefetchable) [size=64K]
-	Capabilities: [44] Power Management version 2
-	Kernel driver in use: ath9k
-	Kernel modules: ath9k
+> ---
+> diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+> index 1638468..7d5c65e 100644
+> --- a/drivers/net/wireless/ath/carl9170/main.c
+> +++ b/drivers/net/wireless/ath/carl9170/main.c
+> @@ -883,7 +883,7 @@ static void carl9170_op_configure_filter(struct
+> ieee80211_hw *hw,
+> 	 * then checking the error flags, later.
+> 	 */
+> 
+> -	if (changed_flags&  FIF_ALLMULTI&&  *new_flags&  FIF_ALLMULTI)
+                      ^^^            ^^^          ^^^
+It looks like your mailer realigned the spaces around the operators
+and added a line-wrap so it won't apply without some help. Can you
+fix the problem and send the patch again?
 
 Thanks,
-Ben
-
->
-> Ben
->
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+	Christian
