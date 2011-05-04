@@ -1,100 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:45788 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932480Ab1EZQYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 12:24:07 -0400
-Date: Thu, 26 May 2011 12:24:06 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Jools Wills <buzz@exotica.org.uk>
-cc: Walter Goldens <goldenstranger@yahoo.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-In-Reply-To: <4DBFFE64.6000306@exotica.org.uk>
-Message-ID: <alpine.DEB.2.02.1105261221240.8379@p34.internal.lan> (sfid-20110526_182440_474687_6508204D)
-References: <484421.61252.qm@web161619.mail.bf1.yahoo.com> <4DBFFE64.6000306@exotica.org.uk>
+Received: from w1.fi ([128.177.27.249]:33835 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752211Ab1EDGrn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2011 02:47:43 -0400
+Date: Tue, 3 May 2011 22:50:15 -0700
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Remove unused wiphy flag
+Message-ID: <20110504055015.GB10455@jm.kir.nu> (sfid-20110504_084749_431159_A0100DE4)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The only user of WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS was removed
+and consequently, this flag can be removed, too. In addition, a single
+capability flag was not enough to indicate this capability clearly since
+the device behavior may be different based on which operating mode is
+being used.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
+---
+ include/net/cfg80211.h |    3 ---
+ net/mac80211/main.c    |    3 +--
+ 2 files changed, 1 insertion(+), 5 deletions(-)
+
+Note: This depends on the previous patch (removal of nl80211 set_key
+check using this flag) to be applied first.
 
 
-On Tue, 3 May 2011, Jools Wills wrote:
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h	2011-05-03 10:05:09.000866371 -0700
++++ wireless-testing/include/net/cfg80211.h	2011-05-03 10:06:12.187650404 -0700
+@@ -1455,8 +1455,6 @@
+  *	control port protocol ethertype. The device also honours the
+  *	control_port_no_encrypt flag.
+  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
+- * @WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS: The device supports separate
+- *	unicast and multicast TX keys.
+  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
+  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+  */
+@@ -1470,7 +1468,6 @@
+ 	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
+ 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+ 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+-	WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS= BIT(9),
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ };
+ 
+Index: wireless-testing/net/mac80211/main.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/main.c	2011-05-03 10:06:31.769190352 -0700
++++ wireless-testing/net/mac80211/main.c	2011-05-03 10:06:45.087679000 -0700
+@@ -580,8 +580,7 @@
+ 
+ 	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
+ 			WIPHY_FLAG_4ADDR_AP |
+-			WIPHY_FLAG_4ADDR_STATION |
+-			WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS;
++			WIPHY_FLAG_4ADDR_STATION;
+ 
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
 
-> in case it is useful:
->
-> I am currently using the vendor driver on a device I have (O2 Joggler).
-> The rt2800usb driver didn't work well and the staging rt2870sta driver
-> didn't seem to work with wireless N and users reported to me that it
-> drops the connection and is unreliable. The vendor driver does seem to
-> work best.
->
-> I made a debian package (using dkms) of the vendor driver on my joggler
-> ppa. tested working wiht 2.6.37/2.6.38
->
-> https://launchpad.net/~jools/+archive/joggler
->
-> note it doesn't automatically install the newer firmware so that will
-> need to be done manually.
->
-> Best Regards
->
-> Jools
->
-
-Hi,
-
-Tried 2.6.39, laggy, lots of errors, going to go back to 2.6.38 w/ rt2870sta.
-
-[ 9514.700343] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9524.700306] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9526.700279] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9538.700270] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9539.700227] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9577.700342] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9579.700314] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9585.700238] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9595.700352] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9598.700314] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9598.869690] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 46
-[ 9598.873113] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 47
-[ 9598.877453] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 48
-[ 9598.884587] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 49
-[ 9598.889435] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 50
-[ 9598.896697] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 51
-[ 9598.901949] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 52
-[ 9598.908197] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 53
-[ 9598.911798] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 54
-[ 9598.931461] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 55
-[ 9599.700317] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9600.700287] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-[ 9601.760057] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 62
-[ 9601.764633] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 63
-
-$ ping atomw
-PING atomw.internal.lan (1.1.1.1) 56(84) bytes of data.
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=3 ttl=64 time=1540 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=4 ttl=64 time=639 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=5 ttl=64 time=571 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=6 ttl=64 time=492 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=7 ttl=64 time=510 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=8 ttl=64 time=528 ms
-64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=9 ttl=64 time=538 ms
-^C
---- atomw.internal.lan ping statistics ---
-9 packets transmitted, 7 received, 22% packet loss, time 8004ms
-rtt min/avg/max/mdev = 492.253/688.793/1540.319/350.472 ms, pipe 2
-
-Is there a certain or driver one should use with a MediaLink USB adapter?
-http://www.amazon.com/Medialink-Wireless-Adapter-802-11n-Compatible/dp/B002RM08RE
-
-The rt2870sta works flawlessly with 2.6.38.
-The rt2800usb is very problamtic.
-
-Thanks,
-
-Justin.
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
