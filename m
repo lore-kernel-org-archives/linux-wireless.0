@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37702 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793Ab1EJESo convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:43257 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982Ab1EEXBt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 00:18:44 -0400
-Received: by vws1 with SMTP id 1so258725vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 21:18:43 -0700 (PDT)
+	Thu, 5 May 2011 19:01:49 -0400
 MIME-Version: 1.0
-In-Reply-To: <1304951590-2411-10-git-send-email-arend@broadcom.com>
-References: <1304951590-2411-1-git-send-email-arend@broadcom.com> <1304951590-2411-10-git-send-email-arend@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 10 May 2011 14:18:22 +1000
-Message-ID: <BANLkTimvWnhJDSdn+fhGw=WAZDU4RPEKmg@mail.gmail.com> (sfid-20110510_061859_736247_80524590)
-Subject: Re: [PATCH 9/9] staging: brcm80211: move utility functions into new module
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, Henry Ptasinski <henryp@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <BANLkTi=epFN2EZBj9n8pac6h7F4RWmyk+Q@mail.gmail.com>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<BANLkTi=epFN2EZBj9n8pac6h7F4RWmyk+Q@mail.gmail.com>
+Date: Fri, 6 May 2011 01:01:48 +0200
+Message-ID: <BANLkTi=fmTBs=kOwRQWROHWzAG7h_0T80w@mail.gmail.com> (sfid-20110506_010206_789004_95D7C2DC)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend, Henry,
-
-One problem I noticed with your patch:
-
-On Tue, May 10, 2011 at 00:33, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Henry Ptasinski <henryp@broadcom.com>
+W dniu 6 maja 2011 00:59 uÅ¼ytkownik Julian Calaby
+<julian.calaby@gmail.com> napisaÅ‚:
+> RafaÅ‚,
 >
-> Move utility functions shared by the brcmsmac and brcmfmac drivers into a new
-> module, brcmutil.ko.  This eliminates the need to compile and link the shared
-> functions into both drivers.  Prefix all exported symbols with "bcm_".
+> A minor nit:
 >
-> Cc: devel@linuxdriverproject.org
-> Cc: linux-wireless@vger.kernel.org
-> Reviewed-by: Brett Rudley <brudley@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  drivers/staging/brcm80211/Makefile                |    1 +
+> On Fri, May 6, 2011 at 07:59, RafaÅ‚ MiÅ‚ecki <zajec5@gmail.com> wrote:
+>> diff --git a/Documentation/ABI/testing/sysfs-bus-bcma b/Documentation/ABI/testing/sysfs-bus-bcma
+>> new file mode 100644
+>> index 0000000..ad3cd69
+>> --- /dev/null
+>> +++ b/Documentation/ABI/testing/sysfs-bus-bcma
+>> @@ -0,0 +1,31 @@
+>> +What: Â  Â  Â  Â  Â /sys/bus/bcma/devices/.../class
+>> +Date: Â  Â  Â  Â  Â May 2011
+>> +KernelVersion: 2.6.40
+>> +Contact: Â  Â  Â  RafaÅ‚ MiÅ‚ecki <zajec5@gmail.com>
+>> +Description:
+>> + Â  Â  Â  Â  Â  Â  Â  Each AXI core is identified by few fields, including class it
+>> + Â  Â  Â  Â  Â  Â  Â  belongs to. See include/linux/bcma/bcma.h for possible values.
 >
-> diff --git a/drivers/staging/brcm80211/Makefile b/drivers/staging/brcm80211/Makefile
-> index c064cdf..287ad0e 100644
-> --- a/drivers/staging/brcm80211/Makefile
-> +++ b/drivers/staging/brcm80211/Makefile
-> @@ -19,5 +19,6 @@
->  subdir-ccflags-y                                       := -DBCMDMA32
->  subdir-ccflags-$(CONFIG_BRCMDBG)       += -DBCMDBG -DBCMDBG_ASSERT
+> Should this not read BCMA or something similar, not AXI?
 >
-> +obj-m                  += util/
->  obj-$(CONFIG_BRCMFMAC) += brcmfmac/
->  obj-$(CONFIG_BRCMSMAC) += brcmsmac/
+> Ditto for the rest of the changes to this file.
 
-You should not use obj-m directly - the way this is set up, if module
-support is disabled, then the driver will fail as the brcmutil module
-will not be built. This might also happen if the drivers are built
-into the kernel ('y' rather than 'm')
-
-You should create a new Kconfig variable (say BRCMWLUTIL) and use some
-Kconfig trickery to ensure that it's built properly for the drivers
-that need it, then replace this line with something like
-
-obj-$(CONFIG_BRCMWLUTIL)
-
-The LIB80211 symbol used by the Intel 2x00 (old non-mac80211) wireless
-drivers uses similar trickery to ensure that everything is built
-properly.
+Ups, I left old name in this single place. Thx.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+RafaÅ‚
