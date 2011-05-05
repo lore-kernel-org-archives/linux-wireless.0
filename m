@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64522 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab1EJSbQ (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37371 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553Ab1EEMsc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 14:31:16 -0400
-Received: by vxi39 with SMTP id 39so6907265vxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 11:31:16 -0700 (PDT)
-Message-ID: <4DC98470.10500@lwfinger.net> (sfid-20110510_203120_061606_1B6C6170)
-Date: Tue, 10 May 2011 13:31:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 5 May 2011 08:48:32 -0400
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Juan Carlos Romero <juancarlos.romero@gmail.com>
-Subject: Re: Regression affecting b43 LP-PHY card
-References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-In-Reply-To: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4DC2991F.6030703@broadcom.com>
+References: <BANLkTim7Uj2tsgFngWhUqFK_hk3Leg+sQA@mail.gmail.com>
+	<201104171938.12834.arnd@arndb.de>
+	<op.vt6ufu1n3ri7v4@arend-laptop>
+	<201104191635.40351.arnd@arndb.de>
+	<op.vt76hofg3ri7v4@arend-laptop>
+	<BANLkTinMe-KedeOAiQYES-LCC2O4BoE28w@mail.gmail.com>
+	<4DC2991F.6030703@broadcom.com>
+Date: Thu, 5 May 2011 14:48:31 +0200
+Message-ID: <BANLkTi=4zxFWKymsnZuycMowXJz_ciHuVQ@mail.gmail.com> (sfid-20110505_144848_435551_94069A0E)
+Subject: Re: AXI driver status => previously: Re: Could I (ab)use bus (struct
+ bus_type) for virtual Broadcom bus?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	George Kashperko <george@znau.edu.ua>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Russell King <rmk@arm.linux.org.uk>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>, Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 05:52 PM, Rafał Miłecki wrote:
-> Juan owns Lenovo affected by well-known LP-PHY DMA errors. His testing
-> procedure is following:
-> modprobe wl; connect; download sth small; rmmod wl;
-> modprobe b43; download 2GB
+W dniu 5 maja 2011 14:33 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 04/20/2011 09:29 AM, Rafał Miłecki wrote:
+>>
+>> I do not register that exceptional devices in my code.
 >
-> When working on DMA errors we discovered that wireless-testing is not
-> working well for him. Even after performing above procedure his
-> machine disconnects quickly and he is not able to reconnect. We tested
-> 2.6.39-rc6 from tarball and it was working fine. I'd like to highlight
-> here, that we were switching between mainline and wireless-testing few
-> times. It is not a random issue.
+> Hi Rafał,
 >
-> I suspected this regression could be caused by my recent ssb patches.
-> So I reverted all of them but this didn't help.
->
-> In this situation we decided to bisect. I was a little afraid of last
-> merges so we took older 2.6.38 as GOOD (we tested this twice) and
-> wireless-testing commit before my ssb changes as BAD. Today Juan
-> finished bisecting kernel:
-> http://pastebin.com/HSKbRzpB
->
-> According to his bisection the first bad commit is
-> e06383db9ec591696a06654257474b85bac1f8cb [0]:
-> hrtimers: extend hrtimer base code to handle more then 2 clockids
->
-> Does it make any sense to you? Could this be some timing issue?
->
-> It was too late to test this today, we (Juan) will work on this
-> tomorrow. It's impossible to revert this commit from HEAD of
-> wireless-testing, so my idea is to checkout commit, test, revert,
-> test.
->
-> Did anyone else experience any similar problems with latest wireless-testing?
+> There has been some radio silence on the subject of the (bcm)axi driver. I
+> was getting a feeling that my concerns were almost all out of the way in
+> latest emails I got from Arnd and/or Jonas. Do you have an update of what
+> plans you have with this module.
 
-I did some testing over the weekend using the LP-PHY device in my HP Mini 110 
-netbook. This one does not have any DMA issues, but b43 generates PHY 
-transmission errors and dies when I try to copy a file over my LAN. The source 
-material is contained on an NFS-mounted volume. The machine that exports the 
-volume is connected by wire to the router/switch. When I get a file from the 
-Internet, there are no problems. In the latter case, the transfer rate of the 
-download is up to 1.2 MB/s. I don't know what the peak rate is for the NFS copy 
-operation.
+Hey,
 
-I was able to test kernels from the wireless-testing tree back to v2.6.36. All 
-behaved the same, thus my problem is not a regression.
+I got some unique possibility to work on machine affected by DMA
+errors and I spent last 2 weeks only on solving this issue. I'm going
+to go back to AMBA topic again soo.
 
-Larry
+-- 
+Rafał
