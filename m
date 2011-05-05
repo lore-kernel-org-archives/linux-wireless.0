@@ -1,203 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112Ab1EIQlR (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:40892 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab1EEUjx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:41:17 -0400
-Subject: [PATCH] cfg80211: restrict AP beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 18:41:15 +0200
-Message-ID: <1304959275.12202.4.camel@jlt3.sipsolutions.net> (sfid-20110509_184119_374792_5F7A96D0)
-Mime-Version: 1.0
+	Thu, 5 May 2011 16:39:53 -0400
+Date: Thu, 05 May 2011 15:39:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linux-wireless@vger.kernel.org
+Cc: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org
+Subject: [RFC] rtlwifi: Remove large arrays from stack - a question
+Message-ID: <4dc30b12.uDIivxjeQot+s05F%Larry.Finger@lwfinger.net> (sfid-20110505_224012_943899_65A23081)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In driver rtlwifi, one routine places two relatively large arrays on the
+stack - a 1D u8 array of size 128, and a 2D array of u16 with 128 * 4 elements.
+With the next driver to be used with rtlwifi, the sizes will be 256 and
+256 * 4 respectively. As that will make the 2D array be 2048 bytes, I have
+changed the code to use kmalloc to allocate the space as shown in the patch
+below. This code has been tested.
 
-Multiple virtual AP interfaces can currently try
-to use different beacon intervals, but that just
-leads to problems since it won't actually be done
-that way by drivers. Return an error in this case
-to make sure it won't be done wrong.
+This method performs 6 kmalloc operations. My understanding is that each one
+allocates a page of memory, which makes the code allocate 6 KiB rather than
+the previous 5 * 128 or 5 * 256 bytes. This routine is called once for each
+load of an upper-level driver that uses rtlwifi.
 
-Also, ignore attempts to change the DTIM period
-or beacon interval during the lifetime of the BSS.
+Given that the large arrays on the stack needed to be removed, I see three 
+possible options:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |    4 ++++
- net/wireless/core.c    |    1 +
- net/wireless/core.h    |    3 +++
- net/wireless/nl80211.c |   40 +++++++++++++++++++++++-----------------
- net/wireless/util.c    |   25 +++++++++++++++++++++++++
- 5 files changed, 56 insertions(+), 17 deletions(-)
+1. Leave it this way as 6 allocations of O(0) are trivial.
 
---- a/include/net/cfg80211.h	2011-05-06 17:40:17.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-05-06 17:40:17.000000000 +0200
-@@ -1836,6 +1836,8 @@ struct cfg80211_cached_keys;
-  * @mgmt_registrations_lock: lock for the list
-  * @mtx: mutex used to lock data in this struct
-  * @cleanup_work: work struct used for cleanup that can't be done directly
-+ * @beacon_interval: beacon interval used on this device for transmitting
-+ *	beacons, 0 when not valid
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -1876,6 +1878,8 @@ struct wireless_dev {
- 	bool ps;
- 	int ps_timeout;
+2. Switch to a single allocation of up to 1280 B and set the pointers manually.
+
+3. Add the arrays to a structure maintained by the upper-level driver, which
+   would make the memory usage be permanent.
+
+My inclination is to use option 1. Are there strong arguments for one of the
+other alternatives, or any that I have not considered?
+
+Thanks,
+
+Larry
+
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/efuse.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/efuse.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/efuse.c
+@@ -235,7 +235,7 @@ void read_efuse(struct ieee80211_hw *hw,
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+-	u8 efuse_tbl[rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]];
++	u8 *efuse_tbl;
+ 	u8 rtemp8[1];
+ 	u16 efuse_addr = 0;
+ 	u8 offset, wren;
+@@ -245,7 +245,7 @@ void read_efuse(struct ieee80211_hw *hw,
+ 		rtlpriv->cfg->maps[EFUSE_MAX_SECTION_MAP];
+ 	const u32 efuse_len =
+ 		rtlpriv->cfg->maps[EFUSE_REAL_CONTENT_SIZE];
+-	u16 efuse_word[efuse_max_section][EFUSE_MAX_WORD_UNIT];
++	u16 **efuse_word;
+ 	u16 efuse_utilized = 0;
+ 	u8 efuse_usage;
  
-+	int beacon_interval;
-+
- #ifdef CONFIG_CFG80211_WEXT
- 	/* wext data */
- 	struct {
---- a/net/wireless/core.h	2011-05-06 17:40:17.000000000 +0200
-+++ b/net/wireless/core.h	2011-05-06 17:40:17.000000000 +0200
-@@ -426,6 +426,9 @@ int cfg80211_set_freq(struct cfg80211_re
+@@ -256,9 +256,24 @@ void read_efuse(struct ieee80211_hw *hw,
+ 		return;
+ 	}
  
- u16 cfg80211_calculate_bitrate(struct rate_info *rate);
- 
-+int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
-+				 u32 beacon_int);
-+
- #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
- #define CFG80211_DEV_WARN_ON(cond)	WARN_ON(cond)
- #else
---- a/net/wireless/util.c	2011-05-06 17:40:17.000000000 +0200
-+++ b/net/wireless/util.c	2011-05-06 17:44:40.000000000 +0200
-@@ -896,3 +896,28 @@ u16 cfg80211_calculate_bitrate(struct ra
- 	/* do NOT round down here */
- 	return (bitrate + 50000) / 100000;
- }
-+
-+int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
-+				 u32 beacon_int)
-+{
-+	struct wireless_dev *wdev;
-+	int res = 0;
-+
-+	if (!beacon_int)
-+		return -EINVAL;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+
-+	list_for_each_entry(wdev, &rdev->netdev_list, list) {
-+		if (!wdev->beacon_interval)
-+			continue;
-+		if (wdev->beacon_interval != beacon_int) {
-+			res = -EINVAL;
-+			break;
-+		}
++	/* allocate memory for efuse_tbl and efuse_word */
++	efuse_tbl = kmalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE] *
++			    sizeof(u8), GFP_KERNEL);
++	if (!efuse_tbl)
++		return;
++	efuse_word = kmalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_KERNEL);
++	if (!efuse_word)
++		goto done;
++	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++) {
++		efuse_word[i] = kmalloc(efuse_max_section * sizeof(u16),
++				        GFP_KERNEL);
++		if (!efuse_word[i])
++			goto done;
 +	}
 +
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return res;
-+}
---- a/net/wireless/nl80211.c	2011-05-06 17:40:17.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-05-06 17:40:17.000000000 +0200
-@@ -1871,8 +1871,9 @@ static int nl80211_addset_beacon(struct
- 		    struct beacon_parameters *info);
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct beacon_parameters params;
--	int haveinfo = 0;
-+	int haveinfo = 0, err;
+ 	for (i = 0; i < efuse_max_section; i++)
+ 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++)
+-			efuse_word[i][j] = 0xFFFF;
++			efuse_word[j][i] = 0xFFFF;
  
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_BEACON_TAIL]))
- 		return -EINVAL;
-@@ -1881,6 +1882,8 @@ static int nl80211_addset_beacon(struct
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
- 		return -EOPNOTSUPP;
+ 	read_efuse_byte(hw, efuse_addr, rtemp8);
+ 	if (*rtemp8 != 0xFF) {
+@@ -285,7 +300,7 @@ void read_efuse(struct ieee80211_hw *hw,
+ 					read_efuse_byte(hw, efuse_addr, rtemp8);
+ 					efuse_addr++;
+ 					efuse_utilized++;
+-					efuse_word[offset][i] = (*rtemp8 & 0xff);
++					efuse_word[i][offset] = (*rtemp8 & 0xff);
  
-+	memset(&params, 0, sizeof(params));
-+
- 	switch (info->genlhdr->cmd) {
- 	case NL80211_CMD_NEW_BEACON:
- 		/* these are required for NEW_BEACON */
-@@ -1889,6 +1892,15 @@ static int nl80211_addset_beacon(struct
- 		    !info->attrs[NL80211_ATTR_BEACON_HEAD])
- 			return -EINVAL;
+ 					if (efuse_addr >= efuse_len)
+ 						break;
+@@ -297,7 +312,7 @@ void read_efuse(struct ieee80211_hw *hw,
+ 					read_efuse_byte(hw, efuse_addr, rtemp8);
+ 					efuse_addr++;
+ 					efuse_utilized++;
+-					efuse_word[offset][i] |=
++					efuse_word[i][offset] |=
+ 					    (((u16)*rtemp8 << 8) & 0xff00);
  
-+		params.interval =
-+			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
-+		params.dtim_period =
-+			nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
-+
-+		err = cfg80211_validate_beacon_int(rdev, params.interval);
-+		if (err)
-+			return err;
-+
- 		call = rdev->ops->add_beacon;
- 		break;
- 	case NL80211_CMD_SET_BEACON:
-@@ -1902,20 +1914,6 @@ static int nl80211_addset_beacon(struct
- 	if (!call)
- 		return -EOPNOTSUPP;
- 
--	memset(&params, 0, sizeof(params));
--
--	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
--		params.interval =
--		    nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
--		haveinfo = 1;
--	}
--
--	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
--		params.dtim_period =
--		    nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
--		haveinfo = 1;
--	}
--
- 	if (info->attrs[NL80211_ATTR_BEACON_HEAD]) {
- 		params.head = nla_data(info->attrs[NL80211_ATTR_BEACON_HEAD]);
- 		params.head_len =
-@@ -1933,13 +1931,18 @@ static int nl80211_addset_beacon(struct
- 	if (!haveinfo)
- 		return -EINVAL;
- 
--	return call(&rdev->wiphy, dev, &params);
-+	err = call(&rdev->wiphy, dev, &params);
-+	if (!err && params.interval)
-+		wdev->beacon_interval = params.interval;
-+	return err;
- }
- 
- static int nl80211_del_beacon(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
- 
- 	if (!rdev->ops->del_beacon)
- 		return -EOPNOTSUPP;
-@@ -1948,7 +1951,10 @@ static int nl80211_del_beacon(struct sk_
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
- 		return -EOPNOTSUPP;
- 
--	return rdev->ops->del_beacon(&rdev->wiphy, dev);
-+	err = rdev->ops->del_beacon(&rdev->wiphy, dev);
-+	if (!err)
-+		wdev->beacon_interval = 0;
-+	return err;
- }
- 
- static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
---- a/net/wireless/core.c	2011-05-06 17:41:05.000000000 +0200
-+++ b/net/wireless/core.c	2011-05-06 17:41:25.000000000 +0200
-@@ -777,6 +777,7 @@ static int cfg80211_netdev_notifier_call
- 		default:
- 			break;
+ 					if (efuse_addr >= efuse_len)
+@@ -320,9 +335,9 @@ void read_efuse(struct ieee80211_hw *hw,
+ 	for (i = 0; i < efuse_max_section; i++) {
+ 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++) {
+ 			efuse_tbl[(i * 8) + (j * 2)] =
+-			    (efuse_word[i][j] & 0xff);
++			    (efuse_word[j][i] & 0xff);
+ 			efuse_tbl[(i * 8) + ((j * 2) + 1)] =
+-			    ((efuse_word[i][j] >> 8) & 0xff);
++			    ((efuse_word[j][i] >> 8) & 0xff);
  		}
-+		wdev->beacon_interval = 0;
- 		break;
- 	case NETDEV_DOWN:
- 		dev_hold(dev);
-
-
+ 	}
+ 
+@@ -336,6 +351,11 @@ void read_efuse(struct ieee80211_hw *hw,
+ 				      (u8 *)&efuse_utilized);
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_EFUSE_USAGE,
+ 				      (u8 *)&efuse_usage);
++done:
++	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++)
++		kfree(efuse_word[i]);
++	kfree(efuse_word);
++	kfree(efuse_tbl);
+ }
+ 
+ bool efuse_shadow_update_chk(struct ieee80211_hw *hw)
