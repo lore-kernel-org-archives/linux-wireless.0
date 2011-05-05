@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm22.bullet.mail.bf1.yahoo.com ([98.139.212.181]:46356 "HELO
-	nm22.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752436Ab1EJPXu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753256Ab1EEO4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 11:23:50 -0400
-Message-ID: <152413.98046.qm@web161612.mail.bf1.yahoo.com> (sfid-20110510_172353_623661_3588B3C7)
-Date: Tue, 10 May 2011 08:23:49 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: [PATCH 3/3] compat-wireless: enable RT33XX and RT53XX support.
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: mcgrof@gmail.com, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-In-Reply-To: <BANLkTimp10vXTRkC7mBgDX97aiE+Eo_seg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 5 May 2011 10:56:46 -0400
+Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for
+ scheduled scans
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <1304607500.3594.7.camel@jlt3.sipsolutions.net> (sfid-20110505_165557_965402_0D829BAA)
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>
+	 <1304600420-24227-4-git-send-email-coelho@ti.com>
+	 <4DC2B78E.3000205@candelatech.com>
+	 <1304607108.3594.6.camel@jlt3.sipsolutions.net>
+	 <4DC2B941.6@candelatech.com>
+	 <1304607500.3594.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20110505_165557_965402_0D829BAA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 05 May 2011 16:59:12 +0200
+Message-ID: <1304607552.3594.8.camel@jlt3.sipsolutions.net> (sfid-20110505_165648_662741_0A113083)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2011-05-05 at 16:58 +0200, Johannes Berg wrote:
+> On Thu, 2011-05-05 at 07:50 -0700, Ben Greear wrote:
+> > On 05/05/2011 07:51 AM, Johannes Berg wrote:
+> > > On Thu, 2011-05-05 at 07:43 -0700, Ben Greear wrote:
+> > >> On 05/05/2011 06:00 AM, Luciano Coelho wrote:
+> > >>> Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
+> > >>> NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
+> > >>> intervals the scheduled scan cycles should be executed.
+> > >>
+> > >> Please default to something useful instead of requiring
+> > >> this so that things are backwards compatible.
+> > >
+> > > Backward compatible to what?
+> > 
+> > To anything sending older style netlink messages?
+> 
+> But this is a new feature, and a new command, so I don't quite
+> understand why an application would think it can send it without the
+> interval?
 
-> The following config options are all marked as unstable
-> (they depend
-> on EXPERIMENTAL)
->  RT2800PCI_RT35XX
->  RT2800PCI_RT53XX
->  RT2800USB_RT35XX
->  RT2800USB_RT53XX
+Oh wait, I guess you're right, or this should just be part of patch 1
+instead so we never have the feature without the requirement to have the
+interval given.
 
-So this basically means everything above 33+ is experimental at this point. RT33xx should only be enabled now, per my original patch.
+johannes
 
-Walter
--------
-
-// Side note to Luis,
-compat-wireless tar balls aren't being uploaded to orbit and kernel, despite the successful emails from the cron bot. Last uploaded CW archive was 5 days ago, can you look that up? //
