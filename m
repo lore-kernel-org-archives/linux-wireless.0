@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50801 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756201Ab1EXOcV (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49823 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751425Ab1EEOnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 10:32:21 -0400
-Received: by fxm17 with SMTP id 17so4693677fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 07:32:20 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Initial automatic channel selection implementation
-Date: Tue, 24 May 2011 16:27:48 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
-In-Reply-To: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+	Thu, 5 May 2011 10:43:43 -0400
+Message-ID: <4DC2B78E.3000205@candelatech.com> (sfid-20110505_164346_564380_AD763896)
+Date: Thu, 05 May 2011 07:43:26 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201105241627.49201.helmut.schaa@googlemail.com> (sfid-20110524_163225_189132_C6E34701)
+To: Luciano Coelho <coelho@ti.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for scheduled
+ scans
+References: <1304600420-24227-1-git-send-email-coelho@ti.com> <1304600420-24227-4-git-send-email-coelho@ti.com>
+In-Reply-To: <1304600420-24227-4-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On 05/05/2011 06:00 AM, Luciano Coelho wrote:
+> Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
+> NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
+> intervals the scheduled scan cycles should be executed.
 
-Am Dienstag, 24. Mai 2011 schrieb Luis R. Rodriguez:
-> II - Load check:
-> 
->   * In addition to the above take into consideration some metric for
-> load on the channel: frame count observed
+Please default to something useful instead of requiring
+this so that things are backwards compatible.
 
-Sounds similar to the busy time information some drivers already report
-via "iw wlan0 survey dump", no? Counting frames sounds like a lot of
-overhead to me.
+Thanks,
+Ben
 
-Helmut
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
