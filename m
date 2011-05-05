@@ -1,141 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53421 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932584Ab1EXUDt (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:55759 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132Ab1EEOyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 16:03:49 -0400
-Received: by fxm17 with SMTP id 17so4901386fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 13:03:48 -0700 (PDT)
-Message-ID: <4DDC0F1F.3050301@googlemail.com> (sfid-20110524_220354_446990_38105D1B)
-Date: Tue, 24 May 2011 22:03:43 +0200
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
+	Thu, 5 May 2011 10:54:46 -0400
+Date: Thu, 5 May 2011 09:54:30 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: ath5k regression associating with APs in 2.6.38
+Message-ID: <20110505145430.GB13727@thinkpad-t410> (sfid-20110505_165509_691686_82314530)
+References: <20110504153819.GA4551@thinkpad-t410>
+ <20110504172716.GC18541@tuxdriver.com>
+ <20110504192639.GB4551@thinkpad-t410>
+ <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
+ <20110505135207.GA13727@thinkpad-t410>
+ <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [ath5k] kernel panic while using compat-wireless-2.6.38.2-2
-References: <4DCA672E.2080906@googlemail.com> <4DDA89A4.5040101@googlemail.com> <4DDA8CCA.3050703@candelatech.com>
-In-Reply-To: <4DDA8CCA.3050703@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear linux-wireless list,
+On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
+> Hmm I don't see any errors from reset/phy code, can you disable
+> Network Manager/wpa-supplicant and test connection on an open network
+> using iw ? It 'll give us a better picture...
+> 
+> If iw doesn't return any scan results we are probably hitting a PHY/RF
+> error specific to your device (not all vendors follow the reference
+> design). Maybe we should follow a blacklist/whitelist approach for
+> this feature.
 
-sorry, I did answer too early, problem still exists. I am now using 
-compat-wireless-2.6.39-1. I hope, this is new enough (it seems to be 
-from last night anyway...)
+Will do. I just got another log from my tester, which is more typical of
+what he's been getting. I've pasted a portion of it below. The full log
+can be viewed at
 
-I now even exchanged the wireless card, now I am using a Gigabyte 
-GN-WI01HT (AR5414 chip), the problem seems to be the same. I attached 
-some dmesg info. Could this be a hardware error of the mainboard? 
-Actually, I only have one hardware to test on and I somehow don't really 
-trust it. Just a thought of mine...
+https://launchpadlibrarian.net/71137619/20110504_020639rc6%23201105050227_boot4_syslog
 
-What are your suggestions, or could this really be a bug?
-
-Best regards,
-Dennis
-
-
-[    7.525432] Compat-wireless backport release: compat-wireless-v2.6.39-1
-[    7.532737] Backport based on linux-2.6-allstable.git v2.6.39
-[    7.576502] cfg80211: Calling CRDA to update world regulatory domain
-[    7.640147] cfg80211: World regulatory domain updated:
-[    7.645908] cfg80211:     (start_freq - end_freq @ bandwidth), 
-(max_antenna_gain, max_eirp)
-[    7.656157] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    7.664483] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), 
-(300 mBi, 2000 mBm)
-[    7.672754] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), 
-(300 mBi, 2000 mBm)
-[    7.674546] ath5k 0000:11:07.0: PCI->APIC IRQ transform: INT A -> IRQ 19
-[    7.688710] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    7.697046] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    7.705453] ath5k 0000:11:07.0: registered as 'phy0'
-[    8.351679] ath: EEPROM regdomain: 0x0
-[    8.351685] ath: EEPROM indicates default country code should be used
-[    8.351690] ath: doing EEPROM country->regdmn map search
-[    8.351695] ath: country maps to regdmn code: 0x3a
-[    8.351699] ath: Country alpha2 being used: US
-[    8.351703] ath: Regpair used: 0x3a
-[    8.360800] ieee80211 phy0: Selected rate control algorithm 
-'minstrel_ht'
-[    8.362487] cfg80211: Calling CRDA for country: US
-[    8.362536] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-[    8.363657] modprobe used greatest stack depth: 5860 bytes left
-[    8.388493] cfg80211: Regulatory domain changed to country: US
-[    8.394937] cfg80211:     (start_freq - end_freq @ bandwidth), 
-(max_antenna_gain, max_eirp)
-[    8.403724] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), 
-(300 mBi, 2700 mBm)
-[    8.412246] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), 
-(300 mBi, 1700 mBm)
-[    8.421561] cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    8.430451] cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    8.438853] cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), 
-(300 mBi, 2000 mBm)
-[    8.447623] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), 
-(300 mBi, 3000 mBm)
-[    8.496322] scsi 4:0:0:0: Direct-Access     Generic  Storage Device   
-0.00 PQ: 0 ANSI: 2
-[    8.505354] sd 4:0:0:0: Attached scsi generic sg1 type 0
-[    8.511989] sd 4:0:0:0: [sdb] Attached SCSI removable disk
-[    8.796704] chown used greatest stack depth: 5824 bytes left
-[   27.909475] cfg80211: Calling CRDA for country: DE
-[   27.920079] cfg80211: Regulatory domain changed to country: DE
-[   27.927544] cfg80211:     (start_freq - end_freq @ bandwidth), 
-(max_antenna_gain, max_eirp)
-[   27.937610] cfg80211:     (2400000 KHz - 2483500 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   27.945562] cfg80211:     (5150000 KHz - 5250000 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   27.953475] cfg80211:     (5250000 KHz - 5350000 KHz @ 40000 KHz), 
-(N/A, 2000 mBm)
-[   27.961475] cfg80211:     (5470000 KHz - 5725000 KHz @ 40000 KHz), 
-(N/A, 2698 mBm)
-[   28.014622] hostapd used greatest stack depth: 5748 bytes left
-[   33.195098] ------------[ cut here ]------------
-[   33.201175] WARNING: at 
-/mnt/entw/compat-wireless-2.6.39-1/net/mac80211/rx.c:2882 
-ieee80211_rx+0x39/0x660 [mac80211]()
-[   33.213802] Hardware name: Luna Pier CRB
-[   33.219331] Modules linked in: ath5k ath mac80211 cfg80211 compat 
-[last unloaded: scsi_wait_scan]
-[   33.226899] Pid: 24, comm: sirq-tasklet/1 Not tainted 
-2.6.33.7.2-rt30-atom-ssb #1
-[   33.236137] Call Trace:
-[   33.240118]  [<c1030666>] warn_slowpath_common+0x60/0x90
-[   33.247071]  [<c10306a3>] warn_slowpath_null+0xd/0x10
-[   33.253762]  [<dff60edd>] ieee80211_rx+0x39/0x660 [mac80211]
-[   33.261111]  [<e031064c>] ath5k_tasklet_rx+0x540/0x5aa [ath5k]
-[   33.268566]  [<c102b281>] ? set_next_entity+0x1e/0x89
-[   33.273935]  [<c135941d>] ? __schedule+0x76f/0x7a4
-[   33.280319]  [<c10356b4>] __tasklet_action+0x77/0xd7
-[   33.285564]  [<c10357d2>] tasklet_action+0x5c/0x62
-[   33.291956]  [<c1035c19>] run_ksoftirqd+0x131/0x247
-[   33.297091]  [<c1035ae8>] ? run_ksoftirqd+0x0/0x247
-[   33.303589]  [<c1046ab6>] kthread+0x61/0x66
-[   33.308029]  [<c1046a55>] ? kthread+0x0/0x66
-[   33.313884]  [<c1002db6>] kernel_thread_helper+0x6/0x10
-[   33.319430] ---[ end trace 95aeede189daca6f ]---
+Thanks,
+Seth
 
 
-Am 23.05.2011 18:35, schrieb Ben Greear:
-> On 05/23/2011 09:21 AM, Dennis Borgmann wrote:
->> Hello linux-wireless list!
->>
->> Is there really no one with an idea? Is there no one among the
->> developers, who is interested in this bug, if it is a bug?
->>
->> I'm starting to lose my hope...
->
-> Can you reproduce this in the wireless-testing tree?
->
-> Ben
->
-
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): new 802.11 WiFi device (driver: 'ath5k' ifindex: 3)
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): exported as /org/freedesktop/NetworkManager/Devices/1
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): now managed
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 1 -> 2 (reason 2)
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): bringing up device.
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): preparing device.
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): deactivating device (reason: 2).
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: supplicant_interface_acquire: assertion `mgr_state == NM_SUPPLICANT_MANAGER_STATE_IDLE' failed
+May  5 08:57:16 AcerAspire5100 kernel: [   25.844302] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> modem-manager is now available
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <warn> bluez error getting default adapter: The name org.bluez was not provided by any .service files
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> Trying to start the supplicant...
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant manager state:  down -> idle
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 2 -> 3 (reason 0)
+May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant interface state:  starting -> ready
+...
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) starting connection 'Auto aureola'
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 3 -> 4 (reason 0)
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 4 -> 5 (reason 0)
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0/wireless): access point 'Auto aureola' has security, but secrets are required.
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 5 -> 6 (reason 0)
+May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 6 -> 4 (reason 0)
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 4 -> 5 (reason 0)
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0/wireless): connection 'Auto aureola' has security, and secrets exist.  No new secrets needed.
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'ssid' value 'aureola'
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'scan_ssid' value '1'
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'key_mgmt' value 'WPA-PSK'
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'psk' value '<omitted>'
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: nm_setting_802_1x_get_pkcs11_engine_path: assertion `NM_IS_SETTING_802_1X (setting)' failed
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: nm_setting_802_1x_get_pkcs11_module_path: assertion `NM_IS_SETTING_802_1X (setting)' failed
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: set interface ap_scan to 1
+May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  inactive -> scanning
+May  5 08:57:41 AcerAspire5100 wpa_supplicant[734]: Trying to associate with c0:3f:0e:b9:f3:b2 (SSID='aureola' freq=2452 MHz)
+May  5 08:57:41 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  scanning -> associating
+May  5 08:57:41 AcerAspire5100 kernel: [   51.261113] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 1/3)
+May  5 08:57:41 AcerAspire5100 kernel: [   51.460049] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 2/3)
+May  5 08:57:41 AcerAspire5100 kernel: [   51.660091] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 3/3)
+May  5 08:57:42 AcerAspire5100 kernel: [   51.860048] wlan0: direct probe to c0:3f:0e:b9:f3:b2 timed out
+May  5 08:57:51 AcerAspire5100 wpa_supplicant[734]: Authentication with c0:3f:0e:b9:f3:b2 timed out.
+May  5 08:57:51 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  associating -> disconnected
+May  5 08:57:51 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  disconnected -> scanning
+May  5 08:57:51 AcerAspire5100 kernel: [   61.396045] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2452 -> 2412 MHz)
+May  5 08:57:51 AcerAspire5100 kernel: [   61.396051] ath5k phy0: (ath5k_reset:2648): resetting
+May  5 08:57:51 AcerAspire5100 kernel: [   61.397135] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
+May  5 08:57:51 AcerAspire5100 kernel: [   61.452053] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
+May  5 08:57:51 AcerAspire5100 kernel: [   61.452059] ath5k phy0: (ath5k_reset:2648): resetting
+May  5 08:57:51 AcerAspire5100 kernel: [   61.453143] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
+May  5 08:57:51 AcerAspire5100 kernel: [   61.508053] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
+May  5 08:57:51 AcerAspire5100 kernel: [   61.508059] ath5k phy0: (ath5k_reset:2648): resetting
+May  5 08:57:51 AcerAspire5100 kernel: [   61.509143] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
+May  5 08:57:51 AcerAspire5100 kernel: [   61.564045] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
+May  5 08:57:52 AcerAspire5100 wpa_supplicant[734]: Trying to associate with c0:3f:0e:b9:f3:b2 (SSID='aureola' freq=2452 MHz)
+May  5 08:57:52 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  scanning -> associating
+May  5 08:57:52 AcerAspire5100 kernel: [   62.364741] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 1/3)
+May  5 08:57:52 AcerAspire5100 kernel: [   62.564061] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 2/3)
+May  5 08:57:53 AcerAspire5100 kernel: [   62.764058] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 3/3)
+May  5 08:57:53 AcerAspire5100 kernel: [   62.964061] wlan0: direct probe to c0:3f:0e:b9:f3:b2 timed out
+May  5 08:58:02 AcerAspire5100 wpa_supplicant[734]: Authentication with c0:3f:0e:b9:f3:b2 timed out.
+May  5 08:58:02 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  associating -> disconnected
