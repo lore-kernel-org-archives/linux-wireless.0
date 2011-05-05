@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:57862 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934954Ab1ESWM3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 18:12:29 -0400
-Received: by gwaa18 with SMTP id a18so1107261gwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 15:12:29 -0700 (PDT)
-Message-ID: <4DD595C9.105@lwfinger.net> (sfid-20110520_001233_103619_C9E19FED)
-Date: Thu, 19 May 2011 17:12:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:40605 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751714Ab1EEVDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 May 2011 17:03:32 -0400
+Message-ID: <4DC3109F.6080601@openwrt.org> (sfid-20110505_230336_430308_CE269AA0)
+Date: Thu, 05 May 2011 23:03:27 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Fix bogus compilation warning for phy_n
-References: <4dd58d39.ev8WALmbdvCfJmAJ%Larry.Finger@lwfinger.net> <BANLkTinDciqW2yJLpwKemnSM=8_1Jy3Fxw@mail.gmail.com>
-In-Reply-To: <BANLkTinDciqW2yJLpwKemnSM=8_1Jy3Fxw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
+ AP mode broke STA association.
+References: <4DC30C42.6070402@candelatech.com>
+In-Reply-To: <4DC30C42.6070402@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/19/2011 04:43 PM, Rafał Miłecki wrote:
-> 2011/5/19 Larry Finger<Larry.Finger@lwfinger.net>:
->> When cross-compiling the 2.6.39 wireless-testing source using GCC version
->> (SUSE Linux) 4.3.2 [gcc-4_3-branch revision 141291] on an x86_64 system,
->> the following warning is issued:
->>
->>   CC [M]  drivers/net/wireless/b43/phy_n.o
->> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_cal_tx_iq_lo’:
->> drivers/net/wireless/b43/phy_n.c:3096: warning: ‘last’ may be used
->>         uninitialized in this function
->>
->> A quick look at the code shows that the warning is bogus and a gcc bug,
->> but to ensure clean compilation for all users, mark the offending variable
->> as uninitialized.
->
-> Did you check for both "last" usages on this function? From my quick
-> review it seems "last" is set in case of
-> 1) mphase_cal_phase_id>  2
-> xor
-> 2) b43_nphy_tx_tone returning success
->
-> I'm not so sure if this patch is correct.
+On 2011-05-05 10:44 PM, Ben Greear wrote:
+> I bisected the problem I was having with ath9k STA configured for WPA
+> not being able to authenticate.  I'm using nohwcrypt=1, which may
+> be why no one else sees it.
+> 
+> According to bisect, this is the first bad commit:
+> 
+> commit 5519541d5a5f19893546883547e2f0f2e5934df7
+> Author: Felix Fietkau<nbd@openwrt.org>
+> Date:   Sun Apr 17 23:28:09 2011 +0200
+> 
+>       ath9k: fix powersave frame filtering/buffering in AP mode
+> 
+>       This patch fixes a long standing issue of pending packets in the queue being
+>       sent (and retransmitted many times) to sleeping stations.
+>       This was made worse by aggregation through driver-internal retransmitting
+>       of A-MDPU subframes.
+>       Previously the hardware tx filter was cleared unconditionally for every
+>       single packet - with this patch it uses the IEEE80211_TX_CTL_CLEAR_PS_FILT
+>       for unaggregated frames.
+>       A sta_notify driver op is added to stop aggregation for stations when they
+>       enter powersave mode. Subframes stay buffered inside the driver, to ensure
+>       that the BlockAck window keeps a sane state.
+>       Since the driver uses software aggregation, the clearing of the tx filter
+>       needs to be handled by the driver instead of mac80211 for aggregated frames.
+> 
+>       Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>       Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> 
+> 
+> I'll be happy to test patches, it seems very easy to reproduce on
+> my setup.
+How about this?
 
-My analysis is as follows: "last" is created in line 3096. In line 3256, it is 
-set by the statement "last = (dev->phy.rev < 3) ? 6 : 7;". In line 3258 and 
-3300, it is tested for equality with "nphy->mphase_cal_phase_id". As there is no 
-path around line 3256, it seems to me that last must be assigned a value at 3256 
-and the warning is bogus.
-
-The call in line 3154 to b43_nphy_tx_tone is "error = b43_nphy_tx_tone(dev, 
-freq, 250, true, false);" and does not access last.
-
-If this patch is not correct, then last must be initialized to zero and the 
-older compiler is correct and the newer ones are buggy for not reporting the 
-problem.
-
-Larry
-
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++	else if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
