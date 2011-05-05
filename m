@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15228384.onlinehome-server.info ([87.106.30.177]:45745 "EHLO
-	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab1ECPBL (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34822 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947Ab1EEVPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 11:01:11 -0400
-Date: Tue, 3 May 2011 17:01:05 +0200
-From: Borislav Petkov <bp@amd64.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn,
-	Andreas Herrmann <andreas.herrmann3@amd.com>
-Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
-Message-ID: <20110503150105.GC18648@gere.osrc.amd.com> (sfid-20110503_170143_456723_B50DF694)
-References: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net>
+	Thu, 5 May 2011 17:15:12 -0400
+Message-ID: <4DC3135C.4040601@candelatech.com> (sfid-20110505_231515_992896_565E1EA7)
+Date: Thu, 05 May 2011 14:15:08 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4dc01587.AfSJXmRO80K/pl3f%Larry.Finger@lwfinger.net>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
+ AP mode broke STA association.
+References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org>
+In-Reply-To: <4DC3109F.6080601@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 03, 2011 at 09:47:35AM -0500, Larry Finger wrote:
-> This set of patches introduces a driver for the RTL8192SE PCI devices.
-> 
-> The patches are as follows:
-> 
-> 01/12: Introduce file def.h
-> 02/12: Introduce dynamic management routines dm.c and dm.h
-> 03/12: Introduce firmware routines fw.c and fw.h
-> 04/12: Introduce hardware control routines hw.c and hw.h
-> 05/12: Introduce LED routines led.c and led.h
-> 06/12: Introduce PHY routines phy.c and phy.h
-> 07/12: Introduce register definition header
-> 08/12: Introduce radio control routines
-> 09/12: Introduce main routine (sw.c and sw.h)
-> 10/12: Introduce tables
-> 11/12: Introduce TX/RX routines
-> 12/12: Modify Kconfig and Makefiles to build rtl8192se
+On 05/05/2011 02:03 PM, Felix Fietkau wrote:
+> On 2011-05-05 10:44 PM, Ben Greear wrote:
+>> I bisected the problem I was having with ath9k STA configured for WPA
+>> not being able to authenticate.  I'm using nohwcrypt=1, which may
+>> be why no one else sees it.
 
-I think I have such a device in my Thinkpad:
+>> I'll be happy to test patches, it seems very easy to reproduce on
+>> my setup.
+> How about this?
+>
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
+>   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>   	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+>   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+> +	else if (sdata->vif.type != NL80211_IFTYPE_AP&&
+> +	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+> +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>
+>   	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>   	if (skb->len>  hdrlen + sizeof(rfc1042_header) + 2) {
 
-03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
+Yes, that seems to fix the problem.
 
-I could give them a run soon. Do you have them in a tree somewhere I
-could pull?
+Thanks for the quick fix!
 
-Thanks.
+Ben
 
 -- 
-Regards/Gruss,
-Boris.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Gemeinde Aschheim, Landkreis Muenchen
-Registergericht Muenchen, HRB Nr. 43632
