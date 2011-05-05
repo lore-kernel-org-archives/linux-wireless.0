@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brent.tribalogic.net ([78.86.109.144]:47901 "EHLO
-	summit.brent.tribalogic.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754174Ab1EJJrQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55991 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751489Ab1EETA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 05:47:16 -0400
-Message-ID: <4DC9072D.4030103@colin.guthr.ie> (sfid-20110510_114734_665854_E89D8059)
-Date: Tue, 10 May 2011 10:36:45 +0100
-From: Colin Guthrie <mageia@colin.guthr.ie>
+	Thu, 5 May 2011 15:00:57 -0400
+Date: Thu, 5 May 2011 14:49:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] wireless: Make and use const struct ieee80211_channel
+Message-ID: <20110505184934.GB3005@tuxdriver.com> (sfid-20110505_210122_720305_75B4028E)
+References: <cover.1304054543.git.joe@perches.com>
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	Thomas Backlund <tmb@mageia.org>
-Subject: Re: [Regression] Problem with rfkill on 2.6.38
-References: <ip6j66$o5f$1@dough.gmane.org> <1304930195.3475.17.camel@jlt3.sipsolutions.net> <4DC81FC7.9040503@colin.guthr.ie> <20110509171144.GA7194@srcf.ucam.org>
-In-Reply-To: <20110509171144.GA7194@srcf.ucam.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1304054543.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'Twas brillig, and Matthew Garrett at 09/05/11 18:11 did gyre and gimble:
-> On Mon, May 09, 2011 at 06:09:27PM +0100, Colin Guthrie wrote:
+These patches generated a lot of warnings in net/mac80211.  Did you
+actually build them?
+
+On Thu, Apr 28, 2011 at 10:25:06PM -0700, Joe Perches wrote:
+> Joe Perches (2):
+>   wireless: Make struct ieee80211_channel const where possible
+>   wireless: Use const struct ieee80211_channel where possible
 > 
->> Just a quick (non-compile) followup from my last email... blacklisting
->> the dell-laptop module works around the issue, so I think the commit
->> previously mentioned is indeed the culprit (as it's the only recent
->> commit and does fiddle with the rfkill stuff).
->>
->> Not sure what the best track forward is, but it's certainly a
->> regression, so should probably be fixed or reverted until a more
->> complete fix is found.
+>  drivers/net/wireless/iwlegacy/iwl-4965-lib.c |    2 +-
+>  drivers/net/wireless/iwlegacy/iwl3945-base.c |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |    2 +-
+>  drivers/net/wireless/iwmc3200wifi/cfg80211.c |    4 +-
+>  drivers/net/wireless/libertas/cfg.c          |    2 +-
+>  drivers/net/wireless/mwifiex/cfg80211.c      |    9 ++++---
+>  drivers/net/wireless/orinoco/cfg.c           |    2 +-
+>  drivers/net/wireless/rndis_wlan.c            |    9 ++++---
+>  drivers/net/wireless/wl1251/cmd.c            |    2 +-
+>  drivers/net/wireless/wl1251/cmd.h            |    2 +-
+>  include/net/cfg80211.h                       |   34 +++++++++++++-------------
+>  net/wireless/chan.c                          |   10 ++++----
+>  net/wireless/core.h                          |   14 ++++++----
+>  net/wireless/debugfs.c                       |    2 +-
+>  net/wireless/ibss.c                          |    6 ++--
+>  net/wireless/mlme.c                          |   15 ++++++-----
+>  net/wireless/nl80211.c                       |   31 ++++++++++++-----------
+>  net/wireless/nl80211.h                       |    9 ++++---
+>  net/wireless/reg.c                           |   11 ++++----
+>  net/wireless/reg.h                           |    4 +-
+>  net/wireless/scan.c                          |    6 ++--
+>  net/wireless/wext-sme.c                      |    2 +-
+>  22 files changed, 94 insertions(+), 86 deletions(-)
 > 
-> If you can confirm that with a build then I'll do that.
-
-ACK. Reverting that commit and unblacklisting the dell_laptop module
-restores the previous, working functionality. I've flipped rfkill a few
-times and it's always worked fine.
-
-Many thanks.
-
-Col
-
+> -- 
+> 1.7.5.rc3.dirty
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
 -- 
-
-Colin Guthrie
-mageia(at)colin.guthr.ie
-http://colin.guthr.ie/
-
-Day Job:
-  Tribalogic Limited [http://www.tribalogic.net/]
-Open Source:
-  Mageia Contributor [http://www.mageia.org/]
-  PulseAudio Hacker [http://www.pulseaudio.org/]
-  Trac Hacker [http://trac.edgewall.org/]
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
