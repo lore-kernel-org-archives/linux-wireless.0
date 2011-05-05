@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37936 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932455Ab1ESVcW (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:42841 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160Ab1EEBsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 17:32:22 -0400
-Received: by iwn34 with SMTP id 34so2536803iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:32:22 -0700 (PDT)
+	Wed, 4 May 2011 21:48:10 -0400
+Received: by pwi15 with SMTP id 15so775453pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 18:48:09 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1305396027-5864-1-git-send-email-hauke@hauke-m.de>
-References: <1305396027-5864-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 19 May 2011 14:32:02 -0700
-Message-ID: <BANLkTiku-uFwVEzoSW96+WOUc75niQ6YwA@mail.gmail.com> (sfid-20110519_233226_043277_85816938)
-Subject: Re: [PATCH 1/3] compat-wireless: libertas lbs_pr_<level> was
- converted to pr_<level>
-To: Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19906.621.413439.414030@gargle.gargle.HOWL> (sfid-20110505_034846_227085_8A755104)
+Date: Thu, 5 May 2011 07:20:37 +0530
+To: Daniel Halperin <dhalperi@cs.washington.edu>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: bug: 2 second wireless stall on ath9k link
+In-Reply-To: <19906.158.278401.536454@gargle.gargle.HOWL>
+References: <BANLkTinJK3B_dcX4Qmuo=hC5j654YLLmCA@mail.gmail.com>
+	<19906.158.278401.536454@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 14, 2011 at 11:00 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This adapt changes in commit f3a57fd148a4afd3c38f558c5b44972cb29ea8ba
-> "libertas: Convert lbs_pr_<level> to pr_<level>" to the compat patches.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Sujith wrote:
+> Daniel Halperin wrote:
+> > Hi,
+> > 
+> > I have two identical Dell Inspiron 530n desktops running latest w-t
+> > (07e789c5094735747b3df8a7840f61467575ba9e, master 2011-05-04) on
+> > Ubuntu 10.04.2 LTS. I have uninstalled network-manager from both
+> > devices and, as far as I can tell, no software processes or daemons
+> > interfere with my wireless configurations.
+> > 
+> > The AP machine has an AR9280-based device and an IWL5300 based device.
+> > I blacklist ath9k and iwlagn modules from loading on boot. It is
+> > running latest hostap.git, though I've seen the same issue with older
+> > versions.
+> > 
+> > The client machine has one AR9380-based NIC, one IWL5300-based NIC,
+> > and one RT2800pci NIC. I blacklist ath9k, iwlagn, and rt2800pci from
+> > loading on boot.
+> > 
+> > When I set up the client to connect (using iwconfig essid) to the AP
+> > (no encryption, channel 48 with HT40-) and run iperf, I sometimes see
+> > 2-second drops of the connection. I run iperf to generate elastic TCP
+> > flows that see ~150 Mbps, and in parallel I run ping <AP> -i 0.2.
+> > Here's the ping log:
+> 
+> Your timing couldn't be better. :)
+> https://patchwork.kernel.org/patch/753862/
 
-Cherry picked some hunks as things have changed a bit, sorry for the
-delay and thanks for the patch!
+Hm, is ath9k in AP mode ?
+That fix is meant primarily for station mode.
 
- Luis
+Disabling ANI would be useful to narrow down the issue.
+(Since long calibration is every 30 seconds).
+
+Sujith
