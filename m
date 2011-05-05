@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:53194 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856Ab1EaHUv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52262 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751714Ab1EEQK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 03:20:51 -0400
-Received: by gwaa18 with SMTP id a18so1657974gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 00:20:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1306823717.9366.3.camel@jlt3.sipsolutions.net>
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
-	<1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
-	<1306823717.9366.3.camel@jlt3.sipsolutions.net>
-Date: Tue, 31 May 2011 15:20:50 +0800
-Message-ID: <BANLkTimotXTy3Lk8CH6LZ3KD=f9iWOtJmw@mail.gmail.com> (sfid-20110531_092054_853681_D3D17A71)
-Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 May 2011 12:10:57 -0400
+Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for
+ scheduled scans
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1304610694.12586.404.camel@cumari>
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>
+	 <1304600420-24227-4-git-send-email-coelho@ti.com>
+	 <4DC2B78E.3000205@candelatech.com>
+	 <1304607108.3594.6.camel@jlt3.sipsolutions.net>
+	 <4DC2B941.6@candelatech.com>
+	 <1304607500.3594.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20110505_165557_965402_0D829BAA)  <1304607552.3594.8.camel@jlt3.sipsolutions.net>
+	 <1304610524.12586.403.camel@cumari>  <1304610694.12586.404.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 05 May 2011 18:13:21 +0200
+Message-ID: <1304612001.3594.10.camel@jlt3.sipsolutions.net> (sfid-20110505_181100_061965_C66524F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 May 2011 14:35, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thu, 2011-05-05 at 18:51 +0300, Luciano Coelho wrote:
 
-> Looks like I completely missed this since you hid it in an ath9k
-> patchset. DON'T DO THAT.
->
-> Anyway, John, please revert. This is completely useless. Not only is
-> abusing the CSA stop reason a show-stopper, the whole patch is also just
-> not right, it seems like a workaround around a rate control algorithm
-> that isn't able to do an atomic HT change by itself. Also, it won't even
-> do what you want, there may be packets being processed concurrently
-> while stopping the queue -- calling stop_queues() is no guarantee that
-> no packet will be processed afterwards.
+> > > > But this is a new feature, and a new command, so I don't quite
+> > > > understand why an application would think it can send it without the
+> > > > interval?
+> > > 
+> > > Oh wait, I guess you're right, or this should just be part of patch 1
+> > > instead so we never have the feature without the requirement to have the
+> > > interval given.
+> > 
+> > Yeah, I could squish this with the previous patch (1/3), but I just
+> > reckoned that patch was getting too big, so I decided to make a separate
+> > one.
+> > 
+> > If this whole patch series is taken at the same time, I guess there
+> > won't be backwards compatibility problems (except for bisecting,
+> > maybe?).
+> > 
+> > Anyways, I'll leave it as your choice.  Squishing the patch is easy
+> > enough. ;)
+> 
+> Ah, and one more thought... There's no driver implementing this at this
+> point, so is there anything to really worry about?
 
-I'm unsure of what's going on in mac80211 and ath9k here.
+Yeah, good point, no big deal. We can keep it -- I just didn't even
+understand why Ben thought it would not be compatible but it makes sense
+if you just look at the patch by itself.
 
-FreeBSD handles it very simply - it goes via ath_reset() which drains
-each TX queue, freeing existing packets. Inefficient (ie, packet loss)
-but fine for now.
+johannes
 
-How is ath9k handling the situation where the hardware currently has
-HT40 packets queued in the TX queues and you do a 40->20 change?
-The 40->20 change in the ath9k instance requires reinit'ing of the
-card. What happens to currently queued packets?
-
-Adrian
