@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61858 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab1EJDFg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59348 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755408Ab1EEQWh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 23:05:36 -0400
-Received: by pzk9 with SMTP id 9so2632497pzk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 20:05:35 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 5 May 2011 12:22:37 -0400
+Message-ID: <4DC2CEC0.2030302@candelatech.com> (sfid-20110505_182242_207814_DB190F75)
+Date: Thu, 05 May 2011 09:22:24 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19912.44045.774181.844464@gargle.gargle.HOWL> (sfid-20110510_050541_002429_D73AD2D3)
-Date: Tue, 10 May 2011 08:37:57 +0530
-To: George Nychis <gnychis@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-In-Reply-To: <BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
-	<19908.11423.898062.510184@gargle.gargle.HOWL>
-	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
-	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
-	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for scheduled
+ scans
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>	 <1304600420-24227-4-git-send-email-coelho@ti.com>	 <4DC2B78E.3000205@candelatech.com>	 <1304607108.3594.6.camel@jlt3.sipsolutions.net>	 <4DC2B941.6@candelatech.com>	 <1304607500.3594.7.camel@jlt3.sipsolutions.net>	 (sfid-20110505_165557_965402_0D829BAA)  <1304607552.3594.8.camel@jlt3.sipsolutions.net>	 <1304610524.12586.403.camel@cumari>  <1304610694.12586.404.camel@cumari> <1304612001.3594.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1304612001.3594.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-George Nychis wrote:
-> Is there anything more I can do to help here? I've tried older versions of
-> compat wireless with older firmware and I am having 0 luck.
+On 05/05/2011 09:13 AM, Johannes Berg wrote:
+> On Thu, 2011-05-05 at 18:51 +0300, Luciano Coelho wrote:
+>
+>>>>> But this is a new feature, and a new command, so I don't quite
+>>>>> understand why an application would think it can send it without the
+>>>>> interval?
+>>>>
+>>>> Oh wait, I guess you're right, or this should just be part of patch 1
+>>>> instead so we never have the feature without the requirement to have the
+>>>> interval given.
+>>>
+>>> Yeah, I could squish this with the previous patch (1/3), but I just
+>>> reckoned that patch was getting too big, so I decided to make a separate
+>>> one.
+>>>
+>>> If this whole patch series is taken at the same time, I guess there
+>>> won't be backwards compatibility problems (except for bisecting,
+>>> maybe?).
+>>>
+>>> Anyways, I'll leave it as your choice.  Squishing the patch is easy
+>>> enough. ;)
+>>
+>> Ah, and one more thought... There's no driver implementing this at this
+>> point, so is there anything to really worry about?
+>
+> Yeah, good point, no big deal. We can keep it -- I just didn't even
+> understand why Ben thought it would not be compatible but it makes sense
+> if you just look at the patch by itself.
 
-Nope, nothing from your side. I have asked internally if the card could
-be used by the HTC drivers without any changes, will update once I get an answer.
+I was a bit confused..didn't realize it was a new command that had just
+been added.  I thought someone was adding a required member to the existing
+scan logic.
 
-Sujith
+So, I have no complaints.
+
+Thanks,
+Ben
+
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
