@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:41204 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786Ab1E2UGu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42970 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617Ab1EEVnm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:06:50 -0400
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh01-2.mail.saunalahti.fi (Postfix) with SMTP id 772808C65E
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:06:49 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 609581C6385
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:06:48 +0300 (EEST)
-Subject: [RFC PATCH 23/27] mac80211: rename ieee80211_sdata_state_bits to
-	mac80211_sdata_state_bits
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 29 May 2011 23:06:47 +0300
-Message-ID: <20110529200647.16479.17618.stgit@localhost6.localdomain6> (sfid-20110529_220653_595980_D4FAE6E0)
-In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+	Thu, 5 May 2011 17:43:42 -0400
+Message-ID: <4DC31A0B.4040409@candelatech.com> (sfid-20110505_234346_183767_8EFE4356)
+Date: Thu, 05 May 2011 14:43:39 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
+ AP mode broke STA association.
+References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com>
+In-Reply-To: <4DC3135C.4040601@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/mac80211_i.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On 05/05/2011 02:15 PM, Ben Greear wrote:
+> On 05/05/2011 02:03 PM, Felix Fietkau wrote:
+>> On 2011-05-05 10:44 PM, Ben Greear wrote:
+>>> I bisected the problem I was having with ath9k STA configured for WPA
+>>> not being able to authenticate. I'm using nohwcrypt=1, which may
+>>> be why no one else sees it.
+>
+>>> I'll be happy to test patches, it seems very easy to reproduce on
+>>> my setup.
+>> How about this?
+>>
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
+>> info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>> else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+>> info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>> + else if (sdata->vif.type != NL80211_IFTYPE_AP&&
+>> + sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+>> + info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>>
+>> hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>> if (skb->len> hdrlen + sizeof(rfc1042_header) + 2) {
+>
+> Yes, that seems to fix the problem.
+>
+> Thanks for the quick fix!
 
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index 5ae43dc..dfc3f77 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -524,14 +524,14 @@ enum mac80211_sub_if_data_flags {
- };
- 
- /**
-- * enum ieee80211_sdata_state_bits - virtual interface state bits
-+ * enum mac80211_sdata_state_bits - virtual interface state bits
-  * @SDATA_STATE_RUNNING: virtual interface is up & running; this
-  *	mirrors netif_running() but is separate for interface type
-  *	change handling while the interface is up
-  * @SDATA_STATE_OFFCHANNEL: This interface is currently in offchannel
-  *	mode, so queues are stopped
-  */
--enum ieee80211_sdata_state_bits {
-+enum mac80211_sdata_state_bits {
- 	SDATA_STATE_RUNNING,
- 	SDATA_STATE_OFFCHANNEL,
- };
+Well, that appeared to fix the problem on -rc1, but when I go
+back to -rc6 and apply that patch, it still doesn't work.
+
+Might be some other issue though...
+
+Are you able to get STA to associate & athenticate on latest wireless-testing?
+
+Thanks,
+Ben
+
+>
+> Ben
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
