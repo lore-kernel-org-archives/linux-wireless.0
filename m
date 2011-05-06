@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:48991 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933678Ab1ESXNr (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:52259 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751564Ab1EFWPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 19:13:47 -0400
-Received: by qyg14 with SMTP id 14so1822330qyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 16:13:47 -0700 (PDT)
-MIME-Version: 1.0
-From: Matteo Croce <matteo@openwrt.org>
-Date: Fri, 20 May 2011 01:13:07 +0200
-Message-ID: <BANLkTikcBcobbXzjGv4UtD952kHtrSsvNw@mail.gmail.com> (sfid-20110520_011406_423246_1F00C156)
-Subject: [PATCH 2/2]: mac80211: report correct MCS information in tx status info
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 May 2011 18:15:55 -0400
+Date: Fri, 6 May 2011 15:15:43 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: <akpm@linux-foundation.org>, <mingo@redhat.com>,
+	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<allen.kao@atheros.com>, <roman.gezikov@atheros.com>,
+	<joonas.viskari@atheros.com>
+Subject: Re: [RFC 1/2] misc: add Atheros ar1520 GPS support
+Message-Id: <20110506151543.c96ece07.rdunlap@xenotime.net> (sfid-20110507_001613_672500_B2B1B7BF)
+In-Reply-To: <1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
+References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
+	<1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report correct MCS information in tx status info
+On Fri, 6 May 2011 15:09:39 -0700 Luis R. Rodriguez wrote:
 
-Signed-off-by: Matteo Croce <matteo@openwrt.org>
+> From: Allen Kao <allen.kao@atheros.com>
+> 
+> This adds support for the Atheros ar1520 GPS device.
+> 
+> Cc: Roman Gezikov <roman.gezikov@atheros.com>
+> Cc: Joonas Viskari <joonas.viskari@atheros.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: "H. Peter Anvin" <hpa@zytor.com>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: x86@kernel.org
+> Signed-off-by: Allen Kao <allen.kao@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/misc/Kconfig   |   10 ++
+>  drivers/misc/Makefile  |    1 +
+>  drivers/misc/ar1520.c  |  406 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/ar1520.h |   49 ++++++
+>  4 files changed, 466 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/misc/ar1520.c
+>  create mode 100644 include/linux/ar1520.h
+> 
+> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+> index 4e007c6..7108214 100644
+> --- a/drivers/misc/Kconfig
+> +++ b/drivers/misc/Kconfig
+> @@ -379,6 +379,16 @@ config HMC6352
+>  	  This driver provides support for the Honeywell HMC6352 compass,
+>  	  providing configuration and heading data via sysfs.
+>  
+> +config AR1520
+> +	tristate "Atheros AR1520 support"
+> +	depends on I2C
 
---- a/net/mac80211/status.c	2011-05-20 00:22:56.220640264 +0200
-+++ b/net/mac80211/status.c	2011-05-20 00:24:14.010640270 +0200
-@@ -405,6 +405,20 @@
- 	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
- 		rthdr->rate = sband->bitrates[
- 				info->status.rates[0].idx].bitrate / 5;
-+	/* HT rates */
-+	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
-+		rthdr->hdr.it_present |=
-+				cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
-+		rthdr->rate = 0;
-+		rthdr->ht_known =	IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+					IEEE80211_RADIOTAP_MCS_HAVE_MCS |
-+					IEEE80211_RADIOTAP_MCS_HAVE_GI;
-+		rthdr->ht_mcs = info->status.rates[0].idx;
-+		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
-+		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
-+			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
-+	}
+Looks like it also depends on GPIOLIB.
 
- 	/* for now report the total retry_count */
- 	rthdr->data_retries = retry_count;
+> +	help
+> +	  If you say yes here you get support for the Atheros
+> +	  AR1520 GPS chip.
+> +
+> +	  To compile this driver as a module, choose M here: the
+> +	  module will be called ar1520. If unsure, say N here.
+> +
+>  config EP93XX_PWM
+>  	tristate "EP93xx PWM support"
+>  	depends on ARCH_EP93XX
+
+
+
++#define AR1520_IOCTL_MAGIC      0xc2
+
+^^^^^ needs to be added to Documentation/ioctl/ioctl-number.txt, please.
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
