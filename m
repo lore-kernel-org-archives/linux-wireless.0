@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:47536 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755153Ab1ECU6J (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:52707 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755160Ab1EFTCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 16:58:09 -0400
-Message-ID: <4DC06BF3.6070208@lwfinger.net> (sfid-20110503_225831_030183_D70514C6)
-Date: Tue, 03 May 2011 15:56:19 -0500
+	Fri, 6 May 2011 15:02:49 -0400
+Date: Fri, 06 May 2011 14:02:48 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192se: Remove need to disable ASPM
+Message-ID: <4dc445d8.qNuBQj9x5elLlNec%Larry.Finger@lwfinger.net> (sfid-20110506_210258_965537_13E1F01A)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Walter Goldens <goldenstranger@yahoo.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
-In-Reply-To: <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 03:38 PM, Gábor Stefanik wrote:
-> 2011/5/3 Larry Finger<Larry.Finger@lwfinger.net>:
->> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
->>>
->>> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
->>>   wrote:
->>>>
->>>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
->>>>>
->>>>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
->>>>>
->>>>> Any estimates on the *SU driver? :)
->>>>
->>>> Now that rtl8192se is submitted, I will start work on the driver for the
->>>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
->>>> priority
->>>> because r8712u from staging handles those devices. It is not based on
->>>> mac80211, but it works.
->>>
->>> Again, may I remind you that the preferred behavior in the Linux world
->>> is release-early, release-often? :-)
->>
->> That I know, but "code first" still applies. If the comparison between
->> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties, roughly
->> half of this driver will be shared. In addition, we do have all the USB
->> plumbing in place, but we are still talking about a few thousand lines of
->> code. At last contact, Realtek has no interest in this project, thus I will
->> be on my own.
->>
->> Larry
->
-> I do not mean immediately submitting everything for inclusion -
-> however, a publicly accessible Git tree would be nice. A non-rtlwifi,
-> badly coded but functional and GPL-compatible driver is still better
-> than having to use ndiswrapper/load a binary blob.
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-We are in better shape than having to use ndiswrapper or any non-GPL code. The 
-r8712u driver in staging is for the RTL8192SU, and it works perfectly well. It 
-just doesn't use mac80211, which is why it needs to be replaced.
+When this driver was initially submitted, the system would crash unless
+ASPM was disabled. This problem has been fixed.
+
+This patch also adds a printk that outputs the name of the firmware
+file that is used.
+
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+This is 2.6.40 material.
 
 Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -1611,6 +1611,7 @@ static bool _rtl_pci_find_adapter(struct
+ 	u16 irqline;
+ 	u8 tmp;
+ 
++	pcipriv->ndis_adapter.pcibridge_vendor = PCI_BRIDGE_VENDOR_UNKNOWN;
+ 	venderid = pdev->vendor;
+ 	deviceid = pdev->device;
+ 	pci_read_config_byte(pdev, 0x8, &revisionid);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -58,7 +58,7 @@ static void rtl92s_init_aspm_vars(struct
+ 	 * 4 - Always Enable ASPM without Clock Req.
+ 	 * set defult to RTL8192CE:3 RTL8192E:2
+ 	 * */
+-	rtlpci->const_pci_aspm = 0; /* changed from 2 due to crashes */
++	rtlpci->const_pci_aspm = 2; /* changed from 2 due to crashes */
+ 
+ 	/*Setting for PCI-E device */
+ 	rtlpci->const_devicepci_aspm_setting = 0x03;
+@@ -183,6 +183,8 @@ static int rtl92s_init_sw_vars(struct ie
+ 		return 1;
+ 	}
+ 
++	printk(KERN_INFO "rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE\n"
++	       "           Loading firmware %s\n", rtlpriv->cfg->fw_name);
+ 	/* request fw */
+ 	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
+ 			rtlpriv->io.dev);
+
