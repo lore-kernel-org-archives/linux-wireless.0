@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:43042 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754122Ab1EBJvD (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46117 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753171Ab1EFQ3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 05:51:03 -0400
-Received: by mail-ew0-f47.google.com with SMTP id 5so1672990ewy.6
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 02:51:01 -0700 (PDT)
-Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com>
-References: <1303849311-8817-1-git-send-email-arik@wizery.com>
-	 <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com>
-	 <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 May 2011 12:50:55 +0300
-Message-ID: <1304329855.12586.234.camel@cumari> (sfid-20110502_115107_585989_1F7E51DA)
-Mime-Version: 1.0
+	Fri, 6 May 2011 12:29:16 -0400
+Message-ID: <4DC421D8.3050403@candelatech.com> (sfid-20110506_182919_778631_E61F875B)
+Date: Fri, 06 May 2011 09:29:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
+ AP mode broke STA association.
+References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com> <4DC31A0B.4040409@candelatech.com> <4DC31C91.1030303@openwrt.org> <4DC33DE2.1070508@candelatech.com> <4DC34465.6090108@openwrt.org>
+In-Reply-To: <4DC34465.6090108@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John and Arik,
+On 05/05/2011 05:44 PM, Felix Fietkau wrote:
 
-On Sat, 2011-04-30 at 00:09 +0300, Arik Nemtsov wrote:
-> Hey John,
-> 
-> Looking at the latest git, it seems you've picked up this patch
-> (commit 47684808fd89d6809c0886e06f8ac324252499d8).
-> This is unfortunate, since there's currently a FW bug that will cause
-> many disconnections in STA mode with this patch.
-> 
-> How would we go about reverting this?
+> This should fix the second issue:
+>
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
+>   	struct ath_node *an = (struct ath_node *) sta->drv_priv;
+>   	struct ieee80211_key_conf ps_key = { };
+>
+> +	if (vif->opmode != NL80211_IFTYPE_AP&&
+> +	    vif->opmode != NL80211_IFTYPE_AP_VLAN)
+> +		return 0;
+> +
+>   	ath_node_attach(sc, sta);
+>   	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
 
-I have reverted this patch in the wl12xx.git tree.  This required a bit
-of merging and we needed the revert in order to proceed with our tests.
+This doesn't compile..appears there is no vif->opmode member?
 
-So, John, please don't revert this in your tree.  My revert will come in
-my next pull-request which will come in a couple of days, after our
-internal test round is done.
+Also, if you are trying to compare the hardware opmode, I'm not
+sure that would be correct since you can be in AP mode and still
+have stations.  Maybe I'm just confused though...
 
-Thanks!
+Thanks,
+Ben
 
 -- 
-Cheers,
-Luca.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
