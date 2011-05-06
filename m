@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61591 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753521Ab1EEKIX (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:36586 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470Ab1EFSB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 06:08:23 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 24so617784eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2011 03:08:22 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43legacy: drop invalid IMCFGLO workaround
-Date: Thu,  5 May 2011 12:46:04 +0200
-Message-Id: <1304592364-5075-1-git-send-email-zajec5@gmail.com> (sfid-20110505_120826_656744_C3B2929C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 May 2011 14:01:57 -0400
+Received: by gxk21 with SMTP id 21so1297715gxk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 11:01:56 -0700 (PDT)
+Date: Fri, 6 May 2011 14:01:52 -0400
+From: Tom Horsley <horsley1953@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: r8192cu AP mode?
+Message-ID: <20110506140152.60c9da93@tomh> (sfid-20110506_200200_648337_7CEF8536)
+In-Reply-To: <4DC4306F.20104@lwfinger.net>
+References: <20110506081356.08ac93a8@tomh>
+	<4DC40CEB.5010107@lwfinger.net>
+	<20110506131612.7a6d40cb@tomh>
+	<4DC4306F.20104@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were performing it on wrong core, it was outdated and is already
-implemented in ssb.
+On Fri, 06 May 2011 12:31:27 -0500
+Larry Finger wrote:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43legacy/main.c |   32 --------------------------------
- 1 files changed, 0 insertions(+), 32 deletions(-)
+> What does the output of dmesg say?
+> 
+> If could be as simple as your compiler is a different version.
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index c7fd73e..2162663 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3104,37 +3104,6 @@ static void setup_struct_wldev_for_init(struct b43legacy_wldev *dev)
- 	memset(&dev->noisecalc, 0, sizeof(dev->noisecalc));
- }
- 
--static void b43legacy_imcfglo_timeouts_workaround(struct b43legacy_wldev *dev)
--{
--#ifdef CONFIG_SSB_DRIVER_PCICORE
--	struct ssb_bus *bus = dev->dev->bus;
--	u32 tmp;
--
--	if (bus->pcicore.dev &&
--	    bus->pcicore.dev->id.coreid == SSB_DEV_PCI &&
--	    bus->pcicore.dev->id.revision <= 5) {
--		/* IMCFGLO timeouts workaround. */
--		tmp = ssb_read32(dev->dev, SSB_IMCFGLO);
--		switch (bus->bustype) {
--		case SSB_BUSTYPE_PCI:
--		case SSB_BUSTYPE_PCMCIA:
--			tmp &= ~SSB_IMCFGLO_REQTO;
--			tmp &= ~SSB_IMCFGLO_SERTO;
--			tmp |= 0x32;
--			break;
--		case SSB_BUSTYPE_SSB:
--			tmp &= ~SSB_IMCFGLO_REQTO;
--			tmp &= ~SSB_IMCFGLO_SERTO;
--			tmp |= 0x53;
--			break;
--		default:
--			break;
--		}
--		ssb_write32(dev->dev, SSB_IMCFGLO, tmp);
--	}
--#endif /* CONFIG_SSB_DRIVER_PCICORE */
--}
--
- static void b43legacy_set_synth_pu_delay(struct b43legacy_wldev *dev,
- 					  bool idle) {
- 	u16 pu_delay = 1050;
-@@ -3278,7 +3247,6 @@ static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)
- 	/* Enable IRQ routing to this device. */
- 	ssb_pcicore_dev_irqvecs_enable(&bus->pcicore, dev->dev);
- 
--	b43legacy_imcfglo_timeouts_workaround(dev);
- 	prepare_phy_data_for_init(dev);
- 	b43legacy_phy_calibrate(dev);
- 	err = b43legacy_chip_init(dev);
--- 
-1.7.3.4
+I actually figured that out as well: In the messages file
+I saw these errors:
 
+May  6 13:12:57 tomh kernel: [ 1106.442233] compat: exports duplicate symbol vzalloc (owned by kernel)
+
+I removed the definition of vzalloc (which is maybe defined
+by fedora in some backported patch in their kernel?) and I can now load
+the modules and even try to connect, but I keep getting
+this sequence:
+
+May  6 13:40:11 tomh hostapd: wlan0: STA 60:a1:0a:c7:af:01 IEEE 802.11: authenticated
+May  6 13:40:11 tomh hostapd: wlan0: STA 60:a1:0a:c7:af:01 IEEE 802.11: associated (aid 1)
+May  6 13:40:14 tomh hostapd: wlan0: STA 60:a1:0a:c7:af:01 IEEE 802.11: deauthenticated due to local deauth request
+
+So I haven't gotten far enough to worry about DHCP or
+NAT or anything yet - I only stay connected for a second. Perhaps
+I should first try something less complicated than WPA2
+authentication, but I won't get a chance to fool with this
+more till tomorrow probably. It's looking a lot better now
+that it did earlier though.
+
+Also, when running hostapd -dd, I get an endless stream of
+these messages:
+
+Unknown Broadcom information element ignored (type=52 len=26)
+
+don't know if that actually matters to anyone.
