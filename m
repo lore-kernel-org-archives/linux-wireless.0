@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:56755 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932349Ab1ESV2a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 17:28:30 -0400
-Date: Thu, 19 May 2011 16:28:14 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k regression associating with APs in 2.6.38
-Message-ID: <20110519212814.GA16139@thinkpad-t410> (sfid-20110519_232850_066634_D584FBA8)
-References: <20110504153819.GA4551@thinkpad-t410>
- <20110504172716.GC18541@tuxdriver.com>
- <20110504192639.GB4551@thinkpad-t410>
- <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
- <20110505135207.GA13727@thinkpad-t410>
- <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
- <20110509070230.GA20458@thinkpad-t410>
- <20110517165720.GB9258@thinkpad-t410>
- <BANLkTi=8ZRUVWn3FLAMtPh=4yY1F0k6i9w@mail.gmail.com>
- <20110517185032.GC9258@thinkpad-t410>
+Received: from smtp.nexicom.net ([216.168.96.13]:34080 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751902Ab1EFFgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 01:36:02 -0400
+Received: from mail.lockie.ca (dyn-dsl-mb-66-79-239-161.nexicom.net [66.79.239.161])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p465Qq6r015772
+	for <linux-wireless@vger.kernel.org>; Fri, 6 May 2011 01:26:55 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id F29961E015F
+	for <linux-wireless@vger.kernel.org>; Fri,  6 May 2011 01:26:51 -0400 (EDT)
+Message-ID: <4DC386BB.4010106@lockie.ca> (sfid-20110506_073608_690055_DB9CAF18)
+Date: Fri, 06 May 2011 01:27:23 -0400
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110517185032.GC9258@thinkpad-t410>
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: scan not working or limited
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 17, 2011 at 01:50:32PM -0500, Seth Forshee wrote:
-> On Tue, May 17, 2011 at 08:14:34PM +0300, Nick Kossifidis wrote:
-> > 2011/5/17 Seth Forshee <seth.forshee@canonical.com>:
-> > > On Mon, May 09, 2011 at 09:02:30AM +0200, Seth Forshee wrote:
-> > >> On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
-> > >> > Hmm I don't see any errors from reset/phy code, can you disable
-> > >> > Network Manager/wpa-supplicant and test connection on an open network
-> > >> > using iw ? It 'll give us a better picture...
-> > >> >
-> > >> > If iw doesn't return any scan results we are probably hitting a PHY/RF
-> > >> > error specific to your device (not all vendors follow the reference
-> > >> > design). Maybe we should follow a blacklist/whitelist approach for
-> > >> > this feature.
-> > >>
-> > >> I got the results back from my tester. He was able to get scan results,
-> > >> but it took multiple tries and the direct probe failures appear in the
-> > >> log. He didn't enable ATH5K_DEBUG_RESET this time; let me know if you
-> > >> need that and I'll request he retest with the extra debug logs enabled.
-> > >
-> > > I got some more feedback. Most of the time iw does not get scan results,
-> > > but even when it does connecting to the AP isn't always successful. The
-> > > tester did note that he doesn't seem to have any trouble if his machine
-> > > is within a few feet of his AP. Let me know if you'd like something else
-> > > tested.
-> > >
-> > > I noticed that bugzilla #31922 (ath5k: Decreased throughput in IBSS or
-> > > 802.11n mode) is also fixed by reverting 8aec7af9. It seems like the
-> > > synth-only channel changes are resulting in poor connection quality.
-> > > Maybe that patch needs to be reverted?
-> > >
-> > > Thanks,
-> > > Seth
-> > >
-> > >
-> > 
-> > http://www.kernel.org/pub/linux/kernel/people/mickflemm/01-fast-chan-switch-modparm
-> 
-> That looks like it should do the trick. I'll request some testing with
-> it and let you know how it goes. Thanks!
 
-I've received feedback from a number of testers that the patch fixes the
-wireless problems they've been seeing since upgrading to 2.6.38, so this
-fix looks good from my perspective.
+I get the errors:
+ath: Failed to stop TX DMA in 100 msec after killing last frame
+ath: Failed to stop TX DMA!
+on all the kernels that my scans don't work right.
 
-Thanks,
-Seth
+I did:
+$ git clone
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+$ cd linux-2.6.37.y
+$ git bisect start
+$ git bisect good v2.6.36
+$ git bisect bad v2.6.37.6
+It said 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+
+I typed that number. :-(
+How do I make git print it again?
+How do I find the details of that commit?
+How do I reverse what that commit did?
 
