@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:60206 "EHLO bues.ch"
+Received: from mail.atheros.com ([12.19.149.2]:13962 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815Ab1EMNsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:48:31 -0400
-Subject: Re: [PATCH] ssb: fix pcicore build breakage
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>
-In-Reply-To: <1305294214.12573.3.camel@maggie>
-References: <20110512161914.e16be4d3.randy.dunlap@oracle.com>
-	 <1305293189-20605-1-git-send-email-linville@tuxdriver.com>
-	 <1305294214.12573.3.camel@maggie>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 15:48:25 +0200
-Message-ID: <1305294505.12573.6.camel@maggie> (sfid-20110513_154834_161522_14751A4C)
-Mime-Version: 1.0
+	id S1751312Ab1EFWAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 18:00:19 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <akpm@linux-foundation.org>, <mingo@redhat.com>,
+	<tglx@linutronix.de>, <hpa@zytor.com>
+CC: <x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <allen.kao@atheros.com>,
+	<roman.gezikov@atheros.com>, <joonas.viskari@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] x86: fix mrst sparse complaints
+Date: Fri, 6 May 2011 15:00:09 -0700
+Message-ID: <1304719209-26913-1-git-send-email-lrodriguez@atheros.com> (sfid-20110507_000039_275404_BAFDC160)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 15:43 +0200, Michael Büsch wrote: 
-> On Fri, 2011-05-13 at 09:26 -0400, John W. Linville wrote: 
-> > drivers/ssb/main.c:1336: error: 'SSB_PCICORE_BCAST_ADDR' undeclared (first use in this function)
-> > drivers/ssb/main.c:1337: error: 'SSB_PCICORE_BCAST_DATA' undeclared (first use in this function)
-> > drivers/ssb/main.c:1349: error: 'struct ssb_pcicore' has no member named 'dev'
-> > 
-> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/ssb/main.c |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-> > index ee2937c..a53fc4d 100644
-> > --- a/drivers/ssb/main.c
-> > +++ b/drivers/ssb/main.c
-> > @@ -1332,6 +1332,7 @@ EXPORT_SYMBOL(ssb_bus_powerup);
-> >  static void ssb_broadcast_value(struct ssb_device *dev,
-> >  				u32 address, u32 data)
-> >  {
-> > +#ifdef CONFIG_SSB_DRIVER_PCICORE
-> >  	/* This is used for both, PCI and ChipCommon core, so be careful. */
-> >  	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
-> >  	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
-> > @@ -1340,6 +1341,7 @@ static void ssb_broadcast_value(struct ssb_device *dev,
-> >  	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
-> >  	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
-> >  	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
-> > +#endif
-> >  }
-> >  
-> >  void ssb_commit_settings(struct ssb_bus *bus)
-> 
-> This clearly is incorrect. Read the comment, please.
+This fixes these few sparse complaints:
 
-I think we should probably have two ssb_broadcast_value functions. One
-for PCI core and one for chipcommon. That seems the best solution, even
-if the constants happen to be the same. It's only a few lines of code.
-(If the compiler is clever enough, it might probably be able to optimize
-it out anyway).
+  CHECK   arch/x86/platform/mrst/mrst.c
+arch/x86/platform/mrst/mrst.c:197:13: warning: symbol 'mrst_time_init' was not declared. Should it be static?
+arch/x86/platform/mrst/mrst.c:219:16: warning: symbol 'mrst_arch_setup' was not declared. Should it be static?
+  CC      arch/x86/platform/mrst/mrst.o
 
+Cc: Roman Gezikov <roman.gezikov@atheros.com>
+Cc: Joonas Viskari <joonas.viskari@atheros.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Allen Kao <allen.kao@atheros.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: x86@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ arch/x86/platform/mrst/mrst.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/platform/mrst/mrst.c b/arch/x86/platform/mrst/mrst.c
+index 275dbc1..7000e74 100644
+--- a/arch/x86/platform/mrst/mrst.c
++++ b/arch/x86/platform/mrst/mrst.c
+@@ -194,7 +194,7 @@ static unsigned long __init mrst_calibrate_tsc(void)
+ 	return 0;
+ }
+ 
+-void __init mrst_time_init(void)
++static void __init mrst_time_init(void)
+ {
+ 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
+ 	switch (mrst_timer_options) {
+@@ -216,7 +216,7 @@ void __init mrst_time_init(void)
+ 	apbt_time_init();
+ }
+ 
+-void __cpuinit mrst_arch_setup(void)
++static void __cpuinit mrst_arch_setup(void)
+ {
+ 	if (boot_cpu_data.x86 == 6 && boot_cpu_data.x86_model == 0x27)
+ 		__mrst_cpu_chip = MRST_CPU_CHIP_PENWELL;
 -- 
-Greetings Michael.
+1.7.4.15.g7811d
 
