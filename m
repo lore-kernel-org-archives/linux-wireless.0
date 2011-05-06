@@ -1,97 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47072 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753396Ab1ECSAI (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:62297 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab1EFRbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 14:00:08 -0400
-Message-ID: <4DC042A5.9050806@candelatech.com> (sfid-20110503_200012_799181_7B684E11)
-Date: Tue, 03 May 2011 11:00:05 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 6 May 2011 13:31:32 -0400
+Received: by pvg12 with SMTP id 12so1517300pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 10:31:31 -0700 (PDT)
+Message-ID: <4DC4306F.20104@lwfinger.net> (sfid-20110506_193135_794436_29E8C830)
+Date: Fri, 06 May 2011 12:31:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com> <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-In-Reply-To: <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
+To: Tom Horsley <horsley1953@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8192cu AP mode?
+References: <20110506081356.08ac93a8@tomh>	<4DC40CEB.5010107@lwfinger.net> <20110506131612.7a6d40cb@tomh>
+In-Reply-To: <20110506131612.7a6d40cb@tomh>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2011 11:13 PM, Adrian Chadd wrote:
-> The AR9160/SR71-A should be supported by ath9k. They're just 2x2
-> stream devices using 3 radios.
+On 05/06/2011 12:16 PM, Tom Horsley wrote:
+> On Fri, 06 May 2011 09:59:55 -0500
+> Larry Finger wrote:
 >
-> What do you mean by "not even supported" ?
+>> If not, you can always get the compat-wireless
+>> sources from http://wireless.kernel.org/en/users/Download.
 >
-> If the SR71-A isn't working for you then please email the ath9k list
-> and I'll take a look. I have a bunch of SR71-A hardware here to tinker
-> with.
-
-Here's the lspci for the SR71-A that doesn't work with ath9k:
-
-03:00.0 Ethernet controller: Atheros Communications Inc. AR5008 Wireless Network Adapter (rev 01)
-	Subsystem: Atheros Communications Inc. Device ee1c
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 64, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 15
-	Region 0: Memory at febf0000 (32-bit, non-prefetchable) [size=64K]
-	Capabilities: [40] #80 [0000]
-	Capabilities: [80] #00 [0000]
-
-The only visual difference we saw is that there is a chip labeled AR9160-AC1E
-on the one above, and the ones that work have instead:  AR9160-BC1A
-
-The SR71-A that *does* work, works very well for us.  The problem is just that we
-cannot be sure of what we are receiving when we order stuff because the name
-is the same for both NICs.
-
-Thanks,
-Ben
-
-
+> Well, I worked around the compile errors by reversing the
+> patch that inserted the kfree_rcu calls, but now when I try
+> to load the modules I get this:
 >
+> [root@tomh ~]# modprobe rtl8192cu
+> WARNING: Error inserting rfkill (/lib/modules/2.6.35.12-90.fc14.x86_64/kernel/net/rfkill/rfkill.ko): Invalid module format
+> WARNING: Error inserting cfg80211 (/lib/modules/2.6.35.12-90.fc14.x86_64/updates/net/wireless/cfg80211.ko): Invalid module format
+> WARNING: Error inserting mac80211 (/lib/modules/2.6.35.12-90.fc14.x86_64/updates/net/mac80211/mac80211.ko): Invalid module format
+> WARNING: Error inserting rtlwifi (/lib/modules/2.6.35.12-90.fc14.x86_64/updates/drivers/net/wireless/rtlwifi/rtlwifi.ko): Invalid module format
+> WARNING: Error inserting rtl8192c_common (/lib/modules/2.6.35.12-90.fc14.x86_64/updates/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-common.ko): Invalid module format
+> FATAL: Error inserting rtl8192cu (/lib/modules/2.6.35.12-90.fc14.x86_64/updates/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko): Invalid module format
 >
->
->
-> Adrian
->
-> On 3 May 2011 04:51, Ben Greear<greearb@candelatech.com>  wrote:
->> Hello!
->>
->> We are trying to find some Atheros NICs that support 3x3
->> MIMO, but we are having a hard time.
->>
->> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
->> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
->> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
->> hard to order that specific version.
->>
->> Sparklan seems to make one based on AR9380, but they are not
->> in stock any place we could find.
->>
->> Anyone know of any others that are available to the public
->> in small quantities?
->>
->> Thanks,
->> Ben
->>
->> --
->> Ben Greear<greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I guess 2.6.35 is just too old or something.
 
+What does the output of dmesg say?
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+If could be as simple as your compiler is a different version.
 
+Larry
