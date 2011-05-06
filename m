@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36273 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751325Ab1EHMsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 08:48:24 -0400
-Message-ID: <4DC6910F.2020008@hauke-m.de> (sfid-20110508_144848_146804_57CF6B76)
-Date: Sun, 08 May 2011 14:48:15 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:58930 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755213Ab1EFJFt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 05:05:49 -0400
+Received: by qyg14 with SMTP id 14so2333921qyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 02:05:48 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
+In-Reply-To: <1304672497.22936.4.camel@maggie>
+References: <1304635505-9824-1-git-send-email-zajec5@gmail.com>
+	<1304672497.22936.4.camel@maggie>
+Date: Fri, 6 May 2011 11:05:48 +0200
+Message-ID: <BANLkTi=4SGkWvFCMxMiqBzAsfSXexDO-cQ@mail.gmail.com> (sfid-20110506_110553_181134_5DA68EFC)
+Subject: Re: [PATCH] ssb: move ssb_commit_settings and export it
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?B?TWljaGFl?= =?UTF-8?B?bCBCw7xzY2g=?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
-.....
-> --- /dev/null
-> +++ b/drivers/bcma/bcma_private.h
-.....
-> +
-> +#define BCMA_ADDR_BASE		0x18000000
-> +#define BCMA_WRAP_BASE		0x18100000
-> +
-......
-> --- /dev/null
-> +++ b/drivers/bcma/scan.h
-> @@ -0,0 +1,56 @@
-> +#ifndef BCMA_SCAN_H_
-> +#define BCMA_SCAN_H_
-> +
-> +#define BCMA_ADDR_BASE		0x18000000
-> +#define BCMA_WRAP_BASE		0x18100000
-> +
-.....
+2011/5/6 Michael Büsch <m@bues.ch>:
+> On Fri, 2011-05-06 at 00:45 +0200, Rafał Miłecki wrote:
+>> +EXPORT_SYMBOL(ssb_commit_settings);
+>
+> Don't add EXPORT_SYMBOLs, unless you also add an actual
+> user within the same patch series.
 
-While graping through the code I found this. BCMA_ADDR_BASE and
-BCMA_WRAP_BASE are defined twice.
+OK, John please drop this. I'll resubmit this in series with b43 patch
+when it's ready.
 
-Why are some constants defined in purpose specific headers in
-drivers/bcma/*.h like drivers/bcma/scan.h and some in
-drivers/bcma/bcma_private.h and other in include/linux/bcma/bcma_regs.h ?
-
-Hauke
+-- 
+Rafał
