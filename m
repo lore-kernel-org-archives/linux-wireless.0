@@ -1,28 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm14-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.164]:37166 "HELO
-	nm14-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754062Ab1EJOoj (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60912 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756720Ab1EFQyd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 10:44:39 -0400
-Message-ID: <684215.94213.qm@web161615.mail.bf1.yahoo.com> (sfid-20110510_164443_031423_1F3195BB)
-Date: Tue, 10 May 2011 07:44:38 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: [PATCH 3/3] compat-wireless: enable RT33XX and RT53XX support.
-To: mcgrof@gmail.com, lrodriguez@atheros.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-In-Reply-To: <1305025896-12586-3-git-send-email-hauke@hauke-m.de>
+	Fri, 6 May 2011 12:54:33 -0400
+Message-ID: <4DC427C6.2080407@candelatech.com> (sfid-20110506_185444_680726_5662579A)
+Date: Fri, 06 May 2011 09:54:30 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
+ AP mode broke STA association.
+References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com> <4DC31A0B.4040409@candelatech.com> <4DC31C91.1030303@openwrt.org> <4DC33DE2.1070508@candelatech.com> <4DC34465.6090108@openwrt.org> <4DC421D8.3050403@candelatech.com> <4DC42707.2080503@openwrt.org>
+In-Reply-To: <4DC42707.2080503@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/06/2011 09:51 AM, Felix Fietkau wrote:
+> On 2011-05-06 6:29 PM, Ben Greear wrote:
+>> On 05/05/2011 05:44 PM, Felix Fietkau wrote:
+>>
+>>>   This should fix the second issue:
+>>>
+>>>   --- a/drivers/net/wireless/ath/ath9k/main.c
+>>>   +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>>   @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
+>>>     	struct ath_node *an = (struct ath_node *) sta->drv_priv;
+>>>     	struct ieee80211_key_conf ps_key = { };
+>>>
+>>>   +	if (vif->opmode != NL80211_IFTYPE_AP&&
+>>>   +	    vif->opmode != NL80211_IFTYPE_AP_VLAN)
+>>>   +		return 0;
+>>>   +
+>>>     	ath_node_attach(sc, sta);
+>>>     	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
+>>
+>> This doesn't compile..appears there is no vif->opmode member?
+>>
+>> Also, if you are trying to compare the hardware opmode, I'm not
+>> sure that would be correct since you can be in AP mode and still
+>> have stations.  Maybe I'm just confused though...
+> I sent the wrong version of the patch, forgot to refresh it.
+> Here's the correct one:
+>
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
+>   	struct ath_node *an = (struct ath_node *) sta->drv_priv;
+>   	struct ieee80211_key_conf ps_key = { };
+>
+> +	if (vif->type != NL80211_IFTYPE_AP&&
+> +	    vif->type != NL80211_IFTYPE_AP_VLAN)
+> +		return 0;
+> +
+>   	ath_node_attach(sc, sta);
+>   	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
+>
 
-> This is based on a patch by Walter
-> Goldens.
+I think maybe you want that logic inserted below the ath_node_attach?
 
-Hi Hauke,
+I tried it as you have it above, guessing that is what you meant, and
+it crashed with null pointer exception....
 
-I think RT53XX is still experimental, unlike the RT33XX. Should we enable it from config.mk now?
+Compiling with the logic below node_attach now...
 
-Walter
+Ben
+
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
