@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55118 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:32954 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932094Ab1EMM11 (ORCPT
+	with ESMTP id S1751676Ab1EFIUX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 08:27:27 -0400
-Subject: Re: Setting my WiFi adhoc connection in power save mode
+	Fri, 6 May 2011 04:20:23 -0400
+Subject: Re: [PATCH] mac80211: Fix build error when CONFIG_PM is not defined
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Jorge Miguel <jmiggal@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20110513122235.GC5516@redhat.com>
-References: <BANLkTi=pupNh=LMO-OEK+BbfNkpJz0nUkw@mail.gmail.com>
-	 <20110513115030.GB5516@redhat.com>
-	 <1305287703.3487.16.camel@jlt3.sipsolutions.net>
-	 <20110513122235.GC5516@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4dc3375f.3VdEfQKL1lidemOn%Larry.Finger@lwfinger.net>
+References: <4dc3375f.3VdEfQKL1lidemOn%Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 14:27:22 +0200
-Message-ID: <1305289642.3487.18.camel@jlt3.sipsolutions.net> (sfid-20110513_142730_710817_34D88280)
+Date: Fri, 06 May 2011 10:20:17 +0200
+Message-ID: <1304670017.3595.0.camel@jlt3.sipsolutions.net> (sfid-20110506_102028_357271_E7A0A838)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 14:22 +0200, Stanislaw Gruszka wrote:
-> On Fri, May 13, 2011 at 01:55:03PM +0200, Johannes Berg wrote:
-> > > Also in kernel 2.6.39, after driver split into iwlegacy, power save
-> > > is marked as not supported by driver. I wonder it was deliberate action
-> > > from Intel developers, or just IEEE80211_HW_SUPPORTS_PS is missed by
-> > > mistake. I'm going to look at this.
-> > 
-> > Deliberate. On some platforms/systems, the way the device goes to sleep
-> > caused DMA trouble or something like that, and the ucode would sysassert
-> > when it tried to wake itself up. The problem was fairly rare, but of
-> > course the device wakes up 10 times a second or so ...
+On Thu, 2011-05-05 at 18:48 -0500, Larry Finger wrote:
+> When mac80211 is built without CONFIG_PM being defined, the following errors
+> are output:
 > 
-> It's interesting if PS on 3945 ever works or was broken from very
-> beginning. I bet it was, on some old kernel, and this issue is similar
-> case like most of other bugs we have in iwlwifi - something that worked
-> well was broken by adding new chipsets/features support, but never fixed
-> again and just masked/disabled instead.
+> net/mac80211/main.c: In function ‘ieee80211_register_hw’:
+> net/mac80211/main.c:700: error: ‘const struct ieee80211_ops’ has no member named ‘suspend’
+> net/mac80211/main.c:700: error: ‘const struct ieee80211_ops’ has no member named ‘resume’
+> make[2]: *** [net/mac80211/main.o] Error 1
+> make[1]: *** [net/mac80211] Error 2
+> make[1]: *** Waiting for unfinished jobs....
+> make: *** [net] Error 2
 
-I doubt it, iirc it was just some DMA issue that was discovered at some
-point and nobody could really pinpoint it. Those old devices stored some
-internal data into a host memory buffer, and reading them back sometimes
-corrupted them.
+Oh, what a stupid mistake, thanks!
 
 johannes
+
 
