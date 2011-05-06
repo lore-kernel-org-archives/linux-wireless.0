@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48058
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751716Ab1EEVMt (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:24912 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754311Ab1EFPkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 17:12:49 -0400
-Date: Thu, 05 May 2011 14:12:17 -0700 (PDT)
-Message-Id: <20110505.141217.102539207.davem@davemloft.net> (sfid-20110505_231258_610318_973446E1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-05-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110505191219.GC3005@tuxdriver.com>
-References: <20110505191219.GC3005@tuxdriver.com>
+	Fri, 6 May 2011 11:40:43 -0400
+Date: Fri, 6 May 2011 08:40:31 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: Tree for May 6 (wireless)
+Message-Id: <20110506084031.a1f2e483.randy.dunlap@oracle.com> (sfid-20110506_174103_195848_3BEC378A)
+In-Reply-To: <20110506154921.47700781.sfr@canb.auug.org.au>
+References: <20110506154921.47700781.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 5 May 2011 15:12:20 -0400
+On Fri, 6 May 2011 15:49:21 +1000 Stephen Rothwell wrote:
 
-> Another big Cinco de Mayo batch of stuff intended for 2.6.40...
-
-Aye caramba! :-)
-
-> Highlights include a number of mwifiex bug fixes, a batch of wl12xx
-> updates (including some new hardware support), a big batch of rtlwifi
-> fixups in preparation for some new hardware drivers, some mwl8k and
-> rt2x00 updates, the usual variety of iwlwifi and ath9k updates, a set
-> of updates to the iwlegacy drivers from Stanislaw, some ssb udpates
-> form Rafa©©, a bunch of Bluetooth updates from Gustavo and friends,
-> and a handful of enhancements to other drivers and to mac80211.
+> Hi all,
 > 
-> Please let me know if there are problems!
+> Changes since 20110505:
 
-Pulled, thanks a lot John!
+
+when PM is not enabled:
+
+net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'suspend'
+net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'resume'
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
