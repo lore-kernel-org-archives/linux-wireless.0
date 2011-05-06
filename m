@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53502 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758248Ab1EaTrv (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48309 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753066Ab1EFWYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:51 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 01/32] ath9k: define mac version for AR9330
-Date: Tue, 31 May 2011 21:36:52 +0200
-Message-Id: <1306870643-7935-2-git-send-email-juhosg@openwrt.org> (sfid-20110531_214844_299685_4F8FAECB)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Fri, 6 May 2011 18:24:39 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath5k:  Fix lockup due to un-init spinlock.
+Date: Fri,  6 May 2011 15:24:34 -0700
+Message-Id: <1304720674-27031-1-git-send-email-greearb@candelatech.com> (sfid-20110507_002502_080836_A8A0509D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  |    5 ++++-
- drivers/net/wireless/ath/ath9k/reg.h |   16 ++++++++++++++++
- 2 files changed, 20 insertions(+), 1 deletions(-)
+From: Ben Greear <greearb@candelatech.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1be7c8b..05c2ba2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -551,6 +551,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	case AR_SREV_VERSION_9287:
- 	case AR_SREV_VERSION_9271:
- 	case AR_SREV_VERSION_9300:
-+	case AR_SREV_VERSION_9330:
- 	case AR_SREV_VERSION_9485:
- 	case AR_SREV_VERSION_9340:
- 		break;
-@@ -561,7 +562,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EOPNOTSUPP;
- 	}
+This was introduced in 2.6.39-rc1 it seems.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 203243b... 2204762... M	drivers/net/wireless/ath/ath5k/base.c
+ drivers/net/wireless/ath/ath5k/base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 203243b..2204762 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2394,7 +2394,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
+ 	spin_lock_init(&sc->rxbuflock);
+ 	spin_lock_init(&sc->txbuflock);
+ 	spin_lock_init(&sc->block);
+-
++	spin_lock_init(&sc->irqlock);
  
--	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah))
-+	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah) ||
-+	    AR_SREV_9330(ah))
- 		ah->is_pciexpress = false;
- 
- 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
-@@ -2574,6 +2576,7 @@ static struct {
- 	{ AR_SREV_VERSION_9287,         "9287" },
- 	{ AR_SREV_VERSION_9271,         "9271" },
- 	{ AR_SREV_VERSION_9300,         "9300" },
-+	{ AR_SREV_VERSION_9330,         "9330" },
- 	{ AR_SREV_VERSION_9485,         "9485" },
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c18ee99..a483388 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -788,6 +788,10 @@
- #define AR_SREV_REVISION_9271_11	1
- #define AR_SREV_VERSION_9300		0x1c0
- #define AR_SREV_REVISION_9300_20	2 /* 2.0 and 2.1 */
-+#define AR_SREV_VERSION_9330		0x200
-+#define AR_SREV_REVISION_9330_10	0
-+#define AR_SREV_REVISION_9330_11	1
-+#define AR_SREV_REVISION_9330_12	2
- #define AR_SREV_VERSION_9485		0x240
- #define AR_SREV_REVISION_9485_10	0
- #define AR_SREV_REVISION_9485_11        1
-@@ -862,6 +866,18 @@
- #define AR_SREV_9300_20_OR_LATER(_ah) \
- 	((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9300)
- 
-+#define AR_SREV_9330(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9330))
-+#define AR_SREV_9330_10(_ah) \
-+	(AR_SREV_9330((_ah)) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_10))
-+#define AR_SREV_9330_11(_ah) \
-+	(AR_SREV_9330((_ah)) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_11))
-+#define AR_SREV_9330_12(_ah) \
-+	(AR_SREV_9330((_ah)) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_12))
-+
- #define AR_SREV_9485(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
- #define AR_SREV_9485_10(_ah) \
+ 	/* Setup interrupt handler */
+ 	ret = request_irq(sc->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
 -- 
-1.7.2.1
+1.7.3.4
 
