@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63694 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211Ab1ECSjT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 14:39:19 -0400
-Received: by bwz15 with SMTP id 15so360722bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 11:39:18 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:15463 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751034Ab1EFWJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 18:09:44 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <akpm@linux-foundation.org>, <mingo@redhat.com>,
+	<tglx@linutronix.de>, <hpa@zytor.com>
+CC: <x86@kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <allen.kao@atheros.com>,
+	<roman.gezikov@atheros.com>, <joonas.viskari@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 0/2] x86: Add support for Atheros AR1520 GPS devices
+Date: Fri, 6 May 2011 15:09:38 -0700
+Message-ID: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com> (sfid-20110507_001046_311132_1BFCD671)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-Date: Tue, 3 May 2011 14:39:17 -0400
-Message-ID: <BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com> (sfid-20110503_203922_802394_242E11EF)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Has anyone tried either of these with ath9k_htc:
-Sony UWA-BR100
-TiVo AN0100
+These two patches adds support for the Atheros AR1520 GPS device,
+currently only pegged onto an mrst platform. This creates a character
+device called ar1520 and lets userspace talk to it through it. My only
+concern against this approach is that it this requires a custom userspace
+application for reseting the device, waking it up and for blocking reads
+through ioctl. The character device can be used to read/write data to it
+as well.
 
-I'm curious if anyone has had success with them, and if they are UB94
-based.  It'd be great to know.
+I'll try to get more information and details on the userspace application
+and document stuff here:
+
+http://wireless.kernel.org/en/users/Drivers/ar5120
+
+In the meantime some review and testing would be appreciated as I modified
+the original code a bit.
+
+Allen Kao (2):
+  misc: add Atheros ar1520 GPS support
+  x86: add Atheros ar1520 platform support for mrst
+
+ arch/x86/platform/mrst/mrst.c |   18 ++
+ drivers/misc/Kconfig          |   10 +
+ drivers/misc/Makefile         |    1 +
+ drivers/misc/ar1520.c         |  406 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/ar1520.h        |   49 +++++
+ 5 files changed, 484 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/misc/ar1520.c
+ create mode 100644 include/linux/ar1520.h
+
+-- 
+1.7.4.15.g7811d
+
