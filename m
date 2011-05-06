@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:54125 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178Ab1EMTrm (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50489 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab1EFXcI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 15:47:42 -0400
-Received: by fxm17 with SMTP id 17so1980128fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 12:47:41 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: add zoom 4410 usbid
-Date: Fri, 13 May 2011 21:47:23 +0200
-Cc: linville@tuxdriver.com, marked86@gmail.com
+	Fri, 6 May 2011 19:32:08 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201105132147.24486.chunkeey@googlemail.com> (sfid-20110513_214802_823606_5D174499)
+In-Reply-To: <20110506232638.72e8900a@lxorguk.ukuu.org.uk>
+References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
+ <1304719780-27347-2-git-send-email-lrodriguez@atheros.com> <20110506232638.72e8900a@lxorguk.ukuu.org.uk>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 6 May 2011 16:31:48 -0700
+Message-ID: <BANLkTimB7MB=E2gq80Gu5==anxwJsqjZCA@mail.gmail.com> (sfid-20110507_013223_779522_76BEBC92)
+Subject: Re: [RFC 1/2] misc: add Atheros ar1520 GPS support
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@linux-foundation.org, mingo@redhat.com, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, allen.kao@atheros.com,
+	roman.gezikov@atheros.com, joonas.viskari@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: <stable@kernel.org>
-Reported-by: Mark Davis <marked86@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index e183587..a8f3bc7 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -82,6 +82,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
- 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
- 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
- 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
-+	{USB_DEVICE(0x083a, 0xc501)},	/* Zoom Wireless-G 4410 */
- 	{USB_DEVICE(0x083a, 0xf503)},	/* Accton FD7050E ver 1010ec  */
- 	{USB_DEVICE(0x0846, 0x4240)},	/* Netgear WG111 (v2) */
- 	{USB_DEVICE(0x0915, 0x2000)},	/* Cohiba Proto board */
+On Fri, May 6, 2011 at 3:26 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> Last time this driver came up the answer was that the userspace was
+> proprietary and this was in fact part of a mixed user/kernel driver which
+> seemed to raise all sorts of interesting questions.
+>
+> This was NAKked before for that reason so why the resubmit. Kernel policy
+> is clear enough ?
+
+I was not aware such a patch was even submitted before..
+
+>> + * You need a userspace application to cooperate with this driver. It and
+>> + * more information about this driver can be obtained here:
+>> + *
+>> + * http://wireless.kernel.org/en/users/Drivers/ar5120
+>
+> Which says:
+>
+> Userspace application
+>
+> This driver requires a userspace application which will interact with the
+> driver via ioctl. More information on this to be posted later.
+>
+> So NAK
+
+Umm, yeah, also unaware there was no userspace app which was open that
+was going to be provided, sorry about that, I'll check with the
+team...
+
+> Let's see an open userspace and then this driver can be submitted
+>
+> +               time =
+>  wait_event_interruptible_timeout(ar1520_data->wait_irq,
+> +
+>  ar1520_data->irq_rx, +
+>  msecs_to_jiffies(3142));
+>
+> Why 3142 ?
+
+Really arbitrary as pi is, this didn't have a timeout before so I just
+added this for now. Was hoping Roman or Joonas can better estimate a
+better value here.
+
+> Come to think of it why not fixes the races while you are it.
+
+Sure.
+
+  Luis
