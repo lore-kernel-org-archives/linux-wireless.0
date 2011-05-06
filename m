@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41609 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933726Ab1ETO0P (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:55119 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab1EFPop convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 10:26:15 -0400
-Subject: Re: Plan for ath6kl cleanup
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Kalle Valo <kalle.valo@atheros.com>
-Cc: linux-wireless@vger.kernel.org, gregkh@suse.de,
-	linville@tuxdriver.com, devel@linuxdriverproject.org
-In-Reply-To: <4DD668F4.6090308@atheros.com>
-References: <4DD668F4.6090308@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 May 2011 07:26:03 -0700
-Message-ID: <1305901563.2681.9.camel@aeonflux> (sfid-20110520_162619_115903_D29E60CC)
-Mime-Version: 1.0
+	Fri, 6 May 2011 11:44:45 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20110506084031.a1f2e483.randy.dunlap@oracle.com>
+References: <20110506154921.47700781.sfr@canb.auug.org.au>
+	<20110506084031.a1f2e483.randy.dunlap@oracle.com>
+Date: Fri, 6 May 2011 17:44:44 +0200
+Message-ID: <BANLkTimqboATe5cO+19Bv5p9dStnwevwng@mail.gmail.com> (sfid-20110506_174449_259040_76EBD07F)
+Subject: Re: linux-next: Tree for May 6 (wireless)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Fri, May 6, 2011 at 5:40 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> On Fri, 6 May 2011 15:49:21 +1000 Stephen Rothwell wrote:
+>
+>> Hi all,
+>>
+>> Changes since 20110505:
+>
+>
+> when PM is not enabled:
+>
+> net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'suspend'
+> net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'resume'
+>
+> ---
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-next" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> We have been thinking about how to get ath6kl out from staging and get
-> it to a first class citizen under drivers/net/wireless. There's quite a
-> lot of work to do get ath6kl cleaned up and the prospect of doing all
-> that through the staging-next tree wasn't that exciting. We would be
-> sending hundreds of patches and it would take a long time to cleanup the
-> driver. And the disconnection from the wireless core development also
-> sounded very daunting (cfg80211 API changes etc.).
+There was a patch sent today, see "[PATCH] mac80211: Fix build error
+when CONFIG_PM is not defined" from Larry.
 
-my main question is why do you still bother with this driver and not
-re-write it as a mac80211 driver from scratch. It seems to be more
-softmac than fullmac anyway. Or am I mistaken here?
-
-The source code of the current staging driver is 5 MB in size. That is
-by far the largest staging driver. Even brcm80211 is smaller.
-
-Regards
-
-Marcel
-
-
+- Sedat -
