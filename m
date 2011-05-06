@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61503 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757206Ab1EOWUB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2011 18:20:01 -0400
-Received: by iyb14 with SMTP id 14so3293619iyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2011 15:20:00 -0700 (PDT)
-Message-ID: <4DD0518D.1090300@lwfinger.net> (sfid-20110516_002007_149804_6D8A52E9)
-Date: Sun, 15 May 2011 17:19:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Flaminigo <sunnyiez@gmail.com>
-CC: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>	<4DCB3DFF.1030809@lockie.ca>	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>	<4DCE9DB8.7080404@lwfinger.net>	<BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com> <BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
-In-Reply-To: <BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:54054 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932212Ab1EFS2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 14:28:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/7] update for 2.6.40
+Date: Fri,  6 May 2011 11:04:33 -0700
+Message-Id: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202846_804615_2028A9A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2011 04:32 PM, Flaminigo wrote:
-> Hi,
->     I have another question. Is it possible to turn of the N network
-> ratio on this NIC? My notebook works well in a 802.11 b/g network. If
-> I can turn the N network radio off, at least, I can use it now in my
-> office building.
+We add the feature to support the test mode operation through
+the generic netlink channel NL80211_CMD_TESTMODE
+We also continue the cleanup work for iwlagn
 
-If you just connect to a b/g network, it will work. If the office building only 
-has what I suspect is an HT40 network, then it will fail.
+Cindy H. Kao (1):
+  iwlwifi: support the svtool messages interactions through nl80211
+    test mode
 
-Did you look at the kernel bugzilla number that I sent to you the other day. It 
-has a patch for using the device with an HT40 network. For me, everything else 
-(B/G and HT20) worked before.
+Johannes Berg (6):
+  iwlagn: remove get_hcmd_size indirection
+  iwlagn: remove frame pre-allocation
+  iwlagn: remove unused variable
+  iwlagn: dont update bytecount table for command queue
+  iwlagn: remove bytecount indirection
+  iwlagn: check DMA mapping errors
 
-Larry
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.gi
+
+ drivers/net/wireless/iwlwifi/Kconfig         |   10 +
+ drivers/net/wireless/iwlwifi/Makefile        |    1 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |    2 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c      |    2 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |    4 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |    4 -
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |    7 -
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |  105 +++---
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  143 ++------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h      |    6 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c   |  469 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-testmode.h  |  151 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-tx.c        |   22 +-
+ 16 files changed, 747 insertions(+), 218 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-sv-open.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-testmode.h
 
