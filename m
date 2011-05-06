@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46493 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525Ab1EQHTU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754346Ab1EFIjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 03:19:20 -0400
-Received: by iyb14 with SMTP id 14so186055iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 00:19:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <19922.8044.978298.696663@gargle.gargle.HOWL>
-References: <19922.8044.978298.696663@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 17 May 2011 00:19:00 -0700
-Message-ID: <BANLkTi=TdiXbZAdMdX1pQwLaE=BpdrF=xw@mail.gmail.com> (sfid-20110517_091923_469626_55657946)
-Subject: Re: [PATCH 0/8] ath9k_htc patches
-To: Sujith <m.sujith@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Luis.Rodriguez@atheros.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 May 2011 04:39:45 -0400
+Subject: Re: [PATCH 2.6.39] mac80211: always clear PS filtering for non-AP
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	greearb@candelatech.com
+In-Reply-To: <1304642474-32935-1-git-send-email-nbd@openwrt.org>
+References: <1304642474-32935-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 May 2011 10:39:42 +0200
+Message-ID: <1304671182.3595.2.camel@jlt3.sipsolutions.net> (sfid-20110506_103954_170184_C77E6C9B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 17, 2011 at 12:10 AM, Sujith <m.sujith@gmail.com> wrote:
-> The required firmware version is now 1.3 and the new firmware will
-> be uploaded to http://wireless.kernel.org/download/htc_fw/ once Luis
-> comes out of his slumber.
+On Fri, 2011-05-06 at 02:41 +0200, Felix Fietkau wrote:
+> PS filtering is only useful in AP mode and by setting the flags in mac80211,
+> vif mode checks do not have to be added to every single driver supporting
+> this.
+> Fixes part of a regression introduced in commit 93ae2dd2
+> "ath9k: assign keycache slots to unencrypted stations"
 
-*Yawn*
+I guess for GO powersave this might need to change but it seems nobody
+has thought about implementing that yet anyway :)
 
-OK its up.
+johannes
 
- Luis
