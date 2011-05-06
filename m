@@ -1,66 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60293 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756572Ab1ELNbA (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59816 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755024Ab1EFSWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 09:31:00 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1QKVyj-0000uy-NZ
-	for linux-wireless@vger.kernel.org; Thu, 12 May 2011 09:30:57 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p4CDLljx021967
-	for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 09:21:47 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id p4CDLlpf021965
-	for linux-wireless@vger.kernel.org; Thu, 12 May 2011 09:21:47 -0400
-Date: Thu, 12 May 2011 09:21:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [ANN] wireless-regdb: master-2011-04-28
-Message-ID: <20110512132146.GK2490@tuxdriver.com> (sfid-20110512_153105_401955_5B10C3ED)
-References: <E1QKMHu-0006wu-F9@sipsolutions.net>
+	Fri, 6 May 2011 14:22:52 -0400
+Received: by bwz15 with SMTP id 15so2696692bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 11:22:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1QKMHu-0006wu-F9@sipsolutions.net>
+In-Reply-To: <BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+	<19908.11423.898062.510184@gargle.gargle.HOWL>
+	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+Date: Fri, 6 May 2011 14:22:51 -0400
+Message-ID: <BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com> (sfid-20110506_202257_210632_40886246)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Weird, this took a while...
-
-On Thu, May 12, 2011 at 05:10:06AM +0200, wireless@sipsolutions.net wrote:
-> 
-> A new release of wireless-regdb (master-2011-04-28) is available at:
-> 
-> http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2011.04.28.tar.bz2
-> 
-> SHA1 sum: d45ba854cf111a7ea4c21fbda9b996f0e8942ceb
-> 
-> 
-> For your convenience the individual regulatory.bin file can be downloaded from:
-> 
-> http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2011.04.28-regulatory.bin
-> 
-> SHA1 sum d4f67f7c76c7206034237aa7dc93370b052ca888
-> 
-> Here is the short log of the changes included in this 
-> release:
-> 
-> Anne Marcel Roorda (1):
->       Update regulatory rules for Netherlands (NL)
-> 
-> Johannes Berg (1):
->       regdb: fix moinmoin plugin license
-> 
-> John W. Linville (1):
->       wireless-regdb: update regulatory.bin based on preceding changes.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+BTW- same error with fw1.0, fw1.1, and fw1.2
