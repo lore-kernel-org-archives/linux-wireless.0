@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3975 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751509Ab1ECJKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:10:17 -0400
-Message-ID: <4DBFC669.9020900@broadcom.com> (sfid-20110503_111021_656251_92DD346F)
-Date: Tue, 3 May 2011 11:10:01 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37642 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab1EFFFJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 01:05:09 -0400
+Received: by wya21 with SMTP id 21so2129587wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2011 22:05:08 -0700 (PDT)
 MIME-Version: 1.0
-To: "sukeshs@broadcom.com" <sukeshs@broadcom.com>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
- <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
-In-Reply-To: <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <4DC2C743.9060004@01019freenet.de>
+References: <4DC2C743.9060004@01019freenet.de>
+Date: Fri, 6 May 2011 10:35:08 +0530
+Message-ID: <BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com> (sfid-20110506_070532_479189_C8F440B1)
+Subject: =?windows-1252?Q?Re=3A_compile=2Derror_agg=2Dtx=2Ec=3A_error=3A_implicit_declarat?=
+	=?windows-1252?Q?ion_of_function_=91kfree=5Frcu=92?=
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 09:00 AM, sukeshs@broadcom.com wrote:
-> From: Sukesh Srikakula<sukeshs@xl-sj1-20.sj.broadcom.com>
+On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Hello,
 >
-> Currently, there are 2 callbacks registered with OS for getting notifications when system goes to suspend/resume.
-> Racing between these 2 callbacks leads to failure in the suspend/resume path.
-> With this fix, we avoid registering dhd callback for suspend/resume notification when cfg80211 is used. Relevant functionality in dhd suspend/resume callback function is moved to cfg80211 suspend/resume functions.
+> since May, there is a compile error in compat-wireless (against kernel
+> 2.6.34):
 >
-> Signed-off-by: Sukesh Srikakula<sukeshs@broadcom.com>
-> Signed-off-by: Sukesh Srikakula<sukeshs@xl-sj1-20.sj.broadcom.com>
-> ---
-> diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-> index 99c38dd..41c55a6 100644
-> --- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-> +++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-> @@ -123,6 +124,8 @@ typedef struct dhd_pub {
 >
->   #if defined(CONFIG_PM_SLEEP)
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
+> ‘___ieee80211_stop_tx_ba_session’:
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: implicit
+> declaration of function ‘kfree_rcu’
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error:
+> ‘rcu_head’ undeclared (first use in this function)
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: (Each
+> undeclared identifier is reported only once
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: for each
+> function it appears in.)
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
+> ‘ieee80211_tx_ba_session_handle_start’:
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:317: error:
+> ‘rcu_head’ undeclared (first use in this function)
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
+> ‘ieee80211_stop_tx_ba_cb’:
+> compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:696: error:
+> ‘rcu_head’ undeclared (first use in this function)
 >
-> +extern volatile bool dhd_mmc_suspend;
-> +
+>
+> See https://patchwork.kernel.org/patch/745352/
 
-You probably should run checkpatch.pl on this patch. The volatile 
-keyword triggers a warning here. I grepped the fullmac code and this 
-variable is only set so what is its purpose (debugging?)? See 
-Documentation/volatile-considered-harmful.txt on this topic.
+this patch seems to be applied in compat-wireless-2011-05-05 but I am
+still getting the same compilation errors in 2.6.32-25. any other
+fixes
 
-Gr. AvS
+thanks,
+shafi
 
-
+>
+>
+> Regards,
+> Andreas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
