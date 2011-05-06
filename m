@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757579Ab1ELTwb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 15:52:31 -0400
-Subject: Re: [PATCH 4/7] wl12xx: prevent scheduling while suspending (WoW
- enabled)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1305229737.12586.1027.camel@cumari> (sfid-20110512_214911_703763_A3F7A170)
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-	 <1305104068-32240-5-git-send-email-eliad@wizery.com>
-	 <1305229737.12586.1027.camel@cumari> (sfid-20110512_214911_703763_A3F7A170)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 21:52:29 +0200
-Message-ID: <1305229949.3461.41.camel@jlt3.sipsolutions.net> (sfid-20110512_215234_600979_4D3E7AFE)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:9464 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932202Ab1EFS2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 14:28:44 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/7] iwlagn: dont update bytecount table for command queue
+Date: Fri,  6 May 2011 11:04:38 -0700
+Message-Id: <1304705080-29349-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202857_423767_62CB3CFD)
+In-Reply-To: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 22:48 +0300, Luciano Coelho wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > index 9ca71ce..308855a 100644
-> > --- a/drivers/net/wireless/wl12xx/main.c
-> > +++ b/drivers/net/wireless/wl12xx/main.c
-> > @@ -1338,6 +1338,28 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
-> >  	struct wl1271 *wl = hw->priv;
-> >  	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
-> >  	wl->wow_enabled = !!wow;
-> > +	if (wl->wow_enabled) {
-> > +		/* flush any remaining work */
-> > +		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-> > +		flush_delayed_work(&wl->scan_complete_work);
-> > +
-> > +		/*
-> > +		 * disable and re-enable interrupts in order to flush
-> > +		 * the threaded_irq
-> > +		 */
-> > +		wl1271_disable_interrupts(wl);
-> > +
-> > +		/*
-> > +		 * set suspended flag to avoid triggering a new threaded_irq
-> > +		 * work. no need for spinlock as interrupts are disabled.
-> > +		 */
-> > +		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-> 
-> The set_bit() function is atomic, so you wouldn't need the spinlock here
-> anyway.  Couldn't you use __set_bit() instead, to avoid the expense of
-> using an atomic function when it's not necessary?
+The device doesn't use the bytecount table for the
+command queue, only for aggregation queues to make
+aggregation decisions. So don't update it for the
+command queue (and we even updated it with wrong
+values).
 
-That's only possible if the spinlock is held for all modifications of
-the variable. If there are any modifications that don't hold it, then
-you need the atomic version.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   28 +++++++++++++---------------
+ drivers/net/wireless/iwlwifi/iwl-tx.c     |    4 ----
+ 2 files changed, 13 insertions(+), 19 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 494de0e..5445fd6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -112,21 +112,19 @@ void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+ 
+ 	WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX);
+ 
+-	if (txq_id != priv->cmd_queue) {
+-		sta_id = txq->cmd[txq->q.write_ptr]->cmd.tx.sta_id;
+-		sec_ctl = txq->cmd[txq->q.write_ptr]->cmd.tx.sec_ctl;
+-
+-		switch (sec_ctl & TX_CMD_SEC_MSK) {
+-		case TX_CMD_SEC_CCM:
+-			len += CCMP_MIC_LEN;
+-			break;
+-		case TX_CMD_SEC_TKIP:
+-			len += TKIP_ICV_LEN;
+-			break;
+-		case TX_CMD_SEC_WEP:
+-			len += WEP_IV_LEN + WEP_ICV_LEN;
+-			break;
+-		}
++	sta_id = txq->cmd[txq->q.write_ptr]->cmd.tx.sta_id;
++	sec_ctl = txq->cmd[txq->q.write_ptr]->cmd.tx.sec_ctl;
++
++	switch (sec_ctl & TX_CMD_SEC_MSK) {
++	case TX_CMD_SEC_CCM:
++		len += CCMP_MIC_LEN;
++		break;
++	case TX_CMD_SEC_TKIP:
++		len += TKIP_ICV_LEN;
++		break;
++	case TX_CMD_SEC_WEP:
++		len += WEP_IV_LEN + WEP_ICV_LEN;
++		break;
+ 	}
+ 
+ 	bc_ent = cpu_to_le16((len & 0xFFF) | (sta_id << 12));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 517d104..5a7cd17 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -540,10 +540,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ #endif
+ 	txq->need_update = 1;
+ 
+-	if (priv->cfg->ops->lib->txq_update_byte_cnt_tbl)
+-		/* Set up entry in queue's byte count circular buffer */
+-		priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq, 0);
+-
+ 	phys_addr = pci_map_single(priv->pci_dev, &out_cmd->hdr,
+ 				   fix_size, PCI_DMA_BIDIRECTIONAL);
+ 	dma_unmap_addr_set(out_meta, mapping, phys_addr);
+-- 
+1.7.0.4
 
