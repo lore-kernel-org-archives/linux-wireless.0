@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dell.nexicom.net ([216.168.96.13]:59289 "EHLO smtp.nexicom.net"
+Received: from nbd.name ([46.4.11.11]:50994 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932654Ab1EFUyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 16:54:47 -0400
-Received: from mail.lockie.ca (dyn-dsl-mb-66-79-239-161.nexicom.net [66.79.239.161])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p46Ksjtb032570
-	for <linux-wireless@vger.kernel.org>; Fri, 6 May 2011 16:54:46 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 669BD1E0183
-	for <linux-wireless@vger.kernel.org>; Fri,  6 May 2011 16:54:44 -0400 (EDT)
-Message-ID: <4DC46034.7000901@lockie.ca> (sfid-20110506_225450_439822_F1683D91)
-Date: Fri, 06 May 2011 16:55:16 -0400
-From: James <bjlockie@lockie.ca>
-MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Failed to stop TX DMA in 100 msec after killing last frame, ath:
- Failed to stop TX DMA! cause my scans not to work right.
-Content-Type: text/plain; charset=ISO-8859-1
+	id S932462Ab1EFAlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 May 2011 20:41:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	greearb@candelatech.com
+Subject: [PATCH 2.6.39] mac80211: always clear PS filtering for non-AP interfaces
+Date: Fri,  6 May 2011 02:41:14 +0200
+Message-Id: <1304642474-32935-1-git-send-email-nbd@openwrt.org> (sfid-20110506_024151_061932_3EE28DE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+PS filtering is only useful in AP mode and by setting the flags in mac80211,
+vif mode checks do not have to be added to every single driver supporting
+this.
+Fixes part of a regression introduced in commit 93ae2dd2
+"ath9k: assign keycache slots to unencrypted stations"
 
-I almost had a breakthrough (but it is not repeatable).
-I did:
-modprobe ath9k debug=0xffffffff
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/tx.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-and it WORKED. :-)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e1a39ed..b301216 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1267,6 +1267,9 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
++	else if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
+-- 
+1.7.3.2
 
-It didn't work when I rebooted.
-
-I would suspect a hardware problem except it works 100% in kernel 2.6.4.
