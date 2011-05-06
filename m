@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13001 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758897Ab1ELXuR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 19:50:17 -0400
-From: Stephen Boyd <sboyd@codeaurora.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/9] iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-Date: Thu, 12 May 2011 16:50:05 -0700
-Message-Id: <1305244212-19183-3-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015221_220329_0BDDF309)
-In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+Received: from nbd.name ([46.4.11.11]:42214 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754795Ab1EFNUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 09:20:23 -0400
+Message-ID: <4DC3F58F.4010007@openwrt.org> (sfid-20110506_152026_402492_95C1F8BF)
+Date: Fri, 06 May 2011 15:20:15 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, greearb@candelatech.com
+Subject: Re: [PATCH 2.6.39] mac80211: always clear PS filtering for non-AP
+ interfaces
+References: <1304642474-32935-1-git-send-email-nbd@openwrt.org> <201105061508.20010.chunkeey@googlemail.com>
+In-Reply-To: <201105061508.20010.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
-warning:
+On 2011-05-06 3:08 PM, Christian Lamparter wrote:
+> On Friday 06 May 2011 02:41:14 Felix Fietkau wrote:
+>>  PS filtering is only useful in AP mode and by setting the flags in mac80211,
+>>  vif mode checks do not have to be added to every single driver supporting
+>>  this.
+>>  Fixes part of a regression introduced in commit 93ae2dd2
+>>  "ath9k: assign keycache slots to unencrypted stations"
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  Reported-by: Ben Greear<greearb@candelatech.com>
+>>  ---
+>>   net/mac80211/tx.c |    3 +++
+>>   1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>>  diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+>>  index e1a39ed..b301216 100644
+>>  --- a/net/mac80211/tx.c
+>>  +++ b/net/mac80211/tx.c
+>>  @@ -1267,6 +1267,9 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+>>   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>>   	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+>>   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>>  +	else if (sdata->vif.type != NL80211_IFTYPE_AP&&
+>>  +	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+>>  +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+>>
+>>   	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>>   	if (skb->len>  hdrlen + sizeof(rfc1042_header) + 2) {
+>>
+> uh, I think this will break p54* powersave in station mode.
+> But why do we set it anyway? It's not like the AP is in PS mode, right?
+PS filtering is not meant for station mode at all. It's meant for 
+suppressing lots of consecutive excessive retries when in AP mode 
+sending traffic to a STA that just entered powersave.
 
-In file included from arch/x86/include/asm/uaccess.h:573,
-                 from include/net/checksum.h:25,
-                 from include/linux/skbuff.h:28,
-                 from drivers/net/wireless/iwlwifi/iwl-agn-rs.c:28:
-In function 'copy_from_user',
-    inlined from 'rs_sta_dbgfs_scale_table_write' at
-    drivers/net/wireless/iwlwifi/iwl-agn-rs.c:3099:
-arch/x86/include/asm/uaccess_64.h:65:
-warning: call to 'copy_from_user_overflow' declared with
-attribute warning: copy_from_user() buffer size is not provably
-correct
-
-presumably due to buf_size being signed causing GCC to fail to
-see that buf_size can't become negative.
-
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index d03b473..abcc9f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -3087,7 +3087,7 @@ static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
- 	struct iwl_lq_sta *lq_sta = file->private_data;
- 	struct iwl_priv *priv;
- 	char buf[64];
--	int buf_size;
-+	size_t buf_size;
- 	u32 parsed_rate;
- 	struct iwl_station_priv *sta_priv =
- 		container_of(lq_sta, struct iwl_station_priv, lq_sta);
--- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
-
+- Felix
