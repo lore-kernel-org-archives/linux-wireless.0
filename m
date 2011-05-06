@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933082Ab1EMNmp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:42:45 -0400
-Subject: Re: concurrency advertising -- driver maintainers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Sujith <Sujith.Manoharan@atheros.com>
-In-Reply-To: <1305290657.3487.32.camel@jlt3.sipsolutions.net> (sfid-20110513_144426_187099_CDAFE5E0)
-References: <1305290657.3487.32.camel@jlt3.sipsolutions.net>
-	 (sfid-20110513_144426_187099_CDAFE5E0)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 15:40:52 +0200
-Message-ID: <1305294053.3487.37.camel@jlt3.sipsolutions.net> (sfid-20110513_154249_292501_6B35F214)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:58807 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753932Ab1EFQeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 12:34:12 -0400
+Date: Fri, 6 May 2011 09:33:20 -0700
+From: Greg KH <greg@kroah.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	Vipin.Mehta@Atheros.com, Naveen.Singh@Atheros.com
+Subject: Re: [PATCH 1/2] ath6kl: Remove dead code with undefined
+ EXPORT_HCI_BRIDGE_INTERFACE
+Message-ID: <20110506163320.GA15144@kroah.com> (sfid-20110506_183416_122856_E720E06D)
+References: <1304524691-12652-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1304524691-12652-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 14:44 +0200, Johannes Berg wrote:
+On Wed, May 04, 2011 at 09:28:10PM +0530, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-> The affected drivers, as far as I can tell, are:
+It's not as dead as you think it is, this series causes a build
+breakage.
 
-I forgot ath9k_htc, which needs to advertise something afaict (two
-interfaces seem to be supported)
+PLEASE TEST YOUR PATCHES!
 
-johannes
+To not do so, like you did here just makes me grumpy and not want to
+deal with them at all...
 
+greg k-h
