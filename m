@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63422 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756311Ab1EEAOp (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42077 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932369Ab1EFRMv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 20:14:45 -0400
+	Fri, 6 May 2011 13:12:51 -0400
+Received: by pzk9 with SMTP id 9so1511673pzk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 10:12:51 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 4 May 2011 17:14:25 -0700
-Message-ID: <BANLkTiktcsMYg=Pzi9nr0PC-w8WT_YTRwA@mail.gmail.com> (sfid-20110505_021504_827090_B8DEDDA5)
-Subject: compat-wireless based on 2.6.39-rc6
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19908.11423.898062.510184@gargle.gargle.HOWL> (sfid-20110506_191254_819214_6D1426D9)
+Date: Fri, 6 May 2011 22:45:11 +0530
+To: George Nychis <gnychis@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+In-Reply-To: <BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As we close up on the regression fixing for 2.6.39 series I've prepped
-up a new "-sp" compat-wireless release [1] based on 2.6.39-rc6. It has
-one pending-stable fix:
+George Nychis wrote:
+> I decided to get the Sony BR100 and try it out, given that the
+> WikiDevi page for the device seems to suggest that it works with
+> ath9k_htc:
+> http://www.wikidevi.com/wiki/Sony_UWA-BR100
+> 
+> My confidence is also a little higher given that someone has it
+> working in Windows, also.
+> 
+> But, using the most recent firmware and compat-wireless, I get the
+> same exact error that I did with the Xbox adapter:
+> [ 1277.228258] usb 2-2: ath9k_htc: Transferred FW: htc_7010.fw, size: 72996
+> [ 1278.228930] ath9k_htc 2-2:1.0: ath9k_htc: Target is unresponsive
+> [ 1278.229788] Failed to initialize the device
+> [ 1279.029952] ath9k_htc: probe of 2-2:1.0 failed with error -22
+> 
+> The WikiDev page mentions that it worked as of Jan. 8, 2011.  So I
+> rolled back compat-wireless to that date and grabbed the old firmware
+> from the old tree.
+> 
+> Unfortunately, I still get the same error:
+> [  386.398366] usb 1-1: USB disconnect, address 4
+> [  388.412466] usb 1-1: new high speed USB device using ehci_hcd and address 5
+> [  389.113687] usb 1-1: ath9k_htc: Transferred FW: ar7010_1_1.fw, size: 70624
+> [  390.112282] usb 1-1: ath9k_htc: Target is unresponsive
+> [  390.112308] Failed to initialize the device
+> [  390.113658] ath9k_hif_usb: probe of 1-1:1.0 failed with error -22
+> 
+> So, either this person had some form of magic, or I am missing
+> something... I'd be curious to try it in Windows.  BTW, it shows up in
+> Mac OSX as "Buffalo" ...
+> 
+> (CEWL 1):
+> 
+>   Product ID:	0x017f
+>   Vendor ID:	0x0411  (BUFFALO INC.)
+>   Version:	 2.02
+>   Serial Number:	12345
+>   Speed:	Up to 480 Mb/sec
+>   Manufacturer:	BUFFALO
+>   Location ID:	0xfd100000
+>   Current Available (mA):	500
+>   Current Required (mA):	Unknown (Device has not been configured)
 
-0001-iwlwifi-fix-bugs-in-change_interface.patch
+This is  UB94 based, so it should work with ath9k_htc.
+Can you post the output of lsusb -v ?
 
-And one linux-next-pending patch:
-
-0001-ath9k_hw-fix-power-for-the-HT40-duplicate-frames.patch
-
-There is also a vanilla release without these two patches, but who
-would want that? :) For more boring details you can check the
-ChangeLog [3].
-
-compat-wireless code metrics
-
-    832608 - Total upstream lines of code being pulled
-      2215 - backport code changes
-      1922 - backport code additions
-       293 - backport code deletions
-      7534 - backport from compat module
-      9749 - total backport code
-    1.1709 - % of code consists of backport work
-        14 - Code changes brought in from pending-stable
-        11 - Code additions brought in from pending-stable
-         3 - Code deletions brought in from pending-stable
-    0.0017 - % of code being cherry picked from pending-stable
-        13 - Code changes posted but not yet merged
-        11 - Code additions posted but not yet merged
-         2 - Code deletions posted but not yet merged
-    0.0016 - % of code not yet merged
-
-Base tree: linux-2.6-allstable.git
-Base tree version: v2.6.39-rc6
-compat-wireless release: compat-wireless-v2.6.39-rc6-1-sp
-
-[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/compat-wireless-2.6.39-rc6-1-sp.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/compat-wireless-2.6.39-rc6-1.tar.bz2
-[3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/ChangeLog-2.6.39-wireless
-
-  Luis
+Sujith
