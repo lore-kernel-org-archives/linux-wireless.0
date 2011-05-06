@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:51485 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab1EQCNO (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:47167 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754367Ab1EFP6O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 22:13:14 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/5] mwifiex: CPU mips optimization patch series
-Date: Mon, 16 May 2011 19:17:48 -0700
-Message-Id: <1305598673-26606-1-git-send-email-bzhao@marvell.com> (sfid-20110517_041325_168653_8E04369B)
+	Fri, 6 May 2011 11:58:14 -0400
+Date: Fri, 6 May 2011 08:58:03 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: sedat.dilek@gmail.com
+Cc: Sedat Dilek <sedat.dilek@googlemail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: linux-next: Tree for May 6 (wireless)
+Message-Id: <20110506085803.c15692bb.randy.dunlap@oracle.com> (sfid-20110506_175831_645370_A41C1927)
+In-Reply-To: <BANLkTimqboATe5cO+19Bv5p9dStnwevwng@mail.gmail.com>
+References: <20110506154921.47700781.sfr@canb.auug.org.au>
+	<20110506084031.a1f2e483.randy.dunlap@oracle.com>
+	<BANLkTimqboATe5cO+19Bv5p9dStnwevwng@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series optimizes CPU utilization
+On Fri, 6 May 2011 17:44:44 +0200 Sedat Dilek wrote:
 
-Marc Yang (5):
-  mwifiex: reduce CPU usage by tracking tx_pkts_queued
-  mwifiex: reduce CPU usage by tracking highest_queued_prio
-  mwifiex: check mwifiex_wmm_lists_empty() before dequeue
-  mwifiex: CPU mips optimization with NO_PKT_PRIO_TID
-  mwifiex: adjust high/low water marks for tx_pending queue
+> On Fri, May 6, 2011 at 5:40 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> > On Fri, 6 May 2011 15:49:21 +1000 Stephen Rothwell wrote:
+> >
+> >> Hi all,
+> >>
+> >> Changes since 20110505:
+> >
+> >
+> > when PM is not enabled:
+> >
+> > net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'suspend'
+> > net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'resume'
+> >
+> > ---
+> > ~Randy
+> > *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-next" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> There was a patch sent today, see "[PATCH] mac80211: Fix build error
+> when CONFIG_PM is not defined" from Larry.
 
- drivers/net/wireless/mwifiex/11n_aggr.c |    4 ++
- drivers/net/wireless/mwifiex/main.h     |    9 ++++-
- drivers/net/wireless/mwifiex/txrx.c     |    4 ++-
- drivers/net/wireless/mwifiex/wmm.c      |   59 ++++++++++++++++++++++++-------
- 4 files changed, 60 insertions(+), 16 deletions(-)
+Thanks.  That works.
 
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
