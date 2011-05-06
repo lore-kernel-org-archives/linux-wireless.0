@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:57698 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698Ab1E3XuN (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63740 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871Ab1EFNCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 19:50:13 -0400
-Received: by pvg12 with SMTP id 12so1776009pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 16:50:13 -0700 (PDT)
-Message-ID: <4DE42D2F.6060107@ring3k.org> (sfid-20110531_015016_494224_4AD2D70E)
-Date: Tue, 31 May 2011 08:50:07 +0900
-From: Mike McCormack <mikem@ring3k.org>
+	Fri, 6 May 2011 09:02:43 -0400
+Received: by bwz15 with SMTP id 15so2485133bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 06:02:42 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Andrew V. Stepanov" <stanv@altlinux.org>
+Subject: Re: carl9170.ko RX - DMA, TX - COPY
+Date: Fri, 6 May 2011 15:02:25 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTiniamP_zXeGkW2TgatdkSv1+rdfeg@mail.gmail.com> <201105042209.29950.chunkeey@googlemail.com> <BANLkTinH2pU2mGnoN1=BMQkY-0mhN801+A@mail.gmail.com>
+In-Reply-To: <BANLkTinH2pU2mGnoN1=BMQkY-0mhN801+A@mail.gmail.com>
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 7/8] rtlwifi: Use write barrier when assigning ownership
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201105061502.25981.chunkeey@googlemail.com> (sfid-20110506_150246_634919_8A4799BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure all updates to a descriptor are flushed to memory
-before assigning ownship to hardware.
+On Friday 06 May 2011 14:13:39 Andrew V. Stepanov wrote:
+> What is:
+> 
+>  ar->fw.tx_stream = true;
+> 
+What about it? it's a configurable feature. It can be used to 
+upload several frames in one urb-[tansfer], but I never looked into
+usb sg and it wasn't enabled in the original vendor driver either.
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Currently, It just adds another 4 byte [tag + len] to the headroom so
+it won't make a difference in your case anyway...
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 54b2bd5..06d9ddb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -932,6 +932,7 @@ void rtl92ce_set_desc(u8 *pdesc, bool istx, u8 desc_name, u8 *val)
- 	if (istx == true) {
- 		switch (desc_name) {
- 		case HW_DESC_OWN:
-+			wmb();
- 			SET_TX_DESC_OWN(pdesc, 1);
- 			break;
- 		case HW_DESC_TX_NEXTDESC_ADDR:
-@@ -945,6 +946,7 @@ void rtl92ce_set_desc(u8 *pdesc, bool istx, u8 desc_name, u8 *val)
- 	} else {
- 		switch (desc_name) {
- 		case HW_DESC_RXOWN:
-+			wmb();
- 			SET_RX_DESC_OWN(pdesc, 1);
- 			break;
- 		case HW_DESC_RXBUFF_ADDR:
--- 
-1.7.4.1
-
-
+Regards,
+	Christian
