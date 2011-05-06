@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li235-22.members.linode.com ([173.255.225.22]:38077 "EHLO
-	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758768Ab1EBWIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 18:08:15 -0400
-Message-ID: <4DBF297F.5030906@erley.org> (sfid-20110503_000826_295552_87125FA7)
-Date: Mon, 02 May 2011 18:00:31 -0400
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com>
-In-Reply-To: <4DBF1967.9010604@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:59814 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324Ab1EFWRf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 18:17:35 -0400
+Subject: Re: [PATCH] mac80211: Only process mesh PREPs with equal seq
+ number if metric is better.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Fabrice Deyber <fabricedeyber@agilemesh.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1304719911-22636-1-git-send-email-javier@cozybit.com> (sfid-20110507_001221_302201_902C39CF)
+References: <1304719911-22636-1-git-send-email-javier@cozybit.com>
+	 (sfid-20110507_001221_302201_902C39CF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 May 2011 00:17:28 +0200
+Message-ID: <1304720248.3595.13.camel@jlt3.sipsolutions.net> (sfid-20110507_001737_141312_4F2FC315)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/11 16:51, Ben Greear wrote:
-> Hello!
+On Fri, 2011-05-06 at 15:11 -0700, Javier Cardona wrote:
+> From: Fabrice Deyber <fabricedeyber@agilemesh.com>
 > 
-> We are trying to find some Atheros NICs that support 3x3
-> MIMO, but we are having a hard time.
-> 
-> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
-> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
-> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
-> hard to order that specific version.
-> 
-> Sparklan seems to make one based on AR9380, but they are not
-> in stock any place we could find.
-> 
-> Anyone know of any others that are available to the public
-> in small quantities?
-> 
-I've ordered from Oxfordtec a few times: 
+> This fixes routing loops in PREP propagation and is in accordance with Draft
+> 11, Section: 11C.9.8.4.
 
-http://www.oxfordtec.com/us/MiniPCI-Wireless-Cards-802.11n---300Mbps/c36_40/p127/SparkLAN-WMIA-199N-WLAN-802.11n-draft-wifi-2.4/5Ghz-dual-band-3T/3R-Module-%28Atheros-AR9001-AR9160-XSPAN%29-Wireless-miniPCI-card/product_info.html
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -391,7 +391,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+>  			    (mpath->flags & MESH_PATH_SN_VALID)) {
+>  				if (SN_GT(mpath->sn, orig_sn) ||
+>  				    (mpath->sn == orig_sn &&
+> -				     action == MPATH_PREQ &&
+
+I don't understand how removing the action comparison maps to the patch
+description -- can you explain a bit more?
+
+johannes
 
