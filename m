@@ -1,108 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3416 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758578Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 29/32] staging: brcm80211: cfg80211 up/down routines in
- brcmfmac driver are fixed
-Date: Fri, 13 May 2011 11:59:49 +0200
-Message-ID: <1305280792-9475-29-git-send-email-arend@broadcom.com> (sfid-20110513_120127_194776_CBB8150D)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:54991 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755371Ab1EFPAA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 May 2011 11:00:00 -0400
+Received: by pvg12 with SMTP id 12so1461420pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 08:00:00 -0700 (PDT)
+Message-ID: <4DC40CEB.5010107@lwfinger.net> (sfid-20110506_170011_439302_847408E4)
+Date: Fri, 06 May 2011 09:59:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Tom Horsley <horsley1953@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8192cu AP mode?
+References: <20110506081356.08ac93a8@tomh>
+In-Reply-To: <20110506081356.08ac93a8@tomh>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On 05/06/2011 07:13 AM, Tom Horsley wrote:
+> I recently got a cheap usb wi-fi dongle I would love to get
+> working as an access point. I see the driver table on
+> the linux wireless website has question marks on most
+> of the columns in the row for the r8192cu. Anything I
+> can do to help fill in "yes" in those columns?
+>
+> Here's my experience and findings so far:
+>
+> http://home.comcast.net/~tomhorsley/hardware/rtl8192cu/rtl8192cu.html
+>
+> I'm currently working on fedora 14 with the 2.6.35
+> kernel fedora ships. Might I have more luck with a
+> later kernel.org kernel?
 
-'__wl_cfg80211_up' & '__wl_cfg80211_down' routines are updated to correctly
-set the 'wl->status' variable.
+You don't necessarily need a newer kernel, just install the compat-wireless 
+package. I'm not a Fedora user, so I don't know the exact details, but I'm 
+reasonably certain one exists. If not, you can always get the compat-wireless 
+sources from http://wireless.kernel.org/en/users/Download.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   27 ++++++---------------
- 1 files changed, 8 insertions(+), 19 deletions(-)
+The Linux driver for this chip is rtl8192cu and it became part of the mainline 
+kernel with 2.6.39, which is the current mainline kernel and at 2.6.39-rc6. As 
+it is not yet "stable", you might not want to run it, but the package noted 
+above will have the same code for this device.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index eb7f611..03f6c20 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3391,7 +3391,6 @@ s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
- 		goto cfg80211_attach_out;
- 	}
- 	wl_set_drvdata(wl_cfg80211_dev, ci);
--	set_bit(WL_STATUS_READY, &wl->status);
- 
- 	return err;
- 
-@@ -4021,6 +4020,8 @@ static s32 __wl_cfg80211_up(struct wl_priv *wl)
- {
- 	s32 err = 0;
- 
-+	set_bit(WL_STATUS_READY, &wl->status);
-+
- 	wl_debugfs_add_netdev_params(wl);
- 
- 	err = wl_config_dongle(wl, false);
-@@ -4028,41 +4029,29 @@ static s32 __wl_cfg80211_up(struct wl_priv *wl)
- 		return err;
- 
- 	wl_invoke_iscan(wl);
--	set_bit(WL_STATUS_READY, &wl->status);
-+
- 	return err;
- }
- 
- static s32 __wl_cfg80211_down(struct wl_priv *wl)
- {
--	s32 err = 0;
--
--	/* Check if cfg80211 interface is already down */
--	if (!test_bit(WL_STATUS_READY, &wl->status))
--		return err;	/* it is even not ready */
--
- 	set_bit(WL_STATUS_SCAN_ABORTING, &wl->status);
- 	wl_term_iscan(wl);
- 	if (wl->scan_request) {
--		cfg80211_scan_done(wl->scan_request, true);	/* true
--								 means abort */
--		/* wl_set_mpc(wl_to_ndev(wl), 1); */	/* BUG
--						* this operation cannot help
--						* but here because sdio
--						* is already down through
--						* rmmod process.
--						* Need to figure out how to
--						* address this issue
--						*/
-+		cfg80211_scan_done(wl->scan_request, true);
-+		/* May need to perform this to cover rmmod */
-+		/* wl_set_mpc(wl_to_ndev(wl), 1); */
- 		wl->scan_request = NULL;
- 	}
- 	clear_bit(WL_STATUS_READY, &wl->status);
- 	clear_bit(WL_STATUS_SCANNING, &wl->status);
- 	clear_bit(WL_STATUS_SCAN_ABORTING, &wl->status);
-+	clear_bit(WL_STATUS_CONNECTING, &wl->status);
- 	clear_bit(WL_STATUS_CONNECTED, &wl->status);
- 
- 	wl_debugfs_remove_netdev(wl);
- 
--	return err;
-+	return 0;
- }
- 
- s32 wl_cfg80211_up(void)
--- 
-1.7.4.1
-
-
+Larry
