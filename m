@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48064 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755410Ab1ENLFN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51332 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754893Ab1EFNnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 07:05:13 -0400
-Received: by fxm17 with SMTP id 17so2211851fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 04:05:12 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ignacy Gawedzki <i@lri.fr>
-Subject: Re: WPA in ad-hoc mode with carl9170
-Date: Sat, 14 May 2011 13:05:06 +0200
-Cc: linux-wireless@vger.kernel.org, Stephen.Chen@atheros.com
-References: <20110513160113.GA14293@zenon.in.qult.net> <201105140113.09867.chunkeey@googlemail.com> <20110514094102.GA31275@zenon.in.qult.net>
-In-Reply-To: <20110514094102.GA31275@zenon.in.qult.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201105141305.06659.chunkeey@googlemail.com> (sfid-20110514_130525_492526_E93DB788)
+	Fri, 6 May 2011 09:43:24 -0400
+Subject: Re: [PATCH 2.6.39] mac80211: always clear PS filtering for non-AP
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	greearb@candelatech.com
+In-Reply-To: <4DC3F93B.10308@openwrt.org>
+References: <1304642474-32935-1-git-send-email-nbd@openwrt.org>
+	 <201105061508.20010.chunkeey@googlemail.com> <4DC3F58F.4010007@openwrt.org>
+	 <1304688387.3595.8.camel@jlt3.sipsolutions.net>
+	 <4DC3F93B.10308@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 May 2011 15:43:22 +0200
+Message-ID: <1304689402.3595.12.camel@jlt3.sipsolutions.net> (sfid-20110506_154327_839291_C63C73D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 14 May 2011 11:41:02 Ignacy Gawedzki wrote:
-> On Sat, May 14, 2011 at 01:13:09AM +0200, thus spake Christian Lamparter:
-> > On Saturday 14 May 2011 00:21:41 Ignacy Gawedzki wrote:
-> > > On Fri, May 13, 2011 at 10:31:47PM +0200, thus spake Christian Lamparter:
-> > > > Note: there's a special bit [RX_MAC_CONTROL - bit 6] which instructs the key
-> > > > cache controller to do the "key security settings" lookup with addr2 for all
-> > > > bc/mc frames. If we enable this bit and modify carl9170_op_set_key to set the
-> > > > per station gtk correctly [i.e.: use sta->addr as MAC and put the keys into
-> > > > the per-sta space [0-63?]] we should be able to enable PER_STA_GTK...
-> > > > although the driver will be restricted to a single vif [I think].
-> > > 
-> > > If I understand correctly, by PER_STA_GTK you mean a different encryption key
-> > > for each one-hop neighbor.  It happens to be unnecessary in my case as one
-> > > "ad-hoc-global" encryption key would be enough.
-> > yes, but AFAIK that's not how it works. There's no "global" encryption key see
-> > 802.11-2007 8.4.9 RSNA key management in an IBSS: 
-> > "Each Authenticator generates its own GTK and uses either the 4-Way Handshake
-> > or Group Key Handshake to transfer the GTK to other STAs with whom it has
-> > completed a 4-Way Handshake."
-> 
-> Okay, I suppose I didn't understand correctly after all.  What you mean by
-> PER_STA_GTK is a different *decryption* key per station (one-hop neighbor),
-> right?  The encryption key is the GTK and any receiving station supposed to be
-> able to decrypt the frames must have gone through the 4-way handshake with the
-> sending station somehow.
-> 
-> In my case, it would be nice to be able to tell the driver to use the
-> encryption key for decryption as well and bypass the need to go through the
-> handshake.  But I assume this is not something worth implementing if it's not
-> there already and not specified by the standard anyway.
-Oh, don't let the "RX_MAC_CONTROL" fool you, this is just Atheros' name
-for the register. They really say "Setting this bit instructs the Key Cache controller
-to send address2 of multicast/broadcast frames to be searched for user and
-key security settings". If it would only affect decryption, the would have written
-"*RxMac* Key Cache controller" instead... or Stephen, can you comment on this?
-[We are talking about Address: 0x1c3c40 - Bit 6] 
+On Fri, 2011-05-06 at 15:35 +0200, Felix Fietkau wrote:
 
-Regards,
-	Christian
+> >>  >>   +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+
+> Rely on what being set in AP mode only? The patch ensures that the flag 
+> for *clearing* PS filtering gets set for all non-AP modes. This flag 
+> already gets set whenever tx->sta is unset, so I think it also makes 
+> sense to extend that for other cases where the hardware is not supposed 
+> to enable any PS filtering on its own.
+
+I didn't remember/know about the case where sta is unset, but still,
+what if the driver checks for the flag and does something that's only
+valid in AP mode? I'm thinking firmware API here, not HW like ath9k.
+
+> > Your patch makes those drivers responsible for checking the mode, but
+> > that makes less sense than having drivers that need to do some magic in
+> > all modes, no?
+> How does my patch make drivers responsible for checking the mode?
+
+Well, say I implement the clearing by sending something command to the
+device, like p54. If that's only valid in AP mode in the firmware, now
+this driver has to check that it's AP mode, where before it didn't have
+to. That's not counting the sta==NULL case I guess.
+
+OTOH, we only have two drivers using the flag anyway. Go figure it out
+between those two :)
+
+johannes
+
