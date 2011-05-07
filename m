@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2313 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752153Ab1E2Ukr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:40:47 -0400
-Subject: Re: [PATCH 2/4] staging: Remove direct includes of printk.h
-From: Joe Perches <joe@perches.com>
-To: julie Sullivan <kernelmail.jms@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	devel@driverdev.osuosl.org, Dowan Kim <dowan@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <BANLkTimY9-ng8HVm+QFyS8FYks_mFx=ong@mail.gmail.com>
-References: <cover.1306342673.git.joe@perches.com>
-	 <BANLkTimo30L7feKr9_Ec=fMoe1erw8Rnag@mail.gmail.com>
-	 <a605f8a8039f83fae3fbf61b58f846bc3c58c379.1306342673.git.joe@perches.com>
-	 <BANLkTimY9-ng8HVm+QFyS8FYks_mFx=ong@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 29 May 2011 13:40:45 -0700
-Message-ID: <1306701645.14524.3.camel@Joe-Laptop> (sfid-20110529_224104_549486_EF6B1B06)
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:39679 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab1EGUBP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 16:01:15 -0400
+Received: by gwaa18 with SMTP id a18so1490103gwa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 13:01:14 -0700 (PDT)
+Date: Sat, 7 May 2011 16:01:11 -0400
+From: Tom Horsley <horsley1953@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: r8192cu AP mode?
+Message-ID: <20110507160111.0e4b289a@zooty> (sfid-20110507_220130_840921_BCA2CA70)
+In-Reply-To: <20110506140152.60c9da93@tomh>
+References: <20110506081356.08ac93a8@tomh>
+	<4DC40CEB.5010107@lwfinger.net>
+	<20110506131612.7a6d40cb@tomh>
+	<4DC4306F.20104@lwfinger.net>
+	<20110506140152.60c9da93@tomh>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-05-29 at 18:00 +0100, julie Sullivan wrote: 
-> > --- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-[] 
-> types.h is also a subfile of kernel.h, right?
+On Fri, 6 May 2011 14:01:52 -0400
+Tom Horsley wrote:
 
-Yes it is.
+> So I haven't gotten far enough to worry about DHCP or
+> NAT or anything yet - I only stay connected for a second. Perhaps
+> I should first try something less complicated than WPA2
+> authentication, but I won't get a chance to fool with this
+> more till tomorrow probably. It's looking a lot better now
+> that it did earlier though.
 
-> Or maybe you patched this one already - if so please excuse the noise :-)
+Well, I did try it with no encryption and it works better.
+Instead of being disconnected every couple of seconds,
+I last around ten or twenty seconds now and am able to
+use the web browser and wot-not during the time I am
+connected, so it is kind of working.
 
-No I didn't patch that one.
+I've updated my web page with all my current experiences:
 
-I think it wouldn't be good to do that.
-printk.h may be a special case because it was
-moved out of kernel.h just to make it a bit neater.
+http://home.comcast.net/~tomhorsley/hardware/rtl8192cu/rtl8192cu.html
 
-You are welcome to if you choose to.
-
-There are like 1500 or so files that have both kernel.h and types.h
-
-$ grep --include=*.[ch] -rP -l "^\s*\#\s*include\s+\<linux/types\.h>" * | \
-  xargs grep -Pl "^\s*\#\s*include\s+\<linux/kernel\.h\>" | wc -l
-1572
-
-
+search for "Day three" to get down to the latest update.
