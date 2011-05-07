@@ -1,74 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:46336 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751913Ab1EEPvi (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:43421 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754973Ab1EGTIb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 11:51:38 -0400
-Received: by mail-ey0-f177.google.com with SMTP id 6so786948eyh.36
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2011 08:51:37 -0700 (PDT)
-Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for
- scheduled scans
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1304610524.12586.403.camel@cumari>
-References: <1304600420-24227-1-git-send-email-coelho@ti.com>
-	 <1304600420-24227-4-git-send-email-coelho@ti.com>
-	 <4DC2B78E.3000205@candelatech.com>
-	 <1304607108.3594.6.camel@jlt3.sipsolutions.net>
-	 <4DC2B941.6@candelatech.com>
-	 <1304607500.3594.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20110505_165557_965402_0D829BAA)  <1304607552.3594.8.camel@jlt3.sipsolutions.net>
-	 <1304610524.12586.403.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 May 2011 18:51:34 +0300
-Message-ID: <1304610694.12586.404.camel@cumari> (sfid-20110505_175142_039519_753D704D)
+	Sat, 7 May 2011 15:08:31 -0400
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v12.0.0)
+	with ESMTP id md50000002750.msg
+	for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 22:08:19 +0300
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
+	driver
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	 <201105061605.31625.arnd@arndb.de>
+	 <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	 <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	 <1304790665.13983.10.camel@dev.znau.edu.ua>
+	 <BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
+	 <1304792795.13983.28.camel@dev.znau.edu.ua>
+	 <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
+Content-Type: text/plain
+Date: Sat, 07 May 2011 22:02:11 +0300
+Message-Id: <1304794931.13983.44.camel@dev.znau.edu.ua> (sfid-20110507_210837_853599_815570A1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-05 at 18:48 +0300, Luciano Coelho wrote:
-> On Thu, 2011-05-05 at 16:59 +0200, Johannes Berg wrote:
-> > On Thu, 2011-05-05 at 16:58 +0200, Johannes Berg wrote:
-> > > On Thu, 2011-05-05 at 07:50 -0700, Ben Greear wrote:
-> > > > On 05/05/2011 07:51 AM, Johannes Berg wrote:
-> > > > > On Thu, 2011-05-05 at 07:43 -0700, Ben Greear wrote:
-> > > > >> On 05/05/2011 06:00 AM, Luciano Coelho wrote:
-> > > > >>> Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
-> > > > >>> NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
-> > > > >>> intervals the scheduled scan cycles should be executed.
-> > > > >>
-> > > > >> Please default to something useful instead of requiring
-> > > > >> this so that things are backwards compatible.
-> > > > >
-> > > > > Backward compatible to what?
-> > > > 
-> > > > To anything sending older style netlink messages?
-> > > 
-> > > But this is a new feature, and a new command, so I don't quite
-> > > understand why an application would think it can send it without the
-> > > interval?
-> > 
-> > Oh wait, I guess you're right, or this should just be part of patch 1
-> > instead so we never have the feature without the requirement to have the
-> > interval given.
+> >>
+> >> The purpose is ridiculously trivial. Print user-friendly names on
+> >> scanning. Why not do that?
+> > Output like
+> > Core 0: ChipCommon (id 0x800, rev 18, vendor 0x14e4)
+> > and
+> > Core 0: id 0x800, rev 18, vendor 0x14e4
+> > both give to 99% of linux systems' end-users exactly the same consistent
+> > information. Its more than enough for diagnostic purposes (I guess
+> > scanning code does outputs this for diagnostic purposes by those less
+> > than 1% of people who are aware wth is actually that ChipCommon is, not
+> > to be just user friendly?).
 > 
-> Yeah, I could squish this with the previous patch (1/3), but I just
-> reckoned that patch was getting too big, so I decided to make a separate
-> one.
+> Really, what's wrong with that? Does it kill anyone's pet we print
+> this? We also do:
+> pr_err("Scanning failed because of wrong CID\n");
+> return -1;
+> While we could drop pr_err. Why to do this? Advanced used can always
+> check what -1 means.
 > 
-> If this whole patch series is taken at the same time, I guess there
-> won't be backwards compatibility problems (except for bisecting,
-> maybe?).
-> 
-> Anyways, I'll leave it as your choice.  Squishing the patch is easy
-> enough. ;)
+> I just like this. I find situations when it's useful, while I don't
+> see real negatives. I want to keep this. Can we leave this that way?
+> Unless someone finds some really bad effects of this?
+Nothing wrong except it makes kernel larger while gives _absolutely_ no
+benefit to end users. Regardless bus code prints core name or not it
+(core name) have absolutely no impact on driver matching.
 
-Ah, and one more thought... There's no driver implementing this at this
-point, so is there anything to really worry about?
+Imagine yourself an end-user who haven't got his 80211 core matched with
+driver and therefore he haven't got WiFi working.
+If bus driver code outputs
+Core X: id 0x812, rev. 8, vendor 0x4BF
+you (as end user) will look where is 0x4BF/0x812 driver supporting
+rev.8.
+But if bus driver code outputs
+Core X: MAC 802.11 (core id 0x812, rev. 8, vendor 0x4BF)
+you (as end user) empowered with MAC 802.11 name knowledge will still
+look where is 0x4BF/0x812 driver supporting rev.8.
 
--- 
-Cheers,
-Luca.
+Really, there will be more and more core codes/types/name. Why hardcode
+those into kernel for some e. g. memory-constraint system while you
+still can (and in most cases also will) have them in dedicated drivers?
+
+Btw, have you ever suffered hardly from PCI naming devices xxxx.xx.xx.x
+but not "Network device" ?
+
+Have nice day,
+George
+
 
