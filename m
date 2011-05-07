@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55643 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759191Ab1EBOpy (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63530 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416Ab1EGNit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 10:45:54 -0400
-Date: Mon, 2 May 2011 10:37:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wl12xx: support FW TX inactivity triggers
-Message-ID: <20110502143757.GD2544@tuxdriver.com> (sfid-20110502_164557_671112_74299CF1)
-References: <1303849311-8817-1-git-send-email-arik@wizery.com>
- <BANLkTi=mJE+M79-XOJsTPRu1zGodiiZ8bg@mail.gmail.com>
- <BANLkTinnQgZGjZOigQuUSVD0kCBTuzUE1A@mail.gmail.com>
- <1304329855.12586.234.camel@cumari>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1304329855.12586.234.camel@cumari>
+	Sat, 7 May 2011 09:38:49 -0400
+Subject: Re: How to disable TCP checksum calculation?
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Alexander Clouter <alex@digriz.org.uk>,
+	"Wu, Xia" <xia.wu@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <ut8f98-hoj.ln1@chipmunk.wormnet.eu>
+References: <A24AE1FFE7AEC5489F83450EE98351BF35079BA24F@shsmsx502.ccr.corp.intel.com>
+	 <ut8f98-hoj.ln1@chipmunk.wormnet.eu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 May 2011 15:38:36 +0200
+Message-ID: <1304775516.2821.1253.camel@edumazet-laptop> (sfid-20110507_153907_142079_6BE32FF5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 02, 2011 at 12:50:55PM +0300, Luciano Coelho wrote:
-> Hi John and Arik,
-> 
-> On Sat, 2011-04-30 at 00:09 +0300, Arik Nemtsov wrote:
-> > Hey John,
-> > 
-> > Looking at the latest git, it seems you've picked up this patch
-> > (commit 47684808fd89d6809c0886e06f8ac324252499d8).
-> > This is unfortunate, since there's currently a FW bug that will cause
-> > many disconnections in STA mode with this patch.
-> > 
-> > How would we go about reverting this?
-> 
-> I have reverted this patch in the wl12xx.git tree.  This required a bit
-> of merging and we needed the revert in order to proceed with our tests.
-> 
-> So, John, please don't revert this in your tree.  My revert will come in
-> my next pull-request which will come in a couple of days, after our
-> internal test round is done.
-> 
-> Thanks!
+Le samedi 07 mai 2011 à 08:28 +0100, Alexander Clouter a écrit :
 
-OK, sounds good.  FWIW, this is what I meant when I said "Do the
-wl12xx guys still want this?"  Granted, that was about the other
-patch in the series, but I kinda presumed that they were related...
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Wu, Xia <xia.wu@intel.com> wrote:
+> >
+> > I'm studying TCP transporting efficiency. Now I want to disable TCP 
+> > checksum calculation, but I cannot find the right way to disable it. 
+> > Who can give me a help on how to disable TCP checksum on Linux?
+> > 
+> Look at using TCP checksum offloading to see the effects:
+> 
+> http://en.wikipedia.org/wiki/TCP_Offload_Engine
+> 
+> ----
+> berk:/home/alex# ethtool -k eth0
+> Offload parameters for eth0:
+...
+
+
+Not sure what We meant here. TCP standard requires checksums to be set,
+you cannot 'disable it'. Only possible thing in linux stack is to
+offload tcp checksum computation to network card, if hardware permits
+it.
+
+By the way, the loopback interface (lo) pretends to support this
+feature, so we dont compute tcp checksums for loopback.
+
+
+
