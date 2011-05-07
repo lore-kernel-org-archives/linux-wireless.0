@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:57526 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757038Ab1ELJyV (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:46429 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752Ab1EGQtc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 05:54:21 -0400
-Date: Thu, 12 May 2011 15:14:57 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: net/mac80211/cfg.c:746: error
-Message-ID: <20110512094456.GB32495@hertz.marvell.com> (sfid-20110512_115436_914880_D32FF64E)
+	Sat, 7 May 2011 12:49:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4DC57383.3050903@broadcom.com>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105061605.31625.arnd@arndb.de>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	<1304776555.16344.2.camel@maggie>
+	<4DC57383.3050903@broadcom.com>
+Date: Sat, 7 May 2011 18:49:30 +0200
+Message-ID: <BANLkTi=GJs=04H=HpCDy_o1JnhY4+aPgxA@mail.gmail.com> (sfid-20110507_184954_374619_8FFF70E9)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, 
-Have seen following error during the compilation
+2011/5/7 Arend van Spriel <arend@broadcom.com>:
+> On 05/07/2011 03:55 PM, Michael Büsch wrote:
+>>
+>>> Arnd: did you have a look at defines at all?
+>>>
+>>> Most of the defines have values in range 0x800 → 0x837. Converting
+>>> this to array means loosing 0x800 u16 entries. We can not use 0x800
+>>> offset, because there are also some defined between 0x000 and 0x800:
+>>> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+>>> #define BCMA_CORE_INVALID              0x700
+>
+> Please be aware that the core identifier itself is not unique (in the
+> current list they are). In the scan the BCMA_CORE_OOB_ROUTER will always
+> show BCMA_MANUF_ARM (did not look up the proper manufacturer define but you
+> get the idea, i hope).
 
->net/mac80211/cfg.c: In function ‘sta_apply_parameters’:
->net/mac80211/cfg.c:746: error: ‘struct sta_info’ has no member named ‘plink_state’
->make[1]: *** [net/mac80211/cfg.o] Error 1
->make: *** [net/mac80211/mac80211.ko] Error 2
+Unfortunately, I don't. Could you explain this? How core identified
+can be not unique? Can 0x800 mean ChipCommon but also SuperPCIeX?
 
-May be following is the fix
-
-Thanks
-Yogesh
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a2ff474..ed3400c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -738,6 +738,7 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 						  &sta->sta.ht_cap);
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+#ifdef CONFIG_MAC80211_MESH
- 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
- 			switch (params->plink_state) {
- 			case PLINK_LISTEN:
-@@ -758,6 +759,7 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 				mesh_plink_block(sta);
- 				break;
- 			}
-+#endif
- 	}
- }
-
---
+-- 
+Rafał
