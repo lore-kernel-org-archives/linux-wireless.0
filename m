@@ -1,89 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50801 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755202Ab1ELOPv (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:64152 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754331Ab1EGRfx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:15:51 -0400
-Received: by mail-ey0-f180.google.com with SMTP id 24so615841eyg.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:15:49 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7] wl12xx: add configuration values for scheduled scan
-Date: Thu, 12 May 2011 17:15:34 +0300
-Message-Id: <1305209740-30287-2-git-send-email-coelho@ti.com> (sfid-20110512_161554_754303_D1E90134)
-In-Reply-To: <1305209740-30287-1-git-send-email-coelho@ti.com>
-References: <1305209740-30287-1-git-send-email-coelho@ti.com>
+	Sat, 7 May 2011 13:35:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <4DC5805C.2010202@hauke-m.de>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<4DC56FB9.5000208@hauke-m.de>
+	<BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
+	<4DC57425.30206@hauke-m.de>
+	<BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com>
+	<4DC5805C.2010202@hauke-m.de>
+Date: Sat, 7 May 2011 19:35:52 +0200
+Message-ID: <BANLkTik1bZHk6+DqKpBdDOZW2=Sheia5kQ@mail.gmail.com> (sfid-20110507_193616_732145_DC0B885E)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the structures and values for driver-configured scheduled scan
-parameters.
+2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 05/07/2011 06:51 PM, Rafał Miłecki wrote:
+>> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> On 05/07/2011 06:23 PM, Rafał Miłecki wrote:
+>>>> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+>>>>> On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
+>>>>>> Cc: Greg KH <greg@kroah.com>
+>>>>>> Cc: Michael Büsch <mb@bu3sch.de>
+>>>>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>>> Cc: George Kashperko <george@znau.edu.ua>
+>>>>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>>>>> Cc: linux-arm-kernel@lists.infradead.org
+>>>>>> Cc: Russell King <rmk@arm.linux.org.uk>
+>>>>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>>>>> Cc: Andy Botting <andy@andybotting.com>
+>>>>>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+>>>>>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>>>>> ---
+>>>>>> V2: Rename to axi
+>>>>>>     Use DEFINE_PCI_DEVICE_TABLE in bridge
+>>>>>>     Make use of pr_fmt and pr_*
+>>>>>>     Store core class
+>>>>>>     Rename bridge to not b43 specific
+>>>>>>     Replace magic 0x1000 with BCMAI_CORE_SIZE
+>>>>>>     Remove some old "ssb" names and defines
+>>>>>>     Move BCMAI_ADDR_BASE def
+>>>>>>     Add drvdata field
+>>>>>> V3: Fix reloading (kfree issue)
+>>>>>>     Add 14e4:0x4331
+>>>>>>     Fix non-initialized struct issue
+>>>>>>     Drop useless inline functions wrappers for pci core drv
+>>>>>>     Proper pr_* usage
+>>>>>> V3.1: Include forgotten changes (pr_* and include related)
+>>>>>>     Explain why we dare to implement empty release function
+>>>>>> V4: Add ABI documentation
+>>>>>>     Move struct device to wrapper and alloc it dynamically
+>>>>>>     checkpatch.pl pointed fixes
+>>>>>> V5: Rename to bcma, AXI was really bad name
+>>>>>>     Use EXPORT_SYMBOL_GPL
+>>>>>>     Set pci driver fields in one place
+>>>>>>     Drop unlikely
+>>>>>>     Use BCMA_CORE_SIZE for calc in awrite32
+>>>>>>     Add README
+>>>>>>     Fix compilation (delay.h)
+>>>>>> ---
+>>>>>>  Documentation/ABI/testing/sysfs-bus-bcma    |   31 ++
+>>>>>>  drivers/Kconfig                             |    2 +
+>>>>>>  drivers/Makefile                            |    1 +
+>>>>>>  drivers/bcma/Kconfig                        |   33 +++
+>>>>>>  drivers/bcma/Makefile                       |    7 +
+>>>>>>  drivers/bcma/README                         |   18 ++
+>>>>>>  drivers/bcma/TODO                           |    3 +
+>>>>>>  drivers/bcma/bcma_private.h                 |   31 ++
+>>>>>>  drivers/bcma/core.c                         |   51 ++++
+>>>>>>  drivers/bcma/driver_chipcommon.c            |   87 ++++++
+>>>>>>  drivers/bcma/driver_chipcommon_pmu.c        |  134 +++++++++
+>>>>>>  drivers/bcma/driver_pci.c                   |  163 +++++++++++
+>>>>>>  drivers/bcma/host_pci.c                     |  196 +++++++++++++
+>>>>>>  drivers/bcma/main.c                         |  271 ++++++++++++++++++
+>>>>>>  drivers/bcma/scan.c                         |  392 +++++++++++++++++++++++++++
+>>>>>>  drivers/bcma/scan.h                         |   56 ++++
+>>>>>>  include/linux/bcma/bcma.h                   |  232 ++++++++++++++++
+>>>>>>  include/linux/bcma/bcma_driver_chipcommon.h |  297 ++++++++++++++++++++
+>>>>>>  include/linux/bcma/bcma_driver_pci.h        |   89 ++++++
+>>>>>>  include/linux/bcma/bcma_regs.h              |   34 +++
+>>>>>>  include/linux/mod_devicetable.h             |   17 ++
+>>>>>>  scripts/mod/file2alias.c                    |   22 ++
+>>>>>>  22 files changed, 2167 insertions(+), 0 deletions(-)
+>>>>>>  create mode 100644 Documentation/ABI/testing/sysfs-bus-bcma
+>>>>>>  create mode 100644 drivers/bcma/Kconfig
+>>>>>>  create mode 100644 drivers/bcma/Makefile
+>>>>>>  create mode 100644 drivers/bcma/README
+>>>>>>  create mode 100644 drivers/bcma/TODO
+>>>>>>  create mode 100644 drivers/bcma/bcma_private.h
+>>>>>>  create mode 100644 drivers/bcma/core.c
+>>>>>>  create mode 100644 drivers/bcma/driver_chipcommon.c
+>>>>>>  create mode 100644 drivers/bcma/driver_chipcommon_pmu.c
+>>>>>>  create mode 100644 drivers/bcma/driver_pci.c
+>>>>>>  create mode 100644 drivers/bcma/host_pci.c
+>>>>>>  create mode 100644 drivers/bcma/main.c
+>>>>>>  create mode 100644 drivers/bcma/scan.c
+>>>>>>  create mode 100644 drivers/bcma/scan.h
+>>>>>>  create mode 100644 include/linux/bcma/bcma.h
+>>>>>>  create mode 100644 include/linux/bcma/bcma_driver_chipcommon.h
+>>>>>>  create mode 100644 include/linux/bcma/bcma_driver_pci.h
+>>>>>>  create mode 100644 include/linux/bcma/bcma_regs.h
+>>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> An entry in the MAINTAINERS file would be nice to find the right
+>>>>> addresses to send patches to.
+>>>>
+>>>> Will do, thanks. Should I put some ML for this driver?
+>>>> netdev@vger.kernel.org? linux-wireless@vger.kernel.org? So far there
+>>>> are no net drivers for BCMA. Probably b43 will be the first (or
+>>>> brcm80211).
+>>>>
+>>> There is a Ethernet core used on embedded devices with this bus and
+>>> George wrote a driver for the first version of this bus implementation,
+>>> he send to the ML. Most user will use this with some wireless devices so
+>>> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
+>>
+>> Thanks, I didn't know about this ethernet driver. Have to check it!
+>> Where was this published? Do you have a thread name?
+>
+> I think he haven't send it to the mailing list, there is a link [0] in
+> some Ticket [1] at OpenWrt. This driver was derived from source code
+> Braodcom have published, but not under a GPL compatible license. It will
+> be nice if Braodcom would allow us to publish a driver under the terms
+> of the GPL for the Ethernet core based on their driver, without writing
+> a full spec of the driver like it was done for b43.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/conf.h |   21 +++++++++++++++++++++
- drivers/net/wireless/wl12xx/main.c |    9 +++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+OK, I'll stay away from this driver for now (license).
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 6620840..1ab6c86 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1147,6 +1147,26 @@ struct conf_scan_settings {
- 
- };
- 
-+struct conf_sched_scan_settings {
-+	/* minimum time to wait on the channel for active scans (in TUs) */
-+	u16 min_dwell_time_active;
-+
-+	/* maximum time to wait on the channel for active scans (in TUs) */
-+	u16 max_dwell_time_active;
-+
-+	/* time to wait on the channel for passive scans (in TUs) */
-+	u32 dwell_time_passive;
-+
-+	/* number of probe requests to send on each channel in active scans */
-+	u8 num_probe_reqs;
-+
-+	/* RSSI threshold to be used for filtering */
-+	s8 rssi_threshold;
-+
-+	/* SNR threshold to be used for filtering */
-+	s8 snr_threshold;
-+};
-+
- /* these are number of channels on the band divided by two, rounded up */
- #define CONF_TX_PWR_COMPENSATION_LEN_2 7
- #define CONF_TX_PWR_COMPENSATION_LEN_5 18
-@@ -1234,6 +1254,7 @@ struct conf_drv_settings {
- 	struct conf_pm_config_settings pm_config;
- 	struct conf_roam_trigger_settings roam_trigger;
- 	struct conf_scan_settings scan;
-+	struct conf_sched_scan_settings sched_scan;
- 	struct conf_rf_settings rf;
- 	struct conf_ht_setting ht;
- 	struct conf_memory_settings mem_wl127x;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f82e736..cb4ed90 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -302,6 +302,15 @@ static struct conf_drv_settings default_conf = {
- 		.max_dwell_time_passive       = 100000,
- 		.num_probe_reqs               = 2,
- 	},
-+	.sched_scan = {
-+		/* sched_scan requires dwell times in TU instead of TU/1000 */
-+		.min_dwell_time_active = 8,
-+		.max_dwell_time_active = 30,
-+		.dwell_time_passive    = 100,
-+		.num_probe_reqs        = 2,
-+		.rssi_threshold        = -90,
-+		.snr_threshold         = 0,
-+	},
- 	.rf = {
- 		.tx_per_channel_power_compensation_2 = {
- 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+>> I'm not sure if we want linux-wireless to be ML, if we already have
+>> some Ethernet driver. Some network-general ML makes more sense then.
+>> Maybe netdev would be better.
+>
+> Some of the embedded devices also have a USB core on the BCMA bus and a
+> pci(e) host controller to connect other pci(e) devices. As most of the
+> patches for ssb came from the wireless guys and I do not thing this will
+> be different for bcma, I thing the wireless mailing list is the correct
+> place.
+
+Ups, yeah, you're right. I didn't think about USB, V90, PCI(e), etc...
+I think situations linux-wireless as most active or linux-kernel as
+most generic should be used. I think I'm fine with linux-wireless.
+
 -- 
-1.7.1
-
+Rafał
