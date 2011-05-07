@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1376 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752896Ab1EIPva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 11:51:30 -0400
-Subject: [PATCH] staging: brcm80211: brcmfmac: Fix memset using sizeof(ptr)
- not sizeof(*ptr)
-From: Joe Perches <joe@perches.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	devel <devel@driverdev.osuosl.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 08:51:29 -0700
-Message-ID: <1304956289.19586.35.camel@Joe-Laptop> (sfid-20110509_175143_014072_9F1808A9)
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54756 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690Ab1EGJVp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 05:21:45 -0400
+Received: by fxm17 with SMTP id 17so2791464fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 02:21:43 -0700 (PDT)
+Message-Id: <47a87105abcdba5cee38e2bf9ae56e1b59218ffb.1304759993.git.chunkeey@googlemail.com> (sfid-20110507_112203_231954_476C9FDF)
+In-Reply-To: <882b3dbce3a3c6fa33ce02130d6bbf5fee348dfb.1304759993.git.chunkeey@googlemail.com>
+References: <882b3dbce3a3c6fa33ce02130d6bbf5fee348dfb.1304759993.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 7 May 2011 11:16:08 +0200
+Subject: [PATCH 2/2] p54pci: fix -Wunused-but-set-variable warnings
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Found via coccinelle script
+p54pci.c: In function ‘p54p_tx’:
+p54pci.c:334:6: warning: variable ‘device_idx’ set but not used
 
-@@
-type T;
-T* ptr;
-expression E1;
-@@
-
-* memset(E1, 0, sizeof(ptr));
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_iw.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/p54/p54pci.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-index a16b46c..4b810ed 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-@@ -498,9 +498,7 @@ wl_iw_get_range(struct net_device *dev,
- 	list = (wl_u32_list_t *) channels;
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 0494d7b..1b75317 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -331,10 +331,9 @@ static void p54p_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+ 	struct p54p_desc *desc;
+ 	dma_addr_t mapping;
+-	u32 device_idx, idx, i;
++	u32 idx, i;
  
- 	dwrq->length = sizeof(struct iw_range);
--	memset(range, 0, sizeof(range));
--
--	range->min_nwid = range->max_nwid = 0;
-+	memset(range, 0, sizeof(*range));
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	device_idx = le32_to_cpu(ring_control->device_idx[1]);
+ 	idx = le32_to_cpu(ring_control->host_idx[1]);
+ 	i = idx % ARRAY_SIZE(ring_control->tx_data);
  
- 	list->count = cpu_to_le32(MAXCHANNEL);
- 	error = dev_wlc_ioctl(dev, WLC_GET_VALID_CHANNELS, channels,
-
+-- 
+1.7.5.1
 
