@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40605 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751714Ab1EEVDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 17:03:32 -0400
-Message-ID: <4DC3109F.6080601@openwrt.org> (sfid-20110505_230336_430308_CE269AA0)
-Date: Thu, 05 May 2011 23:03:27 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41818 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753748Ab1EGNeW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 09:34:22 -0400
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
- AP mode broke STA association.
-References: <4DC30C42.6070402@candelatech.com>
-In-Reply-To: <4DC30C42.6070402@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105061605.31625.arnd@arndb.de>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+Date: Sat, 7 May 2011 15:34:20 +0200
+Message-ID: <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com> (sfid-20110507_153443_887964_442E2D73)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-05 10:44 PM, Ben Greear wrote:
-> I bisected the problem I was having with ath9k STA configured for WPA
-> not being able to authenticate.  I'm using nohwcrypt=1, which may
-> be why no one else sees it.
-> 
-> According to bisect, this is the first bad commit:
-> 
-> commit 5519541d5a5f19893546883547e2f0f2e5934df7
-> Author: Felix Fietkau<nbd@openwrt.org>
-> Date:   Sun Apr 17 23:28:09 2011 +0200
-> 
->       ath9k: fix powersave frame filtering/buffering in AP mode
-> 
->       This patch fixes a long standing issue of pending packets in the queue being
->       sent (and retransmitted many times) to sleeping stations.
->       This was made worse by aggregation through driver-internal retransmitting
->       of A-MDPU subframes.
->       Previously the hardware tx filter was cleared unconditionally for every
->       single packet - with this patch it uses the IEEE80211_TX_CTL_CLEAR_PS_FILT
->       for unaggregated frames.
->       A sta_notify driver op is added to stop aggregation for stations when they
->       enter powersave mode. Subframes stay buffered inside the driver, to ensure
->       that the BlockAck window keeps a sane state.
->       Since the driver uses software aggregation, the clearing of the tx filter
->       needs to be handled by the driver instead of mac80211 for aggregated frames.
-> 
->       Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->       Signed-off-by: John W. Linville<linville@tuxdriver.com>
-> 
-> 
-> I'll be happy to test patches, it seems very easy to reproduce on
-> my setup.
-How about this?
+2011/5/6 Rafał Miłecki <zajec5@gmail.com>:
+> 2011/5/6 Arnd Bergmann <arnd@arndb.de>:
+>>> +const char *bcma_device_name(u16 coreid)
+>>> +{
+>>> +     switch (coreid) {
+>>> +     case BCMA_CORE_OOB_ROUTER:
+>>> +             return "OOB Router";
+>>> +     case BCMA_CORE_INVALID:
+>>> +             return "Invalid";
+>>> +     case BCMA_CORE_CHIPCOMMON:
+>>> +             return "ChipCommon";
+>>> +     case BCMA_CORE_ILINE20:
+>>> +             return "ILine 20";
+>>
+>> It's better to make that a data structure than a switch() statement,
+>> both from readability and efficiency aspects.
+>
+> Well, maybe. We call it only once, at init time. In any case we're
+> still waiting for Broadcom to clarify which cores are really used for
+> BCMA.
 
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
- 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
- 	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
- 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+	else if (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
+Arnd: did you have a look at defines at all?
+
+Most of the defines have values in range 0x800 → 0x837. Converting
+this to array means loosing 0x800 u16 entries. We can not use 0x800
+offset, because there are also some defined between 0x000 and 0x800:
+#define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+#define BCMA_CORE_INVALID              0x700
+
+Oh and there is still:
+#define BCMA_CORE_DEFAULT              0xFFF
+we could want to include. Then we would loose additional (0xFFF -
+0x837) u16 entries in array.
+
+I'll just leave this huge "case". As I said, it's called only once on
+initialization time. For standard PCI cards there are usually 3-5
+cores, for embedded systems this number can be bigger, but still is
+limited with 16 for 1 bus:
+#define BCMA_MAX_NR_CORES              16
+
+-- 
+Rafał
