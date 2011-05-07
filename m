@@ -1,131 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3188 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754011Ab1EIOdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:08 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 2/4] staging: brcm80211: use common pktq_flush functions
-Date: Mon, 9 May 2011 16:32:54 +0200
-Message-ID: <1304951576-2351-3-git-send-email-arend@broadcom.com> (sfid-20110509_163606_940113_F02389FE)
-In-Reply-To: <1304951576-2351-1-git-send-email-arend@broadcom.com>
-References: <1304951576-2351-1-git-send-email-arend@broadcom.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:45528 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755901Ab1EGSsL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 14:48:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1304792795.13983.28.camel@dev.znau.edu.ua>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105061605.31625.arnd@arndb.de>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	<1304790665.13983.10.camel@dev.znau.edu.ua>
+	<BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
+	<1304792795.13983.28.camel@dev.znau.edu.ua>
+Date: Sat, 7 May 2011 20:48:10 +0200
+Message-ID: <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com> (sfid-20110507_204833_420427_3165478E)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
+2011/5/7 George Kashperko <george@znau.edu.ua>:
+>
+>> 2011/5/7 George Kashperko <george@znau.edu.ua>:
+>> >
+>> >> 2011/5/6 Rafał Miłecki <zajec5@gmail.com>:
+>> >> > 2011/5/6 Arnd Bergmann <arnd@arndb.de>:
+>> >> >>> +const char *bcma_device_name(u16 coreid)
+>> >> >>> +{
+>> >> >>> +     switch (coreid) {
+>> >> >>> +     case BCMA_CORE_OOB_ROUTER:
+>> >> >>> +             return "OOB Router";
+>> >> >>> +     case BCMA_CORE_INVALID:
+>> >> >>> +             return "Invalid";
+>> >> >>> +     case BCMA_CORE_CHIPCOMMON:
+>> >> >>> +             return "ChipCommon";
+>> >> >>> +     case BCMA_CORE_ILINE20:
+>> >> >>> +             return "ILine 20";
+>> >> >>
+>> >> >> It's better to make that a data structure than a switch() statement,
+>> >> >> both from readability and efficiency aspects.
+>> >> >
+>> >> > Well, maybe. We call it only once, at init time. In any case we're
+>> >> > still waiting for Broadcom to clarify which cores are really used for
+>> >> > BCMA.
+>> >>
+>> >> Arnd: did you have a look at defines at all?
+>> >>
+>> >> Most of the defines have values in range 0x800 → 0x837. Converting
+>> >> this to array means loosing 0x800 u16 entries. We can not use 0x800
+>> >> offset, because there are also some defined between 0x000 and 0x800:
+>> >> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+>> >> #define BCMA_CORE_INVALID              0x700
+>> >>
+>> >> Oh and there is still:
+>> >> #define BCMA_CORE_DEFAULT              0xFFF
+>> >> we could want to include. Then we would loose additional (0xFFF -
+>> >> 0x837) u16 entries in array.
+>> > What is the purpose for bcma_device_name in bus driver code ? Why not
+>> > define const char *name in struct bcma_driver and let driver writers
+>> > supply kernel with knowledge on new cores' names rather than hard type
+>> > those into the bus code ?
+>>
+>> The purpose is ridiculously trivial. Print user-friendly names on
+>> scanning. Why not do that?
+> Output like
+> Core 0: ChipCommon (id 0x800, rev 18, vendor 0x14e4)
+> and
+> Core 0: id 0x800, rev 18, vendor 0x14e4
+> both give to 99% of linux systems' end-users exactly the same consistent
+> information. Its more than enough for diagnostic purposes (I guess
+> scanning code does outputs this for diagnostic purposes by those less
+> than 1% of people who are aware wth is actually that ChipCommon is, not
+> to be just user friendly?).
 
-The softmac and fullmac drivers can use the same implementation of
-pktq_flush(), so remove the unnecessary version.
+Really, what's wrong with that? Does it kill anyone's pet we print
+this? We also do:
+pr_err("Scanning failed because of wrong CID\n");
+return -1;
+While we could drop pr_err. Why to do this? Advanced used can always
+check what -1 means.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- drivers/staging/brcm80211/include/bcmutils.h  |   13 +----------
- drivers/staging/brcm80211/util/bcmutils.c     |   27 -------------------------
- 3 files changed, 3 insertions(+), 39 deletions(-)
+I just like this. I find situations when it's useful, while I don't
+see real negatives. I want to keep this. Can we leave this that way?
+Unless someone finds some really bad effects of this?
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 4bfd8d8..c1d22c8 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2835,7 +2835,7 @@ void dhd_bus_stop(struct dhd_bus *bus, bool enforce_mutex)
- 	dhdsdio_clkctl(bus, CLK_SDONLY, false);
- 
- 	/* Clear the data packet queues */
--	pktq_flush(&bus->txq, true);
-+	pktq_flush(&bus->txq, true, NULL, 0);
- 
- 	/* Clear any held glomming stuff */
- 	if (bus->glomd)
-diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
-index 0dd63a2..d83a504 100644
---- a/drivers/staging/brcm80211/include/bcmutils.h
-+++ b/drivers/staging/brcm80211/include/bcmutils.h
-@@ -99,13 +99,8 @@ extern struct sk_buff *pkt_buf_get_skb(uint len);
- extern void pkt_buf_free_skb(struct sk_buff *skb);
- 
- /* Empty the queue at particular precedence level */
--#ifdef BRCM_FULLMAC
--	extern void pktq_pflush(struct pktq *pq, int prec,
--		bool dir);
--#else
--	extern void pktq_pflush(struct pktq *pq, int prec,
--		bool dir, ifpkt_cb_t fn, int arg);
--#endif /* BRCM_FULLMAC */
-+extern void pktq_pflush(struct pktq *pq, int prec,
-+	bool dir, ifpkt_cb_t fn, int arg);
- 
- /* operations on a set of precedences in packet queue */
- 
-@@ -130,12 +125,8 @@ extern struct sk_buff *pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
- 	extern void pktq_init(struct pktq *pq, int num_prec, int max_len);
- /* prec_out may be NULL if caller is not interested in return value */
- 	extern struct sk_buff *pktq_peek_tail(struct pktq *pq, int *prec_out);
--#ifdef BRCM_FULLMAC
--	extern void pktq_flush(struct pktq *pq, bool dir);
--#else
- 	extern void pktq_flush(struct pktq *pq, bool dir,
- 		ifpkt_cb_t fn, int arg);
--#endif
- 
- /* externs */
- /* packet */
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index 7337a75..95214cf 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -213,32 +213,6 @@ struct sk_buff *BCMFASTPATH pktq_pdeq_tail(struct pktq *pq, int prec)
- 	return p;
- }
- 
--#ifdef BRCM_FULLMAC
--void pktq_pflush(struct pktq *pq, int prec, bool dir)
--{
--	struct pktq_prec *q;
--	struct sk_buff *p;
--
--	q = &pq->q[prec];
--	p = q->head;
--	while (p) {
--		q->head = p->prev;
--		p->prev = NULL;
--		pkt_buf_free_skb(p);
--		q->len--;
--		pq->len--;
--		p = q->head;
--	}
--	q->tail = NULL;
--}
--
--void pktq_flush(struct pktq *pq, bool dir)
--{
--	int prec;
--	for (prec = 0; prec < pq->num_prec; prec++)
--		pktq_pflush(pq, prec, dir);
--}
--#else /* !BRCM_FULLMAC */
- void
- pktq_pflush(struct pktq *pq, int prec, bool dir,
- 	    ifpkt_cb_t fn, int arg)
-@@ -278,7 +252,6 @@ void pktq_flush(struct pktq *pq, bool dir,
- 	for (prec = 0; prec < pq->num_prec; prec++)
- 		pktq_pflush(pq, prec, dir, fn, arg);
- }
--#endif /* BRCM_FULLMAC */
- 
- void pktq_init(struct pktq *pq, int num_prec, int max_len)
- {
+
+> For user firendly output you still can keep the name of the core in
+> dedicated driver.
+
+It won't work in case of core with no driver (not supported), driver
+not compiled (someone didn't know it's needed for his system) and it
+won't print nicely all bus devices in one place.
+
+
+>> Let's allow user understand what his bus contains without looking info
+>> defines in .h.
+>>
+>>
+>> > Also this will close the question Arend asked
+>> > you regarding same core ids with different manufacturer ids.
+>>
+>> I don't know what was Arend's question. I asked but it was few minutes
+>> ago. I guess he just wanted to point there can be other manufacturer's
+>> cores.
+>>
+> I guess core id 0x800 by 0x04BF vendor and 0x800 by 0x043B vendor will
+> both be reported as ChipCommon which most likely is wrong for second
+> one. Btw, ChipCommon is 0x500 for 4706 and there will be more new core
+> codes for new Broadcom devices. Don't think its right to build core
+> names database into kernel while there will be at most few of them used
+> on particular end system.
+
+This is constructive, I'll fix this, thanks.
+
 -- 
-1.7.4.1
-
-
+Rafał
