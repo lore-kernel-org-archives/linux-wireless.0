@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:36717 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752809Ab1EIOTY (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37152 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310Ab1EGAeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:19:24 -0400
-Received: by mail-ey0-f181.google.com with SMTP id 5so1849504eyh.40
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 07:19:22 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: don't drop frames where skb->len < 24 in ieee80211_scan_rx()
-Date: Mon,  9 May 2011 17:19:13 +0300
-Message-Id: <1304950753-2952-1-git-send-email-coelho@ti.com> (sfid-20110509_161928_964688_156F5757)
+	Fri, 6 May 2011 20:34:23 -0400
+Message-ID: <4DC49386.6070503@candelatech.com> (sfid-20110507_023450_080520_B1E00588)
+Date: Fri, 06 May 2011 17:34:14 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Biescting between mainline and wireless-testing
+References: <BANLkTik3TtCcy2cJkMbRTpsn4x4XE9=naQ@mail.gmail.com>
+In-Reply-To: <BANLkTik3TtCcy2cJkMbRTpsn4x4XE9=naQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This seems to be a leftover from the old days, when we didn't support
-any frames that didn't contain the full ieee802.11 header.  This is
-not the case anymore.  It does not cause problems now, because they
-are only dropped during scan.  But when scheduled scans get merged,
-this would become a problem because we would drop all small frames
-while scheduled scan is running.
+On 05/06/2011 04:51 PM, Rafał Miłecki wrote:
+> I suspect we have some ugly (hard trackable) regression between
+> mainline and wireless-testing. It sounds impossible, but this seems to
+> affect Broadcom cards and looks like not related to ssb or b43.
+>
+> Today I've compiled 2.6.38 and 2.6.39-rc6, both work GOOD.
+> I've compiled wireless-testing and it failed, BAD.
+> I've reverted all recent ssb patches from top and it still fails BAD.
+>
+> What would be the easiest way to try bisecting? I can see
+> wireless-testing merges mainline quite often. Can I use some trick on
+> checkouted wireless-testing? Do I have to checkout mainline and merge
+> wireless-testing into it? Something even different?
+>
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- net/mac80211/scan.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+git bisect can handle it...I've spent some quality time finding
+bugs in ath9k with that lately...
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 489b6ad..b7a39c4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -169,9 +169,6 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- 	if (ieee80211_is_ctl(fc))
- 		return RX_CONTINUE;
- 
--	if (skb->len < 24)
--		return RX_DROP_MONITOR;
--
- 	presp = ieee80211_is_probe_resp(fc);
- 	if (presp) {
- 		/* ignore ProbeResp to foreign address */
+Ben
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
