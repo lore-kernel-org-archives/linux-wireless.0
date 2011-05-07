@@ -1,33 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:53236 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753844Ab1ECQpg (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53218 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756013Ab1EGTVr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 12:45:36 -0400
-Message-ID: <4DC0312A.4040303@lwfinger.net> (sfid-20110503_184552_454342_834273D7)
-Date: Tue, 03 May 2011 11:45:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 7 May 2011 15:21:47 -0400
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com>
-In-Reply-To: <776913.88107.qm@web161609.mail.bf1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1304794931.13983.44.camel@dev.znau.edu.ua>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105061605.31625.arnd@arndb.de>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	<1304790665.13983.10.camel@dev.znau.edu.ua>
+	<BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
+	<1304792795.13983.28.camel@dev.znau.edu.ua>
+	<BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
+	<1304794931.13983.44.camel@dev.znau.edu.ua>
+Date: Sat, 7 May 2011 21:21:46 +0200
+Message-ID: <BANLkTik9FWgzpNWuMXXRjOj-rDvPNY_nCA@mail.gmail.com> (sfid-20110507_212205_846417_9C45C31F)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 10:59 AM, Walter Goldens wrote:
+2011/5/7 George Kashperko <george@znau.edu.ua>:
+>> >>
+>> >> The purpose is ridiculously trivial. Print user-friendly names on
+>> >> scanning. Why not do that?
+>> > Output like
+>> > Core 0: ChipCommon (id 0x800, rev 18, vendor 0x14e4)
+>> > and
+>> > Core 0: id 0x800, rev 18, vendor 0x14e4
+>> > both give to 99% of linux systems' end-users exactly the same consistent
+>> > information. Its more than enough for diagnostic purposes (I guess
+>> > scanning code does outputs this for diagnostic purposes by those less
+>> > than 1% of people who are aware wth is actually that ChipCommon is, not
+>> > to be just user friendly?).
+>>
+>> Really, what's wrong with that? Does it kill anyone's pet we print
+>> this? We also do:
+>> pr_err("Scanning failed because of wrong CID\n");
+>> return -1;
+>> While we could drop pr_err. Why to do this? Advanced used can always
+>> check what -1 means.
+>>
+>> I just like this. I find situations when it's useful, while I don't
+>> see real negatives. I want to keep this. Can we leave this that way?
+>> Unless someone finds some really bad effects of this?
+> Nothing wrong except it makes kernel larger while gives _absolutely_ no
+> benefit to end users. Regardless bus code prints core name or not it
+> (core name) have absolutely no impact on driver matching.
 >
->> This set of patches introduces a driver for the RTL8192SE PCI devices.
->
-> Any estimates on the *SU driver? :)
+> Imagine yourself an end-user who haven't got his 80211 core matched with
+> driver and therefore he haven't got WiFi working.
+> If bus driver code outputs
+> Core X: id 0x812, rev. 8, vendor 0x4BF
+> you (as end user) will look where is 0x4BF/0x812 driver supporting
+> rev.8.
+> But if bus driver code outputs
+> Core X: MAC 802.11 (core id 0x812, rev. 8, vendor 0x4BF)
+> you (as end user) empowered with MAC 802.11 name knowledge will still
+> look where is 0x4BF/0x812 driver supporting rev.8.
 
-Now that rtl8192se is submitted, I will start work on the driver for the 
-RTL8192DE devices. After that will be the RTL8191SU. It has lower priority 
-because r8712u from staging handles those devices. It is not based on mac80211, 
-but it works.
+I'll ask linux-wireless instead of linux-usb or linux-arm.
 
-Larry
+I didn't expect longer discussion so I got this trivial example of
+pr_err. But it appears to be good example/question.
+
+How do you see relation between bcma_device_name and:
+int zd_ioread32v_locked(...) {
+	if (r) {
+		dev_dbg_f(zd_chip_dev(chip),
+			  "error: zd_ioread16v_locked. Error number %d\n", r);
+		return r;
+	}
+}
+
+I believe according to your theory we should drop thi error message,
+right? It eats memory to keep this string while error code can always
+be checked in source.
+
+-- 
+Rafał
