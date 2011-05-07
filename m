@@ -1,186 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51481 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932353Ab1EMI5T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 04:57:19 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 21so1752034wya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:18 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 4/6] wl12xx: prevent scheduling while suspending (WoW enabled)
-Date: Fri, 13 May 2011 11:57:11 +0300
-Message-Id: <1305277033-6662-5-git-send-email-eliad@wizery.com> (sfid-20110513_105724_122724_A35F961F)
-In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
-References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39318 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753173Ab1EGXRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 19:17:44 -0400
+Message-ID: <4DC5D310.8050604@hauke-m.de> (sfid-20110508_011811_788946_C7F00F34)
+Date: Sun, 08 May 2011 01:17:36 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Henry Ptasinski <henryp@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com> <4DC56FB9.5000208@hauke-m.de> <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com> <4DC57425.30206@hauke-m.de> <BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com> <4DC5805C.2010202@hauke-m.de> <20110507224223.GA2537@broadcom.com>
+In-Reply-To: <20110507224223.GA2537@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When WoW is enabled, the interface will stay up and the chip will
-be powered on, so we have to flush/cancel any remaining work, and
-prevent the irq handler from scheduling a new work until the system
-is resumed.
+On 05/08/2011 12:42 AM, Henry Ptasinski wrote:
+> On Sat, May 07, 2011 at 10:24:44AM -0700, Hauke Mehrtens wrote:
+>> On 05/07/2011 06:51 PM, Rafał Miłecki wrote:
+>>> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+>>>> There is a Ethernet core used on embedded devices with this bus and
+>>>> George wrote a driver for the first version of this bus implementation,
+>>>> he send to the ML. Most user will use this with some wireless devices so
+>>>> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
+>>>
+>>> Thanks, I didn't know about this ethernet driver. Have to check it!
+>>> Where was this published? Do you have a thread name?
+>>
+>> I think he haven't send it to the mailing list, there is a link [0] in
+>> some Ticket [1] at OpenWrt. This driver was derived from source code
+>> Braodcom have published, but not under a GPL compatible license. It will
+>> be nice if Braodcom would allow us to publish a driver under the terms
+>> of the GPL for the Ethernet core based on their driver, without writing
+>> a full spec of the driver like it was done for b43.
+> 
+> ...
+>>
+>> [0] http://www.znau.edu.ua/temp/asus-rt-n16/openwrt-bcm4716-README.txt
+>> [1] https://dev.openwrt.org/ticket/6580#comment
+> 
+> All of of the patches listed in [0] appear to contain GPL-licensed code.  Can
+> you provide a pointer to the ethernet driver that you think is not under a
+> GPL-compatible license?
 
-Add 2 new flags:
-* WL1271_FLAG_SUSPENDED - the system is (about to be) suspended.
-* WL1271_FLAG_PENDING_WORK - there is a pending irq work which
-   should be scheduled when the system is being resumed.
+I was only able to find the driver George build based on the et driver
+as a patch in a patch version. It is patch
+999-openwrt4716-ssb-bgmac-mak-driver.patch in
+http://www.znau.edu.ua/temp/asus-rt-n16/2011-02-13T23-17/001-openwrt4716-TARGET_brcm4716.patch
 
-In order to wake-up the system while getting an irq, we initialize
-the device as wakeup device, and calling pm_wakeup_event() upon
-getting the interrupt (while the system is about to be suspended)
+This driver is based on the Broadcom et driver from the GPL source
+package of the Asus RT-N16. One of the files has this header [0]. This
+license does not seam to be compatible with the GPL. Netgear provides
+the et driver just in binary format without any source code.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+It will be nice if Broadcom is fine when we build and release an
+Ethernet driver like 999-openwrt4716-ssb-bgmac-mak-driver.patch using
+bcma under the terms of the GPL and using et as a reference. The best
+thing would be if you could release the Broadcom et driver under a GPL
+compatible license, so we are able to use it as a reference
+implementation without any problems.
+
+If you relicense your driver you will probably get a Ethernet driver
+based on the bcma bus without any costs. I do not see any problems with
+the FCC, if your release this code. Every one how wants to see the
+source code already did so, as it is freely available for years now.
+
+Hauke
+
+[0] RT-N16/src/et/sys/etcgmac.c header:
 ---
-v1->v2:
-	change wl1271_hardirq flow when returning IRQ_HANDLED
+Broadcom Gigabit Ethernet MAC (Unimac) core.
 
- drivers/net/wireless/wl12xx/main.c   |   46 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/sdio.c   |   24 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +
- 3 files changed, 72 insertions(+), 0 deletions(-)
+This file implements the chip-specific routines for the GMAC core.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9ca71ce..308855a 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1338,6 +1338,28 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 	struct wl1271 *wl = hw->priv;
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
- 	wl->wow_enabled = !!wow;
-+	if (wl->wow_enabled) {
-+		/* flush any remaining work */
-+		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-+		flush_delayed_work(&wl->scan_complete_work);
-+
-+		/*
-+		 * disable and re-enable interrupts in order to flush
-+		 * the threaded_irq
-+		 */
-+		wl1271_disable_interrupts(wl);
-+
-+		/*
-+		 * set suspended flag to avoid triggering a new threaded_irq
-+		 * work. no need for spinlock as interrupts are disabled.
-+		 */
-+		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+
-+		wl1271_enable_interrupts(wl);
-+		flush_work(&wl->tx_work);
-+		flush_delayed_work(&wl->pspoll_work);
-+		flush_delayed_work(&wl->elp_work);
-+	}
- 	return 0;
- }
- 
-@@ -1346,6 +1368,30 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 	struct wl1271 *wl = hw->priv;
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
- 		     wl->wow_enabled);
-+
-+	/*
-+	 * re-enable irq_work enqueuing, and call irq_work directly if
-+	 * there is a pending work.
-+	 */
-+	if (wl->wow_enabled) {
-+		struct wl1271 *wl = hw->priv;
-+		unsigned long flags;
-+		bool run_irq_work = false;
-+
-+		spin_lock_irqsave(&wl->wl_lock, flags);
-+		clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+		if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
-+			run_irq_work = true;
-+		spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+		if (run_irq_work) {
-+			wl1271_debug(DEBUG_MAC80211,
-+				     "run postponed irq_work directly");
-+			wl1271_irq(0, wl);
-+			wl1271_enable_interrupts(wl);
-+		}
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 5b03fd5..41183db 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -82,6 +82,16 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
- 		complete(wl->elp_compl);
- 		wl->elp_compl = NULL;
- 	}
-+
-+	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
-+		/* don't enqueue a work right now. mark it as pending */
-+		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
-+		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
-+		disable_irq_nosync(wl->irq);
-+		pm_wakeup_event(wl1271_sdio_wl_to_dev(wl), 0);
-+		spin_unlock_irqrestore(&wl->wl_lock, flags);
-+		return IRQ_HANDLED;
-+	}
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	return IRQ_WAKE_THREAD;
-@@ -268,6 +278,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	}
- 
- 	enable_irq_wake(wl->irq);
-+	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
- 
- 	disable_irq(wl->irq);
- 
-@@ -305,6 +316,7 @@ static void __devexit wl1271_remove(struct sdio_func *func)
- 	pm_runtime_get_noresume(&func->dev);
- 
- 	wl1271_unregister_hw(wl);
-+	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
- 	disable_irq_wake(wl->irq);
- 	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
-@@ -339,6 +351,9 @@ static int wl1271_suspend(struct device *dev)
- 			wl1271_error("error while trying to keep power");
- 			goto out;
- 		}
-+
-+		/* release host */
-+		sdio_release_host(func);
- 	}
- out:
- 	return ret;
-@@ -346,6 +361,15 @@ out:
- 
- static int wl1271_resume(struct device *dev)
- {
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct wl1271 *wl = sdio_get_drvdata(func);
-+
-+	wl1271_debug(DEBUG_MAC80211, "wl1271 resume");
-+	if (wl->wow_enabled) {
-+		/* claim back host */
-+		sdio_claim_host(func);
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index f9d0a14..daf941d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -358,6 +358,8 @@ enum wl12xx_flags {
- 	WL1271_FLAG_AP_STARTED,
- 	WL1271_FLAG_IF_INITIALIZED,
- 	WL1271_FLAG_DUMMY_PACKET_PENDING,
-+	WL1271_FLAG_SUSPENDED,
-+	WL1271_FLAG_PENDING_WORK,
- };
- 
- struct wl1271_link {
--- 
-1.7.0.4
+Copyright (C) 2009, Broadcom Corporation
+All Rights Reserved.
 
+This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
+the contents of this file may not be disclosed to third parties, copied
+or duplicated in any form, in whole or in part, without the prior
+written permission of Broadcom Corporation.
+---
