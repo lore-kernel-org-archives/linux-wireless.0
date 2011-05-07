@@ -1,88 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:11988 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753186Ab1EFPNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 11:13:21 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 08:12:53 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Vasanth.Thiagarajan@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k: Fix a warning due to a queued work during S3 state
-Date: Fri, 6 May 2011 20:43:11 +0530
-Message-ID: <1304694791-4238-1-git-send-email-mshajakhan@atheros.com> (sfid-20110506_171328_434243_C3B36171)
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39986 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540Ab1EGJVp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 05:21:45 -0400
+Received: by fxm17 with SMTP id 17so2791461fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 02:21:42 -0700 (PDT)
+Message-Id: <882b3dbce3a3c6fa33ce02130d6bbf5fee348dfb.1304759993.git.chunkeey@googlemail.com> (sfid-20110507_112202_656629_C7499628)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 7 May 2011 11:13:37 +0200
+Subject: [PATCH 1/2] carl9170: fix -Wunused-but-set-variable warnings
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+tx.c: In function ‘carl9170_tx_accounting_free’:
+tx.c:159:28: warning: variable ‘txinfo’ set but not used
+tx.c: In function ‘carl9170_tx_status_process_ampdu’:
+tx.c:383:27: warning: variable ‘ar_info’ set but not used
+tx.c: In function ‘__carl9170_tx_process_status’:
+tx.c:626:27: warning: variable ‘arinfo’ set but not used
+tx.c: In function ‘carl9170_tx_ampdu_queue’:
+tx.c:1324:15: warning: variable ‘max’ set but not used
 
-during suspend/S3 state drv_flush is called from mac80211 irrespective of
-interface count. In ath9k we queue a work in ath9k_flush which we expect
-to be cancelled in the drv_stop call back. during suspend process mac80211
-calls drv_stop only when the interface count(local->count) is non-zero.
-unfortunately when the network manager is enabled, drv_flush is called
-while drv_stop is not called as local->count reaches '0'.
-	So fix this by simply checking for the device presence in the
-drv_flush call back in the driver before queueing work or anything else.
-this patch fixes the following WARNING
-
-	Call Trace:
-	[<c014c6e2>] warn_slowpath_common+0x72/0xa0
-	[<fc133f99>] ? ieee80211_can_queue_work+0x39/0x50 [mac80211]
-	[<fc133f99>] ? ieee80211_can_queue_work+0x39/0x50 [mac80211]
-	[<c014c75b>] warn_slowpath_fmt+0x2b/0x30
-	[<fc133f99>] ieee80211_can_queue_work+0x39/0x50 [mac80211]
-	[<fc134ed1>] ieee80211_queue_delayed_work+0x21/0x50 [mac80211]
-	[<fc1e5b22>] ath_tx_complete_poll_work+0xb2/0x100 [ath9k]
-	[<c016399e>] run_workqueue+0x8e/0x150
-	[<fc1e5a70>] ? ath_tx_complete_poll_work+0x0/0x100 [ath9k]
-	[<c0163ae4>] worker_thread+0x84/0xe0
-	[<c0167a60>] ? autoremove_wake_function+0x0/0x50
-	[<c0163a60>] ? worker_thread+0x0/0xe0
-	[<c01677d4>] kthread+0x74/0x80
-	[<c0167760>] ? kthread+0x0/0x80
-	[<c0104087>] kernel_thread_helper+0x7/0x10
----[ end trace 2aff81010df9215b ]---
-
-Cc: stable@kernel.org [2.6.39+]
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/carl9170/tx.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3de115d..4691bf3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2256,6 +2256,8 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index bf2eff9..e94084f 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -156,10 +156,8 @@ out_rcu:
+ 
+ static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
  {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int timeout = 200; /* ms */
- 	int i, j;
- 	bool drain_txq;
-@@ -2263,6 +2265,12 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 	mutex_lock(&sc->mutex);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
+-	struct ieee80211_tx_info *txinfo;
+ 	int queue;
  
-+	if (sc->sc_flags & SC_OP_INVALID) {
-+		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
-+		mutex_unlock(&sc->mutex);
-+		return;
-+	}
-+
- 	if (drop)
- 		timeout = 1;
+-	txinfo = IEEE80211_SKB_CB(skb);
+ 	queue = skb_get_queue_mapping(skb);
  
+ 	spin_lock_bh(&ar->tx_stats_lock);
+@@ -380,7 +378,6 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ {
+ 	struct _carl9170_tx_superframe *super = (void *) skb->data;
+ 	struct ieee80211_hdr *hdr = (void *) super->frame_data;
+-	struct carl9170_tx_info *ar_info;
+ 	struct ieee80211_sta *sta;
+ 	struct carl9170_sta_info *sta_info;
+ 	struct carl9170_sta_tid *tid_info;
+@@ -391,8 +388,6 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ 	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
+ 		return;
+ 
+-	ar_info = (void *) txinfo->rate_driver_data;
+-
+ 	rcu_read_lock();
+ 	sta = __carl9170_get_tx_sta(ar, skb);
+ 	if (unlikely(!sta))
+@@ -623,7 +618,6 @@ static void __carl9170_tx_process_status(struct ar9170 *ar,
+ {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *txinfo;
+-	struct carl9170_tx_info *arinfo;
+ 	unsigned int r, t, q;
+ 	bool success = true;
+ 
+@@ -639,7 +633,6 @@ static void __carl9170_tx_process_status(struct ar9170 *ar,
+ 	}
+ 
+ 	txinfo = IEEE80211_SKB_CB(skb);
+-	arinfo = (void *) txinfo->rate_driver_data;
+ 
+ 	if (!(info & CARL9170_TX_STATUS_SUCCESS))
+ 		success = false;
+@@ -1321,7 +1314,6 @@ static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
+ 	struct carl9170_sta_info *sta_info;
+ 	struct carl9170_sta_tid *agg;
+ 	struct sk_buff *iter;
+-	unsigned int max;
+ 	u16 tid, seq, qseq, off;
+ 	bool run = false;
+ 
+@@ -1331,7 +1323,6 @@ static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
+ 
+ 	rcu_read_lock();
+ 	agg = rcu_dereference(sta_info->agg[tid]);
+-	max = sta_info->ampdu_max_len;
+ 
+ 	if (!agg)
+ 		goto err_unlock_rcu;
 -- 
-1.7.0.4
+1.7.5.1
 
