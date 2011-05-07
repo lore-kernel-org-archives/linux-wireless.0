@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:33579 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883Ab1EWKqk (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:49138 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750796Ab1EGEc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 06:46:40 -0400
-Received: by fxm17 with SMTP id 17so3818437fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 03:46:39 -0700 (PDT)
+	Sat, 7 May 2011 00:32:28 -0400
 MIME-Version: 1.0
-Date: Mon, 23 May 2011 12:46:39 +0200
-Message-ID: <BANLkTimDsOvrHnLxYeFLmaXTAA7Fpyy+HA@mail.gmail.com> (sfid-20110523_124643_748510_033C917D)
-Subject: Access Point on davinci dm365 board
-From: Boyan Penev <boyan.mp@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20110507003818.GA23997@kroah.com>
+References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com> <20110507003818.GA23997@kroah.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 6 May 2011 21:32:08 -0700
+Message-ID: <BANLkTinHPkUFLDpsyReruQOhE45pbYyJwQ@mail.gmail.com> (sfid-20110507_063253_925838_E9B4FA8C)
+Subject: Re: [RFC 0/2] x86: Add support for Atheros AR1520 GPS devices
+To: Greg KH <greg@kroah.com>
+Cc: akpm@linux-foundation.org, mingo@redhat.com, tglx@linutronix.de,
+	hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, allen.kao@atheros.com,
+	roman.gezikov@atheros.com, joonas.viskari@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri, May 6, 2011 at 5:38 PM, Greg KH <greg@kroah.com> wrote:
+> On Fri, May 06, 2011 at 03:09:38PM -0700, Luis R. Rodriguez wrote:
+>> These two patches adds support for the Atheros AR1520 GPS device,
+>> currently only pegged onto an mrst platform. This creates a character
+>> device called ar1520 and lets userspace talk to it through it. My only
+>> concern against this approach is that it this requires a custom userspace
+>> application for reseting the device, waking it up and for blocking reads
+>> through ioctl. The character device can be used to read/write data to it
+>> as well.
+>
+> I really don't like using a character device for this, what's wrong with
+> a tty device instead like other GPS devices are using today (i.e. a
+> number of USB GPS devices)?
+>
+> I don't understand what these ioctls are supposed to be doing, can't
+> they map to standard tty ioctls that we already have for flow control so
+> that userspace doesn't have to write a whole new application just to
+> talk to yet-another-gps-device?
 
-i need to find a solution how to enable an embedded system (TI davinci
-board, dm365, arm CPU, kernel is 2.6.32.17 from the TI psp03.01.01.38
-sdk).
-Could someone advise me on what the most suitable solution might be? I
-know i should be using hostapd, but what would be the best wireless
-stick?
+Thanks for the review, will relay this back.
 
-Until now i have tried out the D-Link DWL-G122 and Linksys WUSB54GC-EU
-for the rt73usb driver is listed as supporting AP- mode, but i could
-not get tham to work:
-I've enabled the drivers as modules in the kernel, downloaded the
-firmware and loaded it in /lib/firmware, but the sticks don't get
-assigned as wireless interfaces.
-I've managed to enable an AVM wireless n stick with the ar9170 driver,
-but as ar9170 does not support ap mode- hostapd couldn't do anything.
-
-I will be very thankful for any help or advice on what the best stick
-for an embedded system as mine might be. Furthermore- is there any
-soulution
-for enabling the davinci board as an access point? i have 3 USB ports,
-a serial port and jtag available.
-
-Best Regards,
-
-Boyan Penev
+  Luis
