@@ -1,27 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:51122 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109Ab1ECMu1 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38713 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756029Ab1EGUOx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 08:50:27 -0400
-Received: by yia27 with SMTP id 27so11729yia.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 05:50:26 -0700 (PDT)
+	Sat, 7 May 2011 16:14:53 -0400
 MIME-Version: 1.0
-Date: Tue, 3 May 2011 16:50:26 +0400
-Message-ID: <BANLkTiniamP_zXeGkW2TgatdkSv1+rdfeg@mail.gmail.com> (sfid-20110503_145030_136239_6389868C)
-Subject: carl9170.ko RX - DMA, TX - COPY.
-From: "Andrew V. Stepanov" <stanv@altlinux.org>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1304771519.2227.6.camel@x61.thuisdomein>
+References: <1304771519.2227.6.camel@x61.thuisdomein>
+Date: Sat, 7 May 2011 21:14:52 +0100
+Message-ID: <BANLkTinE4zDXE6VDS=yc1SmCCEbAn70Rcw@mail.gmail.com> (sfid-20110507_221520_272211_B7B6EEF1)
+Subject: Re: [PATCH] [RESEND] iwl4965: drop a lone pr_err()
+From: julie Sullivan <kernelmail.jms@gmail.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+> iwl4965_rate_control_register() prints a message at KERN_ERR level.
 
-I'm very surprising, that carl9170.ko uses DMA only for receiving.
+> -       pr_err("Registering 4965 rate control operations\n");
 
-Is it possible to use DMA for sending packets in carl9170?
+Yes, I noticed this message on boot too and found it a tad confusing...
+('Rate control operations'?? 4,965 of them?)
+:-)  At least I know what it is now. Thanks, Paul.
 
-Can anybody shed some light on this?
-
-Thanks!
+Julie
