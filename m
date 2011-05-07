@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:60151 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755036Ab1EPM7M convert rfc822-to-8bit (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:4259 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756029Ab1EGWno convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 08:59:12 -0400
+	Sat, 7 May 2011 18:43:44 -0400
+Date: Sat, 7 May 2011 15:42:25 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Greg KH" <greg@kroah.com>,
+	"Michael =?iso-8859-1?Q?B=FCsch?=" <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	"Andy Botting" <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
+ driver
+Message-ID: <20110507224223.GA2537@broadcom.com> (sfid-20110508_004359_793935_58C8F6B9)
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+ <4DC56FB9.5000208@hauke-m.de>
+ <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
+ <4DC57425.30206@hauke-m.de>
+ <BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com>
+ <4DC5805C.2010202@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
-References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
-	<BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
-Date: Mon, 16 May 2011 15:59:10 +0300
-Message-ID: <BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com> (sfid-20110516_145922_598449_F54EFEF5)
-Subject: Re: several packets in a single buffer in Rx
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
-Content-Type: text/plain; charset=ISO-8859-2
+In-Reply-To: <4DC5805C.2010202@hauke-m.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/16 Micha³ Miros³aw <mirqus@gmail.com>:
-> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
->> I would like to be able to deliver the same page several times to the
->> stack without having the stack consume it before the last time I
->> deliver it.
->> Of course I would like to avoid cloning it.
->
-> Just do get_page() on the page having another packet in it before
-> passing skb up.
->
+On Sat, May 07, 2011 at 10:24:44AM -0700, Hauke Mehrtens wrote:
+> On 05/07/2011 06:51 PM, RafaÅ‚ MiÅ‚ecki wrote:
+> > 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+> >> There is a Ethernet core used on embedded devices with this bus and
+> >> George wrote a driver for the first version of this bus implementation,
+> >> he send to the ML. Most user will use this with some wireless devices so
+> >> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
+> > 
+> > Thanks, I didn't know about this ethernet driver. Have to check it!
+> > Where was this published? Do you have a thread name?
+> 
+> I think he haven't send it to the mailing list, there is a link [0] in
+> some Ticket [1] at OpenWrt. This driver was derived from source code
+> Braodcom have published, but not under a GPL compatible license. It will
+> be nice if Braodcom would allow us to publish a driver under the terms
+> of the GPL for the Ethernet core based on their driver, without writing
+> a full spec of the driver like it was done for b43.
 
-I can see the path:
-__kfree_skb -> skb_release_all -> skb_release_data -> put_page
-put_page will free the page iff the _count variable reaches 0. Of course,
-_count is incremented by get_page.
+...
+> 
+> [0] http://www.znau.edu.ua/temp/asus-rt-n16/openwrt-bcm4716-README.txt
+> [1] https://dev.openwrt.org/ticket/6580#comment
 
-I will give it try.
+All of of the patches listed in [0] appear to contain GPL-licensed code.  Can
+you provide a pointer to the ethernet driver that you think is not under a
+GPL-compatible license?
 
-I understand that this will work regardless the order given to
-alloc_pages right ?
+Thanks,
+---
+Henry Ptasinski
+henryp@broadcom.com
 
-Thanks
