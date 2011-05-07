@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23352 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620Ab1EMFfi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 01:35:38 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 22:35:09 -0700
-Date: Fri, 13 May 2011 11:05:34 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: cancel scan_work in ieee80211_unregister_hw
-Message-ID: <20110513053533.GA20459@vmraj-lnx.users.atheros.com> (sfid-20110513_073545_339693_0B165EB2)
-References: <1305220188-13098-1-git-send-email-rmanoharan@atheros.com>
- <1305221121.3461.32.camel@jlt3.sipsolutions.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:49960 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755384Ab1EGP2N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 11:28:13 -0400
+Received: by eyx24 with SMTP id 24so1215677eyx.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 08:28:12 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Fix rmmod hang of rt2800pci
+Date: Sat, 7 May 2011 17:27:46 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1305221121.3461.32.camel@jlt3.sipsolutions.net>
+Message-Id: <201105071727.46998.IvDoorn@gmail.com> (sfid-20110507_172816_668841_4AB0BE75)
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 12, 2011 at 10:55:21PM +0530, Johannes Berg wrote:
-> On Thu, 2011-05-12 at 22:39 +0530, Rajkumar Manoharan wrote:
-> > scan_work is never stopped if the device was unplugged during
-> > s/w scan.
-> 
-> How did you come to that conclusion? ieee80211_do_stop() does stop the
-> scan.
->
-True. But Sometimes ieee80211_scan_cancel is waiting for mutex where
-the lock was already aquired by scan work and scan_work never releases
-the lock till scan completion whenever next_delay == 0.
-This scenario was observed while unplug the card during scan.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
---
-Rajkumar
+txstatus_timer should only be deleted for USB devices, as it is only
+initialized for USB devices.
+
+Reported-by: Andreas Hartmann <andihartmann@01019freenet.de>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 2eb5196..c018d67 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1159,9 +1159,9 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Stop all work.
+ 	 */
+-	del_timer_sync(&rt2x00dev->txstatus_timer);
+ 	cancel_work_sync(&rt2x00dev->intf_work);
+ 	if (rt2x00_is_usb(rt2x00dev)) {
++		del_timer_sync(&rt2x00dev->txstatus_timer);
+ 		cancel_work_sync(&rt2x00dev->rxdone_work);
+ 		cancel_work_sync(&rt2x00dev->txdone_work);
+ 	}
+-- 
+1.7.2.3
+
