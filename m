@@ -1,86 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:53647 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754952Ab1ERHtL convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:56802 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197Ab1EGE4q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 03:49:11 -0400
-Received: by qyk7 with SMTP id 7so2546528qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 00:49:10 -0700 (PDT)
+	Sat, 7 May 2011 00:56:46 -0400
+Received: by vxi39 with SMTP id 39so4068831vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 21:56:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinaPMr-owT31e5hbRVKBad_u9XbUw@mail.gmail.com>
-References: <1305677203-16660-1-git-send-email-zajec5@gmail.com>
-	<1305677203-16660-2-git-send-email-zajec5@gmail.com>
-	<BANLkTinh7VVGUtEUezk3mODqpQ9zPT022Q@mail.gmail.com>
-	<BANLkTinsK3f6Wqpf7ugJKBTMtRbErTdCuw@mail.gmail.com>
-	<BANLkTinaPMr-owT31e5hbRVKBad_u9XbUw@mail.gmail.com>
-Date: Wed, 18 May 2011 09:49:10 +0200
-Message-ID: <BANLkTinLFGzjFOtXZe1Zk2_jLjj2ZZVCrg@mail.gmail.com> (sfid-20110518_094914_637910_26974681)
-Subject: Re: [PATCH 2/9] b43: add bus device abstraction layer
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4DC4BF99.3050101@candelatech.com>
+References: <4DBF1967.9010604@candelatech.com>
+	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
+	<4DC042A5.9050806@candelatech.com>
+	<BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
+	<4DC17DAE.9020808@candelatech.com>
+	<4DC47C04.1080604@candelatech.com>
+	<BANLkTiknUzyadwRLHbEZ4zLkVCmC5A7zKA@mail.gmail.com>
+	<4DC4BF99.3050101@candelatech.com>
+Date: Sat, 7 May 2011 12:56:46 +0800
+Message-ID: <BANLkTimSNE3DQAGEG45ie+O3-fknm7z+hA@mail.gmail.com> (sfid-20110507_065649_970207_E6343839)
+Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 18 maja 2011 09:21 użytkownik Julian Calaby
-<julian.calaby@gmail.com> napisał:
-> 2011/5/18 Rafał Miłecki <zajec5@gmail.com>:
->> W dniu 18 maja 2011 02:28 użytkownik Julian Calaby
->> <julian.calaby@gmail.com> napisał:
->>> Rafał,
->>>
->>> A quick question:
->>>
->>> 2011/5/18 Rafał Miłecki <zajec5@gmail.com>:
->>>>
->>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>> ---
->>>>  drivers/net/wireless/b43/Makefile |    1 +
->>>>  drivers/net/wireless/b43/b43.h    |    4 +++-
->>>>  drivers/net/wireless/b43/bus.c    |   36 ++++++++++++++++++++++++++++++++++++
->>>
->>> Would it make more sense to have this be called ssb.c as it contains
->>> all the ssb specific functions,
->>
->> It's only ssb specific for now. It will contain BCMA code later.
->>
->>
->>> that way you can then have an brcma.c
->>> file to contain the functions specific to that bus?
->>
->> I'll put BCMA specific code in bus.c.
->> Right now bus.c contains 100 LOC* and I believe its SSB part is
->> complete. All the ops functions are one liners. It's so small and
->> simple file I don't see sense to splitting it and having more mess in
->> list of files instead.
+On 7 May 2011 11:42, Ben Greear <greearb@candelatech.com> wrote:
+
+>> Ok, there's likely some PCI init bugs going on here; would someone
+>> with more background in this please take a look?
 >
-> As I see it, having two sets of mostly identical  wrapper functions in
-> a file seems incorrect to me. Especially as once the abstraction is
-> complete it would technically be correct to build b43 without SSB
-> support - it's much cleaner to not compile a file than have a massive
-> #ifdef block in a common file.
+> I haven't had a chance to try this on the Atom system with the
+> latest 39-rc6+ kernels.. �I'll try that on Monday.
 >
-> Anyway, it's only a minor thing.
+> The VIA system was running 39-rc6+, btw.
 
-Massive? It's *one* ifdef for one bus type in this file.
+Thanks!
+
+I do hope it's not ath9k. :-)
 
 
->> A one quick question:
->> Why didn't you respond in "[RFC][PATCH] b43: add bus abstraction
->> layer" on 2011-04-08? Or more recent "[RFC ONLY 2/5] b43: add bus
->> device abstraction later" posted on 2011-05-09?
->
-> While I try to read every patch that passes through the linux-wireless
-> mailing list, I only skim them, and tend to miss some details. The
-> thing that prompted this comment was the SSB comment at the start of
-> the SSB specific wrappers - something I probably didn't read the last
-> two times the patch came up on the list.
-
-OK, I ask because it's much easier to discuss such a things before you
-got 20 patches. That's why I posted very early RFC.
-
--- 
-Rafał
+Adrian
