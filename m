@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:44856 "EHLO purkki.adurom.net"
+Received: from mms3.broadcom.com ([216.31.210.19]:2528 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935666Ab1ETMJA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 08:09:00 -0400
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] Fix uevent race in register_netdevice()
-References: <20110516143913.13838.85357.stgit@localhost6.localdomain6>
-	<20110516.141158.1777924960833804150.davem@davemloft.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 20 May 2011 15:08:58 +0300
-In-Reply-To: <20110516.141158.1777924960833804150.davem@davemloft.net> (David Miller's message of "Mon\, 16 May 2011 14\:11\:58 -0400 \(EDT\)")
-Message-ID: <87oc2xd15x.fsf@purkki.adurom.net> (sfid-20110520_140924_867059_ED81D1F1)
+	id S1751800Ab1EGREU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 13:04:20 -0400
+Message-ID: <4DC57B81.6030705@broadcom.com> (sfid-20110507_190456_344230_23A42318)
+Date: Sat, 7 May 2011 19:04:01 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"Greg KH" <greg@kroah.com>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"George Kashperko" <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Russell King" <rmk@arm.linux.org.uk>,
+	"Andy Botting" <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
+ driver
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+ <201105061605.31625.arnd@arndb.de>
+ <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+ <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+ <1304776555.16344.2.camel@maggie> <4DC57383.3050903@broadcom.com>
+ <BANLkTi=GJs=04H=HpCDy_o1JnhY4+aPgxA@mail.gmail.com>
+In-Reply-To: <BANLkTi=GJs=04H=HpCDy_o1JnhY4+aPgxA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+On 05/07/2011 06:49 PM, Rafał Miłecki wrote:
+> 2011/5/7 Arend van Spriel<arend@broadcom.com>:
+>> On 05/07/2011 03:55 PM, Michael Büsch wrote:
+>>>> Arnd: did you have a look at defines at all?
+>>>>
+>>>> Most of the defines have values in range 0x800 → 0x837. Converting
+>>>> this to array means loosing 0x800 u16 entries. We can not use 0x800
+>>>> offset, because there are also some defined between 0x000 and 0x800:
+>>>> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+>>>> #define BCMA_CORE_INVALID              0x700
+>> Please be aware that the core identifier itself is not unique (in the
+>> current list they are). In the scan the BCMA_CORE_OOB_ROUTER will always
+>> show BCMA_MANUF_ARM (did not look up the proper manufacturer define but you
+>> get the idea, i hope).
+> Unfortunately, I don't. Could you explain this? How core identified
+> can be not unique? Can 0x800 mean ChipCommon but also SuperPCIeX?
+Yes, if ChipCommon is Broadcom core and SuperPCIeX is ARM core (or some 
+other). The core identifiers are chosen by a chip manufacturer (eg. 
+Broadcom ;-) ). They are not unique by itself so that is why the 
+bcma_device_id consists of manufacturer, id, rev, and class. Providing a 
+device table with ANY_MANUF would be a bad idea.
 
-> From: Kalle Valo <kvalo@adurom.com>
-> Date: Mon, 16 May 2011 17:46:30 +0300
->
->> I'm trying to fix a race in register_netdevice(). The problem is that
->> there's a uevent to userspace before the netdevice is ready for use. The
->> problem is described here:
->> 
->> https://bugzilla.kernel.org/show_bug.cgi?id=15606
->> 
->> I have sent few different ways to fix this, but none of them have been
->> really usable. Now I came up with a way which changes the driver core
->> to make it possible send the uevent in a separate call. This is a clean
->> and safe way to fix the race. Downside is that two new functions are
->> added to the driver core interface.
->> 
->> Please comment.
->
-> This doesn't work.
->
-> The sysfs file will still be there before the uevent, so any
-> process can go in there, and see the inconsistent state.
+Gr. AvS
 
-I considered that user space would not notice the device until the
-uevent is emitted so that wouldn't matter that much.
-
-But it's back to the drawing board again. I'm running out of options
-how to do this in a not so intrusive way. Do you have any tips how to
-fix the race for good?
-
--- 
-Kalle Valo
