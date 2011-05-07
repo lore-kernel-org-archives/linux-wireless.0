@@ -1,52 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:55348 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754238Ab1ECXQC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 19:16:02 -0400
-Received: by pvg12 with SMTP id 12so247068pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 16:16:02 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	ath9k-devel@lists.ath9k.org
-Subject: [PATCH] ath9k: fix beaconing for mesh interfaces
-Date: Tue,  3 May 2011 16:15:55 -0700
-Message-Id: <1304464555-2931-1-git-send-email-javier@cozybit.com> (sfid-20110504_011614_909256_2E362F75)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43654 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755790Ab1EGQcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 12:32:45 -0400
+Message-ID: <4DC57425.30206@hauke-m.de> (sfid-20110507_183250_074016_EC51B454)
+Date: Sat, 07 May 2011 18:32:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?B?TWljaGFl?= =?UTF-8?B?bCBCw7xzY2g=?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>	<4DC56FB9.5000208@hauke-m.de> <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
+In-Reply-To: <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh beaconing on ath9k was broken by this commit:
+On 05/07/2011 06:23 PM, Rafał Miłecki wrote:
+> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
+>> On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
+>>> Cc: Greg KH <greg@kroah.com>
+>>> Cc: Michael Büsch <mb@bu3sch.de>
+>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: George Kashperko <george@znau.edu.ua>
+>>> Cc: Arend van Spriel <arend@broadcom.com>
+>>> Cc: linux-arm-kernel@lists.infradead.org
+>>> Cc: Russell King <rmk@arm.linux.org.uk>
+>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>> Cc: Andy Botting <andy@andybotting.com>
+>>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
+>>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>> V2: Rename to axi
+>>>     Use DEFINE_PCI_DEVICE_TABLE in bridge
+>>>     Make use of pr_fmt and pr_*
+>>>     Store core class
+>>>     Rename bridge to not b43 specific
+>>>     Replace magic 0x1000 with BCMAI_CORE_SIZE
+>>>     Remove some old "ssb" names and defines
+>>>     Move BCMAI_ADDR_BASE def
+>>>     Add drvdata field
+>>> V3: Fix reloading (kfree issue)
+>>>     Add 14e4:0x4331
+>>>     Fix non-initialized struct issue
+>>>     Drop useless inline functions wrappers for pci core drv
+>>>     Proper pr_* usage
+>>> V3.1: Include forgotten changes (pr_* and include related)
+>>>     Explain why we dare to implement empty release function
+>>> V4: Add ABI documentation
+>>>     Move struct device to wrapper and alloc it dynamically
+>>>     checkpatch.pl pointed fixes
+>>> V5: Rename to bcma, AXI was really bad name
+>>>     Use EXPORT_SYMBOL_GPL
+>>>     Set pci driver fields in one place
+>>>     Drop unlikely
+>>>     Use BCMA_CORE_SIZE for calc in awrite32
+>>>     Add README
+>>>     Fix compilation (delay.h)
+>>> ---
+>>>  Documentation/ABI/testing/sysfs-bus-bcma    |   31 ++
+>>>  drivers/Kconfig                             |    2 +
+>>>  drivers/Makefile                            |    1 +
+>>>  drivers/bcma/Kconfig                        |   33 +++
+>>>  drivers/bcma/Makefile                       |    7 +
+>>>  drivers/bcma/README                         |   18 ++
+>>>  drivers/bcma/TODO                           |    3 +
+>>>  drivers/bcma/bcma_private.h                 |   31 ++
+>>>  drivers/bcma/core.c                         |   51 ++++
+>>>  drivers/bcma/driver_chipcommon.c            |   87 ++++++
+>>>  drivers/bcma/driver_chipcommon_pmu.c        |  134 +++++++++
+>>>  drivers/bcma/driver_pci.c                   |  163 +++++++++++
+>>>  drivers/bcma/host_pci.c                     |  196 +++++++++++++
+>>>  drivers/bcma/main.c                         |  271 ++++++++++++++++++
+>>>  drivers/bcma/scan.c                         |  392 +++++++++++++++++++++++++++
+>>>  drivers/bcma/scan.h                         |   56 ++++
+>>>  include/linux/bcma/bcma.h                   |  232 ++++++++++++++++
+>>>  include/linux/bcma/bcma_driver_chipcommon.h |  297 ++++++++++++++++++++
+>>>  include/linux/bcma/bcma_driver_pci.h        |   89 ++++++
+>>>  include/linux/bcma/bcma_regs.h              |   34 +++
+>>>  include/linux/mod_devicetable.h             |   17 ++
+>>>  scripts/mod/file2alias.c                    |   22 ++
+>>>  22 files changed, 2167 insertions(+), 0 deletions(-)
+>>>  create mode 100644 Documentation/ABI/testing/sysfs-bus-bcma
+>>>  create mode 100644 drivers/bcma/Kconfig
+>>>  create mode 100644 drivers/bcma/Makefile
+>>>  create mode 100644 drivers/bcma/README
+>>>  create mode 100644 drivers/bcma/TODO
+>>>  create mode 100644 drivers/bcma/bcma_private.h
+>>>  create mode 100644 drivers/bcma/core.c
+>>>  create mode 100644 drivers/bcma/driver_chipcommon.c
+>>>  create mode 100644 drivers/bcma/driver_chipcommon_pmu.c
+>>>  create mode 100644 drivers/bcma/driver_pci.c
+>>>  create mode 100644 drivers/bcma/host_pci.c
+>>>  create mode 100644 drivers/bcma/main.c
+>>>  create mode 100644 drivers/bcma/scan.c
+>>>  create mode 100644 drivers/bcma/scan.h
+>>>  create mode 100644 include/linux/bcma/bcma.h
+>>>  create mode 100644 include/linux/bcma/bcma_driver_chipcommon.h
+>>>  create mode 100644 include/linux/bcma/bcma_driver_pci.h
+>>>  create mode 100644 include/linux/bcma/bcma_regs.h
+>>>
+>> Hi,
+>>
+>> An entry in the MAINTAINERS file would be nice to find the right
+>> addresses to send patches to.
+> 
+> Will do, thanks. Should I put some ML for this driver?
+> netdev@vger.kernel.org? linux-wireless@vger.kernel.org? So far there
+> are no net drivers for BCMA. Probably b43 will be the first (or
+> brcm80211).
+> 
+There is a Ethernet core used on embedded devices with this bus and
+George wrote a driver for the first version of this bus implementation,
+he send to the ML. Most user will use this with some wireless devices so
+I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
 
-commit 4801416c76a3a355076d6d371c00270dfe332e1c
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Sat Jan 15 19:13:48 2011 +0000
-
-This patch assigns the right opmode when the device is used in mesh
-mode.
-
-Reported-by: Fabrice Deyber fabricedeyber@agilemesh.com
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c3dbf26..8fa07aa 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1384,7 +1384,9 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 		ath9k_hw_set_tsfadjust(ah, 0);
- 		sc->sc_flags &= ~SC_OP_TSF_RESET;
- 
--		if (iter_data.nwds + iter_data.nmeshes)
-+		if (iter_data.nmeshes)
-+			ah->opmode = NL80211_IFTYPE_MESH_POINT;
-+		else if (iter_data.nwds)
- 			ah->opmode = NL80211_IFTYPE_AP;
- 		else if (iter_data.nadhocs)
- 			ah->opmode = NL80211_IFTYPE_ADHOC;
--- 
-1.7.1
-
+Hauke
