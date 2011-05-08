@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34909 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab1EIIgj (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:56217 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320Ab1EHMzz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 04:36:39 -0400
-Subject: Re: [Regression] Problem with rfkill on 2.6.38
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Colin Guthrie <gmane@colin.guthr.ie>
+	Sun, 8 May 2011 08:55:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <4DC6910F.2020008@hauke-m.de>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<4DC6910F.2020008@hauke-m.de>
+Date: Sun, 8 May 2011 14:55:54 +0200
+Message-ID: <BANLkTi=wtxH6suf8D=nzYKrBjWV9-yAQLw@mail.gmail.com> (sfid-20110508_145611_846935_D07DFEB4)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Cc: linux-wireless@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	platform-driver-x86@vger.kernel.org
-In-Reply-To: <ip6j66$o5f$1@dough.gmane.org> (sfid-20110426_170016_050429_A6E2C01A)
-References: <ip6j66$o5f$1@dough.gmane.org>
-	 (sfid-20110426_170016_050429_A6E2C01A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 10:36:35 +0200
-Message-ID: <1304930195.3475.17.camel@jlt3.sipsolutions.net> (sfid-20110509_103643_023867_2D660FE3)
-Mime-Version: 1.0
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
+2011/5/8 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
+> .....
+>> --- /dev/null
+>> +++ b/drivers/bcma/bcma_private.h
+> .....
+>> +
+>> +#define BCMA_ADDR_BASE               0x18000000
+>> +#define BCMA_WRAP_BASE               0x18100000
+>> +
+> ......
+>> --- /dev/null
+>> +++ b/drivers/bcma/scan.h
+>> @@ -0,0 +1,56 @@
+>> +#ifndef BCMA_SCAN_H_
+>> +#define BCMA_SCAN_H_
+>> +
+>> +#define BCMA_ADDR_BASE               0x18000000
+>> +#define BCMA_WRAP_BASE               0x18100000
+>> +
+> .....
+>
+> While graping through the code I found this. BCMA_ADDR_BASE and
+> BCMA_WRAP_BASE are defined twice.
 
-[Matthew, everybody from the platform list, please see
-http://mid.gmane.org/ip6j66$o5f$1@dough.gmane.org for the full email
-thread]
-
-Sorry, took me a while to get back to your email.
-
-> wifi works fine generally, but after cycling RFKILL I have to reload the
-> various modules before it works again.
+Will fix, thx.
 
 
-> [root@jimmy ~]# rmmod dell_laptop
+> Why are some constants defined in purpose specific headers in
+> drivers/bcma/*.h like drivers/bcma/scan.h and some in
+> drivers/bcma/bcma_private.h and other in include/linux/bcma/bcma_regs.h ?
 
-I'm pretty sure this one's at fault, see below.
+What is unclear to you in this split? It says everything. scan.h for
+scanning, regs for registers, private for internal functions.
 
-> Turn back on:
-> 
-> iwlagn 0000:0b:00.0: RF_KILL bit toggled to enable radio.
-
-See, iwlwifi just reports this from the hw.
-
-> usb 4-2: new full speed USB device using uhci_hcd and address 4
-
-And your BT USB device shows up on the bus too. But then:
-
-> iwlagn 0000:0b:00.0: RF_KILL bit toggled to disable radio.
-
-> usb 4-2: USB disconnect, address 4
-
-iwlwifi reports that it was killed, and your BT USB device disappears.
-
-> I've been looking through the various commits that could come into play
-> (although I am sure there are others):
-
-All the commits you listed are related to iwlwifi only. However, we can
-see that both wifi and BT are killed again. Therefore, iwlwifi can't be
-at fault (its rfkill line is basically a GPIO input, it can't cause BT
-to drop from the bus).
-
-The consequence is that the fault must be with dell_laptop, the BIOS is
-the only thing that can be causing both to be rf-killed. (I'd also
-suspect rfkill, but it has no changes since 2.6.37)
-
-johannes
-
+-- 
+Rafał
