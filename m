@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2936 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758814Ab1EMKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/32] staging: brcm80211: Kconfig fix for 'Broadcom I/O
- order fix'
-Date: Fri, 13 May 2011 11:59:31 +0200
-Message-ID: <1305280792-9475-11-git-send-email-arend@broadcom.com> (sfid-20110513_120050_644954_3D9CB92D)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:47770 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab1EHPaB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 May 2011 11:30:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201105081706.12449.arnd@arndb.de>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	<201105081706.12449.arnd@arndb.de>
+Date: Sun, 8 May 2011 17:25:55 +0200
+Message-ID: <BANLkTinujj_E4xPvbXB_AQM-d9BqHRts8Q@mail.gmail.com> (sfid-20110508_173021_915364_B951760A)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+2011/5/8 Arnd Bergmann <arnd@arndb.de>:
+> On Saturday 07 May 2011, Rafał Miłecki wrote:
+>> > Well, maybe. We call it only once, at init time. In any case we're
+>> > still waiting for Broadcom to clarify which cores are really used for
+>> > BCMA.
+>>
+>> Arnd: did you have a look at defines at all?
+>>
+>> Most of the defines have values in range 0x800 → 0x837. Converting
+>> this to array means loosing 0x800 u16 entries. We can not use 0x800
+>> offset, because there are also some defined between 0x000 and 0x800:
+>> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+>> #define BCMA_CORE_INVALID              0x700
+>
+> I did not mean using the enum value as index, just make an array of
+> simple structs:
+>
+> struct bcma_device_name {
+>        unsigned int id;
+>        const char *name;
+> };
+>
+> struct bcma_device_name bcma_device_names = {
+>        { BCMA_CORE_OOB_ROUTER, "Out of band router" },
+>        { BCMA_CORE_INVALID,    "Invalid" },
+>        ...
+> };
 
-Config item 'Broadcom I/O order fix' would pop up during the build process
-on non-MIPs platforms.
+Arnd, right now I'm loosing a lot of time (I could spent on improving
+bcma or b43) on posting new version of this huge patch with single
+changes. Changes that can easily be introduced later without breaking
+driver, ABI, etc.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/Kconfig |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I'll be glad to try your solution later, when we get this patch
+merged. I'll be much easier to play with such a differences then.
+Thanks for sharing this idea.
 
-diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
-index a11ffc7..816c1b5 100644
---- a/drivers/staging/brcm80211/Kconfig
-+++ b/drivers/staging/brcm80211/Kconfig
-@@ -40,7 +40,7 @@ config BRCMDBG
- config BRCM_FIX_IO_ORDER
- 	bool "Broadcom I/O order fix"
- 	default n
--	depends on BRCMSMAC
-+	depends on MIPS && BRCMSMAC
- 	---help---
--	  Select this for for platforms running on bcm4706, 4716, 4717 or 4718.
-+	  Select this for platforms running on bcm4706, 4716, 4717 or 4718.
- 	  It resolves an I/O issue with the PCIe core used in these chips.
+Right now I want to focus on some bugs in driver that don't allow it
+being merged.
+
 -- 
-1.7.4.1
-
-
+Rafał
