@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:48780 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754565Ab1ERImO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 04:42:14 -0400
-Received: by ewy9 with SMTP id 9so451333ewy.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 01:42:12 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] nl80211: remove some stack variables in trigger_scan and start_sched_scan
-Date: Wed, 18 May 2011 11:42:03 +0300
-Message-Id: <1305708123-25668-1-git-send-email-coelho@ti.com> (sfid-20110518_104217_859757_3CAA412A)
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:32931 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753441Ab1EHBsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 21:48:25 -0400
+Subject: Re: ssb: where to reject dangling cores?
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <BANLkTimRasoDAbK+tLNFx8zK96Xe1hnHXg@mail.gmail.com>
+References: <BANLkTimRasoDAbK+tLNFx8zK96Xe1hnHXg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 08 May 2011 03:48:22 +0200
+Message-ID: <1304819302.21680.10.camel@maggie> (sfid-20110508_034828_034939_C4E424C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some stack variables (name *ssid and *channel) are only used to define
-the size of the memory block that needs to be allocated for the
-request structure in the nl80211_trigger_scan() and
-nl80211_start_sched_scan() functions.
+On Sat, 2011-05-07 at 22:40 +0200, Rafał Miłecki wrote: 
+> Michael, I can see code for ignoring dangling cores in both: ssb and b43.
+> 
+> In ssb it's quite common, we have:
+> 1) we_support_multiple_80211_cores for 80211
+> 2) inline checks in ssb_bus_scan for PCI(E)
+> 3) inline check in ssb_bus_scan for ETHERNET
+> 
+> However there is also check in b43 at the beginning of b43_one_core_attach:
+> if (!pdev ||
+> 	((pdev->device != 0x4321) &&
+> 	(pdev->device != 0x4313) && (pdev->device != 0x431A))) {
+> 	b43dbg(wl, "Ignoring unconnected 802.11 core\n");
+> 	return -ENODEV;
+> }
+> 
+> Should I move this check into ssb?
 
-This is unnecessary because the sizes of the actual elements in the
-structure can be used instead.
+Well, I'm not sure. _Neither_ place looks fine. It's a dirty workaround
+for broken hardware.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- net/wireless/nl80211.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+If you really want to touch this mess, then yes. Move it into ssb.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d967073..d24f5c1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3300,8 +3300,6 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
- 	struct cfg80211_scan_request *request;
--	struct cfg80211_ssid *ssid;
--	struct ieee80211_channel *channel;
- 	struct nlattr *attr;
- 	struct wiphy *wiphy;
- 	int err, tmp, n_ssids = 0, n_channels, i;
-@@ -3348,8 +3346,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	request = kzalloc(sizeof(*request)
--			+ sizeof(*ssid) * n_ssids
--			+ sizeof(channel) * n_channels
-+			+ sizeof(*request->ssids) * n_ssids
-+			+ sizeof(*request->channels) * n_channels
- 			+ ie_len, GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
-@@ -3455,8 +3453,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	struct cfg80211_sched_scan_request *request;
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
--	struct cfg80211_ssid *ssid;
--	struct ieee80211_channel *channel;
- 	struct nlattr *attr;
- 	struct wiphy *wiphy;
- 	int err, tmp, n_ssids = 0, n_channels, i;
-@@ -3513,8 +3509,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		return -EINVAL;
- 
- 	request = kzalloc(sizeof(*request)
--			+ sizeof(*ssid) * n_ssids
--			+ sizeof(channel) * n_channels
-+			+ sizeof(*request->ssids) * n_ssids
-+			+ sizeof(*request->channels) * n_channels
- 			+ ie_len, GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
 -- 
-1.7.1
+Greetings Michael.
 
