@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:56371 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755781Ab1EZMPl convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f173.google.com ([209.85.212.173]:52082 "EHLO
+	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab1EHRG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 08:15:41 -0400
-Received: by pwi15 with SMTP id 15so306329pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 05:15:41 -0700 (PDT)
+	Sun, 8 May 2011 13:06:26 -0400
+Received: by pxi16 with SMTP id 16so3163314pxi.4
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 10:06:25 -0700 (PDT)
+Message-ID: <4DC6CD8C.6080104@lwfinger.net> (sfid-20110508_190630_106268_ACCB6E16)
+Date: Sun, 08 May 2011 12:06:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
-References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
-Date: Thu, 26 May 2011 17:45:41 +0530
-Message-ID: <BANLkTinSkoKOwBT-nRNzt9PhrZfvn+1Viw@mail.gmail.com> (sfid-20110526_141605_790611_9CFD1118)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
-From: Mohammed Shafi <shafi.ath9k@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 0/3] ssb/b43(legacy): clean dangling cores workarounds
+References: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 26, 2011 at 10:30 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
+On 05/08/2011 12:09 PM, RafaÅ‚ MiÅ‚ecki wrote:
+> There is no perfect place for this workarounds, but keeping it in ssb sounds
+> more reasonable.
+> 1) We already have in ssb similar workarounds for different cores
+> 2) We do not register not working devices in system
+> 3) We do not duplicate code in b43 and b43legacy
 >
-> The AR9287 initial calibration in ar9002_hw_init_cal() isn't ever
-> called because the Kite check (AR_SREV_9285_12_OR_LATER()) matches on
-> MACs versioned Kite and later.
+> RafaÅ‚ MiÅ‚ecki (3):
+>    ssb: update list of devices supporting multiple 80211 cores
+>    b43: drop ssb-duplicated workaround for dangling cores
+>    b43legacy: drop ssb-duplicated workaround for dangling cores
+>
+>   drivers/net/wireless/b43/main.c       |   17 -----------------
+>   drivers/net/wireless/b43legacy/main.c |   18 ------------------
+>   drivers/ssb/scan.c                    |    5 ++++-
+>   3 files changed, 4 insertions(+), 36 deletions(-)
 
-Adrian this change looks logically correct. but as there were lot of
-regwrites in the original path, I am not sure how this change will
-effect the throughput especially in noisy environment
-conditions/stress testing.
+First of all, a minor grammatical mistake. It should be "this workaround" as 
+there is only only one workaround discussed here.
 
->
-> The Atheros newma code checks it is Kite as well as being Kite >= 1.2.
->
-> I don't currently have Linux ath9k on something with an AR9287 so I'd
-> appreciate it if this were verified by someone who has.
->
-> The patch is quite simple:
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> index 015d974..2d4c091 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> @@ -829,7 +829,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah,
-> struct ath9k_channel *chan)
->        if (AR_SREV_9271(ah)) {
->                if (!ar9285_hw_cl_cal(ah, chan))
->                        return false;
-> -       } else if (AR_SREV_9285_12_OR_LATER(ah)) {
-> +       } else if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
->                if (!ar9285_hw_clc(ah, chan))
->                        return false;
->        } else {
->
-> Thanks,
->
->
-> Adrian
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+Secondly, "we do not register not working" is a little awkward. "We do not 
+register inactive devices..." would be better.
+
+Finally, this commit message will never show up in the git commit logs. I think 
+this info is valuable, thus it should be in the real commits.
+
+My suggestion for the [1/3] patch is something like:
+
+"Many of the BCM43xx chips contain cores that are attached to the SSB, but are 
+inactive as they do not connect to the external environment. These must not be 
+registered. Several of these types are handled in driver ssb; however, the 
+specific case of an inactive 802.11 cores is now treated in b43 and b43legacy. 
+Although the current setup works, this minor change will place all such 
+workarounds in ssb, and simplify the code in drivers b43 and b43legacy."
+
+In each of the other two patches, add a commit message something like:
+
+"Remove the code to detect inactive 802.11 cores, as that function is now done 
+in ssb."
+
+I have not yet tested the patches, but will do so soon.
+
+Larry
