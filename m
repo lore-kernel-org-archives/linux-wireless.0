@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f52.google.com ([209.85.214.52]:56964 "EHLO
-	mail-bw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755248Ab1EPTrv (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:54652 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963Ab1EHRw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 15:47:51 -0400
-Received: by bwj24 with SMTP id 24so6270718bwj.11
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 12:47:49 -0700 (PDT)
+	Sun, 8 May 2011 13:52:56 -0400
+Received: by ewy4 with SMTP id 4so1360065ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 10:52:55 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2 1/3] ssb: update list of devices supporting multiple 80211 cores
+Date: Sun,  8 May 2011 20:30:31 +0200
+Message-Id: <1304879433-7096-2-git-send-email-zajec5@gmail.com> (sfid-20110508_195259_610165_9A62A7C7)
+In-Reply-To: <1304879433-7096-1-git-send-email-zajec5@gmail.com>
+References: <1304879433-7096-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Date: Mon, 16 May 2011 15:41:54 -0400
-Message-ID: <BANLkTimDudEKPEjTrWxm1wNA00Cmyot+sA@mail.gmail.com> (sfid-20110516_214802_800576_297908F5)
-Subject: what dictates the firmware directory of compat-wireless firmware?
-From: George Nychis <gnychis@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On an x86 Ubuntu machine, I have built ath9k_htc and successfully
-gotten an AR9280 card up with the htc_7010.fw firmware file.  Now,
-what I am attempting to do is move the working build to an Android
-device.  I have successfully cross-compiled ath9k_htc against my
-Android kernel, and I am able to successfully install and load the
-ath9k_htc module and related modules on the Android device.  Simply, I
-cross-compile and then package the kernel modules with my Android
-kernel.  I carry nothing else over.
+Some of the BCM43xx chips contain cores that are attached to the SSB, but are
+inactive as they do not connect to the external environment. These must not be
+registered. Several of these types are handled in driver ssb; however, the
+specific case of an inactive 802.11 cores is now treated in b43 and b43legacy.
+Although the current setup works, this minor change will place all such
+workarounds in ssb, and simplify the code in drivers b43 and b43legacy.
 
-However, I am hitting a barrier when trying to load the firmware.
-Whenever I insert the Atheros USB module, I get the error:
-<3>[ 4010.997375] usb 3-1.4: ath9k_htc: Firmware - htc_7010.fw not found
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/scan.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-I placed htc_7010.fw in /lib/firmware on my Android device, which is
-the location it was on my Ubuntu machine.  However, I still get this
-error.
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 7dca719..45e5bab 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -258,7 +258,10 @@ static int we_support_multiple_80211_cores(struct ssb_bus *bus)
+ #ifdef CONFIG_SSB_PCIHOST
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 		if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+-		    bus->host_pci->device == 0x4324)
++		    ((bus->host_pci->device == 0x4313) ||
++		     (bus->host_pci->device == 0x431A) ||
++		     (bus->host_pci->device == 0x4321) ||
++		     (bus->host_pci->device == 0x4324)))
+ 			return 1;
+ 	}
+ #endif /* CONFIG_SSB_PCIHOST */
+-- 
+1.7.3.4
 
-So then I built zd1211rw from the Android kernel source (included in
-the kernel source tree), and after doing so I found that /etc/firmware
-was the location the in-kernel zd1211rw driver was looking for the
-firmware.  By placing zd1201.fw in /etc/firmware, I was able to bring
-that card up on the Android device.
-
-Then I tried putting htc_7010.fw in /etc/firmware on the Android
-device (same place zd1201.fw worked for the kernel source tree
-driver), and I still get the same error that it cannot be found.  But,
-the ath9k_htc driver is from compat-wireless, cross-compiled against
-my kernel.  Not built from the kernel tree source like zd1211rw was.
-
-I have tried various other locations: /lib/firmware, /etc/firmware,
-/system/lib/modules, /system/lib/firmware, /system/etc  ... everything
-gives me the same error.
-
-Looking at my Android kernel Makefile, I find:
-
-# ---------------------------------------------------------------------------
-# Firmware install
-INSTALL_FW_PATH=$(INSTALL_MOD_PATH)/lib/firmware
-export INSTALL_FW_PATH
-
-PHONY += firmware_install
-firmware_install: FORCE
-  @mkdir -p $(objtree)/firmware
-  $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.fwinst obj=firmware __fw_install
-
-#---------------------
-
-This suggests that the kernel is placing (and therefore looking?) for
-firmware in /lib/firmware since $(INSTALL_MOD_PATH) defaults to "/"
-
-So, I'm a little confused why it is not finding the firmware.  Does
-anyone have any insight on this?
-
-Thanks!
-George
