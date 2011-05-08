@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29653 "EHLO mx1.redhat.com"
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:32927 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756881Ab1ESRPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 13:15:02 -0400
-Subject: Re: [PATCH] Add libertas_disablemesh module parameter to disable
- mesh interface
-From: Dan Williams <dcbw@redhat.com>
-To: Sascha Silbe <silbe@activitycentral.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	devel <devel@lists.laptop.org>,
-	John@xo15-sascha.sascha.silbe.org,
-	W.Linville@xo15-sascha.sascha.silbe.org, linville@tuxdriver.com,
-	libertas-dev <libertas-dev@lists.infradead.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Date: Thu, 19 May 2011 12:16:58 -0500
-In-Reply-To: <1305290935-sup-4547@xo15-sascha.sascha.silbe.org>
-References: <1305118354-17337-1-git-send-email-silbe@activitycentral.com>
-	 <1305169898.8054.19.camel@dcbw.foobar.com>
-	 <1305290935-sup-4547@xo15-sascha.sascha.silbe.org>
+	id S1753746Ab1EHBpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 May 2011 21:45:20 -0400
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
+ driver
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
+To: George Kashperko <george@znau.edu.ua>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1304796956.13983.65.camel@dev.znau.edu.ua>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	 <201105061605.31625.arnd@arndb.de>
+	 <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	 <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	 <1304790665.13983.10.camel@dev.znau.edu.ua>
+	 <BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
+	 <1304792795.13983.28.camel@dev.znau.edu.ua>
+	 <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
+	 <1304794931.13983.44.camel@dev.znau.edu.ua>
+	 <BANLkTik9FWgzpNWuMXXRjOj-rDvPNY_nCA@mail.gmail.com>
+	 <1304796956.13983.65.camel@dev.znau.edu.ua>
 Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1305825421.3271.8.camel@dcbw.foobar.com> (sfid-20110519_191555_971558_E601FABE)
+Date: Sun, 08 May 2011 03:44:41 +0200
+Message-ID: <1304819081.21680.6.camel@maggie> (sfid-20110508_034559_187332_85399328)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 15:16 +0200, Sascha Silbe wrote:
-> Excerpts from Dan Williams's message of Thu May 12 05:11:36 +0200 2011:
-> > On Wed, 2011-05-11 at 14:52 +0200, Sascha Silbe wrote:
-> > > This allows individual users and deployments to disable mesh support at
-> > > runtime, i.e. without having to build and maintain a custom kernel.
-> 
-> > Does the mesh interface somehow cause problems, even when nothing is
-> > using it?
-> 
-> Some people suspect it does, but there's no hard data showing that. But
-> then the problems are often hard to reproduce in the first place, so
-> proving a correlation with mesh is even harder.
+On Sat, 2011-05-07 at 22:35 +0300, George Kashperko wrote: 
+> dbg_bcma_device_name
+> {
+> #ifdef DEBUG
+> 		case/switch/if/else stuff
+> #endif
+> 		return NULL;
+> }
+> But I don't see here much sense to hardcode names other than those of
+> buscommons/buscores for debugging purposes.
 
-That's not an excuse for not finding and fixing the problem though.
-What problems are we actually talking about here?
+Would you please read and understand the code before discussing this?
+That would help the discussion on the technical side.
 
-> The hardware based mesh support is based on an outdated draft of
-> 802.11s and not interoperable with any other device AFAIK. For most
-> users Ad-hoc networks are the better option. Disabling mesh support as
-> low-level as possible makes it less likely that any remains are causing
-> trouble. With at least four layers (firmware, kernel, NM, Sugar)
-> involved in managing connectivity and one of the (firmware) being closed
-> source, I prefer to simplify things by eliminating three layers for
-> functionality we don't intend to use. It makes debugging (and
-> blaming ;) ) a lot easier.
-> 
-> In the field, mesh support is currently disabled using
-> /sys/class/net/eth0/lbs_mesh. However, it comes back after resume
-> (possibly only if powercycled) and needs to be disabled again by
-> post-resume hacks. Race conditions with NM are possible.
+Those names are hardcoded by definition. And just like 14e4 is the PCI
+ID for Broadcom devices, 800 is the AXI ID for Broadcom Chipcommon.
 
-That's a parameter handled by the driver; so shouldn't we make sure it's
-respected again on resume?
+And building an #ifdef mess around this stuff is not better than having
+a few bytes of _helpful_ information messages.
+You are absolutely right that those messages only help 1% of the people.
+Just as _any_ other kernel message.
 
-> A user space option would be to teach NM to disable mesh support (at
-> runtime - we don't want to ship a custom NM package). I'd expect the
-> patch to be much more invasive than the one posted for libertas.
-
-Not really, but we already have on/off for a bunch of other stuff, I
-don't see why we can't add one for OLPC mesh.
-
-Dan
+-- 
+Greetings Michael.
 
