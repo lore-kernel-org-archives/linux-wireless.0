@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:57994 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab1EQHML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 03:12:11 -0400
-Received: by pxi16 with SMTP id 16so161677pxi.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 00:12:11 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36273 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751325Ab1EHMsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 May 2011 08:48:24 -0400
+Message-ID: <4DC6910F.2020008@hauke-m.de> (sfid-20110508_144848_146804_57CF6B76)
+Date: Sun, 08 May 2011 14:48:15 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19922.8044.978298.696663@gargle.gargle.HOWL> (sfid-20110517_091214_890163_0F9FECBA)
-Date: Tue, 17 May 2011 12:40:36 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Luis.Rodriguez@atheros.com
-Subject: [PATCH 0/8] ath9k_htc patches
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?B?TWljaGFl?= =?UTF-8?B?bCBCw7xzY2g=?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
+.....
+> --- /dev/null
+> +++ b/drivers/bcma/bcma_private.h
+.....
+> +
+> +#define BCMA_ADDR_BASE		0x18000000
+> +#define BCMA_WRAP_BASE		0x18100000
+> +
+......
+> --- /dev/null
+> +++ b/drivers/bcma/scan.h
+> @@ -0,0 +1,56 @@
+> +#ifndef BCMA_SCAN_H_
+> +#define BCMA_SCAN_H_
+> +
+> +#define BCMA_ADDR_BASE		0x18000000
+> +#define BCMA_WRAP_BASE		0x18100000
+> +
+.....
 
-This series fixes a few issues with BSSID handling and removes
-unused stuff in both the firmware and the host driver.
+While graping through the code I found this. BCMA_ADDR_BASE and
+BCMA_WRAP_BASE are defined twice.
 
-The required firmware version is now 1.3 and the new firmware will
-be uploaded to http://wireless.kernel.org/download/htc_fw/ once Luis
-comes out of his slumber.
+Why are some constants defined in purpose specific headers in
+drivers/bcma/*.h like drivers/bcma/scan.h and some in
+drivers/bcma/bcma_private.h and other in include/linux/bcma/bcma_regs.h ?
 
-For the record, the FW Changelog for v1.3 is:
-
-* Remove unused PHY modes (TURBO etc.)
-* Remove unused MIMO PS code.
-* Cleanup node flags.
-* Remove FastFrame code.
-* Fix various bugs in management frame transmission.
-* Fix duration calculation.
-* Fix packet type calculation.
-* Enable CAB queue for UB94/95.
-* Fix sequence number assignment.
-* Remove vendor-specific hacks.
-* Add TX completion for multicast packets.
-* Various code cleanups.
-* Reduce credit size for UB94/95 to 45.
-
-Sujith
-
-Sujith Manoharan (8):
-  ath9k_htc: Fix mode selection
-  ath9k_htc: Fix station flags
-  ath9k_htc: Recalculate the BSSID mask on interface removal
-  ath9k_htc: Fix RX filter calculation
-  ath9k_htc: Fix BSSID calculation
-  ath9k_htc: Fix max subframe handling
-  ath9k_htc: Change credit limit for UB94/95
-  ath9k_htc: Fix packet timeout
-
- drivers/net/wireless/ath/ath9k/hif_usb.h      |    2 +-
- drivers/net/wireless/ath/ath9k/htc.h          |   23 ++------
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 +--
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   77 ++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    4 +
- 5 files changed, 61 insertions(+), 52 deletions(-)
-
--- 
-1.7.5.1
-
+Hauke
