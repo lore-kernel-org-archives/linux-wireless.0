@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45437 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757379Ab1EWVTW (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55075 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755126Ab1EHQbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 17:19:22 -0400
-Message-ID: <4DDACF56.9070403@candelatech.com> (sfid-20110523_231925_517176_BD896830)
-Date: Mon, 23 May 2011 14:19:18 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 8 May 2011 12:31:49 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so1350122eyx.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 09:31:48 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] ssb: update list of devices supporting multiple 80211 cores
+Date: Sun,  8 May 2011 19:09:22 +0200
+Message-Id: <1304874564-6426-2-git-send-email-zajec5@gmail.com> (sfid-20110508_183154_242909_AA632902)
+In-Reply-To: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
+References: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
-References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com> <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com> <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com> <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
-In-Reply-To: <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 01:59 PM, Luis R. Rodriguez wrote:
-> On Mon, May 23, 2011 at 1:51 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 05/23/2011 01:25 PM, Luis R. Rodriguez wrote:
->>>
->>> On Mon, May 23, 2011 at 1:09 PM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> Makes it basically useless as a 5Ghz AP though, eh?
->>>
->>> Um yup. The card is a world roaming card... not an AP card. For AP
->>> mode of functionality vendors have to go through a regulatory test
->>> specific to 3 regions, and depending on which region they get
->>> certification for they will have then programmed in the values
->>> required for regulatory on the CTLs. The EEPROM would be configured
->>> for the region the card was being tested for.
->>
->> Well, if you have an AP on a 5Ghz channel, and associate a station
->> interface, that one channel becomes
->> usable, and then you can start hostapd, as far as I can tell.
->> You just can't use an un-used channel, which is of course
->> a pain if you want to do some 5Ghz AP testing on a clean
->> channel!
->
-> You don't even need to associate, you just need to scan, that's it. It
-> is a pain to test AP functionality but that is not how vendors test AP
-> functionality -- remember you are using a world roaming card, the fact
-> that you can even get away with beaconing modes of operation on some
-> channels is actually a feature.
->
-> The issue here comes from the fact that people think using AP mode of
-> functionality is a freedom they are entitled to with any 802.11 card
-> on any channel. Its obviously more complicated than that and figuring
-> out a proper way to do this is part of our own effort to enable APs
-> with Linux properly and in a regulatory compliant manner.
 
-Do you know of any 3x3 AR9380 NICs that can be used
-as 5Ghz APs w/out regdomain hacks?  Sparklan was the only NIC I found, and
-I didn't notice any way to order a specific regdomain
-on the NIC.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/scan.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
->>> The real solution to these issues is for regulatory agencies to start
->>> warming up to the idea about dynamic regulatory selection but for this
->>> you will also then need to ensure each card gets properly tested for
->>> each regulatory region -- or we'd have to restrict the card to work in
->>
->> What kinds of things could fail in one region and not
->> another?
->
-> Atheros cards are optimized to output as much power in the middle area
-> of a spectrum, towards the ends of the spectrum regulatory agencies
-> sometimes require a bit tighter power constraints and cards are
-> required to meet certain power curve constraints. This is one of the
-> reasons for the EEPROM CTLs on the Atheros cards. This is one example
-> of such considerations.
->
->>   Are there any known regions of the world where
->> the AR9380 actually fails to function in any mode?
->
-> Huh? AR9380 will work in any region so long as its tested for that
-> region and the CTLs get programmed as such.
-
-Testing doesn't make something work, it just makes sure that it
-does work.  Now, programming the CTLs sounds like something important.
-Is there any way to tell if a NIC is properly programmed for a particular
-region, or is each brand/revision programmed independently?
-
-Since it *is* possible to start an AP on a channel with existing AP,
-I assume that the NIC must be able to handle this properly..or is
-that ability to start on a scanned channel just a bug?  (Please
-don't fix it, if it is :P)
-
-Thanks,
-Ben
-
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 7dca719..45e5bab 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -258,7 +258,10 @@ static int we_support_multiple_80211_cores(struct ssb_bus *bus)
+ #ifdef CONFIG_SSB_PCIHOST
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 		if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+-		    bus->host_pci->device == 0x4324)
++		    ((bus->host_pci->device == 0x4313) ||
++		     (bus->host_pci->device == 0x431A) ||
++		     (bus->host_pci->device == 0x4321) ||
++		     (bus->host_pci->device == 0x4324)))
+ 			return 1;
+ 	}
+ #endif /* CONFIG_SSB_PCIHOST */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.3.4
 
