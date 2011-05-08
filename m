@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:43071 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755039Ab1ELUJT (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38576 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803Ab1EHKhQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 16:09:19 -0400
-Received: by mail-ey0-f178.google.com with SMTP id 25so628398eya.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 13:09:18 -0700 (PDT)
-Subject: Re: [PATCH 4/7] wl12xx: prevent scheduling while suspending (WoW
- enabled)
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1305229949.3461.41.camel@jlt3.sipsolutions.net>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-	 <1305104068-32240-5-git-send-email-eliad@wizery.com>
-	 <1305229737.12586.1027.camel@cumari>
-	 (sfid-20110512_214911_703763_A3F7A170)  <1305229949.3461.41.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 23:09:15 +0300
-Message-ID: <1305230955.12586.1037.camel@cumari> (sfid-20110512_220923_163174_AA4D8C09)
-Mime-Version: 1.0
+	Sun, 8 May 2011 06:37:16 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110508101609.GF27807@n2100.arm.linux.org.uk>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105061605.31625.arnd@arndb.de>
+	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
+	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+	<1304790665.13983.10.camel@dev.znau.edu.ua>
+	<BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
+	<1304792795.13983.28.camel@dev.znau.edu.ua>
+	<BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
+	<20110508101609.GF27807@n2100.arm.linux.org.uk>
+Date: Sun, 8 May 2011 12:37:15 +0200
+Message-ID: <BANLkTikMruTibp64GjE9qP9r80JiHgAFXw@mail.gmail.com> (sfid-20110508_123758_589367_0493A752)
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: George Kashperko <george@znau.edu.ua>,
+	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 21:52 +0200, Johannes Berg wrote:
-> On Thu, 2011-05-12 at 22:48 +0300, Luciano Coelho wrote:
-> 
-> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > > index 9ca71ce..308855a 100644
-> > > --- a/drivers/net/wireless/wl12xx/main.c
-> > > +++ b/drivers/net/wireless/wl12xx/main.c
-> > > @@ -1338,6 +1338,28 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
-> > >  	struct wl1271 *wl = hw->priv;
-> > >  	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
-> > >  	wl->wow_enabled = !!wow;
-> > > +	if (wl->wow_enabled) {
-> > > +		/* flush any remaining work */
-> > > +		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-> > > +		flush_delayed_work(&wl->scan_complete_work);
-> > > +
-> > > +		/*
-> > > +		 * disable and re-enable interrupts in order to flush
-> > > +		 * the threaded_irq
-> > > +		 */
-> > > +		wl1271_disable_interrupts(wl);
-> > > +
-> > > +		/*
-> > > +		 * set suspended flag to avoid triggering a new threaded_irq
-> > > +		 * work. no need for spinlock as interrupts are disabled.
-> > > +		 */
-> > > +		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-> > 
-> > The set_bit() function is atomic, so you wouldn't need the spinlock here
-> > anyway.  Couldn't you use __set_bit() instead, to avoid the expense of
-> > using an atomic function when it's not necessary?
-> 
-> That's only possible if the spinlock is held for all modifications of
-> the variable. If there are any modifications that don't hold it, then
-> you need the atomic version.
+2011/5/8 Russell King - ARM Linux <linux@arm.linux.org.uk>:
+> On Sat, May 07, 2011 at 08:48:10PM +0200, Rafał Miłecki wrote:
+>> Really, what's wrong with that? Does it kill anyone's pet we print
+>> this? We also do:
+>> pr_err("Scanning failed because of wrong CID\n");
+>> return -1;
+>> While we could drop pr_err. Why to do this? Advanced used can always
+>> check what -1 means.
+>
+> And why return -1 when we have a system of error codes?  I _really_ wish
+> people would stop returning -1 for "some random error occurred".
 
-Ah, you're right.   wl->flags is being modified in other places too (ie.
-other bits are being set/cleared in other parts of the code), so there
-could be some conflicts.  I had just considered the flag as an
-independent boolean, which it obviously isn't.
+You commented on imagined code, but we actually do sth similar in code.
 
-My next comment about changing to __set_bit() can also be disregarded.
+I did this because:
+1) I had no idea what err code would be valid for invalid EPROM layout
+(content). Nothing from include/asm-generic/errno-base.h sounds
+reasonable.
+2) I wanted to use different error codes for different EPROM layout
+issues. Sometimes we don't get CIA block. Sometimes we don't get CIB
+block. Sometimes there is problem with master port (not found in EPROM
+when expected). They all would probably use the same errno.
+
+Could you help me with this?
 
 -- 
-Cheers,
-Luca.
-
+Rafał
