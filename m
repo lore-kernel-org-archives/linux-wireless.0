@@ -1,153 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42495 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933236Ab1ETAtP (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.171]:65526 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585Ab1EHPJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 20:49:15 -0400
-Received: by eyx24 with SMTP id 24so1025772eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 17:49:13 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: host pci: implement block R/W operations
-Date: Fri, 20 May 2011 03:27:06 +0200
-Message-Id: <1305854826-14717-1-git-send-email-zajec5@gmail.com> (sfid-20110520_024918_904536_C33A302F)
+	Sun, 8 May 2011 11:09:46 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
+Date: Sun, 8 May 2011 17:06:12 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
+	Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <rmk@arm.linux.org.uk>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com> <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com> <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
+In-Reply-To: <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201105081706.12449.arnd@arndb.de> (sfid-20110508_171001_238218_FAD01122)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 07 May 2011, Rafał Miłecki wrote:
+> > Well, maybe. We call it only once, at init time. In any case we're
+> > still waiting for Broadcom to clarify which cores are really used for
+> > BCMA.
+> 
+> Arnd: did you have a look at defines at all?
+> 
+> Most of the defines have values in range 0x800 → 0x837. Converting
+> this to array means loosing 0x800 u16 entries. We can not use 0x800
+> offset, because there are also some defined between 0x000 and 0x800:
+> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
+> #define BCMA_CORE_INVALID              0x700
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/Kconfig      |    5 ++++
- drivers/bcma/host_pci.c   |   52 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bcma/bcma.h |   18 +++++++++++++++
- 3 files changed, 75 insertions(+), 0 deletions(-)
+I did not mean using the enum value as index, just make an array of
+simple structs:
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 353781b..83e9adf 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -13,6 +13,11 @@ config BCMA
- 	  Bus driver for Broadcom specific Advanced Microcontroller Bus
- 	  Architecture.
- 
-+# Support for Block-I/O. SELECT this from the driver that needs it.
-+config BCMA_BLOCKIO
-+	bool
-+	depends on BCMA
-+
- config BCMA_HOST_PCI_POSSIBLE
- 	bool
- 	depends on BCMA && PCI = y
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index ffd8797..279bf50 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -64,6 +64,54 @@ static void bcma_host_pci_write32(struct bcma_device *core, u16 offset,
- 	iowrite32(value, core->bus->mmio + offset);
- }
- 
-+#ifdef CONFIG_BCMA_BLOCKIO
-+void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
-+			      size_t count, u16 offset, u8 reg_width)
-+{
-+	void __iomem *addr = core->bus->mmio + offset;
-+	if (core->bus->mapped_core != core)
-+		bcma_host_pci_switch_core(core);
-+	switch (reg_width) {
-+	case sizeof(u8):
-+		ioread8_rep(addr, buffer, count);
-+		break;
-+	case sizeof(u16):
-+		WARN_ON(count & 1);
-+		ioread16_rep(addr, buffer, count >> 1);
-+		break;
-+	case sizeof(u32):
-+		WARN_ON(count & 3);
-+		ioread32_rep(addr, buffer, count >> 2);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+
-+void bcma_host_pci_block_write(struct bcma_device *core, const void *buffer,
-+			       size_t count, u16 offset, u8 reg_width)
-+{
-+	void __iomem *addr = core->bus->mmio + offset;
-+	if (core->bus->mapped_core != core)
-+		bcma_host_pci_switch_core(core);
-+	switch (reg_width) {
-+	case sizeof(u8):
-+		iowrite8_rep(addr, buffer, count);
-+		break;
-+	case sizeof(u16):
-+		WARN_ON(count & 1);
-+		iowrite16_rep(addr, buffer, count >> 1);
-+		break;
-+	case sizeof(u32):
-+		WARN_ON(count & 3);
-+		iowrite32_rep(addr, buffer, count >> 2);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+#endif
-+
- static u32 bcma_host_pci_aread32(struct bcma_device *core, u16 offset)
- {
- 	if (core->bus->mapped_core != core)
-@@ -86,6 +134,10 @@ const struct bcma_host_ops bcma_host_pci_ops = {
- 	.write8		= bcma_host_pci_write8,
- 	.write16	= bcma_host_pci_write16,
- 	.write32	= bcma_host_pci_write32,
-+#ifdef CONFIG_BCMA_BLOCKIO
-+	.block_read	= bcma_host_pci_block_read,
-+	.block_write	= bcma_host_pci_block_write,
-+#endif
- 	.aread32	= bcma_host_pci_aread32,
- 	.awrite32	= bcma_host_pci_awrite32,
- };
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 8b0cef9..27a27a7 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -31,6 +31,12 @@ struct bcma_host_ops {
- 	void (*write8)(struct bcma_device *core, u16 offset, u8 value);
- 	void (*write16)(struct bcma_device *core, u16 offset, u16 value);
- 	void (*write32)(struct bcma_device *core, u16 offset, u32 value);
-+#ifdef CONFIG_BCMA_BLOCKIO
-+	void (*block_read)(struct bcma_device *core, void *buffer,
-+			   size_t count, u16 offset, u8 reg_width);
-+	void (*block_write)(struct bcma_device *core, const void *buffer,
-+			    size_t count, u16 offset, u8 reg_width);
-+#endif
- 	/* Agent ops */
- 	u32 (*aread32)(struct bcma_device *core, u16 offset);
- 	void (*awrite32)(struct bcma_device *core, u16 offset, u32 value);
-@@ -210,6 +216,18 @@ void bcma_write32(struct bcma_device *core, u16 offset, u32 value)
- {
- 	core->bus->ops->write32(core, offset, value);
- }
-+#ifdef CONFIG_BCMA_BLOCKIO
-+extern inline void bcma_block_read(struct bcma_device *core, void *buffer,
-+				   size_t count, u16 offset, u8 reg_width)
-+{
-+	core->bus->ops->block_read(core, buffer, count, offset, reg_width);
-+}
-+extern inline void bcma_block_write(struct bcma_device *core, const void *buffer,
-+				    size_t count, u16 offset, u8 reg_width)
-+{
-+	core->bus->ops->block_write(core, buffer, count, offset, reg_width);
-+}
-+#endif
- extern inline u32 bcma_aread32(struct bcma_device *core, u16 offset)
- {
- 	return core->bus->ops->aread32(core, offset);
--- 
-1.7.3.4
+struct bcma_device_name {
+	unsigned int id;
+	const char *name;
+};
+
+struct bcma_device_name bcma_device_names = {
+	{ BCMA_CORE_OOB_ROUTER, "Out of band router" },
+	{ BCMA_CORE_INVALID,	"Invalid" },
+	...
+};
+
+The data size for this should be way smaller than the code needed
+to represent the whole function otherwise, and be more readable.
+
+	Arnd
 
