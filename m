@@ -1,99 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39318 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753173Ab1EGXRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 19:17:44 -0400
-Message-ID: <4DC5D310.8050604@hauke-m.de> (sfid-20110508_011811_788946_C7F00F34)
-Date: Sun, 08 May 2011 01:17:36 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-px0-f173.google.com ([209.85.212.173]:50732 "EHLO
+	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039Ab1EHSeX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 May 2011 14:34:23 -0400
+Received: by pxi16 with SMTP id 16so3184186pxi.4
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 11:34:22 -0700 (PDT)
+Message-ID: <4DC6E229.7060501@lwfinger.net> (sfid-20110508_203426_606809_DD9160C5)
+Date: Sun, 08 May 2011 13:34:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Henry Ptasinski <henryp@broadcom.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	=?UTF-8?B?UmFmYcWCIE1pxYI=?= =?UTF-8?B?ZWNraQ==?=
+	<zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	Greg KH <greg@kroah.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com> <4DC56FB9.5000208@hauke-m.de> <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com> <4DC57425.30206@hauke-m.de> <BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com> <4DC5805C.2010202@hauke-m.de> <20110507224223.GA2537@broadcom.com>
-In-Reply-To: <20110507224223.GA2537@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 0/3] ssb/b43(legacy): clean dangling cores workarounds
+References: <1304874564-6426-1-git-send-email-zajec5@gmail.com>	 <4DC6CD8C.6080104@lwfinger.net>	 <BANLkTimNHB0mzAnndDeT9CsLKMTSYvLNGw@mail.gmail.com> <1304874969.23124.22.camel@maggie>
+In-Reply-To: <1304874969.23124.22.camel@maggie>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2011 12:42 AM, Henry Ptasinski wrote:
-> On Sat, May 07, 2011 at 10:24:44AM -0700, Hauke Mehrtens wrote:
->> On 05/07/2011 06:51 PM, Rafał Miłecki wrote:
->>> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
->>>> There is a Ethernet core used on embedded devices with this bus and
->>>> George wrote a driver for the first version of this bus implementation,
->>>> he send to the ML. Most user will use this with some wireless devices so
->>>> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
->>>
->>> Thanks, I didn't know about this ethernet driver. Have to check it!
->>> Where was this published? Do you have a thread name?
->>
->> I think he haven't send it to the mailing list, there is a link [0] in
->> some Ticket [1] at OpenWrt. This driver was derived from source code
->> Braodcom have published, but not under a GPL compatible license. It will
->> be nice if Braodcom would allow us to publish a driver under the terms
->> of the GPL for the Ethernet core based on their driver, without writing
->> a full spec of the driver like it was done for b43.
-> 
-> ...
->>
->> [0] http://www.znau.edu.ua/temp/asus-rt-n16/openwrt-bcm4716-README.txt
->> [1] https://dev.openwrt.org/ticket/6580#comment
-> 
-> All of of the patches listed in [0] appear to contain GPL-licensed code.  Can
-> you provide a pointer to the ethernet driver that you think is not under a
-> GPL-compatible license?
+On 05/08/2011 12:16 PM, Michael Büsch wrote:
+> On Sun, 2011-05-08 at 19:11 +0200, Rafał Miłecki wrote:
+>> Oh, do you have some device with 2 active cores? Nice :)
+>
+> I don't think there are any supported multicore devices anyway. Those
+> are the very early A-PHY, only. AFAIK.
 
-I was only able to find the driver George build based on the et driver
-as a patch in a patch version. It is patch
-999-openwrt4716-ssb-bgmac-mak-driver.patch in
-http://www.znau.edu.ua/temp/asus-rt-n16/2011-02-13T23-17/001-openwrt4716-TARGET_brcm4716.patch
+Yes, I have a Linksys WPC54G Cardbus device that uses b43legacy.
 
-This driver is based on the Broadcom et driver from the GPL source
-package of the Asus RT-N16. One of the files has this header [0]. This
-license does not seam to be compatible with the GPL. Netgear provides
-the et driver just in binary format without any source code.
+The 'dmesg | egrep "ssb|b43"' output for it is
 
-It will be nice if Broadcom is fine when we build and release an
-Ethernet driver like 999-openwrt4716-ssb-bgmac-mak-driver.patch using
-bcma under the terms of the GPL and using et as a reference. The best
-thing would be if you could release the Broadcom et driver under a GPL
-compatible license, so we are able to use it as a reference
-implementation without any problems.
+b43-pci-bridge 0000:06:00.0: PCI INT A -> Link[LNK1] -> GSI 11 (level, low) -> 
+IRQ 11
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x02, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x04, vendor 0x4243)
+ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x01, vendor 0x4243)
+ssb: Core 3 found: V90 (cc 0x807, rev 0x01, vendor 0x4243)
+ssb: Core 4 found: PCI (cc 0x804, rev 0x07, vendor 0x4243)
+ssb: Core 5 found: IEEE 802.11 (cc 0x812, rev 0x04, vendor 0x4243)
+ssb: Ignoring additional 802.11 core
+ssb: chipcommon status is 0x0
+ssb: SPROM offset is 0x1000
+ssb: SPROM revision 1 detected.
+ssb: Sonics Silicon Backplane found on PCI device 0000:06:00.0
+b43legacy-phy0: Broadcom 4306 WLAN found
+b43legacy-phy0 debug: Found PHY: Analog 1, Type 2, Revision 1
+b43legacy-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+b43legacy-phy0 debug: Radio initialized
+b43legacy-phy0: Loading firmware version 0x127, patch level 14 (2005-04-18 02:36:27)
+b43legacy-phy0 debug: Chip initialized
+b43legacy-phy0 debug: 30-bit DMA initialized
+b43legacy-phy0 debug: Wireless interface started
+b43legacy-phy0 debug: Adding Interface type 2
 
-If you relicense your driver you will probably get a Ethernet driver
-based on the bcma bus without any costs. I do not see any problems with
-the FCC, if your release this code. Every one how wants to see the
-source code already did so, as it is freely available for years now.
+You can add a Tested-by: and an ACK to the patches.
 
-Hauke
+Larry
 
-[0] RT-N16/src/et/sys/etcgmac.c header:
----
-Broadcom Gigabit Ethernet MAC (Unimac) core.
 
-This file implements the chip-specific routines for the GMAC core.
-
-Copyright (C) 2009, Broadcom Corporation
-All Rights Reserved.
-
-This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
-the contents of this file may not be disclosed to third parties, copied
-or duplicated in any form, in whole or in part, without the prior
-written permission of Broadcom Corporation.
----
