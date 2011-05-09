@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:46670 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753426Ab1EaLR3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 07:17:29 -0400
-Received: by gxk22 with SMTP id 22so2304719gxk.16
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 04:17:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1306833366.23002.52.camel@cumari>
-References: <1306828287-31802-1-git-send-email-shahar_levi@ti.com>
-	<1306830902.23002.18.camel@cumari>
-	<BANLkTikGm1KwNTXXHTjM0K1tVNOPpi2BLQ@mail.gmail.com>
-	<1306833366.23002.52.camel@cumari>
-Date: Tue, 31 May 2011 14:17:27 +0300
-Message-ID: <BANLkTinfEopWmY91UwtHFdtxxwhOi=EH-A@mail.gmail.com> (sfid-20110531_131738_870096_B05EBA70)
-Subject: Re: [PATCH] wl12xx: Add Support for Low Power DRPw (LPD) Mode
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39668 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582Ab1EIQzH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 12:55:07 -0400
+Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4DC81BFB.3020103@candelatech.com>
+References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
+	 <4DC81A61.9080101@candelatech.com>
+	 <1304959783.12202.7.camel@jlt3.sipsolutions.net>
+	 <4DC81BFB.3020103@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 18:55:05 +0200
+Message-ID: <1304960105.12202.8.camel@jlt3.sipsolutions.net> (sfid-20110509_185518_207312_804935C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 31, 2011 at 12:16 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-05-31 at 12:11 +0300, Eliad Peller wrote:
->> On Tue, May 31, 2011 at 11:35 AM, Luciano Coelho <coelho@ti.com> wrote:
->> > On Tue, 2011-05-31 at 10:51 +0300, Shahar Levi wrote:
->> >> The Low Power DRPw (LPD) mode contains several optimizations
->> >> that designed to reduce the solution's consumption. The
->> >> purpose is to save current consumption in RX and Listen mode.
->> >>
->> >> LPD setting apply only for wl127x AP mode (not wl128x)
->> >>
->> >> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> >> ---
->> >
->> > [...]
->> >
->> >
->> > I still think this is not the right way to do it.  It doesn't make sense
->> > to have it in the configuration parameters.  If you want to make it
->> > configurable, it should be in the NVS file and the driver should clear
->> > it when not in AP mode (and whoever generates the NVS needs to make sure
->> > it's never set for wl128x).
->> >
->> please don't use the "blacklist" approach. it always gets broken at some point.
->
-> I totally agree.
->
->
->> > The other solution is to always set this flag when in wl127x in AP-mode,
->> > in which case it doesn't need to be configurable at all.  That would be
->> > the simplest solution and you could even use a quirk if it makes it
->> > easier.
->> >
->> sounds much better.
->
-> Yes, and now we got confirmation that this is really the case.  It
-> should always be set for wl127x in AP-mode and not be set for anything
-> else.  This is a clear case, not a configurable value.
-np. will be fix in the quirk way
+On Mon, 2011-05-09 at 09:53 -0700, Ben Greear wrote:
 
-> --
-> Cheers,
-> Luca.
-Thanks for your review.
-All the best,
-Shahar
+> >> I think there is no problem with having different beacon
+> >> intervals, as long as they are all a multiple of
+> >> the smallest interval and the driver does things properly.
+> >>
+> >> I'm not sure ath9k or ath5k currently supports this properly,
+> >> but there was a patch floating around for a while that did
+> >> this for ath9k I think...
+> >
+> > Yes, in theory that's possible, but apparently no driver actually did
+> > this correctly. Also, it didn't seem like anyone really cares, and we
+> > need to enforce some restrictions because otherwise drivers will end up
+> > doing it wrong, and you'll end up having a beacon interval of 200 while
+> > advertising 150 for example, which will totally throw off powersaving
+> > clients.
+> >
+> > If you really care greatly about having different beacon intervals (and
+> > I don't see why you would?) then maybe you can think how we can enforce
+> > and advertise that to userspace. For now, I'm more comfortable just
+> > restricting it.
+> 
+> I guess we could add a flag to the driver when it supports it properly
+> and modify your logic to check for even multiples instead of just ==
+> if that flag is set?
+
+Yes, but it's not just a flag, you also need the smallest divisor that
+the driver needs, for example at least 50 TU. Also, when multiple
+channels are used (not right now of course) that might factor into the
+calculations of when which beacon is sent.
+
+johannes
+
