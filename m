@@ -1,201 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:45620 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751074Ab1EIL2B (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42019 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752802Ab1EINcs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 07:28:01 -0400
-Received: by eyx24 with SMTP id 24so2071759eyx.33
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 04:27:58 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: add a couple of trace event classes to reduce duplicated code
-Date: Mon,  9 May 2011 14:27:49 +0300
-Message-Id: <1304940469-4978-1-git-send-email-coelho@ti.com> (sfid-20110509_132806_507969_2B23CFB5)
+	Mon, 9 May 2011 09:32:48 -0400
+Received: by wya21 with SMTP id 21so3869912wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:32:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110509114601.GA27067@zenon.in.qult.net>
+References: <4DC2C743.9060004@01019freenet.de>
+	<BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
+	<20110509114601.GA27067@zenon.in.qult.net>
+Date: Mon, 9 May 2011 19:02:47 +0530
+Message-ID: <BANLkTikAYtW5o9rVS_WT-1XuGQVXOucjZg@mail.gmail.com> (sfid-20110509_153254_519124_57D3C2B2)
+Subject: =?windows-1252?Q?Re=3A_compile=2Derror_agg=2Dtx=2Ec=3A_error=3A_implicit_declarat?=
+	=?windows-1252?Q?ion_of_function_=91kfree=5Frcu=92?=
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions drv_add_interface() and drv_remove_interface() print out
-the same values in the traces.  Combine the traces of these two
-functions into one event class to remove some duplicate code.
+On Mon, May 9, 2011 at 5:16 PM, Ignacy Gawedzki <i@lri.fr> wrote:
+> On Fri, May 06, 2011 at 10:35:08AM +0530, thus spake Mohammed Shafi:
+>> On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>> > Hello,
+>> >
+>> > since May, there is a compile error in compat-wireless (against kernel
+>> > 2.6.34):
+>
+> I, as it appears with many others, have the same kind of trouble compiling the
+> latests compat-wireless snapshots on some kernels (2.6.38 for me).
+>
+> Obviously the kfree_rcu machinery should go into some compat/ source file.  In
+> the meantime, I personnaly reverted these changes (see attached patch) and it
+> works just fine.
 
-Also add a new class for functions drv_set_frag_threshold() and
-drv_set_rts_threshold().
+I blindly used your patch and now the compat-wireless is compiling for me.
+thanks a lot.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- net/mac80211/driver-trace.h |  130 +++++++++++++++++-------------------------
- 1 files changed, 53 insertions(+), 77 deletions(-)
+with regards,
+shafi
 
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 11e1ea5..146f619 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -55,6 +55,49 @@ DECLARE_EVENT_CLASS(local_only_evt,
- 	TP_printk(LOCAL_PR_FMT, LOCAL_PR_ARG)
- );
- 
-+DECLARE_EVENT_CLASS(local_sdata_addr_evt,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__array(char, addr, 6)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		memcpy(__entry->addr, sdata->vif.addr, 6);
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
-+	)
-+);
-+
-+DECLARE_EVENT_CLASS(local_value_evt,
-+	TP_PROTO(struct ieee80211_local *local, u32 value),
-+	TP_ARGS(local, value),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u32, value)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->value = value;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " value:%d",
-+		LOCAL_PR_ARG, __entry->value
-+	)
-+);
-+
- DEFINE_EVENT(local_only_evt, drv_return_void,
- 	TP_PROTO(struct ieee80211_local *local),
- 	TP_ARGS(local)
-@@ -123,28 +166,10 @@ DEFINE_EVENT(local_only_evt, drv_stop,
- 	TP_ARGS(local)
- );
- 
--TRACE_EVENT(drv_add_interface,
-+DEFINE_EVENT(local_sdata_addr_evt, drv_add_interface,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata),
--
--	TP_ARGS(local, sdata),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		VIF_ENTRY
--		__array(char, addr, 6)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		VIF_ASSIGN;
--		memcpy(__entry->addr, sdata->vif.addr, 6);
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
--		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
--	)
-+	TP_ARGS(local, sdata)
- );
- 
- TRACE_EVENT(drv_change_interface,
-@@ -175,27 +200,10 @@ TRACE_EVENT(drv_change_interface,
- 	)
- );
- 
--TRACE_EVENT(drv_remove_interface,
--	TP_PROTO(struct ieee80211_local *local, struct ieee80211_sub_if_data *sdata),
--
--	TP_ARGS(local, sdata),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		VIF_ENTRY
--		__array(char, addr, 6)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		VIF_ASSIGN;
--		memcpy(__entry->addr, sdata->vif.addr, 6);
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
--		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
--	)
-+DEFINE_EVENT(local_sdata_addr_evt, drv_remove_interface,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
- );
- 
- TRACE_EVENT(drv_config,
-@@ -514,46 +522,14 @@ TRACE_EVENT(drv_get_tkip_seq,
- 	)
- );
- 
--TRACE_EVENT(drv_set_frag_threshold,
-+DEFINE_EVENT(local_value_evt, drv_set_frag_threshold,
- 	TP_PROTO(struct ieee80211_local *local, u32 value),
--
--	TP_ARGS(local, value),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		__field(u32, value)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		__entry->value = value;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT " value:%d",
--		LOCAL_PR_ARG, __entry->value
--	)
-+	TP_ARGS(local, value)
- );
- 
--TRACE_EVENT(drv_set_rts_threshold,
-+DEFINE_EVENT(local_value_evt, drv_set_rts_threshold,
- 	TP_PROTO(struct ieee80211_local *local, u32 value),
--
--	TP_ARGS(local, value),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		__field(u32, value)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		__entry->value = value;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT " value:%d",
--		LOCAL_PR_ARG, __entry->value
--	)
-+	TP_ARGS(local, value)
- );
- 
- TRACE_EVENT(drv_set_coverage_class,
--- 
-1.7.1
-
+>
+> --
+> /* This is not a comment */
+>
