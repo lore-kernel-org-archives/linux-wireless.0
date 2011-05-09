@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53489 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758234Ab1EaTrv (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51975 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932378Ab1EICUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:51 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 28/32] ath9k: fix few register offsets for AR9330
-Date: Tue, 31 May 2011 21:37:19 +0200
-Message-Id: <1306870643-7935-29-git-send-email-juhosg@openwrt.org> (sfid-20110531_214847_574667_A0144184)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Sun, 8 May 2011 22:20:01 -0400
+Received: by iyb14 with SMTP id 14so3957227iyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 19:20:00 -0700 (PDT)
+Message-ID: <4DC74F4B.7070201@lwfinger.net> (sfid-20110509_042006_652664_B571E9BF)
+Date: Sun, 08 May 2011 21:19:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH V2] b43: trivial: include ssb word in ssb specific functions
+References: <1304893278-32318-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1304893278-32318-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On 05/08/2011 05:21 PM, Rafał Miłecki wrote:
+> This can be helpful when we decide to add support for other buses.
+>
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> V2: commit message typo
+> ---
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index d259278..9eb3aa2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -625,11 +625,11 @@
- #define AR_PHY_65NM_CH2_RXTX1       0x16900
- #define AR_PHY_65NM_CH2_RXTX2       0x16904
- 
--#define AR_CH0_TOP2 (AR_SREV_9485(ah) ? 0x00016284 : 0x0001628c)
-+#define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : 0x16284)
- #define AR_CH0_TOP2_XPABIASLVL		0xf000
- #define AR_CH0_TOP2_XPABIASLVL_S	12
- 
--#define AR_CH0_XTAL		(AR_SREV_9485(ah) ? 0x16290 : 0x16294)
-+#define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : 0x16290)
- #define AR_CH0_XTAL_CAPINDAC	0x7f000000
- #define AR_CH0_XTAL_CAPINDAC_S	24
- #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
--- 
-1.7.2.1
+ACK.
+
+Larry
 
