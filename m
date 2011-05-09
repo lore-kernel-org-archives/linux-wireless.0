@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1296 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751224Ab1ECNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:09:43 -0400
-Message-ID: <4DBFFE80.3030305@broadcom.com> (sfid-20110503_150946_590018_A303806C)
-Date: Tue, 3 May 2011 15:09:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52982 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896Ab1EIQCX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 12:02:23 -0400
+Message-ID: <4DC81009.5060501@lwfinger.net> (sfid-20110509_180322_636405_29C16797)
+Date: Mon, 09 May 2011 11:02:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
- <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
- <20110503121522.GB22674@suse.de> <4DBFF628.6040502@broadcom.com>
- <20110503130049.GA29438@suse.de>
-In-Reply-To: <20110503130049.GA29438@suse.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Joe Perches <joe@perches.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix memset using sizeof(ptr) not
+ sizeof(*ptr)
+References: <1304919832.19586.15.camel@Joe-Laptop>
+In-Reply-To: <1304919832.19586.15.camel@Joe-Laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 03:00 PM, Greg KH wrote:
-> On Tue, May 03, 2011 at 02:33:44PM +0200, Arend van Spriel wrote:
->> On 05/03/2011 02:15 PM, Greg KH wrote:
->>> On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
->>>>   #if defined(CONFIG_PM_SLEEP)
->>>>
->>>> +extern volatile bool dhd_mmc_suspend;
->>> This does not do what you think it does.
->> Hi Greg,
->>
->> I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2]
->> brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two
->> patches I saw on the linuxdriver list are:
-> You rebased on a 1/2 patch in a series with an invalid 0/2 email?
+On 05/09/2011 12:43 AM, Joe Perches wrote:
+> Found via coccinelle script
 >
-> {sigh}
-Sorry.
-> I dropped that patch as the whole series needed to be resent, do you
-> want me to apply that one patch before yours?
-I can resend my series if that is more convenient for you.
+> @@
+> type T;
+> T* ptr;
+> expression E1;
+> @@
+>
+> * memset(E1, 0, sizeof(ptr));
+>
+> Signed-off-by: Joe Perches<joe@perches.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> index 79c98f6..c16fc1c 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+> @@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+>   	__le16 fc;
+>   	struct ieee80211_hdr *hdr;
+>
+> -	memset(rx_status, 0, sizeof(rx_status));
+> +	memset(rx_status, 0, sizeof(*rx_status));
+>   	rxdesc	= skb->data;
+>   	skb_len	= skb->len;
+>   	drvinfo_len = (GET_RX_DESC_DRVINFO_SIZE(rxdesc) * RTL_RX_DRV_INFO_UNIT);
 
-Gr. AvS
+ACK.
 
+Larry
