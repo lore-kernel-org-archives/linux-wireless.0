@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:56473 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337Ab1EBXqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 19:46:50 -0400
-Date: Mon, 2 May 2011 19:46:49 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-In-Reply-To: <alpine.DEB.2.02.1104261923390.3894@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1105021944560.14515@p34.internal.lan> (sfid-20110503_014711_343853_EFCFBBD5)
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com> <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan>
- <4DB74788.2000908@lwfinger.net> <alpine.DEB.2.02.1104261923390.3894@p34.internal.lan>
+Received: from brent.tribalogic.net ([78.86.109.144]:37106 "EHLO
+	summit.brent.tribalogic.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753759Ab1EIRJa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 13:09:30 -0400
+Message-ID: <4DC81FC7.9040503@colin.guthr.ie> (sfid-20110509_190933_590239_8E5CF4F1)
+Date: Mon, 09 May 2011 18:09:27 +0100
+From: Colin Guthrie <gmane@colin.guthr.ie>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	platform-driver-x86@vger.kernel.org
+Subject: Re: [Regression] Problem with rfkill on 2.6.38
+References: <ip6j66$o5f$1@dough.gmane.org>	 (sfid-20110426_170016_050429_A6E2C01A) <1304930195.3475.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1304930195.3475.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
+'Twas brillig, and Johannes Berg at 09/05/11 09:36 did gyre and gimble:
+> [Matthew, everybody from the platform list, please see
+> http://mid.gmane.org/ip6j66$o5f$1@dough.gmane.org for the full email
+> thread]
+> 
+> Sorry, took me a while to get back to your email.
+> 
+>> wifi works fine generally, but after cycling RFKILL I have to reload the
+>> various modules before it works again.
+> 
+> 
+>> [root@jimmy ~]# rmmod dell_laptop
+> 
+> I'm pretty sure this one's at fault, see below.
 
-On Tue, 26 Apr 2011, Justin Piszcz wrote:
+Just a quick (non-compile) followup from my last email... blacklisting
+the dell-laptop module works around the issue, so I think the commit
+previously mentioned is indeed the culprit (as it's the only recent
+commit and does fiddle with the rfkill stuff).
 
->
->
-> On Tue, 26 Apr 2011, Larry Finger wrote:
->
->>> 
->>> I am trying a different driver now: rt2870sta
->>> I've read a few reports this may be the 'proper' one to use.
->>> So far so good, no lag or anything and I did not have to set power off
->>> either.
->> 
->> Driver rtl2870sta is not the proper one to use. In fact, a patch to delete 
->> rt2860sta and rt2870sta from the kernel was queued yesterday, and they will 
->> be gone by the time 2.6.40 is released.
->> 
->> New firmware for rt2800usb was just accepted into the linux-firmware git 
->> tree. Please obtain a copy and try it.
->> 
->> Larry
->>
+Not sure what the best track forward is, but it's certainly a
+regression, so should probably be fixed or reverted until a more
+complete fix is found.
 
-Hi,
+Cheers
 
-Just an update, this driver has been solid so far:
-rt2870sta
+Col
 
-With the Media Link 150 USB stick, not a single crash yet--
-The rt2800usb driver is laggy and crashes the kernel (as of 2.6.38.x)--
-Is there a possiblity to get rtl2870sta into the mainline?
-It is the best wireless driver I've used for Linux with various usb wifi
-adapters--
+-- 
 
-# uptime
-  19:44:28 up 4 days, 10:16,  2 users,  load average: 1.51, 1.56, 1.25
+Colin Guthrie
+gmane(at)colin.guthr.ie
+http://colin.guthr.ie/
 
-Justin.
-
+Day Job:
+  Tribalogic Limited [http://www.tribalogic.net/]
+Open Source:
+  Mageia Contributor [http://www.mageia.org/]
+  PulseAudio Hacker [http://www.pulseaudio.org/]
+  Trac Hacker [http://trac.edgewall.org/]
