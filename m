@@ -1,44 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45734 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404Ab1EFX1p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 19:27:45 -0400
+Received: from qult.net ([82.238.217.46]:49695 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923Ab1EIM1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 08:27:50 -0400
+Received: from zenon.in.qult.net ([192.168.128.3])
+	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <i@lri.fr>)
+	id 1QJOuY-00033E-BT
+	for linux-wireless@vger.kernel.org; Mon, 09 May 2011 13:46:02 +0200
+Received: from ig by zenon.in.qult.net with local (Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QJOuX-0007Du-Dj
+	for linux-wireless@vger.kernel.org; Mon, 09 May 2011 13:46:01 +0200
+Date: Mon, 9 May 2011 13:46:01 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: linux-wireless@vger.kernel.org
+Subject: Re: compile-error agg-tx.c: =?utf-8?Q?erro?=
+ =?utf-8?Q?r=3A_implicit_declaration_of_function_=E2=80=98kfree=5Frcu?=
+ =?utf-8?B?4oCZ?=
+Message-ID: <20110509114601.GA27067@zenon.in.qult.net> (sfid-20110509_142755_997953_CBC8FF86)
+References: <4DC2C743.9060004@01019freenet.de>
+ <BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110506232814.3ca7b943@lxorguk.ukuu.org.uk>
-References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
- <1304719780-27347-3-git-send-email-lrodriguez@atheros.com> <20110506232814.3ca7b943@lxorguk.ukuu.org.uk>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 6 May 2011 16:27:25 -0700
-Message-ID: <BANLkTik5g3r_aqbp=zTawEtgzYCGwCZ_Xw@mail.gmail.com> (sfid-20110507_012804_370471_FABB005F)
-Subject: Re: [RFC 2/2] x86: add Atheros ar1520 platform support for mrst
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@linux-foundation.org, mingo@redhat.com, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, allen.kao@atheros.com,
-	roman.gezikov@atheros.com, joonas.viskari@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed; boundary="oyUTqETQ0mS9luUI"
+In-Reply-To: <BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 6, 2011 at 3:28 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Fri, 6 May 2011 15:09:40 -0700
-> "Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
->
->> From: Allen Kao <allen.kao@atheros.com>
->>
->> This adds platform driver support for Atheros ar1520 GPS device
->> on the Intel Moorestown Low Power Intel Architecture (LPIA) based
->> Moblin Internet Device (MID) platform.
->
-> NAK - for the same reasons as before, and the same NAK you already got on
-> the other list.
->
-> No open user space or sufficient API docs to make use of the kernel
-> driver and write your own = not a candidate for submission. Same for the
-> 3D graphics on that platform.
 
-I was under the impression an open userspace app was going to be
-provided.... I'll check with the team.
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
- Luis
+On Fri, May 06, 2011 at 10:35:08AM +0530, thus spake Mohammed Shafi:
+> On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
+> <andihartmann@01019freenet.de> wrote:
+> > Hello,
+> >
+> > since May, there is a compile error in compat-wireless (against kernel
+> > 2.6.34):
+
+I, as it appears with many others, have the same kind of trouble compiling the
+latests compat-wireless snapshots on some kernels (2.6.38 for me).
+
+Obviously the kfree_rcu machinery should go into some compat/ source file.  In
+the meantime, I personnaly reverted these changes (see attached patch) and it
+works just fine.
+
+-- 
+/* This is not a comment */
+
+--oyUTqETQ0mS9luUI
+Content-Type: text/x-diff; charset=us-ascii
+Content-Disposition: attachment; filename="compat-wireless-no-kfree-rcu.patch"
+
+diff --git b/net/mac80211/agg-tx.c a/net/mac80211/agg-tx.c
+index 53defaf..63d852c 100644
+--- b/net/mac80211/agg-tx.c
++++ a/net/mac80211/agg-tx.c
+@@ -136,6 +136,14 @@ void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u1
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
++static void kfree_tid_tx(struct rcu_head *rcu_head)
++{
++	struct tid_ampdu_tx *tid_tx =
++	    container_of(rcu_head, struct tid_ampdu_tx, rcu_head);
++
++	kfree(tid_tx);
++}
++
+ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				    enum ieee80211_back_parties initiator,
+ 				    bool tx)
+@@ -155,7 +163,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 		/* not even started yet! */
+ 		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
+ 		spin_unlock_bh(&sta->lock);
+-		kfree_rcu(tid_tx, rcu_head);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
+ 		return 0;
+ 	}
+ 
+@@ -314,7 +322,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		spin_unlock_bh(&sta->lock);
+ 
+ 		ieee80211_wake_queue_agg(local, tid);
+-		kfree_rcu(tid_tx, rcu_head);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
+ 		return;
+ 	}
+ 
+@@ -693,7 +701,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ 
+ 	ieee80211_agg_splice_finish(local, tid);
+ 
+-	kfree_rcu(tid_tx, rcu_head);
++	call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
+ 
+  unlock_sta:
+ 	spin_unlock_bh(&sta->lock);
+diff --git b/net/mac80211/work.c a/net/mac80211/work.c
+index d2e7f0e..a94b312 100644
+--- b/net/mac80211/work.c
++++ a/net/mac80211/work.c
+@@ -65,9 +65,17 @@ static void run_again(struct ieee80211_local *local,
+ 		mod_timer(&local->work_timer, timeout);
+ }
+ 
++static void work_free_rcu(struct rcu_head *head)
++{
++	struct ieee80211_work *wk =
++		container_of(head, struct ieee80211_work, rcu_head);
++
++	kfree(wk);
++}
++
+ void free_work(struct ieee80211_work *wk)
+ {
+-	kfree_rcu(wk, rcu_head);
++	call_rcu(&wk->rcu_head, work_free_rcu);
+ }
+ 
+ static int ieee80211_compatible_rates(const u8 *supp_rates, int supp_rates_len,
+
+--oyUTqETQ0mS9luUI--
