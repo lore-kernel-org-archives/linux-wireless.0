@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:60620 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754669Ab1ECUjN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 16:39:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <4DC0669E.4040100@lwfinger.net>
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
- <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 3 May 2011 22:38:52 +0200
-Message-ID: <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> (sfid-20110503_223929_353981_DC7F5C74)
-Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
+Received: from mail.perches.com ([173.55.12.10]:1406 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754135Ab1EITv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 15:51:59 -0400
+Subject: [PATCH V3] rtlwifi: rtl8192cu: Fix memset/memcpy using sizeof(ptr)
+ not sizeof(*ptr)
+From: Joe Perches <joe@perches.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Walter Goldens <goldenstranger@yahoo.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <4DC84071.4080500@lwfinger.net>
+References: <1304919832.19586.15.camel@Joe-Laptop>
+	 <4DC81009.5060501@lwfinger.net> <1304960976.19586.51.camel@Joe-Laptop>
+	 <4DC84071.4080500@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 12:51:57 -0700
+Message-ID: <1304970717.19586.74.camel@Joe-Laptop> (sfid-20110509_215221_543559_B25526D7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/3 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
->>
->> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
->>  wrote:
->>>
->>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
->>>>
->>>>> This set of patches introduces a driver for the RTL8192SE PCI devices.
->>>>
->>>> Any estimates on the *SU driver? :)
->>>
->>> Now that rtl8192se is submitted, I will start work on the driver for the
->>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
->>> priority
->>> because r8712u from staging handles those devices. It is not based on
->>> mac80211, but it works.
->>
->> Again, may I remind you that the preferred behavior in the Linux world
->> is release-early, release-often? :-)
->
-> That I know, but "code first" still applies. If the comparison between
-> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties, roughly
-> half of this driver will be shared. In addition, we do have all the USB
-> plumbing in place, but we are still talking about a few thousand lines of
-> code. At last contact, Realtek has no interest in this project, thus I will
-> be on my own.
->
-> Larry
+Found via coccinelle script
 
-I do not mean immediately submitting everything for inclusion -
-however, a publicly accessible Git tree would be nice. A non-rtlwifi,
-badly coded but functional and GPL-compatible driver is still better
-than having to use ndiswrapper/load a binary blob.
+@@
+type T;
+T* ptr;
+expression E1;
+@@
+* memset(E1, 0, sizeof(ptr));
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Signed-off-by: Joe Perches <joe@perches.com>
+
+---
+
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index 79c98f6..3a92ba3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	__le16 fc;
+ 	struct ieee80211_hdr *hdr;
+ 
+-	memset(rx_status, 0, sizeof(rx_status));
++	memset(rx_status, 0, sizeof(*rx_status));
+ 	rxdesc	= skb->data;
+ 	skb_len	= skb->len;
+ 	drvinfo_len = (GET_RX_DESC_DRVINFO_SIZE(rxdesc) * RTL_RX_DRV_INFO_UNIT);
+@@ -434,7 +434,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		 "0x%02X\n", fc, (u32)hdr->addr1[0], (u32)hdr->addr1[1],
+ 		 (u32)hdr->addr1[2], (u32)hdr->addr1[3], (u32)hdr->addr1[4],
+ 		 (u32)hdr->addr1[5]));
+-	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
++	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
+ 	ieee80211_rx_irqsafe(hw, skb);
+ }
+ 
+
+
