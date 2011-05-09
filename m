@@ -1,273 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:42243 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754432Ab1EEOan convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:52244 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753852Ab1EIIvA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 10:30:43 -0400
+	Mon, 9 May 2011 04:51:00 -0400
+Received: by qyk7 with SMTP id 7so776053qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 01:50:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110505135207.GA13727@thinkpad-t410>
-References: <20110504153819.GA4551@thinkpad-t410>
-	<20110504172716.GC18541@tuxdriver.com>
-	<20110504192639.GB4551@thinkpad-t410>
-	<BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
-	<20110505135207.GA13727@thinkpad-t410>
-Date: Thu, 5 May 2011 17:30:42 +0300
-Message-ID: <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com> (sfid-20110505_163107_000957_E54B78EC)
-Subject: Re: ath5k regression associating with APs in 2.6.38
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Nick Kossifidis <mickflemm@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <8739kos3cm.wl@dns1.atmark-techno.com>
+References: <201104181526.01722.IvDoorn@gmail.com>
+	<201104301601.15558.IvDoorn@gmail.com>
+	<87d3k1rzuw.wl@dns1.atmark-techno.com>
+	<201105022124.10614.IvDoorn@gmail.com>
+	<8739kos3cm.wl@dns1.atmark-techno.com>
+Date: Mon, 9 May 2011 10:50:58 +0200
+Message-ID: <BANLkTin9YVtc++yuqaLG8szZ4PvLy-_ehA@mail.gmail.com> (sfid-20110509_105115_177510_556D12BE)
+Subject: Re: [PATCH 04/23] rt2x00: Make rt2x00_queue_entry_for_each more flexible
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Yasushi SHOJI <yashi@atmark-techno.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	helmut.schaa@googlemail.com, hanada@atmark-techno.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/5 Seth Forshee <seth.forshee@canonical.com>:
-> On Wed, May 04, 2011 at 11:09:03PM +0300, Nick Kossifidis wrote:
->> 2011/5/4 Seth Forshee <seth.forshee@canonical.com>:
->> > On Wed, May 04, 2011 at 01:27:17PM -0400, John W. Linville wrote:
->> >> On Wed, May 04, 2011 at 10:38:19AM -0500, Seth Forshee wrote:
->> >> > I've been investigating some reports of a regression in associating with
->> >> > APs with AR2413 in 2.6.38. Association repeatedly fails with some
->> >> > "direct probe to x timed out" messages (see syslog excerpt below),
->> >> > although it will generally associate eventually, after many tries.
->> >> >
->> >> > Bisection identifies 8aec7af (ath5k: Support synth-only channel change
->> >> > for AR2413/AR5413) as offending commit. Prior to this commit there are
->> >> > no direct probe messages at all in the logs. I've also found that
->> >> > forcing fast to false at the top of ath5k_hw_reset() fixes the issue.
->> >> > I'm not sure what the connection is between this commit and the
->> >> > timeouts. Any suggestions?
->> >>
->> >> Have you tried reverting that commit on top of 2.6.38?  Can you
->> >> recreate the issue with 2.6.39-rc6 (or later)?
->> >
->> > I started to revert that commit, but it wasn't straight-forward due to
->> > later changes. Forcing fast to false in ath5k_hw_reset() acts as a
->> > functional revert of sorts since that should force it back to a full
->> > reset for all channel changes, and it's much simpler than working out
->> > the right way to revert the commit. I think the results suggest strongly
->> > that a revert is likely to fix the problem. I can finish the work to
->> > revert if you'd still like to see the results.
->> >
->> > Testing a previous .39-rc kernel still exhibited the failure. I don't
->> > recall which one it was and apparently forgot to make note of it. I'll
->> > request testing against rc6.
->> >
->> > Thanks,
->> > Seth
->> >
+Hi,
+
+> At Mon, 2 May 2011 21:24:09 +0200,
+> Ivo van Doorn wrote:
 >>
->> Do you get scan results ?
->> Can you enable ATH5K_DEBUG_RESET and see what you get ?
+>> > �- CPU consumption was not an issue (sorry for wrong info. my bad)
+>> > �-- but network throughput performance is bad
+>> > �- USB controller on the CPU is not fast
+>> > �-- max throughput for USB memory read is about 50 Mbps on our test
+>> > �-- max client mode transfer rate is about 20 Mbps (at best)
+>>
+>> Ah ok, as CPU consumption is not the problem, then I better understand the problem.
+>> My previous patch missed one fix for a return value. Could you try this one.
 >
-> 2.6.39-rc6 still fails. A more comprehensive log with ATH5K_DEBUG_RESET
-> enabled is below.
->
-> Scanning looks to be failing according to this log. I was thinking that
-> I saw successfull scans in some of the previous logs, but I'll have to
-> go back and check to be sure.
->
-> Thanks,
-> Seth
->
->
-> kernel: [   23.421242] ath5k 0000:06:02.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> kernel: [   23.421312] ath5k 0000:06:02.0: registered as 'phy0'
-> kernel: [   24.132959] ath: EEPROM regdomain: 0x63
-> kernel: [   24.132962] ath: EEPROM indicates we should expect a direct regpair map
-> kernel: [   24.132967] ath: Country alpha2 being used: 00
-> kernel: [   24.132969] ath: Regpair used: 0x63
-> kernel: [   24.136125] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136131] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136134] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136137] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136140] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136143] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136146] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136149] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136151] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136155] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136157] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136160] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136163] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136166] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136168] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136172] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136174] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136177] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136180] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136183] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136186] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136189] cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136191] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136195] cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136197] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
-> kernel: [   24.136200] cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (N/A mBi, 2000 mBm)
-> kernel: [   24.136203] cfg80211: Disabling freq 2484 MHz as custom regd has no rule that fits a 20 MHz wide channel
-> kernel: [   24.136404] cfg80211: Ignoring regulatory request Set by core since the driver uses its own custom regulatory domain
-> kernel: [   24.393924] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> kernel: [   24.394588] ath5k phy0: Atheros AR2413 chip found (MAC: 0x78, PHY: 0x45)
-> ...
-> NetworkManager[725]: <info> (wlan0): driver supports SSID scans (scan_capa 0x01).
-> NetworkManager[725]: <info> (wlan0): new 802.11 WiFi device (driver: 'ath5k' ifindex: 3)
-> NetworkManager[725]: <info> (wlan0): exported as /org/freedesktop/NetworkManager/Devices/1
-> NetworkManager[725]: <info> (wlan0): now managed
-> NetworkManager[725]: <info> (wlan0): device state change: 1 -> 2 (reason 2)
-> NetworkManager[725]: <info> (wlan0): bringing up device.
-> NetworkManager[725]: <info> (wlan0): preparing device.
-> NetworkManager[725]: <info> (wlan0): deactivating device (reason: 2).
-> NetworkManager[725]: supplicant_interface_acquire: assertion `mgr_state == NM_SUPPLICANT_MANAGER_STATE_IDLE' failed
-> kernel: [   25.149294] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> ...
-> NetworkManager[725]: <info> Trying to start the supplicant...
-> ...
-> NetworkManager[725]: <info> (wlan0): supplicant manager state:  down -> idle
-> NetworkManager[725]: <info> (wlan0): device state change: 2 -> 3 (reason 0)
-> NetworkManager[725]: <info> (wlan0): supplicant interface state:  starting -> ready
-> ...
-> NetworkManager[725]: <info> (wlan0): device state change: 3 -> 2 (reason 0)
-> NetworkManager[725]: <info> (wlan0): deactivating device (reason: 0).
-> NetworkManager[725]: <info> (wlan0): taking down device.
-> NetworkManager[725]: <info> (wlan0): bringing up device.
-> kernel: [  104.430292] ath5k phy0: (ath5k_init_hw:2522): mode 2
-> kernel: [  104.430297] ath5k phy0: (ath5k_stop_locked:2481): invalid 0
-> kernel: [  104.431000] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  104.434475] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  104.434683] ath5k phy0: (ath5k_rfkill_disable:42): rfkill disable (gpio:0 polarity:0)
-> kernel: [  104.435759] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2412 MHz)
-> kernel: [  104.435762] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  104.436845] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  104.437191] ath5k phy0: (ath5k_conf_tx:602): Configure tx [queue 0],  aifs: 2, cw_min: 7, cw_max: 15, txop: 102
-> kernel: [  104.437212] ath5k phy0: (ath5k_conf_tx:602): Configure tx [queue 1],  aifs: 2, cw_min: 15, cw_max: 31, txop: 188
-> kernel: [  104.438337] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> NetworkManager[725]: <info> (wlan0): supplicant interface state:  starting -> ready
-> NetworkManager[725]: <info> (wlan0): device state change: 2 -> 3 (reason 42)
-> wpa_supplicant[745]: Failed to initiate AP scan.
-> kernel: [  125.188087] net_ratelimit: 41 callbacks suppressed
-> kernel: [  125.188100] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  125.188109] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  125.291007] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  125.344076] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  125.344090] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  125.447014] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  125.500078] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  125.500091] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  125.602999] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  125.656070] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  155.188052] net_ratelimit: 29 callbacks suppressed
-> kernel: [  155.188058] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  155.188061] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  155.290844] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  155.344032] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  155.344038] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  155.446810] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  155.500031] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  155.500036] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  155.602811] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  155.656033] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  195.184088] net_ratelimit: 29 callbacks suppressed
-> kernel: [  195.184102] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  195.184110] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  195.287022] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  195.340066] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  195.340079] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  195.442967] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  195.496076] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  195.496088] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  195.599009] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  195.652078] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  245.188077] net_ratelimit: 29 callbacks suppressed
-> kernel: [  245.188091] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  245.188100] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  245.290997] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  245.344084] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  245.344092] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  245.446882] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  245.500053] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  245.500058] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  245.602808] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  245.656046] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  305.188050] net_ratelimit: 29 callbacks suppressed
-> kernel: [  305.188063] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  305.188071] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  305.290945] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  305.344070] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  305.344082] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  305.446943] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  305.500047] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  305.500058] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  305.602967] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  305.656090] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> NetworkManager[725]: <info> (wlan0): device state change: 3 -> 2 (reason 0)
-> NetworkManager[725]: <info> (wlan0): deactivating device (reason: 0).
-> NetworkManager[725]: <info> (wlan0): taking down device.
-> kernel: [  310.887530] net_ratelimit: 29 callbacks suppressed
-> kernel: [  310.887535] ath5k phy0: (ath5k_stop_locked:2481): invalid 0
-> kernel: [  310.990264] ath5k phy0: (ath5k_stop_hw:2619): putting device to sleep
-> kernel: [  310.990554] ath5k phy0: (ath5k_rfkill_enable:51): rfkill enable (gpio:0 polarity:0)
-> NetworkManager[725]: <info> (wlan0): bringing up device.
-> kernel: [  315.755891] ath5k phy0: (ath5k_init_hw:2522): mode 2
-> kernel: [  315.755903] ath5k phy0: (ath5k_stop_locked:2481): invalid 0
-> kernel: [  315.756624] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  315.760236] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  315.760474] ath5k phy0: (ath5k_rfkill_disable:42): rfkill disable (gpio:0 polarity:0)
-> kernel: [  315.762566] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2412 MHz)
-> kernel: [  315.762574] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  315.764972] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> NetworkManager[725]: <info> (wlan0): supplicant interface state:  starting -> ready
-> NetworkManager[725]: <info> (wlan0): device state change: 2 -> 3 (reason 42)
-> wpa_supplicant[745]: Failed to initiate AP scan.
-> kernel: [  316.036068] net_ratelimit: 8 callbacks suppressed
-> kernel: [  316.036080] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  316.036089] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  316.140039] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  316.196067] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  316.196079] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  316.298940] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  316.352063] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  316.352071] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  316.455003] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  316.508080] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2432 -> 2437 MHz)
-> kernel: [  336.188067] net_ratelimit: 26 callbacks suppressed
-> kernel: [  336.188080] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  336.188088] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  336.290966] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  336.344059] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  336.344068] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  336.446912] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  336.500068] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  336.500077] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  336.602937] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  336.656058] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
-> kernel: [  366.188084] net_ratelimit: 29 callbacks suppressed
-> kernel: [  366.188097] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-> kernel: [  366.188105] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  366.290999] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  366.344099] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-> kernel: [  366.344112] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  366.447030] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  366.500094] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-> kernel: [  366.500106] ath5k phy0: (ath5k_reset:2648): resetting
-> kernel: [  366.603008] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-> kernel: [  366.656103] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2427 -> 2432 MHz)
->
->
+> it works like a charm! �you can put a tested-by tag on this patch. :-)
 
-Hmm I don't see any errors from reset/phy code, can you disable
-Network Manager/wpa-supplicant and test connection on an open network
-using iw ? It 'll give us a better picture...
+Good news. :)
+The patch has been sent upstream, it has already been picked up in
+wireless-testing.git
+and wireless-next-2.6.git a few days ago but hasn't yet by the
+compat-wireless package.
+So if all goes correct, the compat-wireless package which will be
+generated today will
+contain the fix.
 
-If iw doesn't return any scan results we are probably hitting a PHY/RF
-error specific to your device (not all vendors follow the reference
-design). Maybe we should follow a blacklist/whitelist approach for
-this feature.
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Ivo
