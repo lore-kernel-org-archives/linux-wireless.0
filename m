@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:43550 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754591Ab1EKQel convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:34:41 -0400
-Received: by qyk7 with SMTP id 7so2416545qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:34:40 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:51781 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752924Ab1EINlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 09:41:52 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:41:24 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 4/4] ath9k: Failed to set default beacon rssi in AP/IBSS mode
+Date: Mon, 9 May 2011 19:11:29 +0530
+Message-ID: <1304948489-14585-4-git-send-email-rmanoharan@atheros.com> (sfid-20110509_154154_925976_C428EC62)
+In-Reply-To: <1304948489-14585-1-git-send-email-rmanoharan@atheros.com>
+References: <1304948489-14585-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1305131265.16850.6.camel@maggie>
-References: <BANLkTi=xOtAaxh8Q7Nk84Rwz9jM-6EP1Ww@mail.gmail.com>
-	<1305131265.16850.6.camel@maggie>
-Date: Wed, 11 May 2011 18:34:40 +0200
-Message-ID: <BANLkTinR=+vdYNModL_yOKhAqKv3e0nQ4A@mail.gmail.com> (sfid-20110511_183447_067589_411E2343)
-Subject: Re: Optimization: keeping pointer all the time, or defining getter?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 maja 2011 18:27 użytkownik Michael Büsch <m@bues.ch> napisał:
-> On Wed, 2011-05-11 at 18:22 +0200, Rafał Miłecki wrote:
->> I try to abstract bus in b43 driver. For frequently used fields
->> solution is obvious:
->> At init time I get info from bus-specific stuct and put it in generic field.
->> Example: core revision. We often refer to it, I put it in abstraction struct.
->>
->> My question: what is the policy for cases with less frequently used fields?
->> Example: I need to use "struct device" for registering some low lever stuff.
->>
->> I have two solutions:
->>
->> 1) Realtime:
->> struct device *get_device(...)
->> {
->> if (dev->bus_type = B43_BUS_SSB)
->> return dev->ssbdev->device;
->> else if (dev->bus_type = B43_BUS_BCMA)
->> return dev->bcmadev->device;
->> }
->>
->> 2) Init time:
->> void b43_ssb_init(struct ssb_device *ssbdev)
->> {
->> dev->struct = ssbdev->device;
->> }
->>
->> The first one is slower but we don't keep "struct device" pointer in
->> abstraction struct. Situation is opposite for the second one.
->>
->> Does anyone care? ;)
->
-> Put a struct device pointer into b43_wldev.
-> The pointer is needed on every DMA transaction several times, so this
-> seems worth it.
+This beacon rssi will be used to set noisefloor during ani reset.
 
-Oops, OK, that was example. I thought DMA uses "dma_dev" frequently, not "dev".
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-But if we assume there is some not frequently used struct. What
-solution should be used then?
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 11d9eca..c4d32c5 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1409,6 +1409,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 
+ 	/* Set up ANI */
+ 	if ((iter_data.naps + iter_data.nadhocs) > 0) {
++		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 		sc->sc_flags |= SC_OP_ANI_RUN;
+ 		ath_start_ani(common);
+ 	} else {
 -- 
-Rafał
+1.7.5.1
+
