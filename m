@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53342 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44919 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753941Ab1EDQu6 (ORCPT
+	with ESMTP id S1751958Ab1EILde (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 12:50:58 -0400
-Subject: Re: [RFC] mac80211: reestablish mis-configured existing Rx BA
- sessions
+	Mon, 9 May 2011 07:33:34 -0400
+Subject: Re: [PATCH] mac80211: add a couple of trace event classes to
+ reduce duplicated code
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1304413928-17673-1-git-send-email-arik@wizery.com> (sfid-20110503_111236_686946_877B0C73)
-References: <1304413928-17673-1-git-send-email-arik@wizery.com>
-	 (sfid-20110503_111236_686946_877B0C73)
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1304940469-4978-1-git-send-email-coelho@ti.com>
+References: <1304940469-4978-1-git-send-email-coelho@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 May 2011 18:50:57 +0200
-Message-ID: <1304527857.3563.24.camel@jlt3.sipsolutions.net> (sfid-20110504_185103_668897_C0CA52A4)
+Date: Mon, 09 May 2011 13:33:28 +0200
+Message-ID: <1304940808.12202.0.camel@jlt3.sipsolutions.net> (sfid-20110509_133337_263752_F2791C78)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-03 at 12:12 +0300, Arik Nemtsov wrote:
-> When forming a Rx BA session, sometimes the ADDBA response gets lost.
-> This leads to a situation where the session is configured locally, but
-> doesn't exist on the remote side. Subsequent ADDBA requests are declined
-> by mac80211.
+On Mon, 2011-05-09 at 14:27 +0300, Luciano Coelho wrote:
+> The functions drv_add_interface() and drv_remove_interface() print out
+> the same values in the traces.  Combine the traces of these two
+> functions into one event class to remove some duplicate code.
 > 
-> Fix this by assuming the session state of the initiator is the correct
-> one. When receiving an unexpected ADDBA request on a TID with an active
-> Rx BA session, delete the existing one and establish a new session.
+> Also add a new class for functions drv_set_frag_threshold() and
+> drv_set_rts_threshold().
 
-I thought about this for a while but I don't really have an opinion I
-think. Maybe the behaviour could be avoided by checking the ack status,
-but that wouldn't be good enough for devices that don't have that...
+Nice :)
+
+
+> +DECLARE_EVENT_CLASS(local_value_evt,
+
+Though I wonder if that might be better as "local_u32_evt"?
 
 johannes
 
