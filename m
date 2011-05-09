@@ -1,31 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:37695 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751152Ab1ECLFo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 07:05:44 -0400
-From: Yogesh Powar <yogeshp@marvell.com>
-To: "rossi.f@inwind.it" <rossi.f@inwind.it>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 3 May 2011 03:51:04 -0700
-Subject: RE: WARNING: at net/mac80211/wep.c:101
- ieee80211_wep_add_iv+0x52/0x150 [mac80211]()
-Message-ID: <7DDF37406E10F0438561DBB78326DF3902F35339F1@SC-VEXCH1.marvell.com> (sfid-20110503_130547_236089_5C71607F)
-References: <14271672.1295321304416953379.JavaMail.defaultUser@defaultHost>
-In-Reply-To: <14271672.1295321304416953379.JavaMail.defaultUser@defaultHost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:48503 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432Ab1EIIWY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 04:22:24 -0400
+Subject: Re: [PATCH 2/3] mac80211: add support for HW scheduled scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1304600420-24227-3-git-send-email-coelho@ti.com>
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>
+	 <1304600420-24227-3-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 10:22:21 +0200
+Message-ID: <1304929342.3475.8.camel@jlt3.sipsolutions.net> (sfid-20110509_102230_446918_387B1E88)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->I get the warning every few seconds.
->
->Fabio
-I failed to regenerate the issue on my setup. I am using WEP40 on
-Ath5k as station on 32 bit machine. I even tried disabling hw encryption.
+On Thu, 2011-05-05 at 16:00 +0300, Luciano Coelho wrote:
 
-Some more details would be helpful.
+> +TRACE_EVENT(drv_sched_scan_start,
+> +	TP_PROTO(struct ieee80211_local *local,
+> +		 struct ieee80211_sub_if_data *sdata,
+> +		 struct cfg80211_sched_scan_request *req),
 
-Thanks
-Yogesh
+Since you're not tracing "req" (right now), could you please use
+DECLARE_EVENT_CLASS() and define a common class for this and some others
+that only have local and sdata?
+
+> +TRACE_EVENT(api_sched_scan_results,
+> +	TP_PROTO(struct ieee80211_local *local),
+
+and use the local_only_evt class here, cf. drv_start() for example.
+
+> +TRACE_EVENT(api_sched_scan_stopped,
+> +	TP_PROTO(struct ieee80211_local *local),
+
+ditto.
+
+
+Also -- no API tracers for results/stopped?
+
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 6187766..9a20671 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -47,7 +47,7 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
+>  	if (atomic_read(&local->iff_allmultis))
+>  		new_flags |= FIF_ALLMULTI;
+>  
+> -	if (local->monitors || local->scanning)
+> +	if (local->monitors || local->scanning || local->sched_scanning)
+>  		new_flags |= FIF_BCN_PRBRESP_PROMISC;
+
+Hmm, that seems like an implementation detail of the driver in this
+case. I'd rather not do this here, other drivers might not have a
+special filter they need for scheduled scans.
+ 
+> @@ -358,7 +358,8 @@ static void ieee80211_restart_work(struct work_struct *work)
+>  	flush_workqueue(local->workqueue);
+>  
+>  	mutex_lock(&local->mtx);
+> -	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
+> +	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
+> +	     local->sched_scanning,
+>  		"%s called with hardware scan in progress\n", __func__);
+>  	mutex_unlock(&local->mtx);
+
+
+Good catch, I should've thought of that in the remain-on-channel stuff,
+would've saved me some debugging :)
+
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 599fa90..1158164 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -408,7 +408,8 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+>  		return RX_CONTINUE;
+>  
+>  	if (test_bit(SCAN_HW_SCANNING, &local->scanning) ||
+> -	    test_bit(SCAN_SW_SCANNING, &local->scanning))
+> +	    test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+> +	    local->sched_scanning)
+>  		return ieee80211_scan_rx(rx->sdata, skb);
+
+I'm still not convinced that this is right.
+ 
+> @@ -2801,7 +2802,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+>  		local->dot11ReceivedFragmentCount++;
+>  
+>  	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
+> -		     test_bit(SCAN_SW_SCANNING, &local->scanning)))
+> +		     test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+> +		     local->sched_scanning))
+>  		status->rx_flags |= IEEE80211_RX_IN_SCAN;
+
+Nor this I guess, though we don't use this much of course.
+
+> +	ret = drv_sched_scan_start(local, sdata, req,
+> +				   &local->sched_scan_ies);
+> +	if (!ret)
+> +		local->sched_scanning = true;
+> +out:
+> +	mutex_unlock(&sdata->local->mtx);
+> +
+> +	return ret;
+> +
+> +out_free:
+> +	while (i > 0)
+> +		kfree(local->sched_scan_ies.ie[--i]);
+> +	goto out;
+
+Not freeing it when the driver callback fails?
+
+Seems like you should reorder:
+	ret = drv...();
+	if (ret == 0) {
+		... = true;
+		goto out;
+	}
+out_free:
+	...
+out:
+	...
+
+johannes
+
