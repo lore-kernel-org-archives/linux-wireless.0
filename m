@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37015 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757086Ab1EMHPt (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57534 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752978Ab1EIVDd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 03:15:49 -0400
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1305235386.10961.13.camel@rklein-linux2>
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
-	 <1305224592.10961.10.camel@rklein-linux2>
-	 <1305225648.3461.37.camel@jlt3.sipsolutions.net>
-	 <1305226377.10961.12.camel@rklein-linux2>
-	 <1305226969.3461.38.camel@jlt3.sipsolutions.net>
-	 <1305235386.10961.13.camel@rklein-linux2>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 09:15:43 +0200
-Message-ID: <1305270943.3487.5.camel@jlt3.sipsolutions.net> (sfid-20110513_091606_877405_8DAFD043)
-Mime-Version: 1.0
+	Mon, 9 May 2011 17:03:33 -0400
+Date: Mon, 9 May 2011 22:03:25 +0100
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Mike Ricketts <mike@earth.li>, 625953@bugs.debian.org
+Cc: Geoff Simmons <gsimmons@gsimmons.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Bug#625953: linux-2.6: orinoco_pci module is no longer present
+Message-ID: <20110509210324.GM2268@decadent.org.uk> (sfid-20110509_230344_705327_FD4A855E)
+References: <20110507103107.3576.18188.reportbug@wibble.chf>
+ <20110507142643.GC2616@chmmr.gsimmons.org>
+ <Pine.LNX.4.64.1105091949450.32120@heaven.on.earth.li>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.64.1105091949450.32120@heaven.on.earth.li>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
-> On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
-> > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
-> > 
-> > > > If, on the other hand, rfkill decides that at the time of loading the
-> > > > driver wifi should be on, then the first change would be +1 and it'll
-> > > > flip between 0 and +1.
-> > > > 
-> > > > This seems like it'll cause issues at some point, so I think you should
-> > > > either allow the driver to set the initial state or hardcode one of
-> > > > these possibilities (so at least it's predictable)
-> > 
-> > > I won't go negative, if you look, it only will disable clock if it knows
-> > > it has already enabled it. 
-> > 
-> > Ah, you're right, I misread the macros.
+On Mon, May 09, 2011 at 07:51:43PM +0100, Mike Ricketts wrote:
+> On Sun, 8 May 2011, Geoff Simmons wrote:
+> 
+> >The hostap driver provides better support for Prism 2/2.5/3-based PCI
+> >devices, including firmware downloading and WPA support.  Consider using
+> >the available hostap_pci module.
+> >
+> I have finally had time to try this.  The hostap_pci module does not
+> work at all for my card.  It detects it, and allows me to configure
+> it, but it does not actually send or receive any packets :(
+ 
+Please can you provide some information about the hardware (from lspci)
+and the driver log messages from hostap_pci.  Your initial bug report was
+missing these.
 
-> So the patch is good as is?
+Ben.
 
-I think so, yes.
-
-johannes
-
+-- 
+Ben Hutchings
+We get into the habit of living before acquiring the habit of thinking.
+                                                              - Albert Camus
