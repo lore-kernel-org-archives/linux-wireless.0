@@ -1,91 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:49339 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757905Ab1ELQUI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 12:20:08 -0400
-Received: by ewy6 with SMTP id 6so548860ewy.10
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 09:20:05 -0700 (PDT)
-Subject: Re: [PATCH v3 1/3] cfg80211/nl80211: add support for scheduled
- scans
-From: Luciano Coelho <coelho@ti.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, eliad@wizery.com
-In-Reply-To: <20110512150530.GB2171@redhat.com>
-References: <1305122977-6740-1-git-send-email-coelho@ti.com>
-	 <1305122977-6740-2-git-send-email-coelho@ti.com>
-	 <20110512150530.GB2171@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 19:20:01 +0300
-Message-ID: <1305217201.12586.949.camel@cumari> (sfid-20110512_182013_081562_1FFA4A2A)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3433 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754080Ab1EIOd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:29 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 8/9] staging: brcm80211: move functions only used by
+ brcmsmac out of utils
+Date: Mon, 9 May 2011 16:33:09 +0200
+Message-ID: <1304951590-2411-9-git-send-email-arend@broadcom.com> (sfid-20110509_163742_843188_C8D5DD4F)
+In-Reply-To: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 17:05 +0200, Stanislaw Gruszka wrote:
-> On Wed, May 11, 2011 at 05:09:35PM +0300, Luciano Coelho wrote:
-> > Implement new functionality for scheduled scan offload.  With this feature we
-> > can scan automatically at certain intervals.
-> > 
-> > The idea is that the hardware can perform scan automatically and filter on
-> > desired results without waking up the host unnecessarily.
-> 
-> Can you elaborate more about this?
+From: Henry Ptasinski <henryp@broadcom.com>
 
-Some devices require very low power consumption, like mobile phones and
-other mobile devices, as you know. ;)
+The functions gitvar() and getintvar() are only used by brcmsmac, so move them
+out of the bcmutils.c file, which is shared by both brcmsmac and brcmfmac.
 
-With this feature, we can offload the scanning entirely to the wireless
-chip, when we're not connected but looking for APs to connect to, so the
-host can keep sleeping and consuming very low power.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/nicpci.c        |    1 +
+ drivers/staging/brcm80211/brcmsmac/nvram.c         |   43 ++++++++++++++++++
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_antsel.c    |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c   |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_pmu.c       |    1 +
+ drivers/staging/brcm80211/brcmsmac/wlc_stf.c       |    1 +
+ drivers/staging/brcm80211/include/bcmnvram.h       |    4 ++
+ drivers/staging/brcm80211/include/bcmutils.h       |    3 -
+ drivers/staging/brcm80211/util/bcmutils.c          |   47 --------------------
+ 13 files changed, 56 insertions(+), 50 deletions(-)
 
-Let's say you're looking for an AP with SSID "myap".  You can keep your
-device scanning for it, so that it's able to connect automatically when
-it shows up without having to keep your device's main CPU awake and
-consuming power.  When "myap" shows in the scan results, the main CPU is
-awoken and the device can connect to it.
-
-This is also useful when connected and scanning for better access points
-to roam to.
-
-This patchset is just the first step, so not much is supported, but I'm
-already working on more features that will allow you to choose a list of
-SSIDs to scan for, so you can keep scanning for all SSIDs your device
-already knows and automatically wake up when one (or more) of them is
-(or are) found.
-
-
-> > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
-> > commands to the nl80211 interface.  When results are available they are
-> > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
-> > informed when the scheduled scan has stopped with a
-> > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
-> > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
-> > 
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> >  include/linux/nl80211.h |   25 +++++
-> >  include/net/cfg80211.h  |   57 +++++++++++
-> >  net/wireless/core.c     |   12 ++-
-> >  net/wireless/core.h     |    7 ++
-> >  net/wireless/nl80211.c  |  250 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  net/wireless/nl80211.h  |    4 +
-> >  net/wireless/scan.c     |   70 +++++++++++++
-> >  7 files changed, 424 insertions(+), 1 deletions(-)
-> 
-> And explain, why all of this is needed, instead of modify existing scan
-> code and reuse existing infrastructure. This sched_scan does not seems to
-> be something different than normal hardware scan we have already, or I'm
-> wrong.
-
-It is something different.  At first, I was thinking about modifying the
-existing scan mechanism.  But it turned out to be too complicated,
-because the scheduled scan is a long-term operation and the normal scan
-is done for a very short time (and the rest of the stack assumes it will
-complete quickly enough as not to interfere with the connection.
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+index 5a127d2..18b844a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+@@ -19,6 +19,7 @@
+ #include <linux/pci.h>
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include <aiutils.h>
+ #include <hndsoc.h>
+ #include <bcmdevs.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/nvram.c b/drivers/staging/brcm80211/brcmsmac/nvram.c
+index 0e93a55..830e30f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nvram.c
++++ b/drivers/staging/brcm80211/brcmsmac/nvram.c
+@@ -108,6 +108,49 @@ static char *findvar(char *vars, char *lim, const char *name)
+ 	return NULL;
+ }
+ 
++/*
++ * Search the name=value vars for a specific one and return its value.
++ * Returns NULL if not found.
++ */
++char *getvar(char *vars, const char *name)
++{
++	char *s;
++	int len;
++
++	if (!name)
++		return NULL;
++
++	len = strlen(name);
++	if (len == 0)
++		return NULL;
++
++	/* first look in vars[] */
++	for (s = vars; s && *s;) {
++		if ((memcmp(s, name, len) == 0) && (s[len] == '='))
++			return &s[len + 1];
++
++		while (*s++)
++			;
++	}
++	/* then query nvram */
++	return nvram_get(name);
++}
++
++/*
++ * Search the vars for a specific one and return its value as
++ * an integer. Returns 0 if not found.
++ */
++int getintvar(char *vars, const char *name)
++{
++	char *val;
++
++	val = getvar(vars, name);
++	if (val == NULL)
++		return 0;
++
++	return simple_strtoul(val, NULL, 0);
++}
++
+ char *nvram_get(const char *name)
+ {
+ 	char *v = NULL;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index 8fc1bef..a28633c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci.h>
+ #include <aiutils.h>
+ #include <wlc_pmu.h>
++#include <bcmnvram.h>
+ 
+ #include <bcmdevs.h>
+ #include <sbhnddma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 9f2e5a2..2dd7c7b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -30,6 +30,7 @@
+ #include <bcmdefs.h>
+ #include <bcmwifi.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include <pcicfg.h>
+ #include <wlioctl.h>
+ #include <sbhnddma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+index a8037e9..3d9485a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+@@ -22,6 +22,7 @@
+ 
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include <aiutils.h>
+ #include <bcmdevs.h>
+ #include <sbhnddma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index 91d366d..cf0d2bf 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -29,6 +29,7 @@
+ #include <bcmsrom.h>
+ #include <bcmotp.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include <wlioctl.h>
+ #include <sbconfig.h>
+ #include <sbchipc.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+index bde82bd..fe3e392 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+@@ -21,6 +21,7 @@
+ 
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include <aiutils.h>
+ #include <sbhnddma.h>
+ #include <wlioctl.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 4d8fa34..3eaabe9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -23,6 +23,7 @@
+ #include <bcmdevs.h>
+ #include <bcmutils.h>
+ #include <bcmwifi.h>
++#include <bcmnvram.h>
+ #include <aiutils.h>
+ #include <pcicfg.h>
+ #include <bcmsrom.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+index 5b1697a..82986bd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
+@@ -21,6 +21,7 @@
+ #include <bcmdevs.h>
+ #include <sbchipc.h>
+ #include <bcmutils.h>
++#include <bcmnvram.h>
+ #include "wlc_pmu.h"
+ 
+ /*
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+index aa8d42d..c4f5817 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+@@ -24,6 +24,7 @@
+ #include <aiutils.h>
+ #include <wlioctl.h>
+ #include <bcmwifi.h>
++#include <bcmnvram.h>
+ #include <sbhnddma.h>
+ 
+ #include "wlc_types.h"
+diff --git a/drivers/staging/brcm80211/include/bcmnvram.h b/drivers/staging/brcm80211/include/bcmnvram.h
+index e194131..e58151c 100644
+--- a/drivers/staging/brcm80211/include/bcmnvram.h
++++ b/drivers/staging/brcm80211/include/bcmnvram.h
+@@ -147,6 +147,10 @@ u8 nvram_calc_crc(struct nvram_header *nvh);
+ 
+ #endif				/* _LANGUAGE_ASSEMBLY */
+ 
++/* variable access */
++extern char *getvar(char *vars, const char *name);
++extern int getintvar(char *vars, const char *name);
++
+ /* The NVRAM version number stored as an NVRAM variable */
+ #define NVRAM_SOFTWARE_VERSION	"1"
+ 
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index d83a504..905e3ce 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -141,9 +141,6 @@ extern struct sk_buff *pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
+ 	struct ipv4_addr;
+ 	extern char *bcm_ip_ntoa(struct ipv4_addr *ia, char *buf);
+ 
+-/* variable access */
+-	extern char *getvar(char *vars, const char *name);
+-	extern int getintvar(char *vars, const char *name);
+ #ifdef BCMDBG
+ 	extern void prpkt(const char *msg, struct sk_buff *p0);
+ #else
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index 95214cf..0c21e43 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -353,53 +353,6 @@ int bcm_ether_atoe(char *p, u8 *ea)
+ 	return i == 6;
+ }
+ 
+-/*
+- * Search the name=value vars for a specific one and return its value.
+- * Returns NULL if not found.
+- */
+-char *getvar(char *vars, const char *name)
+-{
+-	char *s;
+-	int len;
+-
+-	if (!name)
+-		return NULL;
+-
+-	len = strlen(name);
+-	if (len == 0)
+-		return NULL;
+-
+-	/* first look in vars[] */
+-	for (s = vars; s && *s;) {
+-		if ((memcmp(s, name, len) == 0) && (s[len] == '='))
+-			return &s[len + 1];
+-
+-		while (*s++)
+-			;
+-	}
+-#ifdef BRCM_FULLMAC
+-	return NULL;
+-#else
+-	/* then query nvram */
+-	return nvram_get(name);
+-#endif
+-}
+-
+-/*
+- * Search the vars for a specific one and return its value as
+- * an integer. Returns 0 if not found.
+- */
+-int getintvar(char *vars, const char *name)
+-{
+-	char *val;
+-
+-	val = getvar(vars, name);
+-	if (val == NULL)
+-		return 0;
+-
+-	return simple_strtoul(val, NULL, 0);
+-}
+-
+ #if defined(BCMDBG)
+ /* pretty hex print a pkt buffer chain */
+ void prpkt(const char *msg, struct sk_buff *p0)
 -- 
-Cheers,
-Luca.
+1.7.4.1
+
 
