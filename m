@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42583 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909Ab1EWByX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:54:23 -0400
-Date: Sun, 22 May 2011 20:54:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7 V2] Fix warnings from gcc 4.6.0
-Message-ID: <4dd9be4e.9vPhZCD73D/uOZQB%Larry.Finger@lwfinger.net> (sfid-20110523_035425_576628_C5320F03)
+Received: from mms3.broadcom.com ([216.31.210.19]:3296 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754031Ab1EIOdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 5/9] staging: brcm80211: remove unneeded include path
+Date: Mon, 9 May 2011 16:33:06 +0200
+Message-ID: <1304951590-2411-6-git-send-email-arend@broadcom.com> (sfid-20110509_163608_920262_A049AAD9)
+In-Reply-To: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the introduction of gcc 4.6.0, a number of warnings for variables
-that are set but not used are printed. With earlier versions, the
-following construct was OK, but not any more:
+From: Henry Ptasinski <henryp@broadcom.com>
 
-declare foobar;
-.
-.
-foobar = some_expression;
+No include files are needed from the util directory, so remove that directory
+from the include path.
 
-As some upstream maintainers have gotten cranky over warnings issued by
-their compiler version, even when our compiles are clean, these warnings
-need to be fixed.
-
-Patches are submitted for the following wireless drivers:
-
-1/7: b43
-2/7: b43legacy
-3/7: rtlwifi
-4/7: rtl8192c-common
-5/7: rtl8192ce
-6/7: rtl8192cu
-7/7: rtl8192se
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/staging/brcm80211/brcmfmac/Makefile |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-V1 => V2: Fix submission script.
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index 4adbc4e..2732d7f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -36,8 +36,7 @@ ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG
+ 
+ ccflags-y += \
+ 	-Idrivers/staging/brcm80211/brcmfmac	\
+-	-Idrivers/staging/brcm80211/include		\
+-	-Idrivers/staging/brcm80211/util
++	-Idrivers/staging/brcm80211/include
+ 
+ DHDOFILES = \
+ 	wl_cfg80211.o \
+-- 
+1.7.4.1
+
 
