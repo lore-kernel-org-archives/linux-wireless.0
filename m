@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64657 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457Ab1EWT5z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 15:57:55 -0400
-Received: by vxi39 with SMTP id 39so4380202vxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:57:54 -0700 (PDT)
-Message-ID: <4DDABC3F.2070900@lwfinger.net> (sfid-20110523_215758_635949_C63D672E)
-Date: Mon, 23 May 2011 14:57:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:51772 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752924Ab1EINlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 09:41:36 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:41:07 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 1/4] ath9k_hw: Corrected xpabiaslevel register settings for AR9340
+Date: Mon, 9 May 2011 19:11:26 +0530
+Message-ID: <1304948489-14585-1-git-send-email-rmanoharan@atheros.com> (sfid-20110509_154139_268081_06687D98)
 MIME-Version: 1.0
-To: Mike McCormack <mikem@ring3k.org>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 8/8] rtlwifi: Fix logic in rx_interrupt
-References: <4DDA673B.6070600@ring3k.org>
-In-Reply-To: <4DDA673B.6070600@ring3k.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 08:55 AM, Mike McCormack wrote:
-> Should pass along packet if there's no CRC and no hardware error.
->
-> Signed-off-by: Mike McCormack<mikem@ring3k.org>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index 4fe405a..215abfa 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -691,7 +691,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
->   			hdr = rtl_get_hdr(skb);
->   			fc = rtl_get_fc(skb);
->
-> -			if (!stats.crc || !stats.hwerror) {
-> +			if (!stats.crc&&  !stats.hwerror) {
->   				memcpy(IEEE80211_SKB_RXCB(skb),&rx_status,
->   				       sizeof(rx_status));
->
-
-Good catch.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3b13c1b..37f86c0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3442,17 +3442,15 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ {
+ 	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
+ 
+-	if (AR_SREV_9485(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
+ 	else {
+ 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
+-		if (!AR_SREV_9340(ah)) {
+-			REG_RMW_FIELD(ah, AR_CH0_THERM,
+-				      AR_CH0_THERM_XPABIASLVL_MSB,
+-				      bias >> 2);
+-			REG_RMW_FIELD(ah, AR_CH0_THERM,
+-				      AR_CH0_THERM_XPASHORT2GND, 1);
+-		}
++		REG_RMW_FIELD(ah, AR_CH0_THERM,
++				AR_CH0_THERM_XPABIASLVL_MSB,
++				bias >> 2);
++		REG_RMW_FIELD(ah, AR_CH0_THERM,
++				AR_CH0_THERM_XPASHORT2GND, 1);
+ 	}
+ }
+ 
+-- 
+1.7.5.1
 
