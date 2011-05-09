@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2419 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132Ab1ECJgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 47/61] staging: brcm80211: remove check on interconnect
- type in ai_setcore
-Date: Tue, 3 May 2011 11:35:47 +0200
-Message-ID: <1304415361-7813-48-git-send-email-arend@broadcom.com> (sfid-20110503_113840_380242_350957EF)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:36717 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752809Ab1EIOTY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:19:24 -0400
+Received: by mail-ey0-f181.google.com with SMTP id 5so1849504eyh.40
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 07:19:22 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: don't drop frames where skb->len < 24 in ieee80211_scan_rx()
+Date: Mon,  9 May 2011 17:19:13 +0300
+Message-Id: <1304950753-2952-1-git-send-email-coelho@ti.com> (sfid-20110509_161928_964688_156F5757)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All functions in aiutils are only used for AI SOC interconnect chipsets
-so no software check is needed other then during the ai_scan function.
+This seems to be a leftover from the old days, when we didn't support
+any frames that didn't contain the full ieee802.11 header.  This is
+not the case anymore.  It does not cause problems now, because they
+are only dropped during scan.  But when scheduled scans get merged,
+this would become a problem because we would drop all small frames
+while scheduled scan is running.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/staging/brcm80211/brcmsmac/aiutils.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+ net/mac80211/scan.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index 549a612..2ee4236 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -1068,12 +1068,7 @@ void *ai_setcore(si_t *sih, uint coreid, uint coreunit)
- 	if (!GOODIDX(idx))
- 		return NULL;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 489b6ad..b7a39c4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -169,9 +169,6 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+ 	if (ieee80211_is_ctl(fc))
+ 		return RX_CONTINUE;
  
--	if (sih->socitype == SOCI_AI)
--		return ai_setcoreidx(sih, idx);
--	else {
--		ASSERT(0);
--		return NULL;
--	}
-+	return ai_setcoreidx(sih, idx);
- }
- 
- /* Turn off interrupt as required by ai_setcore, before switch core */
+-	if (skb->len < 24)
+-		return RX_DROP_MONITOR;
+-
+ 	presp = ieee80211_is_probe_resp(fc);
+ 	if (presp) {
+ 		/* ignore ProbeResp to foreign address */
 -- 
-1.7.4.1
-
+1.7.1
 
