@@ -1,191 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54054 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932471Ab1EFS2p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 14:28:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 6/7] iwlagn: remove bytecount indirection
-Date: Fri,  6 May 2011 11:04:39 -0700
-Message-Id: <1304705080-29349-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202859_908580_9DCFCE15)
-In-Reply-To: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:59620 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751400Ab1EISAv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 14:00:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Christoph Fritz <chf.fritz@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Mon, 9 May 2011 11:00:30 -0700
+Subject: RE: linux-next: [PATCH] mwifiex: fix null derefs, mem leaks and
+ trivia
+Message-ID: <477F20668A386D41ADCC57781B1F704307FD237FA9@SC-VEXCH1.marvell.com> (sfid-20110509_200102_061714_0017D002)
+References: <1304887809.16160.19.camel@mars>
+In-Reply-To: <1304887809.16160.19.camel@mars>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Christoph,
 
-All AGN devices need the bytecount table, so
-remove the indirection and make the functions
-static again.
+> -----Original Message-----
+> From: Christoph Fritz [mailto:chf.fritz@googlemail.com]
+> Sent: Sunday, May 08, 2011 1:50 PM
+> To: John W. Linville; Bing Zhao
+> Cc: Yogesh Powar; Amitkumar Karwar; Kiran Divekar; Marc Yang; linux-wireless@vger.kernel.org; kernel-
+> janitors@vger.kernel.org
+> Subject: linux-next: [PATCH] mwifiex: fix null derefs, mem leaks and trivia
+> 
+> This patch:
+>  - adds kfree() where necessary
+>  - prevents potential null dereferences
+>  - makes use of kfree_skb()
+>  - replaces -1 for failed kzallocs with -ENOMEM
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c   |    2 --
- drivers/net/wireless/iwlwifi/iwl-2000.c   |    2 --
- drivers/net/wireless/iwlwifi/iwl-5000.c   |    4 ----
- drivers/net/wireless/iwlwifi/iwl-6000.c   |    4 ----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   17 ++++++++---------
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    5 -----
- drivers/net/wireless/iwlwifi/iwl-core.h   |    5 -----
- 7 files changed, 8 insertions(+), 31 deletions(-)
+Thanks for the patch.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 3da8cf2..b4c8193 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -171,8 +171,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 
- static struct iwl_lib_ops iwl1000_lib = {
- 	.set_hw_params = iwl1000_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index bca462c..89b8da7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -252,8 +252,6 @@ static int iwl2030_hw_channel_switch(struct iwl_priv *priv,
- 
- static struct iwl_lib_ops iwl2000_lib = {
- 	.set_hw_params = iwl2000_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 561f2cd..98f81df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -339,8 +339,6 @@ static int iwl5000_hw_channel_switch(struct iwl_priv *priv,
- 
- static struct iwl_lib_ops iwl5000_lib = {
- 	.set_hw_params = iwl5000_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-@@ -376,8 +374,6 @@ static struct iwl_lib_ops iwl5000_lib = {
- 
- static struct iwl_lib_ops iwl5150_lib = {
- 	.set_hw_params = iwl5150_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 6045457..a7921f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -278,8 +278,6 @@ static int iwl6000_hw_channel_switch(struct iwl_priv *priv,
- 
- static struct iwl_lib_ops iwl6000_lib = {
- 	.set_hw_params = iwl6000_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-@@ -316,8 +314,6 @@ static struct iwl_lib_ops iwl6000_lib = {
- 
- static struct iwl_lib_ops iwl6030_lib = {
- 	.set_hw_params = iwl6000_hw_set_hw_params,
--	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
--	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwlagn_txq_set_sched,
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 5445fd6..26601b7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -98,9 +98,9 @@ static inline int get_fifo_from_tid(struct iwl_rxon_context *ctx, u16 tid)
- /**
-  * iwlagn_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
-  */
--void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
--					    struct iwl_tx_queue *txq,
--					    u16 byte_cnt)
-+static void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
-+					   struct iwl_tx_queue *txq,
-+					   u16 byte_cnt)
- {
- 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = priv->scd_bc_tbls.addr;
- 	int write_ptr = txq->q.write_ptr;
-@@ -136,8 +136,8 @@ void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
- }
- 
--void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
--					   struct iwl_tx_queue *txq)
-+static void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
-+					  struct iwl_tx_queue *txq)
- {
- 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = priv->scd_bc_tbls.addr;
- 	int txq_id = txq->q.id;
-@@ -766,8 +766,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU)
--		priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq,
--						     le16_to_cpu(tx_cmd->len));
-+		iwlagn_txq_update_byte_cnt_tbl(priv, txq,
-+					       le16_to_cpu(tx_cmd->len));
- 
- 	pci_dma_sync_single_for_device(priv->pci_dev, txcmd_phys,
- 				       firstlen, PCI_DMA_BIDIRECTIONAL);
-@@ -1246,8 +1246,7 @@ int iwlagn_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 				 txq_id >= IWLAGN_FIRST_AMPDU_QUEUE);
- 		tx_info->skb = NULL;
- 
--		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
--			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
-+		iwlagn_txq_inval_byte_cnt_tbl(priv, txq);
- 
- 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index aa398b6..fe33fe8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -139,11 +139,6 @@ void iwlagn_set_wr_ptrs(struct iwl_priv *priv,
- void iwlagn_tx_queue_set_status(struct iwl_priv *priv,
- 			     struct iwl_tx_queue *txq,
- 			     int tx_fifo_id, int scd_retry);
--void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
--				    struct iwl_tx_queue *txq,
--				    u16 byte_cnt);
--void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
--				   struct iwl_tx_queue *txq);
- void iwlagn_txq_set_sched(struct iwl_priv *priv, u32 mask);
- void iwl_free_tfds_in_queue(struct iwl_priv *priv,
- 			    int sta_id, int tid, int freed);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 9d7e36d..5b5b0cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -128,11 +128,6 @@ struct iwl_lib_ops {
- 	/* set hw dependent parameters */
- 	int (*set_hw_params)(struct iwl_priv *priv);
- 	/* Handling TX */
--	void (*txq_update_byte_cnt_tbl)(struct iwl_priv *priv,
--					struct iwl_tx_queue *txq,
--					u16 byte_cnt);
--	void (*txq_inval_byte_cnt_tbl)(struct iwl_priv *priv,
--				       struct iwl_tx_queue *txq);
- 	void (*txq_set_sched)(struct iwl_priv *priv, u32 mask);
- 	int (*txq_attach_buf_to_tfd)(struct iwl_priv *priv,
- 				     struct iwl_tx_queue *txq,
--- 
-1.7.0.4
+> 
+> Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+
+Reviewed-by: Kiran Divekar <dkiran@marvell.com>
+Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/11n_aggr.c  |    6 ++++--
+>  drivers/net/wireless/mwifiex/cfg80211.c  |    5 ++++-
+>  drivers/net/wireless/mwifiex/cmdevt.c    |    2 +-
+>  drivers/net/wireless/mwifiex/init.c      |    4 ++--
+>  drivers/net/wireless/mwifiex/main.c      |    8 ++++----
+>  drivers/net/wireless/mwifiex/scan.c      |    8 ++++----
+>  drivers/net/wireless/mwifiex/sdio.c      |    5 +++--
+>  drivers/net/wireless/mwifiex/sta_ioctl.c |    2 +-
+>  8 files changed, 23 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+> index 12cf424..2b2cca5 100644
+> --- a/drivers/net/wireless/mwifiex/11n_aggr.c
+> +++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+> @@ -318,7 +318,8 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+>  		else
+>  			skb_src = NULL;
+> 
+> -		pra_list->total_pkts_size -= skb_src->len;
+> +		if (skb_src)
+> +			pra_list->total_pkts_size -= skb_src->len;
+> 
+>  		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+>  				       ra_list_flags);
+> @@ -373,7 +374,8 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+>  			(adapter->pps_uapsd_mode) &&
+>  			(adapter->tx_lock_flag)) {
+>  				priv->adapter->tx_lock_flag = false;
+> -				ptx_pd->flags = 0;
+> +				if (ptx_pd)
+> +					ptx_pd->flags = 0;
+>  		}
+> 
+>  		skb_queue_tail(&pra_list->skb_head, skb_aggr);
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> index 0c01163..19be887 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -1255,8 +1255,10 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
+>  	wdev->wiphy =
+>  		wiphy_new(&mwifiex_cfg80211_ops,
+>  			  sizeof(struct mwifiex_private *));
+> -	if (!wdev->wiphy)
+> +	if (!wdev->wiphy) {
+> +		kfree(wdev);
+>  		return -ENOMEM;
+> +	}
+>  	wdev->iftype = NL80211_IFTYPE_STATION;
+>  	wdev->wiphy->max_scan_ssids = 10;
+>  	wdev->wiphy->interface_modes =
+> @@ -1296,6 +1298,7 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
+>  		dev_err(priv->adapter->dev, "%s: registering cfg80211 device\n",
+>  						__func__);
+>  		wiphy_free(wdev->wiphy);
+> +		kfree(wdev);
+>  		return ret;
+>  	} else {
+>  		dev_dbg(priv->adapter->dev,
+> diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+> index b75cc92..1c8b4f7 100644
+> --- a/drivers/net/wireless/mwifiex/cmdevt.c
+> +++ b/drivers/net/wireless/mwifiex/cmdevt.c
+> @@ -292,7 +292,7 @@ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter)
+>  	if (!cmd_array) {
+>  		dev_err(adapter->dev, "%s: failed to alloc cmd_array\n",
+>  				__func__);
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	adapter->cmd_pool = cmd_array;
+> diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+> index 27ad72b..6a8fd99 100644
+> --- a/drivers/net/wireless/mwifiex/init.c
+> +++ b/drivers/net/wireless/mwifiex/init.c
+> @@ -41,7 +41,7 @@ static int mwifiex_add_bss_prio_tbl(struct mwifiex_private *priv)
+>  	if (!bss_prio) {
+>  		dev_err(adapter->dev, "%s: failed to alloc bss_prio\n",
+>  						__func__);
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	bss_prio->priv = priv;
+> @@ -161,7 +161,7 @@ static int mwifiex_allocate_adapter(struct mwifiex_adapter *adapter)
+>  	if (!temp_scan_table) {
+>  		dev_err(adapter->dev, "%s: failed to alloc temp_scan_table\n",
+>  		       __func__);
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	adapter->scan_table = temp_scan_table;
+> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+> index c234b14..f058225 100644
+> --- a/drivers/net/wireless/mwifiex/main.c
+> +++ b/drivers/net/wireless/mwifiex/main.c
+> @@ -69,7 +69,7 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+> 
+>  	adapter = kzalloc(sizeof(struct mwifiex_adapter), GFP_KERNEL);
+>  	if (!adapter)
+> -		return -1;
+> +		return -ENOMEM;
+> 
+>  	g_adapter = adapter;
+>  	adapter->card = card;
+> @@ -516,13 +516,13 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  				jiffies, priv->bss_index);
+> 
+>  	if (priv->adapter->surprise_removed) {
+> -		kfree(skb);
+> +		kfree_skb(skb);
+>  		priv->stats.tx_dropped++;
+>  		return 0;
+>  	}
+>  	if (!skb->len || (skb->len > ETH_FRAME_LEN)) {
+>  		dev_err(priv->adapter->dev, "Tx: bad skb len %d\n", skb->len);
+> -		kfree(skb);
+> +		kfree_skb(skb);
+>  		priv->stats.tx_dropped++;
+>  		return 0;
+>  	}
+> @@ -535,7 +535,7 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  			skb_realloc_headroom(skb, MWIFIEX_MIN_DATA_HEADER_LEN);
+>  		if (unlikely(!new_skb)) {
+>  			dev_err(priv->adapter->dev, "Tx: cannot alloca new_skb\n");
+> -			kfree(skb);
+> +			kfree_skb(skb);
+>  			priv->stats.tx_dropped++;
+>  			return 0;
+>  		}
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index 4968974..5c22860 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -2283,7 +2283,7 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+>  					GFP_KERNEL);
+>  	if (!scan_cfg_out) {
+>  		dev_err(adapter->dev, "failed to alloc scan_cfg_out\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	buf_size = sizeof(struct mwifiex_chan_scan_param_set) *
+> @@ -2292,7 +2292,7 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+>  	if (!scan_chan_list) {
+>  		dev_err(adapter->dev, "failed to alloc scan_chan_list\n");
+>  		kfree(scan_cfg_out);
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	keep_previous_scan = false;
+> @@ -2491,7 +2491,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+>  				GFP_KERNEL);
+>  	if (!bss_new_entry) {
+>  		dev_err(adapter->dev, " failed to alloc bss_new_entry\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	for (idx = 0; idx < scan_rsp->number_of_sets && bytes_left; idx++) {
+> @@ -2881,7 +2881,7 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
+>  	scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg), GFP_KERNEL);
+>  	if (!scan_cfg) {
+>  		dev_err(adapter->dev, "failed to alloc scan_cfg\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	memcpy(scan_cfg->ssid_list[0].ssid, req_ssid->ssid,
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+> index 470dbaa..d425dbd 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
+> @@ -68,6 +68,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+> 
+>  	if (ret) {
+>  		pr_err("%s: failed to enable function\n", __func__);
+> +		kfree(card);
+>  		return -EIO;
+>  	}
+> 
+> @@ -676,7 +677,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+>  	if (!fwbuf) {
+>  		dev_err(adapter->dev, "unable to alloc buffer for firmware."
+>  				" Terminating download\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	/* Perform firmware data transfer */
+> @@ -1605,7 +1606,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+>  	card->mp_regs = kzalloc(MAX_MP_REGS, GFP_KERNEL);
+>  	if (!card->mp_regs) {
+>  		dev_err(adapter->dev, "failed to alloc mp_regs\n");
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	ret = mwifiex_alloc_sdio_mpa_buffers(adapter,
+> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> index 4585c1b..75bca56 100644
+> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> @@ -895,7 +895,7 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
+>  	if (!buf) {
+>  		dev_err(priv->adapter->dev, "%s: failed to alloc cmd buffer\n",
+>  				__func__);
+> -		return -1;
+> +		return -ENOMEM;
+>  	}
+> 
+>  	txp_cfg = (struct host_cmd_ds_txpwr_cfg *) buf;
+> --
+> 1.7.2.3
+> 
+> 
 
