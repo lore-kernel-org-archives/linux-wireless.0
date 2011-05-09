@@ -1,42 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:48565 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761Ab1EJWIQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 18:08:16 -0400
-Received: by qwk3 with SMTP id 3so3931716qwk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 15:08:16 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:3418 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754147Ab1EIOdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/10] staging: brcm80211: make use of fls bit operation
+ in wlc_phy_compute_dB
+Date: Mon, 9 May 2011 16:33:27 +0200
+Message-ID: <1304951609-2493-8-git-send-email-arend@broadcom.com> (sfid-20110509_163741_764946_A1A1F9CC)
+In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimecZ0uB4V_b-8F784Tnbkqo71ORA@mail.gmail.com>
-References: <1304879433-7096-1-git-send-email-zajec5@gmail.com>
-	<BANLkTimecZ0uB4V_b-8F784Tnbkqo71ORA@mail.gmail.com>
-Date: Wed, 11 May 2011 00:08:15 +0200
-Message-ID: <BANLkTinfMbkyh9kB+hsmka-JcWXAYEPynw@mail.gmail.com> (sfid-20110511_000819_813755_2E680FBF)
-Subject: Re: [PATCH V2 0/3] ssb/b43(legacy): clean dangling cores workarounds
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 8 maja 2011 19:54 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> W dniu 8 maja 2011 20:30 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
->> There is no perfect place for this workarounds, but keeping it in ssb sounds
->> more reasonable.
->
-> Uups, I didn't save edition fixing this grammatical mistake. I'm lucky
-> it won't be visible anywhere in git log :)
+wlc_phy_compute_dB converts absolute power value to dB implementing
+a fixed point calculation for 10*log10(x). It does this by determining
+the most significant bit for value x. This can be done using the fls()
+bit operation, which has arch specific and possibly more efficient
+implementation.
 
-John: something went wrong there. You applied b43 and b43legacy
-patches, but they should applied *after* ssb patch I don't see in your
-tree.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-I don't know how many people can be affected by this... Can not tell
-you if we should rebase or just commit ssb patch quickly.
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+index 446dc84..6cba4df 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
+@@ -18,10 +18,12 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/string.h>
+-#include <bcmdefs.h>
++#include <linux/bitops.h>
+ #include <linux/delay.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
++
++#include <bcmdefs.h>
+ #include <bcmnvram.h>
+ #include <sbchipc.h>
+ #include <bcmdevs.h>
+@@ -2746,20 +2748,15 @@ s8 lcnphy_gain_index_offset_for_pkt_rssi[] = {
+ 
+ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
+ {
+-	u8 shift_ct, lsb, msb, secondmsb, i;
++	u8 msb, secondmsb, i;
+ 	u32 tmp;
+ 
+ 	for (i = 0; i < core; i++) {
++		secondmsb = 0;
+ 		tmp = cmplx_pwr[i];
+-		shift_ct = msb = secondmsb = 0;
+-		while (tmp != 0) {
+-			tmp = tmp >> 1;
+-			shift_ct++;
+-			lsb = (u8) (tmp & 1);
+-			if (lsb == 1)
+-				msb = shift_ct;
+-		}
+-		secondmsb = (u8) ((cmplx_pwr[i] >> (msb - 1)) & 1);
++		msb = fls(tmp);
++		if (msb)
++			secondmsb = (u8) ((tmp >> (--msb - 1)) & 1);
+ 		p_cmplx_pwr_dB[i] = (s8) (3 * msb + 2 * secondmsb);
+ 	}
+ }
 -- 
-Rafał
+1.7.4.1
+
+
