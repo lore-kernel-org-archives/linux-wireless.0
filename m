@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36969 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756185Ab1EMNa4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56588 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881Ab1EIOqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:30:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ssb: fix pcicore build breakage
-Date: Fri, 13 May 2011 09:26:29 -0400
-Message-Id: <1305293189-20605-1-git-send-email-linville@tuxdriver.com> (sfid-20110513_153100_180909_69587928)
-In-Reply-To: <20110512161914.e16be4d3.randy.dunlap@oracle.com>
-References: <20110512161914.e16be4d3.randy.dunlap@oracle.com>
+	Mon, 9 May 2011 10:46:44 -0400
+Subject: Re: [PATCH] mac80211: don't drop frames where skb->len < 24 in
+ ieee80211_scan_rx()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1304950753-2952-1-git-send-email-coelho@ti.com>
+References: <1304950753-2952-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 16:46:39 +0200
+Message-ID: <1304952399.12202.3.camel@jlt3.sipsolutions.net> (sfid-20110509_164647_544803_A1CBDB6B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/ssb/main.c:1336: error: 'SSB_PCICORE_BCAST_ADDR' undeclared (first use in this function)
-drivers/ssb/main.c:1337: error: 'SSB_PCICORE_BCAST_DATA' undeclared (first use in this function)
-drivers/ssb/main.c:1349: error: 'struct ssb_pcicore' has no member named 'dev'
+On Mon, 2011-05-09 at 17:19 +0300, Luciano Coelho wrote:
+> This seems to be a leftover from the old days, when we didn't support
+> any frames that didn't contain the full ieee802.11 header.  This is
+> not the case anymore.  It does not cause problems now, because they
+> are only dropped during scan.  But when scheduled scans get merged,
+> this would become a problem because we would drop all small frames
+> while scheduled scan is running.
+> 
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  net/mac80211/scan.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 489b6ad..b7a39c4 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -169,9 +169,6 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+>  	if (ieee80211_is_ctl(fc))
+>  		return RX_CONTINUE;
+>  
+> -	if (skb->len < 24)
+> -		return RX_DROP_MONITOR;
+> -
 
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/ssb/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+You can't just delete it, we use mgmt->da at least in this code path.
+You should just change RX_DROP_MONITOR to RX_CONTINUe here I think.
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index ee2937c..a53fc4d 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1332,6 +1332,7 @@ EXPORT_SYMBOL(ssb_bus_powerup);
- static void ssb_broadcast_value(struct ssb_device *dev,
- 				u32 address, u32 data)
- {
-+#ifdef CONFIG_SSB_DRIVER_PCICORE
- 	/* This is used for both, PCI and ChipCommon core, so be careful. */
- 	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
- 	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
-@@ -1340,6 +1341,7 @@ static void ssb_broadcast_value(struct ssb_device *dev,
- 	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
- 	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
- 	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
-+#endif
- }
- 
- void ssb_commit_settings(struct ssb_bus *bus)
--- 
-1.7.4.4
+johannes
 
