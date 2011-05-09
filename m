@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57467 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753569Ab1EPRbC (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:52369 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747Ab1EIRLt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 13:31:02 -0400
-Date: Mon, 16 May 2011 13:25:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: James Hogan <james@albanarts.com>
-Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: BUG: scheduling while atomic 2.6.39-rc7 (iwl3945_irq_tasklet)
-Message-ID: <20110516172513.GA2546@tuxdriver.com> (sfid-20110516_193106_159783_66A48055)
-References: <20110513203448.GA3523@gandalf>
+	Mon, 9 May 2011 13:11:49 -0400
+Date: Mon, 9 May 2011 18:11:44 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Colin Guthrie <gmane@colin.guthr.ie>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, platform-driver-x86@vger.kernel.org
+Subject: Re: [Regression] Problem with rfkill on 2.6.38
+Message-ID: <20110509171144.GA7194@srcf.ucam.org> (sfid-20110509_191151_954695_17210551)
+References: <ip6j66$o5f$1@dough.gmane.org>
+ <1304930195.3475.17.camel@jlt3.sipsolutions.net>
+ <4DC81FC7.9040503@colin.guthr.ie>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110513203448.GA3523@gandalf>
+In-Reply-To: <4DC81FC7.9040503@colin.guthr.ie>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 09:34:49PM +0100, James Hogan wrote:
-> Hi,
-> 
-> On 2.6.39-rc7 I've seen a panic due to "BUG: scheduling while atomic"
-> with the backtrace below (not much detail as it was written in a text
-> message while it was displayed on the screen!). All worked fine in
-> 2.6.38.
-> 
-> This was soon after resuming from suspend (enough time to unlock the
-> screen, but not much else). I think it was the same bug I saw in rc2 but
-> didn't have time to track down. I can probably get it to happen again if
-> more detail is needed. It doesn't happen every suspend (I think it had
-> survived a couple of suspend/resume cycles at this point).
-> 
-> I could bisect if necessary, but hopefully the backtrace will be enough
-> to see what's going on?
+On Mon, May 09, 2011 at 06:09:27PM +0100, Colin Guthrie wrote:
 
-A bisect might be very helpful -- time is short for 2.6.39 already.
+> Just a quick (non-compile) followup from my last email... blacklisting
+> the dell-laptop module works around the issue, so I think the commit
+> previously mentioned is indeed the culprit (as it's the only recent
+> commit and does fiddle with the rfkill stuff).
+> 
+> Not sure what the best track forward is, but it's certainly a
+> regression, so should probably be fixed or reverted until a more
+> complete fix is found.
 
-John
+If you can confirm that with a build then I'll do that.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Matthew Garrett | mjg59@srcf.ucam.org
