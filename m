@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36239 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704Ab1EJT0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 15:26:07 -0400
-Date: Tue, 10 May 2011 12:26:04 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/10] staging: brcm80211: cleanup unnecessary functions
- from wlc_ampdu.c
-Message-ID: <20110510192604.GA11348@kroah.com> (sfid-20110510_212612_782858_187A5BE0)
-References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
- <20110510181208.GA3396@kroah.com>
- <4DC98CF2.9050804@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DC98CF2.9050804@broadcom.com>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:58695 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753344Ab1EIIRT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 04:17:19 -0400
+Received: by eydd26 with SMTP id d26so1965300eyd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 01:17:16 -0700 (PDT)
+Subject: Re: [PATCH 1/3] cfg80211/nl80211: add support for scheduled scans
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1304928720.3475.0.camel@jlt3.sipsolutions.net>
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>
+	 <1304600420-24227-2-git-send-email-coelho@ti.com>
+	 <1304928720.3475.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 11:17:13 +0300
+Message-ID: <1304929033.12586.447.camel@cumari> (sfid-20110509_101727_964105_17634CE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 10, 2011 at 09:07:30PM +0200, Arend van Spriel wrote:
-> On 05/10/2011 08:12 PM, Greg KH wrote:
-> >On Mon, May 09, 2011 at 04:33:20PM +0200, Arend van Spriel wrote:
-> >>Couple of functions are not used or empty and have been removed.
-> >This patch doesn't apply on top of all of the other brcm80211 patches
-> >sent me.  Care to redo this series and resend after syncing up with the
-> >next linux-next tree?
-> According to the email messages 'patch "staging: brcm80211: ..."
-> added to staging tree' you dropped four patches in this series. Do
-> you want me to resend those or the entire series. I prefer only
-> resending the dropped ones, but it is your call.
+On Mon, 2011-05-09 at 10:12 +0200, Johannes Berg wrote:
+> On Thu, 2011-05-05 at 16:00 +0300, Luciano Coelho wrote:
+> > Implement new functionality for scheduled scan offload.  With this feature we
+> > can scan automatically at certain intervals.
+> > 
+> > The idea is that the hardware can perform scan automatically and filter on
+> > desired results without waking up the host unnecessarily.
+> > 
+> > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
+> > commands to the nl80211 interface.  When results are available they are
+> > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
+> > informed when the scheduled scan has stopped with a
+> > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
+> > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
+> 
+> Didn't you initially want to differentiate between SCAN_SSIDS and
+> SSIDS_FILTER?
 
-Please resend only the dropped ones, as I can't do anything with ones
-I've already applied :)
+Yes, I'll add SSID filtering soon, as separate patches, if that's okay.
+For now, the SSIDs that you can pass via nl80211 are used in the
+probe_reqs.
 
-thanks,
+We can also filter on RSSI, SNR and/or group results into one event.
+This are other features that our firmware supports.  For now I have not
+exposed this, but it could also be added to nl80211 in the future.
 
-greg k-h
+-- 
+Cheers,
+Luca.
+
