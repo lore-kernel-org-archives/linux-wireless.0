@@ -1,175 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57577 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3425 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852Ab1ECHoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 03:44:17 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 00:43:49 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k_hw: remove aggregation protection mode
-Date: Tue, 3 May 2011 13:14:06 +0530
-Message-ID: <1304408646-9411-1-git-send-email-mshajakhan@atheros.com> (sfid-20110503_094423_199167_8FAFE797)
+	id S1754151Ab1EIOdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/10] staging: brcm80211: use print_hex_dump_bytes
+ kernel function
+Date: Mon, 9 May 2011 16:33:26 +0200
+Message-ID: <1304951609-2493-7-git-send-email-arend@broadcom.com> (sfid-20110509_163742_915779_CDA1F412)
+In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+The drivers had own implementation to dump buffer contents using
+printk. This has been replaced by kernel function.
 
-when aggregation protection mode is enabled the hardware needs
-to send RTS/CTS for each HT frame. Currently its disabled so
-remove the unused call backs.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |   10 ----------
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   11 -----------
- drivers/net/wireless/ath/ath9k/ath9k.h      |    1 -
- drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ------
- drivers/net/wireless/ath/ath9k/hw.h         |    2 --
- drivers/net/wireless/ath/ath9k/main.c       |    3 ---
- drivers/net/wireless/ath/ath9k/xmit.c       |    5 +----
- 7 files changed, 1 insertions(+), 37 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   91 +++++++++++++++++--------
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c |    8 ++-
+ drivers/staging/brcm80211/include/bcmutils.h  |    1 -
+ drivers/staging/brcm80211/util/bcmutils.c     |   40 +----------
+ 4 files changed, 70 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index c338efb..7a332f1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -415,15 +415,6 @@ static void ar9002_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
- 	ads->ds_ctl1 &= (~AR_IsAggr & ~AR_MoreAggr);
- }
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 49e73b2..9167ebc 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -15,9 +15,11 @@
+  */
  
--static void ar9002_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
--					   u32 burstDuration)
--{
--	struct ar5416_desc *ads = AR5416DESC(ds);
--
--	ads->ds_ctl2 &= ~AR_BurstDur;
--	ads->ds_ctl2 |= SM(burstDuration, AR_BurstDur);
--}
--
- void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			  u32 size, u32 flags)
- {
-@@ -456,6 +447,5 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
- 	ops->set11n_aggr_middle = ar9002_hw_set11n_aggr_middle;
- 	ops->set11n_aggr_last = ar9002_hw_set11n_aggr_last;
- 	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
--	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
- 	ops->set_clrdmask = ar9002_hw_set_clrdmask;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index c1264d6..be6adec 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -484,16 +484,6 @@ static void ar9003_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
- 	ads->ctl12 &= (~AR_IsAggr & ~AR_MoreAggr);
- }
+ #include <linux/types.h>
++#include <linux/kernel.h>
++#include <linux/printk.h>
+ #include <linux/pci_ids.h>
+-#include <bcmdefs.h>
+ #include <linux/netdevice.h>
++#include <bcmdefs.h>
+ #include <bcmsdh.h>
  
--static void ar9003_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
--					   u32 burstDuration)
--{
--	struct ar9003_txc *ads = (struct ar9003_txc *) ds;
--
--	ads->ctl13 &= ~AR_BurstDur;
--	ads->ctl13 |= SM(burstDuration, AR_BurstDur);
--
--}
--
- void ar9003_hw_set_paprd_txdesc(struct ath_hw *ah, void *ds, u8 chains)
- {
- 	struct ar9003_txc *ads = ds;
-@@ -518,7 +508,6 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- 	ops->set11n_aggr_middle = ar9003_hw_set11n_aggr_middle;
- 	ops->set11n_aggr_last = ar9003_hw_set11n_aggr_last;
- 	ops->clr11n_aggr = ar9003_hw_clr11n_aggr;
--	ops->set11n_burstduration = ar9003_hw_set11n_burstduration;
- 	ops->set_clrdmask = ar9003_hw_set_clrdmask;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0312aa0..1bffd15 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -62,7 +62,6 @@ struct ath_node;
- #define	ATH_TXQ_SETUP(sc, i)        ((sc)->tx.txqsetup & (1<<i))
- 
- struct ath_config {
--	u32 ath_aggr_prot;
- 	u16 txpowlimit;
- 	u8 cabqReadytime;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 9dd90a8..99f8334 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -116,12 +116,6 @@ static inline void ath9k_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
- 	ath9k_hw_ops(ah)->clr11n_aggr(ah, ds);
- }
- 
--static inline void ath9k_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
--						 u32 burstDuration)
--{
--	ath9k_hw_ops(ah)->set11n_burstduration(ah, ds, burstDuration);
--}
--
- static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
- {
- 	ath9k_hw_ops(ah)->set_clrdmask(ah, ds, val);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 34ed1bd..b2248bb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -628,8 +628,6 @@ struct ath_hw_ops {
- 				   u32 numDelims);
- 	void (*set11n_aggr_last)(struct ath_hw *ah, void *ds);
- 	void (*clr11n_aggr)(struct ath_hw *ah, void *ds);
--	void (*set11n_burstduration)(struct ath_hw *ah, void *ds,
--				     u32 burstDuration);
- 	void (*set_clrdmask)(struct ath_hw *ah, void *ds, bool val);
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c3dbf26..d3a3c89 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2039,9 +2039,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BSSID) {
- 		ath9k_config_bss(sc, vif);
- 
--		/* Set aggregation protection mode parameters */
--		sc->config.ath_aggr_prot = 0;
--
- 		ath_dbg(common, ATH_DBG_CONFIG, "BSSID: %pM aid: 0x%x\n",
- 			common->curbssid, common->curaid);
+ #ifdef BCMEMBEDIMAGE
+@@ -1003,9 +1005,12 @@ static int dhdsdio_txpkt(dhd_bus_t *bus, struct sk_buff *pkt, uint chan,
+ 	if (DHD_BYTES_ON() &&
+ 	    (((DHD_CTL_ON() && (chan == SDPCM_CONTROL_CHANNEL)) ||
+ 	      (DHD_DATA_ON() && (chan != SDPCM_CONTROL_CHANNEL))))) {
+-		bcm_prhex("Tx Frame", frame, len);
++		printk(KERN_DEBUG "Tx Frame:\n");
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, frame, len);
+ 	} else if (DHD_HDRS_ON()) {
+-		bcm_prhex("TxHdr", frame, min_t(u16, len, 16));
++		printk(KERN_DEBUG "TxHdr:\n");
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++				     frame, min_t(u16, len, 16));
  	}
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 7b91b2a..744779d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1663,8 +1663,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- 		rix = rates[i].idx;
- 		series[i].Tries = rates[i].count;
+ #endif
  
--		if ((sc->config.ath_aggr_prot && bf_isaggr(bf)) ||
--		    (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
-+		    if (rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 			series[i].RateFlags |= ATH9K_RATESERIES_RTS_CTS;
- 			flags |= ATH9K_TXDESC_RTSENA;
- 		} else if (rates[i].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-@@ -1733,8 +1732,6 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- 				     !is_pspoll, ctsrate,
- 				     0, series, 4, flags);
+@@ -1333,10 +1338,15 @@ int dhd_bus_txctl(struct dhd_bus *bus, unsigned char *msg, uint msglen)
  
--	if (sc->config.ath_aggr_prot && flags)
--		ath9k_hw_set11n_burstduration(sc->sc_ah, bf->bf_desc, 8192);
+ 	if (ret == -1) {
+ #ifdef DHD_DEBUG
+-		if (DHD_BYTES_ON() && DHD_CTL_ON())
+-			bcm_prhex("Tx Frame", frame, len);
+-		else if (DHD_HDRS_ON())
+-			bcm_prhex("TxHdr", frame, min_t(u16, len, 16));
++		if (DHD_BYTES_ON() && DHD_CTL_ON()) {
++			printk(KERN_DEBUG "Tx Frame:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++					     frame, len);
++		} else if (DHD_HDRS_ON()) {
++			printk(KERN_DEBUG "TxHdr:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++					     frame, min_t(u16, len, 16));
++		}
+ #endif
+ 
+ 		do {
+@@ -3117,8 +3127,10 @@ dhdsdio_read_control(dhd_bus_t *bus, u8 *hdr, uint len, uint doff)
+ gotpkt:
+ 
+ #ifdef DHD_DEBUG
+-	if (DHD_BYTES_ON() && DHD_CTL_ON())
+-		bcm_prhex("RxCtrl", bus->rxctl, len);
++	if (DHD_BYTES_ON() && DHD_CTL_ON()) {
++		printk(KERN_DEBUG "RxCtrl:\n");
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, bus->rxctl, len);
++	}
+ #endif
+ 
+ 	/* Point to valid data and indicate its length */
+@@ -3309,8 +3321,9 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
+ 		}
+ #ifdef DHD_DEBUG
+ 		if (DHD_GLOM_ON()) {
+-			bcm_prhex("SUPERFRAME", pfirst->data,
+-			      min_t(int, pfirst->len, 48));
++			printk(KERN_DEBUG "SUPERFRAME:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++				pfirst->data, min_t(int, pfirst->len, 48));
+ 		}
+ #endif
+ 
+@@ -3391,8 +3404,11 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
+ 			chan = SDPCM_PACKET_CHANNEL(&dptr[SDPCM_FRAMETAG_LEN]);
+ 			doff = SDPCM_DOFFSET_VALUE(&dptr[SDPCM_FRAMETAG_LEN]);
+ #ifdef DHD_DEBUG
+-			if (DHD_GLOM_ON())
+-				bcm_prhex("subframe", dptr, 32);
++			if (DHD_GLOM_ON()) {
++				printk(KERN_DEBUG "subframe:\n");
++				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++						     dptr, 32);
++			}
+ #endif
+ 
+ 			if ((u16)~(sublen ^ check)) {
+@@ -3469,8 +3485,11 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
+ 				rxseq = seq;
+ 			}
+ #ifdef DHD_DEBUG
+-			if (DHD_BYTES_ON() && DHD_DATA_ON())
+-				bcm_prhex("Rx Subframe Data", dptr, dlen);
++			if (DHD_BYTES_ON() && DHD_DATA_ON()) {
++				printk(KERN_DEBUG "Rx Subframe Data:\n");
++				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++						     dptr, dlen);
++			}
+ #endif
+ 
+ 			__skb_trim(pfirst, sublen);
+@@ -3513,8 +3532,9 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
+ 				__func__, num, pfirst, pfirst->data,
+ 				pfirst->len, pfirst->next,
+ 				pfirst->prev));
+-				bcm_prhex("", (u8 *) pfirst->data,
+-				      min_t(int, pfirst->len, 32));
++				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++						pfirst->data,
++						min_t(int, pfirst->len, 32));
+ 			}
+ #endif				/* DHD_DEBUG */
+ 		}
+@@ -3816,10 +3836,15 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
+ 			bus->tx_max = txmax;
+ 
+ #ifdef DHD_DEBUG
+-			if (DHD_BYTES_ON() && DHD_DATA_ON())
+-				bcm_prhex("Rx Data", rxbuf, len);
+-			else if (DHD_HDRS_ON())
+-				bcm_prhex("RxHdr", bus->rxhdr, SDPCM_HDRLEN);
++			if (DHD_BYTES_ON() && DHD_DATA_ON()) {
++				printk(KERN_DEBUG "Rx Data:\n");
++				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++						     rxbuf, len);
++			} else if (DHD_HDRS_ON()) {
++				printk(KERN_DEBUG "RxHdr:\n");
++				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++						     bus->rxhdr, SDPCM_HDRLEN);
++			}
+ #endif
+ 
+ 			if (chan == SDPCM_CONTROL_CHANNEL) {
+@@ -3874,8 +3899,11 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
+ 			continue;
+ 		}
+ #ifdef DHD_DEBUG
+-		if (DHD_BYTES_ON() || DHD_HDRS_ON())
+-			bcm_prhex("RxHdr", bus->rxhdr, SDPCM_HDRLEN);
++		if (DHD_BYTES_ON() || DHD_HDRS_ON()) {
++			printk(KERN_DEBUG "RxHdr:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++					     bus->rxhdr, SDPCM_HDRLEN);
++		}
+ #endif
+ 
+ 		/* Extract hardware header fields */
+@@ -4048,8 +4076,11 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
+ 		memcpy(pkt->data, bus->rxhdr, firstread);
+ 
+ #ifdef DHD_DEBUG
+-		if (DHD_BYTES_ON() && DHD_DATA_ON())
+-			bcm_prhex("Rx Data", pkt->data, len);
++		if (DHD_BYTES_ON() && DHD_DATA_ON()) {
++			printk(KERN_DEBUG "Rx Data:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++					     pkt->data, len);
++		}
+ #endif
+ 
+ deliver:
+@@ -4060,7 +4091,10 @@ deliver:
+ 					__func__, len));
+ #ifdef DHD_DEBUG
+ 				if (DHD_GLOM_ON()) {
+-					bcm_prhex("Glom Data", pkt->data, len);
++					printk(KERN_DEBUG "Glom Data:\n");
++					print_hex_dump_bytes("",
++							     DUMP_PREFIX_OFFSET,
++							     pkt->data, len);
+ 				}
+ #endif
+ 				__skb_trim(pkt, len);
+@@ -4621,8 +4655,9 @@ static void dhdsdio_pktgen(dhd_bus_t *bus)
+ #ifdef DHD_DEBUG
+ 		if (DHD_BYTES_ON() && DHD_DATA_ON()) {
+ 			data = (u8 *) (pkt->data) + SDPCM_HDRLEN;
+-			bcm_prhex("dhdsdio_pktgen: Tx Data", data,
+-			      pkt->len - SDPCM_HDRLEN);
++			printk(KERN_DEBUG "dhdsdio_pktgen: Tx Data:\n");
++			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, data,
++					     pkt->len - SDPCM_HDRLEN);
+ 		}
+ #endif
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index c1bd24f..2fed0eb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -4681,8 +4681,9 @@ void wlc_print_txdesc(d11txh_t *txh)
+ 	char hexbuf[256];
+ 
+ 	/* add plcp header along with txh descriptor */
+-	bcm_prhex("Raw TxDesc + plcp header", (unsigned char *) txh,
+-		sizeof(d11txh_t) + 48);
++	printk(KERN_DEBUG "Raw TxDesc + plcp header:\n");
++	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
++			     txh, sizeof(d11txh_t) + 48);
+ 
+ 	printk(KERN_DEBUG "TxCtlLow: %04x ", mtcl);
+ 	printk(KERN_DEBUG "TxCtlHigh: %04x ", mtch);
+@@ -4753,7 +4754,8 @@ void wlc_print_rxh(d11rxhdr_t *rxh)
+ 		{0, NULL}
+ 	};
+ 
+-	bcm_prhex("Raw RxDesc", (unsigned char *) rxh, sizeof(d11rxhdr_t));
++	printk(KERN_DEBUG "Raw RxDesc:\n");
++	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, rxh, sizeof(d11rxhdr_t));
+ 
+ 	bcm_format_flags(macstat_flags, macstatus1, flagstr, 64);
+ 
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index 2a00741..aa00e83 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -476,7 +476,6 @@ extern u8 bcm_crc8(u8 *p, uint nbytes, u8 crc);
+ 	extern int bcm_format_hex(char *str, const void *bytes, int len);
+ #endif
+ 	extern char *bcm_chipname(uint chipid, char *buf, uint len);
+-	extern void bcm_prhex(const char *msg, unsigned char *buf, uint len);
+ 
+ 	extern bcm_tlv_t *bcm_parse_tlvs(void *buf, int buflen,
+ 						    uint key);
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index cca5b7d..e185e28 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -21,6 +21,7 @@
+ #include <linux/pci.h>
+ #include <linux/netdevice.h>
+ #include <linux/sched.h>
++#include <linux/printk.h>
+ #include <bcmdefs.h>
+ #include <stdarg.h>
+ #include <bcmutils.h>
+@@ -386,7 +387,7 @@ void bcm_prpkt(const char *msg, struct sk_buff *p0)
+ 		printk(KERN_DEBUG "%s:\n", msg);
+ 
+ 	for (p = p0; p; p = p->next)
+-		bcm_prhex(NULL, p->data, p->len);
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, p->data, p->len);
  }
+ EXPORT_SYMBOL(bcm_prpkt);
+ #endif				/* defined(BCMDBG) */
+@@ -629,43 +630,6 @@ int bcm_format_hex(char *str, const void *bytes, int len)
+ EXPORT_SYMBOL(bcm_format_hex);
+ #endif				/* defined(BCMDBG) */
  
- static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+-/* pretty hex print a contiguous buffer */
+-void bcm_prhex(const char *msg, unsigned char *buf, uint nbytes)
+-{
+-	char line[128], *p;
+-	int len = sizeof(line);
+-	int nchar;
+-	uint i;
+-
+-	if (msg && (msg[0] != '\0'))
+-		printk(KERN_DEBUG "%s:\n", msg);
+-
+-	p = line;
+-	for (i = 0; i < nbytes; i++) {
+-		if (i % 16 == 0) {
+-			nchar = snprintf(p, len, "  %04d: ", i);	/* line prefix */
+-			p += nchar;
+-			len -= nchar;
+-		}
+-		if (len > 0) {
+-			nchar = snprintf(p, len, "%02x ", buf[i]);
+-			p += nchar;
+-			len -= nchar;
+-		}
+-
+-		if (i % 16 == 15) {
+-			printk(KERN_DEBUG "%s\n", line);	/* flush line */
+-			p = line;
+-			len = sizeof(line);
+-		}
+-	}
+-
+-	/* flush last partial line */
+-	if (p != line)
+-		printk(KERN_DEBUG "%s\n", line);
+-}
+-EXPORT_SYMBOL(bcm_prhex);
+-
+ char *bcm_chipname(uint chipid, char *buf, uint len)
+ {
+ 	const char *fmt;
 -- 
-1.7.0.4
+1.7.4.1
+
 
