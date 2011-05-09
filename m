@@ -1,137 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:40892 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab1EEUjx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 16:39:53 -0400
-Date: Thu, 05 May 2011 15:39:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linux-wireless@vger.kernel.org
-Cc: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org
-Subject: [RFC] rtlwifi: Remove large arrays from stack - a question
-Message-ID: <4dc30b12.uDIivxjeQot+s05F%Larry.Finger@lwfinger.net> (sfid-20110505_224012_943899_65A23081)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:9004 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754116Ab1EITWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 15:22:30 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2.6.35] iwlwifi: add {ack,plpc}_check module parameters
+Date: Mon,  9 May 2011 21:22:23 +0200
+Message-Id: <1304968943-27633-1-git-send-email-sgruszka@redhat.com> (sfid-20110509_212237_060862_1AC82352)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In driver rtlwifi, one routine places two relatively large arrays on the
-stack - a 1D u8 array of size 128, and a 2D array of u16 with 128 * 4 elements.
-With the next driver to be used with rtlwifi, the sizes will be 256 and
-256 * 4 respectively. As that will make the 2D array be 2048 bytes, I have
-changed the code to use kmalloc to allocate the space as shown in the patch
-below. This code has been tested.
+commit b7977ffaab5187ad75edaf04ac854615cea93828 upstream.
 
-This method performs 6 kmalloc operations. My understanding is that each one
-allocates a page of memory, which makes the code allocate 6 KiB rather than
-the previous 5 * 128 or 5 * 256 bytes. This routine is called once for each
-load of an upper-level driver that uses rtlwifi.
+Add module ack_check, and plcp_check parameters. Ack_check is disabled
+by default since is proved that check ack health can cause troubles.
+Plcp_check is enabled by default.
 
-Given that the large arrays on the stack needed to be removed, I see three 
-possible options:
+This prevent connection hangs with "low ack count detected" messages.
 
-1. Leave it this way as 6 allocations of O(0) are trivial.
+Resolves:
+https://bugzilla.redhat.com/show_bug.cgi?id=666646
 
-2. Switch to a single allocation of up to 1280 B and set the pointers manually.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-rx.c      |    8 ++++++--
+ 4 files changed, 15 insertions(+), 2 deletions(-)
 
-3. Add the arrays to a structure maintained by the upper-level driver, which
-   would make the memory usage be permanent.
-
-My inclination is to use option 1. Are there strong arguments for one of the
-other alternatives, or any that I have not considered?
-
-Thanks,
-
-Larry
-
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/efuse.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/efuse.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/efuse.c
-@@ -235,7 +235,7 @@ void read_efuse(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
--	u8 efuse_tbl[rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]];
-+	u8 *efuse_tbl;
- 	u8 rtemp8[1];
- 	u16 efuse_addr = 0;
- 	u8 offset, wren;
-@@ -245,7 +245,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 		rtlpriv->cfg->maps[EFUSE_MAX_SECTION_MAP];
- 	const u32 efuse_len =
- 		rtlpriv->cfg->maps[EFUSE_REAL_CONTENT_SIZE];
--	u16 efuse_word[efuse_max_section][EFUSE_MAX_WORD_UNIT];
-+	u16 **efuse_word;
- 	u16 efuse_utilized = 0;
- 	u8 efuse_usage;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0f292a2..3a79907 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -387,6 +387,7 @@ const u8 *iwlagn_eeprom_query_addr(const struct iwl_priv *priv,
+ struct iwl_mod_params iwlagn_mod_params = {
+ 	.amsdu_size_8K = 1,
+ 	.restart_fw = 1,
++	.plcp_check = true,
+ 	/* the rest are 0 by default */
+ };
  
-@@ -256,9 +256,24 @@ void read_efuse(struct ieee80211_hw *hw,
- 		return;
- 	}
- 
-+	/* allocate memory for efuse_tbl and efuse_word */
-+	efuse_tbl = kmalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE] *
-+			    sizeof(u8), GFP_KERNEL);
-+	if (!efuse_tbl)
-+		return;
-+	efuse_word = kmalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_KERNEL);
-+	if (!efuse_word)
-+		goto done;
-+	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++) {
-+		efuse_word[i] = kmalloc(efuse_max_section * sizeof(u16),
-+				        GFP_KERNEL);
-+		if (!efuse_word[i])
-+			goto done;
-+	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8a2c4d7..6bd11c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4180,3 +4180,9 @@ module_param_named(ucode_alternative, iwlagn_wanted_ucode_alternative, int,
+ 		   S_IRUGO);
+ MODULE_PARM_DESC(ucode_alternative,
+ 		 "specify ucode alternative to use from ucode file");
 +
- 	for (i = 0; i < efuse_max_section; i++)
- 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++)
--			efuse_word[i][j] = 0xFFFF;
-+			efuse_word[j][i] = 0xFFFF;
++module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
++MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
++
++module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
++MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index e8ef317..ef03c24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -226,6 +226,8 @@ struct iwl_mod_params {
+ 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
+ 	int antenna;  		/* def: 0 = both antennas (use diversity) */
+ 	int restart_fw;		/* def: 1 = restart firmware */
++	bool plcp_check;	/* def: true = enable plcp health check */
++	bool ack_check;		/* def: false = disable ack health check */
+ };
  
- 	read_efuse_byte(hw, efuse_addr, rtemp8);
- 	if (*rtemp8 != 0xFF) {
-@@ -285,7 +300,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 					read_efuse_byte(hw, efuse_addr, rtemp8);
- 					efuse_addr++;
- 					efuse_utilized++;
--					efuse_word[offset][i] = (*rtemp8 & 0xff);
-+					efuse_word[i][offset] = (*rtemp8 & 0xff);
- 
- 					if (efuse_addr >= efuse_len)
- 						break;
-@@ -297,7 +312,7 @@ void read_efuse(struct ieee80211_hw *hw,
- 					read_efuse_byte(hw, efuse_addr, rtemp8);
- 					efuse_addr++;
- 					efuse_utilized++;
--					efuse_word[offset][i] |=
-+					efuse_word[i][offset] |=
- 					    (((u16)*rtemp8 << 8) & 0xff00);
- 
- 					if (efuse_addr >= efuse_len)
-@@ -320,9 +335,9 @@ void read_efuse(struct ieee80211_hw *hw,
- 	for (i = 0; i < efuse_max_section; i++) {
- 		for (j = 0; j < EFUSE_MAX_WORD_UNIT; j++) {
- 			efuse_tbl[(i * 8) + (j * 2)] =
--			    (efuse_word[i][j] & 0xff);
-+			    (efuse_word[j][i] & 0xff);
- 			efuse_tbl[(i * 8) + ((j * 2) + 1)] =
--			    ((efuse_word[i][j] >> 8) & 0xff);
-+			    ((efuse_word[j][i] >> 8) & 0xff);
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 0a5d7cf..d6c5927 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -401,10 +401,13 @@ EXPORT_SYMBOL(iwl_good_plcp_health);
+ void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 				struct iwl_rx_packet *pkt)
+ {
++	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
++
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 	if (iwl_is_associated(priv)) {
+-		if (priv->cfg->ops->lib->check_ack_health) {
++		if (mod_params->ack_check &&
++		    priv->cfg->ops->lib->check_ack_health) {
+ 			if (!priv->cfg->ops->lib->check_ack_health(
+ 			    priv, pkt)) {
+ 				/*
+@@ -417,7 +420,8 @@ void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 					return;
+ 			}
  		}
- 	}
- 
-@@ -336,6 +351,11 @@ void read_efuse(struct ieee80211_hw *hw,
- 				      (u8 *)&efuse_utilized);
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_EFUSE_USAGE,
- 				      (u8 *)&efuse_usage);
-+done:
-+	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++)
-+		kfree(efuse_word[i]);
-+	kfree(efuse_word);
-+	kfree(efuse_tbl);
- }
- 
- bool efuse_shadow_update_chk(struct ieee80211_hw *hw)
+-		if (priv->cfg->ops->lib->check_plcp_health) {
++		if (mod_params->plcp_check &&
++		    priv->cfg->ops->lib->check_plcp_health) {
+ 			if (!priv->cfg->ops->lib->check_plcp_health(
+ 			    priv, pkt)) {
+ 				/*
+-- 
+1.7.1
+
