@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4.comsite.net ([205.238.176.238]:20656 "EHLO
-	mail4.comsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756584Ab1ERPzB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 11:55:01 -0400
-To: Stevie Trujillo <stevie.trujillo@gmail.com>
-In-Reply-To: <201105181637.46164.stevie.trujillo@gmail.com>
-References: <201105181637.46164.stevie.trujillo@gmail.com>
-From: Milton Miller <miltonm@bga.com>
-Subject: Re: How to get backtrace? modprobe -r iwlagn; modprobe iwlagn kills kernel
-Cc: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>
-Date: Wed, 18 May 2011 10:55:01 -0500
-Message-ID: <1305734101_6569@mail4.comsite.net> (sfid-20110518_175530_903425_2DA472CF)
+Received: from mms1.broadcom.com ([216.31.210.17]:3412 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754146Ab1EIOdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:44 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/10] staging: brcm80211: wlc_aggregatable function
+ prototype moved
+Date: Mon, 9 May 2011 16:33:22 +0200
+Message-ID: <1304951609-2493-3-git-send-email-arend@broadcom.com> (sfid-20110509_163742_030803_2CE616DF)
+In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed May 18 2011 about 10:37:54 EST, Stevie Trujillo wrote:
-> I'm having some problem getting a backtrace. When I do "modprobe -r
-> iwlagn; modprobe iwlagn" (2.6.38.6 with Intel-1030N) the kernel crashes
-> (sometimes I need to try 2 or 3 times, and sometimes the modprobe -r
-> is the one that crashes).
-> 
-> This spams my monitor with several oops/panics before it finally
-> dies. I can only see bottom of the last one, which probably isn't
-> very meaningful.  I tried loading netconsole, but I only get one or
-> two lines before it stops sending/printing.
-> 
-> I then tried kexec+crashkernel, but I only managed to get a backtrace
-> for the last panic (which I think is just a result of memory corruption
-> or something).  Finally I tried compiling ramoops into my kernel,
-> but it didn't want to load because of "No such device".
+The function wlc_aggregatable is used by wl_mac80211.c. The prototype
+of the function was placed in include file wlc_scb.h but the interface
+for wl_mac80211.c to other driver functions is to be placed in wlc_pub.h.
 
-For the kexec+crashkernel, try to retrieve the kernel log buffer:
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_pub.h |    2 ++
+ drivers/staging/brcm80211/brcmsmac/wlc_scb.h |    2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-There are some macros available, but basically log_buf is a pointer
-to a buffer of length log_buf_len initialized to __log_buf (but can
-be expanded via the command line or sysctl, in). log_end is the
-end of the buffer.  If you haven't wrapped then just print log_end
-characters.
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
+index 3dc5b1d..44f6153 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
+@@ -514,6 +514,8 @@ extern int wlc_iovar_op(struct wlc_info *wlc, const char *name, void *params,
+ 			struct wlc_if *wlcif);
+ extern int wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 		     struct wlc_if *wlcif);
++extern bool wlc_aggregatable(struct wlc_info *wlc, u8 tid);
++
+ /* helper functions */
+ extern void wlc_statsupd(struct wlc_info *wlc);
+ extern void wlc_protection_upd(struct wlc_info *wlc, uint idx, int val);
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_scb.h b/drivers/staging/brcm80211/brcmsmac/wlc_scb.h
+index 7326006..f07a891 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_scb.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_scb.h
+@@ -17,8 +17,6 @@
+ #ifndef _wlc_scb_h_
+ #define _wlc_scb_h_
+ 
+-extern bool wlc_aggregatable(struct wlc_info *wlc, u8 tid);
+-
+ #define AMPDU_TX_BA_MAX_WSIZE	64	/* max Tx ba window size (in pdu) */
+ /* structure to store per-tid state for the ampdu initiator */
+ typedef struct scb_ampdu_tid_ini {
+-- 
+1.7.4.1
 
-Also consider setting /proc/sys/kernel/panic_on_oops to 1 to
-concentrate on the first one.  It won't help getting the oops to your
-syslog but maybe it will keep it on the screen.
 
-Hope this helps,
-milton
