@@ -1,41 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43136 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932872Ab1EXWyX convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53347 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134Ab1EIOdo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 18:54:23 -0400
-Received: by iwn34 with SMTP id 34so5923164iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 15:54:23 -0700 (PDT)
+	Mon, 9 May 2011 10:33:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <201105241627.49201.helmut.schaa@googlemail.com>
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> <201105241627.49201.helmut.schaa@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 24 May 2011 15:54:03 -0700
-Message-ID: <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com> (sfid-20110525_005427_076148_21084EE0)
-Subject: Re: Initial automatic channel selection implementation
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+In-Reply-To: <201105081759.03032.arnd@arndb.de>
+References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
+	<201105081647.22091.arnd@arndb.de>
+	<BANLkTimhOCL7O1ERqUKkH_4sgq5xNYJZRg@mail.gmail.com>
+	<201105081759.03032.arnd@arndb.de>
+Date: Mon, 9 May 2011 16:33:43 +0200
+Message-ID: <BANLkTikoLnrVvAWC7v7+q1fe4+Qt3HF4ug@mail.gmail.com> (sfid-20110509_163742_459287_08925E82)
+Subject: Re: [PATCH][WAS:bcmai, axi] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	George Kashperko <george@znau.edu.ua>,
+	Russell King <rmk@arm.linux.org.uk>, Greg KH <greg@kroah.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev@lists.infradead.org,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	Andy Botting <andy@andybotting.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 24, 2011 at 7:27 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Hi Luis,
->
-> Am Dienstag, 24. Mai 2011 schrieb Luis R. Rodriguez:
->> II - Load check:
+2011/5/8 Arnd Bergmann <arnd@arndb.de>:
+> On Sunday 08 May 2011 16:59:55 Rafał Miłecki wrote:
+>> 2011/5/8 Arnd Bergmann <arnd@arndb.de>:
+>> >> >> diff --git a/drivers/bcma/TODO b/drivers/bcma/TODO
+>> >> >> new file mode 100644
+>> >> >> index 0000000..45eadc9
+>> >> >> --- /dev/null
+>> >> >> +++ b/drivers/bcma/TODO
+>> >> >> @@ -0,0 +1,3 @@
+>> >> >> +- Interrupts
+>> >> >> +- Defines for PCI core driver
+>> >> >> +- Convert bcma_bus->cores into linked list
+>> >> >
+>> >> > The last item doesn't make sense to me. Since you are using the regular
+>> >> > driver model, you can simply iterate over all child devices of any
+>> >> > dev.
+>> >>
+>> >> It's about optimization. Right now bcma_bus->cores is static array, we
+>> >> probably never will use all entries.
+>> >
+>> > Oh, I see. You should probably have neither of them. Instead allocate
+>> > the devices dynamically as you find them and do a device_register,
+>> > which will add the device into linked list.
 >>
->>   * In addition to the above take into consideration some metric for
->> load on the channel: frame count observed
+>> As I said, and wrote: TODO.
 >
-> Sounds similar to the busy time information some drivers already report
-> via "iw wlan0 survey dump", no? Counting frames sounds like a lot of
-> overhead to me.
+> Well, I think getting this part right is essential before the
+> patch can get merged.
+>
+>> > Maybe you didn't understand what I said: This should be
+>> >
+>> > struct bcma_device {
+>> >     struct bcma_bus *bus;
+>> >     struct bcma_device_id id;
+>> >     struct device dev;
+>> >     u8 core_index;
+>> >
+>> >     u32 addr;
+>> >     u32 wrap;
+>> >
+>> >     void *drvdata;
+>> > };
+>> >
+>> > Here, bcma_device is the device, no need to follow pointers
+>> > around. It's how all bus_types work, you should just do the same.
+>>
+>> We can not use static "struct device", see Greg's comments in:
+>> [RFC][PATCH V3] axi: add AXI bus driver
+>> (not to mention we would have unused "struct device" in ChipCommon's
+>> and PCI's "struct bcma_device").
+>
+> Please reread what Greg explained, it's actually the same as what
+> I said here: Don't make the device static (you already don't),
+> don't put the device structure as a member in the bus structure
+> (as discussed above). Make the device a member of bcma_device,
+> so you get proper reference counting for it, in the way that
+> Greg explained.
 
-Yes, thanks this is a lot of work already done. Now we just need a
-basic algorithm to parse this, quantify how ideal this channel is and
-then spit out a desired optimal channel.
+Thanks for help & explaining! Unfortunately Greg didn't answer if my
+changed implementation is fine. I'll fix this!
 
-  Luis
+-- 
+Rafał
