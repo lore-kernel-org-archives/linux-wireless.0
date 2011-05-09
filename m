@@ -1,90 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:47622 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753328Ab1EaDUX (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60630 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751668Ab1EILkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 23:20:23 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Mike McCormack <mikem@ring3k.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4DE45D54.9050301@lwfinger.net>
-References: <1306791271.4277.39.camel@localhost>
-	 <4DE45D54.9050301@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-C3PE5kUxDoZV6mTQC4CJ"
-Date: Tue, 31 May 2011 04:20:13 +0100
-Message-ID: <1306812013.4277.89.camel@localhost> (sfid-20110531_052026_798707_C08C83BF)
-Mime-Version: 1.0
-Subject: Re: rtl8192se replacing rtl8192e?
+	Mon, 9 May 2011 07:40:17 -0400
+Received: by ewy5 with SMTP id 5so1672525ewy.20
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 04:40:14 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH v2] mac80211: add a couple of trace event classes to reduce duplicated code
+Date: Mon,  9 May 2011 14:40:06 +0300
+Message-Id: <1304941206-11472-1-git-send-email-coelho@ti.com> (sfid-20110509_134021_729500_160AF5D3)
+In-Reply-To: <1304940808.12202.0.camel@jlt3.sipsolutions.net>
+References: <1304940808.12202.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The functions drv_add_interface() and drv_remove_interface() print out
+the same values in the traces.  Combine the traces of these two
+functions into one event class to remove some duplicate code.
 
---=-C3PE5kUxDoZV6mTQC4CJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Also add a new class for functions drv_set_frag_threshold() and
+drv_set_rts_threshold().
 
-On Mon, 2011-05-30 at 22:15 -0500, Larry Finger wrote:
-> On 05/30/2011 04:34 PM, Ben Hutchings wrote:
-> > I'm happy to see rtl8192se in Linux 3.0-rc1.  I noticed that it claims
-> > PCI device ID 10ec:8192, which is already claimed by staging driver
-> > rtl8192e.  Is it intended to replace that driver, or are there two
-> > different devices with that ID which they will distinguish in their
-> > probe functions?
-> >
-> > If is intended to replace rtl8192e, shouldn't it also claim these devic=
-e
-> > IDs?
-> >
-> > 	/* Corega */
-> > 	{ PCI_DEVICE(0x07aa, 0x0044) },
-> > 	{ PCI_DEVICE(0x07aa, 0x0047) },
->=20
-> The RTL8192E is a different device than the RTL8192SE, thus rtl8192se wil=
-l not=20
-> replace rtl8192e. The way to tell them apart is the PCIe revision id. At=
-=20
-> present, I don't have a method to use that info to load the correct drive=
-r, but=20
-> I will be working on it.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ net/mac80211/driver-trace.h |  130 +++++++++++++++++-------------------------
+ 1 files changed, 53 insertions(+), 77 deletions(-)
 
-It doesn't matter too much if both drivers get loaded, so long as their
-respective probe() functions fail cleanly and return -ENODEV when called
-for the wrong device.
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 11e1ea5..dd9779d 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -55,6 +55,49 @@ DECLARE_EVENT_CLASS(local_only_evt,
+ 	TP_printk(LOCAL_PR_FMT, LOCAL_PR_ARG)
+ );
+ 
++DECLARE_EVENT_CLASS(local_sdata_addr_evt,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__array(char, addr, 6)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		memcpy(__entry->addr, sdata->vif.addr, 6);
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
++	)
++);
++
++DECLARE_EVENT_CLASS(local_u32_evt,
++	TP_PROTO(struct ieee80211_local *local, u32 value),
++	TP_ARGS(local, value),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u32, value)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->value = value;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " value:%d",
++		LOCAL_PR_ARG, __entry->value
++	)
++);
++
+ DEFINE_EVENT(local_only_evt, drv_return_void,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local)
+@@ -123,28 +166,10 @@ DEFINE_EVENT(local_only_evt, drv_stop,
+ 	TP_ARGS(local)
+ );
+ 
+-TRACE_EVENT(drv_add_interface,
++DEFINE_EVENT(local_sdata_addr_evt, drv_add_interface,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+-
+-	TP_ARGS(local, sdata),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-		VIF_ENTRY
+-		__array(char, addr, 6)
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-		VIF_ASSIGN;
+-		memcpy(__entry->addr, sdata->vif.addr, 6);
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
+-		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
+-	)
++	TP_ARGS(local, sdata)
+ );
+ 
+ TRACE_EVENT(drv_change_interface,
+@@ -175,27 +200,10 @@ TRACE_EVENT(drv_change_interface,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_remove_interface,
+-	TP_PROTO(struct ieee80211_local *local, struct ieee80211_sub_if_data *sdata),
+-
+-	TP_ARGS(local, sdata),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-		VIF_ENTRY
+-		__array(char, addr, 6)
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-		VIF_ASSIGN;
+-		memcpy(__entry->addr, sdata->vif.addr, 6);
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT  VIF_PR_FMT " addr:%pM",
+-		LOCAL_PR_ARG, VIF_PR_ARG, __entry->addr
+-	)
++DEFINE_EVENT(local_sdata_addr_evt, drv_remove_interface,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
+ );
+ 
+ TRACE_EVENT(drv_config,
+@@ -514,46 +522,14 @@ TRACE_EVENT(drv_get_tkip_seq,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_set_frag_threshold,
++DEFINE_EVENT(local_u32_evt, drv_set_frag_threshold,
+ 	TP_PROTO(struct ieee80211_local *local, u32 value),
+-
+-	TP_ARGS(local, value),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-		__field(u32, value)
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-		__entry->value = value;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT " value:%d",
+-		LOCAL_PR_ARG, __entry->value
+-	)
++	TP_ARGS(local, value)
+ );
+ 
+-TRACE_EVENT(drv_set_rts_threshold,
++DEFINE_EVENT(local_u32_evt, drv_set_rts_threshold,
+ 	TP_PROTO(struct ieee80211_local *local, u32 value),
+-
+-	TP_ARGS(local, value),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-		__field(u32, value)
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-		__entry->value = value;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT " value:%d",
+-		LOCAL_PR_ARG, __entry->value
+-	)
++	TP_ARGS(local, value)
+ );
+ 
+ TRACE_EVENT(drv_set_coverage_class,
+-- 
+1.7.1
 
-> In addition, I need to acquire an RTL8192E.
->=20
-> No, rtl8192se should not claim those Corega devices.
-
-Thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-C3PE5kUxDoZV6mTQC4CJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATeRebee/yOyVhhEJAQpQSQ/8CxLbr47Yq3SUA212n3JXKeXEjmZMCYb1
-ZH1IRc3t/WX7XLmPwqrZFJainbuRGtloO7KzC23Oh2ZJfbez2lm7ZLjC8Qgjjz0N
-adPR7E3crISYg7HIUCZxsSgzqa36KB2e4x75JszIeEtjigKQ6CJD+D6oOdT6CmE3
-5bymu2WqWW0CR4RukeJcvc0az0kho1m7HU8vCLiz6LAALpnQEKRT2GDtZaMpP6Y6
-NFI1xqKaFp9Hrr/UGSMZuCkCKxZGazBJ4MToiL5bThhsMXUuxt+FBGfqyMneTjaP
-dH0cF6vGEmw+52NW7zClHDh9rpcsAL2rfw36KlTkRDxnUfo7xEtH2Rf9kP7/DBQM
-f1JfDHbqZYEH1BtOFMm0x0Q4gnVPJManiVY2RACh0gY16fqphpBzWEWZ3+fB+Enr
-lzM5he3O+4RF2sydIWNcoHhR47UQyNAfOKrrh8fd8wjnckU5NTf/+xlSvHGiJj8D
-dBWMeqdQzhuQDbs5L3NuT3UkSswF87Etbx24rg9KXIUpJEoWMwj3Mm3UeDtAguJ4
-8xZGsoOe16/55Q787ZamjJytFyemrjt+yV2WgVplP9sBcYrtXRuceAkiyRe7jR/Y
-QB0bvHyKMxVLb3xD42VzBqQIbJJ7DlmByRxGSvPEMsvx1PV9xPW8Xo18wHLnYVTx
-mv/c8mvDkb4=
-=1DWd
------END PGP SIGNATURE-----
-
---=-C3PE5kUxDoZV6mTQC4CJ--
