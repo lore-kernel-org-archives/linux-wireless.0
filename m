@@ -1,105 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57340 "EHLO nbd.name"
+Received: from mms1.broadcom.com ([216.31.210.17]:3429 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572Ab1ESKUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 06:20:35 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 2/2] ath9k_hw: remove ath9k_hw_get_desc_link
-Date: Thu, 19 May 2011 12:20:26 +0200
-Message-Id: <1305800426-19260-2-git-send-email-nbd@openwrt.org> (sfid-20110519_122038_428824_6EB86D54)
-In-Reply-To: <1305800426-19260-1-git-send-email-nbd@openwrt.org>
-References: <1305800426-19260-1-git-send-email-nbd@openwrt.org>
+	id S1754152Ab1EIOdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:45 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/10] staging: brcm80211: fix checkpatch issue
+ introduced in dhd_sdio.c
+Date: Mon, 9 May 2011 16:33:28 +0200
+Message-ID: <1304951609-2493-9-git-send-email-arend@broadcom.com> (sfid-20110509_163741_966913_B680A0CC)
+In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |    6 ------
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    8 --------
- drivers/net/wireless/ath/ath9k/hw-ops.h     |    5 -----
- drivers/net/wireless/ath/ath9k/hw.h         |    1 -
- 4 files changed, 0 insertions(+), 20 deletions(-)
+Patch "[2349e278] move utility functions into new module" introduced
+a checkpatch warning which is resolved with this patch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 7a332f1..ee1193c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -28,11 +28,6 @@ static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
- 	((struct ath_desc*) ds)->ds_link = ds_link;
- }
- 
--static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
--{
--	*ds_link = &((struct ath_desc *)ds)->ds_link;
--}
--
- static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- {
- 	u32 isr = 0;
-@@ -437,7 +432,6 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
- 
- 	ops->rx_enable = ar9002_hw_rx_enable;
- 	ops->set_desc_link = ar9002_hw_set_desc_link;
--	ops->get_desc_link = ar9002_hw_get_desc_link;
- 	ops->get_isr = ar9002_hw_get_isr;
- 	ops->fill_txdesc = ar9002_hw_fill_txdesc;
- 	ops->proc_txdesc = ar9002_hw_proc_txdesc;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index be6adec..9176035 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -43,13 +43,6 @@ static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
- 	ads->ctl10 |= ar9003_calc_ptr_chksum(ads);
- }
- 
--static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
--{
--	struct ar9003_txc *ads = ds;
--
--	*ds_link = &ads->link;
--}
--
- static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- {
- 	u32 isr = 0;
-@@ -498,7 +491,6 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- 
- 	ops->rx_enable = ar9003_hw_rx_enable;
- 	ops->set_desc_link = ar9003_hw_set_desc_link;
--	ops->get_desc_link = ar9003_hw_get_desc_link;
- 	ops->get_isr = ar9003_hw_get_isr;
- 	ops->fill_txdesc = ar9003_hw_fill_txdesc;
- 	ops->proc_txdesc = ar9003_hw_proc_txdesc;
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 8b8f044..c550d27 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -39,11 +39,6 @@ static inline void ath9k_hw_set_desc_link(struct ath_hw *ah, void *ds,
- 	ath9k_hw_ops(ah)->set_desc_link(ds, link);
- }
- 
--static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
--					  u32 **link)
--{
--	ath9k_hw_ops(ah)->get_desc_link(ds, link);
--}
- static inline bool ath9k_hw_calibrate(struct ath_hw *ah,
- 				      struct ath9k_channel *chan,
- 				      u8 rxchainmask,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7af2773..4ba0b06 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -603,7 +603,6 @@ struct ath_hw_ops {
- 				     int power_off);
- 	void (*rx_enable)(struct ath_hw *ah);
- 	void (*set_desc_link)(void *ds, u32 link);
--	void (*get_desc_link)(void *ds, u32 **link);
- 	bool (*calibrate)(struct ath_hw *ah,
- 			  struct ath9k_channel *chan,
- 			  u8 rxchainmask,
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9167ebc..8683eeb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3690,8 +3690,11 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
+ 				} else {
+ 					/* Give up on data,
+ 					request rtx of events */
+-					DHD_ERROR(("%s (nextlen): bcm_pkt_buf_get_skb failed: len %d rdlen %d " "expected rxseq %d\n",
+-						__func__, len, rdlen, rxseq));
++					DHD_ERROR(("%s (nextlen): "
++						   "bcm_pkt_buf_get_skb failed:"
++						   " len %d rdlen %d expected"
++						   " rxseq %d\n", __func__,
++						   len, rdlen, rxseq));
+ 					/* Just go try again w/normal
+ 					header read */
+ 					dhd_os_sdunlock_rxq(bus->dhd);
 -- 
-1.7.3.2
+1.7.4.1
+
 
