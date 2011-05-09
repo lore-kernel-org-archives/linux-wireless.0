@@ -1,53 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57234 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab1EIQtq (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:39933 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754111Ab1EITXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:49:46 -0400
-Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4DC81A61.9080101@candelatech.com>
-References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-	 <4DC81A61.9080101@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 18:49:43 +0200
-Message-ID: <1304959783.12202.7.camel@jlt3.sipsolutions.net> (sfid-20110509_184949_638209_9036E1D9)
-Mime-Version: 1.0
+	Mon, 9 May 2011 15:23:16 -0400
+Received: by mail-ew0-f44.google.com with SMTP id 19so2411969ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 12:23:15 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	eliad@wizery.com
+Subject: [PATCH v2 3/3] cfg80211/nl80211: add interval attribute for scheduled scans
+Date: Mon,  9 May 2011 22:22:58 +0300
+Message-Id: <1304968978-14319-4-git-send-email-coelho@ti.com> (sfid-20110509_212319_421805_2CD212F9)
+In-Reply-To: <1304968978-14319-1-git-send-email-coelho@ti.com>
+References: <1304968978-14319-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 09:46 -0700, Ben Greear wrote:
-> On 05/09/2011 09:41 AM, Johannes Berg wrote:
-> > From: Johannes Berg<johannes.berg@intel.com>
-> >
-> > Multiple virtual AP interfaces can currently try
-> > to use different beacon intervals, but that just
-> > leads to problems since it won't actually be done
-> > that way by drivers. Return an error in this case
-> > to make sure it won't be done wrong.
-> 
-> I think there is no problem with having different beacon
-> intervals, as long as they are all a multiple of
-> the smallest interval and the driver does things properly.
-> 
-> I'm not sure ath9k or ath5k currently supports this properly,
-> but there was a patch floating around for a while that did
-> this for ath9k I think...
+Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
+NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
+intervals the scheduled scan cycles should be executed.
 
-Yes, in theory that's possible, but apparently no driver actually did
-this correctly. Also, it didn't seem like anyone really cares, and we
-need to enforce some restrictions because otherwise drivers will end up
-doing it wrong, and you'll end up having a beacon interval of 200 while
-advertising 150 for example, which will totally throw off powersaving
-clients.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ include/linux/nl80211.h |   25 ++++++++++++++++---------
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |   10 ++++++++++
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-If you really care greatly about having different beacon intervals (and
-I don't see why you would?) then maybe you can think how we can enforce
-and advertise that to userspace. For now, I'm more comfortable just
-restricting it.
-
-johannes
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 8f02fac..5912529 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -203,15 +203,17 @@
+  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
+  *	partial scan results may be available
+  *
+- * @NL80211_CMD_START_SCHED_SCAN: start a scheduled scan.  Like with normal
+- *	scans, if SSIDs (%NL80211_ATTR_SCAN_SSIDS) are passed, they are used
+- *	in the probe requests.  For broadcast, a broadcast SSID must be
+- *	passed (ie. an empty string).  If no SSID is passed, no probe
+- *	requests are sent and a passive scan is performed.
+- *	%NL80211_ATTR_SCAN_FREQUENCIES, if passed, define which channels
+- *	should be scanned; if not passed, all channels allowed for the
+- *	current regulatory domain are used.  Extra IEs can also be passed
+- *	from the userspace by using the %NL80211_ATTR_IE attribute.
++ * @NL80211_CMD_START_SCHED_SCAN: start a scheduled scan at certain
++ *	intervals, as specified by %NL80211_ATTR_SCHED_SCAN_INTERVAL.
++ *	Like with normal scans, if SSIDs (%NL80211_ATTR_SCAN_SSIDS)
++ *	are passed, they are used in the probe requests.  For
++ *	broadcast, a broadcast SSID must be passed (ie. an empty
++ *	string).  If no SSID is passed, no probe requests are sent and
++ *	a passive scan is performed.  %NL80211_ATTR_SCAN_FREQUENCIES,
++ *	if passed, define which channels should be scanned; if not
++ *	passed, all channels allowed for the current regulatory domain
++ *	are used.  Extra IEs can also be passed from the userspace by
++ *	using the %NL80211_ATTR_IE attribute.
+  * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan
+  * @NL80211_CMD_SCHED_SCAN_RESULTS: indicates that there are scheduled scan
+  *	results available.
+@@ -945,6 +947,9 @@ enum nl80211_commands {
+  *	indicate which WoW triggers should be enabled. This is also
+  *	used by %NL80211_CMD_GET_WOWLAN to get the currently enabled WoWLAN
+  *	triggers.
++
++ * @NL80211_ATTR_SCHED_SCAN_INTERVAL: Interval between scheduled scan
++ *	cycles, in msecs.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1138,6 +1143,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WOWLAN_TRIGGERS,
+ 	NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED,
+ 
++	NL80211_ATTR_SCHED_SCAN_INTERVAL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d9b92c4..b18327f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -798,6 +798,7 @@ struct cfg80211_scan_request {
+  * @ssids: SSIDs to scan for (passed in the probe_reqs in active scans)
+  * @n_ssids: number of SSIDs
+  * @n_channels: total number of channels to scan
++ * @interval: interval between each scheduled scan cycle
+  * @ie: optional information element(s) to add into Probe Request or %NULL
+  * @ie_len: length of ie in octets
+  * @wiphy: the wiphy this was for
+@@ -808,6 +809,7 @@ struct cfg80211_sched_scan_request {
+ 	struct cfg80211_ssid *ssids;
+ 	int n_ssids;
+ 	u32 n_channels;
++	u32 interval;
+ 	const u8 *ie;
+ 	size_t ie_len;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0c32faf..b95436a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -174,6 +174,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_OFFCHANNEL_TX_OK] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_KEY_DEFAULT_TYPES] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_WOWLAN_TRIGGERS] = { .type = NLA_NESTED },
++	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3362,6 +3363,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	struct nlattr *attr;
+ 	struct wiphy *wiphy;
+ 	int err, tmp, n_ssids = 0, n_channels, i;
++	u32 interval;
+ 	enum ieee80211_band band;
+ 	size_t ie_len;
+ 
+@@ -3375,6 +3377,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (rdev->sched_scan_req)
+ 		return -EINPROGRESS;
+ 
++	if (!info->attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
++		return -EINVAL;
++
++	interval = nla_get_u32(info->attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
++	if (interval == 0)
++		return -EINVAL;
++
+ 	wiphy = &rdev->wiphy;
+ 
+ 	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
+@@ -3497,6 +3506,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 
+ 	request->dev = dev;
+ 	request->wiphy = &rdev->wiphy;
++	request->interval = interval;
+ 
+ 	err = rdev->ops->sched_scan_start(&rdev->wiphy, dev, request);
+ 	if (!err) {
+-- 
+1.7.1
 
