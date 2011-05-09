@@ -1,160 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:37406 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752856Ab1EINi6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 09:38:58 -0400
-Received: by mail-ew0-f42.google.com with SMTP id 2so3157415ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:38:56 -0700 (PDT)
-Subject: Re: [PATCH 2/3] mac80211: add support for HW scheduled scan
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1304929342.3475.8.camel@jlt3.sipsolutions.net>
-References: <1304600420-24227-1-git-send-email-coelho@ti.com>
-	 <1304600420-24227-3-git-send-email-coelho@ti.com>
-	 <1304929342.3475.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 16:38:53 +0300
-Message-ID: <1304948333.12586.546.camel@cumari> (sfid-20110509_153901_107467_6781F545)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3418 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754068Ab1EIOd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 10:33:29 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 4/9] staging: brcm80211: remove unnecessary header file
+Date: Mon, 9 May 2011 16:33:05 +0200
+Message-ID: <1304951590-2411-5-git-send-email-arend@broadcom.com> (sfid-20110509_163611_246870_C8F0C7CF)
+In-Reply-To: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 10:22 +0200, Johannes Berg wrote:
-> On Thu, 2011-05-05 at 16:00 +0300, Luciano Coelho wrote:
-> 
-> > +TRACE_EVENT(drv_sched_scan_start,
-> > +	TP_PROTO(struct ieee80211_local *local,
-> > +		 struct ieee80211_sub_if_data *sdata,
-> > +		 struct cfg80211_sched_scan_request *req),
-> 
-> Since you're not tracing "req" (right now), could you please use
-> DECLARE_EVENT_CLASS() and define a common class for this and some others
-> that only have local and sdata?
-> 
-> > +TRACE_EVENT(api_sched_scan_results,
-> > +	TP_PROTO(struct ieee80211_local *local),
-> 
-> and use the local_only_evt class here, cf. drv_start() for example.
-> 
-> > +TRACE_EVENT(api_sched_scan_stopped,
-> > +	TP_PROTO(struct ieee80211_local *local),
-> 
-> ditto.
+From: Henry Ptasinski <henryp@broadcom.com>
 
-Sent a patch that combines a couple of traces into a class.  I also will
-change my sched_scan patch so that hw_scan and sched_start/sched_stop
-are combined into a new class.
+This header file is no longer needed.
 
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/util/sbsocram.h |  175 -----------------------------
+ 1 files changed, 0 insertions(+), 175 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/util/sbsocram.h
 
-> Also -- no API tracers for results/stopped?
-> 
-> > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> > index 6187766..9a20671 100644
-> > --- a/net/mac80211/main.c
-> > +++ b/net/mac80211/main.c
-> > @@ -47,7 +47,7 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
-> >  	if (atomic_read(&local->iff_allmultis))
-> >  		new_flags |= FIF_ALLMULTI;
-> >  
-> > -	if (local->monitors || local->scanning)
-> > +	if (local->monitors || local->scanning || local->sched_scanning)
-> >  		new_flags |= FIF_BCN_PRBRESP_PROMISC;
-> 
-> Hmm, that seems like an implementation detail of the driver in this
-> case. I'd rather not do this here, other drivers might not have a
-> special filter they need for scheduled scans.
-
-You're right, we don't really need this.  I'll remove it.
-
-
-> > @@ -358,7 +358,8 @@ static void ieee80211_restart_work(struct work_struct *work)
-> >  	flush_workqueue(local->workqueue);
-> >  
-> >  	mutex_lock(&local->mtx);
-> > -	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
-> > +	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-> > +	     local->sched_scanning,
-> >  		"%s called with hardware scan in progress\n", __func__);
-> >  	mutex_unlock(&local->mtx);
-> 
-> 
-> Good catch, I should've thought of that in the remain-on-channel stuff,
-> would've saved me some debugging :)
-
-:)
-
-
-> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > index 599fa90..1158164 100644
-> > --- a/net/mac80211/rx.c
-> > +++ b/net/mac80211/rx.c
-> > @@ -408,7 +408,8 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
-> >  		return RX_CONTINUE;
-> >  
-> >  	if (test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-> > -	    test_bit(SCAN_SW_SCANNING, &local->scanning))
-> > +	    test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-> > +	    local->sched_scanning)
-> >  		return ieee80211_scan_rx(rx->sdata, skb);
-> 
-> I'm still not convinced that this is right.
-
-As we discussed on IRC, it seems that this is indeed safe to do, as long
-as we remove the check that drops frames smaller than 24 bytes in
-length.  As we agreed, I will do that in a separate patch.
-
- 
-> > @@ -2801,7 +2802,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
-> >  		local->dot11ReceivedFragmentCount++;
-> >  
-> >  	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-> > -		     test_bit(SCAN_SW_SCANNING, &local->scanning)))
-> > +		     test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-> > +		     local->sched_scanning))
-> >  		status->rx_flags |= IEEE80211_RX_IN_SCAN;
-> 
-> Nor this I guess, though we don't use this much of course.
-
-You're right here.  The reason why I was doing this was so that the
-ieee80211_rx_h_passive_scan() would not return immediately.  But this
-would affect the IEEE80211_RX_RA_MATCH handling in ad-hoc ad AP.
-
-I will add a different check in ieee80211_rx_h_passive_scan() instead.
-
-
-> > +	ret = drv_sched_scan_start(local, sdata, req,
-> > +				   &local->sched_scan_ies);
-> > +	if (!ret)
-> > +		local->sched_scanning = true;
-> > +out:
-> > +	mutex_unlock(&sdata->local->mtx);
-> > +
-> > +	return ret;
-> > +
-> > +out_free:
-> > +	while (i > 0)
-> > +		kfree(local->sched_scan_ies.ie[--i]);
-> > +	goto out;
-> 
-> Not freeing it when the driver callback fails?
-> 
-> Seems like you should reorder:
-> 	ret = drv...();
-> 	if (ret == 0) {
-> 		... = true;
-> 		goto out;
-> 	}
-> out_free:
-> 	...
-> out:
-> 	...
-
-Oops! I wonder where this mess came from.  out_free calling goto out?
-Horrible.  I will fix it.
-
+diff --git a/drivers/staging/brcm80211/util/sbsocram.h b/drivers/staging/brcm80211/util/sbsocram.h
+deleted file mode 100644
+index 0cfe985..0000000
+--- a/drivers/staging/brcm80211/util/sbsocram.h
++++ /dev/null
+@@ -1,175 +0,0 @@
+-/*
+- * Copyright (c) 2010 Broadcom Corporation
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#ifndef	_SBSOCRAM_H
+-#define	_SBSOCRAM_H
+-
+-#ifndef _LANGUAGE_ASSEMBLY
+-
+-/* cpp contortions to concatenate w/arg prescan */
+-#ifndef PAD
+-#define	_PADLINE(line)	pad ## line
+-#define	_XSTR(line)	_PADLINE(line)
+-#define	PAD		_XSTR(__LINE__)
+-#endif				/* PAD */
+-
+-/* Memcsocram core registers */
+-typedef volatile struct sbsocramregs {
+-	u32 coreinfo;
+-	u32 bwalloc;
+-	u32 extracoreinfo;
+-	u32 biststat;
+-	u32 bankidx;
+-	u32 standbyctrl;
+-
+-	u32 errlogstatus;	/* rev 6 */
+-	u32 errlogaddr;	/* rev 6 */
+-	/* used for patching rev 3 & 5 */
+-	u32 cambankidx;
+-	u32 cambankstandbyctrl;
+-	u32 cambankpatchctrl;
+-	u32 cambankpatchtblbaseaddr;
+-	u32 cambankcmdreg;
+-	u32 cambankdatareg;
+-	u32 cambankmaskreg;
+-	u32 PAD[1];
+-	u32 bankinfo;	/* corev 8 */
+-	u32 PAD[15];
+-	u32 extmemconfig;
+-	u32 extmemparitycsr;
+-	u32 extmemparityerrdata;
+-	u32 extmemparityerrcnt;
+-	u32 extmemwrctrlandsize;
+-	u32 PAD[84];
+-	u32 workaround;
+-	u32 pwrctl;		/* corerev >= 2 */
+-} sbsocramregs_t;
+-
+-#endif				/* _LANGUAGE_ASSEMBLY */
+-
+-/* Register offsets */
+-#define	SR_COREINFO		0x00
+-#define	SR_BWALLOC		0x04
+-#define	SR_BISTSTAT		0x0c
+-#define	SR_BANKINDEX		0x10
+-#define	SR_BANKSTBYCTL		0x14
+-#define SR_PWRCTL		0x1e8
+-
+-/* Coreinfo register */
+-#define	SRCI_PT_MASK		0x00070000	/* corerev >= 6; port type[18:16] */
+-#define	SRCI_PT_SHIFT		16
+-/* port types : SRCI_PT_<processorPT>_<backplanePT> */
+-#define SRCI_PT_OCP_OCP		0
+-#define SRCI_PT_AXI_OCP		1
+-#define SRCI_PT_ARM7AHB_OCP	2
+-#define SRCI_PT_CM3AHB_OCP	3
+-#define SRCI_PT_AXI_AXI		4
+-#define SRCI_PT_AHB_AXI		5
+-/* corerev >= 3 */
+-#define SRCI_LSS_MASK		0x00f00000
+-#define SRCI_LSS_SHIFT		20
+-#define SRCI_LRS_MASK		0x0f000000
+-#define SRCI_LRS_SHIFT		24
+-
+-/* In corerev 0, the memory size is 2 to the power of the
+- * base plus 16 plus to the contents of the memsize field plus 1.
+- */
+-#define	SRCI_MS0_MASK		0xf
+-#define SR_MS0_BASE		16
+-
+-/*
+- * In corerev 1 the bank size is 2 ^ the bank size field plus 14,
+- * the memory size is number of banks times bank size.
+- * The same applies to rom size.
+- */
+-#define	SRCI_ROMNB_MASK		0xf000
+-#define	SRCI_ROMNB_SHIFT	12
+-#define	SRCI_ROMBSZ_MASK	0xf00
+-#define	SRCI_ROMBSZ_SHIFT	8
+-#define	SRCI_SRNB_MASK		0xf0
+-#define	SRCI_SRNB_SHIFT		4
+-#define	SRCI_SRBSZ_MASK		0xf
+-#define	SRCI_SRBSZ_SHIFT	0
+-
+-#define SR_BSZ_BASE		14
+-
+-/* Standby control register */
+-#define	SRSC_SBYOVR_MASK	0x80000000
+-#define	SRSC_SBYOVR_SHIFT	31
+-#define	SRSC_SBYOVRVAL_MASK	0x60000000
+-#define	SRSC_SBYOVRVAL_SHIFT	29
+-#define	SRSC_SBYEN_MASK		0x01000000	/* rev >= 3 */
+-#define	SRSC_SBYEN_SHIFT	24
+-
+-/* Power control register */
+-#define SRPC_PMU_STBYDIS_MASK	0x00000010	/* rev >= 3 */
+-#define SRPC_PMU_STBYDIS_SHIFT	4
+-#define SRPC_STBYOVRVAL_MASK	0x00000008
+-#define SRPC_STBYOVRVAL_SHIFT	3
+-#define SRPC_STBYOVR_MASK	0x00000007
+-#define SRPC_STBYOVR_SHIFT	0
+-
+-/* Extra core capability register */
+-#define SRECC_NUM_BANKS_MASK   0x000000F0
+-#define SRECC_NUM_BANKS_SHIFT  4
+-#define SRECC_BANKSIZE_MASK    0x0000000F
+-#define SRECC_BANKSIZE_SHIFT   0
+-
+-#define SRECC_BANKSIZE(value)	 (1 << (value))
+-
+-/* CAM bank patch control */
+-#define SRCBPC_PATCHENABLE 0x80000000
+-
+-#define SRP_ADDRESS   0x0001FFFC
+-#define SRP_VALID     0x8000
+-
+-/* CAM bank command reg */
+-#define SRCMD_WRITE  0x00020000
+-#define SRCMD_READ   0x00010000
+-#define SRCMD_DONE   0x80000000
+-
+-#define SRCMD_DONE_DLY	1000
+-
+-/* bankidx and bankinfo reg defines corerev >= 8 */
+-#define SOCRAM_BANKINFO_SZMASK		0x3f
+-#define SOCRAM_BANKIDX_ROM_MASK		0x100
+-
+-#define SOCRAM_BANKIDX_MEMTYPE_SHIFT	8
+-/* socram bankinfo memtype */
+-#define SOCRAM_MEMTYPE_RAM		0
+-#define SOCRAM_MEMTYPE_R0M		1
+-#define SOCRAM_MEMTYPE_DEVRAM		2
+-
+-#define	SOCRAM_BANKINFO_REG		0x40
+-#define	SOCRAM_BANKIDX_REG		0x10
+-#define	SOCRAM_BANKINFO_STDBY_MASK	0x400
+-#define	SOCRAM_BANKINFO_STDBY_TIMER	0x800
+-
+-/* bankinfo rev >= 10 */
+-#define SOCRAM_BANKINFO_DEVRAMSEL_SHIFT	13
+-#define SOCRAM_BANKINFO_DEVRAMSEL_MASK	0x2000
+-#define SOCRAM_BANKINFO_DEVRAMPRO_SHIFT	14
+-#define SOCRAM_BANKINFO_DEVRAMPRO_MASK	0x4000
+-
+-/* extracoreinfo register */
+-#define SOCRAM_DEVRAMBANK_MASK		0xF000
+-#define SOCRAM_DEVRAMBANK_SHIFT		12
+-
+-/* bank info to calculate bank size */
+-#define	SOCRAM_BANKINFO_SZBASE		8192
+-#define SOCRAM_BANKSIZE_SHIFT		13	/* SOCRAM_BANKINFO_SZBASE */
+-
+-#endif				/* _SBSOCRAM_H */
 -- 
-Cheers,
-Luca.
+1.7.4.1
+
 
