@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48633 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753813Ab1EPTGb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111Ab1EIIYB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 15:06:31 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 5BD7754003A
-	for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 15:12:24 -0400 (EDT)
-Subject: Compat-wireless release for 2011-05-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110516190630.4602940EC3@repository3.orbit-lab.org> (sfid-20110516_210636_385906_1B8FBD2C)
-Date: Mon, 16 May 2011 15:06:30 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 9 May 2011 04:24:01 -0400
+Subject: Re: [PATCH 1/3] cfg80211/nl80211: add support for scheduled scans
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1304929033.12586.447.camel@cumari>
+References: <1304600420-24227-1-git-send-email-coelho@ti.com>
+	 <1304600420-24227-2-git-send-email-coelho@ti.com>
+	 <1304928720.3475.0.camel@jlt3.sipsolutions.net>
+	 <1304929033.12586.447.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 May 2011 10:23:59 +0200
+Message-ID: <1304929439.3475.10.camel@jlt3.sipsolutions.net> (sfid-20110509_102405_645439_38316908)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + cdab2bb...550be8e akpm-end   -> origin/akpm-end  (forced update)
-   411f05f..eed631e  akpm-start -> origin/akpm-start
-   17c5c36..777941e  history    -> origin/history
- + e7d93d1...e0f4eba master     -> origin/master  (forced update)
-   411f05f..eed631e  stable     -> origin/stable
- * [new tag]         next-20110516 -> next-20110516
+On Mon, 2011-05-09 at 11:17 +0300, Luciano Coelho wrote:
 
-compat-wireless code metrics
+> > Didn't you initially want to differentiate between SCAN_SSIDS and
+> > SSIDS_FILTER?
+> 
+> Yes, I'll add SSID filtering soon, as separate patches, if that's okay.
+> For now, the SSIDs that you can pass via nl80211 are used in the
+> probe_reqs.
+> 
+> We can also filter on RSSI, SNR and/or group results into one event.
+> This are other features that our firmware supports.  For now I have not
+> exposed this, but it could also be added to nl80211 in the future.
 
-    821926 - Total upstream lines of code being pulled
-      2347 - backport code changes
-      2044 - backport code additions
-       303 - backport code deletions
-      8106 - backport from compat module
-     10453 - total backport code
-    1.2718 - % of code consists of backport work
+Ok, makes sense. However:
+
+> + * struct cfg80211_sched_scan_request - scheduled scan request
+> description
+> + *
+> + * @ssids: SSIDs to report (other SSIDs will be filtered out)
+
+That's wrong then, no?
+
+johannes
+
