@@ -1,48 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38763 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:36317 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753523Ab1EaTqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:46:32 -0400
-Message-ID: <4DE54596.8090003@openwrt.org> (sfid-20110531_214635_078381_7E4FC85B)
-Date: Tue, 31 May 2011 21:46:30 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
-References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>	 <1306869394-83047-2-git-send-email-nbd@openwrt.org> <1306870318.29989.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1306870318.29989.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1751261Ab1EITWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2011 15:22:37 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2.6.38] iwlwifi: add {ack,plpc}_check module parameters
+Date: Mon,  9 May 2011 21:22:33 +0200
+Message-Id: <1304968953-27663-1-git-send-email-sgruszka@redhat.com> (sfid-20110509_212241_300342_B2716A96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-31 9:31 PM, Johannes Berg wrote:
-> On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
->
->>  +	rcu_read_lock();
->>  +
->>  +	sta = sta_info_get(sdata, sdata->u.wds.remote_addr);
->>  +
->>  +	if (!sta) {
->>  +		rcu_read_unlock();
->>  +		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
->>  +				     GFP_KERNEL);
->>  +		if (!sta)
->>  +			return;
->>  +
->>  +		new = true;
->>  +	}
->
-> ...
->
->>  +	rcu_read_unlock();
->
-> definitely doesn't look right.
-It's a bit weird because in the case of a new sta being allocated, the 
-rcu read lock is acquired by sta_info_insert_rcu, and the code inbetween 
-does not need to be covered by the rcu read lock as the sta entry has 
-not been added to the list yet.
-It should be correct though, unless I'm missing something...
+commit b7977ffaab5187ad75edaf04ac854615cea93828 upstream.
 
-- Felix
+Add module ack_check, and plcp_check parameters. Ack_check is disabled
+by default since is proved that check ack health can cause troubles.
+Plcp_check is enabled by default.
+
+This prevent connection hangs with "low ack count detected" messages.
+
+Resolves:
+https://bugzilla.redhat.com/show_bug.cgi?id=666646
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-rx.c      |    8 ++++++--
+ 4 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3dee87e..d9c87b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -604,6 +604,7 @@ const u8 *iwlagn_eeprom_query_addr(const struct iwl_priv *priv,
+ struct iwl_mod_params iwlagn_mod_params = {
+ 	.amsdu_size_8K = 1,
+ 	.restart_fw = 1,
++	.plcp_check = true,
+ 	/* the rest are 0 by default */
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 35239f0..be07643 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4586,3 +4586,9 @@ MODULE_PARM_DESC(antenna_coupling,
+ module_param_named(bt_ch_inhibition, iwlagn_bt_ch_announce, bool, S_IRUGO);
+ MODULE_PARM_DESC(bt_ch_inhibition,
+ 		 "Disable BT channel inhibition (default: enable)");
++
++module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
++MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
++
++module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
++MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a347437..5c0d5f7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -263,6 +263,8 @@ struct iwl_mod_params {
+ 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
+ 	int antenna;  		/* def: 0 = both antennas (use diversity) */
+ 	int restart_fw;		/* def: 1 = restart firmware */
++	bool plcp_check;	/* def: true = enable plcp health check */
++	bool ack_check;		/* def: false = disable ack health check */
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 87a6fd8..b707617 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -234,10 +234,13 @@ EXPORT_SYMBOL(iwl_rx_spectrum_measure_notif);
+ void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 				struct iwl_rx_packet *pkt)
+ {
++	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
++
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 	if (iwl_is_any_associated(priv)) {
+-		if (priv->cfg->ops->lib->check_ack_health) {
++		if (mod_params->ack_check &&
++		    priv->cfg->ops->lib->check_ack_health) {
+ 			if (!priv->cfg->ops->lib->check_ack_health(
+ 			    priv, pkt)) {
+ 				/*
+@@ -250,7 +253,8 @@ void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 					return;
+ 			}
+ 		}
+-		if (priv->cfg->ops->lib->check_plcp_health) {
++		if (mod_params->plcp_check &&
++		    priv->cfg->ops->lib->check_plcp_health) {
+ 			if (!priv->cfg->ops->lib->check_plcp_health(
+ 			    priv, pkt)) {
+ 				/*
+-- 
+1.7.1
+
