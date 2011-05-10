@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758727Ab1EMPnk (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37996 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839Ab1EJUqj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 11:43:40 -0400
-Subject: Re: [PATCH] mac80211: cancel scan_work in ieee80211_unregister_hw
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110513053533.GA20459@vmraj-lnx.users.atheros.com>
-References: <1305220188-13098-1-git-send-email-rmanoharan@atheros.com>
-	 <1305221121.3461.32.camel@jlt3.sipsolutions.net>
-	 <20110513053533.GA20459@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 17:43:36 +0200
-Message-ID: <1305301416.3468.9.camel@jlt3.sipsolutions.net> (sfid-20110513_174345_734408_0E8D2DB5)
-Mime-Version: 1.0
+	Tue, 10 May 2011 16:46:39 -0400
+Message-ID: <4DC9A423.3050906@candelatech.com> (sfid-20110510_224658_250638_A71FC57D)
+Date: Tue, 10 May 2011 13:46:27 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: sbrown@cortland.com
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
+References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>	 <4DC81A61.9080101@candelatech.com>	 <1304959783.12202.7.camel@jlt3.sipsolutions.net> <1304961656.2615.9.camel@mythtv.ewol.com>
+In-Reply-To: <1304961656.2615.9.camel@mythtv.ewol.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 11:05 +0530, Rajkumar Manoharan wrote:
+On 05/09/2011 10:20 AM, Steve Brown wrote:
+> On Mon, 2011-05-09 at 18:49 +0200, Johannes Berg wrote:
+>> On Mon, 2011-05-09 at 09:46 -0700, Ben Greear wrote:
+>>> On 05/09/2011 09:41 AM, Johannes Berg wrote:
+>>>> From: Johannes Berg<johannes.berg@intel.com>
+>>>>
+>>>> Multiple virtual AP interfaces can currently try
+>>>> to use different beacon intervals, but that just
+>>>> leads to problems since it won't actually be done
+>>>> that way by drivers. Return an error in this case
+>>>> to make sure it won't be done wrong.
+>>>
+>>> I think there is no problem with having different beacon
+>>> intervals, as long as they are all a multiple of
+>>> the smallest interval and the driver does things properly.
+>>>
+>>> I'm not sure ath9k or ath5k currently supports this properly,
+>>> but there was a patch floating around for a while that did
+>>> this for ath9k I think...
+>>
+>> If you really care greatly about having different beacon intervals (and
+>> I don't see why you would?) then maybe you can think how we can enforce
+>> and advertise that to userspace. For now, I'm more comfortable just
+>> restricting it.
+>>
+>> johannes
+>
+> I posted a patch for different beacon intervals to the ath9k list last
+> Jan. This was to allow both a mesh (interval 1000) and ap (interval 100)
+> vif on the same radio. This combination seems useful, at least for me.
 
-> > How did you come to that conclusion? ieee80211_do_stop() does stop the
-> > scan.
-> >
-> True. But Sometimes ieee80211_scan_cancel is waiting for mutex where
-> the lock was already aquired by scan work and scan_work never releases
-> the lock till scan completion whenever next_delay == 0.
+Could you re-post this against latest wireless-testing?  I should
+be able to do some testing on this and maybe we can get it pushed
+upstream...
 
-But that shouldn't take a long time. And if it's "stuck" there, then
-cancel_delayed_work_sync() will also wait for it.
+Ben
 
-> This scenario was observed while unplug the card during scan.
+>
+> Steve
 
-If this happens then mac80211 will still make calls to the driver, I
-don't think we can avoid this and drivers will need to handle it. Maybe
-the driver is repeatedly timing out somewhere?
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
