@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:60292 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755715Ab1EJPN1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35703 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284Ab1EJTpy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 11:13:27 -0400
-Received: by qyk7 with SMTP id 7so1772707qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 08:13:27 -0700 (PDT)
+	Tue, 10 May 2011 15:45:54 -0400
+Date: Tue, 10 May 2011 15:42:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k:  Fix lockup due to un-init spinlock.
+Message-ID: <20110510194211.GG2520@tuxdriver.com> (sfid-20110510_214600_387415_FAB4F64F)
+References: <1304720674-27031-1-git-send-email-greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4DC9542C.6060508@hauke-m.de>
-References: <684215.94213.qm@web161615.mail.bf1.yahoo.com>
-	<4DC9542C.6060508@hauke-m.de>
-Date: Tue, 10 May 2011 17:13:26 +0200
-Message-ID: <BANLkTimp10vXTRkC7mBgDX97aiE+Eo_seg@mail.gmail.com> (sfid-20110510_171331_120407_6E08943F)
-Subject: Re: [PATCH 3/3] compat-wireless: enable RT33XX and RT53XX support.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Walter Goldens <goldenstranger@yahoo.com>, mcgrof@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1304720674-27031-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When applied to wireless-2.6, I get this:
 
-On Tue, May 10, 2011 at 5:05 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 05/10/2011 04:44 PM, Walter Goldens wrote:
->>
->>> This is based on a patch by Walter
->>> Goldens.
->>
->> Hi Hauke,
->>
->> I think RT53XX is still experimental, unlike the RT33XX. Should we enable it from config.mk now?
->>
->> Walter
->
-> Hi Walter,
->
-> In the description of RT53XX there is no warning that this is not
-> working, like it is in the description of RT35XX. I do not have such a
-> device, but the rt2x00 guys could probably help on this questing. If we
-> enable it and it does not work it will not hurt people more that we do
-> not activate it.
->
-> @rt2x00 people: Are the RT53XX chips working with the most recent
-> version of the rt2x00 driver from wireless-testing?
+  CC [M]  drivers/net/wireless/ath/ath5k/base.o
+drivers/net/wireless/ath/ath5k/base.c: In function ‘ath5k_init_softc’:
+drivers/net/wireless/ath/ath5k/base.c:2357:2: error: ‘struct ath5k_softc’ has no member named ‘irqlock’
+drivers/net/wireless/ath/ath5k/base.c:2357:2: error: ‘struct ath5k_softc’ has no member named ‘irqlock’
 
-The following config options are all marked as unstable (they depend
-on EXPERIMENTAL)
- RT2800PCI_RT35XX
- RT2800PCI_RT53XX
- RT2800USB_RT35XX
- RT2800USB_RT53XX
+Is this only for -next?
 
-Since recently I have an RT53xx USB device, but I haven't tested it yet.
-As far as I heard from other reports the status is the same as 35xx.
+On Fri, May 06, 2011 at 03:24:34PM -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This was introduced in 2.6.39-rc1 it seems.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 203243b... 2204762... M	drivers/net/wireless/ath/ath5k/base.c
+>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 203243b..2204762 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2394,7 +2394,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
+>  	spin_lock_init(&sc->rxbuflock);
+>  	spin_lock_init(&sc->txbuflock);
+>  	spin_lock_init(&sc->block);
+> -
+> +	spin_lock_init(&sc->irqlock);
+>  
+>  	/* Setup interrupt handler */
+>  	ret = request_irq(sc->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+> -- 
+> 1.7.3.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Ivo
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
