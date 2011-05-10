@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:6901 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932450Ab1EZOYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 10:24:42 -0400
-Subject: Re: [PATCH] iwlagn: use cts-to-self protection on 5000 adapters
- series
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110526111752.GA20099@redhat.com>
-References: <20110525122731.GA2546@redhat.com>
-	 <1306332806.17516.7.camel@wwguy-ubuntu> <20110526111752.GA20099@redhat.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:41640 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782Ab1EJTHL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 15:07:11 -0400
+Subject: Re: [hrtimers] Re: Regression affecting b43 LP-PHY card
+From: John Stultz <john.stultz@linaro.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Juan Carlos Romero <juancarlos.romero@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Greear <greearb@candelatech.com>,
+	Jamie Lokier <jamie@shareable.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Alexander Shishkin <virtuoso@slind.org>,
+	Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com>
+References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
+	 <BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 26 May 2011 07:21:19 -0700
-Message-ID: <1306419679.20732.7.camel@wwguy-ubuntu> (sfid-20110526_162507_396438_C6DD6F7E)
+Date: Tue, 10 May 2011 12:06:41 -0700
+Message-ID: <1305054401.2939.52.camel@work-vm> (sfid-20110510_210732_497721_6F0DE6C3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-26 at 04:17 -0700, Stanislaw Gruszka wrote:
-> On Wed, May 25, 2011 at 07:13:26AM -0700, wwguy wrote:
-> > On Wed, 2011-05-25 at 05:33 -0700, Stanislaw Gruszka wrote:
-> > > after some time, performance downgrade to unpached driver level, like
-> >                                          unpatched?
+On Tue, 2011-05-10 at 20:57 +0200, Rafał Miłecki wrote:
+> W dniu 10 maja 2011 00:52 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> > In this situation we decided to bisect. I was a little afraid of last
+> > merges so we took older 2.6.38 as GOOD (we tested this twice) and
+> > wireless-testing commit before my ssb changes as BAD. Today Juan
+> > finished bisecting kernel:
+> > http://pastebin.com/HSKbRzpB
+> >
+> > According to his bisection the first bad commit is
+> > e06383db9ec591696a06654257474b85bac1f8cb [0]:
+> > hrtimers: extend hrtimer base code to handle more then 2 clockids
+> >
+> > Does it make any sense to you? Could this be some timing issue?
+> >
+> > It was too late to test this today, we (Juan) will work on this
+> > tomorrow. It's impossible to revert this commit from HEAD of
+> > wireless-testing, so my idea is to checkout commit, test, revert,
+> > test.
+> >
+> > Did anyone else experience any similar problems with latest wireless-testing?
+> >
+> >
+> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
 > 
-> > > However patch still make better here, since similar test on unpached
-> >                                                           unpatched?
+> Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
+> and tested it. He was disconnected really soon.
 > 
-> I'll fix that.
+> Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
+> again. Connection was stable, he downloaded 2GB file over network.
 > 
-> > > +	/*
-> > > +	 * force CTS-to-self frames protection if RTS-CTS is not preferred
-> > > +	 * one aggregation protection method
-> >              on?
 > 
-> The sentence is not the best English, but replacing "one" to "on" will
-> not help, I think.
-> 
-> > if I remember correctly, the RTS/CTS was added to fix 6000 performance
-> > issue 2 years ago. Did you see the similar performance downgrade issue
-> > on other devices beside 5000?
-> 
-> No, I think only 5000 ware afected (also with random connection hangs).
-> Patching and using cts-to-self on 6000, give slightly better performance
-> here with 6300 adapter:
-> 
-> vanilla 6300 5Ghz: 8.13 8.03 8.13 8.03 8.19 avr 8.1020 std 0.070143
-> patched 6300 5Ghz: 8.60 8.59 8.60 8.41 8.57 avr 8.5540 std 0.081425
-> 
-> vanilla 6300 2GHz: 4.06 4.39 4.60 4.70 4.80 avr 4.5100 std 0.293770
-> patched 6300 2GHz: 4.94 4.90 4.94 5.05 4.88 avr 4.9420 std 0.065727
-> 
-> I plan to do more testing, but not yet (except 5000 adapters I have
-> quite good performance).
-> 
+> John S.: your commit does not touch Broadcom card directly, but it
+> seems it somehow affects it. I suspect there can be some timing issue.
+> Do you have any idea what could it be, how can we debug this?
 
-Thanks for testing. the patch looks good. 
+Sorry for the trouble!
 
-Wey
+My commit exposed a few spots where hrtimers were being initialized
+before hrtimer_init is called, which caused problems. Thomas provided a
+solution that makes such behavior still function ok:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ce31332d3c77532d6ea97ddcb475a2b02dd358b4
+
+Let me know if the issue is still reproducible with Linus' latest git
+tree.
+
+thanks
+-john
+
 
 
