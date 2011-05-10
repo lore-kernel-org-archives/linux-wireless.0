@@ -1,84 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:62618 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755205Ab1EVV53 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46131 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381Ab1EJTdT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 17:57:29 -0400
-Received: by yia27 with SMTP id 27so1884118yia.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 14:57:28 -0700 (PDT)
+	Tue, 10 May 2011 15:33:19 -0400
+Message-ID: <4DC992E8.9080407@candelatech.com> (sfid-20110510_213322_138506_0140E17C)
+Date: Tue, 10 May 2011 12:32:56 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1306085440.12586.1696.camel@cumari>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
-	<1305321990-22041-4-git-send-email-balbi@ti.com>
-	<BANLkTinPipSVdsH5cTb24HKex_h7pOwpAg@mail.gmail.com>
-	<BANLkTi=LKE_wWKxcN0+Unkcqv-tLOKqDXw@mail.gmail.com>
-	<1306085440.12586.1696.camel@cumari>
-Date: Mon, 23 May 2011 00:57:28 +0300
-Message-ID: <BANLkTimf8+hLym2RHGeG1r=7EOj91c3Uzg@mail.gmail.com> (sfid-20110522_235737_773501_16352250)
-Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Felipe Balbi <balbi@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH v2 2.6.39] ath9k: fix a regression in PS frame filter
+ handling
+References: <1305053542-29435-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1305053542-29435-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 22, 2011 at 8:30 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Sun, 2011-05-22 at 15:37 +0300, Eliad Peller wrote:
->> On Sun, May 22, 2011 at 3:34 PM, Eliad Peller <eliad@wizery.com> wrote:
->> > On Sat, May 14, 2011 at 12:26 AM, Felipe Balbi <balbi@ti.com> wrote:
->> >> Those have little value. Remove those to make
->> >> the driver less noisy.
->> >>
->> >> Signed-off-by: Felipe Balbi <balbi@ti.com>
->> >> ---
->> > [...]
->> >> @@ -287,8 +287,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
->> >>        /* Tell PM core that we don't need the card to be powered now */
->> >>        pm_runtime_put_noidle(&func->dev);
->> >>
->> >> -       wl1271_notice("initialized");
->> >> -
->> >>        return 0;
->> >>
->> >
->> >>  static void __exit wl1271_exit(void)
->> >>  {
->> >>        sdio_unregister_driver(&wl1271_sdio_driver);
->> >> -
->> >> -       wl1271_notice("unloaded");
->> >>  }
->> >>
->> >
->> > in fact, i find these prints pretty useful.
->> > does changing wl1271_notice to wl1271_debug(DEBUG_MAC80211) will solve
->> > the "nosiness"?
->> > (i use DEBUG_MAC80211 rather than DEBUG_SDIO, as DEBUG_SDIO is really
->> > *very* noisy)
->> >
->> > (i'll send it as a new patch as the original patch was already applied)
->> >
->> > Eliad.
->> >
->>
->> err... s/nosiness/noisiness/
+On 05/10/2011 11:52 AM, Felix Fietkau wrote:
+> Only leave filtering enabled for AP or VLAN interfaces, clear the
+> destination mask for all other interfaces.
+
+I did a quick test with 32 virtual stations and it seems to
+work fine.
+
+Tested-by: Ben Greear <greearb@candelatech.com>
+
+
+Thanks,
+Ben
+
 >
-> I think these are pretty useless.  You can see whether the driver is
-> loaded or not by lsmod'ing.  You can also use ftrace to get the same
-> stuff, if you want to know whether the driver is loaded or not offline.
-> Or what is the scenario where you think this is useful?
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+> Reported-by: Ben Greear<greearb@candelatech.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c |    5 +++++
+>   drivers/net/wireless/ath/ath9k/xmit.c |    6 ++++++
+>   2 files changed, 11 insertions(+), 0 deletions(-)
 >
-i was thinking about a simple offline log analysis, where it's pretty
-useful to know when the wl12xx_sdio was insmod'ed/rmmod'ed.
-i haven't tried ftrace yet. i'll give it a look.
-anyway, the whole wl12xx driver is full of similar logs that get
-called multiple times, so i don't see the real advantage of removing 2
-prints that get called only once.
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 3de115d..3d999b7 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1778,6 +1778,11 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
+>   	struct ieee80211_key_conf ps_key = { };
+>
+>   	ath_node_attach(sc, sta);
+> +
+> +	if (vif->type != NL80211_IFTYPE_AP&&
+> +	    vif->type != NL80211_IFTYPE_AP_VLAN)
+> +		return 0;
+> +
+>   	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
+>
+>   	return 0;
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 744779d..97dd1fa 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1845,6 +1845,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+>   	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+>   	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>   	struct ieee80211_sta *sta = info->control.sta;
+> +	struct ieee80211_vif *vif = info->control.vif;
+>   	struct ath_softc *sc = hw->priv;
+>   	struct ath_txq *txq = txctl->txq;
+>   	struct ath_buf *bf;
+> @@ -1882,6 +1883,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+>   		memmove(skb->data, skb->data + padsize, padpos);
+>   	}
+>
+> +	if ((vif&&  vif->type != NL80211_IFTYPE_AP&&
+> +	            vif->type != NL80211_IFTYPE_AP_VLAN) ||
+> +	    !ieee80211_is_data(hdr->frame_control))
+> +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+> +
+>   	setup_frame_info(hw, skb, frmlen);
+>
+>   	/*
 
-> I'm reworking the whole way our traces are handled, so I don't think
-> reintroducing them is a good thing.
 
-ok. so i'll just wait for your rework :)
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-thanks,
-Eliad.
