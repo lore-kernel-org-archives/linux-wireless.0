@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1152 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755225Ab1EQOtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 10:49:47 -0400
-Subject: Re: [PATCH] iwlwifi: remove unused parameter from
- iwl_hcmd_queue_reclaim
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <9506853D-331A-4900-BAA3-61C3CB280AAD@cs.washington.edu>
-References: <9506853D-331A-4900-BAA3-61C3CB280AAD@cs.washington.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 May 2011 07:24:03 -0700
-Message-ID: <1305642243.14995.280.camel@wwguy-huron> (sfid-20110517_164955_718439_D0471A80)
-Mime-Version: 1.0
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:34285 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755788Ab1EJMDX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 08:03:23 -0400
+Received: by ewy6 with SMTP id 6so2379314ewy.24
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 05:03:19 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/5] wl12xx: add configuration values for scheduled scan
+Date: Tue, 10 May 2011 15:03:06 +0300
+Message-Id: <1305028990-14044-2-git-send-email-coelho@ti.com> (sfid-20110510_140327_603836_A57C8123)
+In-Reply-To: <1305028990-14044-1-git-send-email-coelho@ti.com>
+References: <1305028990-14044-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-16 at 21:46 -0700, Daniel Halperin wrote:
-> cmd_index is never used.
-> 
-> Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-tx.c |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 54a935f..686e176 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -746,8 +746,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
->   * need to be reclaimed. As result, some free space forms.  If there is
->   * enough free space (> low mark), wake the stack that feeds us.
->   */
-> -static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id,
-> -				   int idx, int cmd_idx)
-> +static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id, int idx)
->  {
->  	struct iwl_tx_queue *txq = &priv->txq[txq_id];
->  	struct iwl_queue *q = &txq->q;
-> @@ -819,7 +818,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  
->  	spin_lock_irqsave(&priv->hcmd_lock, flags);
->  
-> -	iwl_hcmd_queue_reclaim(priv, txq_id, index, cmd_index);
-> +	iwl_hcmd_queue_reclaim(priv, txq_id, index);
->  
->  	if (!(meta->flags & CMD_ASYNC)) {
->  		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
-Thanks
-Wey
+Add the structures and values for driver-configured scheduled scan
+parameters.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/conf.h |   21 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/main.c |    9 +++++++++
+ 2 files changed, 30 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 6620840..1ab6c86 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1147,6 +1147,26 @@ struct conf_scan_settings {
+ 
+ };
+ 
++struct conf_sched_scan_settings {
++	/* minimum time to wait on the channel for active scans (in TUs) */
++	u16 min_dwell_time_active;
++
++	/* maximum time to wait on the channel for active scans (in TUs) */
++	u16 max_dwell_time_active;
++
++	/* time to wait on the channel for passive scans (in TUs) */
++	u32 dwell_time_passive;
++
++	/* number of probe requests to send on each channel in active scans */
++	u8 num_probe_reqs;
++
++	/* RSSI threshold to be used for filtering */
++	s8 rssi_threshold;
++
++	/* SNR threshold to be used for filtering */
++	s8 snr_threshold;
++};
++
+ /* these are number of channels on the band divided by two, rounded up */
+ #define CONF_TX_PWR_COMPENSATION_LEN_2 7
+ #define CONF_TX_PWR_COMPENSATION_LEN_5 18
+@@ -1234,6 +1254,7 @@ struct conf_drv_settings {
+ 	struct conf_pm_config_settings pm_config;
+ 	struct conf_roam_trigger_settings roam_trigger;
+ 	struct conf_scan_settings scan;
++	struct conf_sched_scan_settings sched_scan;
+ 	struct conf_rf_settings rf;
+ 	struct conf_ht_setting ht;
+ 	struct conf_memory_settings mem_wl127x;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f82e736..cb4ed90 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -302,6 +302,15 @@ static struct conf_drv_settings default_conf = {
+ 		.max_dwell_time_passive       = 100000,
+ 		.num_probe_reqs               = 2,
+ 	},
++	.sched_scan = {
++		/* sched_scan requires dwell times in TU instead of TU/1000 */
++		.min_dwell_time_active = 8,
++		.max_dwell_time_active = 30,
++		.dwell_time_passive    = 100,
++		.num_probe_reqs        = 2,
++		.rssi_threshold        = -90,
++		.snr_threshold         = 0,
++	},
+ 	.rf = {
+ 		.tx_per_channel_power_compensation_2 = {
+ 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+-- 
+1.7.1
 
