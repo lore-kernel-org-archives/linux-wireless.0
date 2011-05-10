@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3216 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754145Ab1EIOdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:44 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/10] staging: brcm80211: remove unused function from
- wlc_phy_cmn.c
-Date: Mon, 9 May 2011 16:33:24 +0200
-Message-ID: <1304951609-2493-5-git-send-email-arend@broadcom.com> (sfid-20110509_163742_394223_3C168BCB)
-In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
-References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48275 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755705Ab1EJOtV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 10:49:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4DC9072D.4030103@colin.guthr.ie>
+References: <ip6j66$o5f$1@dough.gmane.org> <1304930195.3475.17.camel@jlt3.sipsolutions.net>
+ <4DC81FC7.9040503@colin.guthr.ie> <20110509171144.GA7194@srcf.ucam.org> <4DC9072D.4030103@colin.guthr.ie>
+From: =?UTF-8?B?S2VuZy1Zw7wgTGlu?= <keng-yu.lin@canonical.com>
+Date: Tue, 10 May 2011 16:48:57 +0200
+Message-ID: <BANLkTinVwnSei_VobfKtgzrwSP+cJSvxaQ@mail.gmail.com> (sfid-20110510_164928_639315_A40540DE)
+Subject: Re: [Regression] Problem with rfkill on 2.6.38
+To: Colin Guthrie <mageia@colin.guthr.ie>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	Thomas Backlund <tmb@mageia.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function wlc_phy_qdiv_roundup() was not used and has been
-removed.
+On Tue, May 10, 2011 at 11:36 AM, Colin Guthrie <mageia@colin.guthr.ie> wrote:
+> 'Twas brillig, and Matthew Garrett at 09/05/11 18:11 did gyre and gimble:
+>> On Mon, May 09, 2011 at 06:09:27PM +0100, Colin Guthrie wrote:
+>>
+>>> Just a quick (non-compile) followup from my last email... blacklisting
+>>> the dell-laptop module works around the issue, so I think the commit
+>>> previously mentioned is indeed the culprit (as it's the only recent
+>>> commit and does fiddle with the rfkill stuff).
+>>>
+>>> Not sure what the best track forward is, but it's certainly a
+>>> regression, so should probably be fixed or reverted until a more
+>>> complete fix is found.
+>>
+>> If you can confirm that with a build then I'll do that.
+>
+> ACK. Reverting that commit and unblacklisting the dell_laptop module
+> restores the previous, working functionality. I've flipped rfkill a few
+> times and it's always worked fine.
+>
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |   25 --------------------
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    2 -
- 2 files changed, 0 insertions(+), 27 deletions(-)
+May I have the model of your Dell laptop?
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-index e9f3972..f35a18c 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-@@ -3312,31 +3312,6 @@ wlc_phy_get_pwrdet_offsets(phy_info_t *pi, s8 *cckoffset, s8 *ofdmoffset)
- 	*ofdmoffset = 0;
- }
- 
--u32 wlc_phy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
--{
--	u32 quotient, remainder, roundup, rbit;
--
--	quotient = dividend / divisor;
--	remainder = dividend % divisor;
--	rbit = divisor & 1;
--	roundup = (divisor >> 1) + rbit;
--
--	while (precision--) {
--		quotient <<= 1;
--		if (remainder >= roundup) {
--			quotient++;
--			remainder = ((remainder - roundup) << 1) + rbit;
--		} else {
--			remainder <<= 1;
--		}
--	}
--
--	if (remainder >= roundup)
--		quotient++;
--
--	return quotient;
--}
--
- s8 wlc_phy_upd_rssi_offset(phy_info_t *pi, s8 rssi, chanspec_t chanspec)
- {
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-index 3d1cd34..77c6106 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-@@ -1094,8 +1094,6 @@ extern void wlc_lcnphy_epa_switch(phy_info_t *pi, bool mode);
- extern void wlc_2064_vco_cal(phy_info_t *pi);
- 
- extern void wlc_phy_txpower_recalc_target(phy_info_t *pi);
--extern u32 wlc_phy_qdiv_roundup(u32 dividend, u32 divisor,
--				   u8 precision);
- 
- #define LCNPHY_TBL_ID_PAPDCOMPDELTATBL	0x18
- #define LCNPHY_TX_POWER_TABLE_SIZE	128
--- 
-1.7.4.1
+dell_latop has a debugfs node in /sys/kernel/debug/dell_latop/rfkill,
+can you attach the logs at both the moment when the radio devices are
+enabled and disabled? the output of the command `rfkill list` at both
+moments will helpful too.
 
+In my experience that different models of Dell laptop may have
+different reaction/behaviour on the rfkill handling. Reverting the
+patch may make your laptop working, but can cause others non-working.
 
+It should make sense and be appreciated that you attach more debug
+information for investigation on the bug.
+
+  Thanks,
+-kengyu
