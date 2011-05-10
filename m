@@ -1,36 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57847 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753416Ab1EWVq5 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:56225 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811Ab1EJS53 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 17:46:57 -0400
-Received: by iwn34 with SMTP id 34so5181683iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 14:46:57 -0700 (PDT)
+	Tue, 10 May 2011 14:57:29 -0400
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinrM1oBfKUoCzs9_DOw+EmpW=ikig@mail.gmail.com>
-References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
- <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com>
- <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
- <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com>
- <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
- <4DDACF56.9070403@candelatech.com> <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com>
- <4DDAD3D5.1070001@candelatech.com> <BANLkTinrM1oBfKUoCzs9_DOw+EmpW=ikig@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 May 2011 14:46:37 -0700
-Message-ID: <BANLkTimDXqa+67=UFY4KS5zwOBrinH_k8g@mail.gmail.com> (sfid-20110523_234700_850293_16779872)
-Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
-To: Ben Greear <greearb@candelatech.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
+References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
+Date: Tue, 10 May 2011 20:57:28 +0200
+Message-ID: <BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com> (sfid-20110510_205745_267926_DFDAF9FE)
+Subject: [hrtimers] Re: Regression affecting b43 LP-PHY card
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Juan Carlos Romero <juancarlos.romero@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Greear <greearb@candelatech.com>,
+	John Stultz <john.stultz@linaro.org>,
+	Jamie Lokier <jamie@shareable.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Alexander Shishkin <virtuoso@slind.org>,
+	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 23, 2011 at 2:42 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+W dniu 10 maja 2011 00:52 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> Juan owns Lenovo affected by well-known LP-PHY DMA errors. His testing
+> procedure is following:
+> modprobe wl; connect; download sth small; rmmod wl;
+> modprobe b43; download 2GB
+>
+> When working on DMA errors we discovered that wireless-testing is not
+> working well for him. Even after performing above procedure his
+> machine disconnects quickly and he is not able to reconnect. We tested
+> 2.6.39-rc6 from tarball and it was working fine. I'd like to highlight
+> here, that we were switching between mainline and wireless-testing few
+> times. It is not a random issue.
+>
+> I suspected this regression could be caused by my recent ssb patches.
+> So I reverted all of them but this didn't help.
+>
+> In this situation we decided to bisect. I was a little afraid of last
+> merges so we took older 2.6.38 as GOOD (we tested this twice) and
+> wireless-testing commit before my ssb changes as BAD. Today Juan
+> finished bisecting kernel:
+> http://pastebin.com/HSKbRzpB
+>
+> According to his bisection the first bad commit is
+> e06383db9ec591696a06654257474b85bac1f8cb [0]:
+> hrtimers: extend hrtimer base code to handle more then 2 clockids
+>
+> Does it make any sense to you? Could this be some timing issue?
+>
+> It was too late to test this today, we (Juan) will work on this
+> tomorrow. It's impossible to revert this commit from HEAD of
+> wireless-testing, so my idea is to checkout commit, test, revert,
+> test.
+>
+> Did anyone else experience any similar problems with latest wireless-testing?
+>
+>
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
 
-> No. You can only do this by trying to take the card out of compliance
-> purposely or unknowingly in software.
+Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
+and tested it. He was disconnected really soon.
 
-Oh and my point was that "regulatory hacks" fit this description.
+Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
+again. Connection was stable, he downloaded 2GB file over network.
 
-  Luis
+
+John S.: your commit does not touch Broadcom card directly, but it
+seems it somehow affects it. I suspect there can be some timing issue.
+Do you have any idea what could it be, how can we debug this?
+
+-- 
+Rafał
