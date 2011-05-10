@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:43421 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754973Ab1EGTIb (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60451 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753589Ab1EJGmp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 15:08:31 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v12.0.0)
-	with ESMTP id md50000002750.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 22:08:19 +0300
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
-	driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	 <201105061605.31625.arnd@arndb.de>
-	 <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-	 <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
-	 <1304790665.13983.10.camel@dev.znau.edu.ua>
-	 <BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
-	 <1304792795.13983.28.camel@dev.znau.edu.ua>
-	 <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-Content-Type: text/plain
-Date: Sat, 07 May 2011 22:02:11 +0300
-Message-Id: <1304794931.13983.44.camel@dev.znau.edu.ua> (sfid-20110507_210837_853599_815570A1)
-Mime-Version: 1.0
+	Tue, 10 May 2011 02:42:45 -0400
+Received: by bwz15 with SMTP id 15so4574156bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 23:42:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <19912.55857.505921.694732@gargle.gargle.HOWL>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+	<19908.11423.898062.510184@gargle.gargle.HOWL>
+	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
+	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
+	<19912.44045.774181.844464@gargle.gargle.HOWL>
+	<19912.55320.817869.173186@gargle.gargle.HOWL>
+	<19912.55857.505921.694732@gargle.gargle.HOWL>
+Date: Tue, 10 May 2011 02:42:43 -0400
+Message-ID: <BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com> (sfid-20110510_084248_649867_090BD436)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >>
-> >> The purpose is ridiculously trivial. Print user-friendly names on
-> >> scanning. Why not do that?
-> > Output like
-> > Core 0: ChipCommon (id 0x800, rev 18, vendor 0x14e4)
-> > and
-> > Core 0: id 0x800, rev 18, vendor 0x14e4
-> > both give to 99% of linux systems' end-users exactly the same consistent
-> > information. Its more than enough for diagnostic purposes (I guess
-> > scanning code does outputs this for diagnostic purposes by those less
-> > than 1% of people who are aware wth is actually that ChipCommon is, not
-> > to be just user friendly?).
-> 
-> Really, what's wrong with that? Does it kill anyone's pet we print
-> this? We also do:
-> pr_err("Scanning failed because of wrong CID\n");
-> return -1;
-> While we could drop pr_err. Why to do this? Advanced used can always
-> check what -1 means.
-> 
-> I just like this. I find situations when it's useful, while I don't
-> see real negatives. I want to keep this. Can we leave this that way?
-> Unless someone finds some really bad effects of this?
-Nothing wrong except it makes kernel larger while gives _absolutely_ no
-benefit to end users. Regardless bus code prints core name or not it
-(core name) have absolutely no impact on driver matching.
+On Tue, May 10, 2011 at 2:24 AM, Sujith <m.sujith@gmail.com> wrote:
+> Sujith wrote:
+>> Sujith wrote:
+>> > George Nychis wrote:
+>> > > Is there anything more I can do to help here? I've tried older versions of
+>> > > compat wireless with older firmware and I am having 0 luck.
+>> >
+>> > Nope, nothing from your side. I have asked internally if the card could
+>> > be used by the HTC drivers without any changes, will update once I get an answer.
+>>
+>> Can you try the attached firmware ?
+>
+> Bleh, had a bunch of local changes.
+> Can you try this instead ?
+>
+>
 
-Imagine yourself an end-user who haven't got his 80211 core matched with
-driver and therefore he haven't got WiFi working.
-If bus driver code outputs
-Core X: id 0x812, rev. 8, vendor 0x4BF
-you (as end user) will look where is 0x4BF/0x812 driver supporting
-rev.8.
-But if bus driver code outputs
-Core X: MAC 802.11 (core id 0x812, rev. 8, vendor 0x4BF)
-you (as end user) empowered with MAC 802.11 name knowledge will still
-look where is 0x4BF/0x812 driver supporting rev.8.
+Yep, seems like the same error:
 
-Really, there will be more and more core codes/types/name. Why hardcode
-those into kernel for some e. g. memory-constraint system while you
-still can (and in most cases also will) have them in dedicated drivers?
+[  206.642427] usb 1-1: ath9k_htc: Transferred FW: htc_7010.fw, size: 73008
+[  207.648520] ath9k_htc 1-1:1.0: ath9k_htc: Target is unresponsive
+[  207.648549] Failed to initialize the device
+[  207.652281] ath9k_htc: probe of 1-1:1.0 failed with error -22
+[  207.656271] usbcore: registered new interface driver ath9k_htc
 
-Btw, have you ever suffered hardly from PCI naming devices xxxx.xx.xx.x
-but not "Network device" ?
-
-Have nice day,
-George
-
-
+Thanks for trying to help
