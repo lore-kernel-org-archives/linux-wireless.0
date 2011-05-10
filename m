@@ -1,168 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:64152 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331Ab1EGRfx convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45580 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829Ab1EJT40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 13:35:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <4DC5805C.2010202@hauke-m.de>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	<4DC56FB9.5000208@hauke-m.de>
-	<BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
-	<4DC57425.30206@hauke-m.de>
-	<BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com>
-	<4DC5805C.2010202@hauke-m.de>
-Date: Sat, 7 May 2011 19:35:52 +0200
-Message-ID: <BANLkTik1bZHk6+DqKpBdDOZW2=Sheia5kQ@mail.gmail.com> (sfid-20110507_193616_732145_DC0B885E)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 May 2011 15:56:26 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC ] wireless: Support can-scan-one logic.
+Date: Tue, 10 May 2011 12:56:14 -0700
+Message-Id: <1305057374-9875-1-git-send-email-greearb@candelatech.com> (sfid-20110510_215629_728045_43BAA3DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 05/07/2011 06:51 PM, Rafał Miłecki wrote:
->> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
->>> On 05/07/2011 06:23 PM, Rafał Miłecki wrote:
->>>> 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
->>>>> On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
->>>>>> Cc: Greg KH <greg@kroah.com>
->>>>>> Cc: Michael Büsch <mb@bu3sch.de>
->>>>>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
->>>>>> Cc: George Kashperko <george@znau.edu.ua>
->>>>>> Cc: Arend van Spriel <arend@broadcom.com>
->>>>>> Cc: linux-arm-kernel@lists.infradead.org
->>>>>> Cc: Russell King <rmk@arm.linux.org.uk>
->>>>>> Cc: Arnd Bergmann <arnd@arndb.de>
->>>>>> Cc: Andy Botting <andy@andybotting.com>
->>>>>> Cc: linuxdriverproject <devel@linuxdriverproject.org>
->>>>>> Cc: linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
->>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>>>> ---
->>>>>> V2: Rename to axi
->>>>>>     Use DEFINE_PCI_DEVICE_TABLE in bridge
->>>>>>     Make use of pr_fmt and pr_*
->>>>>>     Store core class
->>>>>>     Rename bridge to not b43 specific
->>>>>>     Replace magic 0x1000 with BCMAI_CORE_SIZE
->>>>>>     Remove some old "ssb" names and defines
->>>>>>     Move BCMAI_ADDR_BASE def
->>>>>>     Add drvdata field
->>>>>> V3: Fix reloading (kfree issue)
->>>>>>     Add 14e4:0x4331
->>>>>>     Fix non-initialized struct issue
->>>>>>     Drop useless inline functions wrappers for pci core drv
->>>>>>     Proper pr_* usage
->>>>>> V3.1: Include forgotten changes (pr_* and include related)
->>>>>>     Explain why we dare to implement empty release function
->>>>>> V4: Add ABI documentation
->>>>>>     Move struct device to wrapper and alloc it dynamically
->>>>>>     checkpatch.pl pointed fixes
->>>>>> V5: Rename to bcma, AXI was really bad name
->>>>>>     Use EXPORT_SYMBOL_GPL
->>>>>>     Set pci driver fields in one place
->>>>>>     Drop unlikely
->>>>>>     Use BCMA_CORE_SIZE for calc in awrite32
->>>>>>     Add README
->>>>>>     Fix compilation (delay.h)
->>>>>> ---
->>>>>>  Documentation/ABI/testing/sysfs-bus-bcma    |   31 ++
->>>>>>  drivers/Kconfig                             |    2 +
->>>>>>  drivers/Makefile                            |    1 +
->>>>>>  drivers/bcma/Kconfig                        |   33 +++
->>>>>>  drivers/bcma/Makefile                       |    7 +
->>>>>>  drivers/bcma/README                         |   18 ++
->>>>>>  drivers/bcma/TODO                           |    3 +
->>>>>>  drivers/bcma/bcma_private.h                 |   31 ++
->>>>>>  drivers/bcma/core.c                         |   51 ++++
->>>>>>  drivers/bcma/driver_chipcommon.c            |   87 ++++++
->>>>>>  drivers/bcma/driver_chipcommon_pmu.c        |  134 +++++++++
->>>>>>  drivers/bcma/driver_pci.c                   |  163 +++++++++++
->>>>>>  drivers/bcma/host_pci.c                     |  196 +++++++++++++
->>>>>>  drivers/bcma/main.c                         |  271 ++++++++++++++++++
->>>>>>  drivers/bcma/scan.c                         |  392 +++++++++++++++++++++++++++
->>>>>>  drivers/bcma/scan.h                         |   56 ++++
->>>>>>  include/linux/bcma/bcma.h                   |  232 ++++++++++++++++
->>>>>>  include/linux/bcma/bcma_driver_chipcommon.h |  297 ++++++++++++++++++++
->>>>>>  include/linux/bcma/bcma_driver_pci.h        |   89 ++++++
->>>>>>  include/linux/bcma/bcma_regs.h              |   34 +++
->>>>>>  include/linux/mod_devicetable.h             |   17 ++
->>>>>>  scripts/mod/file2alias.c                    |   22 ++
->>>>>>  22 files changed, 2167 insertions(+), 0 deletions(-)
->>>>>>  create mode 100644 Documentation/ABI/testing/sysfs-bus-bcma
->>>>>>  create mode 100644 drivers/bcma/Kconfig
->>>>>>  create mode 100644 drivers/bcma/Makefile
->>>>>>  create mode 100644 drivers/bcma/README
->>>>>>  create mode 100644 drivers/bcma/TODO
->>>>>>  create mode 100644 drivers/bcma/bcma_private.h
->>>>>>  create mode 100644 drivers/bcma/core.c
->>>>>>  create mode 100644 drivers/bcma/driver_chipcommon.c
->>>>>>  create mode 100644 drivers/bcma/driver_chipcommon_pmu.c
->>>>>>  create mode 100644 drivers/bcma/driver_pci.c
->>>>>>  create mode 100644 drivers/bcma/host_pci.c
->>>>>>  create mode 100644 drivers/bcma/main.c
->>>>>>  create mode 100644 drivers/bcma/scan.c
->>>>>>  create mode 100644 drivers/bcma/scan.h
->>>>>>  create mode 100644 include/linux/bcma/bcma.h
->>>>>>  create mode 100644 include/linux/bcma/bcma_driver_chipcommon.h
->>>>>>  create mode 100644 include/linux/bcma/bcma_driver_pci.h
->>>>>>  create mode 100644 include/linux/bcma/bcma_regs.h
->>>>>>
->>>>> Hi,
->>>>>
->>>>> An entry in the MAINTAINERS file would be nice to find the right
->>>>> addresses to send patches to.
->>>>
->>>> Will do, thanks. Should I put some ML for this driver?
->>>> netdev@vger.kernel.org? linux-wireless@vger.kernel.org? So far there
->>>> are no net drivers for BCMA. Probably b43 will be the first (or
->>>> brcm80211).
->>>>
->>> There is a Ethernet core used on embedded devices with this bus and
->>> George wrote a driver for the first version of this bus implementation,
->>> he send to the ML. Most user will use this with some wireless devices so
->>> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
->>
->> Thanks, I didn't know about this ethernet driver. Have to check it!
->> Where was this published? Do you have a thread name?
->
-> I think he haven't send it to the mailing list, there is a link [0] in
-> some Ticket [1] at OpenWrt. This driver was derived from source code
-> Braodcom have published, but not under a GPL compatible license. It will
-> be nice if Braodcom would allow us to publish a driver under the terms
-> of the GPL for the Ethernet core based on their driver, without writing
-> a full spec of the driver like it was done for b43.
+From: Ben Greear <greearb@candelatech.com>
 
-OK, I'll stay away from this driver for now (license).
+Enable this by passing a -1 for a scan frequency.
 
+When enabled, the system will only scan the current active
+channel if at least one VIF is actively using it.  If no
+VIFS are active or this flag is disabled, then default
+behaviour is used.
 
->> I'm not sure if we want linux-wireless to be ML, if we already have
->> some Ethernet driver. Some network-general ML makes more sense then.
->> Maybe netdev would be better.
->
-> Some of the embedded devices also have a USB core on the BCMA bus and a
-> pci(e) host controller to connect other pci(e) devices. As most of the
-> patches for ssb came from the wireless guys and I do not thing this will
-> be different for bcma, I thing the wireless mailing list is the correct
-> place.
+This helps when using multiple STA interfaces that otherwise might
+constantly be trying to scan all channels.
 
-Ups, yeah, you're right. I didn't think about USB, V90, PCI(e), etc...
-I think situations linux-wireless as most active or linux-kernel as
-most generic should be used. I think I'm fine with linux-wireless.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c32e683... c0be322... M	include/net/cfg80211.h
+:100644 100644 489b6ad... dec0a12... M	net/mac80211/scan.c
+:100644 100644 0a199a1... 4e854b7... M	net/wireless/nl80211.c
+:100644 100644 e17b0be... 3e0e638... M	net/wireless/sme.c
+ include/net/cfg80211.h |    3 ++
+ net/mac80211/scan.c    |   57 ++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c |   21 ++++++++++++++++-
+ net/wireless/sme.c     |    5 ++++
+ 4 files changed, 84 insertions(+), 2 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c32e683..c0be322 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -780,6 +780,8 @@ struct cfg80211_ssid {
+  * @wiphy: the wiphy this was for
+  * @dev: the interface
+  * @aborted: (internal) scan request was notified as aborted
++ * @can_scan_one:  If true, only scan active channel if at least one
++ *       vif is already associated.
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -792,6 +794,7 @@ struct cfg80211_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	bool aborted;
++	bool can_scan_one;
+ 
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 489b6ad..dec0a12 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -353,6 +353,63 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	 * nullfunc frames and probe requests will be dropped in
+ 	 * ieee80211_tx_h_check_assoc().
+ 	 */
++	int associated_station_vifs = 0;
++	int running_station_vifs = 0; /* not necessarily associated */
++	int running_other_vifs = 0; /* AP, etc */
++	struct ieee80211_sub_if_data *sdata;
++
++	/*
++	  printk("start_sw_scan, can_scan_one: %i  n_channels: %i\n",
++	  local->scan_req->can_scan_one, local->scan_req->n_channels);
++	  WARN_ON(!local->scan_req->can_scan_one);
++	*/
++	if (local->scan_req->can_scan_one && local->scan_req->n_channels >= 1) {
++		struct sta_info *sta;
++		mutex_lock(&local->iflist_mtx);
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (!ieee80211_sdata_running(sdata))
++				continue;
++
++			if (sdata->vif.type == NL80211_IFTYPE_STATION)
++				running_station_vifs++;
++			else
++				running_other_vifs++;
++		}
++		mutex_unlock(&local->iflist_mtx);
++
++		rcu_read_lock();
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			if (!ieee80211_sdata_running(sta->sdata))
++				continue;
++			if (sta->sdata->vif.type != NL80211_IFTYPE_STATION)
++				continue;
++			if (test_sta_flags(sta, WLAN_STA_ASSOC))
++				associated_station_vifs++;
++		}
++		rcu_read_unlock();
++
++		/* If one sta is associated, we don't want another to start
++		 * scanning on all channels, as that will interfere with the
++		 * one already associated.
++		 */
++		if ((running_other_vifs > 0) ||
++		    (associated_station_vifs > 1)) {
++			local->scan_req->channels[0] = local->hw.conf.channel;
++			local->scan_req->n_channels = 1;
++			printk(KERN_ERR "start_sw_scan: running-other-vifs: %i  "
++			       "running-station-vifs: %i, associated-stations: %i"
++			       " scanning current channel: %u MHz\n",
++			       running_other_vifs, running_station_vifs,
++			       associated_station_vifs,
++			       local->hw.conf.channel->center_freq);
++		} else
++			printk(KERN_ERR "start_sw_scan: running-other-vifs: %i  "
++			       "running-station-vifs: %i, associated-stations: %i"
++			       " scanning all channels.\n",
++			       running_other_vifs, running_station_vifs,
++			       associated_station_vifs);
++	}
++
+ 	drv_sw_scan_start(local);
+ 
+ 	local->leave_oper_channel_time = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0a199a1..4e854b7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3176,6 +3176,9 @@ static int validate_scan_freqs(struct nlattr *freqs)
+ 	int n_channels = 0, tmp1, tmp2;
+ 
+ 	nla_for_each_nested(attr1, freqs, tmp1) {
++		if (nla_get_u32(attr1) == 0xFFFFFFFF)
++			continue; /* skip can-scan-one flag */
++
+ 		n_channels++;
+ 		/*
+ 		 * Some hardware has a limited channel list for
+@@ -3207,6 +3210,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	int err, tmp, n_ssids = 0, n_channels, i;
+ 	enum ieee80211_band band;
+ 	size_t ie_len;
++	bool do_all_chan = true;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -3223,8 +3227,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		n_channels = validate_scan_freqs(
+ 				info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
+ 		if (!n_channels)
+-			return -EINVAL;
++			goto auto_channels;
+ 	} else {
++auto_channels:
+ 		n_channels = 0;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
+@@ -3270,6 +3275,16 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_FREQUENCIES], tmp) {
+ 			struct ieee80211_channel *chan;
+ 
++			/* Special hack:  channel -1 means 'scan only active
++			 * channel if any VIFs on this device are associated
++			 * on the channel.
++			 */
++			if (nla_get_u32(attr) == 0xFFFFFFFF) {
++				request->can_scan_one = true;
++				continue;
++			}
++
++			do_all_chan = false;
+ 			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
+ 
+ 			if (!chan) {
+@@ -3284,7 +3299,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			request->channels[i] = chan;
+ 			i++;
+ 		}
+-	} else {
++	}
++
++	if (do_all_chan) {
+ 		/* all channels */
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			int j;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index e17b0be..3e0e638 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -105,6 +105,11 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 	if (!request)
+ 		return -ENOMEM;
+ 
++	/* If at least one VIF on this hardware is already associated, then
++	 * only scan on the active channel.
++	 */
++	request->can_scan_one = true;
++
+ 	if (wdev->conn->params.channel)
+ 		request->channels[0] = wdev->conn->params.channel;
+ 	else {
 -- 
-Rafał
+1.7.3.4
+
