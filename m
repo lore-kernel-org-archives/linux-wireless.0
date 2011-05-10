@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f170.google.com ([209.85.212.170]:56356 "EHLO
-	mail-px0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755363Ab1ECVfM (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:50953 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754067Ab1EJQjf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 17:35:12 -0400
-Message-ID: <4DC0750A.50806@lwfinger.net> (sfid-20110503_233515_976029_9CFBD0B0)
-Date: Tue, 03 May 2011 16:35:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 10 May 2011 12:39:35 -0400
+Received: by bwz15 with SMTP id 15so4991023bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 09:39:34 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Walter Goldens <goldenstranger@yahoo.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH 00/12] rtlwifi: rtl8192se: Merge new driver
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <BANLkTim89BHU-0P6TkepLgDBPNfEhiaB-w@mail.gmail.com>
-In-Reply-To: <BANLkTim89BHU-0P6TkepLgDBPNfEhiaB-w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <19913.25619.615324.60744@gargle.gargle.HOWL>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+	<19908.11423.898062.510184@gargle.gargle.HOWL>
+	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
+	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
+	<19912.44045.774181.844464@gargle.gargle.HOWL>
+	<19912.55320.817869.173186@gargle.gargle.HOWL>
+	<19912.55857.505921.694732@gargle.gargle.HOWL>
+	<BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com>
+	<19912.57383.634547.405469@gargle.gargle.HOWL>
+	<BANLkTi=BrJPhjA5StJcktkKE7zs3Ob=iOg@mail.gmail.com>
+	<19913.25619.615324.60744@gargle.gargle.HOWL>
+Date: Tue, 10 May 2011 12:39:34 -0400
+Message-ID: <BANLkTinv0XrfhDZWYpmdzSdVXZCovzhy_g@mail.gmail.com> (sfid-20110510_183938_752154_7ABF4E32)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 04:09 PM, Gábor Stefanik wrote:
-> 2011/5/3 Larry Finger<Larry.Finger@lwfinger.net>:
->> On 05/03/2011 03:38 PM, Gábor Stefanik wrote:
->>>
->>> 2011/5/3 Larry Finger<Larry.Finger@lwfinger.net>:
->>>>
->>>> On 05/03/2011 03:19 PM, Gábor Stefanik wrote:
->>>>>
->>>>> On Tue, May 3, 2011 at 6:45 PM, Larry Finger<Larry.Finger@lwfinger.net>
->>>>>   wrote:
->>>>>>
->>>>>> On 05/03/2011 10:59 AM, Walter Goldens wrote:
->>>>>>>
->>>>>>>> This set of patches introduces a driver for the RTL8192SE PCI
->>>>>>>> devices.
->>>>>>>
->>>>>>> Any estimates on the *SU driver? :)
->>>>>>
->>>>>> Now that rtl8192se is submitted, I will start work on the driver for
->>>>>> the
->>>>>> RTL8192DE devices. After that will be the RTL8191SU. It has lower
->>>>>> priority
->>>>>> because r8712u from staging handles those devices. It is not based on
->>>>>> mac80211, but it works.
->>>>>
->>>>> Again, may I remind you that the preferred behavior in the Linux world
->>>>> is release-early, release-often? :-)
->>>>
->>>> That I know, but "code first" still applies. If the comparison between
->>>> rtl8192ce and rtl8192cu has any validity for the rtl8192s varieties,
->>>> roughly
->>>> half of this driver will be shared. In addition, we do have all the USB
->>>> plumbing in place, but we are still talking about a few thousand lines of
->>>> code. At last contact, Realtek has no interest in this project, thus I
->>>> will
->>>> be on my own.
->>>>
->>>> Larry
->>>
->>> I do not mean immediately submitting everything for inclusion -
->>> however, a publicly accessible Git tree would be nice. A non-rtlwifi,
->>> badly coded but functional and GPL-compatible driver is still better
->>> than having to use ndiswrapper/load a binary blob.
+Great, thanks Sujith!  Are we positive that the Xbox adapter is also
+not UB94 now that we have seen both of these with this problem?  I am
+not sure if this was speculation after seeing the initial error, or if
+it is a known fact.
+
+On Tue, May 10, 2011 at 12:13 PM, Sujith <m.sujith@gmail.com> wrote:
+> George Nychis wrote:
+>> > Hm, looks like 0x0411 doesn't match. Can you try this FW ?
+>> >
+>> >
 >>
->> We are in better shape than having to use ndiswrapper or any non-GPL code.
->> The r8712u driver in staging is for the RTL8192SU, and it works perfectly
->> well.
+>> [  393.053564] usb 1-1: new high speed USB device using ehci_hcd and address 5
+>> [  393.525139] usb 1-1: ath9k_htc: Transferred FW: htc_7010.fw, size: 73008
+>> [  394.525196] ath9k_htc 1-1:1.0: ath9k_htc: Target is unresponsive
+>> [  394.525335] Failed to initialize the device
+>> [  394.548205] ath9k_htc: probe of 1-1:1.0 failed with error -22
 >
-> What about RTL8192DE?
-
-I'm working on that one today. If all goes well, it might make 2.6.40, but that 
-may be a little tight on time. Publish early and often does apply here.
-
-Larry
+> Well, looks like my FW hack didn't work out. I will be getting a UWA-BR100,
+> so I'll play around with it and we'll see where it goes. :)
+>
+> Sujith
+>
