@@ -1,118 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34747 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2358 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751930Ab1EZPOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 11:14:47 -0400
-Date: Thu, 26 May 2011 17:14:22 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2] iwlagn: use cts-to-self protection on 5000 adapters series
-Message-ID: <20110526151422.GA2382@redhat.com> (sfid-20110526_171450_443338_9F6E4696)
+	id S1750799Ab1EJTEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 15:04:44 -0400
+Message-ID: <4DC98C3F.8070107@broadcom.com> (sfid-20110510_210447_788062_5F5F1EB7)
+Date: Tue, 10 May 2011 21:04:31 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Greg KH" <greg@kroah.com>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"Julian Calaby" <julian.calaby@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH 9/9] staging: brcm80211: move utility functions into
+ new module
+References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+ <1304951590-2411-10-git-send-email-arend@broadcom.com>
+ <BANLkTimvWnhJDSdn+fhGw=WAZDU4RPEKmg@mail.gmail.com>
+ <4DC91A4C.7020305@broadcom.com> <20110510180449.GE2335@kroah.com>
+In-Reply-To: <20110510180449.GE2335@kroah.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes 802.11n stability and performance regression we have
-since 2.6.35. It boost performance on my 5GHz N-only network from about
-5MB/s to 8MB/s. Similar percentage boost can be observed on 2.4 GHz.
+On 05/10/2011 08:04 PM, Greg KH wrote:
+> On Tue, May 10, 2011 at 12:58:20PM +0200, Arend van Spriel wrote:
+>> On 05/10/2011 06:18 AM, Julian Calaby wrote:
+>>> Arend, Henry,
+>>>
+>>> One problem I noticed with your patch:
+>>>
+>>> On Tue, May 10, 2011 at 00:33, Arend van Spriel<arend@broadcom.com>   wrote:
+>>>> From: Henry Ptasinski<henryp@broadcom.com>
+>>>>
+>>>> Move utility functions shared by the brcmsmac and brcmfmac drivers into a new
+>>>> module, brcmutil.ko.  This eliminates the need to compile and link the shared
+>>>> functions into both drivers.  Prefix all exported symbols with "bcm_".
+>>>>
+>>>> Cc: devel@linuxdriverproject.org
+>>>> Cc: linux-wireless@vger.kernel.org
+>>>> Reviewed-by: Brett Rudley<brudley@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>>>> ---
+>>>>   drivers/staging/brcm80211/Makefile                |    1 +
+>>>>
+>>>> diff --git a/drivers/staging/brcm80211/Makefile b/drivers/staging/brcm80211/Makefile
+>>>> index c064cdf..287ad0e 100644
+>>>> --- a/drivers/staging/brcm80211/Makefile
+>>>> +++ b/drivers/staging/brcm80211/Makefile
+>>>> @@ -19,5 +19,6 @@
+>>>>   subdir-ccflags-y                                       := -DBCMDMA32
+>>>>   subdir-ccflags-$(CONFIG_BRCMDBG)       += -DBCMDBG -DBCMDBG_ASSERT
+>>>>
+>>>> +obj-m                  += util/
+>>>>   obj-$(CONFIG_BRCMFMAC) += brcmfmac/
+>>>>   obj-$(CONFIG_BRCMSMAC) += brcmsmac/
+>>> You should not use obj-m directly - the way this is set up, if module
+>>> support is disabled, then the driver will fail as the brcmutil module
+>>> will not be built. This might also happen if the drivers are built
+>>> into the kernel ('y' rather than 'm')
+>>>
+>>> You should create a new Kconfig variable (say BRCMWLUTIL) and use some
+>>> Kconfig trickery to ensure that it's built properly for the drivers
+>>> that need it, then replace this line with something like
+>>>
+>>> obj-$(CONFIG_BRCMWLUTIL)
+>>>
+>>> The LIB80211 symbol used by the Intel 2x00 (old non-mac80211) wireless
+>>> drivers uses similar trickery to ensure that everything is built
+>>> properly.
+>> Hi Greg,
+>>
+>> We were informed about this potential problem. Should I resend this
+>> patch or fix it with a separate patch?
+> Resend it with a fixed version, I'll just not apply this one in the
+> series for now.
+Will do that.
 
-These are test results of 5x downloading of approximately 700MB iso
-image:
+Gr. AvS
 
-vanilla: 5.27 5.22 4.94 4.47 5.31 ; avr 5.0420 std 0.35110
-patched: 8.07 7.95 8.06 7.99 7.96 ; avr 8.0060 std 0.055946
-
-This was achieved with NetworkManager configured to do not perform
-periodical scans, by configuring constant BSSID. With periodical scans,
-after some time, performance downgrade to unpatched driver level, like
-in example below:
-
-patched: 7.40 7.61 4.28 4.37 4.80 avr 5.6920 std 1.6683
-
-However patch still make better here, since similar test on unpatched
-driver make link disconnects with below messages after some time:
-
-wlan1: authenticate with 00:23:69:35:d1:3f (try 1)
-wlan1: authenticate with 00:23:69:35:d1:3f (try 2)
-wlan1: authenticate with 00:23:69:35:d1:3f (try 3)
-wlan1: authentication with 00:23:69:35:d1:3f timed out
-
-On 2.6.35 kernel patch helps against connection hangs with messages:
-
-iwlagn 0000:20:00.0: queue 10 stuck 3 time. Fw reload.
-iwlagn 0000:20:00.0: On demand firmware reload
-iwlagn 0000:20:00.0: Stopping AGG while state not ON or starting
-
-Cc: stable@kernel.org # 2.6.35+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2: s/unpached/unpatched/
-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 -
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |   12 ++----------
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    8 ++++++++
- 3 files changed, 10 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index a70b8cf..f96eb5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -425,7 +425,6 @@ static struct iwl_base_params iwl5000_base_params = {
- };
- static struct iwl_ht_params iwl5000_ht_params = {
- 	.ht_greenfield_support = true,
--	.use_rts_for_aggregation = true, /* use rts/cts protection */
- };
- 
- #define IWL_DEVICE_5000						\
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index b12c72d..23fa93d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -163,17 +163,9 @@ static void iwlagn_tx_cmd_protection(struct iwl_priv *priv,
- 				     __le16 fc, __le32 *tx_flags)
- {
- 	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS ||
--	    info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+	    info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT ||
-+	    info->flags & IEEE80211_TX_CTL_AMPDU)
- 		*tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
--		return;
--	}
--
--	if (priv->cfg->ht_params &&
--	    priv->cfg->ht_params->use_rts_for_aggregation &&
--	    info->flags & IEEE80211_TX_CTL_AMPDU) {
--		*tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
--		return;
--	}
- }
- 
- /* Calc max signal level (dBm) among 3 possible receivers */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index a95ad84..0a1941d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -325,6 +325,14 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 			return 0;
- 	}
- 
-+	/*
-+	 * force CTS-to-self frames protection if RTS-CTS is not preferred
-+	 * one aggregation protection method
-+	 */
-+	if (!(priv->cfg->ht_params &&
-+	      priv->cfg->ht_params->use_rts_for_aggregation))
-+		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
-+
- 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
- 	    !(ctx->staging.flags & RXON_FLG_BAND_24G_MSK))
- 		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
 
