@@ -1,101 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60921 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383Ab1ECLor convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 07:44:47 -0400
-Received: by wwa36 with SMTP id 36so7330759wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 04:44:46 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:46860 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752765Ab1EJWcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 18:32:25 -0400
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: "gregkh\@suse.de" <gregkh@suse.de>,
+	"devel\@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Naveen Singh <Naveen.Singh@Atheros.com>
+Subject: Re: [PATCH 1/2] ath6kl: iw dev wlan0 link implementation
+References: <20110510044023.29589.38450.stgit@localhost6.localdomain6>
+	<20110510120243.GA2017@senthil-lnx.users.atheros.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 11 May 2011 01:32:20 +0300
+In-Reply-To: <20110510120243.GA2017@senthil-lnx.users.atheros.com> (Senthil Balasubramanian's message of "Tue\, 10 May 2011 17\:32\:43 +0530")
+Message-ID: <87liyefaq3.fsf@purkki.adurom.net> (sfid-20110511_003231_075473_5C26941A)
 MIME-Version: 1.0
-In-Reply-To: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
-References: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
-Date: Tue, 3 May 2011 17:14:46 +0530
-Message-ID: <BANLkTim3-ve4BD6wghA=F-asEqJmcDip6Q@mail.gmail.com> (sfid-20110503_134450_791068_EF66219F)
-Subject: Re: WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x52/0x150
- [mac80211]()
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "rossi.f@inwind.it" <rossi.f@inwind.it>, yogeshp@marvell.com
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 3, 2011 at 4:57 PM, rossi.f@inwind.it <rossi.f@inwind.it> wrote:
->>Da: yogeshp@marvell.com
->>Data: 03/05/2011 12.51
->>A: "rossi.f@inwind.it"<rossi.f@inwind.it>, "johannes@sipsolutions.net"
-> <johannes@sipsolutions.net>
->>Cc: "linux-wireless@vger.kernel.org"<linux-wireless@vger.kernel.org>
->>Ogg: RE: WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x52/0x150
-> [mac80211]()
->>
->>>I get the warning every few seconds.
->>>
->>>Fabio
->>I failed to regenerate the issue on my setup. I am using WEP40 on
->>Ath5k as station on 32 bit machine. I even tried disabling hw encryption.
->>
->>Some more details would be helpful.
->>
->>Thanks
->>Yogesh
+Senthil Balasubramanian <senthilkumar@atheros.com> writes:
+
+> On Tue, May 10, 2011 at 10:10:23AM +0530, Kalle Valo wrote:
+>> From: Naveen Singh <nsingh@atheros.com>
+>> 
+>> implementing the cfg ops that gets called when iw dev wlan0
+>> link is issued by user. The ops that needs to be implemented
+>> is get_station.
+>> 
+>> kvalo: check the mac address and fix style issues
+
+[...]
+
+>> +int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
+>> +		     u8 *mac, struct station_info *sinfo)
+>> +{
+>> +	struct ar6_softc *ar = ar6k_priv(dev);
+>> +	u8 mcs, ret, timeout = false;
+>> +
+>> +	if (compare_ether_addr(mac, ar->arBssid))
 >
-> I'm using WEP with 128bit key on a 64bit system using ath5k driver. The hw
-> encryption is configured with the default value. I don't have access right now
-> to the machine, I can provide more details tonight if needed. I can test
-> patches to diagnose the problem.
+> this may result in unaligned memeory access on some platforms as mac
+> may not be 2 byte aligned. This is the case with the caller as per
+> cfg80211_wext_giwrate() and cfg80211_wireless_stats().
+
+I didn't think of this. I'll change it to use memcmp() instead.
+
+>> +	wait_event_interruptible_timeout(arEvent,
+>> +					 ar->statsUpdatePending == false,
+>> +					 wmitimeout * HZ);
+>> +
+>> +	if (signal_pending(current)) {
 >
-> Regards,
-> Fabio
+> wait_event_interruptible_tiemout() itself checks for signal_pending
+> and so this is not necessary. You can check for the return status of
+> wait_event_interruptible_timeout() to know whether the task was
+> interrupted by a signal.
 
-this also hits ath9k i think.
-just running a traffic between WEP secured AP will reproduce this issue.
-saw in set_key call back in ath9k/ath5k
+Will fix.
 
-            key->hw_key_idx = ret;
-                        /* push IV and Michael MIC generation to stack */
-                        key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-                        if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
-                                key->flags |= IEEE80211_KEY_FLAG_GENERATE_MM
-
-so may will this help? I don't know whether its a correct and with a
-quick test the warning gets fixed.
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ca3c626..49444c8 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -102,7 +102,8 @@ static int ieee80211_key_enable_hw_accel(struct
-ieee80211_key *key)
-        if (!ret) {
-                key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-
--               if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
-+               if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)||
-+                                       (key->conf.flags &
-IEEE80211_KEY_FLAG_GENERATE_IV)))
-                        key->local->crypto_tx_tailroom_needed_cnt--;
-
-                return 0;
-@@ -161,7 +162,8 @@ static void ieee80211_key_disable_hw_accel(struct
-ieee80211_key *key)
-
-        key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-
--       if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
-+               if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)||
-+                                       (key->conf.flags &
-IEEE80211_KEY_FLAG_GENERATE_IV)))
-                key->local->crypto_tx_tailroom_needed_cnt++;
- }
-
-
-
+>> +		timeout = true;
+>> +		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
+>> +				("ar6000 : WMI get stats timeout\n"));
+>> +	}
+>> +
+>> +	up(&ar->arSem);
 >
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> I believe we can release the semaphore early on. I don't see any reason..
+
+What do you mean? I'm not the author of the patch, but I assume that
+the idea is to protect the access to ar->statsUpdatePending.
+
+Thanks for the review, I'll submit v2.
+
+-- 
+Kalle Valo
