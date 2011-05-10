@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2356 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752265Ab1ECJgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 49/61] staging: brcm80211: remove socitype member for
- struct si_pub definition
-Date: Tue, 3 May 2011 11:35:49 +0200
-Message-ID: <1304415361-7813-50-git-send-email-arend@broadcom.com> (sfid-20110503_113704_411806_3F369883)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:50624 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818Ab1EJS3b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 14:29:31 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p4AITUel013855
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 11:29:30 -0700
+Message-ID: <4DC9840A.2030608@candelatech.com> (sfid-20110510_202934_235260_F7A9C598)
+Date: Tue, 10 May 2011 11:29:30 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k ref cnt won't let me unload module
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The attribute socitype is no longer required so it is removed here.
+I just notice this while trying to debug the crash in Felix's
+patch.  refcnt is 1, no holders are shown in /sys/modules/ath9k/holders
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I tried manually removing the only interface (wlan0), but that didn't
+help.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index 379bd51..b98099e 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -291,8 +291,6 @@
-  *   public (read-only) portion of aiutils handle returned by si_attach()
-  */
- struct si_pub {
--	uint socitype;		/* SOCI_SB, SOCI_AI */
--
- 	uint bustype;		/* SI_BUS, PCI_BUS */
- 	uint buscoretype;	/* PCI_CORE_ID, PCIE_CORE_ID, PCMCIA_CORE_ID */
- 	uint buscorerev;	/* buscore rev */
+No idea if it's reproducible...
+
+Ben
+
 -- 
-1.7.4.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
