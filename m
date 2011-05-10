@@ -1,35 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35815 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129Ab1E0NQI (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36679 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882Ab1EJVsy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 09:16:08 -0400
-Date: Fri, 27 May 2011 09:07:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Linux wireless mini-summit -- Vancouver, Canada August 15-16,
- 2011
-Message-ID: <20110527130701.GB28923@tuxdriver.com> (sfid-20110527_151613_010307_0408585B)
-References: <20110504194704.GD18541@tuxdriver.com>
- <BANLkTi=rTU=V_WXGsW2c4_ngrw5V7uVuwA@mail.gmail.com>
+	Tue, 10 May 2011 17:48:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTi=rTU=V_WXGsW2c4_ngrw5V7uVuwA@mail.gmail.com>
+In-Reply-To: <BANLkTinnVwQbz+K32pyzLVCdz-fXUVUQ3g@mail.gmail.com>
+References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
+	<BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com>
+	<1305054401.2939.52.camel@work-vm>
+	<BANLkTinnVwQbz+K32pyzLVCdz-fXUVUQ3g@mail.gmail.com>
+Date: Tue, 10 May 2011 23:48:53 +0200
+Message-ID: <BANLkTinjcVjb-1wZahonmP5tjxOzQfMeFw@mail.gmail.com> (sfid-20110510_234900_878508_B64C27E7)
+Subject: Re: [hrtimers] Re: Regression affecting b43 LP-PHY card
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: John Stultz <john.stultz@linaro.org>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Juan Carlos Romero <juancarlos.romero@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Greear <greearb@candelatech.com>,
+	Jamie Lokier <jamie@shareable.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Alexander Shishkin <virtuoso@slind.org>,
+	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 27, 2011 at 11:44:00AM +0200, Helmut Schaa wrote:
+2011/5/10 Rafał Miłecki <zajec5@gmail.com>:
+> 2011/5/10 John Stultz <john.stultz@linaro.org>:
+>> On Tue, 2011-05-10 at 20:57 +0200, Rafał Miłecki wrote:
+>>> W dniu 10 maja 2011 00:52 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+>>> > In this situation we decided to bisect. I was a little afraid of last
+>>> > merges so we took older 2.6.38 as GOOD (we tested this twice) and
+>>> > wireless-testing commit before my ssb changes as BAD. Today Juan
+>>> > finished bisecting kernel:
+>>> > http://pastebin.com/HSKbRzpB
+>>> >
+>>> > According to his bisection the first bad commit is
+>>> > e06383db9ec591696a06654257474b85bac1f8cb [0]:
+>>> > hrtimers: extend hrtimer base code to handle more then 2 clockids
+>>> >
+>>> > Does it make any sense to you? Could this be some timing issue?
+>>> >
+>>> > It was too late to test this today, we (Juan) will work on this
+>>> > tomorrow. It's impossible to revert this commit from HEAD of
+>>> > wireless-testing, so my idea is to checkout commit, test, revert,
+>>> > test.
+>>> >
+>>> > Did anyone else experience any similar problems with latest wireless-testing?
+>>> >
+>>> >
+>>> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
+>>>
+>>> Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
+>>> and tested it. He was disconnected really soon.
+>>>
+>>> Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
+>>> again. Connection was stable, he downloaded 2GB file over network.
+>>>
+>>>
+>>> John S.: your commit does not touch Broadcom card directly, but it
+>>> seems it somehow affects it. I suspect there can be some timing issue.
+>>> Do you have any idea what could it be, how can we debug this?
+>>
+>> Sorry for the trouble!
+>>
+>> My commit exposed a few spots where hrtimers were being initialized
+>> before hrtimer_init is called, which caused problems. Thomas provided a
+>> solution that makes such behavior still function ok:
+>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ce31332d3c77532d6ea97ddcb475a2b02dd358b4
+>>
+>> Let me know if the issue is still reproducible with Linus' latest git
+>> tree.
+>
+> We were using wireless-testing git tree, commit:
+> 1e664a777e5eb4b23e65e76fbeadd2376fe8d8d8
+>
+> I can not see ce31332d3c77532d6ea97ddcb475a2b02dd358b4 it git log.
+> I'll apply and test, thanks!
 
-> On Wed, May 4, 2011 at 9:47 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> > Attendees will be required to register for LinuxCon.
-> 
-> Do you know if this is really necessary? I'll attend the wireless summit but not
-> necessarily the LinuxCon afterwards.
+I can confirm updated wireless-testing resolves this issue!
 
-Yes, it is necessary.  LinuxCon is providing the facilities.
+Too bad Juan spent 2-3 days on bisecting on his Atom... but at least
+we came and met ready fix. It could be pain to find a solution with
+out feedback only. I'm aware it was not very detailed.
 
-John
+Thanks for your help :)
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
