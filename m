@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:50380 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755466Ab1ERKLW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 06:11:22 -0400
-Date: Wed, 18 May 2011 12:11:16 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: George Nychis <gnychis@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] ath9k_htc: new devices get name wlan%d if not in rules
-Message-ID: <20110518101116.GA14900@zenon.in.qult.net> (sfid-20110518_121126_179770_EA86C9CA)
-References: <BANLkTim-XdEJNfSS1UtP7Yf1UZVaPonvQA@mail.gmail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:56274 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab1EJUvh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 16:51:37 -0400
+Message-ID: <4DC9A557.9050405@candelatech.com> (sfid-20110510_225141_160839_44BF9757)
+Date: Tue, 10 May 2011 13:51:35 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
-In-Reply-To: <BANLkTim-XdEJNfSS1UtP7Yf1UZVaPonvQA@mail.gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
+References: <4DBF1967.9010604@candelatech.com>	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>	<4DC042A5.9050806@candelatech.com>	<BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>	<4DC17DAE.9020808@candelatech.com>	<4DC47C04.1080604@candelatech.com>	<4DC83B03.5070002@candelatech.com> <BANLkTimtRz8SMTRnn57CUgkudJ6=_vK+kw@mail.gmail.com>
+In-Reply-To: <BANLkTimtRz8SMTRnn57CUgkudJ6=_vK+kw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/09/2011 07:21 PM, Adrian Chadd wrote:
+> On 10 May 2011 03:05, Ben Greear<greearb@candelatech.com>  wrote:
+>
+>> The NIC is still showing up funky on the other system (Atom), even with the
+>> same 39-rc6+ kernel.
+>>
+>> This NIC is reliably showing up wrong on in this system, and the other
+>> is reliably showing up well, so I think the problem must be with
+>> the NIC or perhaps the ath9k driver.
+>>
+> When you say "other NIC", you mean "BC1A" revision, rather than "AC1E" ?
+>
+>> If anyone has any suggestions for how to debug this further, I'm
+>> interested...
+>
+> Can you try (much) earlier kernels? Ignore ath9k; ath9k shouldn't be
+> needed for the card device id to be setup on PCI bus reset or whenever
+> specifically it happens.
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I tried a stock F14 .35 kernel, same problem.
 
-On Tue, May 17, 2011 at 03:33:34PM -0400, thus spake George Nychis:
-> I haven't narrowed it down to the exact build date where this breaks,
-> but I know that it works in compat-wireless-2011-05-01, and not in
-> compat-wireless-2011-05-11+ (including last night's build).  I had
-> trouble building compat-wireless-2011-05-04/05 so it was hard for me
-> to narrow it down.
+I tried booting a .29 kernel, but F14 won't boot
+on so old of a kernel.
 
-The parsing of the format of interface name has been reworked in some recent
-commit in the kernel.  Consequently, several calls to dev_alloc_name (which
-does the actual parsing of the format string and allocation of a number) have
-been removed from several kernel components and the parsing and number
-allocation is done in some unique common place down the road.  The problem is,
-compat-wireless doesn't add this bit of "common place" code, but still removes
-the original calls to dev_alloc_name.
+Current plan is to just stick it in one of the VIA systems
+that it functions in and use it for testing..and never buy any
+more of those SR71-A NICs.
 
-This is something that should be added to compat/, but in the meantime, you
-can apply the attached patch.
+The sparklan 127N 3x3 pci-e seems to be working very well, so
+I plan to start using them instead.
 
-Ignacy
+Thanks,
+Ben
+
 
 -- 
-A person is shit's way of making more shit.
-		-- S. Barnett, anthropologist.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="compat-wireless-dev-alloc-name.patch"
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 8531915..27264de 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1173,6 +1173,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
- #endif
- 
-+	ret = dev_alloc_name(ndev, ndev->name);
-+	if (ret < 0)
-+		goto fail;
-+
- 	ieee80211_assign_perm_addr(local, ndev, type);
- 	memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
- 	SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
-
---8t9RHnE3ZwKMSgU+--
