@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out0.tiscali.nl ([195.241.79.175]:43185 "EHLO
-	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754499Ab1EWLpN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45566 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950Ab1EJTxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 07:45:13 -0400
-Subject: [iwl4965] Microcode SW error detected
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 May 2011 13:45:06 +0200
-Message-ID: <1306151106.2066.60.camel@x61.thuisdomein> (sfid-20110523_134520_626273_900F7E84)
-Mime-Version: 1.0
+	Tue, 10 May 2011 15:53:35 -0400
+Message-ID: <4DC997B9.2080400@candelatech.com> (sfid-20110510_215349_790205_EB9FDA2E)
+Date: Tue, 10 May 2011 12:53:29 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k:  Fix lockup due to un-init spinlock.
+References: <1304720674-27031-1-git-send-email-greearb@candelatech.com> <20110510194211.GG2520@tuxdriver.com>
+In-Reply-To: <20110510194211.GG2520@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0) Since I started running (release candidates of) kernel v2.6.39 errors
-like these show up in my log, every now and then:
+On 05/10/2011 12:42 PM, John W. Linville wrote:
+> When applied to wireless-2.6, I get this:
+>
+>    CC [M]  drivers/net/wireless/ath/ath5k/base.o
+> drivers/net/wireless/ath/ath5k/base.c: In function ‘ath5k_init_softc’:
+> drivers/net/wireless/ath/ath5k/base.c:2357:2: error: ‘struct ath5k_softc’ has no member named ‘irqlock’
+> drivers/net/wireless/ath/ath5k/base.c:2357:2: error: ‘struct ath5k_softc’ has no member named ‘irqlock’
+>
+> Is this only for -next?
 
-iwl4965 0000:03:00.0: Microcode SW error detected.  Restarting 0x82000000.
-iwl4965 0000:03:00.0: Loaded firmware version: 228.61.2.24
-iwl4965 0000:03:00.0: Start IWL Error Log Dump:
-iwl4965 0000:03:00.0: Status: 0x000213E4, count: 5
-iwl4965 0000:03:00.0: Desc                                  Time       data1      data2      line
-iwl4965 0000:03:00.0: FH_ERROR                     (0x000C) 1821446380 0x00000008 0x03130000 208 
-iwl4965 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
-iwl4965 0000:03:00.0: 0x0046C 0x04A46 0x004C2 0x006DA 0x04A46 0x4C700A8
-iwl4965 0000:03:00.0: FH register values:
-iwl4965 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X132a9b00
-iwl4965 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X01329ed0
-iwl4965 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000d8
-iwl4965 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00819000
-iwl4965 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X0000003c
-iwl4965 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X03130000
-iwl4965 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-iwl4965 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0002
-iwl4965 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-iwl4965 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
-iwl4965 0000:03:00.0: EVT_LOGT:1821445332:0x00000000:1352
-iwl4965 0000:03:00.0: EVT_LOGT:1821445332:0x00000001:1353
-iwl4965 0000:03:00.0: EVT_LOGT:1821445336:0x0000000c:0357
-iwl4965 0000:03:00.0: EVT_LOGT:1821445533:0x00000107:0106
-iwl4965 0000:03:00.0: EVT_LOGT:1821445534:0x00000000:0302
-iwl4965 0000:03:00.0: EVT_LOGT:1821445574:0x000000d4:0321
-iwl4965 0000:03:00.0: EVT_LOGT:1821445575:0x00000000:1350
-iwl4965 0000:03:00.0: EVT_LOGT:1821445576:0x00000000:1351
-iwl4965 0000:03:00.0: EVT_LOGT:1821445576:0x00000000:1352
-iwl4965 0000:03:00.0: EVT_LOGT:1821445577:0x00000001:1353
-iwl4965 0000:03:00.0: EVT_LOGT:1821445581:0x0000000d:0357
-iwl4965 0000:03:00.0: EVT_LOGT:1821446327:0x00000107:0106
-iwl4965 0000:03:00.0: EVT_LOGT:1821446328:0x00000000:0302
-iwl4965 0000:03:00.0: EVT_LOGT:1821446368:0x000000d4:0321
-iwl4965 0000:03:00.0: EVT_LOGT:1821446369:0x00000000:1350
-iwl4965 0000:03:00.0: EVT_LOGT:1821446370:0x00000000:1351
-iwl4965 0000:03:00.0: EVT_LOGT:1821446370:0x00000000:1352
-iwl4965 0000:03:00.0: EVT_LOGT:1821446371:0x00000001:1353
-iwl4965 0000:03:00.0: EVT_LOGT:1821446375:0x0000000e:0357
-iwl4965 0000:03:00.0: EVT_LOGT:1821446383:0x00000000:0125
-ieee80211 phy0: Hardware restart was requested
+This is against wireless-testing.  Maybe I was confused about this being in 2.6.39-rcX.
 
-1) Is there anything I'm supposed to do to (help) make these errors go
-away?
+Bug was caused by this commit as far as I can tell:
+
+Author: Felix Fietkau <nbd@openwrt.org>  2011-04-10 09:32:19
+Committer: John W. Linville <linville@tuxdriver.com>  2011-04-12 13:59:27
+Parent: 5b7916ad8c29da9f30fbf03a8b61862acdba00ce (ath5k: clean up debugfs code)
+Child:  8962d87129ec0a820d17ac44cbf3f51010ad8db8 (ath5k: improve comments for optimized tx descriptor setup)
+Child:  1d4af019d920c838e4de81afa0b5d67879090fd5 (Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6)
+Branches: master, remotes/origin/master
+Follows: v2.6.37-rc1
+Precedes:
 
 
-Paul Bolle
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
