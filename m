@@ -1,82 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61761 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758490Ab1EMOo5 convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:46064 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab1EJTph convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 10:44:57 -0400
-Received: by qwk3 with SMTP id 3so1319175qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 07:44:57 -0700 (PDT)
+	Tue, 10 May 2011 15:45:37 -0400
 MIME-Version: 1.0
-In-Reply-To: <1305290657.3487.32.camel@jlt3.sipsolutions.net>
-References: <1305290657.3487.32.camel@jlt3.sipsolutions.net>
-Date: Fri, 13 May 2011 16:44:56 +0200
-Message-ID: <BANLkTi=CfZxWGboaOizjDQwf_7gwxJmNkA@mail.gmail.com> (sfid-20110513_164501_592389_A966D086)
-Subject: Re: concurrency advertising -- driver maintainers
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1305054401.2939.52.camel@work-vm>
+References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
+	<BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com>
+	<1305054401.2939.52.camel@work-vm>
+Date: Tue, 10 May 2011 21:45:36 +0200
+Message-ID: <BANLkTinnVwQbz+K32pyzLVCdz-fXUVUQ3g@mail.gmail.com> (sfid-20110510_214553_044424_28BF2DC0)
+Subject: Re: [hrtimers] Re: Regression affecting b43 LP-PHY card
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: John Stultz <john.stultz@linaro.org>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Juan Carlos Romero <juancarlos.romero@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Greear <greearb@candelatech.com>,
+	Jamie Lokier <jamie@shareable.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Alexander Shishkin <virtuoso@slind.org>,
+	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 2:44 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Please excuse the long CC list. I want to make you aware that I plan to
-> remove the WIPHY_FLAG_ENFORCE_COMBINATIONS flag again soon, so that all
-> drivers that don't advertise valid combinations will not be able to have
-> multiple virtual interfaces.
+2011/5/10 John Stultz <john.stultz@linaro.org>:
+> On Tue, 2011-05-10 at 20:57 +0200, Rafa≈Ç Mi≈Çecki wrote:
+>> W dniu 10 maja 2011 00:52 u≈ºytkownik Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> napisa≈Ç:
+>> > In this situation we decided to bisect. I was a little afraid of last
+>> > merges so we took older 2.6.38 as GOOD (we tested this twice) and
+>> > wireless-testing commit before my ssb changes as BAD. Today Juan
+>> > finished bisecting kernel:
+>> > http://pastebin.com/HSKbRzpB
+>> >
+>> > According to his bisection the first bad commit is
+>> > e06383db9ec591696a06654257474b85bac1f8cb [0]:
+>> > hrtimers: extend hrtimer base code to handle more then 2 clockids
+>> >
+>> > Does it make any sense to you? Could this be some timing issue?
+>> >
+>> > It was too late to test this today, we (Juan) will work on this
+>> > tomorrow. It's impossible to revert this commit from HEAD of
+>> > wireless-testing, so my idea is to checkout commit, test, revert,
+>> > test.
+>> >
+>> > Did anyone else experience any similar problems with latest wireless-testing?
+>> >
+>> >
+>> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
+>>
+>> Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
+>> and tested it. He was disconnected really soon.
+>>
+>> Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
+>> again. Connection was stable, he downloaded 2GB file over network.
+>>
+>>
+>> John S.: your commit does not touch Broadcom card directly, but it
+>> seems it somehow affects it. I suspect there can be some timing issue.
+>> Do you have any idea what could it be, how can we debug this?
 >
-> The affected drivers, as far as I can tell, are:
-> †* ath5k
-> †* ath9k
-> †* carl9170
-> †* hwsim (I'll look at this)
-> †* iwlagn (I'm handling that of course)
-> †* mwl8k
-> †* rt2x00 (see RFC patch)
+> Sorry for the trouble!
 >
-> I'm happy to help out with the restrictions code, please let me know.
+> My commit exposed a few spots where hrtimers were being initialized
+> before hrtimer_init is called, which caused problems. Thomas provided a
+> solution that makes such behavior still function ok:
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ce31332d3c77532d6ea97ddcb475a2b02dd358b4
 >
-> I'd like to remove the flag again before it ever goes upstream, but I
-> understand the timing is bad, unless we hold my patch out of 2.6.40.
->
-> For completeness, I checked all drivers, and the following drivers don't
-> support more than a single virtual interface anyway:
-> †* adm8211
-> †* at76c50x-usb -- but it is broken because it has no checks
-> †* b43
-> †* b43legacy
-> †* iwlegacy
-> †* libertas_tf
-> †* p54
-> †* rtl8180
-> †* rtl8187
-> †* rtlwifi
-> †* wl1251
-> †* wl12xx
-> †* zd1211
-> (Staging drivers:)
-> †* brcm80211 is broken, allows multiple but can't handle it
-> †* winbond is also broken the same way
->
+> Let me know if the issue is still reproducible with Linus' latest git
+> tree.
 
-I seem to have missed the patch that introduces this advertisement of
-valid combinations
-in mac80211. Do you have a pointer towards this patch and/or some of
-the documentation
-for it?
+We were using wireless-testing git tree, commit:
+1e664a777e5eb4b23e65e76fbeadd2376fe8d8d8
 
-That would make it a lot easier to see if your RFC patch for rt2x00
-actually makes sense ;-)
+I can not see ce31332d3c77532d6ea97ddcb475a2b02dd358b4 it git log.
+I'll apply and test, thanks!
 
----
-Gertjan
+-- 
+Rafa≈Ç
