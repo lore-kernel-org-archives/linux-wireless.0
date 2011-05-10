@@ -1,59 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35800 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:4150 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751964Ab1EEVy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 17:54:27 -0400
-Message-ID: <4DC31C91.1030303@openwrt.org> (sfid-20110505_235430_834290_C4F4E5B9)
-Date: Thu, 05 May 2011 23:54:25 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752679Ab1EJLAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 07:00:52 -0400
+Message-ID: <4DC91A4C.7020305@broadcom.com> (sfid-20110510_130055_870504_D95DD8D4)
+Date: Tue, 10 May 2011 12:58:20 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
- AP mode broke STA association.
-References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com> <4DC31A0B.4040409@candelatech.com>
-In-Reply-To: <4DC31A0B.4040409@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "gregkh@suse.de" <gregkh@suse.de>
+cc: "Julian Calaby" <julian.calaby@gmail.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 9/9] staging: brcm80211: move utility functions into
+ new module
+References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+ <1304951590-2411-10-git-send-email-arend@broadcom.com>
+ <BANLkTimvWnhJDSdn+fhGw=WAZDU4RPEKmg@mail.gmail.com>
+In-Reply-To: <BANLkTimvWnhJDSdn+fhGw=WAZDU4RPEKmg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-05 11:43 PM, Ben Greear wrote:
-> On 05/05/2011 02:15 PM, Ben Greear wrote:
->>  On 05/05/2011 02:03 PM, Felix Fietkau wrote:
->>>  On 2011-05-05 10:44 PM, Ben Greear wrote:
->>>>  I bisected the problem I was having with ath9k STA configured for WPA
->>>>  not being able to authenticate. I'm using nohwcrypt=1, which may
->>>>  be why no one else sees it.
->>
->>>>  I'll be happy to test patches, it seems very easy to reproduce on
->>>>  my setup.
->>>  How about this?
->>>
->>>  --- a/net/mac80211/tx.c
->>>  +++ b/net/mac80211/tx.c
->>>  @@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
->>>  info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->>>  else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
->>>  info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->>>  + else if (sdata->vif.type != NL80211_IFTYPE_AP&&
->>>  + sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
->>>  + info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->>>
->>>  hdrlen = ieee80211_hdrlen(hdr->frame_control);
->>>  if (skb->len>  hdrlen + sizeof(rfc1042_header) + 2) {
->>
->>  Yes, that seems to fix the problem.
->>
->>  Thanks for the quick fix!
+On 05/10/2011 06:18 AM, Julian Calaby wrote:
+> Arend, Henry,
 >
-> Well, that appeared to fix the problem on -rc1, but when I go
-> back to -rc6 and apply that patch, it still doesn't work.
+> One problem I noticed with your patch:
 >
-> Might be some other issue though...
-Odd. Please try bisecting by applying the patch for each test and 
-reverting it before running git bisect again.
+> On Tue, May 10, 2011 at 00:33, Arend van Spriel<arend@broadcom.com>  wrote:
+>> From: Henry Ptasinski<henryp@broadcom.com>
+>>
+>> Move utility functions shared by the brcmsmac and brcmfmac drivers into a new
+>> module, brcmutil.ko.  This eliminates the need to compile and link the shared
+>> functions into both drivers.  Prefix all exported symbols with "bcm_".
+>>
+>> Cc: devel@linuxdriverproject.org
+>> Cc: linux-wireless@vger.kernel.org
+>> Reviewed-by: Brett Rudley<brudley@broadcom.com>
+>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>> ---
+>>   drivers/staging/brcm80211/Makefile                |    1 +
+>>
+>> diff --git a/drivers/staging/brcm80211/Makefile b/drivers/staging/brcm80211/Makefile
+>> index c064cdf..287ad0e 100644
+>> --- a/drivers/staging/brcm80211/Makefile
+>> +++ b/drivers/staging/brcm80211/Makefile
+>> @@ -19,5 +19,6 @@
+>>   subdir-ccflags-y                                       := -DBCMDMA32
+>>   subdir-ccflags-$(CONFIG_BRCMDBG)       += -DBCMDBG -DBCMDBG_ASSERT
+>>
+>> +obj-m                  += util/
+>>   obj-$(CONFIG_BRCMFMAC) += brcmfmac/
+>>   obj-$(CONFIG_BRCMSMAC) += brcmsmac/
+> You should not use obj-m directly - the way this is set up, if module
+> support is disabled, then the driver will fail as the brcmutil module
+> will not be built. This might also happen if the drivers are built
+> into the kernel ('y' rather than 'm')
+>
+> You should create a new Kconfig variable (say BRCMWLUTIL) and use some
+> Kconfig trickery to ensure that it's built properly for the drivers
+> that need it, then replace this line with something like
+>
+> obj-$(CONFIG_BRCMWLUTIL)
+>
+> The LIB80211 symbol used by the Intel 2x00 (old non-mac80211) wireless
+> drivers uses similar trickery to ensure that everything is built
+> properly.
+Hi Greg,
 
-> Are you able to get STA to associate&  athenticate on latest wireless-testing?
-I'll try it by making a new wireless-testing based compat-wireless.
+We were informed about this potential problem. Should I resend this 
+patch or fix it with a separate patch?
 
-- Felix
+Gr. AvS
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
