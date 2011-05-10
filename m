@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:54718 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756372Ab1EQSur (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:60292 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755715Ab1EJPN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 14:50:47 -0400
-Date: Tue, 17 May 2011 13:50:32 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k regression associating with APs in 2.6.38
-Message-ID: <20110517185032.GC9258@thinkpad-t410> (sfid-20110517_205114_296645_4D4B9F47)
-References: <20110504153819.GA4551@thinkpad-t410>
- <20110504172716.GC18541@tuxdriver.com>
- <20110504192639.GB4551@thinkpad-t410>
- <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
- <20110505135207.GA13727@thinkpad-t410>
- <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
- <20110509070230.GA20458@thinkpad-t410>
- <20110517165720.GB9258@thinkpad-t410>
- <BANLkTi=8ZRUVWn3FLAMtPh=4yY1F0k6i9w@mail.gmail.com>
+	Tue, 10 May 2011 11:13:27 -0400
+Received: by qyk7 with SMTP id 7so1772707qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 08:13:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTi=8ZRUVWn3FLAMtPh=4yY1F0k6i9w@mail.gmail.com>
+In-Reply-To: <4DC9542C.6060508@hauke-m.de>
+References: <684215.94213.qm@web161615.mail.bf1.yahoo.com>
+	<4DC9542C.6060508@hauke-m.de>
+Date: Tue, 10 May 2011 17:13:26 +0200
+Message-ID: <BANLkTimp10vXTRkC7mBgDX97aiE+Eo_seg@mail.gmail.com> (sfid-20110510_171331_120407_6E08943F)
+Subject: Re: [PATCH 3/3] compat-wireless: enable RT33XX and RT53XX support.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Walter Goldens <goldenstranger@yahoo.com>, mcgrof@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 17, 2011 at 08:14:34PM +0300, Nick Kossifidis wrote:
-> 2011/5/17 Seth Forshee <seth.forshee@canonical.com>:
-> > On Mon, May 09, 2011 at 09:02:30AM +0200, Seth Forshee wrote:
-> >> On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
-> >> > Hmm I don't see any errors from reset/phy code, can you disable
-> >> > Network Manager/wpa-supplicant and test connection on an open network
-> >> > using iw ? It 'll give us a better picture...
-> >> >
-> >> > If iw doesn't return any scan results we are probably hitting a PHY/RF
-> >> > error specific to your device (not all vendors follow the reference
-> >> > design). Maybe we should follow a blacklist/whitelist approach for
-> >> > this feature.
-> >>
-> >> I got the results back from my tester. He was able to get scan results,
-> >> but it took multiple tries and the direct probe failures appear in the
-> >> log. He didn't enable ATH5K_DEBUG_RESET this time; let me know if you
-> >> need that and I'll request he retest with the extra debug logs enabled.
-> >
-> > I got some more feedback. Most of the time iw does not get scan results,
-> > but even when it does connecting to the AP isn't always successful. The
-> > tester did note that he doesn't seem to have any trouble if his machine
-> > is within a few feet of his AP. Let me know if you'd like something else
-> > tested.
-> >
-> > I noticed that bugzilla #31922 (ath5k: Decreased throughput in IBSS or
-> > 802.11n mode) is also fixed by reverting 8aec7af9. It seems like the
-> > synth-only channel changes are resulting in poor connection quality.
-> > Maybe that patch needs to be reverted?
-> >
-> > Thanks,
-> > Seth
-> >
-> >
-> 
-> http://www.kernel.org/pub/linux/kernel/people/mickflemm/01-fast-chan-switch-modparm
+Hi,
 
-That looks like it should do the trick. I'll request some testing with
-it and let you know how it goes. Thanks!
+On Tue, May 10, 2011 at 5:05 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 05/10/2011 04:44 PM, Walter Goldens wrote:
+>>
+>>> This is based on a patch by Walter
+>>> Goldens.
+>>
+>> Hi Hauke,
+>>
+>> I think RT53XX is still experimental, unlike the RT33XX. Should we enable it from config.mk now?
+>>
+>> Walter
+>
+> Hi Walter,
+>
+> In the description of RT53XX there is no warning that this is not
+> working, like it is in the description of RT35XX. I do not have such a
+> device, but the rt2x00 guys could probably help on this questing. If we
+> enable it and it does not work it will not hurt people more that we do
+> not activate it.
+>
+> @rt2x00 people: Are the RT53XX chips working with the most recent
+> version of the rt2x00 driver from wireless-testing?
 
+The following config options are all marked as unstable (they depend
+on EXPERIMENTAL)
+ RT2800PCI_RT35XX
+ RT2800PCI_RT53XX
+ RT2800USB_RT35XX
+ RT2800USB_RT53XX
+
+Since recently I have an RT53xx USB device, but I haven't tested it yet.
+As far as I heard from other reports the status is the same as 35xx.
+
+Ivo
