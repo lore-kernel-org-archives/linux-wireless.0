@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1383 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753781Ab1EIRJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 13:09:38 -0400
-Subject: [PATCH V2] rtlwifi: rtl8192cu: Fix memset/memcpy using sizeof(ptr)
- not sizeof(*ptr)
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <4DC81009.5060501@lwfinger.net>
-References: <1304919832.19586.15.camel@Joe-Laptop>
-	 <4DC81009.5060501@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 10:09:36 -0700
-Message-ID: <1304960976.19586.51.camel@Joe-Laptop> (sfid-20110509_190959_907226_ADF3C9DC)
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41081 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839Ab1EJVzK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 17:55:10 -0400
+Received: by iyb14 with SMTP id 14so5555115iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 14:55:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <152413.98046.qm@web161612.mail.bf1.yahoo.com>
+References: <BANLkTimp10vXTRkC7mBgDX97aiE+Eo_seg@mail.gmail.com> <152413.98046.qm@web161612.mail.bf1.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 10 May 2011 14:54:50 -0700
+Message-ID: <BANLkTins6p1f6kPN2st4pC49azs9get6Sw@mail.gmail.com> (sfid-20110510_235520_532878_338A944A)
+Subject: Re: [PATCH 3/3] compat-wireless: enable RT33XX and RT53XX support.
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 11:02 -0500, Larry Finger wrote:
-> On 05/09/2011 12:43 AM, Joe Perches wrote:
-> > Found via coccinelle script
-> > @@
-> > type T;
-> > T* ptr;
-> > expression E1;
-> > @@
-> > * memset(E1, 0, sizeof(ptr));
-> > Signed-off-by: Joe Perches<joe@perches.com>
-> > ---
-> >   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 +-
-> >   1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> > @@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
-[]
-> > +	memset(rx_status, 0, sizeof(*rx_status));
-> ACK.
+On Tue, May 10, 2011 at 8:23 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+>
+>> The following config options are all marked as unstable
+>> (they depend
+>> on EXPERIMENTAL)
+>>  RT2800PCI_RT35XX
+>>  RT2800PCI_RT53XX
+>>  RT2800USB_RT35XX
+>>  RT2800USB_RT53XX
+>
+> So this basically means everything above 33+ is experimental at this point. RT33xx should only be enabled now, per my original patch.
+>
+> Walter
+> -------
+>
+> // Side note to Luis,
+> compat-wireless tar balls aren't being uploaded to orbit and kernel, despite the successful emails from the cron bot. Last uploaded CW archive was 5 days ago, can you look that up? //
 
-Hey Larry.
+Hauke -- Applied your 2 patches. I did not apply this last one though
+as it seems it requires some modifications. Walter, the releases
+likely stopped as ./scripts/admin-update.sh was failing, after the new
+patches it should pick up.
 
-If this is correct, then probably the memcpy at the
-end of the routine needs conversion too.
-
----
-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index 79c98f6..3a92ba3 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	__le16 fc;
- 	struct ieee80211_hdr *hdr;
- 
--	memset(rx_status, 0, sizeof(rx_status));
-+	memset(rx_status, 0, sizeof(*rx_status));
- 	rxdesc	= skb->data;
- 	skb_len	= skb->len;
- 	drvinfo_len = (GET_RX_DESC_DRVINFO_SIZE(rxdesc) * RTL_RX_DRV_INFO_UNIT);
-@@ -434,7 +434,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		 "0x%02X\n", fc, (u32)hdr->addr1[0], (u32)hdr->addr1[1],
- 		 (u32)hdr->addr1[2], (u32)hdr->addr1[3], (u32)hdr->addr1[4],
- 		 (u32)hdr->addr1[5]));
--	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
-+	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
- 	ieee80211_rx_irqsafe(hw, skb);
- }
- 
-
-
+  Luis
