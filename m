@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:38814 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757499Ab1ELOQA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54144 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818Ab1EJTPy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:16:00 -0400
-Received: by eya28 with SMTP id 28so638521eya.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:15:58 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+	Tue, 10 May 2011 15:15:54 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1QJsPM-0006j0-Mu
+	for linux-wireless@vger.kernel.org; Tue, 10 May 2011 15:15:48 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p4AJBqWJ018884
+	for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 15:11:52 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p4AJBqZU018883
+	for linux-wireless@vger.kernel.org; Tue, 10 May 2011 15:11:52 -0400
+Date: Tue, 10 May 2011 15:11:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/7] wl12xx: prevent sched_scan when not idle or not in station mode
-Date: Thu, 12 May 2011 17:15:39 +0300
-Message-Id: <1305209740-30287-7-git-send-email-coelho@ti.com> (sfid-20110512_161606_231725_A9BBE51E)
-In-Reply-To: <1305209740-30287-1-git-send-email-coelho@ti.com>
-References: <1305209740-30287-1-git-send-email-coelho@ti.com>
+Subject: new stuff for 2.6.40 needs to be posted _now_
+Message-ID: <20110510191152.GE2520@tuxdriver.com> (sfid-20110510_211557_865979_DA58CE8C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current firmware only supports scheduled scan in station mode and
-when idle.  To prevent the firmware from crashing, return -EOPNOTSUPP
-when sched_scan start is called in an invalid state.
+You may have noticed that Linus has released 2.6.39-rc7.  So, the
+merge window is around the corner!
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/scan.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 2.6.40.  In fact, any non-fix patches need to
+already be in wireless-next-2.6 when the merge window opens if you want
+them in 2.6.40.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index 668ff46..f37e5a3 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -505,6 +505,12 @@ int wl1271_scan_sched_scan_start(struct wl1271 *wl)
- 
- 	wl1271_debug(DEBUG_CMD, "cmd periodic scan start");
- 
-+	if (wl->bss_type != BSS_TYPE_STA_BSS)
-+		return -EOPNOTSUPP;
-+
-+	if (!test_bit(WL1271_FLAG_IDLE, &wl->flags))
-+		return -EBUSY;
-+
- 	start = kzalloc(sizeof(*start), GFP_KERNEL);
- 	if (!start)
- 		return -ENOMEM;
+You have been warned...this means you!
+
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
