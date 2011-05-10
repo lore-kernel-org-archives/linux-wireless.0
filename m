@@ -1,63 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37031 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932807Ab1EMTa4 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:55734 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163Ab1EJXMc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 15:30:56 -0400
-Date: Fri, 13 May 2011 15:20:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-Message-ID: <20110513192019.GC10555@tuxdriver.com> (sfid-20110513_213120_151734_1C5517B6)
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
- <1305189092.3461.10.camel@jlt3.sipsolutions.net>
- <1305224592.10961.10.camel@rklein-linux2>
- <1305225648.3461.37.camel@jlt3.sipsolutions.net>
- <1305226377.10961.12.camel@rklein-linux2>
- <1305226969.3461.38.camel@jlt3.sipsolutions.net>
- <1305235386.10961.13.camel@rklein-linux2>
- <1305270943.3487.5.camel@jlt3.sipsolutions.net>
- <1305313374.10961.23.camel@rklein-linux2>
+	Tue, 10 May 2011 19:12:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1305313374.10961.23.camel@rklein-linux2>
+In-Reply-To: <1305063094-26656-2-git-send-email-hauke@hauke-m.de>
+References: <1305063094-26656-1-git-send-email-hauke@hauke-m.de>
+	<1305063094-26656-2-git-send-email-hauke@hauke-m.de>
+Date: Wed, 11 May 2011 01:12:30 +0200
+Message-ID: <BANLkTinZkCPQh84wy66nDmHpgwCO3Pvu3w@mail.gmail.com> (sfid-20110511_011246_120980_757E49B1)
+Subject: Re: [PATCH v2 1/5] ssb: Change fallback sprom to callback mechanism.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Florian Fainelli <florian@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 12:02:54PM -0700, Rhyland Klein wrote:
-> On Fri, 2011-05-13 at 00:15 -0700, Johannes Berg wrote:
-> > On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
-> > > On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
-> > > > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
-> > > > 
-> > > > > > If, on the other hand, rfkill decides that at the time of loading the
-> > > > > > driver wifi should be on, then the first change would be +1 and it'll
-> > > > > > flip between 0 and +1.
-> > > > > > 
-> > > > > > This seems like it'll cause issues at some point, so I think you should
-> > > > > > either allow the driver to set the initial state or hardcode one of
-> > > > > > these possibilities (so at least it's predictable)
-> > > > 
-> > > > > I won't go negative, if you look, it only will disable clock if it knows
-> > > > > it has already enabled it. 
-> > > > 
-> > > > Ah, you're right, I misread the macros.
-> > 
-> > > So the patch is good as is?
-> > 
-> > I think so, yes.
-> > 
-> > johannes
-> > 
-> 
-> John, Johannes suggested you are able to pull in this patch?
+2011/5/10 Hauke Mehrtens <hauke@hauke-m.de>:
+> Some embedded devices like the Netgear WNDR3300 have two SSB based
+> cards without an own sprom on the pci bus. We have to provide two
+> different fallback sproms for these and this was not possible with the
+> old solution. In the bcm47xx architecture the sprom data is stored in
+> the nvram in the main flash storage. The architecture code will be able
+> to fill the sprom with the stored data based on the bus where the
+> device was found.
+>
+> The bcm63xx code should do the same thing as before, just using the new
+> API.
+>
+> Acked-by: Michael Buesch <mb@bu3sch.de>
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: Florian Fainelli <florian@openwrt.org>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>
+> v2: * fix some checkpatch errors and warnings
+>    * spelling issues
+>
+>  arch/mips/bcm63xx/boards/board_bcm963xx.c |   16 +++++++++-
+>  drivers/ssb/pci.c                         |   16 +++++++---
+>  drivers/ssb/sprom.c                       |   43 +++++++++++++++++------------
+>  drivers/ssb/ssb_private.h                 |    3 +-
+>  include/linux/ssb/ssb.h                   |    4 ++-
+>  5 files changed, 55 insertions(+), 27 deletions(-)
+>
+> diff --git a/arch/mips/bcm63xx/boards/board_bcm963xx.c b/arch/mips/bcm63xx/boards/board_bcm963xx.c
+> index 8dba8cf..40b223b 100644
+> --- a/arch/mips/bcm63xx/boards/board_bcm963xx.c
+> +++ b/arch/mips/bcm63xx/boards/board_bcm963xx.c
+> @@ -643,6 +643,17 @@ static struct ssb_sprom bcm63xx_sprom = {
+>        .boardflags_lo          = 0x2848,
+>        .boardflags_hi          = 0x0000,
+>  };
+> +
+> +int bcm63xx_get_fallback_sprom(struct ssb_bus *bus, struct ssb_sprom *out)
+> +{
+> +       if (bus->bustype == SSB_BUSTYPE_PCI) {
+> +               memcpy(out, &bcm63xx_sprom, sizeof(struct ssb_sprom));
+> +               return 0;
+> +       } else {
+> +               printk(KERN_ERR PFX "unable to fill SPROM for given bustype.\n");
+> +               return -EINVAL;
+> +       }
+> +}
+>  #endif
+>
+>  /*
+> @@ -793,8 +804,9 @@ void __init board_prom_init(void)
+>        if (!board_get_mac_address(bcm63xx_sprom.il0mac)) {
+>                memcpy(bcm63xx_sprom.et0mac, bcm63xx_sprom.il0mac, ETH_ALEN);
+>                memcpy(bcm63xx_sprom.et1mac, bcm63xx_sprom.il0mac, ETH_ALEN);
+> -               if (ssb_arch_set_fallback_sprom(&bcm63xx_sprom) < 0)
+> -                       printk(KERN_ERR "failed to register fallback SPROM\n");
+> +               if (ssb_arch_register_fallback_sprom(
+> +                               &bcm63xx_get_fallback_sprom) < 0)
+> +                       printk(KERN_ERR PFX "failed to register fallback SPROM\n");
+>        }
+>  #endif
+>  }
+> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+> index 6f34963..7ad4858 100644
+> --- a/drivers/ssb/pci.c
+> +++ b/drivers/ssb/pci.c
+> @@ -662,7 +662,6 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
+>  static int ssb_pci_sprom_get(struct ssb_bus *bus,
+>                             struct ssb_sprom *sprom)
+>  {
+> -       const struct ssb_sprom *fallback;
+>        int err;
+>        u16 *buf;
+>
+> @@ -707,10 +706,17 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+>                if (err) {
+>                        /* All CRC attempts failed.
+>                         * Maybe there is no SPROM on the device?
+> -                        * If we have a fallback, use that. */
+> -                       fallback = ssb_get_fallback_sprom();
+> -                       if (fallback) {
+> -                               memcpy(sprom, fallback, sizeof(*sprom));
+> +                        * Now we ask the arch code if there is some sprom
+> +                        * available for this device in some other storage */
+> +                       err = ssb_fill_sprom_with_fallback(bus, sprom);
+> +                       if (err) {
+> +                               ssb_printk(KERN_WARNING PFX "WARNING: Using"
+> +                                          " fallback SPROM failed (err %d)\n",
+> +                                          err);
 
-I've got it, thanks.
+I was recently told we should not duplicate message levels info with
+own prefixes ("WARNING: ").
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
