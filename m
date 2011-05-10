@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46002 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753729Ab1ENRrj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 13:47:39 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: add header linux/printk.h
-Date: Sat, 14 May 2011 19:47:32 +0200
-Message-Id: <1305395252-21873-1-git-send-email-hauke@hauke-m.de> (sfid-20110514_194743_759541_AD6EC58A)
+Received: from kroah.org ([198.145.64.141]:41849 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799Ab1EJS0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 14:26:44 -0400
+Date: Tue, 10 May 2011 11:12:08 -0700
+From: Greg KH <greg@kroah.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/10] staging: brcm80211: cleanup unnecessary functions
+ from wlc_ampdu.c
+Message-ID: <20110510181208.GA3396@kroah.com> (sfid-20110510_202647_882014_593BC4A0)
+References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers are including linux/printk.h and this is not available for
-kernel < 2.6.37, but the needed declared methods are all in
-linux/kernel.h.
+On Mon, May 09, 2011 at 04:33:20PM +0200, Arend van Spriel wrote:
+> Couple of functions are not used or empty and have been removed.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/printk.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/printk.h
+This patch doesn't apply on top of all of the other brcm80211 patches
+sent me.  Care to redo this series and resend after syncing up with the
+next linux-next tree?
 
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-new file mode 100644
-index 0000000..c0822ac
---- /dev/null
-+++ b/include/linux/printk.h
-@@ -0,0 +1,12 @@
-+#ifndef _COMPAT_LINUX_PRINTK_H
-+#define _COMPAT_LINUX_PRINTK_H 1
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,36))
-+#include_next <linux/printk.h>
-+#else
-+#include <linux/kernel.h>
-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,35)) */
-+
-+#endif	/* _COMPAT_LINUX_PRINTK_H */
--- 
-1.7.4.1
+thanks,
 
+greg k-h
