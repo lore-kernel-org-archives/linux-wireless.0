@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:46112 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755604Ab1EQQ5h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 12:57:37 -0400
-Date: Tue, 17 May 2011 11:57:20 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k regression associating with APs in 2.6.38
-Message-ID: <20110517165720.GB9258@thinkpad-t410> (sfid-20110517_185757_036311_E899CC34)
-References: <20110504153819.GA4551@thinkpad-t410>
- <20110504172716.GC18541@tuxdriver.com>
- <20110504192639.GB4551@thinkpad-t410>
- <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
- <20110505135207.GA13727@thinkpad-t410>
- <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
- <20110509070230.GA20458@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110509070230.GA20458@thinkpad-t410>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53274 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752777Ab1EJLLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 07:11:48 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: make patches apply again
+Date: Tue, 10 May 2011 13:11:34 +0200
+Message-Id: <1305025896-12586-1-git-send-email-hauke@hauke-m.de> (sfid-20110510_131151_309415_3E0CD633)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 09, 2011 at 09:02:30AM +0200, Seth Forshee wrote:
-> On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
-> > Hmm I don't see any errors from reset/phy code, can you disable
-> > Network Manager/wpa-supplicant and test connection on an open network
-> > using iw ? It 'll give us a better picture...
-> > 
-> > If iw doesn't return any scan results we are probably hitting a PHY/RF
-> > error specific to your device (not all vendors follow the reference
-> > design). Maybe we should follow a blacklist/whitelist approach for
-> > this feature.
-> 
-> I got the results back from my tester. He was able to get scan results,
-> but it took multiple tries and the direct probe failures appear in the
-> log. He didn't enable ATH5K_DEBUG_RESET this time; let me know if you
-> need that and I'll request he retest with the extra debug logs enabled.
+This part of the patch is now in wireless-testing.
 
-I got some more feedback. Most of the time iw does not get scan results,
-but even when it does connecting to the AP isn't always successful. The
-tester did note that he doesn't seem to have any trouble if his machine
-is within a few feet of his AP. Let me know if you'd like something else
-tested.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/22-multiqueue.patch |   15 ++-------------
+ 1 files changed, 2 insertions(+), 13 deletions(-)
 
-I noticed that bugzilla #31922 (ath5k: Decreased throughput in IBSS or
-802.11n mode) is also fixed by reverting 8aec7af9. It seems like the
-synth-only channel changes are resulting in poor connection quality.
-Maybe that patch needs to be reverted?
-
-Thanks,
-Seth
+diff --git a/patches/22-multiqueue.patch b/patches/22-multiqueue.patch
+index 2090320..05129d5 100644
+--- a/patches/22-multiqueue.patch
++++ b/patches/22-multiqueue.patch
+@@ -44,17 +44,6 @@ are used for injecting frames so they have their own respective queue
+ handling, but mac80211 just always sends management frames on VO
+ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
+ 
+---- a/drivers/net/wireless/wl12xx/main.c
+-+++ b/drivers/net/wireless/wl12xx/main.c
+-@@ -1272,7 +1272,7 @@ static struct sk_buff *wl12xx_alloc_dumm
+- 	skb->priority = WL1271_TID_MGMT;
+- 
+- 	/* Initialize all fields that might be used */
+--	skb->queue_mapping = 0;
+-+	skb_set_queue_mapping(skb, 0);
+- 	memset(IEEE80211_SKB_CB(skb), 0, sizeof(struct ieee80211_tx_info));
+- 
+- 	return skb;
+ --- a/net/mac80211/util.c
+ +++ b/net/mac80211/util.c
+ @@ -264,6 +264,18 @@ __le16 ieee80211_ctstoself_duration(stru
+@@ -107,7 +96,7 @@ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
+  
+ --- a/net/mac80211/tx.c
+ +++ b/net/mac80211/tx.c
+-@@ -1598,6 +1598,10 @@ static void ieee80211_xmit(struct ieee80
++@@ -1587,6 +1587,10 @@ static void ieee80211_xmit(struct ieee80
+  				return;
+  			}
+  
+@@ -118,7 +107,7 @@ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
+  	ieee80211_set_qos_hdr(local, skb);
+  	ieee80211_tx(sdata, skb, false);
+  	rcu_read_unlock();
+-@@ -2090,7 +2094,14 @@ void ieee80211_tx_pending(unsigned long
++@@ -2079,7 +2083,14 @@ void ieee80211_tx_pending(unsigned long
+  
+  		if (skb_queue_empty(&local->pending[i]))
+  			list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-- 
+1.7.4.1
 
