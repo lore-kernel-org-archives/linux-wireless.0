@@ -1,84 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37598 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754097Ab1EGKBt (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:55990 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab1EJVTO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 06:01:49 -0400
-Subject: Re: [PATCH] net: rfkill: add generic gpio rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: olof@lixom.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1304728801-21331-2-git-send-email-rklein@nvidia.com>
-References: <1304728801-21331-1-git-send-email-rklein@nvidia.com>
-	 <1304728801-21331-2-git-send-email-rklein@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 May 2011 12:01:43 +0200
-Message-ID: <1304762503.3574.5.camel@jlt3.sipsolutions.net> (sfid-20110507_120212_145852_2B7B9F6C)
-Mime-Version: 1.0
+	Tue, 10 May 2011 17:19:14 -0400
+Received: by qyg14 with SMTP id 14so4951293qyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 14:19:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DC9853A.1090508@lwfinger.net>
+References: <4CEAB969.20702@lwfinger.net>
+	<1290451982.20888.2.camel@maggie>
+	<4CEAC095.7020706@lwfinger.net>
+	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
+	<4DC9853A.1090508@lwfinger.net>
+Date: Tue, 10 May 2011 23:19:13 +0200
+Message-ID: <BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com> (sfid-20110510_231928_981463_95BA0102)
+Subject: Re: b43 error under heavy load
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Juan Carlos Romero <juancarlos.romero@gmail.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-06 at 17:40 -0700, Rhyland Klein wrote:
+2011/5/10 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/10/2011 12:08 AM, Rafał Miłecki wrote:
+>>
+>> 2010/11/22 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>
+>>> On 11/22/2010 12:53 PM, Michael Büsch wrote:
+>>>>
+>>>> On Mon, 2010-11-22 at 12:41 -0600, Larry Finger wrote:
+>>>>>
+>>>>> Under heavy load with multiple streams, I'm getting errors from my
+>>>>> BCM4312
+>>>>> (14e4:4315) device as follows:
+>>>>>
+>>>>> b43-phy0 debug: TX-status contains invalid cookie: 0x0D4D
+>>>>> b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected
+>>>>> 74, but got 76
+>>>>> b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected
+>>>>> 74, but got 78
+>>>>> (and continues).
+>>>>>
+>>>>> Clearly that cookie is garbage as it has a slot number of 0. Any
+>>>>> suggestions on
+>>>>> diagnostic information that I could dump to help debug this?
+>>>>
+>>>> I think that probably is a firmware or hardware bug. The affected
+>>>> kernel code was not changed in years, as far as I know.
+>>>
+>>> Thanks. I'll see if I can figure out a way for the driver to recover more
+>>> gracefully. In the meantime, I will be dumping the entire TX status
+>>> struct to
+>>> see if that helps in seeing what is wrong.
+>>
+>> Larry, did you try debugging this? Juan noticed this issue on his
+>> 14e4:4315 as well.
+>> [  854.826369] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 54
+>> [  854.827348] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 56
+>> [  854.828080] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 58
+>> [  854.831431] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 60
+>> [  854.831453] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 62
+>> [  854.832440] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 64
+>> [  854.833836] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 66
+>> [  854.834567] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 68
+>> [  854.834588] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 70
+>> [  854.835378] b43-phy0 debug: Out of order TX status report on DMA
+>> ring 1. Expected 74, but got 72
+>>
+>> Connection is lost, reloading of the driver is needer.
+>
+> I have not gotten any further with this problem, but I just noticed a
+> curious "coincidence". The expected status number was 74 in both cases. I do
+> not think there is anything special about that particular slot. After all,
+> there are 256 TX ring slots. As the comment says at line 1407 of dma.c,
+> there might be a firmware error. If so, it is common to several versions as
+> I have seen it on a BCM4318.
 
-[snip]
+Yeah, it seems to be always 74 (the expected one). Here is the full log:
+http://pastebin.com/bDpVXTtb
 
-Looks nice! A few comments below:
+It's the first time I see the full log. It perfectly shows firmware
+omitted 74, transmitted every next packet until reaching 72 and then
+stopped.
 
-> + * @blocked:           block rf enabled (default is true)
+Do you have any idea what can we do to debug this?
 
-(see below)
+It seems to happen only under heavy load... maybe it has something to
+do with reaching end of the ring (not whole ring, just end of free
+slots)?
 
-> +struct rfkill_gpio_platform_data {
-> +	char			*name;
+Did you try verbose debugging? I wonder if there is any relation
+between Out of order and:
+if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+	b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+}
 
-> +	char			*power_clk_name;
+Could you try it?
 
-const?
-
-> +	bool			blocked;
-
-The comments say this is default "true", but I don't think that makes
-sense since this struct would be defined somewhere else and be static
-const so zero-initialised. Also, are you sure that even having this
-makes sense? (see below)
-
-> +config RFKILL_GPIO
-> +	bool "GPIO RFKILL driver"
-> +	depends on RFKILL && GPIOLIB
-> +	help
-> +	  If you say yes here you get support of a generic gpio RFKILL
-> +	  driver. Platform needs to define the resources required
-
-That appears to be cut short?
-
-
-> +#define GPIO_NAME_LEN  40
-
-Is there really no definition yet? Maybe it would make sense to
-dynamically allocate?
-
-> +struct rfkill_gpio_data {
-> +	struct rfkill_gpio_platform_data	*pdata;
-> +	struct rfkill				*rfkill_dev;
-> +	char					reset_name[GPIO_NAME_LEN];
-> +	char					shutdown_name[GPIO_NAME_LEN];
-> +	struct					clk *pwr_clk;
-
-That last line is a little oddly formatted.
-
-> +	/* setup initial state */
-> +	rfkill_gpio_set_power(rfkill, pdata->blocked);
-> +	rfkill_set_states(rfkill->rfkill_dev, pdata->blocked, false);
-> +
-> +	ret = rfkill_register(rfkill->rfkill_dev);
-
-So if you do this, rfkill core will set the persistent thing. We
-discovered a while ago (and I mentioned that in the original thread)
-there will be quirky behaviour. I would recommend leaving this out and
-just relying on the rfkill core to call set_block() a little after
-rfkill_register() to sync the state of this device with the desired
-system state.
-
-johannes
-
+-- 
+Rafał
