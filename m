@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62589 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347Ab1ECBQE (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53134 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753589Ab1EJG5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 21:16:04 -0400
-Message-ID: <4DBF574E.80309@lwfinger.net> (sfid-20110503_031623_509396_AB32F630)
-Date: Mon, 02 May 2011 20:15:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 10 May 2011 02:57:12 -0400
+Received: by bwz15 with SMTP id 15so4581360bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 23:57:11 -0700 (PDT)
 MIME-Version: 1.0
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-CC: Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-References: <alpine.DEB.2.02.1104131139380.11270@p34.internal.lan> <alpine.DEB.2.02.1104251432560.23304@p34.internal.lan> <BANLkTimV4Nse58oQsWZWKzMbC7Ldm4mRLA@mail.gmail.com> <alpine.DEB.2.02.1104260619420.8361@p34.internal.lan> <alpine.DEB.2.02.1104261753210.3894@p34.internal.lan> <4DB74788.2000908@lwfinger.net> <alpine.DEB.2.02.1104261923390.3894@p34.internal.lan> <alpine.DEB.2.02.1105021944560.14515@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.02.1105021944560.14515@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <19912.57383.634547.405469@gargle.gargle.HOWL>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+	<19908.11423.898062.510184@gargle.gargle.HOWL>
+	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
+	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
+	<19912.44045.774181.844464@gargle.gargle.HOWL>
+	<19912.55320.817869.173186@gargle.gargle.HOWL>
+	<19912.55857.505921.694732@gargle.gargle.HOWL>
+	<BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com>
+	<19912.57383.634547.405469@gargle.gargle.HOWL>
+Date: Tue, 10 May 2011 02:57:10 -0400
+Message-ID: <BANLkTi=BrJPhjA5StJcktkKE7zs3Ob=iOg@mail.gmail.com> (sfid-20110510_085716_082425_3FC3E4A2)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2011 06:46 PM, Justin Piszcz wrote:
-> Just an update, this driver has been solid so far:
-> rt2870sta
+> Hm, looks like 0x0411 doesn't match. Can you try this FW ?
 >
-> With the Media Link 150 USB stick, not a single crash yet--
-> The rt2800usb driver is laggy and crashes the kernel (as of 2.6.38.x)--
-> Is there a possiblity to get rtl2870sta into the mainline?
+>
 
-Not a chance. As of 2.6.39, it is gone.
-
-> It is the best wireless driver I've used for Linux with various usb wifi
-> adapters--
-
-That driver was in staging because it does not use mac80211, which is an 
-absolute requirement for a new mainline driver. Keeping things like rt2870sta 
-that contain their own MAC layer just bloats the kernel and has code persist 
-that no one really understands.
-
-Please try the version of rt2800usb from compat-wireless with the latest 
-firmware. If it still crashes the kernel, then post the bugs.
-
-Larry
+[  393.053564] usb 1-1: new high speed USB device using ehci_hcd and address 5
+[  393.525139] usb 1-1: ath9k_htc: Transferred FW: htc_7010.fw, size: 73008
+[  394.525196] ath9k_htc 1-1:1.0: ath9k_htc: Target is unresponsive
+[  394.525335] Failed to initialize the device
+[  394.548205] ath9k_htc: probe of 1-1:1.0 failed with error -22
