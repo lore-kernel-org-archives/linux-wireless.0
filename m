@@ -1,195 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42698 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550Ab1EWByp (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:37822 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab1EJBzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:54:45 -0400
-Date: Sun, 22 May 2011 20:54:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/7 V2] rtl8192se: Fix warnings from gcc 4.6.0
-Message-ID: <4dd9be63.EJkDWyDIfgEcjRvA%Larry.Finger@lwfinger.net> (sfid-20110523_035447_559319_8BBF08D8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 9 May 2011 21:55:44 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: remove unnecessary struct mwifiex_opt_sleep_confirm_buffer
+Date: Mon,  9 May 2011 19:00:18 -0700
+Message-Id: <1304992818-9859-1-git-send-email-bzhao@marvell.com> (sfid-20110510_035558_684632_18A22C92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for rtl8192se:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192se/dm.o
-drivers/net/wireless/rtlwifi/rtl8192se/dm.c: In function ‘_rtl92s_dm_refresh_rateadaptive_mask’:
-drivers/net/wireless/rtlwifi/rtl8192se/dm.c:225:5: warning: variable ‘rssi_level’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192se/fw.o
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c: In function ‘rtl92s_download_fw’:
-drivers/net/wireless/rtlwifi/rtl8192se/fw.c:361:6: warning: variable ‘file_length’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192se/hw.o
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c: In function ‘_rtl92se_hw_configure’:
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c:887:6: warning: variable ‘reg_ratr’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c: In function ‘_rtl92se_set_media_status’:
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c:1125:20: warning: variable ‘ledaction’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c: In function ‘rtl92se_gpio_radio_on_off_checking’:
-drivers/net/wireless/rtlwifi/rtl8192se/hw.c:2274:32: warning: variable ‘cur_rfstate’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192se/phy.o
-drivers/net/wireless/rtlwifi/rtl8192se/phy.c: In function ‘rtl92s_phy_set_bw_mode’:
-drivers/net/wireless/rtlwifi/rtl8192se/phy.c:266:5: warning: variable ‘reg_prsr_rsc’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192se/trx.o
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c: In function ‘_rtl92se_translate_rx_signal_stuff’:
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:584:6: warning: variable ‘psaddr’ set but not used [-Wunused-but-set-variable]
+The structure definition is
+struct mwifiex_opt_sleep_confirm_buffer {
+       u8 hdr[4];
+       struct mwifiex_opt_sleep_confirm ps_cfm_sleep;
+} __packed;
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+For sleep_confirm command we already reserve 4 bytes (using skb_reserve())
+for an interface header. It will be filled later by interface specific code.
+We don't need "hdr[4]" element in above structure. So we can use
+"struct mwifiex_opt_sleep_confirm" directly instead of
+"struct mwifiex_opt_sleep_confirm_buffer".
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/cmdevt.c |   17 ++++++++---------
+ drivers/net/wireless/mwifiex/fw.h     |    5 -----
+ drivers/net/wireless/mwifiex/init.c   |   26 ++++++++++++--------------
+ 3 files changed, 20 insertions(+), 28 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-@@ -222,7 +222,6 @@ static void _rtl92s_dm_refresh_rateadapt
- 	u32 low_rssi_thresh = 0;
- 	u32 middle_rssi_thresh = 0;
- 	u32 high_rssi_thresh = 0;
--	u8 rssi_level;
- 	struct ieee80211_sta *sta = NULL;
- 
- 	if (is_hal_stop(rtlhal))
-@@ -272,18 +271,14 @@ static void _rtl92s_dm_refresh_rateadapt
- 		if (rtlpriv->dm.undecorated_smoothed_pwdb >
- 		    (long)high_rssi_thresh) {
- 			ra->ratr_state = DM_RATR_STA_HIGH;
--			rssi_level = 1;
- 		} else if (rtlpriv->dm.undecorated_smoothed_pwdb >
- 			   (long)middle_rssi_thresh) {
- 			ra->ratr_state = DM_RATR_STA_LOW;
--			rssi_level = 3;
- 		} else if (rtlpriv->dm.undecorated_smoothed_pwdb >
- 			   (long)low_rssi_thresh) {
- 			ra->ratr_state = DM_RATR_STA_LOW;
--			rssi_level = 5;
- 		} else {
- 			ra->ratr_state = DM_RATR_STA_ULTRALOW;
--			rssi_level = 6;
- 		}
- 
- 		if (ra->pre_ratr_state != ra->ratr_state) {
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
-@@ -358,7 +358,6 @@ int rtl92s_download_fw(struct ieee80211_
- 	struct fw_priv *pfw_priv = NULL;
- 	u8 *puc_mappedfile = NULL;
- 	u32 ul_filelength = 0;
--	u32 file_length = 0;
- 	u8 fwhdr_size = RT_8192S_FIRMWARE_HDR_SIZE;
- 	u8 fwstatus = FW_STATUS_INIT;
- 	bool rtstatus = true;
-@@ -370,7 +369,6 @@ int rtl92s_download_fw(struct ieee80211_
- 	firmware->fwstatus = FW_STATUS_INIT;
- 
- 	puc_mappedfile = firmware->sz_fw_tmpbuffer;
--	file_length = firmware->sz_fw_tmpbufferlen;
- 
- 	/* 1. Retrieve FW header. */
- 	firmware->pfwheader = (struct fw_hdr *) puc_mappedfile;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -884,12 +884,10 @@ static void _rtl92se_hw_configure(struct
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 
- 	u8 reg_bw_opmode = 0;
--	u32 reg_ratr = 0, reg_rrsr = 0;
-+	u32 reg_rrsr = 0;
- 	u8 regtmp = 0;
- 
- 	reg_bw_opmode = BW_OPMODE_20MHZ;
--	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG | RATE_ALL_OFDM_1SS |
--				RATE_ALL_OFDM_2SS;
- 	reg_rrsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
- 
- 	regtmp = rtl_read_byte(rtlpriv, INIRTSMCS_SEL);
-@@ -1122,14 +1120,12 @@ static int _rtl92se_set_media_status(str
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 1c8b4f7..5c75399 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -223,24 +223,23 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 bt_msr = rtl_read_byte(rtlpriv, MSR);
--	enum led_ctl_mode ledaction = LED_CTL_NO_LINK;
- 	u32 temp;
- 	bt_msr &= ~MSR_LINK_MASK;
+ 	int ret;
+-	u16 cmd_len;
+ 	struct mwifiex_private *priv;
+-	struct mwifiex_opt_sleep_confirm_buffer *sleep_cfm_buf =
+-				(struct mwifiex_opt_sleep_confirm_buffer *)
++	struct mwifiex_opt_sleep_confirm *sleep_cfm_buf =
++				(struct mwifiex_opt_sleep_confirm *)
+ 				adapter->sleep_cfm->data;
+-	cmd_len = sizeof(struct mwifiex_opt_sleep_confirm);
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
  
- 	switch (type) {
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 		bt_msr |= (MSR_LINK_NONE << MSR_LINK_SHIFT);
--		ledaction = LED_CTL_LINK;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("Set Network type to NO LINK!\n"));
- 		break;
-@@ -1140,7 +1136,6 @@ static int _rtl92se_set_media_status(str
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		bt_msr |= (MSR_LINK_MANAGED << MSR_LINK_SHIFT);
--		ledaction = LED_CTL_LINK;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("Set Network type to STA!\n"));
- 		break;
-@@ -2271,7 +2266,7 @@ bool rtl92se_gpio_radio_on_off_checking(
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	enum rf_pwrstate rfpwr_toset, cur_rfstate;
-+	enum rf_pwrstate rfpwr_toset /*, cur_rfstate */;
- 	unsigned long flag = 0;
- 	bool actuallyset = false;
- 	bool turnonbypowerdomain = false;
-@@ -2292,7 +2287,7 @@ bool rtl92se_gpio_radio_on_off_checking(
- 		spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
+-	sleep_cfm_buf->ps_cfm_sleep.seq_num =
++	sleep_cfm_buf->seq_num =
+ 		cpu_to_le16((HostCmd_SET_SEQ_NO_BSS_INFO
+ 					(adapter->seq_num, priv->bss_num,
+ 					 priv->bss_type)));
+ 	adapter->seq_num++;
+ 
++	skb_push(adapter->sleep_cfm, INTF_HEADER_LEN);
+ 	ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_CMD,
+ 					     adapter->sleep_cfm->data,
+-					     adapter->sleep_cfm->len +
+-					     INTF_HEADER_LEN, NULL);
++					     adapter->sleep_cfm->len, NULL);
++	skb_pull(adapter->sleep_cfm, INTF_HEADER_LEN);
+ 
+ 	if (ret == -1) {
+ 		dev_err(adapter->dev, "SLEEP_CFM: failed\n");
+@@ -249,14 +248,14 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 	}
+ 	if (GET_BSS_ROLE(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY))
+ 			== MWIFIEX_BSS_ROLE_STA) {
+-		if (!sleep_cfm_buf->ps_cfm_sleep.resp_ctrl)
++		if (!sleep_cfm_buf->resp_ctrl)
+ 			/* Response is not needed for sleep
+ 			   confirm command */
+ 			adapter->ps_state = PS_STATE_SLEEP;
+ 		else
+ 			adapter->ps_state = PS_STATE_SLEEP_CFM;
+ 
+-		if (!sleep_cfm_buf->ps_cfm_sleep.resp_ctrl
++		if (!sleep_cfm_buf->resp_ctrl
+ 				&& (adapter->is_hs_configured
+ 					&& !adapter->sleep_period.period)) {
+ 			adapter->pm_wakeup_card_req = true;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 6d1c454..c6b2681 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1198,9 +1198,4 @@ struct mwifiex_opt_sleep_confirm {
+ 	__le16 action;
+ 	__le16 resp_ctrl;
+ } __packed;
+-
+-struct mwifiex_opt_sleep_confirm_buffer {
+-	u8 hdr[4];
+-	struct mwifiex_opt_sleep_confirm ps_cfm_sleep;
+-} __packed;
+ #endif /* !_MWIFIEX_FW_H_ */
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 6a8fd99..3f1559e 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -175,7 +175,7 @@ static int mwifiex_allocate_adapter(struct mwifiex_adapter *adapter)
  	}
  
--	cur_rfstate = ppsc->rfpwr_state;
-+	/* cur_rfstate = ppsc->rfpwr_state;*/
+ 	adapter->sleep_cfm =
+-		dev_alloc_skb(sizeof(struct mwifiex_opt_sleep_confirm_buffer)
++		dev_alloc_skb(sizeof(struct mwifiex_opt_sleep_confirm)
+ 				+ INTF_HEADER_LEN);
  
- 	/* because after _rtl92s_phy_set_rfhalt, all power
- 	 * closed, so we must open some power for GPIO check,
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-@@ -263,7 +263,6 @@ void rtl92s_phy_set_bw_mode(struct ieee8
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	u8 reg_bw_opmode;
--	u8 reg_prsr_rsc;
+ 	if (!adapter->sleep_cfm) {
+@@ -197,10 +197,10 @@ static int mwifiex_allocate_adapter(struct mwifiex_adapter *adapter)
+  */
+ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ {
+-	struct mwifiex_opt_sleep_confirm_buffer *sleep_cfm_buf = NULL;
++	struct mwifiex_opt_sleep_confirm *sleep_cfm_buf = NULL;
  
- 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_TRACE, ("Switch to %s bandwidth\n",
- 		  rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20 ?
-@@ -277,7 +276,8 @@ void rtl92s_phy_set_bw_mode(struct ieee8
- 	rtlphy->set_bwmode_inprogress = true;
+-	skb_put(adapter->sleep_cfm, sizeof(sleep_cfm_buf->ps_cfm_sleep));
+-	sleep_cfm_buf = (struct mwifiex_opt_sleep_confirm_buffer *)
++	skb_put(adapter->sleep_cfm, sizeof(struct mwifiex_opt_sleep_confirm));
++	sleep_cfm_buf = (struct mwifiex_opt_sleep_confirm *)
+ 						(adapter->sleep_cfm->data);
  
- 	reg_bw_opmode = rtl_read_byte(rtlpriv, BW_OPMODE);
--	reg_prsr_rsc = rtl_read_byte(rtlpriv, RRSR + 2);
-+	/* dummy read */
-+	rtl_read_byte(rtlpriv, RRSR + 2);
+ 	adapter->cmd_sent = false;
+@@ -268,16 +268,14 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	mwifiex_wmm_init(adapter);
  
- 	switch (rtlphy->current_chan_bw) {
- 	case HT_CHANNEL_WIDTH_20:
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -581,7 +581,6 @@ static void _rtl92se_translate_rx_signal
- 	struct ieee80211_hdr *hdr;
- 	u8 *tmp_buf;
- 	u8 *praddr;
--	u8 *psaddr;
- 	__le16 fc;
- 	u16 type, cfc;
- 	bool packet_matchbssid, packet_toself, packet_beacon;
-@@ -593,7 +592,6 @@ static void _rtl92se_translate_rx_signal
- 	cfc = le16_to_cpu(fc);
- 	type = WLAN_FC_GET_TYPE(fc);
- 	praddr = hdr->addr1;
--	psaddr = hdr->addr2;
- 
- 	packet_matchbssid = ((IEEE80211_FTYPE_CTL != type) &&
- 	     (!compare_ether_addr(mac->bssid, (cfc & IEEE80211_FCTL_TODS) ?
+ 	if (adapter->sleep_cfm) {
+-		memset(&sleep_cfm_buf->ps_cfm_sleep, 0,
+-			adapter->sleep_cfm->len);
+-		sleep_cfm_buf->ps_cfm_sleep.command =
+-			cpu_to_le16(HostCmd_CMD_802_11_PS_MODE_ENH);
+-		sleep_cfm_buf->ps_cfm_sleep.size =
+-			cpu_to_le16(adapter->sleep_cfm->len);
+-		sleep_cfm_buf->ps_cfm_sleep.result = 0;
+-		sleep_cfm_buf->ps_cfm_sleep.action = cpu_to_le16(SLEEP_CONFIRM);
+-		sleep_cfm_buf->ps_cfm_sleep.resp_ctrl =
+-			cpu_to_le16(RESP_NEEDED);
++		memset(sleep_cfm_buf, 0, adapter->sleep_cfm->len);
++		sleep_cfm_buf->command =
++				cpu_to_le16(HostCmd_CMD_802_11_PS_MODE_ENH);
++		sleep_cfm_buf->size =
++				cpu_to_le16(adapter->sleep_cfm->len);
++		sleep_cfm_buf->result = 0;
++		sleep_cfm_buf->action = cpu_to_le16(SLEEP_CONFIRM);
++		sleep_cfm_buf->resp_ctrl = cpu_to_le16(RESP_NEEDED);
+ 	}
+ 	memset(&adapter->sleep_params, 0, sizeof(adapter->sleep_params));
+ 	memset(&adapter->sleep_period, 0, sizeof(adapter->sleep_period));
+-- 
+1.7.0.2
+
