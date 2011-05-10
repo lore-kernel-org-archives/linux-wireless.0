@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44376 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331Ab1EIE7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 00:59:09 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 21:58:40 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k_hw: remove get_channel_noise function
-Date: Mon, 9 May 2011 10:29:01 +0530
-Message-ID: <1304917141-5379-1-git-send-email-mshajakhan@atheros.com> (sfid-20110509_065925_733543_EB233ABA)
+Received: from brent.tribalogic.net ([78.86.109.144]:47901 "EHLO
+	summit.brent.tribalogic.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754174Ab1EJJrQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 05:47:16 -0400
+Message-ID: <4DC9072D.4030103@colin.guthr.ie> (sfid-20110510_114734_665854_E89D8059)
+Date: Tue, 10 May 2011 10:36:45 +0100
+From: Colin Guthrie <mageia@colin.guthr.ie>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	Thomas Backlund <tmb@mageia.org>
+Subject: Re: [Regression] Problem with rfkill on 2.6.38
+References: <ip6j66$o5f$1@dough.gmane.org> <1304930195.3475.17.camel@jlt3.sipsolutions.net> <4DC81FC7.9040503@colin.guthr.ie> <20110509171144.GA7194@srcf.ucam.org>
+In-Reply-To: <20110509171144.GA7194@srcf.ucam.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+'Twas brillig, and Matthew Garrett at 09/05/11 18:11 did gyre and gimble:
+> On Mon, May 09, 2011 at 06:09:27PM +0100, Colin Guthrie wrote:
+> 
+>> Just a quick (non-compile) followup from my last email... blacklisting
+>> the dell-laptop module works around the issue, so I think the commit
+>> previously mentioned is indeed the culprit (as it's the only recent
+>> commit and does fiddle with the rfkill stuff).
+>>
+>> Not sure what the best track forward is, but it's certainly a
+>> regression, so should probably be fixed or reverted until a more
+>> complete fix is found.
+> 
+> If you can confirm that with a build then I'll do that.
 
-currently ath9k_hw_getchan_noise is not used anywhere
+ACK. Reverting that commit and unblacklisting the dell_laptop module
+restores the previous, working functionality. I've flipped rfkill a few
+times and it's always worked fine.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |    8 --------
- drivers/net/wireless/ath/ath9k/calib.h |    1 -
- 2 files changed, 0 insertions(+), 9 deletions(-)
+Many thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index fe3c10e..558b228 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -409,14 +409,6 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
- 	}
- }
- 
--s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
--{
--	if (!ah->curchan || !ah->curchan->noisefloor)
--		return ath9k_hw_get_default_nf(ah, chan);
--
--	return ah->curchan->noisefloor;
--}
--EXPORT_SYMBOL(ath9k_hw_getchan_noise);
- 
- void ath9k_hw_bstuck_nfcal(struct ath_hw *ah)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index b8973eb..4420780 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -106,7 +106,6 @@ bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan);
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
- 				  struct ath9k_channel *chan);
- void ath9k_hw_bstuck_nfcal(struct ath_hw *ah);
--s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
- void ath9k_hw_reset_calibration(struct ath_hw *ah,
- 				struct ath9k_cal_list *currCal);
- 
+Col
+
+
 -- 
-1.7.0.4
 
+Colin Guthrie
+mageia(at)colin.guthr.ie
+http://colin.guthr.ie/
+
+Day Job:
+  Tribalogic Limited [http://www.tribalogic.net/]
+Open Source:
+  Mageia Contributor [http://www.mageia.org/]
+  PulseAudio Hacker [http://www.pulseaudio.org/]
+  Trac Hacker [http://trac.edgewall.org/]
