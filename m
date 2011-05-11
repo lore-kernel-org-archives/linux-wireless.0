@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4887 "EHLO mms2.broadcom.com"
+Received: from mout1.freenet.de ([195.4.92.91]:59292 "EHLO mout1.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986Ab1EMKAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:10 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 10/32] staging: brcm80211: fix makefiles for building
- drivers in kernel
-Date: Fri, 13 May 2011 11:59:30 +0200
-Message-ID: <1305280792-9475-10-git-send-email-arend@broadcom.com> (sfid-20110513_120019_485010_20D2FCE6)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+	id S1752132Ab1EKPgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 11:36:08 -0400
+Received: from [195.4.92.19] (helo=9.mx.freenet.de)
+	by mout1.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
+	id 1QK9fs-0001rj-Uv
+	for linux-wireless@vger.kernel.org; Wed, 11 May 2011 15:42:00 +0200
+Received: from p54a18766.dip0.t-ipconnect.de ([84.161.135.102]:39440 helo=mail.maya.org)
+	by 9.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1QK9fs-0004X5-NK
+	for linux-wireless@vger.kernel.org; Wed, 11 May 2011 15:42:00 +0200
+Message-ID: <4DCA921A.8090500@01019freenet.de> (sfid-20110511_173624_806165_68E09231)
+Date: Wed, 11 May 2011 15:41:46 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: users@rt2x00.serialmonkey.com
+CC: linux-wireless@vger.kernel.org
+Subject: rekeying of GTK and PTK completely broken under network load
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The makefiles used obj-m which forcibly builds the drivers as
-modules ignoring the Kconfig setting. This has been fixed in this
-patch.
+Hello!
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/Makefile |    2 +-
- drivers/staging/brcm80211/brcmsmac/Makefile |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Could you please take a look at this bugreport:
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
-index 8c9c0dc..c5ec562 100644
---- a/drivers/staging/brcm80211/brcmfmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-@@ -52,5 +52,5 @@ DHDOFILES = \
- 	bcmsdh_sdmmc.o \
- 	bcmsdh_sdmmc_linux.o
- 
--obj-m += brcmfmac.o
-+obj-$(CONFIG_BRCMFMAC) += brcmfmac.o
- brcmfmac-objs += $(DHDOFILES)
-diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
-index 84ae245..8d75fe1 100644
---- a/drivers/staging/brcm80211/brcmsmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmsmac/Makefile
-@@ -55,5 +55,5 @@ BRCMSMAC_OFILES := \
- 
- MODULEPFX := brcmsmac
- 
--obj-m	+= $(MODULEPFX).o
-+obj-$(CONFIG_BRCMSMAC)	+= $(MODULEPFX).o
- $(MODULEPFX)-objs	= $(BRCMSMAC_OFILES)
--- 
-1.7.4.1
+http://w1.fi/bugz/show_bug.cgi?id=402
 
+
+I'm not really sure, if this really is a hostapd bug or a bug somewhere
+else!
+
+
+The tests I did where done with the following hardware:
+
+hostapd:
+
+03:07.0 Network controller: RaLink RT2800 802.11n PCI
+        Subsystem: Linksys Device 0067
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 32 (500ns min, 1000ns max), Cache Line Size: 4 bytes
+        Interrupt: pin A routed to IRQ 21
+        Region 0: Memory at fdce0000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: rt2800pci
+
+
+-> this is a Linksys WMP600N with a ralink RT2860 / RT2850 chip (see
+http://www.wikidevi.com/wiki/Linksys_WMP600N)
+
+
+
+
+The supplicants in use where:
+
+wext-driver with rt3572sta (Linksys WUSB600Nv2 rt3572
+http://www.wikidevi.com/wiki/Linksys_WUSB600N_v2)
+
+nl80211-driver with AR9285 (PCIE-device of a laptop)
+
+
+Thank you,
+Andreas
 
