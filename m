@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4936 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754984Ab1EYVBO (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:37855 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756695Ab1EKP7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 17:01:14 -0400
-Message-ID: <4DDD6E18.6090202@gmail.com> (sfid-20110525_230124_375044_568E1E92)
-Date: Wed, 25 May 2011 23:01:12 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: zhang lei <zhanglei901@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: How to get the noise for ralink3070 using driver rt2x00
-References: <BANLkTimiWtkO3Utb_9dJGHJMyk+-HCaLdQ@mail.gmail.com>
-In-Reply-To: <BANLkTimiWtkO3Utb_9dJGHJMyk+-HCaLdQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 May 2011 11:59:08 -0400
+Received: by mail-ww0-f48.google.com with SMTP id 18so623493wwi.17
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:59:07 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	eliad@wizery.com
+Subject: [PATCH v3 0/3] cfg80211/mac80211: implementation of scheduled scan
+Date: Wed, 11 May 2011 17:09:34 +0300
+Message-Id: <1305122977-6740-1-git-send-email-coelho@ti.com> (sfid-20110511_175943_000519_8DA8B8AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/11 17:31, zhang lei wrote:
-> I can't get the noise value while using driver rt2x00 for the ralink
-> 3070, but I can get it if use the official driver, and I saw the
-> article
-> 
->  [PATCH] rt2x00: remove usage of deprecated noise value
-> 
-> said the noise field has deprecated.
-> Is there a new field for noise to instead of the old noise filed? How
-> can I get the noise value now?
+Hi,
 
-The noise field was deprecated from mac80211 for the following reasons:
-"The noise value as is won't be used, isn't filled by most drivers and doesn't really
-make a whole lot of sense on a per packet basis -- proper cfg80211 survey support in
-mac80211 will need to be different.
+I found a race condition in my previous patches when scan results where queued
+and we got a stop request before processing them.  I have now fixed this by
+checking whether we're scanning before sending results and by not queuing new
+scan results after we have stopped.
 
-Mark the struct member as deprecated so it will be removed from drivers."
+Two new changes from v2:
 
-Since then no method has been available to get the noise value from the mac80211 based drivers.
-If you feel there is a strong case for the noise value I suggest you start a discussion on the
-linux-wireless mailing list.
+* make sure we still have sched_scan_req when trying to send scan results;
+* don't queue scan results events if the scheduled scan is not running;
 
----
-Gertjan
- 
+And the previous changes, from v1 were:
+
+* fixed @ssid description in cfg80211_sched_scan_request();
+* cleaned the 'out_free' inside an else block;
+* use a trace event class for sched_scan_start/_stop and hw_scan;
+* a couple of patches sent separately with more common trace classes;
+* removed the FIF_BCN_PRBRESP_PROMISC flag on sched_scanning;
+* moved conditions a bit around in ieee80211_rx_h_passive_scan(), so the
+  IEEE80211_RX_IN_SCAN flag is not needed in sched_scan;
+* sent a separate patch not to drop skb->len < 24 frames in scans;
+* fixed freeing the ies array when the sched_scan_start driver callback fails;
+
+
+Cheers,
+Luca.
+
+Luciano Coelho (3):
+  cfg80211/nl80211: add support for scheduled scans
+  mac80211: add support for HW scheduled scan
+  cfg80211/nl80211: add interval attribute for scheduled scans
+
+ include/linux/nl80211.h     |   32 ++++++
+ include/net/cfg80211.h      |   59 ++++++++++
+ include/net/mac80211.h      |   50 ++++++++
+ net/mac80211/cfg.c          |   27 +++++
+ net/mac80211/driver-ops.h   |   29 +++++-
+ net/mac80211/driver-trace.h |   88 ++++++++++++---
+ net/mac80211/ieee80211_i.h  |    9 ++
+ net/mac80211/main.c         |    6 +-
+ net/mac80211/rx.c           |    6 +-
+ net/mac80211/scan.c         |   99 ++++++++++++++++
+ net/wireless/core.c         |   12 ++-
+ net/wireless/core.h         |    7 +
+ net/wireless/nl80211.c      |  260 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h      |    4 +
+ net/wireless/scan.c         |   70 ++++++++++++
+ 15 files changed, 735 insertions(+), 23 deletions(-)
+
