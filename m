@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2125 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753969Ab1EXHqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 03:46:08 -0400
-Message-ID: <4DDB622B.1050005@broadcom.com> (sfid-20110524_094626_032742_8C732820)
-Date: Tue, 24 May 2011 09:45:47 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
-cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from p15132773.pureserver.info ([217.160.209.225]:58097 "EHLO
+	smtp.chost.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757804Ab1EKQxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 12:53:15 -0400
+From: Sascha Silbe <silbe@activitycentral.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.laptop.org, Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Carpenter" <error27@gmail.com>
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8
- algorithm
-References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
- <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
- <4DD905CC.8040407@broadcom.com>
- <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
-In-Reply-To: <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] Add libertas_disablemesh module parameter to disable mesh interface
+Date: Wed, 11 May 2011 14:52:34 +0200
+Message-Id: <1305118354-17337-1-git-send-email-silbe@activitycentral.com> (sfid-20110511_185341_499304_AFDC03CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2011 04:19 PM, Alan Cox wrote:
-> Is it just used for wireless in this form ?
->
-> See the n_gsm and bluetooth code for what I think is the same crc
-> algorithm but in reverse bit order .
+This allows individual users and deployments to disable mesh support at
+runtime, i.e. without having to build and maintain a custom kernel.
 
-Hi Alan,
+Based on a patch by Paul Fox <pgf@laptop.org>.
+Signed-off-by: Sascha Silbe <silbe@activitycentral.com>
+---
+ drivers/net/wireless/libertas/main.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-Look into the code in n_gsm and bluetooth code. The algorithm is the 
-same, but except for the bit order it also is using a different 
-polynomial. My current implementation has a fixed table. I could do the 
-table generation runtime with the polynomial and the bit order as 
-parameters. That would make it more general purpose.
+The patch is based on the OLPC 2.6.35 kernel tree, but applies cleanly to
+wireless-next.
 
-Gr. AvS
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 8445473..62069e2 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -41,6 +41,10 @@ unsigned int lbs_debug;
+ EXPORT_SYMBOL_GPL(lbs_debug);
+ module_param_named(libertas_debug, lbs_debug, int, 0644);
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
++unsigned int lbs_disablemesh;
++EXPORT_SYMBOL_GPL(lbs_disablemesh);
++module_param_named(libertas_disablemesh, lbs_disablemesh, int, 0644);
++
 
+ /* This global structure is used to send the confirm_sleep command as
+  * fast as possible down to the firmware. */
+@@ -1086,7 +1090,10 @@ int lbs_start_card(struct lbs_private *priv)
+
+ 	lbs_update_channel(priv);
+
+-	lbs_init_mesh(priv);
++	if (!lbs_disablemesh)
++		lbs_init_mesh(priv);
++	else
++		lbs_pr_info("%s: mesh disabled\n", dev->name);
+
+ 	/*
+ 	 * While rtap isn't related to mesh, only mesh-enabled
+--
+1.7.4.1
 
