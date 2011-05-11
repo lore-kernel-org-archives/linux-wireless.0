@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.solarflare.com ([216.237.3.220]:16561 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965Ab1EBUro (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 16:47:44 -0400
-Subject: Re: Frequent spurious tx_timeouts for libertas
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTi=FT4v=Jvv5bQpUX15R87kPudKq=Q@mail.gmail.com>
-References: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
-	 <1304303082.2833.159.camel@localhost>
-	 <BANLkTi=FT4v=Jvv5bQpUX15R87kPudKq=Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 May 2011 21:47:39 +0100
-Message-ID: <1304369259.2833.180.camel@localhost> (sfid-20110502_224749_095770_4491527C)
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:59390 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754774Ab1EKQWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 12:22:07 -0400
+Received: from dlep35.itg.ti.com ([157.170.170.118])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p4B8Ed68006417
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 03:14:39 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] wl12xx: Unmask beacons includes IE 'HT information' change
+Date: Wed, 11 May 2011 11:14:22 +0300
+Message-Id: <1305101662-12247-1-git-send-email-shahar_levi@ti.com> (sfid-20110511_182221_878268_37E9C51A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-02 at 20:59 +0100, Daniel Drake wrote:
-> On 2 May 2011 03:24, Ben Hutchings <bhutchings@solarflare.com> wrote:
-> >> Also, while looking at this code, I spotted a bug in dev_watchdog():
-> >>                               /*
-> >>                                * old device drivers set dev->trans_start
-> >>                                */
-> >>                               trans_start = txq->trans_start ? : dev->trans_start;
-> >>
-> >> i.e. it is trying to figure out whether to read trans_start from txq
-> >> or dev. In both cases, trans_start is updated based on the value of
-> >> jiffies, which will occasionally be 0 (as it wraps around). Therefore
-> >> this line of code will occasionally make the wrong decision.
-> >
-> > No, I don't think so.
-> >
-> > If only dev->trans_start is being updated then the watchdog reads that.
-> > If both txq->trans_start and dev->trans_start are being updated then it
-> > doesn't matter much which the watchdog reads.
-> > If only txq->trans_start is being updated then dev->trans_start is
-> > always set to 0, so when txq->trans_start is 0 the watchdog still gets
-> > 0.
-> 
-> dev->trans_start is unconditionally initialized by dev_activate() in
-> sch_generic.c:
-> 
-> 	if (need_watchdog) {
-> 		dev->trans_start = jiffies;
-> 		dev_watchdog_up(dev);
-> 	}
-> 
-> so it is (usually) not 0.
-[...]
+All beacons includes changes in IE 'HT information' (IE 61) will
+be pass to the MAC80211 layer in order to be update with HT
+run time setting.
+Enable that via beacon filter mechanism.
 
-You're right.  Seems like we have an incomplete compatibility hack that
-can hurt drivers that are doing the right thing.
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-For those few single-queue drivers that need to update the transmit
-time, perhaps we could add a dev_trans_update() as a wrapper for
-txq_trans_update().  Then delete net_device::trans_start and change
-dev_trans_start() to avoid using it.
-
-Ben.
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dea57ea..92d26f4 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -256,12 +256,16 @@ static struct conf_drv_settings default_conf = {
+ 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
+ 		.listen_interval             = 1,
+ 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
+-		.bcn_filt_ie_count           = 1,
++		.bcn_filt_ie_count           = 2,
+ 		.bcn_filt_ie = {
+ 			[0] = {
+ 				.ie          = WLAN_EID_CHANNEL_SWITCH,
+ 				.rule        = CONF_BCN_RULE_PASS_ON_APPEARANCE,
+-			}
++			},
++			[1] = {
++				.ie          = WLAN_EID_HT_INFORMATION,
++				.rule        = CONF_BCN_RULE_PASS_ON_CHANGE,
++			},
+ 		},
+ 		.synch_fail_thold            = 10,
+ 		.bss_lose_timeout            = 100,
 -- 
-Ben Hutchings, Senior Software Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.0.4
 
