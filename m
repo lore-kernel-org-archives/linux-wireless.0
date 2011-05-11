@@ -1,115 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:21064 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751982Ab1EJFl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 01:41:29 -0400
-Subject: Re: Wireless-regdb US and CA settings incorrect?
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Michael Green <Michael.Green@Atheros.com>
-Cc: "ext Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-In-Reply-To: <1305003469.3749.118.camel@wimaxnb>
-References: <93781E992CBA7843962D8B0E7D683F3C1700646FD6@SC1EXMB-MBCL.global.atheros.com>
-	 <1305003469.3749.118.camel@wimaxnb>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 May 2011 08:40:30 +0300
-Message-ID: <1305006030.3749.129.camel@wimaxnb> (sfid-20110510_074132_785982_5AD7132D)
-Mime-Version: 1.0
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46188 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428Ab1EJXaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 19:30:25 -0400
+Received: by ewy4 with SMTP id 4so1975561ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 16:30:24 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: add missing GPIO defines, use PULL register only when available
+Date: Wed, 11 May 2011 02:08:09 +0200
+Message-Id: <1305072489-3936-1-git-send-email-zajec5@gmail.com> (sfid-20110511_013029_830578_57848CF9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-10 at 07:57 +0300, Juuso Oikarinen wrote:
-> On Mon, 2011-05-09 at 06:31 -0700, ext Michael Green wrote:
-> > 1) Canada:    Industry Canada allows STAs to passive scan (ie enable operation) in those weather radar channels (5.6 to 5.65 GHz).  
-> > APs must disable operation in those channels in Canada.  
-> > 
-> > 2) U.S.:  I hope the entire industry (including Open Source) is aware and understands latest FCC rules for this band (attached "interim rules").    Here again, APs must disable operation in those channels and follow other restrictions about usage and installation, warnings to installers as described in this attachment.
-> > STAs in US are not subject to these restrictions.
-> > 
-> > 3) Atheros licensed software has two different reg domains for some countries like U.S. to support this case (ie different channels sets for AP vs. STA for the same country).
-> > 
-> > 
-> > And somewhat related note:  in future when peer to peer technologies are supported in open source, then we need to be careful that sw and hw complies with these same rules (when a client device acts like a  "Master" per FCC definition using radar channels, then it must meet the full AP/DFS rules).  This point is not directly related to above Q&A, but thought I would mention it now.
-> > 
-> 
-> Thanks a lot for the clarification.
+Similar patch was commited to ssb.
 
-One more thing though. For 1), I cannot find these interim rules
-anywhere, can you post me a reference?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/driver_chipcommon.c            |    6 ++++--
+ include/linux/bcma/bcma_driver_chipcommon.h |    5 +++++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-While I agree with what is said, but I still have the understanding that
-if there is a non-conforming AP transmitting on the weather radar
-frequencies within Canada, the STA still should refrain from
-transmissions.
-
--Juuso
-
-> -Juuso
-> 
-> > 
-> > Michael Green
-> > Atheros Communications, Inc.
-> > mgreen@atheros.com
-> > Desk:   +1-781-400-1491
-> > Mobile: +1-508-380-4921
-> > 
-> > -----Original Message-----
-> > From: Juuso Oikarinen [mailto:juuso.oikarinen@nokia.com] 
-> > Sent: Monday, May 09, 2011 6:29 AM
-> > To: ext Luis R. Rodriguez
-> > Cc: Michael Green; ext John W. Linville; linux-wireless@vger.kernel.org; wireless-regdb@lists.infradead.org
-> > Subject: Re: wireless-regdb US and CA settings incorrect?
-> > 
-> > On Thu, 2011-05-05 at 08:57 -0700, ext Luis R. Rodriguez wrote:
-> > > On Thu, May 5, 2011 at 4:21 AM, Juuso Oikarinen 
-> > > <juuso.oikarinen@nokia.com> wrote:
-> > > > Hi John, all,
-> > > >
-> > > > The following is an excerpt of the db.txt from most recent 
-> > > > wireless-regdb.
-> > > >
-> > > > country US:
-> > > >         (2402 - 2472 @ 40), (3, 27)
-> > > >         (5170 - 5250 @ 40), (3, 17)
-> > > >         (5250 - 5330 @ 40), (3, 20), DFS
-> > > >         (5490 - 5600 @ 40), (3, 20), DFS
-> > > >         (5650 - 5710 @ 40), (3, 20), DFS
-> > > >         (5735 - 5835 @ 40), (3, 30)
-> > > >
-> > > > country CA:
-> > > >         (2402 - 2472 @ 40), (3, 27)
-> > > >         (5170 - 5250 @ 40), (3, 17)
-> > > >         (5250 - 5330 @ 40), (3, 20), DFS
-> > > >         (5490 - 5710 @ 40), (3, 20), DFS
-> > > >         (5735 - 5835 @ 40), (3, 30)
-> > > >
-> > > > We are under the understanding that the Canadian national rules deny 
-> > > > the usage of the 5490-5710 range of frequencies (ref from RSS-210), 
-> > > > but the range is present in the allowed range of frequencies for the CA region:
-> > > >
-> > > > "Additional requirements for the band 5600-5650 MHz: Until further 
-> > > > notice, devices subject to this Section shall not be capable of 
-> > > > transmitting in the band 5600-5650 MHz, so that Environment Canada 
-> > > > weather radars operating in this band are protected."
-> > > >
-> > > > Then again, the FCC rules (15.407) do not prohibit the mentioned 
-> > > > range of frequencies within the US (with DFS and limited power 
-> > > > level) but in the regulatory database that range is missing.
-> > > >
-> > > >
-> > > > Is there a bug in the regulatory db, or am I misunderstanding something?
-> > > 
-> > > 
-> > > Michael, any opinion on this?
-> > 
-> > Any take on this one?
-> > 
-> > -Juuso
-> > 
-> > 
-> 
-
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index caf5960..6061022 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -29,8 +29,10 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ 	if (cc->core->id.rev >= 35)
+ 		cc->capabilities_ext = bcma_cc_read32(cc, BCMA_CC_CAP_EXT);
+ 
+-	bcma_cc_write32(cc, 0x58, 0);
+-	bcma_cc_write32(cc, 0x5C, 0);
++	if (cc->core->id.rev >= 20) {
++		bcma_cc_write32(cc, BCMA_CC_GPIOPULLUP, 0);
++		bcma_cc_write32(cc, BCMA_CC_GPIOPULLDOWN, 0);
++	}
+ 
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU)
+ 		bcma_pmu_init(cc);
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 4f8fd6a..083c3b6 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -113,6 +113,8 @@
+ #define BCMA_CC_FLASHDATA		0x0048
+ #define BCMA_CC_BCAST_ADDR		0x0050
+ #define BCMA_CC_BCAST_DATA		0x0054
++#define BCMA_CC_GPIOPULLUP		0x0058		/* Rev >= 20 only */
++#define BCMA_CC_GPIOPULLDOWN		0x005C		/* Rev >= 20 only */
+ #define BCMA_CC_GPIOIN			0x0060
+ #define BCMA_CC_GPIOOUT			0x0064
+ #define BCMA_CC_GPIOOUTEN		0x0068
+@@ -121,6 +123,9 @@
+ #define BCMA_CC_GPIOIRQ			0x0074
+ #define BCMA_CC_WATCHDOG		0x0080
+ #define BCMA_CC_GPIOTIMER		0x0088		/* LED powersave (corerev >= 16) */
++#define  BCMA_CC_GPIOTIMER_OFFTIME	0x0000FFFF
++#define  BCMA_CC_GPIOTIMER_OFFTIME_SHIFT	0
++#define  BCMA_CC_GPIOTIMER_ONTIME	0xFFFF0000
+ #define  BCMA_CC_GPIOTIMER_ONTIME_SHIFT	16
+ #define BCMA_CC_GPIOTOUTM		0x008C		/* LED powersave (corerev >= 16) */
+ #define BCMA_CC_CLOCK_N			0x0090
+-- 
+1.7.3.4
 
