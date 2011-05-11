@@ -1,89 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42583 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909Ab1EWBy0 (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:47302 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753906Ab1EKDm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:54:26 -0400
-Date: Sun, 22 May 2011 20:54:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7 V2] b43: Fix warnings from gcc 4.6.0
-Message-ID: <4dd9be51.RcTk0QhklrGKK5QT%Larry.Finger@lwfinger.net> (sfid-20110523_035428_737691_11001F1B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 10 May 2011 23:42:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: remove redundant local structures
+Date: Tue, 10 May 2011 20:47:35 -0700
+Message-Id: <1305085656-12484-1-git-send-email-bzhao@marvell.com> (sfid-20110511_054315_607730_2C8DD2AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for b43:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-  CC [M]  drivers/net/wireless/b43/lo.o
-drivers/net/wireless/b43/lo.c: In function ‘lo_measure_gain_values’:
-drivers/net/wireless/b43/lo.c:304:7: warning: variable ‘trsw_rx’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/b43/dma.o
-drivers/net/wireless/b43/dma.c: In function ‘free_all_descbuffers’:
-drivers/net/wireless/b43/dma.c:760:30: warning: variable ‘desc’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/b43/dma.c: In function ‘b43_dma_handle_txstatus’:
-drivers/net/wireless/b43/dma.c:1391:30: warning: variable ‘desc’ set but not used [-Wunused-but-set-variable]
+Avoid use of local structure in the function if the structure is
+already allocated by the caller and the structure pointer is passed.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   28 +++++++++-------------------
+ 1 files changed, 9 insertions(+), 19 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing/drivers/net/wireless/b43/dma.c
-@@ -757,14 +757,14 @@ static void dmacontroller_cleanup(struct
- 
- static void free_all_descbuffers(struct b43_dmaring *ring)
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 75bca56..d05907d 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -1250,11 +1250,9 @@ mwifiex_drv_get_driver_version(struct mwifiex_adapter *adapter, char *version,
+ int mwifiex_get_signal_info(struct mwifiex_private *priv,
+ 			    struct mwifiex_ds_get_signal *signal)
  {
--	struct b43_dmadesc_generic *desc;
- 	struct b43_dmadesc_meta *meta;
- 	int i;
+-	struct mwifiex_ds_get_signal info;
+ 	int status;
  
- 	if (!ring->used_slots)
- 		return;
- 	for (i = 0; i < ring->nr_slots; i++) {
--		desc = ring->ops->idx2desc(ring, i, &meta);
-+		/* get meta - ignore returned value */
-+		ring->ops->idx2desc(ring, i, &meta);
+-	memset(&info, 0, sizeof(struct mwifiex_ds_get_signal));
+-	info.selector = ALL_RSSI_INFO_MASK;
++	signal->selector = ALL_RSSI_INFO_MASK;
  
- 		if (!meta->skb || b43_dma_ptr_is_poisoned(meta->skb)) {
- 			B43_WARN_ON(!ring->tx);
-@@ -1388,7 +1388,6 @@ void b43_dma_handle_txstatus(struct b43_
+ 	/* Signal info can be obtained only if connected */
+ 	if (!priv->media_connected) {
+@@ -1267,13 +1265,10 @@ int mwifiex_get_signal_info(struct mwifiex_private *priv,
+ 				       HostCmd_ACT_GEN_GET, 0, signal);
+ 
+ 	if (!status) {
+-		if (signal)
+-			memcpy(signal, &info,
+-			       sizeof(struct mwifiex_ds_get_signal));
+-		if (info.selector & BCN_RSSI_AVG_MASK)
+-			priv->w_stats.qual.level = info.bcn_rssi_avg;
+-		if (info.selector & BCN_NF_AVG_MASK)
+-			priv->w_stats.qual.noise = info.bcn_nf_avg;
++		if (signal->selector & BCN_RSSI_AVG_MASK)
++			priv->w_stats.qual.level = signal->bcn_rssi_avg;
++		if (signal->selector & BCN_NF_AVG_MASK)
++			priv->w_stats.qual.noise = signal->bcn_nf_avg;
+ 	}
+ 
+ 	return status;
+@@ -1333,19 +1328,14 @@ mwifiex_get_stats_info(struct mwifiex_private *priv,
+ 		       struct mwifiex_ds_get_stats *log)
  {
- 	const struct b43_dma_ops *ops;
- 	struct b43_dmaring *ring;
--	struct b43_dmadesc_generic *desc;
- 	struct b43_dmadesc_meta *meta;
- 	int slot, firstused;
- 	bool frame_succeed;
-@@ -1416,7 +1415,8 @@ void b43_dma_handle_txstatus(struct b43_
- 	ops = ring->ops;
- 	while (1) {
- 		B43_WARN_ON(slot < 0 || slot >= ring->nr_slots);
--		desc = ops->idx2desc(ring, slot, &meta);
-+		/* get meta - ignore returned value */
-+		ops->idx2desc(ring, slot, &meta);
+ 	int ret;
+-	struct mwifiex_ds_get_stats get_log;
  
- 		if (b43_dma_ptr_is_poisoned(meta->skb)) {
- 			b43dbg(dev->wl, "Poisoned TX slot %d (first=%d) "
-Index: wireless-testing/drivers/net/wireless/b43/lo.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/lo.c
-+++ wireless-testing/drivers/net/wireless/b43/lo.c
-@@ -301,14 +301,12 @@ static void lo_measure_gain_values(struc
- 		max_rx_gain = 0;
+-	memset(&get_log, 0, sizeof(struct mwifiex_ds_get_stats));
+ 	ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_GET_LOG,
+-				    HostCmd_ACT_GEN_GET, 0, &get_log);
++				    HostCmd_ACT_GEN_GET, 0, log);
  
- 	if (has_loopback_gain(phy)) {
--		int trsw_rx = 0;
- 		int trsw_rx_gain;
+ 	if (!ret) {
+-		if (log)
+-			memcpy(log, &get_log, sizeof(struct
+-					mwifiex_ds_get_stats));
+-		priv->w_stats.discard.fragment = get_log.fcs_error;
+-		priv->w_stats.discard.retries = get_log.retry;
+-		priv->w_stats.discard.misc = get_log.ack_failure;
++		priv->w_stats.discard.fragment = log->fcs_error;
++		priv->w_stats.discard.retries = log->retry;
++		priv->w_stats.discard.misc = log->ack_failure;
+ 	}
  
- 		if (use_trsw_rx) {
- 			trsw_rx_gain = gphy->trsw_rx_gain / 2;
- 			if (max_rx_gain >= trsw_rx_gain) {
- 				trsw_rx_gain = max_rx_gain - trsw_rx_gain;
--				trsw_rx = 0x20;
- 			}
- 		} else
- 			trsw_rx_gain = max_rx_gain;
+ 	return ret;
+-- 
+1.7.0.2
+
