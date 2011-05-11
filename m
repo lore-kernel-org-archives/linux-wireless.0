@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4259 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756029Ab1EGWno convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954Ab1EKRG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 18:43:44 -0400
-Date: Sat, 7 May 2011 15:42:25 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Greg KH" <greg@kroah.com>,
-	"Michael =?iso-8859-1?Q?B=FCsch?=" <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
- driver
-Message-ID: <20110507224223.GA2537@broadcom.com> (sfid-20110508_004359_793935_58C8F6B9)
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
- <4DC56FB9.5000208@hauke-m.de>
- <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
- <4DC57425.30206@hauke-m.de>
- <BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com>
- <4DC5805C.2010202@hauke-m.de>
-MIME-Version: 1.0
-In-Reply-To: <4DC5805C.2010202@hauke-m.de>
-Content-Type: text/plain;
- charset=utf-8
+	Wed, 11 May 2011 13:06:26 -0400
+Subject: Re: [PATCH v2] 802.11n frame injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
+References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 May 2011 19:06:23 +0200
+Message-ID: <1305133583.17892.3.camel@jlt3.sipsolutions.net> (sfid-20110511_190635_626350_8E34772B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 07, 2011 at 10:24:44AM -0700, Hauke Mehrtens wrote:
-> On 05/07/2011 06:51 PM, Rafał Miłecki wrote:
-> > 2011/5/7 Hauke Mehrtens <hauke@hauke-m.de>:
-> >> There is a Ethernet core used on embedded devices with this bus and
-> >> George wrote a driver for the first version of this bus implementation,
-> >> he send to the ML. Most user will use this with some wireless devices so
-> >> I would add linux-wireless@vger.kernel.org. Why does ssb uses netdev ML?
-> > 
-> > Thanks, I didn't know about this ethernet driver. Have to check it!
-> > Where was this published? Do you have a thread name?
-> 
-> I think he haven't send it to the mailing list, there is a link [0] in
-> some Ticket [1] at OpenWrt. This driver was derived from source code
-> Braodcom have published, but not under a GPL compatible license. It will
-> be nice if Braodcom would allow us to publish a driver under the terms
-> of the GPL for the Ethernet core based on their driver, without writing
-> a full spec of the driver like it was done for b43.
+On Fri, 2011-04-22 at 18:34 +0200, Matteo Croce wrote:
 
-...
-> 
-> [0] http://www.znau.edu.ua/temp/asus-rt-n16/openwrt-bcm4716-README.txt
-> [1] https://dev.openwrt.org/ticket/6580#comment
+> --- a/net/mac80211/status.c	2011-04-22 11:34:08.833135198 +0200
+> +++ b/net/mac80211/status.c	2011-04-22 11:34:54.037135187 +0200
+> @@ -405,6 +405,19 @@
+>  	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+>  		rthdr->rate = sband->bitrates[
+>  				info->status.rates[0].idx].bitrate / 5;
+> +	/* HT rates */
+> +	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
+> +		rthdr->hdr.it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+> +		rthdr->rate = 0;
+> +		rthdr->ht_known =	IEEE80211_RADIOTAP_MCS_HAVE_BW |
+> +					IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+> +					IEEE80211_RADIOTAP_MCS_HAVE_GI;
+> +		rthdr->ht_mcs = info->status.rates[0].idx;
+> +		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> +			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
+> +		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
+> +			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
+> +	}
 
-All of of the patches listed in [0] appear to contain GPL-licensed code.  Can
-you provide a pointer to the ethernet driver that you think is not under a
-GPL-compatible license?
+I think you should also split the patch -- this part isn't really only
+injection.
 
-Thanks,
----
-Henry Ptasinski
-henryp@broadcom.com
+johannes
 
