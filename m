@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ukfsn.org ([77.75.108.10]:55745 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755394Ab1EPNtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 09:49:06 -0400
-Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
-	by mail.ukfsn.org (Postfix) with ESMTP id 47429DEC39
-	for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 14:22:24 +0100 (BST)
-Received: from mail.ukfsn.org ([192.168.54.25])
-	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
-	with ESMTP id sC00EJCUiElJ for <linux-wireless@vger.kernel.org>;
-	Mon, 16 May 2011 14:22:24 +0100 (BST)
-Received: from stargate.localnet (unknown [84.45.236.142])
-	by mail.ukfsn.org (Postfix) with ESMTP id 17EACDEC2E
-	for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 14:22:24 +0100 (BST)
-From: David Goodenough <david.goodenough@btconnect.com>
-To: linux-wireless@vger.kernel.org
-Subject: Is the current link bitrate available in /proc or /sys?
-Date: Mon, 16 May 2011 14:22:22 +0100
+Received: from mail.candelatech.com ([208.74.158.172]:45451 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930Ab1EKRKU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 13:10:20 -0400
+Message-ID: <4DCAC2F0.7090308@candelatech.com> (sfid-20110511_191025_414416_8C583A41)
+Date: Wed, 11 May 2011 10:10:08 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201105161422.22323.david.goodenough@btconnect.com> (sfid-20110516_154910_246603_D21463C6)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?QmrDtnJuIFNtZWRtYW4=?= <bjorn.smedman@venatech.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
+References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>	 <4DC81A61.9080101@candelatech.com>	 <1304959783.12202.7.camel@jlt3.sipsolutions.net>	 <BANLkTinHqMi=sy=sEzQPTz4QEsoucQXYVA@mail.gmail.com>	 (sfid-20110511_175913_191261_9D02A924) <1305132500.17892.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1305132500.17892.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I know I can get the bitrate using iwconfig or iw for a given wireless
-card, but I was wondering if it was exposed anywhere in /proc or /sys.  
-I looked but could not find it, which either means I looks in the wrong 
-place or that it is not there.  If it is not there is a good reason why
-not?  I ask because on my little embedded boards starting apps like iwconfig
-or iw takes while, and I would rather get right to the data.
+On 05/11/2011 09:48 AM, Johannes Berg wrote:
+> On Wed, 2011-05-11 at 17:58 +0200, Björn Smedman wrote:
+>
+>>> Yes, in theory that's possible, but apparently no driver actually did
+>>> this correctly. Also, it didn't seem like anyone really cares, and we
+>>> need to enforce some restrictions because otherwise drivers will end up
+>>> doing it wrong, and you'll end up having a beacon interval of 200 while
+>>> advertising 150 for example, which will totally throw off powersaving
+>>> clients.
+>>
+>> I'm very interested in having multiple AP vifs with different beacon
+>> intervals. If we're going to just fail anyway in this case can't we do
+>> that from the drivers instead? I would also prefer that from an
+>> aesthetic point of view, instead of having broken logic in the drivers
+>> "protected" by extra verification in cfg80211.
+>
+> We can't fail from the drivers, they don't have a failure path.
 
-David
+Maybe we could treat the beacon interval setting as a requested
+value, and give the caller some way to know the actual value
+that is used by the hardware?
+
+Thanks,
+Ben
+
+
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
