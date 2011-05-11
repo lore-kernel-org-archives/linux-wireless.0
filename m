@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45223 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756110Ab1EXMs4 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36176 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146Ab1EKPjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 08:48:56 -0400
-Received: by iyb14 with SMTP id 14so5214118iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 05:48:56 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 24 May 2011 05:48:36 -0700
-Message-ID: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> (sfid-20110524_144900_493095_DB10C2AE)
-Subject: Initial automatic channel selection implementation
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com
-Cc: Matt Smith <Matt.Smith@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 May 2011 11:39:31 -0400
+Received: by wwa36 with SMTP id 36so748938wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:39:30 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/7] wl12xx_sdio: set interrupt as wake_up interrupt
+Date: Wed, 11 May 2011 11:54:22 +0300
+Message-Id: <1305104068-32240-2-git-send-email-eliad@wizery.com> (sfid-20110511_173948_932587_E7A0928B)
+In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm looking to implement some form of Automatic Channel Selection on
-Linux. What this would do is review all known channels where we can
-initiate radiation on (beaconing modes of operation) and then pick the
-best one based on some heuristics. Below are 3 stages I believe we can
-take to start supporting this.
+set the sdio interrupt as wake_up interrupt, so we will be able
+to wake up the suspended system (Wake-On-Wireless)
 
-I - Simple solution:
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-  * Look for the frequency in a band that has the less amount of BSSes
-with the lowest link quality
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index bcd4ad7..1298461 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -267,6 +267,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 		goto out_free;
+ 	}
+ 
++	enable_irq_wake(wl->irq);
++
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+@@ -303,6 +305,7 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	wl1271_unregister_hw(wl);
++	disable_irq_wake(wl->irq);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
+ }
+-- 
+1.7.0.4
 
-II - Load check:
-
-  * In addition to the above take into consideration some metric for
-load on the channel: frame count observed
-
-III - Spectral / FFT data scan:
-
-  * Do a spectral scan on each supported frequency and based on the
-FFT of the data choose the channel which has the less amount of
-interference. This requires FFT data to be sent from each driver to
-userspace, userspace to parse it based on the chipset, and to classify
-the data into some generic form.
-
-The first solution should be a quick hack and I can likely implement a
-proof of concept rather quickly with iw based on scan results. Would
-likely be a very poor algorithm though. For load check I'd like to
-hear ideas on what we can use, I was thinking simply using a monitor
-interface to do a frame count over time on each channel and use this
-information in combination with the BSS / link quality information
-from phase I to form a decision. The first two should be usable with
-any 802.11 mac80211 driver.
-
-The Spectral stuff requires both driver enhancements and some nl80211
-changes which enables drivers to export some vendor specific blob
-which userspace can parse and use for analysis. This is the ideal
-solution but requires quite a bit of work and it the hooks will be
-vendor specific both for kernel / processing of the FFT binary data.
-Not all devices will support this.
-
-This is the roadmap I'll follow, let me know if you have any other suggestions.
-
-  Luis
