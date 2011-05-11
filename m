@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1652 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755334Ab1EOIit convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:47021 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755161Ab1EKQG1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2011 04:38:49 -0400
-Message-ID: <4DCF9105.6010504@broadcom.com> (sfid-20110515_103856_258350_6C4D67FE)
-Date: Sun, 15 May 2011 10:38:29 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Gottfried Haider" <gottfried.haider@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"=?UTF-8?B?UmFmYcWCIE0=?= =?UTF-8?B?acWCZWNraQ==?="
-	<zajec5@gmail.com>
-Subject: Re: brcmsmac and BCM943224HMB (AXI?)
-References: <BANLkTim78s_5DNateJDc7fF=Kh5bTMSUPw@mail.gmail.com>
-In-Reply-To: <BANLkTim78s_5DNateJDc7fF=Kh5bTMSUPw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Wed, 11 May 2011 12:06:27 -0400
+Received: by mail-ey0-f172.google.com with SMTP id 13so298804eye.17
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:06:26 -0700 (PDT)
+Subject: Re: [PATCH 0/7] wl12xx: add initial wowlan support
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 May 2011 11:57:48 +0300
+Message-ID: <1305104269.12586.746.camel@cumari> (sfid-20110511_180659_408038_F4AD9DF2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2011 04:55 PM, Gottfried Haider wrote:
-> Dear Arend,
->
-> I am trying to get a BCM943224HMB module (a Half-Mini Card) [1]
-> working with the brcmsmac driver.
->
-> Broadcom's webpage mentions that the module includes a BCM43224 core
-> (in addition to a BCM2070 Bluetooth one), but the device is not
-> getting recognized by the driver in -rc7.
->
-> Without understanding too much about AXI, I tried both your
-> implementation and Rafał's (the latter with the addition of my PCI
-> id). Both did not make the device magically work with brcmsmac, but
-> with Rafał's code I got the following output, telling me that the
-> device indeed makes use of AXI:
-There are two modules for this support. One from Rafal called bcma.ko 
-and I did one called brcmaxi.ko. I did not get combination brcmsmac/bcma 
-working yet. So the brcmsmac which is in the linux-next tree does not 
-need either brcmaxi nor bcma. That is work in progress.
-> [    3.651668] bcma-pci-bridge 0000:04:00.0: PCI INT A ->  GSI 17
-> (level, low) ->  IRQ 17
-> [    3.651686] bcma-pci-bridge 0000:04:00.0: setting latency timer to 64
-> [    3.651818] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800,
-> rev 0x22, class 0x0)
-> [    3.651841] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812,
-> rev 0x17, class 0x0)
-> [    3.651890] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev
-> 0x0F, class 0x0)
-> [    3.651986] bcma: Switched to core: 0x800
-> [    3.651998] bcma: Found rev 6 PMU (capabilities 0x108C2606)
-> [    3.652020] bcma: Switched to core: 0x820
-> [    3.710315] bcma: Bus registered
->
->
-> Since you mentioned that you tested brcmaxi with brcmsmac, can you
-> tell me what's missing to get the device working? Is this only a
-> question of adding some device IDs to brcmsmac, or does the driver
-> need some major changes to talk to the core through bcma/brcmaxi? (Or
-> something completely different?)
-As said brcmaxi and bcma are not needed for the current brcmsmac.
-> thanks for your time,
-> Gottfried
->
-> [1] 14e4:0576, got this with a ThinkPad x120e .. the closed driver
-> detects the device, but insists that it's disabled by a radio switch
-> (tested on -rc7)
-Let me ask around over here whether adding the device id will work.
+Hi Eliad,
 
-Gr. AvS
+On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
+> Note that this patchset needs some additional omap/mmc patches in 
+> order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
+> (however, if the MMC_PM_KEEP_POWER flag is not being supported we 
+> don't advertise support for wowlan triggers, so this patchset alone
+> shouldn't harm). 
+
+Do you know if these patches are queued in linux-omap for 2.6.40?
 
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+Cheers,
+Luca.
 
