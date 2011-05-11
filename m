@@ -1,76 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13001 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757859Ab1ELXuQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45011 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757544Ab1EKRAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 19:50:16 -0400
-From: Stephen Boyd <sboyd@codeaurora.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-scsi@vger.kernel.org, x86@kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH 0/9] strict user copy checks on x86_64
-Date: Thu, 12 May 2011 16:50:03 -0700
-Message-Id: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015234_813612_56C0E7A8)
+	Wed, 11 May 2011 13:00:54 -0400
+Date: Wed, 11 May 2011 12:49:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] 802.11n frame injection
+Message-ID: <20110511164920.GD2490@tuxdriver.com> (sfid-20110511_190124_159882_67003FD3)
+References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It turns out that strict user copy checks (also known as
-CONFIG_DEBUG_STRICT_USER_COPY_CHECKS) isn't actually implemented
-on x86_64 and thus we aren't catching potential security holes
-at compile time.
+  CC [M]  net/mac80211/tx.o
+net/mac80211/tx.c: In function ‘__ieee80211_parse_tx_radiotap’:
+net/mac80211/tx.c:1095:21: error: ‘sband’ undeclared (first use in this function)
+net/mac80211/tx.c:1095:21: note: each undeclared identifier is reported only once for each function it appears in
 
-This series adds support for strict user copy checks on x86_64
-and silences all the benign warnings in the x86_64 allyesconfig.
+Also, please add "mac80211:" as a prefix in the subject, and correct
+the commit message to not reference received frames.
 
-The final patch consolidates the config option as its duplicated
-across mutliple arches. I don't know what tree this series should
-go through so I tried to send the individual driver patches to the
-respective maintainers.
-
-Stephen Boyd (9):
-  iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  debugfs: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  kprobes: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  ASoC: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  x86: Implement strict user copy checks for x86_64
-  Consolidate CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
-
- arch/parisc/Kconfig                         |    1 +
- arch/parisc/Kconfig.debug                   |   14 --------------
- arch/s390/Kconfig                           |    1 +
- arch/s390/Kconfig.debug                     |   14 --------------
- arch/s390/lib/Makefile                      |    1 -
- arch/s390/lib/usercopy.c                    |    8 --------
- arch/sparc/lib/Makefile                     |    1 -
- arch/sparc/lib/usercopy.c                   |    8 --------
- arch/tile/Kconfig                           |    8 +-------
- arch/tile/include/asm/uaccess.h             |    7 ++++++-
- arch/tile/lib/uaccess.c                     |    8 --------
- arch/x86/Kconfig                            |    1 +
- arch/x86/Kconfig.debug                      |   14 --------------
- arch/x86/include/asm/uaccess_64.h           |   12 +++++++++---
- arch/x86/lib/usercopy_32.c                  |    6 ------
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
- drivers/scsi/lpfc/lpfc_debugfs.c            |    3 ++-
- fs/debugfs/file.c                           |    2 +-
- kernel/kprobes.c                            |    2 +-
- lib/Kconfig.debug                           |   18 ++++++++++++++++++
- lib/Makefile                                |    1 +
- lib/usercopy.c                              |    8 ++++++++
- net/bluetooth/rfcomm/sock.c                 |    3 ++-
- sound/soc/soc-core.c                        |    2 +-
- 25 files changed, 55 insertions(+), 92 deletions(-)
- delete mode 100644 arch/s390/lib/usercopy.c
- delete mode 100644 arch/sparc/lib/usercopy.c
- create mode 100644 lib/usercopy.c
+On Fri, Apr 22, 2011 at 06:34:59PM +0200, Matteo Croce wrote:
+> This patch allows to set the tx rate and retries when injecting,
+> and report correct MCS information on received frames.
+> This v2 version sets IEEE80211_TX_STATUS_HEADROOM to a correct value
+> 
+> Signed-off-by: Matteo Croce <matteo@openwrt.org>
+> 
+> --- a/net/mac80211/tx.c	2011-04-22 11:34:08.825135198 +0200
+> +++ b/net/mac80211/tx.c	2011-04-22 11:34:54.037135187 +0200
+> @@ -1091,6 +1091,44 @@
+>  				tx->flags |= IEEE80211_TX_FRAGMENTED;
+>  			break;
+> 
+> +		case IEEE80211_RADIOTAP_RATE: {
+> +			info->control.rates[0].idx = 0;
+> +			if (*iterator.this_arg) {
+> +				int i;
+> +				for (i = 0; i < sband->n_bitrates; i++)
+> +					if (sband->bitrates[i].bitrate ==
+> +						*iterator.this_arg * 5) {
+> +						info->control.rates[0].idx = i;
+> +						break;
+> +					}
+> +			}
+> +			info->control.rates[0].flags = 0;
+> +			info->control.rates[1].idx = -1;
+> +			info->control.rates[2].idx = -1;
+> +			info->control.rates[3].idx = -1;
+> +			info->control.rates[4].idx = -1;
+> +			break;
+> +		}
+> +
+> +		case IEEE80211_RADIOTAP_DATA_RETRIES:
+> +			info->control.rates[0].count = *iterator.this_arg;
+> +			break;
+> +
+> +		case IEEE80211_RADIOTAP_MCS: {
+> +			u8 flags = iterator.this_arg[1];
+> +			u8 mcs = iterator.this_arg[2];
+> +			info->control.rates[0].idx = mcs;
+> +			info->control.rates[0].flags |=
+> +				IEEE80211_TX_RC_MCS;
+> +			if (flags & IEEE80211_RADIOTAP_MCS_BW_40)
+> +				info->control.rates[0].flags |=
+> +				IEEE80211_TX_RC_40_MHZ_WIDTH;
+> +			if (flags & IEEE80211_RADIOTAP_MCS_SGI)
+> +				info->control.rates[0].flags |=
+> +				IEEE80211_TX_RC_SHORT_GI;
+> +			break;
+> +		}
+> +
+>  		/*
+>  		 * Please update the file
+>  		 * Documentation/networking/mac80211-injection.txt
+> --- a/net/mac80211/ieee80211_i.h	2011-04-22 11:34:08.829135198 +0200
+> +++ b/net/mac80211/ieee80211_i.h	2011-04-22 11:34:54.037135187 +0200
+> @@ -1197,6 +1197,10 @@
+>  	u8 padding_for_rate;
+>  	__le16 tx_flags;
+>  	u8 data_retries;
+> +	/*HT info*/
+> +	u8 ht_known;
+> +	u8 ht_flag;
+> +	u8 ht_mcs;
+>  } __packed;
+> 
+> 
+> --- a/net/mac80211/status.c	2011-04-22 11:34:08.833135198 +0200
+> +++ b/net/mac80211/status.c	2011-04-22 11:34:54.037135187 +0200
+> @@ -405,6 +405,19 @@
+>  	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+>  		rthdr->rate = sband->bitrates[
+>  				info->status.rates[0].idx].bitrate / 5;
+> +	/* HT rates */
+> +	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
+> +		rthdr->hdr.it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+> +		rthdr->rate = 0;
+> +		rthdr->ht_known =	IEEE80211_RADIOTAP_MCS_HAVE_BW |
+> +					IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+> +					IEEE80211_RADIOTAP_MCS_HAVE_GI;
+> +		rthdr->ht_mcs = info->status.rates[0].idx;
+> +		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> +			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
+> +		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
+> +			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
+> +	}
+> 
+>  	/* for now report the total retry_count */
+>  	rthdr->data_retries = retry_count;
+> --- a/net/wireless/radiotap.c	2011-04-22 11:34:08.833135198 +0200
+> +++ b/net/wireless/radiotap.c	2011-04-22 11:34:54.037135187 +0200
+> @@ -40,6 +40,7 @@
+>  	[IEEE80211_RADIOTAP_TX_FLAGS] = { .align = 2, .size = 2, },
+>  	[IEEE80211_RADIOTAP_RTS_RETRIES] = { .align = 1, .size = 1, },
+>  	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
+> +	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
+>  	/*
+>  	 * add more here as they are defined in radiotap.h
+>  	 */
+> --- a/include/net/mac80211.h	2011-04-22 11:38:01.389135142 +0200
+> +++ b/include/net/mac80211.h	2011-04-22 11:40:22.017135111 +0200
+> @@ -2228,7 +2228,7 @@
+>   * The TX headroom reserved by mac80211 for its own tx_status functions.
+>   * This is enough for the radiotap header.
+>   */
+> -#define IEEE80211_TX_STATUS_HEADROOM	13
+> +#define IEEE80211_TX_STATUS_HEADROOM	16
+> 
+>  /**
+>   * ieee80211_sta_set_tim - set the TIM bit for a sleeping station
+> 
 
 -- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
