@@ -1,180 +1,263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:59753 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812Ab1EJEka (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:47303 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753937Ab1EKDm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 00:40:30 -0400
-Subject: [PATCH 1/2] ath6kl: iw dev wlan0 link implementation
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@adurom.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Tue, 10 May 2011 07:40:23 +0300
-Message-ID: <20110510044023.29589.38450.stgit@localhost6.localdomain6> (sfid-20110510_064045_290501_77D39D3C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 10 May 2011 23:42:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: cleanup ioctl.h
+Date: Tue, 10 May 2011 20:47:36 -0700
+Message-Id: <1305085656-12484-2-git-send-email-bzhao@marvell.com> (sfid-20110511_054316_191932_7812F087)
+In-Reply-To: <1305085656-12484-1-git-send-email-bzhao@marvell.com>
+References: <1305085656-12484-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naveen Singh <nsingh@atheros.com>
+Some structures and macros in ioctl.h are redundant or no longer
+used.
 
-implementing the cfg ops that gets called when iw dev wlan0
-link is issued by user. The ops that needs to be implemented
-is get_station.
-
-kvalo: check the mac address and fix style issues
-
-Signed-off-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- drivers/staging/ath6kl/os/linux/cfg80211.c |  130 ++++++++++++++++++++++++++++
- 1 files changed, 130 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    9 +---
+ drivers/net/wireless/mwifiex/fw.h       |   16 +------
+ drivers/net/wireless/mwifiex/ioctl.h    |   81 +------------------------------
+ 3 files changed, 4 insertions(+), 102 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index efd4ae5..cb3187e 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1460,6 +1460,135 @@ u32 cipher_suites[] = {
-     WLAN_CIPHER_SUITE_CCMP,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 19be887..660831c 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -761,7 +761,6 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ static int mwifiex_inform_bss_from_scan_result(struct mwifiex_private *priv,
+ 					       struct mwifiex_802_11_ssid *ssid)
+ {
+-	struct mwifiex_scan_resp scan_resp;
+ 	struct mwifiex_bssdescriptor *scan_table;
+ 	int i, j;
+ 	struct ieee80211_channel *chan;
+@@ -771,10 +770,6 @@ static int mwifiex_inform_bss_from_scan_result(struct mwifiex_private *priv,
+ 	int beacon_size;
+ 	u8 element_id, element_len;
+ 
+-	memset(&scan_resp, 0, sizeof(scan_resp));
+-	scan_resp.scan_table = (u8 *) priv->adapter->scan_table;
+-	scan_resp.num_in_scan_table = priv->adapter->num_in_scan_table;
+-
+ #define MAX_IE_BUF	2048
+ 	ie_buf = kzalloc(MAX_IE_BUF, GFP_KERNEL);
+ 	if (!ie_buf) {
+@@ -783,8 +778,8 @@ static int mwifiex_inform_bss_from_scan_result(struct mwifiex_private *priv,
+ 		return -ENOMEM;
+ 	}
+ 
+-	scan_table = (struct mwifiex_bssdescriptor *) scan_resp.scan_table;
+-	for (i = 0; i < scan_resp.num_in_scan_table; i++) {
++	scan_table = priv->adapter->scan_table;
++	for (i = 0; i < priv->adapter->num_in_scan_table; i++) {
+ 		if (ssid) {
+ 			/* Inform specific BSS only */
+ 			if (memcmp(ssid->ssid, scan_table[i].ssid.ssid,
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c6b2681..afdd145 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -816,14 +816,7 @@ struct host_cmd_ds_txpwr_cfg {
+ 
+ struct mwifiex_scan_cmd_config {
+ 	/*
+-	 *  BSS Type to be sent in the firmware command
+-	 *
+-	 *  Field can be used to restrict the types of networks returned in the
+-	 *    scan.  Valid settings are:
+-	 *
+-	 *   - MWIFIEX_SCAN_MODE_BSS  (infrastructure)
+-	 *   - MWIFIEX_SCAN_MODE_IBSS (adhoc)
+-	 *   - MWIFIEX_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)
++	 *  BSS mode to be sent in the firmware command
+ 	 */
+ 	u8 bss_mode;
+ 
+@@ -866,13 +859,6 @@ struct mwifiex_user_scan_cfg {
+ 	u8 keep_previous_scan;
+ 	/*
+ 	 *  BSS mode to be sent in the firmware command
+-	 *
+-	 *  Field can be used to restrict the types of networks returned in the
+-	 *    scan.  Valid settings are:
+-	 *
+-	 *   - MWIFIEX_SCAN_MODE_BSS  (infrastructure)
+-	 *   - MWIFIEX_SCAN_MODE_IBSS (adhoc)
+-	 *   - MWIFIEX_SCAN_MODE_ANY  (unrestricted, adhoc and infrastructure)
+ 	 */
+ 	u8 bss_mode;
+ 	/* Configure the number of probe requests for active chan scans */
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 5488e11..7c1c5ee 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -23,49 +23,16 @@
+ #include <net/mac80211.h>
+ 
+ enum {
+-	MWIFIEX_SCAN_MODE_UNCHANGED = 0,
+-	MWIFIEX_SCAN_MODE_BSS,
+-	MWIFIEX_SCAN_MODE_IBSS,
+-	MWIFIEX_SCAN_MODE_ANY
+-};
+-
+-enum {
+ 	MWIFIEX_SCAN_TYPE_UNCHANGED = 0,
+ 	MWIFIEX_SCAN_TYPE_ACTIVE,
+ 	MWIFIEX_SCAN_TYPE_PASSIVE
  };
  
-+bool is_rate_legacy(s32 rate)
-+{
-+	static const s32 legacy[] = { 1000, 2000, 5500, 11000,
-+				      6000, 9000, 12000, 18000, 24000,
-+				      36000, 48000, 54000 };
-+	u8 i;
-+
-+	for (i = 0; i < 12; i++) {
-+		if (rate == legacy[i])
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+bool is_rate_ht20(s32 rate, u8 *mcs)
-+{
-+	static const s32 ht20[] = { 6500, 13000, 19500, 26000, 39000,
-+				     52000, 58500, 65000, 72200 };
-+	u8 i;
-+
-+	for (i = 0; i < 9; i++) {
-+		if (rate == ht20[i]) {
-+			*mcs = i;
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
-+bool is_rate_ht40(s32 rate, u8 *mcs)
-+{
-+	static const s32 ht40[] = { 13500, 27000, 40500, 54000,
-+					  81000, 108000, 121500, 135000 };
-+	u8 i;
-+
-+	for (i = 0; i < 9; i++) {
-+		if (rate == ht40[i]) {
-+			*mcs = i;
-+			return true;
-+		}
-+	}
-+
-+	return false;
-+}
-+
-+int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
-+		     u8 *mac, struct station_info *sinfo)
-+{
-+	struct ar6_softc *ar = ar6k_priv(dev);
-+	u8 mcs, ret, timeout = false;
-+
-+	if (compare_ether_addr(mac, ar->arBssid))
-+		return -ENOENT;
-+
-+	if (down_interruptible(&ar->arSem))
-+		return -EBUSY;
-+
-+	ar->statsUpdatePending = true;
-+
-+	ret = wmi_get_stats_cmd(ar->arWmi);
-+
-+	if (ret != 0) {
-+		up(&ar->arSem);
-+		return -EIO;
-+	}
-+
-+	wait_event_interruptible_timeout(arEvent,
-+					 ar->statsUpdatePending == false,
-+					 wmitimeout * HZ);
-+
-+	if (signal_pending(current)) {
-+		timeout = true;
-+		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
-+				("ar6000 : WMI get stats timeout\n"));
-+	}
-+
-+	up(&ar->arSem);
-+
-+	if (timeout)
-+		return -ETIMEDOUT;
-+
-+	if (ar->arTargetStats.rx_bytes) {
-+		sinfo->rx_bytes = ar->arTargetStats.rx_bytes;
-+		sinfo->filled |= STATION_INFO_RX_BYTES;
-+		sinfo->rx_packets = ar->arTargetStats.rx_packets;
-+		sinfo->filled |= STATION_INFO_RX_PACKETS;
-+	}
-+
-+	if (ar->arTargetStats.tx_bytes) {
-+		sinfo->tx_bytes = ar->arTargetStats.tx_bytes;
-+		sinfo->filled |= STATION_INFO_TX_BYTES;
-+		sinfo->tx_packets = ar->arTargetStats.tx_packets;
-+		sinfo->filled |= STATION_INFO_TX_PACKETS;
-+	}
-+
-+	sinfo->signal = ar->arTargetStats.cs_rssi;
-+	sinfo->filled |= STATION_INFO_SIGNAL;
-+
-+	if (is_rate_legacy(ar->arTargetStats.tx_unicast_rate)) {
-+		sinfo->txrate.legacy = ar->arTargetStats.tx_unicast_rate / 100;
-+	} else if (is_rate_ht20(ar->arTargetStats.tx_unicast_rate, &mcs)) {
-+		if (mcs == 0x08) {
-+			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+			sinfo->txrate.mcs = mcs - 1;
-+		} else {
-+			sinfo->txrate.mcs = mcs;
-+		}
-+
-+		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
-+	} else if (is_rate_ht40(ar->arTargetStats.tx_unicast_rate, &mcs)) {
-+		if (mcs == 0x08) {
-+			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+			sinfo->txrate.mcs = mcs - 1;
-+		} else {
-+			sinfo->txrate.mcs = mcs;
-+		}
-+
-+		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
-+		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
-+	} else {
-+		WARN(1, "invalid rate: %d", ar->arTargetStats.tx_unicast_rate);
-+	}
-+
-+	sinfo->filled |= STATION_INFO_TX_BITRATE;
-+
-+	return 0;
-+}
-+
- static struct
- cfg80211_ops ar6k_cfg80211_ops = {
-     .change_virtual_intf = ar6k_cfg80211_change_iface,
-@@ -1480,6 +1609,7 @@ cfg80211_ops ar6k_cfg80211_ops = {
-     .set_power_mgmt = ar6k_cfg80211_set_power_mgmt,
-     .join_ibss = ar6k_cfg80211_join_ibss,
-     .leave_ibss = ar6k_cfg80211_leave_ibss,
-+    .get_station = ar6k_get_station,
+-struct mwifiex_get_scan_table_fixed {
+-	u8 bssid[ETH_ALEN];
+-	u8 channel;
+-	u8 rssi;
+-	long long network_tsf;
+-};
+-
+-struct mwifiex_scan_time_params {
+-	u32 specific_scan_time;
+-	u32 active_scan_time;
+-	u32 passive_scan_time;
+-};
+-
+ struct mwifiex_user_scan {
+ 	u32 scan_cfg_len;
+ 	u8 scan_cfg_buf[1];
  };
  
- struct wireless_dev *
+-struct mwifiex_scan_req {
+-	u32 scan_mode;
+-	u32 scan_type;
+-	struct mwifiex_802_11_ssid scan_ssid;
+-	struct mwifiex_scan_time_params scan_time;
+-	struct mwifiex_user_scan user_scan;
+-};
+-
+-struct mwifiex_scan_resp {
+-	u32 num_in_scan_table;
+-	u8 *scan_table;
+-};
+-
+ #define MWIFIEX_PROMISC_MODE            1
+ #define MWIFIEX_MULTICAST_MODE		2
+ #define	MWIFIEX_ALL_MULTI_MODE		4
+@@ -77,18 +44,11 @@ struct mwifiex_multicast_list {
+ 	u8 mac_list[MWIFIEX_MAX_MULTICAST_LIST_SIZE][ETH_ALEN];
+ };
+ 
+-#define MWIFIEX_MAX_CHANNEL_NUM		128
+-
+ struct mwifiex_chan_freq {
+ 	u32 channel;
+ 	u32 freq;
+ };
+ 
+-struct mwifiex_chan_list {
+-	u32 num_of_chan;
+-	struct mwifiex_chan_freq cf[MWIFIEX_MAX_CHANNEL_NUM];
+-};
+-
+ struct mwifiex_ssid_bssid {
+ 	struct mwifiex_802_11_ssid ssid;
+ 	u8 bssid[ETH_ALEN];
+@@ -136,18 +96,8 @@ struct mwifiex_ds_get_stats {
+ 	u32 wep_icv_error[4];
+ };
+ 
+-#define BCN_RSSI_LAST_MASK              0x00000001
+ #define BCN_RSSI_AVG_MASK               0x00000002
+-#define DATA_RSSI_LAST_MASK             0x00000004
+-#define DATA_RSSI_AVG_MASK              0x00000008
+-#define BCN_SNR_LAST_MASK               0x00000010
+-#define BCN_SNR_AVG_MASK                0x00000020
+-#define DATA_SNR_LAST_MASK              0x00000040
+-#define DATA_SNR_AVG_MASK               0x00000080
+-#define BCN_NF_LAST_MASK                0x00000100
+ #define BCN_NF_AVG_MASK                 0x00000200
+-#define DATA_NF_LAST_MASK               0x00000400
+-#define DATA_NF_AVG_MASK                0x00000800
+ #define ALL_RSSI_INFO_MASK              0x00000fff
+ 
+ struct mwifiex_ds_get_signal {
+@@ -174,11 +124,6 @@ struct mwifiex_ds_get_signal {
+ 	s16 data_nf_avg;
+ };
+ 
+-struct mwifiex_fw_info {
+-	u32 fw_ver;
+-	u8 mac_addr[ETH_ALEN];
+-};
+-
+ #define MWIFIEX_MAX_VER_STR_LEN    128
+ 
+ struct mwifiex_ver_ext {
+@@ -286,11 +231,6 @@ struct mwifiex_rate_cfg {
+ 	u32 rate;
+ };
+ 
+-struct mwifiex_data_rate {
+-	u32 tx_data_rate;
+-	u32 rx_data_rate;
+-};
+-
+ struct mwifiex_power_cfg {
+ 	u32 is_power_auto;
+ 	u32 power_level;
+@@ -309,21 +249,14 @@ struct mwifiex_ds_hs_cfg {
+ };
+ 
+ #define DEEP_SLEEP_ON  1
+-#define DEEP_SLEEP_OFF 0
+-
+ #define DEEP_SLEEP_IDLE_TIME	100
++#define PS_MODE_AUTO		1
+ 
+ struct mwifiex_ds_auto_ds {
+ 	u16 auto_ds;
+ 	u16 idle_time;
+ };
+ 
+-#define PS_MODE_UNCHANGED			0
+-#define PS_MODE_AUTO				1
+-#define PS_MODE_POLL				2
+-#define PS_MODE_NULL				3
+-
+-
+ struct mwifiex_ds_pm_cfg {
+ 	union {
+ 		u32 ps_mode;
+@@ -333,18 +266,6 @@ struct mwifiex_ds_pm_cfg {
+ 	} param;
+ };
+ 
+-struct mwifiex_ioctl_wmm_queue_status_ac {
+-	u8 wmm_acm;
+-	u8 flow_required;
+-	u8 flow_created;
+-	u8 disabled;
+-};
+-
+-struct mwifiex_ds_wmm_queue_status {
+-	struct mwifiex_ioctl_wmm_queue_status_ac
+-		ac_status[IEEE80211_MAX_QUEUES];
+-};
+-
+ struct mwifiex_ds_11n_tx_cfg {
+ 	u16 tx_htcap;
+ 	u16 tx_htinfo;
+-- 
+1.7.0.2
 
