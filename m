@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:38811 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756414Ab1EMNwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:52:17 -0400
-From: Julia Lawall <julia@diku.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] net/rfkill/core.c: Avoid leaving freed data in a list
-Date: Fri, 13 May 2011 15:52:10 +0200
-Message-Id: <1305294731-12127-2-git-send-email-julia@diku.dk> (sfid-20110513_155258_900090_5BADFB6F)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38541 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755534Ab1EKQWO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 12:22:14 -0400
+Received: by qwk3 with SMTP id 3so341034qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:22:13 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 11 May 2011 18:22:13 +0200
+Message-ID: <BANLkTi=xOtAaxh8Q7Nk84Rwz9jM-6EP1Ww@mail.gmail.com> (sfid-20110511_182222_540132_ABD7C638)
+Subject: Optimization: keeping pointer all the time, or defining getter?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The list_for_each_entry loop can fail, in which case the list element is
-not removed from the list rfkill_fds.  Since this list is not accessed by
-the loop, the addition of &data->list into the list is just moved after the
-loop.
+I try to abstract bus in b43 driver. For frequently used fields
+solution is obvious:
+At init time I get info from bus-specific stuct and put it in generic field.
+Example: core revision. We often refer to it, I put it in abstraction struct.
 
-The sematic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+My question: what is the policy for cases with less frequently used fields?
+Example: I need to use "struct device" for registering some low lever stuff.
 
-// <smpl>
-@@
-expression E,E1,E2;
-identifier l;
-@@
+I have two solutions:
 
-*list_add(&E->l,E1);
-... when != E1
-    when != list_del(&E->l)
-    when != list_del_init(&E->l)
-    when != E = E2
-*kfree(E);// </smpl>
+1) Realtime:
+struct device *get_device(...)
+{
+if (dev->bus_type = B43_BUS_SSB)
+return dev->ssbdev->device;
+else if (dev->bus_type = B43_BUS_BCMA)
+return dev->bcmadev->device;
+}
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+2) Init time:
+void b43_ssb_init(struct ssb_device *ssbdev)
+{
+dev->struct = ssbdev->device;
+}
 
----
-I have only verified that rfkill_fds is not accessed by the loop by
-inspecting the code.  If this analysis is not correct, the other solution
-would be to leave the list_add where it is and delete the element from the
-list explicitly.
+The first one is slower but we don't keep "struct device" pointer in
+abstraction struct. Situation is opposite for the second one.
 
- net/rfkill/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Does anyone care? ;)
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 0198191..be90640 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1024,7 +1024,6 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
- 	 * start getting events from elsewhere but hold mtx to get
- 	 * startup events added first
- 	 */
--	list_add(&data->list, &rfkill_fds);
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-@@ -1033,6 +1032,7 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
- 		rfkill_fill_event(&ev->ev, rfkill, RFKILL_OP_ADD);
- 		list_add_tail(&ev->list, &data->events);
- 	}
-+	list_add(&data->list, &rfkill_fds);
- 	mutex_unlock(&data->mtx);
- 	mutex_unlock(&rfkill_global_mutex);
- 
-
+-- 
+Rafał
