@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53479 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753484Ab1EaTrs (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:35681 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755293Ab1EKPyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:48 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 24/32] ath9k: fix antenna diversity configuration for non AR9485 chips
-Date: Tue, 31 May 2011 21:37:15 +0200
-Message-Id: <1306870643-7935-25-git-send-email-juhosg@openwrt.org> (sfid-20110531_214920_642585_B3B3D9D7)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Wed, 11 May 2011 11:54:47 -0400
+Received: by ywj3 with SMTP id 3so210277ywj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:54:46 -0700 (PDT)
+Message-ID: <4DCA89BF.8000007@lwfinger.net> (sfid-20110511_175507_564101_E27AEDF7)
+Date: Wed, 11 May 2011 08:06:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH 2/2] b43: implement timeouts workaround
+References: <1305072659-4011-1-git-send-email-zajec5@gmail.com>	 <1305072659-4011-2-git-send-email-zajec5@gmail.com>	 <4DC9CD4D.6060002@lwfinger.net>	 <BANLkTik-BZnGr1Kya3=KSskr3QrNHHY1SA@mail.gmail.com>	 <4DC9D45C.6010505@lwfinger.net>	 <BANLkTimDQQSfDO-jUtVA0A5zSFxTQAvx7g@mail.gmail.com>	 <4DCA7E40.9070709@lwfinger.net> <1305117080.16850.4.camel@maggie>
+In-Reply-To: <1305117080.16850.4.camel@maggie>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current values must be used only on AR9485 chips. Other chips
-requires different values.
+On 05/11/2011 07:31 AM, Michael Büsch wrote:
+> On Wed, 2011-05-11 at 07:17 -0500, Larry Finger wrote:
+>> On 05/11/2011 02:35 AM, Rafał Miłecki wrote:
+>>> W dniu 11 maja 2011 02:12 użytkownik Larry Finger
+>>> <Larry.Finger@lwfinger.net>   napisał:
+>>>> On 05/10/2011 06:56 PM, Rafał Miłecki wrote:
+>>>>>
+>>>>> W dniu 11 maja 2011 01:42 użytkownik Larry Finger
+>>>>> <Larry.Finger@lwfinger.net>     napisał:
+>>>>>>
+>>>>>> On 05/10/2011 07:10 PM, Rafał Miłecki wrote:
+>>>>>>>
+>>>>>>> Documented in:<4BB81CAD.10602@lwfinger.net>
+>>>>>>
+>>>>>> This reference is not correct.
+>>>>>
+>>>>> Ouch, GMail seems to lie to me. Any change you can give me real message id
+>>>>> of:
+>>>>> http://www.mail-archive.com/b43-dev@lists.infradead.org/msg00049.html
+>>>>
+>>>> This one is good.
+>>>
+>>> Sorry, do you mean<4BB81CAD.10602@lwfinger.net>   is OK? Or should I
+>>> use link I posted instead of message ID? Or do you know how to get
+>>> message ID from the link above?
+>>>
+>>
+>> Use the link
+>> "http://www.mail-archive.com/b43-dev@lists.infradead.org/msg00049.html".
+>> <4BB81CAD.10602@lwfinger.net>  just points to a non-existent email address on my
+>> domain. I don't know how to get a message ID.
+>
+> It's just an email header added by your MUA.
+> For example:   Message-ID:<4DCA7E40.9070709@lwfinger.net>
+>
+> The advantage of this is that links change and vanish. However, message
+> IDs don't. The message ID uniquely identifies a message, regardless of
+> where it's stored. So even if the mail archive moves to another URL,
+> it's still possible to find the actual mail by the ID.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+Ahh. Yes, that Message ID is correct. I just rechecked the header in the mail 
+that I sent. Sorry for the confusion and noise.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index eb18b63..b9f0b27 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1214,8 +1214,14 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 				 AR_PHY_9485_ANT_DIV_ALT_LNACONF_S;
- 	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
- 				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
--	antconf->lna1_lna2_delta = -9;
--	antconf->div_group = 2;
-+
-+	if (AR_SREV_9485(ah)) {
-+		antconf->lna1_lna2_delta = -9;
-+		antconf->div_group = 2;
-+	} else {
-+		antconf->lna1_lna2_delta = -3;
-+		antconf->div_group = 0;
-+	}
- }
- 
- static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
--- 
-1.7.2.1
-
+Larry
