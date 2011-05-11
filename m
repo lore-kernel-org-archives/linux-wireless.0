@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44123 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752990Ab1EBUvw (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40764 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755978Ab1EKQCl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 16:51:52 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p42KppB6026501
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 2 May 2011 13:51:52 -0700
-Message-ID: <4DBF1967.9010604@candelatech.com> (sfid-20110502_225155_292362_707E56C8)
-Date: Mon, 02 May 2011 13:51:51 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Looking for 3x3 Atheros NICs using ath9k driver.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 11 May 2011 12:02:41 -0400
+Received: by wya21 with SMTP id 21so497053wya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:02:39 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/7] wl12xx: add initial wowlan support
+Date: Wed, 11 May 2011 11:54:21 +0300
+Message-Id: <1305104068-32240-1-git-send-email-eliad@wizery.com> (sfid-20110511_180253_306772_6B4A6EFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Add initial support for Wake-On-Wireless.
 
-We are trying to find some Atheros NICs that support 3x3
-MIMO, but we are having a hard time.
+Currently, we support only the ANY trigger, which basically means
+the device stays awake while the host is being suspended, and will
+wake up the host by any irq it will trigger (but since the wl12xx
+fw offloads a lot of its work, it will probably wake up the host
+because of rx frame/beacon loss)
 
-We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
-even supported by ath9k it seems (visible chipset is AR9160-AC1E).
-There are some other SR71 NICs that *do* work (AR9160-BC1A), but
-hard to order that specific version.
+Note that this patchset needs some additional omap/mmc patches in 
+order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
+(however, if the MMC_PM_KEEP_POWER flag is not being supported we 
+don't advertise support for wowlan triggers, so this patchset alone
+shouldn't harm).
 
-Sparklan seems to make one based on AR9380, but they are not
-in stock any place we could find.
+Eliad Peller (7):
+  wl12xx_sdio: set interrupt as wake_up interrupt
+  wl12xx: declare suspend/resume callbacks (for wowlan)
+  wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
+  wl12xx: prevent scheduling while suspending (WoW enabled)
+  wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
+  wl12xx: add ps completion event
+  wl12xx: enter/exit psm on wowlan suspend/resume
 
-Anyone know of any others that are available to the public
-in small quantities?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+ drivers/net/wireless/wl12xx/event.c  |    7 ++
+ drivers/net/wireless/wl12xx/main.c   |  146 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/sdio.c   |   66 +++++++++++++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    9 ++
+ 4 files changed, 228 insertions(+), 0 deletions(-)
 
