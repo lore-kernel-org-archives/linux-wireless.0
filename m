@@ -1,101 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:39144 "EHLO
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:45674 "EHLO
 	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab1EWBtz (ORCPT
+	with ESMTP id S1757362Ab1EKQRy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:49:55 -0400
-Date: Sun, 22 May 2011 20:49:53 -0500
+	Wed, 11 May 2011 12:17:54 -0400
+Date: Wed, 11 May 2011 11:17:51 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <4dd9bd41.I4TeeDKoEoFoecJu%Larry.Finger@lwfinger.net> (sfid-20110523_034959_137784_AE856A58)
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix panic due to memory allocation failure
+Message-ID: <4dcab6af.skkZ1nWg46gP0cdM%Larry.Finger@lwfinger.net> (sfid-20110511_181816_489739_D540ED95)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for rtl8192c-common:
-
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/fw_common.o
-drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: In function ‘_rtl92c_cmd_send_packet’:
-drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c:549:5: warning: variable ‘own’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/phy_common.o
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘_rtl92c_phy_iq_calibrate’:
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1256:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘rtl92c_phy_iq_calibrate’:
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1766:6: warning: variable ‘reg_ecc’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1765:34: warning: variable ‘reg_eac’ set but not used [-Wunused-but-set-variable]
+The PCI routine of this driver is allocating receive buffers of order 2,
+which causes an unnecessary fragmentation of memory. To make matters
+worse, there are locations that fail to check for allocation failures,
+or return success when the allocation actually failed. Kernel panics
+result.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>              [2.6.37 and 2.6.38]
 ---
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+John,
+
+This is 2.6.39 material. I hope we make the cutoff.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
 ===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -546,7 +546,6 @@ static bool _rtl92c_cmd_send_packet(stru
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl8192_tx_ring *ring;
- 	struct rtl_tx_desc *pdesc;
--	u8 own;
- 	unsigned long flags;
- 	struct sk_buff *pskb = NULL;
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -732,10 +732,12 @@ static void _rtl_pci_rx_interrupt(struct
+ 					    false))) {
+ 						dev_kfree_skb_any(skb);
+ 					} else {
+-						struct sk_buff *uskb = NULL;
++						struct sk_buff *uskb;
+ 						u8 *pdata;
+ 						uskb = dev_alloc_skb(skb->len
+ 								     + 128);
++						if (!uskb)
++							return;
+ 						memcpy(IEEE80211_SKB_RXCB(uskb),
+ 						       &rx_status,
+ 						       sizeof(rx_status));
+@@ -996,7 +998,7 @@ static void _rtl_pci_init_trx_var(struct
+ 	 */
+ 	rtlpci->txringcount[BE_QUEUE] = RT_TXDESC_NUM_BE_QUEUE;
  
-@@ -559,7 +558,6 @@ static bool _rtl92c_cmd_send_packet(stru
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+-	rtlpci->rxbuffersize = 9100;	/*2048/1024; */
++	rtlpci->rxbuffersize = 4096;
+ 	rtlpci->rxringcount = RTL_PCI_MAX_RX_COUNT;	/*64; */
+ }
  
- 	pdesc = &ring->desc[0];
--	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
+@@ -1118,7 +1120,7 @@ static int _rtl_pci_init_rx_ring(struct
+ 			    dev_alloc_skb(rtlpci->rxbuffersize);
+ 			u32 bufferaddress;
+ 			if (!skb)
+-				return 0;
++				return -ENOMEM;
+ 			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
  
- 	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -1253,10 +1253,9 @@ static void _rtl92c_phy_iq_calibrate(str
- 
- 	const u32 retrycount = 2;
- 
--	u32 bbvalue;
--
- 	if (t == 0) {
--		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
-+		/* dummy read */
-+		rtl_get_bbreg(hw, 0x800, MASKDWORD);
- 
- 		_rtl92c_phy_save_adda_registers(hw, adda_reg,
- 						rtlphy->adda_backup, 16);
-@@ -1762,8 +1761,7 @@ void rtl92c_phy_iq_calibrate(struct ieee
- 	long result[4][8];
- 	u8 i, final_candidate;
- 	bool patha_ok, pathb_ok;
--	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
--	    reg_ecc, reg_tmp = 0;
-+	long reg_e94, reg_e9c, reg_ea4, reg_eb4, reg_ebc, reg_ec4, reg_tmp = 0;
- 	bool is12simular, is13simular, is23simular;
- 	bool start_conttx = false, singletone = false;
- 	u32 iqk_bb_reg[10] = {
-@@ -1841,21 +1839,17 @@ void rtl92c_phy_iq_calibrate(struct ieee
- 		reg_e94 = result[i][0];
- 		reg_e9c = result[i][1];
- 		reg_ea4 = result[i][2];
--		reg_eac = result[i][3];
- 		reg_eb4 = result[i][4];
- 		reg_ebc = result[i][5];
- 		reg_ec4 = result[i][6];
--		reg_ecc = result[i][7];
- 	}
- 	if (final_candidate != 0xff) {
- 		rtlphy->reg_e94 = reg_e94 = result[final_candidate][0];
- 		rtlphy->reg_e9c = reg_e9c = result[final_candidate][1];
- 		reg_ea4 = result[final_candidate][2];
--		reg_eac = result[final_candidate][3];
- 		rtlphy->reg_eb4 = reg_eb4 = result[final_candidate][4];
- 		rtlphy->reg_ebc = reg_ebc = result[final_candidate][5];
- 		reg_ec4 = result[final_candidate][6];
--		reg_ecc = result[final_candidate][7];
- 		patha_ok = pathb_ok = true;
- 	} else {
- 		rtlphy->reg_e94 = rtlphy->reg_eb4 = 0x100;
+ 			/*skb->dev = dev; */
