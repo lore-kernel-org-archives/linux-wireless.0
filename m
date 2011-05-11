@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:48046 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750854Ab1EEErP convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45793 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751470Ab1EKRQO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 00:47:15 -0400
-Received: by wwa36 with SMTP id 36so1938288wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 21:47:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DC1B2F3.3070300@lwfinger.net>
-References: <4DC1AF49.7080204@lwfinger.net>
-	<1304539363.3563.28.camel@jlt3.sipsolutions.net>
-	<4DC1B2F3.3070300@lwfinger.net>
-Date: Thu, 5 May 2011 10:17:13 +0530
-Message-ID: <BANLkTinty0_+FvOiP2Yag=gdvm73TkOwiQ@mail.gmail.com> (sfid-20110505_064731_228232_A01422BA)
-Subject: Re: WARNING from mac80211
-From: Mohammed Shafi <shafi.wireless@gmail.com>
+	Wed, 11 May 2011 13:16:14 -0400
+Date: Wed, 11 May 2011 13:12:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH V2 0/3] ssb/b43(legacy): clean dangling cores workarounds
+Message-ID: <20110511171217.GF2490@tuxdriver.com> (sfid-20110511_191618_016160_666DF6FE)
+References: <1304879433-7096-1-git-send-email-zajec5@gmail.com>
+ <BANLkTimecZ0uB4V_b-8F784Tnbkqo71ORA@mail.gmail.com>
+ <BANLkTinfMbkyh9kB+hsmka-JcWXAYEPynw@mail.gmail.com>
+ <4DC9BC6E.2090804@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4DC9BC6E.2090804@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 5, 2011 at 1:41 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/04/2011 03:02 PM, Johannes Berg wrote:
->>
->> On Wed, 2011-05-04 at 14:55 -0500, Larry Finger wrote:
->>>
->>> Johannes and John,
->>>
->>> A regression in recent versions of mac80211 are generating the WARNING at
->>> net/mac80211/wep.c:101, because the skb headroom is less than WEP_IV_LEN
->>> or the
->>> tailroom is less than WEP_ICV_LEN. My testing indicates that it is a
->>> headroom
->>> problem as the following hack "fixes" it:
->>
->> See also this thread:
->>
->> http://thread.gmane.org/gmane.linux.kernel.wireless.general/69062/focus=69150
->>
->> and the resulting patch:
->> http://article.gmane.org/gmane.linux.kernel.wireless.general/69190
->> (not sure why it was RFC?)
+On Tue, May 10, 2011 at 05:30:06PM -0500, Larry Finger wrote:
+> On 05/10/2011 05:08 PM, Rafał Miłecki wrote:
+> >W dniu 8 maja 2011 19:54 użytkownik Rafał Miłecki<zajec5@gmail.com>  napisał:
+> >>W dniu 8 maja 2011 20:30 użytkownik Rafał Miłecki<zajec5@gmail.com>  napisał:
+> >>>There is no perfect place for this workarounds, but keeping it in ssb sounds
+> >>>more reasonable.
+> >>
+> >>Uups, I didn't save edition fixing this grammatical mistake. I'm lucky
+> >>it won't be visible anywhere in git log :)
+> >
+> >John: something went wrong there. You applied b43 and b43legacy
+> >patches, but they should applied *after* ssb patch I don't see in your
+> >tree.
+> >
+> >I don't know how many people can be affected by this... Can not tell
+> >you if we should rebase or just commit ssb patch quickly.
+> 
+> My BCM4306 card is probably one of the few affected. No rebase will
+> be needed as long as the ssb patch is available in 2.6.40-rc1.
+> Fortunately, kernel building is not impacted.
 
-I will send the patch today :)
+Sorry, not sure what happened -- I'll go ahead and commit it.
 
-thanks,
-shafi
-
->
-> Thanks. I do remember the thread now that you refreshed my memory. That
-> patch does fix my problem.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at �http://vger.kernel.org/majordomo-info.html
->
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
