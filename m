@@ -1,81 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36310 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab1EJSgp (ORCPT
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:35346 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757434Ab1EKRAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 14:36:45 -0400
-Message-ID: <4DC985B9.1040504@candelatech.com> (sfid-20110510_203651_638946_E5284CE7)
-Date: Tue, 10 May 2011 11:36:41 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k and ath9k bugs still in 2.6.39-rc7
-References: <4DC968FD.1040906@candelatech.com> <4DC97189.1090105@openwrt.org> <4DC97A85.40109@candelatech.com>
-In-Reply-To: <4DC97A85.40109@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 11 May 2011 13:00:33 -0400
+Date: Wed, 11 May 2011 10:00:30 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Sascha Silbe <silbe@activitycentral.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.laptop.org,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Add libertas_disablemesh module parameter to disable
+ mesh interface
+Message-Id: <20110511100030.cad34893.rdunlap@xenotime.net> (sfid-20110511_190100_927337_8EFA5F0A)
+In-Reply-To: <1305118354-17337-1-git-send-email-silbe@activitycentral.com>
+References: <1305118354-17337-1-git-send-email-silbe@activitycentral.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2011 10:48 AM, Ben Greear wrote:
-> On 05/10/2011 10:10 AM, Felix Fietkau wrote:
->> On 2011-05-10 6:34 PM, Ben Greear wrote:
->>> As far as I can tell, ath5k is critically broken due to un-initilized
->>> spinlock (fixed in the patch I posted a few days ago), and ath9k
->>> stations
->>> won't work due to PS bugs that Felix posted fixes for yesterday.
->> Did you test my patch for that? I couldn't reproduce the issue, so I
->> couldn't test whether my patch fully fixes it.
->
-> Better hold off on that patch..looks like the culprit. Maybe vif is not
-> NULL but
-> still bogus?
->
->
->> (gdb) l *(ath_tx_start+0x640)
-> 0xa123 is in ath_tx_start
-> (/home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c:1833).
->
-> 1828 bf->bf_state.bfs_paprd);
-> 1829
-> 1830 if (txctl->paprd)
-> 1831 bf->bf_state.bfs_paprd_timestamp = jiffies;
-> 1832
-> 1833 if ((vif && vif->type != NL80211_IFTYPE_AP &&
-> 1834 vif->type != NL80211_IFTYPE_AP_VLAN) ||
-> 1835 !ieee80211_is_data(hdr->frame_control) ||
-> 1836 (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT))
-> 1837 ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
+On Wed, 11 May 2011 14:52:34 +0200 Sascha Silbe wrote:
 
-Well, it seems vif is always, or at least mostly always, wrong in my testing.
+> This allows individual users and deployments to disable mesh support at
+> runtime, i.e. without having to build and maintain a custom kernel.
 
-I added code like this, and get the printout below:
+I guess a user could want to do this on a per-driver basis, but ISTM that
+it would be better to be something like a sysctl that applies to all (wireless)
+drivers.
 
-		printk("vif: %p tx_info: %p control: %p\n",
-		       vif, tx_info, &(tx_info->control));
-		if ((((unsigned long)(vif) & ~0xff) && vif->type != NL80211_IFTYPE_AP &&
-		            vif->type != NL80211_IFTYPE_AP_VLAN) ||
-
-vif: 00000025 tx_info: f2749a98 control: f2749aa0
-vif: 00000025 tx_info: f2749b58 control: f2749b60
-vif: 00000025 tx_info: f26c8318 control: f26c8320
-vif: 000000a1 tx_info: f26c8a98 control: f26c8aa0
-vif: 000000a1 tx_info: f26c8c18 control: f26c8c20
-vif: 000000a1 tx_info: f0491b58 control: f0491b60
-vif: 00000099 tx_info: f0491198 control: f04911a0
-vif: 00000025 tx_info: f2749498 control: f27494a0
-vif: 000000a1 tx_info: f0491558 control: f0491560
-vif: 000000a1 tx_info: f0491b58 control: f0491b60
+Do other wireless drivers have something like this?
 
 
->
->
->> - Felix
->
->
+> Based on a patch by Paul Fox <pgf@laptop.org>.
+> Signed-off-by: Sascha Silbe <silbe@activitycentral.com>
+> ---
+>  drivers/net/wireless/libertas/main.c |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
+> 
+> The patch is based on the OLPC 2.6.35 kernel tree, but applies cleanly to
+> wireless-next.
+> 
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 8445473..62069e2 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -41,6 +41,10 @@ unsigned int lbs_debug;
+>  EXPORT_SYMBOL_GPL(lbs_debug);
+>  module_param_named(libertas_debug, lbs_debug, int, 0644);
+> 
+> +unsigned int lbs_disablemesh;
+> +EXPORT_SYMBOL_GPL(lbs_disablemesh);
+> +module_param_named(libertas_disablemesh, lbs_disablemesh, int, 0644);
+> +
+> 
+>  /* This global structure is used to send the confirm_sleep command as
+>   * fast as possible down to the firmware. */
+> @@ -1086,7 +1090,10 @@ int lbs_start_card(struct lbs_private *priv)
+> 
+>  	lbs_update_channel(priv);
+> 
+> -	lbs_init_mesh(priv);
+> +	if (!lbs_disablemesh)
+> +		lbs_init_mesh(priv);
+> +	else
+> +		lbs_pr_info("%s: mesh disabled\n", dev->name);
+> 
+>  	/*
+>  	 * While rtap isn't related to mesh, only mesh-enabled
+> --
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
