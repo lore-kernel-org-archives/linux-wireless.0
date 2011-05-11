@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4931 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753149Ab1EQKxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 06:53:51 -0400
-Message-ID: <4DD253B0.8050802@broadcom.com> (sfid-20110517_125355_002257_FB1F79C7)
-Date: Tue, 17 May 2011 12:53:36 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:35916 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753474Ab1EJXdX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 19:33:23 -0400
+Received: by ewy4 with SMTP id 4so1975941ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 16:33:22 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: implement timeouts workaround
+Date: Wed, 11 May 2011 02:10:59 +0200
+Message-Id: <1305072659-4011-2-git-send-email-zajec5@gmail.com> (sfid-20110511_013326_055907_556AAFEA)
+In-Reply-To: <1305072659-4011-1-git-send-email-zajec5@gmail.com>
+References: <1305072659-4011-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: "Greg KH" <greg@kroah.com>
-cc: "Clemens Noss" <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] staging: brcm80211: fix cast to pointer from
- integer
-References: <1305492330-19575-1-git-send-email-cnoss@gmx.de>
- <4DD105FE.9040500@broadcom.com> <20110516203333.GB17698@kroah.com>
-In-Reply-To: <20110516203333.GB17698@kroah.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Greg, please also merge this to the staging-linus branch since it
->> might resolve an instability issue.
->
-> It "might"?
+Documented in: <4BB81CAD.10602@lwfinger.net>
 
-Correction: I tested it now. Indeed it resolves a problem (segmentation 
-fault) upon dissociation on amd64.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-> Is this a regression?  Do people see the problem on the .38 kernel as
-> well?
-
-People on the .38 kernel see the problem even worse: they experience a 
-crash on dissociation on both i386 and amd64.
-
-> It's way too late for anything but severe regressions to be sent to
-> Linus at this point in time...
-
-Understood. Since behavior has not regressed, I think this fix does not 
-qualify to be sent to Linus. Perhaps we can get it into a 
-compat-wireless package.
-
-Thanks, Roland.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index fd8bd98..88bfd29 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4213,7 +4213,18 @@ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+ 
+ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+ {
+-	/* TODO: implement 80211 core workaround here */
++	struct ssb_bus *bus = dev->dev->bus;
++	u32 tmp;
++
++	if ((bus->chip_id == 0x4311 && bus->chip_rev == 2) ||
++	    (bus->chip_id == 0x4312)) {
++		tmp = ssb_read32(dev->dev, SSB_IMCFGLO);
++		tmp &= ~SSB_IMCFGLO_REQTO;
++		tmp &= ~SSB_IMCFGLO_SERTO;
++		tmp |= 0x3;
++		ssb_write32(dev->dev, SSB_IMCFGLO, tmp);
++		ssb_commit_settings(bus);
++	}
+ }
+ 
+ static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
+-- 
+1.7.3.4
 
