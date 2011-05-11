@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:36410 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927Ab1ERTzD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 15:55:03 -0400
-Date: Wed, 18 May 2011 15:55:01 -0400 (EDT)
-Message-Id: <20110518.155501.486816316237445149.davem@davemloft.net> (sfid-20110518_215508_797565_962BABA9)
-To: linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org
-Subject: net-next-2.6 wireless build failure
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+Received: from dell.nexicom.net ([216.168.96.13]:37619 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754642Ab1EKUat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 16:30:49 -0400
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-124-14.nexicom.net [216.168.124.14])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p4BKUkdu010688
+	for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 16:30:47 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 2ACC21E0112
+	for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 16:30:46 -0400 (EDT)
+Message-ID: <4DCAF218.7050402@lockie.ca> (sfid-20110511_223053_055750_E39D8F05)
+Date: Wed, 11 May 2011 16:31:20 -0400
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: later kernels that 2.6.36.4 mess up wireless (but compatwireless
+ on that kernel works)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpUaGUgc3VzcGVuZCBvcCBtZW1iZXIgb2YgaWVlZTgwMjExX29wcyBpcyBvbmx5IGF2YWlsYWJs
-ZSB3aGVuDQpDT05GSUdfUE0gaXMgZW5hYmxlZC4NCg0KZHJpdmVycy9uZXQvd2lyZWxlc3Mvd2wx
-Mnh4L21haW4uYzozNjUzOjI6IGVycm9yOiB1bmtub3duIGZpZWxkIKFzdXNwZW5koiBzcGVjaWZp
-ZWQgaW4gaW5pdGlhbGl6ZXINCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4eC9tYWluLmM6MzY1
-MzoyOiB3YXJuaW5nOiBpbml0aWFsaXphdGlvbiBmcm9tIGluY29tcGF0aWJsZSBwb2ludGVyIHR5
-cGUgW2VuYWJsZWQgYnkgZGVmYXVsdF0NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4eC9tYWlu
-LmM6MzY1MzoyOiB3YXJuaW5nOiAobmVhciBpbml0aWFsaXphdGlvbiBmb3IgoXdsMTI3MV9vcHMu
-Y29uZmlnoikgW2VuYWJsZWQgYnkgZGVmYXVsdF0NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4
-eC9tYWluLmM6MzY1NDoyOiBlcnJvcjogdW5rbm93biBmaWVsZCChcmVzdW1loiBzcGVjaWZpZWQg
-aW4gaW5pdGlhbGl6ZXINCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4eC9tYWluLmM6MzY1NDoy
-OiB3YXJuaW5nOiBpbml0aWFsaXphdGlvbiBmcm9tIGluY29tcGF0aWJsZSBwb2ludGVyIHR5cGUg
-W2VuYWJsZWQgYnkgZGVmYXVsdF0NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3dsMTJ4eC9tYWluLmM6
-MzY1NDoyOiB3YXJuaW5nOiAobmVhciBpbml0aWFsaXphdGlvbiBmb3IgoXdsMTI3MV9vcHMuYnNz
-X2luZm9fY2hhbmdlZKIpIFtlbmFibGVkIGJ5IGRlZmF1bHRdDQoNClNvbWVvbmUgcGxlYXNlIGZp
-eCB0aGlzLg0K
+vanilla linux-2.6.36.4 works with my 02:09.0 Network controller: Atheros
+Communications Inc. AR5008 Wireless Network Adapter (rev 01)
+compat-wireless-2011-05-11.tar.bz2 also works with the 2.6.36.4 kernel).
+
+$ sudo modinfo ath9k 
+filename:      
+/lib/modules/2.6.36.4/updates/drivers/net/wireless/ath/ath9k/ath9k.ko
+
+A later kernel doesn't work.
+
+I can take out my tv tuner card and take out the binary driver for my
+nvidia video card.
+
+How can I find out which part of the kernel is messing up my wireless card?
+Maybe someone can send me their working .config
+I just need AHCI SATA support. :-)
+
