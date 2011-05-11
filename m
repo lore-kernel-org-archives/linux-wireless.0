@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:36089 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab1EGIUC convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55003 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756048Ab1EKQYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 04:20:02 -0400
-Received: by qwk3 with SMTP id 3so2332393qwk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 01:20:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DC49386.6070503@candelatech.com>
-References: <BANLkTik3TtCcy2cJkMbRTpsn4x4XE9=naQ@mail.gmail.com>
-	<4DC49386.6070503@candelatech.com>
-Date: Sat, 7 May 2011 10:20:01 +0200
-Message-ID: <BANLkTinndpZc8fBNdjBJxz3hGd-xdg-YAw@mail.gmail.com> (sfid-20110507_102008_930902_FB039CF6)
-Subject: Re: Biescting between mainline and wireless-testing
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 May 2011 12:24:15 -0400
+Received: by wya21 with SMTP id 21so512787wya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:24:14 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] wl12xx: add ps completion event
+Date: Wed, 11 May 2011 11:54:27 +0300
+Message-Id: <1305104068-32240-7-git-send-email-eliad@wizery.com> (sfid-20110511_182424_447616_B007E904)
+In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 7 maja 2011 02:34 użytkownik Ben Greear
-<greearb@candelatech.com> napisał:
-> On 05/06/2011 04:51 PM, Rafał Miłecki wrote:
->>
->> I suspect we have some ugly (hard trackable) regression between
->> mainline and wireless-testing. It sounds impossible, but this seems to
->> affect Broadcom cards and looks like not related to ssb or b43.
->>
->> Today I've compiled 2.6.38 and 2.6.39-rc6, both work GOOD.
->> I've compiled wireless-testing and it failed, BAD.
->> I've reverted all recent ssb patches from top and it still fails BAD.
->>
->> What would be the easiest way to try bisecting? I can see
->> wireless-testing merges mainline quite often. Can I use some trick on
->> checkouted wireless-testing? Do I have to checkout mainline and merge
->> wireless-testing into it? Something even different?
->>
->
-> git bisect can handle it...I've spent some quality time finding
-> bugs in ath9k with that lately...
+Signal when psm was entered successfully, if the completion
+variable is being set.
 
-Sure it can ;) But what should I match as GOOD for first bisect?
-wireless-testing merges mainline all the time. So there are
-wireless-testing specific commits between John's merge of 2.6.39-rc5
-and 2.6.39-rc6. I can not match Linus's 2.6.39-rc6 as GOOD, because I
-won't test wireless-testing specific changes done earlier (these that
-didn't go info mainline).
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.c  |    7 +++++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-Maybe I should call GOOD a commit that wireless-testing is based on?
-Which one would it be?
-
-Or maybe I could rebase wireless-testing on mainline and then I could
-use 2.6.39-rc6 as GOOD?
-
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index ae69330..21e52ed 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -135,6 +135,13 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 
+ 		/* enable beacon early termination */
+ 		ret = wl1271_acx_bet_enable(wl, true);
++		if (ret < 0)
++			break;
++
++		if (wl->ps_compl) {
++			complete(wl->ps_compl);
++			wl->ps_compl = NULL;
++		}
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index daf941d..cf08a9d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -512,6 +512,7 @@ struct wl1271 {
+ 	unsigned int rx_filter;
+ 
+ 	struct completion *elp_compl;
++	struct completion *ps_compl;
+ 	struct delayed_work elp_work;
+ 	struct delayed_work pspoll_work;
+ 
 -- 
-Rafał
+1.7.0.4
+
