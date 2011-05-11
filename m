@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:42863 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933215Ab1ESOHB (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:65511 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754159Ab1EKPjS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 10:07:01 -0400
-Date: Thu, 19 May 2011 17:06:53 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Felipe Balbi <balbi@ti.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC/PATCH 00/13] wl12xx re-factor
-Message-ID: <20110519140650.GQ13908@legolas.emea.dhcp.ti.com> (sfid-20110519_160726_148898_90EE2C82)
-Reply-To: balbi@ti.com
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
- <1305809345.12586.1579.camel@cumari>
+	Wed, 11 May 2011 11:39:18 -0400
+Received: by bwz15 with SMTP id 15so541484bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:39:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/neOAU127r7zg3jS"
-In-Reply-To: <1305809345.12586.1579.camel@cumari>
+In-Reply-To: <BANLkTi=uW+fVNyFJBS0fHMRAQxMKTDgaLw@mail.gmail.com>
+References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
+	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
+	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
+	<19903.49991.848934.183819@gargle.gargle.HOWL>
+	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
+	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
+	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
+	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
+	<19908.11423.898062.510184@gargle.gargle.HOWL>
+	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
+	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
+	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
+	<19912.44045.774181.844464@gargle.gargle.HOWL>
+	<19912.55320.817869.173186@gargle.gargle.HOWL>
+	<19912.55857.505921.694732@gargle.gargle.HOWL>
+	<BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com>
+	<19912.57383.634547.405469@gargle.gargle.HOWL>
+	<BANLkTi=BrJPhjA5StJcktkKE7zs3Ob=iOg@mail.gmail.com>
+	<19913.25619.615324.60744@gargle.gargle.HOWL>
+	<BANLkTinv0XrfhDZWYpmdzSdVXZCovzhy_g@mail.gmail.com>
+	<19914.42954.285439.226672@gargle.gargle.HOWL>
+	<BANLkTi=uW+fVNyFJBS0fHMRAQxMKTDgaLw@mail.gmail.com>
+Date: Wed, 11 May 2011 11:33:10 -0400
+Message-ID: <BANLkTimTH6ffeqTFSvaiNdQB9+wHs5EODA@mail.gmail.com> (sfid-20110511_173930_209529_0051AA59)
+Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
+From: George Nychis <gnychis@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
+	Steven <srumney@sbcglobal.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+BTW - was this with your updated firmwares you sent me, or with the
+standard 1.2 firmware?
 
---/neOAU127r7zg3jS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi,
-
-On Thu, May 19, 2011 at 03:49:05PM +0300, Luciano Coelho wrote:
-> > this is the re-factor I was talking to you
-> > about. Please have a look and give your
-> > comments.
-> >=20
-> > It probably won't work as is, I compile
-> > tested only, but it shows the idea.
->=20
-> This looks very good! I think we should do something like this to avoid
-> the code that is duplicated in the bus modules.
->=20
-> But, as I already mentioned briefly on IRC, there is a problem with the
-> way you changed the platform data structure, because it will break
-> compat-wireless.  The actual memory and data that is used by the
-> platform data is in the board components and not part of the wireless
-> subsystem.  With compat-wireless, we need to make sure that new stuff
-> works with older kernels.  In your patches you modify the platform data
-> structure, so when we run an old kernel with new compat-wireless, things
-> will break.
->=20
-> We already found a similar bug due to a previous change in the platform
-> data structure, so I don't want this to happen again.  So for now, I'll
-> keep these patches aside, but as soon as we find a good solution, I'll
-> definitely use your ideas here (or ask you to rebase :P).
->=20
-> I'll probably apply some of the patches that are not related to the
-> platform data change.  I'll respond to those specific patches
-> separately.
-
-ok good. I have stated my POV WRT compatibility layers for in-tree
-drivers on a separate thread. In summary, I think those shouldn't exist
-at all :-)
-
-Just let me know if you need anything ;-)
-
---=20
-balbi
-
---/neOAU127r7zg3jS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJN1SP6AAoJEAv8Txj19kN1r7kH/i6inVclkYCLn3xVwohcwVYd
-JWlFtmIG13HS+djkNWJxNp2nHnYKHAGFl46zbmLfYH4Hblsj6Myi+ftJTOqQTNoB
-UZ7EqtamloGtNfqxHVEWWZE7YpEE9RtwMTqRo/w53WnmYxQ19J/mcyNewBu/bKf6
-UQQtQYdR94/2M/XMyw8ciU5k5XYthoK2gGlKeBws0vc+RVVP+glOV67eI3LqQsYg
-Mw+wauZj/26GdYl3ga93z8fZ1i8eMWqSpBHjTuizk81iAIYglISi115rBsTe3RSR
-tIeZtYeqTQpgAHa0MbnkBWsdiSoHm+kGBZ9XCJWDcGb+blhSZq+b5d5Ann+0fYI=
-=SvX+
------END PGP SIGNATURE-----
-
---/neOAU127r7zg3jS--
+On Wed, May 11, 2011 at 11:22 AM, George Nychis <gnychis@gmail.com> wrote:
+> On Wed, May 11, 2011 at 11:14 AM, Sujith <m.sujith@gmail.com> wrote:
+>> George Nychis wrote:
+>>> Great, thanks Sujith!  Are we positive that the Xbox adapter is also
+>>> not UB94 now that we have seen both of these with this problem?  I am
+>>> not sure if this was speculation after seeing the initial error, or if
+>>> it is a known fact.
+>>
+>> Yes, the Xbox adapter is not based on UB94.
+>>
+>> And apparently no changes are required to use UWA-BR100, as an internal
+>> engineer was able to use ath9k_htc as is, after adding the PID/VID
+>> to the driver. So maybe the card that you have bought is different
+>> from the UWA-BR100 sample that he used. Will poke some more people and
+>> see if we're missing something.
+>>
+>
+> Maybe if we can compare lsusb of both devices to ensure that they are
+> actually the same.
+>
+> Could you have him read what the FCC ID is on the back of the stick?
+> My details are:
+>
+> IC: 409B-UWABR100
+> FCC ID: AK8UWABR100
+> ANATEL: 0010-10-4749
+>
