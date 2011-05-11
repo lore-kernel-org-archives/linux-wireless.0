@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47165 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753308Ab1EIW6L (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:36643 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932146Ab1EKXSO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 18:58:11 -0400
-Message-ID: <4DC8717C.70405@candelatech.com> (sfid-20110510_005814_654381_57327EDD)
-Date: Mon, 09 May 2011 15:58:04 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Juan Carlos Romero <juancarlos.romero@gmail.com>
-Subject: Re: Regression affecting b43 LP-PHY card
-References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-In-Reply-To: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 11 May 2011 19:18:14 -0400
+Date: Wed, 11 May 2011 19:16:50 -0400 (EDT)
+Message-Id: <20110511.191650.1128601216324052082.davem@davemloft.net> (sfid-20110512_011839_865234_82CBE8CB)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2011-05-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110511192742.GG2490@tuxdriver.com>
+References: <20110511192742.GG2490@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 03:52 PM, Rafał Miłecki wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 11 May 2011 15:27:42 -0400
 
-> Did anyone else experience any similar problems with latest wireless-testing?
+> Here are a few more late-breakers that I would like to see in 2.6.39.
+> The one from Luca fixes a problem that can cause devices to be unable
+> to (re-)associate after a disconnect.  The ath9k fix from Mohammed
+> fixes a WARNING, the one from Paul fixes a locking issue that can
+> lead to data corruption, and the one from Stanislaw fixes a crash
+> documented in bug 34452.  All are small and all but one are contained
+> within their respective drivers.
+> 
+> Please let me know if there are problems!
 
-With the ath5k patch I posted, and the ath9k patches that Felix
-posted recently in response to my bug reports, I've had good
-luck with ath9k and ath5k.
+Pulled, but I can't guarentee that this will make it to 2.6.39-final
+at this point.
 
-I also pulled in the slub cmpxcg fix that fixes fatal bugs
-for compiles for something earlier than Pentium-II processors.
-
-Hopefully -rc7 will be out shortly (which will contain the slub
-fix, and if we're lucky..the ath9k and ath5k fixes too).
-
-I don't test with any other wifi nics..just ath5k and ath9k.
-
-I've mostly been testing virtual stations...will crank up some
-ath9k APs shortly...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks!
