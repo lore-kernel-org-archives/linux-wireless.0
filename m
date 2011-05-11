@@ -1,71 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38260 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757457Ab1EZM0Z convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:59984 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503Ab1EJXdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 08:26:25 -0400
-Received: by pwi15 with SMTP id 15so310042pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 05:26:25 -0700 (PDT)
+	Tue, 10 May 2011 19:33:15 -0400
+Received: by eyx24 with SMTP id 24so1973699eyx.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 16:33:14 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] ssb: move ssb_commit_settings and export it
+Date: Wed, 11 May 2011 02:10:58 +0200
+Message-Id: <1305072659-4011-1-git-send-email-zajec5@gmail.com> (sfid-20110511_013320_366634_F64BB685)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
-References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
-Date: Thu, 26 May 2011 17:56:24 +0530
-Message-ID: <BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com> (sfid-20110526_142649_595871_5893B13A)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
-From: Mohammed Shafi <shafi.ath9k@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 26, 2011 at 10:30 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
->
-> The AR9287 initial calibration in ar9002_hw_init_cal() isn't ever
-> called because the Kite check (AR_SREV_9285_12_OR_LATER()) matches on
-> MACs versioned Kite and later.
+Commiting settings is possible on devices without PCI core (but with CC
+core). Export it for usage in drivers supporting other cores.
 
-yes, instead  the calibration initialization for AR9285_12_OR_LATER  is called.
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_pcicore.c |   26 --------------------------
+ drivers/ssb/main.c           |   25 +++++++++++++++++++++++++
+ include/linux/ssb/ssb.h      |    1 +
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
->
-> The Atheros newma code checks it is Kite as well as being Kite >= 1.2.
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 8fde122..82feb34 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -21,8 +21,6 @@ static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address);
+ static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
+ 				u8 address, u16 data);
+ 
+-static void ssb_commit_settings(struct ssb_bus *bus);
+-
+ static inline
+ u32 pcicore_read32(struct ssb_pcicore *pc, u16 offset)
+ {
+@@ -659,30 +657,6 @@ static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
+ 	pcicore_write32(pc, mdio_control, 0);
+ }
+ 
+-static void ssb_broadcast_value(struct ssb_device *dev,
+-				u32 address, u32 data)
+-{
+-	/* This is used for both, PCI and ChipCommon core, so be careful. */
+-	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
+-	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
+-
+-	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
+-	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
+-	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
+-	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
+-}
+-
+-static void ssb_commit_settings(struct ssb_bus *bus)
+-{
+-	struct ssb_device *dev;
+-
+-	dev = bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev;
+-	if (WARN_ON(!dev))
+-		return;
+-	/* This forces an update of the cached registers. */
+-	ssb_broadcast_value(dev, 0xFD8, 0);
+-}
+-
+ int ssb_pcicore_dev_irqvecs_enable(struct ssb_pcicore *pc,
+ 				   struct ssb_device *dev)
+ {
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index ad3da93..ee2937c 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1329,6 +1329,31 @@ error:
+ }
+ EXPORT_SYMBOL(ssb_bus_powerup);
+ 
++static void ssb_broadcast_value(struct ssb_device *dev,
++				u32 address, u32 data)
++{
++	/* This is used for both, PCI and ChipCommon core, so be careful. */
++	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
++	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
++
++	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
++	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
++	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
++	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
++}
++
++void ssb_commit_settings(struct ssb_bus *bus)
++{
++	struct ssb_device *dev;
++
++	dev = bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev;
++	if (WARN_ON(!dev))
++		return;
++	/* This forces an update of the cached registers. */
++	ssb_broadcast_value(dev, 0xFD8, 0);
++}
++EXPORT_SYMBOL(ssb_commit_settings);
++
+ u32 ssb_admatch_base(u32 adm)
+ {
+ 	u32 base = 0;
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 7e99b34..f017b89 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -518,6 +518,7 @@ extern int ssb_bus_may_powerdown(struct ssb_bus *bus);
+  * Otherwise static always-on powercontrol will be used. */
+ extern int ssb_bus_powerup(struct ssb_bus *bus, bool dynamic_pctl);
+ 
++extern void ssb_commit_settings(struct ssb_bus *bus);
+ 
+ /* Various helper functions */
+ extern u32 ssb_admatch_base(u32 adm);
+-- 
+1.7.3.4
 
-yes thats true.
-
->
-> I don't currently have Linux ath9k on something with an AR9287 so I'd
-> appreciate it if this were verified by someone who has.
-
-
-did a quick preliminary tx throughput test not much difference.
-
->
-> The patch is quite simple:
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> index 015d974..2d4c091 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> @@ -829,7 +829,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah,
-> struct ath9k_channel *chan)
-> † † † †if (AR_SREV_9271(ah)) {
-> † † † † † † † †if (!ar9285_hw_cl_cal(ah, chan))
-> † † † † † † † † † † † †return false;
-> - † † † } else if (AR_SREV_9285_12_OR_LATER(ah)) {
-> + † † † } else if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
-> † † † † † † † †if (!ar9285_hw_clc(ah, chan))
-> † † † † † † † † † † † †return false;
-> † † † †} else {
->
-> Thanks,
->
->
-> Adrian
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
