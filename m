@@ -1,308 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:62723 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab1E3Xtm (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53701 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757452Ab1EKQSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 19:49:42 -0400
-Received: by pxi2 with SMTP id 2so2677754pxi.10
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 16:49:42 -0700 (PDT)
-Message-ID: <4DE42D10.4000602@ring3k.org> (sfid-20110531_014945_314531_9912CB6A)
-Date: Tue, 31 May 2011 08:49:36 +0900
-From: Mike McCormack <mikem@ring3k.org>
-MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8] rtlwifi: Don't block interrupts in spinlocks
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 May 2011 12:18:42 -0400
+Received: by wwa36 with SMTP id 36so789892wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:18:41 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/7] wl12xx: prevent scheduling while suspending (WoW enabled)
+Date: Wed, 11 May 2011 11:54:25 +0300
+Message-Id: <1305104068-32240-5-git-send-email-eliad@wizery.com> (sfid-20110511_181901_356580_93538477)
+In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now power state transitions are not called from an
-interrupt context, there's no need to block interrupts.
+When WoW is enabled, the interface will stay up and the chip will
+be powered on, so we have to flush/cancel any remaining work, and
+prevent the irq handler from scheduling a new work until the system
+is resumed.
 
-This code appears to block interrupts for too long,
-causing my trackpad to lose sync occasionally.
+Add 2 new flags:
+* WL1271_FLAG_SUSPENDED - the system is (about to be) suspended.
+* WL1271_FLAG_PENDING_WORK - there is a pending irq work which
+   should be scheduled when the system is being resumed.
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+In order to wake-up the system while getting an irq, we initialize
+the device as wakeup device, and calling pm_wakeup_event() upon
+getting the interrupt (while the system is about to be suspended)
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/rtlwifi/ps.c            |   44 ++++++++++---------------
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |   10 ++---
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c |   10 ++---
- 3 files changed, 26 insertions(+), 38 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   46 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/sdio.c   |   27 ++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +
+ 3 files changed, 75 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index 5552b8c..447b458 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -86,7 +86,6 @@ bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 	enum rf_pwrstate rtstate;
- 	bool actionallowed = false;
- 	u16 rfwait_cnt = 0;
--	unsigned long flag;
- 
- 	/*protect_or_not = true; */
- 
-@@ -99,10 +98,9 @@ bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 	 *should wait to be executed.
- 	 */
- 	while (true) {
--		spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flag);
-+		spin_lock(&rtlpriv->locks.rf_ps_lock);
- 		if (ppsc->rfchange_inprogress) {
--			spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock,
--					       flag);
-+			spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
- 				 ("RF Change in progress!"
-@@ -123,8 +121,7 @@ bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 			}
- 		} else {
- 			ppsc->rfchange_inprogress = true;
--			spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock,
--					       flag);
-+			spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 			break;
- 		}
- 	}
-@@ -174,9 +171,9 @@ no_protect:
- 		rtlpriv->cfg->ops->set_rf_power_state(hw, state_toset);
- 
- 	if (!protect_or_not) {
--		spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flag);
-+		spin_lock(&rtlpriv->locks.rf_ps_lock);
- 		ppsc->rfchange_inprogress = false;
--		spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
-+		spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 	}
- 
- 	return actionallowed;
-@@ -290,12 +287,11 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	enum rf_pwrstate rtstate;
--	unsigned long flags;
- 
- 	if (mac->opmode != NL80211_IFTYPE_STATION)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.ips_lock, flags);
-+	spin_lock(&rtlpriv->locks.ips_lock);
- 
- 	if (ppsc->inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
-@@ -311,7 +307,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 		}
- 	}
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.ips_lock, flags);
-+	spin_unlock(&rtlpriv->locks.ips_lock);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9ca71ce..308855a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1338,6 +1338,28 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
+ 	wl->wow_enabled = !!wow;
++	if (wl->wow_enabled) {
++		/* flush any remaining work */
++		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
++		flush_delayed_work(&wl->scan_complete_work);
++
++		/*
++		 * disable and re-enable interrupts in order to flush
++		 * the threaded_irq
++		 */
++		wl1271_disable_interrupts(wl);
++
++		/*
++		 * set suspended flag to avoid triggering a new threaded_irq
++		 * work. no need for spinlock as interrupts are disabled.
++		 */
++		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
++
++		wl1271_enable_interrupts(wl);
++		flush_work(&wl->tx_work);
++		flush_delayed_work(&wl->pspoll_work);
++		flush_delayed_work(&wl->elp_work);
++	}
+ 	return 0;
  }
  
- /*for FW LPS*/
-@@ -429,7 +425,6 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	unsigned long flag;
- 
- 	if (!ppsc->fwctrl_lps)
- 		return;
-@@ -450,7 +445,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
- 	if (mac->link_state != MAC80211_LINKED)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	spin_lock(&rtlpriv->locks.lps_lock);
- 
- 	/* Idle for a while if we connect to AP a while ago. */
- 	if (mac->cnt_after_linked >= 2) {
-@@ -462,7 +457,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
- 		}
- 	}
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	spin_unlock(&rtlpriv->locks.lps_lock);
+@@ -1346,6 +1368,30 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 	struct wl1271 *wl = hw->priv;
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
+ 		     wl->wow_enabled);
++
++	/*
++	 * re-enable irq_work enqueuing, and call irq_work directly if
++	 * there is a pending work.
++	 */
++	if (wl->wow_enabled) {
++		struct wl1271 *wl = hw->priv;
++		unsigned long flags;
++		bool run_irq_work = false;
++
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
++		if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
++			run_irq_work = true;
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++
++		if (run_irq_work) {
++			wl1271_debug(DEBUG_MAC80211,
++				     "run postponed irq_work directly");
++			wl1271_irq(0, wl);
++			wl1271_enable_interrupts(wl);
++		}
++	}
++
+ 	return 0;
  }
  
- /*Leave the leisure power save mode.*/
-@@ -471,9 +466,8 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	unsigned long flag;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	spin_lock(&rtlpriv->locks.lps_lock);
- 
- 	if (ppsc->fwctrl_lps) {
- 		if (ppsc->dot11_psmode != EACTIVE) {
-@@ -494,7 +488,7 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
- 			rtl_lps_set_psmode(hw, EACTIVE);
- 		}
- 	}
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	spin_unlock(&rtlpriv->locks.lps_lock);
- }
- 
- /* For sw LPS*/
-@@ -583,7 +577,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	unsigned long flag;
- 
- 	if (!rtlpriv->psc.swctrl_lps)
- 		return;
-@@ -596,9 +589,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
- 	}
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	spin_lock(&rtlpriv->locks.lps_lock);
- 	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS, false);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	spin_unlock(&rtlpriv->locks.lps_lock);
- }
- 
- void rtl_swlps_rfon_wq_callback(void *data)
-@@ -615,7 +608,6 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	unsigned long flag;
- 	u8 sleep_intv;
- 
- 	if (!rtlpriv->psc.sw_ps_enabled)
-@@ -632,16 +624,16 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	if (rtlpriv->link_info.busytraffic)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flag);
-+	spin_lock(&rtlpriv->locks.rf_ps_lock);
- 	if (rtlpriv->psc.rfchange_inprogress) {
--		spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
-+		spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 		return;
- 	}
--	spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
-+	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	spin_lock(&rtlpriv->locks.lps_lock);
- 	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS, false);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	spin_unlock(&rtlpriv->locks.lps_lock);
- 
- 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
- 		!RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-index 544e0b7..220a738 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -46,13 +46,12 @@ u32 rtl92c_phy_query_rf_reg(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 original_value, readback_value, bitshift;
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	unsigned long flags;
- 
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), "
- 					       "rfpath(%#x), bitmask(%#x)\n",
- 					       regaddr, rfpath, bitmask));
- 
--	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-+	spin_lock(&rtlpriv->locks.rf_lock);
- 
- 	if (rtlphy->rf_mode != RF_OP_BY_FW) {
- 		original_value = _rtl92c_phy_rf_serial_read(hw,
-@@ -65,7 +64,7 @@ u32 rtl92c_phy_query_rf_reg(struct ieee80211_hw *hw,
- 	bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
- 	readback_value = (original_value & bitmask) >> bitshift;
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-+	spin_unlock(&rtlpriv->locks.rf_lock);
- 
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
- 		 ("regaddr(%#x), rfpath(%#x), "
-@@ -120,13 +119,12 @@ void rtl92ce_phy_set_rf_reg(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	u32 original_value, bitshift;
--	unsigned long flags;
- 
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE,
- 		 ("regaddr(%#x), bitmask(%#x), data(%#x), rfpath(%#x)\n",
- 		  regaddr, bitmask, data, rfpath));
- 
--	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-+	spin_lock(&rtlpriv->locks.rf_lock);
- 
- 	if (rtlphy->rf_mode != RF_OP_BY_FW) {
- 		if (bitmask != RFREG_OFFSET_MASK) {
-@@ -153,7 +151,7 @@ void rtl92ce_phy_set_rf_reg(struct ieee80211_hw *hw,
- 		_rtl92c_phy_fw_rf_serial_write(hw, rfpath, regaddr, data);
- 	}
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-+	spin_unlock(&rtlpriv->locks.rf_lock);
- 
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), "
- 					       "bitmask(%#x), data(%#x), "
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-index 2ad51b0..e5b1535 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-@@ -180,19 +180,18 @@ u32 rtl92s_phy_query_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 5b03fd5..bf2a6ad 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -72,6 +72,7 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u32 original_value, readback_value, bitshift;
--	unsigned long flags;
+ 	struct wl1271 *wl = cookie;
+ 	unsigned long flags;
++	bool skip = false;
  
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), rfpath(%#x), "
- 		 "bitmask(%#x)\n", regaddr, rfpath, bitmask));
+ 	wl1271_debug(DEBUG_IRQ, "IRQ");
  
--	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-+	spin_lock(&rtlpriv->locks.rf_lock);
+@@ -82,8 +83,20 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+ 		complete(wl->elp_compl);
+ 		wl->elp_compl = NULL;
+ 	}
++
++	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
++		/* don't enqueue a work right now. mark it as pending */
++		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
++		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
++		disable_irq_nosync(wl->irq);
++		pm_wakeup_event(wl1271_sdio_wl_to_dev(wl), 0);
++		skip = true;
++	}
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
  
- 	original_value = _rtl92s_phy_rf_serial_read(hw, rfpath, regaddr);
++	if (skip)
++		return IRQ_HANDLED;
++
+ 	return IRQ_WAKE_THREAD;
+ }
  
- 	bitshift = _rtl92s_phy_calculate_bit_shift(bitmask);
- 	readback_value = (original_value & bitmask) >> bitshift;
+@@ -268,6 +281,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	}
  
--	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-+	spin_unlock(&rtlpriv->locks.rf_lock);
+ 	enable_irq_wake(wl->irq);
++	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
  
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), rfpath(%#x), "
- 		 "bitmask(%#x), original_value(%#x)\n", regaddr, rfpath,
-@@ -207,7 +206,6 @@ void rtl92s_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	u32 original_value, bitshift;
--	unsigned long flags;
+ 	disable_irq(wl->irq);
  
- 	if (!((rtlphy->rf_pathmap >> rfpath) & 0x1))
- 		return;
-@@ -215,7 +213,7 @@ void rtl92s_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), bitmask(%#x),"
- 		 " data(%#x), rfpath(%#x)\n", regaddr, bitmask, data, rfpath));
+@@ -305,6 +319,7 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
  
--	spin_lock_irqsave(&rtlpriv->locks.rf_lock, flags);
-+	spin_lock(&rtlpriv->locks.rf_lock);
+ 	wl1271_unregister_hw(wl);
++	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
+ 	disable_irq_wake(wl->irq);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
+@@ -339,6 +354,9 @@ static int wl1271_suspend(struct device *dev)
+ 			wl1271_error("error while trying to keep power");
+ 			goto out;
+ 		}
++
++		/* release host */
++		sdio_release_host(func);
+ 	}
+ out:
+ 	return ret;
+@@ -346,6 +364,15 @@ out:
  
- 	if (bitmask != RFREG_OFFSET_MASK) {
- 		original_value = _rtl92s_phy_rf_serial_read(hw, rfpath,
-@@ -226,7 +224,7 @@ void rtl92s_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
+ static int wl1271_resume(struct device *dev)
+ {
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct wl1271 *wl = sdio_get_drvdata(func);
++
++	wl1271_debug(DEBUG_MAC80211, "wl1271 resume");
++	if (wl->wow_enabled) {
++		/* claim back host */
++		sdio_claim_host(func);
++	}
++
+ 	return 0;
+ }
  
- 	_rtl92s_phy_rf_serial_write(hw, rfpath, regaddr, data);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index f9d0a14..daf941d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -358,6 +358,8 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_AP_STARTED,
+ 	WL1271_FLAG_IF_INITIALIZED,
+ 	WL1271_FLAG_DUMMY_PACKET_PENDING,
++	WL1271_FLAG_SUSPENDED,
++	WL1271_FLAG_PENDING_WORK,
+ };
  
--	spin_unlock_irqrestore(&rtlpriv->locks.rf_lock, flags);
-+	spin_unlock(&rtlpriv->locks.rf_lock);
- 
- 	RT_TRACE(rtlpriv, COMP_RF, DBG_TRACE, ("regaddr(%#x), bitmask(%#x), "
- 		 "data(%#x), rfpath(%#x)\n", regaddr, bitmask, data, rfpath));
+ struct wl1271_link {
 -- 
-1.7.4.1
-
+1.7.0.4
 
