@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:52707 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755160Ab1EFTCt (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:50248 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754079Ab1EKDbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 15:02:49 -0400
-Date: Fri, 06 May 2011 14:02:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192se: Remove need to disable ASPM
-Message-ID: <4dc445d8.qNuBQj9x5elLlNec%Larry.Finger@lwfinger.net> (sfid-20110506_210258_965537_13E1F01A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 10 May 2011 23:31:32 -0400
+Subject: Re: GIT net-2.6 rolled back 8 commits...
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+In-Reply-To: <20110510.150814.226778453.davem@davemloft.net>
+References: <20110510.150814.226778453.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 May 2011 05:31:27 +0200
+Message-ID: <1305084687.2437.44.camel@edumazet-laptop> (sfid-20110511_053136_795901_9E0484A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming Li <chaoming_li@realsil.com.cn>
+Le mardi 10 mai 2011 à 15:08 -0700, David Miller a écrit :
+> I made a mistake and applied to net-2.6 a patch from Eric Dumazet that
+> only is applicable for net-next-2.6
+> 
+> I really don't want to have to toss Linus that commit and a revert commit
+> just to fix it up.
+> 
+> So I rewound the net-2.6 tree by 8 commits.
+> 
+> So if you've pulled in the past 3 hours, please reset your pull and repull.
+> 
 
-When this driver was initially submitted, the system would crash unless
-ASPM was disabled. This problem has been fixed.
+Thanks David
 
-This patch also adds a printk that outputs the name of the firmware
-file that is used.
+Would it be possible you sync net-next-2.6 and pull net-2.6 in it ?
 
-Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Eric
 
-John,
-
-This is 2.6.40 material.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -1611,6 +1611,7 @@ static bool _rtl_pci_find_adapter(struct
- 	u16 irqline;
- 	u8 tmp;
- 
-+	pcipriv->ndis_adapter.pcibridge_vendor = PCI_BRIDGE_VENDOR_UNKNOWN;
- 	venderid = pdev->vendor;
- 	deviceid = pdev->device;
- 	pci_read_config_byte(pdev, 0x8, &revisionid);
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -58,7 +58,7 @@ static void rtl92s_init_aspm_vars(struct
- 	 * 4 - Always Enable ASPM without Clock Req.
- 	 * set defult to RTL8192CE:3 RTL8192E:2
- 	 * */
--	rtlpci->const_pci_aspm = 0; /* changed from 2 due to crashes */
-+	rtlpci->const_pci_aspm = 2; /* changed from 2 due to crashes */
- 
- 	/*Setting for PCI-E device */
- 	rtlpci->const_devicepci_aspm_setting = 0x03;
-@@ -183,6 +183,8 @@ static int rtl92s_init_sw_vars(struct ie
- 		return 1;
- 	}
- 
-+	printk(KERN_INFO "rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE\n"
-+	       "           Loading firmware %s\n", rtlpriv->cfg->fw_name);
- 	/* request fw */
- 	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
- 			rtlpriv->io.dev);
 
