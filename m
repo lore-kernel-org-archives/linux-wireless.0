@@ -1,145 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2910 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758812Ab1EMKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:60649 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787Ab1EKCDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2011 22:03:05 -0400
+Subject: [PATCH v2] ath6kl: iw dev wlan0 link implementation
 To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/32] staging: brcm80211: replaced IL_BIGENDIAN by
- __BIG_ENDIAN
-Date: Fri, 13 May 2011 11:59:21 +0200
-Message-ID: <1305280792-9475-1-git-send-email-arend@broadcom.com> (sfid-20110513_120051_177316_87BECBE4)
+From: Kalle Valo <kvalo@adurom.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Wed, 11 May 2011 05:02:57 +0300
+Message-ID: <20110511020257.1752.97603.stgit@localhost6.localdomain6> (sfid-20110511_040308_715118_9E47B481)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Naveen Singh <nsingh@atheros.com>
 
-Code cleanup. IL_BIGENDIAN was a Broadcom specific define.
+implementing the cfg ops that gets called when iw dev wlan0
+link is issued by user. The ops that needs to be implemented
+is get_station.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+kvalo: check the mac address, remove signal_pending() and fix style issues
+
+Signed-off-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    3 ---
- drivers/staging/brcm80211/include/aidmp.h     |    6 +++---
- drivers/staging/brcm80211/include/bcmutils.h  |    6 +++---
- drivers/staging/brcm80211/include/sbchipc.h   |    6 +++---
- 4 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/staging/ath6kl/os/linux/cfg80211.c |  128 ++++++++++++++++++++++++++++
+ 1 files changed, 128 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-index 4448845..b94f376 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-@@ -1623,9 +1623,6 @@ wlc_bmac_write_template_ram(struct wlc_hw_info *wlc_hw, int offset, int len,
- 	d11regs_t *regs;
- 	u32 word;
- 	bool be_bit;
--#ifdef IL_BIGENDIAN
--	volatile u16 *dptr = NULL;
--#endif				/* IL_BIGENDIAN */
- 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index efd4ae5..3a89e33 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -1460,6 +1460,133 @@ u32 cipher_suites[] = {
+     WLAN_CIPHER_SUITE_CCMP,
+ };
  
- 	regs = wlc_hw->regs;
-diff --git a/drivers/staging/brcm80211/include/aidmp.h b/drivers/staging/brcm80211/include/aidmp.h
-index d33f020..7e0ce8f 100644
---- a/drivers/staging/brcm80211/include/aidmp.h
-+++ b/drivers/staging/brcm80211/include/aidmp.h
-@@ -292,7 +292,7 @@ typedef volatile struct _aidmp {
- #define	AI_OOBDINWIDTH		0x364
- #define	AI_OOBDOUTWIDTH		0x368
++bool is_rate_legacy(s32 rate)
++{
++	static const s32 legacy[] = { 1000, 2000, 5500, 11000,
++				      6000, 9000, 12000, 18000, 24000,
++				      36000, 48000, 54000 };
++	u8 i;
++
++	for (i = 0; i < 12; i++) {
++		if (rate == legacy[i])
++			return true;
++	}
++
++	return false;
++}
++
++bool is_rate_ht20(s32 rate, u8 *mcs)
++{
++	static const s32 ht20[] = { 6500, 13000, 19500, 26000, 39000,
++				     52000, 58500, 65000, 72200 };
++	u8 i;
++
++	for (i = 0; i < 9; i++) {
++		if (rate == ht20[i]) {
++			*mcs = i;
++			return true;
++		}
++	}
++	return false;
++}
++
++bool is_rate_ht40(s32 rate, u8 *mcs)
++{
++	static const s32 ht40[] = { 13500, 27000, 40500, 54000,
++					  81000, 108000, 121500, 135000 };
++	u8 i;
++
++	for (i = 0; i < 9; i++) {
++		if (rate == ht40[i]) {
++			*mcs = i;
++			return true;
++		}
++	}
++
++	return false;
++}
++
++static int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
++			    u8 *mac, struct station_info *sinfo)
++{
++	struct ar6_softc *ar = ar6k_priv(dev);
++	long left;
++	int ret;
++	u8 mcs;
++
++	if (memcmp(mac, ar->arBssid, ETH_ALEN) != 0)
++		return -ENOENT;
++
++	if (down_interruptible(&ar->arSem))
++		return -EBUSY;
++
++	ar->statsUpdatePending = true;
++
++	ret = wmi_get_stats_cmd(ar->arWmi);
++
++	if (ret != 0) {
++		up(&ar->arSem);
++		return -EIO;
++	}
++
++	left = wait_event_interruptible_timeout(arEvent,
++						ar->statsUpdatePending == false,
++						wmitimeout * HZ);
++
++	up(&ar->arSem);
++
++	if (left == 0)
++		return -ETIMEDOUT;
++	else if (left < 0)
++		return left;
++
++	if (ar->arTargetStats.rx_bytes) {
++		sinfo->rx_bytes = ar->arTargetStats.rx_bytes;
++		sinfo->filled |= STATION_INFO_RX_BYTES;
++		sinfo->rx_packets = ar->arTargetStats.rx_packets;
++		sinfo->filled |= STATION_INFO_RX_PACKETS;
++	}
++
++	if (ar->arTargetStats.tx_bytes) {
++		sinfo->tx_bytes = ar->arTargetStats.tx_bytes;
++		sinfo->filled |= STATION_INFO_TX_BYTES;
++		sinfo->tx_packets = ar->arTargetStats.tx_packets;
++		sinfo->filled |= STATION_INFO_TX_PACKETS;
++	}
++
++	sinfo->signal = ar->arTargetStats.cs_rssi;
++	sinfo->filled |= STATION_INFO_SIGNAL;
++
++	if (is_rate_legacy(ar->arTargetStats.tx_unicast_rate)) {
++		sinfo->txrate.legacy = ar->arTargetStats.tx_unicast_rate / 100;
++	} else if (is_rate_ht20(ar->arTargetStats.tx_unicast_rate, &mcs)) {
++		if (mcs == 0x08) {
++			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++			sinfo->txrate.mcs = mcs - 1;
++		} else {
++			sinfo->txrate.mcs = mcs;
++		}
++
++		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
++	} else if (is_rate_ht40(ar->arTargetStats.tx_unicast_rate, &mcs)) {
++		if (mcs == 0x08) {
++			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++			sinfo->txrate.mcs = mcs - 1;
++		} else {
++			sinfo->txrate.mcs = mcs;
++		}
++
++		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
++	} else {
++		WARN(1, "invalid rate: %d", ar->arTargetStats.tx_unicast_rate);
++	}
++
++	sinfo->filled |= STATION_INFO_TX_BITRATE;
++
++	return 0;
++}
++
+ static struct
+ cfg80211_ops ar6k_cfg80211_ops = {
+     .change_virtual_intf = ar6k_cfg80211_change_iface,
+@@ -1480,6 +1607,7 @@ cfg80211_ops ar6k_cfg80211_ops = {
+     .set_power_mgmt = ar6k_cfg80211_set_power_mgmt,
+     .join_ibss = ar6k_cfg80211_join_ibss,
+     .leave_ibss = ar6k_cfg80211_leave_ibss,
++    .get_station = ar6k_get_station,
+ };
  
--#if	defined(IL_BIGENDIAN) && defined(BCMHND74K)
-+#if	defined(__BIG_ENDIAN) && defined(BCMHND74K)
- /* Selective swapped defines for those registers we need in
-  * big-endian code.
-  */
-@@ -303,7 +303,7 @@ typedef volatile struct _aidmp {
- #define	AI_RESETCTRL		0x804
- #define	AI_RESETSTATUS		0x800
- 
--#else				/* !IL_BIGENDIAN || !BCMHND74K */
-+#else				/* !__BIG_ENDIAN || !BCMHND74K */
- 
- #define	AI_IOCTRLSET		0x400
- #define	AI_IOCTRLCLEAR		0x404
-@@ -312,7 +312,7 @@ typedef volatile struct _aidmp {
- #define	AI_RESETCTRL		0x800
- #define	AI_RESETSTATUS		0x804
- 
--#endif				/* IL_BIGENDIAN && BCMHND74K */
-+#endif				/* __BIG_ENDIAN && BCMHND74K */
- 
- #define	AI_IOCTRLWIDTH		0x700
- #define	AI_IOSTATUSWIDTH	0x704
-diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
-index aa00e83..224d4ce 100644
---- a/drivers/staging/brcm80211/include/bcmutils.h
-+++ b/drivers/staging/brcm80211/include/bcmutils.h
-@@ -277,7 +277,7 @@ extern void bcm_prpkt(const char *msg, struct sk_buff *p0);
- #define	bcopy(src, dst, len)	memcpy((dst), (src), (len))
- 
- /* register access macros */
--#ifndef IL_BIGENDIAN
-+#ifndef __BIG_ENDIAN
- #ifndef __mips__
- #define R_REG(r) (\
- 	SELECT_BUS_READ(sizeof(*(r)) == sizeof(u8) ? \
-@@ -328,7 +328,7 @@ extern void bcm_prpkt(const char *msg, struct sk_buff *p0);
- 		}, \
- 		(OSL_WRITE_REG(r, v))); \
- 	} while (0)
--#else				/* IL_BIGENDIAN */
-+#else				/* __BIG_ENDIAN */
- #define R_REG(r) (\
- 	SELECT_BUS_READ( \
- 		({ \
-@@ -365,7 +365,7 @@ extern void bcm_prpkt(const char *msg, struct sk_buff *p0);
- 		}, \
- 		(OSL_WRITE_REG(r, v))); \
- 	} while (0)
--#endif				/* IL_BIGENDIAN */
-+#endif				/* __BIG_ENDIAN */
- 
- #define AND_REG(r, v)	W_REG((r), R_REG(r) & (v))
- #define OR_REG(r, v)	W_REG((r), R_REG(r) | (v))
-diff --git a/drivers/staging/brcm80211/include/sbchipc.h b/drivers/staging/brcm80211/include/sbchipc.h
-index f608894..8c01c63 100644
---- a/drivers/staging/brcm80211/include/sbchipc.h
-+++ b/drivers/staging/brcm80211/include/sbchipc.h
-@@ -225,7 +225,7 @@ typedef volatile struct {
- 
- #endif				/* _LANGUAGE_ASSEMBLY */
- 
--#if	defined(IL_BIGENDIAN) && defined(BCMHND74K)
-+#if	defined(__BIG_ENDIAN) && defined(BCMHND74K)
- /* Selective swapped defines for those registers we need in
-  * big-endian code.
-  */
-@@ -234,14 +234,14 @@ typedef volatile struct {
- #define	CC_CHIPST		0x28
- #define	CC_EROMPTR		0xf8
- 
--#else				/* !IL_BIGENDIAN || !BCMHND74K */
-+#else				/* !__BIG_ENDIAN || !BCMHND74K */
- 
- #define	CC_CHIPID		0
- #define	CC_CAPABILITIES		4
- #define	CC_CHIPST		0x2c
- #define	CC_EROMPTR		0xfc
- 
--#endif				/* IL_BIGENDIAN && BCMHND74K */
-+#endif				/* __BIG_ENDIAN && BCMHND74K */
- 
- #define CC_OTPST		0x10
- #define	CC_JTAGCMD		0x30
--- 
-1.7.4.1
-
+ struct wireless_dev *
 
