@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46131 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381Ab1EJTdT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51853 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758896Ab1ELXuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 15:33:19 -0400
-Message-ID: <4DC992E8.9080407@candelatech.com> (sfid-20110510_213322_138506_0140E17C)
-Date: Tue, 10 May 2011 12:32:56 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH v2 2.6.39] ath9k: fix a regression in PS frame filter
- handling
-References: <1305053542-29435-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1305053542-29435-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 12 May 2011 19:50:16 -0400
+From: Stephen Boyd <sboyd@codeaurora.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/9] iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+Date: Thu, 12 May 2011 16:50:04 -0700
+Message-Id: <1305244212-19183-2-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015259_606158_3403FD97)
+In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2011 11:52 AM, Felix Fietkau wrote:
-> Only leave filtering enabled for AP or VLAN interfaces, clear the
-> destination mask for all other interfaces.
+Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
+warning:
 
-I did a quick test with 32 virtual stations and it seems to
-work fine.
+In file included from arch/x86/include/asm/uaccess.h:573,
+                 from include/net/checksum.h:25,
+                 from include/linux/skbuff.h:28,
+                 from drivers/net/wireless/iwlegacy/iwl-4965-rs.c:28:
+In function 'copy_from_user',
+    inlined from 'iwl4965_rs_sta_dbgfs_scale_table_write' at
+    drivers/net/wireless/iwlegacy/iwl-4965-rs.c:2616:
+arch/x86/include/asm/uaccess_64.h:65:
+warning: call to 'copy_from_user_overflow' declared with
+attribute warning: copy_from_user() buffer size is not provably
+correct
 
-Tested-by: Ben Greear <greearb@candelatech.com>
+presumably due to buf_size being signed causing GCC to fail to
+see that buf_size can't become negative.
 
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
-Ben
-
->
-> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> Reported-by: Ben Greear<greearb@candelatech.com>
-> ---
->   drivers/net/wireless/ath/ath9k/main.c |    5 +++++
->   drivers/net/wireless/ath/ath9k/xmit.c |    6 ++++++
->   2 files changed, 11 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 3de115d..3d999b7 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1778,6 +1778,11 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
->   	struct ieee80211_key_conf ps_key = { };
->
->   	ath_node_attach(sc, sta);
-> +
-> +	if (vif->type != NL80211_IFTYPE_AP&&
-> +	    vif->type != NL80211_IFTYPE_AP_VLAN)
-> +		return 0;
-> +
->   	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
->
->   	return 0;
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 744779d..97dd1fa 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -1845,6 +1845,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
->   	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->   	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->   	struct ieee80211_sta *sta = info->control.sta;
-> +	struct ieee80211_vif *vif = info->control.vif;
->   	struct ath_softc *sc = hw->priv;
->   	struct ath_txq *txq = txctl->txq;
->   	struct ath_buf *bf;
-> @@ -1882,6 +1883,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
->   		memmove(skb->data, skb->data + padsize, padpos);
->   	}
->
-> +	if ((vif&&  vif->type != NL80211_IFTYPE_AP&&
-> +	            vif->type != NL80211_IFTYPE_AP_VLAN) ||
-> +	    !ieee80211_is_data(hdr->frame_control))
-> +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-> +
->   	setup_frame_info(hw, skb, frmlen);
->
->   	/*
-
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
+index 31ac672..cc4751c 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
+@@ -2604,7 +2604,7 @@ static ssize_t iwl4965_rs_sta_dbgfs_scale_table_write(struct file *file,
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+ 	struct iwl_priv *priv;
+ 	char buf[64];
+-	int buf_size;
++	size_t buf_size;
+ 	u32 parsed_rate;
+ 	struct iwl_station_priv *sta_priv =
+ 		container_of(lq_sta, struct iwl_station_priv, lq_sta);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Sent by an employee of the Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
 
