@@ -1,128 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58376 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755263Ab1ENSAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 14:00:37 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: libertas lbs_pr_<level> was converted to pr_<level>
-Date: Sat, 14 May 2011 20:00:25 +0200
-Message-Id: <1305396027-5864-1-git-send-email-hauke@hauke-m.de> (sfid-20110514_200041_680150_D1D69E58)
+Received: from he.sipsolutions.net ([78.46.109.217]:43856 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269Ab1ELNLi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 09:11:38 -0400
+Subject: [PATCH] mac80211: fix a few RCU issues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 15:11:37 +0200
+Message-ID: <1305205897.3461.29.camel@jlt3.sipsolutions.net> (sfid-20110512_151148_842962_1DCDD9AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adapt changes in commit f3a57fd148a4afd3c38f558c5b44972cb29ea8ba
-"libertas: Convert lbs_pr_<level> to pr_<level>" to the compat patches.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+A few configuration functions correctly do
+rcu_read_lock() but don't correctly reference
+some pointers protected by RCU. Fix that.
+
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- patches/24-pcmcia.patch |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+ net/mac80211/cfg.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/patches/24-pcmcia.patch b/patches/24-pcmcia.patch
-index 39f2dc0..ef058b7 100644
---- a/patches/24-pcmcia.patch
-+++ b/patches/24-pcmcia.patch
-@@ -834,7 +834,7 @@
-  	.remove		= __devexit_p(b43_pcmcia_remove),
- --- a/drivers/net/wireless/libertas/if_cs.c
- +++ b/drivers/net/wireless/libertas/if_cs.c
--@@ -773,7 +773,11 @@ static void if_cs_release(struct pcmcia_
-+@@ -780,7 +780,11 @@ static void if_cs_release(struct pcmcia_
-  
-  	lbs_deb_enter(LBS_DEB_CS);
-  
-@@ -846,7 +846,7 @@
-  	pcmcia_disable_device(p_dev);
-  	if (card->iobase)
-  		ioport_unmap(card->iobase);
--@@ -781,7 +785,7 @@ static void if_cs_release(struct pcmcia_
-+@@ -788,7 +792,7 @@ static void if_cs_release(struct pcmcia_
-  	lbs_deb_leave(LBS_DEB_CS);
-  }
-  
-@@ -855,8 +855,8 @@
-  static int if_cs_ioprobe(struct pcmcia_device *p_dev, void *priv_data)
-  {
-  	p_dev->resource[0]->flags &= ~IO_DATA_PATH_WIDTH;
--@@ -791,9 +795,39 @@ static int if_cs_ioprobe(struct pcmcia_d
-- 		lbs_pr_err("wrong CIS (check number of IO windows)\n");
-+@@ -798,9 +802,39 @@ static int if_cs_ioprobe(struct pcmcia_d
-+ 		pr_err("wrong CIS (check number of IO windows)\n");
-  		return -ENODEV;
-  	}
- +#else
-@@ -881,7 +881,7 @@
- +
- +	/* IO window settings */
- +	if (cfg->io.nwin != 1) {
--+		lbs_pr_err("wrong CIS (check number of IO windows)\n");
-++		pr_err("wrong CIS (check number of IO windows)\n");
- +		return -ENODEV;
- +	}
- +#endif
-@@ -895,7 +895,7 @@
-  }
-  
-  static int if_cs_probe(struct pcmcia_device *p_dev)
--@@ -815,7 +849,16 @@ static int if_cs_probe(struct pcmcia_dev
-+@@ -822,7 +856,16 @@ static int if_cs_probe(struct pcmcia_dev
-  	card->p_dev = p_dev;
-  	p_dev->priv = card;
-  
-@@ -911,8 +911,8 @@
- +#endif
-  
-  	if (pcmcia_loop_config(p_dev, if_cs_ioprobe, NULL)) {
-- 		lbs_pr_err("error in pcmcia_loop_config\n");
--@@ -827,12 +870,26 @@ static int if_cs_probe(struct pcmcia_dev
-+ 		pr_err("error in pcmcia_loop_config\n");
-+@@ -834,12 +877,26 @@ static int if_cs_probe(struct pcmcia_dev
-  	 * a handler to the interrupt, unless the 'Handler' member of
-  	 * the irq structure is initialized.
-  	 */
-@@ -923,7 +923,7 @@
- +	if (p_dev->conf.Attributes & CONF_ENABLE_IRQ) {
- +		ret = pcmcia_request_irq(p_dev, &p_dev->irq);
- +		if (ret) {
--+			lbs_pr_err("error in pcmcia_request_irq\n");
-++			pr_err("error in pcmcia_request_irq\n");
- +			goto out1;
- +		}
- +	}
-@@ -937,9 +937,9 @@
- +	card->iobase = ioport_map(p_dev->io.BasePort1, p_dev->io.NumPorts1);
- +#endif
-  	if (!card->iobase) {
-- 		lbs_pr_err("error in ioport_map\n");
-+ 		pr_err("error in ioport_map\n");
-  		ret = -EIO;
--@@ -846,7 +903,17 @@ static int if_cs_probe(struct pcmcia_dev
-+@@ -853,7 +910,17 @@ static int if_cs_probe(struct pcmcia_dev
-  	}
-  
-  	/* Finally, report what we've done */
-@@ -957,7 +957,7 @@
-  
-  	/*
-  	 * Most of the libertas cards can do unaligned register access, but some
--@@ -915,7 +982,11 @@ static int if_cs_probe(struct pcmcia_dev
-+@@ -922,7 +989,11 @@ static int if_cs_probe(struct pcmcia_dev
-  	priv->fw_ready = 1;
-  
-  	/* Now actually get the IRQ */
-@@ -968,8 +968,8 @@
- +#endif
-  		IRQF_SHARED, DRV_NAME, card);
-  	if (ret) {
-- 		lbs_pr_err("error in request_irq\n");
--@@ -988,7 +1059,13 @@ MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
-+ 		pr_err("error in request_irq\n");
-+@@ -995,7 +1066,13 @@ MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
-  
-  static struct pcmcia_driver lbs_driver = {
-  	.owner		= THIS_MODULE,
--- 
-1.7.4.1
+--- a/net/mac80211/cfg.c	2011-05-12 15:10:47.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-05-12 15:10:48.000000000 +0200
+@@ -228,11 +228,11 @@ static int ieee80211_get_key(struct wiph
+ 			goto out;
+ 
+ 		if (pairwise)
+-			key = sta->ptk;
++			key = rcu_dereference(sta->ptk);
+ 		else if (key_idx < NUM_DEFAULT_KEYS)
+-			key = sta->gtk[key_idx];
++			key = rcu_dereference(sta->gtk[key_idx]);
+ 	} else
+-		key = sdata->keys[key_idx];
++		key = rcu_dereference(sdata->keys[key_idx]);
+ 
+ 	if (!key)
+ 		goto out;
+@@ -943,8 +943,10 @@ static int ieee80211_change_mpath(struct
+ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
+ 			    struct mpath_info *pinfo)
+ {
+-	if (mpath->next_hop)
+-		memcpy(next_hop, mpath->next_hop->sta.addr, ETH_ALEN);
++	struct sta_info *next_hop_sta = rcu_dereference(mpath->next_hop);
++
++	if (next_hop_sta)
++		memcpy(next_hop, next_hop_sta->sta.addr, ETH_ALEN);
+ 	else
+ 		memset(next_hop, 0, ETH_ALEN);
+ 
+
 
