@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:52244 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753852Ab1EIIvA convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:35803 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758705Ab1ELVSQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 04:51:00 -0400
-Received: by qyk7 with SMTP id 7so776053qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 01:50:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8739kos3cm.wl@dns1.atmark-techno.com>
-References: <201104181526.01722.IvDoorn@gmail.com>
-	<201104301601.15558.IvDoorn@gmail.com>
-	<87d3k1rzuw.wl@dns1.atmark-techno.com>
-	<201105022124.10614.IvDoorn@gmail.com>
-	<8739kos3cm.wl@dns1.atmark-techno.com>
-Date: Mon, 9 May 2011 10:50:58 +0200
-Message-ID: <BANLkTin9YVtc++yuqaLG8szZ4PvLy-_ehA@mail.gmail.com> (sfid-20110509_105115_177510_556D12BE)
-Subject: Re: [PATCH 04/23] rt2x00: Make rt2x00_queue_entry_for_each more flexible
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Yasushi SHOJI <yashi@atmark-techno.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	helmut.schaa@googlemail.com, hanada@atmark-techno.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 12 May 2011 17:18:16 -0400
+Received: by eya28 with SMTP id 28so807353eya.21
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 14:18:13 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add Notification to 80211h support
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305105176-12427-1-git-send-email-shahar_levi@ti.com>
+References: <1305105176-12427-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 00:18:08 +0300
+Message-ID: <1305235089.12586.1058.camel@cumari> (sfid-20110512_231819_436339_B9D40487)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-05-11 at 12:12 +0300, Shahar Levi wrote:
+> Set Spectrum Management Bit in association request in
+> order to support 80211h spec
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
+>  drivers/net/wireless/wl12xx/main.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 7126506..2618a57 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -3536,6 +3536,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+>  		IEEE80211_HW_CONNECTION_MONITOR |
+>  		IEEE80211_HW_SUPPORTS_CQM_RSSI |
+>  		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+> +		IEEE80211_HW_SPECTRUM_MGMT |
+>  		IEEE80211_HW_AP_LINK_PS;
+>  
+>  	wl->hw->wiphy->cipher_suites = cipher_suites;
 
-> At Mon, 2 May 2011 21:24:09 +0200,
-> Ivo van Doorn wrote:
->>
->> >  - CPU consumption was not an issue (sorry for wrong info. my bad)
->> >  -- but network throughput performance is bad
->> >  - USB controller on the CPU is not fast
->> >  -- max throughput for USB memory read is about 50 Mbps on our test
->> >  -- max client mode transfer rate is about 20 Mbps (at best)
->>
->> Ah ok, as CPU consumption is not the problem, then I better understand the problem.
->> My previous patch missed one fix for a return value. Could you try this one.
->
-> it works like a charm!  you can put a tested-by tag on this patch. :-)
+Modified commit subject and message and applied.  Thanks, Shahar!
 
-Good news. :)
-The patch has been sent upstream, it has already been picked up in
-wireless-testing.git
-and wireless-next-2.6.git a few days ago but hasn't yet by the
-compat-wireless package.
-So if all goes correct, the compat-wireless package which will be
-generated today will
-contain the fix.
+-- 
+Cheers,
+Luca.
 
-Ivo
