@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60338 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755595Ab1EDUAz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552Ab1ELI0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 16:00:55 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1QHiFg-0002s3-1f
-	for linux-wireless@vger.kernel.org; Wed, 04 May 2011 16:00:52 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p44Jl5JD009881
-	for <linux-wireless@vger.kernel.org>; Wed, 4 May 2011 15:47:05 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id p44Jl5EJ009879
-	for linux-wireless@vger.kernel.org; Wed, 4 May 2011 15:47:05 -0400
-Date: Wed, 4 May 2011 15:47:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Linux wireless mini-summit -- Vancouver, Canada August 15-16, 2011
-Message-ID: <20110504194704.GD18541@tuxdriver.com> (sfid-20110504_220104_021918_E390E1B2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 12 May 2011 04:26:33 -0400
+Subject: Re: [RFC ] wireless: Support can-scan-one logic.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305057374-9875-1-git-send-email-greearb@candelatech.com> (sfid-20110510_215629_728045_43BAA3DE)
+References: <1305057374-9875-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20110510_215629_728045_43BAA3DE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 10:26:31 +0200
+Message-ID: <1305188791.3461.6.camel@jlt3.sipsolutions.net> (sfid-20110512_102637_540765_FE0A1B3D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a brief announcement...a mini-summit for Linux wireless is
-being planned for just prior to LinuxCon North America this August
-in Vancouver.
+On Tue, 2011-05-10 at 12:56 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Enable this by passing a -1 for a scan frequency.
+> 
+> When enabled, the system will only scan the current active
+> channel if at least one VIF is actively using it.  If no
+> VIFS are active or this flag is disabled, then default
+> behaviour is used.
+> 
+> This helps when using multiple STA interfaces that otherwise might
+> constantly be trying to scan all channels.
 
-Attendees will be required to register for LinuxCon.  More details
-here:
+I still don't see what stops you from doing this in userspace, I don't
+remember a compelling reason for implementing this in the kernel.
+Clearly, you need to modify userspace anyhow. Also, what if, in the
+future, we have multiplel STA interfaces on different channels? Which
+one(s) should it pick then? The -1 trick will also break all
+non-mac80211 drivers, or maybe simply not work?
 
-	http://wireless.kernel.org/en/developers/Summits/Vancouver-2011
+johannes
 
-Space is reasonable, but not unlimited.  If you are interested in
-attending, please add your name to the list on the wiki page cited
-above ASAP.  Also, feel free to add your proposals for discussions
-topics.
-
-Thanks for your attention and participation!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
