@@ -1,102 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53515 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751398Ab1EMTin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 15:38:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/13] iwlagn: remove unused pad argument
-Date: Fri, 13 May 2011 12:13:20 -0700
-Message-Id: <1305314010-18073-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213849_287780_FDB57A34)
-In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:56822 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755256Ab1ELNDe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 09:03:34 -0400
+Subject: [PATCH] mac80211: remove pointless mesh path timer RCU code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Javier Cardona <javier@cozybit.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1305203138.3461.24.camel@jlt3.sipsolutions.net> (sfid-20110512_142543_533404_D7A57FF6)
+References: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
+	 (sfid-20110512_142543_533404_D7A57FF6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 15:03:32 +0200
+Message-ID: <1305205412.3461.27.camel@jlt3.sipsolutions.net> (sfid-20110512_150355_153502_BADF9461)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The pad argument to iwlagn_txq_free_tfd
-isn't used, remove it.
+The code here to RCU-dereference a pointer that's
+on the stack is totally pointless, RCU isn't magic
+(like say Java's weak references are), so the code
+can't work like whoever wrote it thought it might.
+
+Remove it so readers don't get confused. Note that
+it seems that a bug is there anyway: I don't see
+any code that cancels the timer when a mesh path
+struct is destroyed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 --
- drivers/net/wireless/iwlwifi/iwl-tx.c     |    5 ++---
- 4 files changed, 5 insertions(+), 8 deletions(-)
+ net/mac80211/mesh_hwmp.c |   17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index d34e103..9acf0e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -750,10 +750,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	spin_unlock(&priv->sta_lock);
+--- a/net/mac80211/mesh_hwmp.c	2011-05-12 15:01:20.000000000 +0200
++++ b/net/mac80211/mesh_hwmp.c	2011-05-12 15:01:24.000000000 +0200
+@@ -967,20 +967,11 @@ endlookup:
  
- 	/* Attach buffers to TFD */
--	iwlagn_txq_attach_buf_to_tfd(priv, txq, txcmd_phys, firstlen, 1, 0);
-+	iwlagn_txq_attach_buf_to_tfd(priv, txq, txcmd_phys, firstlen, 1);
- 	if (secondlen > 0)
- 		iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr,
--					     secondlen, 0, 0);
-+					     secondlen, 0);
- 
- 	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
- 				offsetof(struct iwl_tx_cmd, scratch);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 269e0c4..fc7dc06 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -194,7 +194,7 @@ void iwl_setup_rx_handlers(struct iwl_priv *priv);
- void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq);
- int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
- 				 struct iwl_tx_queue *txq,
--				 dma_addr_t addr, u16 len, u8 reset, u8 pad);
-+				 dma_addr_t addr, u16 len, u8 reset);
- void iwlagn_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
- 			      struct ieee80211_tx_info *info);
- int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 9daf964..38254bd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -48,8 +48,6 @@
- #include "iwl-agn-rs.h"
- #include "iwl-agn-tt.h"
- 
--#define U32_PAD(n)		((4-(n))&0x3)
--
- struct iwl_tx_queue;
- 
- /* CT-KILL constants */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 302284b..a47558f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -182,7 +182,7 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
- 				 struct iwl_tx_queue *txq,
- 				 dma_addr_t addr, u16 len,
--				 u8 reset, u8 pad)
-+				 u8 reset)
+ void mesh_path_timer(unsigned long data)
  {
- 	struct iwl_queue *q;
- 	struct iwl_tfd *tfd, *tfd_tmp;
-@@ -702,8 +702,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+-	struct ieee80211_sub_if_data *sdata;
+-	struct mesh_path *mpath;
++	struct mesh_path *mpath = (void *) data;
++	struct ieee80211_sub_if_data *sdata = mpath->sdata;
  
- 	trace_iwlwifi_dev_hcmd(priv, &out_cmd->hdr, fix_size, cmd->flags);
+-	rcu_read_lock();
+-	mpath = (struct mesh_path *) data;
+-	mpath = rcu_dereference(mpath);
+-	if (!mpath)
+-		goto endmpathtimer;
+-	sdata = mpath->sdata;
+-
+-	if (sdata->local->quiescing) {
+-		rcu_read_unlock();
++	if (sdata->local->quiescing)
+ 		return;
+-	}
  
--	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, fix_size, 1,
--				     U32_PAD(cmd->len[0]));
-+	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, fix_size, 1);
+ 	spin_lock_bh(&mpath->state_lock);
+ 	if (mpath->flags & MESH_PATH_RESOLVED ||
+@@ -997,8 +988,6 @@ void mesh_path_timer(unsigned long data)
+ 	}
  
- 	/* Increment and update queue's write index */
- 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
--- 
-1.7.0.4
+ 	spin_unlock_bh(&mpath->state_lock);
+-endmpathtimer:
+-	rcu_read_unlock();
+ }
+ 
+ void
+
 
