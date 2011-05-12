@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53958 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755026Ab1EBWUB (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:49339 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757905Ab1ELQUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 18:20:01 -0400
-Message-ID: <4DBF2E08.8080606@candelatech.com> (sfid-20110503_002005_225056_339B595A)
-Date: Mon, 02 May 2011 15:19:52 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Pat Erley <pat-lkml@erley.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com> <4DBF297F.5030906@erley.org>
-In-Reply-To: <4DBF297F.5030906@erley.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 12 May 2011 12:20:08 -0400
+Received: by ewy6 with SMTP id 6so548860ewy.10
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 09:20:05 -0700 (PDT)
+Subject: Re: [PATCH v3 1/3] cfg80211/nl80211: add support for scheduled
+ scans
+From: Luciano Coelho <coelho@ti.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, eliad@wizery.com
+In-Reply-To: <20110512150530.GB2171@redhat.com>
+References: <1305122977-6740-1-git-send-email-coelho@ti.com>
+	 <1305122977-6740-2-git-send-email-coelho@ti.com>
+	 <20110512150530.GB2171@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 19:20:01 +0300
+Message-ID: <1305217201.12586.949.camel@cumari> (sfid-20110512_182013_081562_1FFA4A2A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2011 03:00 PM, Pat Erley wrote:
-> On 05/02/11 16:51, Ben Greear wrote:
->> Hello!
->>
->> We are trying to find some Atheros NICs that support 3x3
->> MIMO, but we are having a hard time.
->>
->> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
->> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
->> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
->> hard to order that specific version.
->>
->> Sparklan seems to make one based on AR9380, but they are not
->> in stock any place we could find.
->>
->> Anyone know of any others that are available to the public
->> in small quantities?
->>
-> I've ordered from Oxfordtec a few times:
->
-> http://www.oxfordtec.com/us/MiniPCI-Wireless-Cards-802.11n---300Mbps/c36_40/p127/SparkLAN-WMIA-199N-WLAN-802.11n-draft-wifi-2.4/5Ghz-dual-band-3T/3R-Module-%28Atheros-AR9001-AR9160-XSPAN%29-Wireless-miniPCI-card/product_info.html
+On Thu, 2011-05-12 at 17:05 +0200, Stanislaw Gruszka wrote:
+> On Wed, May 11, 2011 at 05:09:35PM +0300, Luciano Coelho wrote:
+> > Implement new functionality for scheduled scan offload.  With this feature we
+> > can scan automatically at certain intervals.
+> > 
+> > The idea is that the hardware can perform scan automatically and filter on
+> > desired results without waking up the host unnecessarily.
+> 
+> Can you elaborate more about this?
 
-Thanks, I just ordered one of the industrial versions of that NIC.
+Some devices require very low power consumption, like mobile phones and
+other mobile devices, as you know. ;)
 
-I also found a possible source for the sparklan.  Doesn't say they are out
-of stock, but maybe they just don't keep track on their web page...
+With this feature, we can offload the scanning entirely to the wireless
+chip, when we're not connected but looking for APs to connect to, so the
+host can keep sleeping and consuming very low power.
 
-http://www.embeddedworks.net/psummary.php?mn=sparklan&mid=sparklan211
+Let's say you're looking for an AP with SSID "myap".  You can keep your
+device scanning for it, so that it's able to connect automatically when
+it shows up without having to keep your device's main CPU awake and
+consuming power.  When "myap" shows in the scan results, the main CPU is
+awoken and the device can connect to it.
 
-Thanks,
-Ben
+This is also useful when connected and scanning for better access points
+to roam to.
+
+This patchset is just the first step, so not much is supported, but I'm
+already working on more features that will allow you to choose a list of
+SSIDs to scan for, so you can keep scanning for all SSIDs your device
+already knows and automatically wake up when one (or more) of them is
+(or are) found.
+
+
+> > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
+> > commands to the nl80211 interface.  When results are available they are
+> > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
+> > informed when the scheduled scan has stopped with a
+> > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
+> > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
+> > 
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > ---
+> >  include/linux/nl80211.h |   25 +++++
+> >  include/net/cfg80211.h  |   57 +++++++++++
+> >  net/wireless/core.c     |   12 ++-
+> >  net/wireless/core.h     |    7 ++
+> >  net/wireless/nl80211.c  |  250 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  net/wireless/nl80211.h  |    4 +
+> >  net/wireless/scan.c     |   70 +++++++++++++
+> >  7 files changed, 424 insertions(+), 1 deletions(-)
+> 
+> And explain, why all of this is needed, instead of modify existing scan
+> code and reuse existing infrastructure. This sched_scan does not seems to
+> be something different than normal hardware scan we have already, or I'm
+> wrong.
+
+It is something different.  At first, I was thinking about modifying the
+existing scan mechanism.  But it turned out to be too complicated,
+because the scheduled scan is a long-term operation and the normal scan
+is done for a very short time (and the rest of the stack assumes it will
+complete quickly enough as not to interfere with the connection.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
