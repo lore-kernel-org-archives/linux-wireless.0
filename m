@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35400 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab1EPRqA (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:37401 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845Ab1ELO6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 13:46:00 -0400
-Date: Mon, 16 May 2011 13:35:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/1] netlink: nla_nest_end return "unsigned init"
-Message-ID: <20110516173548.GB6551@tuxdriver.com> (sfid-20110516_194606_039166_03B95D07)
-References: <1305555810-17565-1-git-send-email-wey-yi.w.guy@intel.com>
+	Thu, 12 May 2011 10:58:03 -0400
+Received: by vxi39 with SMTP id 39so1175180vxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:58:01 -0700 (PDT)
+Message-ID: <4DCBF576.1040802@lwfinger.net> (sfid-20110512_165808_007815_B6B012F5)
+Date: Thu, 12 May 2011 09:57:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1305555810-17565-1-git-send-email-wey-yi.w.guy@intel.com>
+To: Flaminigo <sunnyiez@gmail.com>
+CC: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>	<4DCB3DFF.1030809@lockie.ca> <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+In-Reply-To: <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should go to netdev@vger.kernel.org instead...
+On 05/12/2011 08:59 AM, Flaminigo wrote:
+> Thank you for the reply. I think N network in the university is OK.
+> Because,  old computer connected it without any problem. The windows
+> system can also connect it. From the output of wpa_supplicant, the
+> authentication part works well. I've tried to use the latest drive
+> from realtek. The firmware distribute is exactly the same as that in
+> Ubuntu 11.04. But this will make core dump.
+>
+> I will try some other distributions. But the driver and the kernel are
+> the same,  so I don't think this will make any difference.
 
-On Mon, May 16, 2011 at 07:23:30AM -0700, Wey-Yi Guy wrote:
-> skb->len has unsigned int, return the correct value from nla_nest_end call.
-> 
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  include/net/netlink.h |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/net/netlink.h b/include/net/netlink.h
-> index 8a3906a..241fc0d 100644
-> --- a/include/net/netlink.h
-> +++ b/include/net/netlink.h
-> @@ -1015,7 +1015,8 @@ static inline struct nlattr *nla_nest_start(struct sk_buff *skb, int attrtype)
->   *
->   * Returns the total data length of the skb.
->   */
-> -static inline int nla_nest_end(struct sk_buff *skb, struct nlattr *start)
-> +static inline unsigned int nla_nest_end(struct sk_buff *skb,
-> +					struct nlattr *start)
->  {
->  	start->nla_len = skb_tail_pointer(skb) - (unsigned char *)start;
->  	return skb->len;
-> -- 
-> 1.7.0.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+What kind of 802.11n network is your university running? What is the maximum 
+data rate in Mbps? Are they using a 20 or 40 MHz bandwidth? Please have your 
+network administrators give you that information so that I can try to duplicate 
+the results. With my setup here, I have connected using the 2.4 GHz band with 
+rates up to 130 Mbps. My setup uses WPA2-PSK, not EAP, but authentication does 
+not seem to be your problem.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Every driver contains information about its authors. Use the 'modinfo rtl8192ce' 
+command to get that information. Any reports of problems with a given driver 
+should be sent to those listed authors with a Cc to the appropriate mailing 
+list. I read the linux-wireless mailing list, thus I saw your posting, but my 
+Chinese colleagues do not.
+
+I received a new driver version from Realtek yesterday. I am still going through 
+it to port the changes to the kernel driver. It is possible that your problem 
+may have been found and fixed, but until you report what exact network 
+conditions you have, I will not be able to confirm that.
+
+Larry
