@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36968 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704Ab1EJSwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 14:52:30 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	greearb@candelatech.com
-Subject: [PATCH v2 2.6.39] ath9k: fix a regression in PS frame filter handling
-Date: Tue, 10 May 2011 20:52:22 +0200
-Message-Id: <1305053542-29435-1-git-send-email-nbd@openwrt.org> (sfid-20110510_205234_244196_65D78F7A)
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45232 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757260Ab1ELN7E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 09:59:04 -0400
+Received: by bwz15 with SMTP id 15so1315622bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 06:59:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DCB3DFF.1030809@lockie.ca>
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+	<4DCB3DFF.1030809@lockie.ca>
+Date: Thu, 12 May 2011 08:59:03 -0500
+Message-ID: <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com> (sfid-20110512_155910_012195_6AD7D20D)
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+From: Flaminigo <sunnyiez@gmail.com>
+To: James <bjlockie@lockie.ca>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only leave filtering enabled for AP or VLAN interfaces, clear the
-destination mask for all other interfaces.
+Thank you for the reply. I think N network in the university is OK.
+Because,  old computer connected it without any problem. The windows
+system can also connect it. From the output of wpa_supplicant, the
+authentication part works well. I've tried to use the latest drive
+from realtek. The firmware distribute is exactly the same as that in
+Ubuntu 11.04. But this will make core dump.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++++
- drivers/net/wireless/ath/ath9k/xmit.c |    6 ++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+I will try some other distributions. But the driver and the kernel are
+the same,  so I don't think this will make any difference.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3de115d..3d999b7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1778,6 +1778,11 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 	struct ieee80211_key_conf ps_key = { };
- 
- 	ath_node_attach(sc, sta);
-+
-+	if (vif->type != NL80211_IFTYPE_AP &&
-+	    vif->type != NL80211_IFTYPE_AP_VLAN)
-+		return 0;
-+
- 	an->ps_key = ath_key_config(common, vif, sta, &ps_key);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 744779d..97dd1fa 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1845,6 +1845,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sta *sta = info->control.sta;
-+	struct ieee80211_vif *vif = info->control.vif;
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_buf *bf;
-@@ -1882,6 +1883,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		memmove(skb->data, skb->data + padsize, padpos);
- 	}
- 
-+	if ((vif && vif->type != NL80211_IFTYPE_AP &&
-+	            vif->type != NL80211_IFTYPE_AP_VLAN) ||
-+	    !ieee80211_is_data(hdr->frame_control))
-+		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-+
- 	setup_frame_info(hw, skb, frmlen);
- 
- 	/*
--- 
-1.7.3.2
-
+On Wed, May 11, 2011 at 8:55 PM, James <bjlockie@lockie.ca> wrote:
+> On 05/11/11 15:29, Flaminigo wrote:
+>> MY university deployed 802.11n wireless LAN. However, my new T420
+>> cannot connect to the network under ubuntu 11.04. I found the driver
+>> for realtek 8188CE is rtl8192ce.ko, rtlwifi. I asked network
+>> administrator to help me. They told me my wireless adapter didn't work
+>> well with the 802.11n network. Is this because of the driver? The
+>> following are the wpa_supplicant output. FYI
+>
+> Is there another N network you can try (preferably unencrypted)?
+>
+> Or can you try the card under Windows?
+>
+> Try a bunch of other distros on livecds (or USBs).
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
