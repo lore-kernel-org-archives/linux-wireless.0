@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50882 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860Ab1ENKQy (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52521 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab1ELW06 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 06:16:54 -0400
-Received: by qyg14 with SMTP id 14so1847265qyg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 03:16:54 -0700 (PDT)
+	Thu, 12 May 2011 18:26:58 -0400
+Received: by vws1 with SMTP id 1so1468919vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 15:26:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1305280792-9475-4-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com> <1305280792-9475-4-git-send-email-arend@broadcom.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Sat, 14 May 2011 12:16:31 +0200
-Message-ID: <BANLkTimEX7Mrg6HTdQdJDStyc9ZTpd7nKw@mail.gmail.com> (sfid-20110514_121658_033847_AFFA7C98)
-Subject: Re: [PATCH 04/32] staging: brcm80211: got rid of #ifdef __mips__
- sections in hnddma.c
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
+References: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 12 May 2011 15:26:36 -0700
+Message-ID: <BANLkTinDyLyVX3HFHU7i4GFUi8SixOdzAQ@mail.gmail.com> (sfid-20110513_002703_148673_EB5CAA5B)
+Subject: Re: mesh RCU issues
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 May 2011 11:59, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Roland Vossen <rvossen@broadcom.com>
+Johannes,
+
+On Thu, May 12, 2011 at 5:25 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I was reviewing sparse RCU warnings in mac80211...
 >
-> Code cleanup. Broadcom MIPS chips in big endian mode have a memory window
-> in which sdram contents is byte swapped. Code in hnddmac.c makes use of
-> this window. Reworked code so the #ifdef __mips__ is moved from .c to
-> .h file.
+> This seems to be some kind of bad joke:
+>
+> void mesh_path_timer(unsigned long data)
+> {
+>        struct ieee80211_sub_if_data *sdata;
+>        struct mesh_path *mpath;
+>
+>        rcu_read_lock();
+>        mpath = (struct mesh_path *) data;
+>        mpath = rcu_dereference(mpath);
+>        if (!mpath)
+>                goto endmpathtimer;
+>
+> ????
 
-Shouldn't this be guarded with e.g. CONFIG_BCM63XX instead of
-__mips__? Not every big endian mips is a broadcom ;-). I don't know if
-there are further Broadcom ones, the only other I know is bcm47xx and
-that one is little endian.
+Thanks for cleaning that up.
 
-Regards
-Jonas
+> And indeed I don't see a del_timer_sync() when the mesh path is freed.
+
+Isn't the call to del_timer_sync() you are looking for in
+mesh_path_node_reclaim() ?
+
+> But this is _clearly_ totally bogus. Somebody please fix ASAP.
+
+I'll run sparse and see if I see other rcu warnings that I can fix.
+
+Thanks,
+
+j
+
+
+> johannes
+>
+>
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
