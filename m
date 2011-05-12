@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4849 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754288Ab1E3GYO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 02:24:14 -0400
-Message-ID: <4DE3380C.2@gmail.com> (sfid-20110530_082428_892209_961ED501)
-Date: Mon, 30 May 2011 08:24:12 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-CC: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-2.6] rt2x00: fix rmmod crash
-References: <20110529104529.GA2769@localhost.localdomain> <4DE278CD.3030708@gmail.com> <20110529204200.GA2472@localhost.localdomain>
-In-Reply-To: <20110529204200.GA2472@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cantor.suse.de ([195.135.220.2]:51659 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756829Ab1ELJz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 05:55:26 -0400
+From: Jiri Slaby <jslaby@suse.cz>
+To: wey-yi.w.guy@intel.com
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH] iwlwifi: fix TX power configuration on 3945 and 4965 devices
+Date: Thu, 12 May 2011 11:55:24 +0200
+Message-Id: <1305194124-46828-1-git-send-email-jslaby@suse.cz> (sfid-20110512_115530_052802_E1B73537)
+References: bnc#619440 bnc#610421
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/11 22:42, Stanislaw Gruszka wrote:
-> On Sun, May 29, 2011 at 06:48:13PM +0200, Gertjan van Wingerde wrote:
->> On 05/29/11 12:45, Stanislaw Gruszka wrote:
->>> Do not destroy workqueue, which still can be used by autowakeup_work,
->>> before ieee80211_unregister_hw() is called.
->>>
->>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->>
->> Could you add some details of the crash here, e.g. the stack trace of when this occurs, so that
->> we can understand what is exactly happening that is causing the crash, for our education.
-> 
-> Crash is in workqueue code in interrupt context, there is no indication about rt2x00 blame in
-> the calltrace, but crash happen directly after rmmod rt73usb, here is a photo:
-> https://bugzilla.kernel.org/attachment.cgi?id=59992 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-OK. Thanks for the info.
+When receiving a TX power change request from mac80211 the functions
+servicing these requests for 3945 and 4965 uses information in the
+active RXON. In iwl_mac_config the staging RXON is prepared based on
+various directions from mac80211 and only at the end is the staging
+RXON committed to the device and the active RXON updated.
 
-Could you create a v2 of the patch that:
-1. Includes a reference to the bugzilla entry that the patch is resolving.
-2. Cc's the stable team.
+By servicing the TX power change request while servicing the other
+requests that modify the staging RXON we loose the new information
+provided by mac80211.
 
-In that v2 you can add my acked-by as follows:
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Fix this by servicing the TX power change request after the RXON has
+been committed to the device and active RXON thus contains accurate
+information.
 
-Thanks for the patch.
-
+References: https://bugzilla.novell.com/show_bug.cgi?id=610421
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Acked-by: Jeff Mahoney <jeffm@suse.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
-Gertjan
+ drivers/net/wireless/iwlegacy/iwl-core.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+--- a/drivers/net/wireless/iwlegacy/iwl-core.c
++++ b/drivers/net/wireless/iwlegacy/iwl-core.c
+@@ -2220,13 +2220,6 @@ int iwl_legacy_mac_config(struct ieee802
+ 			IWL_DEBUG_MAC80211(priv, "Error setting sleep level\n");
+ 	}
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+-		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
+-			priv->tx_power_user_lmt, conf->power_level);
+-
+-		iwl_legacy_set_tx_power(priv, conf->power_level, false);
+-	}
+-
+ 	if (!iwl_legacy_is_ready(priv)) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+ 		goto out;
+@@ -2245,6 +2238,14 @@ int iwl_legacy_mac_config(struct ieee802
+ 			iwl_legacy_update_qos(priv, ctx);
+ 	}
+ 
++	if (changed & IEEE80211_CONF_CHANGE_POWER) {
++		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
++			priv->tx_power_user_lmt, conf->power_level);
++
++		iwl_legacy_set_tx_power(priv, conf->power_level, false);
++	}
++
++
+ out:
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 	mutex_unlock(&priv->mutex);
