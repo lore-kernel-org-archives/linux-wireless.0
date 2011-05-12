@@ -1,111 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2340 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294Ab1ECJgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: [PATCH 51/61] staging: brcm80211: removed ASSERTs from
- wlc_pmu.c
-Date: Tue, 3 May 2011 11:35:51 +0200
-Message-ID: <1304415361-7813-52-git-send-email-arend@broadcom.com> (sfid-20110503_113651_856875_4EE40F47)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13001 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758897Ab1ELXuR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 19:50:17 -0400
+From: Stephen Boyd <sboyd@codeaurora.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/9] iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+Date: Thu, 12 May 2011 16:50:05 -0700
+Message-Id: <1305244212-19183-3-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015221_220329_0BDDF309)
+In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
+warning:
 
-Code cleanup.
+In file included from arch/x86/include/asm/uaccess.h:573,
+                 from include/net/checksum.h:25,
+                 from include/linux/skbuff.h:28,
+                 from drivers/net/wireless/iwlwifi/iwl-agn-rs.c:28:
+In function 'copy_from_user',
+    inlined from 'rs_sta_dbgfs_scale_table_write' at
+    drivers/net/wireless/iwlwifi/iwl-agn-rs.c:3099:
+arch/x86/include/asm/uaccess_64.h:65:
+warning: call to 'copy_from_user_overflow' declared with
+attribute warning: copy_from_user() buffer size is not provably
+correct
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+presumably due to buf_size being signed causing GCC to fail to
+see that buf_size can't become negative.
+
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_pmu.c |   10 +---------
- 1 files changed, 1 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-index 8fc644f..5b1697a 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2010 Broadcom Corporation
-+ * Copyright (c) 2011 Broadcom Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1220,7 +1220,6 @@ u32 si_pmu_ilp_clock(si_t *sih)
- 		u32 start, end, delta;
- 		u32 origidx = ai_coreidx(sih);
- 		chipcregs_t *cc = ai_setcoreidx(sih, SI_CC_IDX);
--		ASSERT(cc != NULL);
- 		start = R_REG(&cc->pmutimer);
- 		mdelay(ILP_CALC_DUR);
- 		end = R_REG(&cc->pmutimer);
-@@ -1473,7 +1472,6 @@ void si_pmu_spuravoid(si_t *sih, u8 spuravoid)
- 		/* wait for the ht to really go away */
- 		SPINWAIT(((R_REG(&cc->clk_ctl_st) & CCS_HTAVAIL) == 0),
- 			 10000);
--		ASSERT((R_REG(&cc->clk_ctl_st) & CCS_HTAVAIL) == 0);
- 	}
- 
- 	/* update the pll changes */
-@@ -1523,7 +1521,6 @@ void si_pmu_chip_init(si_t *sih)
- {
- 	uint origidx;
- 
--
- 	/* Gate off SPROM clock and chip select signals */
- 	si_pmu_sprom_enable(sih, false);
- 
-@@ -1537,7 +1534,6 @@ void si_pmu_chip_init(si_t *sih)
- /* initialize PMU switch/regulators */
- void si_pmu_swreg_init(si_t *sih)
- {
--
- 	switch (sih->chip) {
- 	case BCM4336_CHIP_ID:
- 		/* Reduce CLDO PWM output voltage to 1.2V */
-@@ -1566,7 +1562,6 @@ void si_pmu_pll_init(si_t *sih, uint xtalfreq)
- 	chipcregs_t *cc;
- 	uint origidx;
- 
--
- 	/* Remember original core before switch to chipc */
- 	origidx = ai_coreidx(sih);
- 	cc = ai_setcoreidx(sih, SI_CC_IDX);
-@@ -1736,7 +1731,6 @@ void si_pmu_res_init(si_t *sih)
- 					[pmu_res_depend_table_sz].depend_mask);
- 				break;
- 			default:
--				ASSERT(0);
- 				break;
- 			}
- 		}
-@@ -1783,11 +1777,9 @@ u32 si_pmu_measure_alpclk(si_t *sih)
- 	if (sih->pmurev < 10)
- 		return 0;
- 
--
- 	/* Remember original core before switch to chipc */
- 	origidx = ai_coreidx(sih);
- 	cc = ai_setcoreidx(sih, SI_CC_IDX);
--	ASSERT(cc != NULL);
- 
- 	if (R_REG(&cc->pmustatus) & PST_EXTLPOAVAIL) {
- 		u32 ilp_ctr, alp_hz;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index d03b473..abcc9f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -3087,7 +3087,7 @@ static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+ 	struct iwl_priv *priv;
+ 	char buf[64];
+-	int buf_size;
++	size_t buf_size;
+ 	u32 parsed_rate;
+ 	struct iwl_station_priv *sta_priv =
+ 		container_of(lq_sta, struct iwl_station_priv, lq_sta);
 -- 
-1.7.4.1
-
+Sent by an employee of the Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
 
