@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay3.ukrpost.ua ([82.207.79.23]:52357 "EHLO relay3.ukrpost.ua"
+Received: from dell.nexicom.net ([216.168.96.13]:54829 "EHLO smtp.nexicom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752865Ab1EGSB7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 14:01:59 -0400
-Received: from mail.academy.zt.ua ([82.207.120.245])
-	by relay3.ukrpost.ua with esmtp (Exim 4.75)
-	(envelope-from <prvs=110837b279=george@znau.edu.ua>)
-	id 1QIlgf-0000Tj-Od
-	for linux-wireless@vger.kernel.org; Sat, 07 May 2011 20:53:06 +0300
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v12.0.0)
-	with ESMTP id md50000002737.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 20:51:49 +0300
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
-	driver
-From: George Kashperko <george@znau.edu.ua>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <4DC5805C.2010202@hauke-m.de>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	 <4DC56FB9.5000208@hauke-m.de>
-	 <BANLkTi=FfjK7obq0hj4TjYZc-GgzTuUC6g@mail.gmail.com>
-	 <4DC57425.30206@hauke-m.de>
-	 <BANLkTikTarvigU-xZNZikhLyvUWse448Tg@mail.gmail.com>
-	 <4DC5805C.2010202@hauke-m.de>
-Content-Type: text/plain
-Date: Sat, 07 May 2011 20:45:24 +0300
-Message-Id: <1304790324.13983.5.camel@dev.znau.edu.ua> (sfid-20110507_200202_522183_D0BA9E01)
-Mime-Version: 1.0
+	id S1753180Ab1ELByj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2011 21:54:39 -0400
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-124-14.nexicom.net [216.168.124.14])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p4C1sbCN032698
+	for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 21:54:38 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id C205C1E0110
+	for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 21:54:36 -0400 (EDT)
+Message-ID: <4DCB3DFF.1030809@lockie.ca> (sfid-20110512_035442_422676_8195932A)
+Date: Wed, 11 May 2011 21:55:11 -0400
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+In-Reply-To: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 05/11/11 15:29, Flaminigo wrote:
+> MY university deployed 802.11n wireless LAN. However, my new T420
+> cannot connect to the network under ubuntu 11.04. I found the driver
+> for realtek 8188CE is rtl8192ce.ko, rtlwifi. I asked network
+> administrator to help me. They told me my wireless adapter didn't work
+> well with the 802.11n network. Is this because of the driver? The
+> following are the wpa_supplicant output. FYI
 
-> Some of the embedded devices also have a USB core on the BCMA bus and a
-> pci(e) host controller to connect other pci(e) devices. As most of the
-> patches for ssb came from the wireless guys and I do not thing this will
-> be different for bcma, I thing the wireless mailing list is the correct
-> place.
-> 
-> @George what is the status of adding support for the embedded devices?
-Haven't been looking into Rafal's code closely yet. I'm working on
-another solution suitable for SSB, AXI and hopefully UBUS as well but I
-don't ready to publish it yet.
+Is there another N network you can try (preferably unencrypted)?
 
-Regarding ethernet driver, still no feedback on GPL-friendly licensing
-possibility for the code from Broadcom.
+Or can you try the card under Windows?
 
-Have nice day,
-George
-
+Try a bunch of other distros on livecds (or USBs).
 
