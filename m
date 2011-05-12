@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38473 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754929Ab1ENWHs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44831 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174Ab1ELI2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 18:07:48 -0400
-Received: by qwk3 with SMTP id 3so1752554qwk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 15:07:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1305133583.17892.3.camel@jlt3.sipsolutions.net>
-References: <BANLkTikBEs7aWZR+UovtpwYVPJfZjHEhgw@mail.gmail.com> <1305133583.17892.3.camel@jlt3.sipsolutions.net>
-From: Matteo Croce <matteo@openwrt.org>
-Date: Sun, 15 May 2011 00:07:07 +0200
-Message-ID: <BANLkTinp0Hy3yhfxAEAX9jeKSaYRMddDew@mail.gmail.com> (sfid-20110515_000756_667204_2A2AB8E6)
-Subject: Re: [PATCH v2] 802.11n frame injection
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 May 2011 04:28:15 -0400
+Subject: Re: [PATCH] cfg80211: make stripping of 802.11 header optional
+ from AMSDU
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1305168432-15569-2-git-send-email-bzhao@marvell.com>
+References: <1305168432-15569-1-git-send-email-bzhao@marvell.com>
+	 <1305168432-15569-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 10:28:13 +0200
+Message-ID: <1305188893.3461.8.camel@jlt3.sipsolutions.net> (sfid-20110512_102819_887416_67368964)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/11 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2011-04-22 at 18:34 +0200, Matteo Croce wrote:
->
->> --- a/net/mac80211/status.c   2011-04-22 11:34:08.833135198 +0200
->> +++ b/net/mac80211/status.c   2011-04-22 11:34:54.037135187 +0200
->> @@ -405,6 +405,19 @@
->>           !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
->>               rthdr->rate = sband->bitrates[
->>                               info->status.rates[0].idx].bitrate / 5;
->> +     /* HT rates */
->> +     if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
->> +             rthdr->hdr.it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
->> +             rthdr->rate = 0;
->> +             rthdr->ht_known =       IEEE80211_RADIOTAP_MCS_HAVE_BW |
->> +                                     IEEE80211_RADIOTAP_MCS_HAVE_MCS |
->> +                                     IEEE80211_RADIOTAP_MCS_HAVE_GI;
->> +             rthdr->ht_mcs = info->status.rates[0].idx;
->> +             if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
->> +                     rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
->> +             if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
->> +                     rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
->> +     }
->
-> I think you should also split the patch -- this part isn't really only
-> injection.
->
-> johannes
->
->
+On Wed, 2011-05-11 at 19:47 -0700, Bing Zhao wrote:
+> From: Yogesh Ashok Powar <yogeshp@marvell.com>
+> 
+> Currently the devices that have already stripped IEEE 802.11
+> header from the AMSDU SKB can not use ieee80211_amsdu_to_8023s
+> routine. This patch enhances ieee80211_amsdu_to_8023s() API by
+> changing mandatory removing of IEEE 802.11 header from AMSDU
+> to optional.
 
-After injecting a frame I have a TX feedback, why shouldn't it have
-correct MCS informations?
+Nice.
 
--- 
-Matteo Croce
-OpenWrt Developer
- _______                     ________        __
-|       |.-----.-----.-----.|  |  |  |.----.|  |_
-|   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
-|_______||   __|_____|__|__||________||__|  |____|
-         |__| W I R E L E S S   F R E E D O M
-ATTITUDE ADJUSTMENT (bleeding edge) --------------
- * 1/4 oz Vodka      Pour all ingredents into mixing
- * 1/4 oz Gin        tin with ice, strain into glass.
- * 1/4 oz Amaretto
- * 1/4 oz Triple sec
- * 1/4 oz Peach schnapps
- * 1/4 oz Sour mix
- * 1 splash Cranberry juice
------------------------------------------------------
+> @@ -2173,10 +2173,13 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+>   * @addr: The device MAC address.
+>   * @iftype: The device interface type.
+>   * @extra_headroom: The hardware extra headroom for SKBs in the @list.
+> + * @stripped_80211_header: Set it true if SKB is without IEEE 802.11
+> + *	header.
+
+I think I'd prefer this be the other way around though, like
+"has_80211_header" (or so), that seems more natural here and in the
+code? Not that it matters much.
+
+johannes
+
