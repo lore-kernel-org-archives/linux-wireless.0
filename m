@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7852 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756023Ab1ELKhz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 06:37:55 -0400
-Date: Thu, 12 May 2011 12:37:03 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH] iwlwifi: fix TX power configuration on 3945 and 4965
- devices
-Message-ID: <20110512103702.GA3292@redhat.com> (sfid-20110512_123802_768510_8906BBB2)
-References: <1305194124-46828-1-git-send-email-jslaby@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1305194124-46828-1-git-send-email-jslaby@suse.cz>
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:12854 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758190Ab1ELSXy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 14:23:54 -0400
+Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
+From: Rhyland Klein <rklein@nvidia.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "olof@lixom.net" <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
+	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 11:23:12 -0700
+Message-ID: <1305224592.10961.10.camel@rklein-linux2> (sfid-20110512_202411_707440_ABD347EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 12, 2011 at 11:55:24AM +0200, Jiri Slaby wrote:
-> From: Reinette Chatre <reinette.chatre@intel.com>
+On Thu, 2011-05-12 at 01:31 -0700, Johannes Berg wrote:
+> On Wed, 2011-05-11 at 17:21 -0700, Rhyland Klein wrote:
 > 
-> When receiving a TX power change request from mac80211 the functions
-> servicing these requests for 3945 and 4965 uses information in the
-> active RXON. In iwl_mac_config the staging RXON is prepared based on
-> various directions from mac80211 and only at the end is the staging
-> RXON committed to the device and the active RXON updated.
+> > +enum rfkill_gpio_clk_state {
+> > +	UNSPECIFIED = 0,
+> > +	PWR_ENABLED,
+> > +	PWR_DISABLED
 > 
-> By servicing the TX power change request while servicing the other
-> requests that modify the staging RXON we loose the new information
-> provided by mac80211.
+> Are you sure starting out with UNSPECIFIED works? Then you'll always
+> change, but if the clock was enabled already you still enable it on the
+> first set_block() from rfkill, which still has the refcount problem, no?
+> It seems to me that the original state has to be passed in from the
+> platform?
 > 
-> Fix this by servicing the TX power change request after the RXON has
-> been committed to the device and active RXON thus contains accurate
-> information.
+> johannes
 > 
-> References: https://bugzilla.novell.com/show_bug.cgi?id=610421
 
-That problem is already fixed in 2.6.38 by:
+I thought about that. But I decided the clock that it is possible to
+have the clock used for the radio used for something else right? in
+which case, the driver will leave the clk in whatever state it initially
+finds it. I.e. if the clock is disabled, then it will enable it only
+once and work, if it is enabled, it will add a refcount (only once) and
+then work and disable it again only once. It never changes the refcount
+in either direction by more than 1, and this way the initial setting of
+the clock is irrelevant. The board files can simply initialize the block
+as off if that is the initial clk state they want.
 
-commit 21db55a9dc4e52d8d2cac30f47efcec3afccb0c5
-Author:     Stanislaw Gruszka <sgruszka@redhat.com>
-AuthorDate: Fri Jan 28 16:47:44 2011 +0100
-Commit:     Greg Kroah-Hartman <gregkh@suse.de>
-CommitDate: Mon May 2 09:19:48 2011 -0700
+rhyland
 
-    iwlwifi: do not set tx power when channel is changing
 
-> --- a/drivers/net/wireless/iwlegacy/iwl-core.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-> @@ -2220,13 +2220,6 @@ int iwl_legacy_mac_config(struct ieee802
->  			IWL_DEBUG_MAC80211(priv, "Error setting sleep level\n");
->  	}
->  
-> -	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-> -		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
-> -			priv->tx_power_user_lmt, conf->power_level);
-> -
-> -		iwl_legacy_set_tx_power(priv, conf->power_level, false);
-> -	}
-> -
->  	if (!iwl_legacy_is_ready(priv)) {
->  		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
->  		goto out;
-> @@ -2245,6 +2238,14 @@ int iwl_legacy_mac_config(struct ieee802
->  			iwl_legacy_update_qos(priv, ctx);
->  	}
->  
-> +	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-> +		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
-> +			priv->tx_power_user_lmt, conf->power_level);
-> +
-> +		iwl_legacy_set_tx_power(priv, conf->power_level, false);
-> +	}
 
-This disallow to set tx power during scan process, NACK.
-
-Stanislaw
