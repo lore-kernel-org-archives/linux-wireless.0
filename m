@@ -1,40 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:35864 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756318Ab1EQTOH (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:48662 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752759Ab1ELTEy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 15:14:07 -0400
-Date: Tue, 17 May 2011 12:10:36 -0700
-From: Greg KH <greg@kroah.com>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>, gregkh@suse.de,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 04/32] staging: brcm80211: got rid of #ifdef __mips__
- sections in hnddma.c
-Message-ID: <20110517191036.GA27593@kroah.com> (sfid-20110517_211412_280174_0DD73927)
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
- <1305280792-9475-4-git-send-email-arend@broadcom.com>
- <BANLkTimEX7Mrg6HTdQdJDStyc9ZTpd7nKw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTimEX7Mrg6HTdQdJDStyc9ZTpd7nKw@mail.gmail.com>
+	Thu, 12 May 2011 15:04:54 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 733B454003A
+	for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 15:10:38 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-12 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110512190452.BDC8D40EC3@repository3.orbit-lab.org> (sfid-20110512_210457_613016_9F3FAA16)
+Date: Thu, 12 May 2011 15:04:52 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 14, 2011 at 12:16:31PM +0200, Jonas Gorski wrote:
-> On 13 May 2011 11:59, Arend van Spriel <arend@broadcom.com> wrote:
-> > From: Roland Vossen <rvossen@broadcom.com>
-> >
-> > Code cleanup. Broadcom MIPS chips in big endian mode have a memory window
-> > in which sdram contents is byte swapped. Code in hnddmac.c makes use of
-> > this window. Reworked code so the #ifdef __mips__ is moved from .c to
-> > .h file.
-> 
-> Shouldn't this be guarded with e.g. CONFIG_BCM63XX instead of
-> __mips__? Not every big endian mips is a broadcom ;-). I don't know if
-> there are further Broadcom ones, the only other I know is bcm47xx and
-> that one is little endian.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + a7f3dae...9bb2a3f akpm-end   -> origin/akpm-end  (forced update)
+   54b3335..9f381a6  akpm-start -> origin/akpm-start
+   33f3237..4e31af7  history    -> origin/history
+ + 9835c81...b9aec9c master     -> origin/master  (forced update)
+   54b3335..9f381a6  stable     -> origin/stable
+ * [new tag]         next-20110512 -> next-20110512
 
-Good point, now dropped.
+compat-wireless code metrics
 
-greg k-h
+    821916 - Total upstream lines of code being pulled
