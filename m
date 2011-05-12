@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3429 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152Ab1EIOdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:45 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/10] staging: brcm80211: fix checkpatch issue
- introduced in dhd_sdio.c
-Date: Mon, 9 May 2011 16:33:28 +0200
-Message-ID: <1304951609-2493-9-git-send-email-arend@broadcom.com> (sfid-20110509_163741_966913_B680A0CC)
-In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
-References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13001 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757859Ab1ELXuQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 19:50:16 -0400
+From: Stephen Boyd <sboyd@codeaurora.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-scsi@vger.kernel.org, x86@kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH 0/9] strict user copy checks on x86_64
+Date: Thu, 12 May 2011 16:50:03 -0700
+Message-Id: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015234_813612_56C0E7A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch "[2349e278] move utility functions into new module" introduced
-a checkpatch warning which is resolved with this patch.
+It turns out that strict user copy checks (also known as
+CONFIG_DEBUG_STRICT_USER_COPY_CHECKS) isn't actually implemented
+on x86_64 and thus we aren't catching potential security holes
+at compile time.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+This series adds support for strict user copy checks on x86_64
+and silences all the benign warnings in the x86_64 allyesconfig.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 9167ebc..8683eeb 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3690,8 +3690,11 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 				} else {
- 					/* Give up on data,
- 					request rtx of events */
--					DHD_ERROR(("%s (nextlen): bcm_pkt_buf_get_skb failed: len %d rdlen %d " "expected rxseq %d\n",
--						__func__, len, rdlen, rxseq));
-+					DHD_ERROR(("%s (nextlen): "
-+						   "bcm_pkt_buf_get_skb failed:"
-+						   " len %d rdlen %d expected"
-+						   " rxseq %d\n", __func__,
-+						   len, rdlen, rxseq));
- 					/* Just go try again w/normal
- 					header read */
- 					dhd_os_sdunlock_rxq(bus->dhd);
+The final patch consolidates the config option as its duplicated
+across mutliple arches. I don't know what tree this series should
+go through so I tried to send the individual driver patches to the
+respective maintainers.
+
+Stephen Boyd (9):
+  iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  debugfs: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  kprobes: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  ASoC: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+  x86: Implement strict user copy checks for x86_64
+  Consolidate CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
+
+ arch/parisc/Kconfig                         |    1 +
+ arch/parisc/Kconfig.debug                   |   14 --------------
+ arch/s390/Kconfig                           |    1 +
+ arch/s390/Kconfig.debug                     |   14 --------------
+ arch/s390/lib/Makefile                      |    1 -
+ arch/s390/lib/usercopy.c                    |    8 --------
+ arch/sparc/lib/Makefile                     |    1 -
+ arch/sparc/lib/usercopy.c                   |    8 --------
+ arch/tile/Kconfig                           |    8 +-------
+ arch/tile/include/asm/uaccess.h             |    7 ++++++-
+ arch/tile/lib/uaccess.c                     |    8 --------
+ arch/x86/Kconfig                            |    1 +
+ arch/x86/Kconfig.debug                      |   14 --------------
+ arch/x86/include/asm/uaccess_64.h           |   12 +++++++++---
+ arch/x86/lib/usercopy_32.c                  |    6 ------
+ drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c            |    3 ++-
+ fs/debugfs/file.c                           |    2 +-
+ kernel/kprobes.c                            |    2 +-
+ lib/Kconfig.debug                           |   18 ++++++++++++++++++
+ lib/Makefile                                |    1 +
+ lib/usercopy.c                              |    8 ++++++++
+ net/bluetooth/rfcomm/sock.c                 |    3 ++-
+ sound/soc/soc-core.c                        |    2 +-
+ 25 files changed, 55 insertions(+), 92 deletions(-)
+ delete mode 100644 arch/s390/lib/usercopy.c
+ delete mode 100644 arch/sparc/lib/usercopy.c
+ create mode 100644 lib/usercopy.c
+
 -- 
-1.7.4.1
-
+Sent by an employee of the Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
 
