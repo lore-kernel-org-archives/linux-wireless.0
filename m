@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44558 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab1EEBk1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48992 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366Ab1ELDKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 21:40:27 -0400
-Received: by pwi15 with SMTP id 15so773178pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 18:40:27 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19906.158.278401.536454@gargle.gargle.HOWL> (sfid-20110505_034031_274225_14D7E481)
-Date: Thu, 5 May 2011 07:12:54 +0530
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless@vger.kernel.org
-Subject: bug: 2 second wireless stall on ath9k link
-In-Reply-To: <BANLkTinJK3B_dcX4Qmuo=hC5j654YLLmCA@mail.gmail.com>
-References: <BANLkTinJK3B_dcX4Qmuo=hC5j654YLLmCA@mail.gmail.com>
+	Wed, 11 May 2011 23:10:09 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.75)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1QKMHu-0006wu-F9
+	for linux-wireless@vger.kernel.org; Thu, 12 May 2011 05:10:06 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] wireless-regdb: master-2011-04-28
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1QKMHu-0006wu-F9@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Thu, 12 May 2011 05:10:06 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Halperin wrote:
-> Hi,
-> 
-> I have two identical Dell Inspiron 530n desktops running latest w-t
-> (07e789c5094735747b3df8a7840f61467575ba9e, master 2011-05-04) on
-> Ubuntu 10.04.2 LTS. I have uninstalled network-manager from both
-> devices and, as far as I can tell, no software processes or daemons
-> interfere with my wireless configurations.
-> 
-> The AP machine has an AR9280-based device and an IWL5300 based device.
-> I blacklist ath9k and iwlagn modules from loading on boot. It is
-> running latest hostap.git, though I've seen the same issue with older
-> versions.
-> 
-> The client machine has one AR9380-based NIC, one IWL5300-based NIC,
-> and one RT2800pci NIC. I blacklist ath9k, iwlagn, and rt2800pci from
-> loading on boot.
-> 
-> When I set up the client to connect (using iwconfig essid) to the AP
-> (no encryption, channel 48 with HT40-) and run iperf, I sometimes see
-> 2-second drops of the connection. I run iperf to generate elastic TCP
-> flows that see ~150 Mbps, and in parallel I run ping <AP> -i 0.2.
-> Here's the ping log:
 
-Your timing couldn't be better. :)
-https://patchwork.kernel.org/patch/753862/
+A new release of wireless-regdb (master-2011-04-28) is available at:
 
-Sujith
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2011.04.28.tar.bz2
+
+SHA1 sum: d45ba854cf111a7ea4c21fbda9b996f0e8942ceb
+
+
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2011.04.28-regulatory.bin
+
+SHA1 sum d4f67f7c76c7206034237aa7dc93370b052ca888
+
+Here is the short log of the changes included in this 
+release:
+
+Anne Marcel Roorda (1):
+      Update regulatory rules for Netherlands (NL)
+
+Johannes Berg (1):
+      regdb: fix moinmoin plugin license
+
+John W. Linville (1):
+      wireless-regdb: update regulatory.bin based on preceding changes.
+
