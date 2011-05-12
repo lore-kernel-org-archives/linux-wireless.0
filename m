@@ -1,126 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59984 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503Ab1EJXdP (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:59694 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932122Ab1ELUYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 19:33:15 -0400
-Received: by eyx24 with SMTP id 24so1973699eyx.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 16:33:14 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: move ssb_commit_settings and export it
-Date: Wed, 11 May 2011 02:10:58 +0200
-Message-Id: <1305072659-4011-1-git-send-email-zajec5@gmail.com> (sfid-20110511_013320_366634_F64BB685)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 May 2011 16:24:23 -0400
+Received: by mail-ey0-f175.google.com with SMTP id 27so796721eye.34
+        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 13:24:22 -0700 (PDT)
+Subject: Re: [PATCH 7/7] wl12xx: enter/exit psm on wowlan suspend/resume
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305104068-32240-8-git-send-email-eliad@wizery.com>
+References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+	 <1305104068-32240-8-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 May 2011 23:24:18 +0300
+Message-ID: <1305231858.12586.1050.camel@cumari> (sfid-20110512_222426_452320_620F42A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commiting settings is possible on devices without PCI core (but with CC
-core). Export it for usage in drivers supporting other cores.
+On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
+> When operating as station, enter psm before suspending
+> the device into wowlan state.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/driver_pcicore.c |   26 --------------------------
- drivers/ssb/main.c           |   25 +++++++++++++++++++++++++
- include/linux/ssb/ssb.h      |    1 +
- 3 files changed, 26 insertions(+), 26 deletions(-)
+[...]
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 8fde122..82feb34 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -21,8 +21,6 @@ static u16 ssb_pcie_mdio_read(struct ssb_pcicore *pc, u8 device, u8 address);
- static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
- 				u8 address, u16 data);
- 
--static void ssb_commit_settings(struct ssb_bus *bus);
--
- static inline
- u32 pcicore_read32(struct ssb_pcicore *pc, u16 offset)
- {
-@@ -659,30 +657,6 @@ static void ssb_pcie_mdio_write(struct ssb_pcicore *pc, u8 device,
- 	pcicore_write32(pc, mdio_control, 0);
- }
- 
--static void ssb_broadcast_value(struct ssb_device *dev,
--				u32 address, u32 data)
--{
--	/* This is used for both, PCI and ChipCommon core, so be careful. */
--	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
--	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
--
--	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
--	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
--	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
--	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
--}
--
--static void ssb_commit_settings(struct ssb_bus *bus)
--{
--	struct ssb_device *dev;
--
--	dev = bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev;
--	if (WARN_ON(!dev))
--		return;
--	/* This forces an update of the cached registers. */
--	ssb_broadcast_value(dev, 0xFD8, 0);
--}
--
- int ssb_pcicore_dev_irqvecs_enable(struct ssb_pcicore *pc,
- 				   struct ssb_device *dev)
- {
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index ad3da93..ee2937c 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1329,6 +1329,31 @@ error:
- }
- EXPORT_SYMBOL(ssb_bus_powerup);
- 
-+static void ssb_broadcast_value(struct ssb_device *dev,
-+				u32 address, u32 data)
-+{
-+	/* This is used for both, PCI and ChipCommon core, so be careful. */
-+	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
-+	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
-+
-+	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
-+	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
-+	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
-+	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
-+}
-+
-+void ssb_commit_settings(struct ssb_bus *bus)
-+{
-+	struct ssb_device *dev;
-+
-+	dev = bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev;
-+	if (WARN_ON(!dev))
-+		return;
-+	/* This forces an update of the cached registers. */
-+	ssb_broadcast_value(dev, 0xFD8, 0);
-+}
-+EXPORT_SYMBOL(ssb_commit_settings);
-+
- u32 ssb_admatch_base(u32 adm)
- {
- 	u32 base = 0;
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 7e99b34..f017b89 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -518,6 +518,7 @@ extern int ssb_bus_may_powerdown(struct ssb_bus *bus);
-  * Otherwise static always-on powercontrol will be used. */
- extern int ssb_bus_powerup(struct ssb_bus *bus, bool dynamic_pctl);
- 
-+extern void ssb_commit_settings(struct ssb_bus *bus);
- 
- /* Various helper functions */
- extern u32 ssb_admatch_base(u32 adm);
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 308855a..b4dd1d9 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -1332,6 +1332,79 @@ static struct notifier_block wl1271_dev_notifier = {
+>  	.notifier_call = wl1271_dev_notify,
+>  };
+>  
+> +static int wl1271_configure_suspend(struct wl1271 *wl)
+> +{
+> +	int ret;
+> +
+> +	if (wl->bss_type != BSS_TYPE_STA_BSS)
+> +		return 0;
+> +
+> +	mutex_lock(&wl->mutex);
+> +
+> +	ret = wl1271_ps_elp_wakeup(wl);
+> +	if (ret < 0)
+> +		goto out_unlock;
+> +
+> +	/* enter psm if needed*/
+> +	if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
+> +		DECLARE_COMPLETION_ONSTACK(compl);
+> +
+> +		wl->ps_compl = &compl;
+> +		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
+> +				   wl->basic_rate, true);
+> +		if (ret < 0)
+> +			goto out_sleep;
+> +
+> +		/* we must unlock here so we will be able to get events */
+> +		wl1271_ps_elp_sleep(wl);
+> +		mutex_unlock(&wl->mutex);
+> +
+> +		ret = wait_for_completion_timeout(
+> +			&compl, msecs_to_jiffies(500));
+
+We have this for the ELP wakeup:
+
+#define WL1271_WAKEUP_TIMEOUT 500
+
+We should have a similar definition PS timeout.  And is this value just
+a guess or is there a real meaning to it? Can these timeouts be combined
+instead of having separate defines?
+
+
 -- 
-1.7.3.4
+Cheers,
+Luca.
 
