@@ -1,122 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36003 "EHLO nbd.name"
+Received: from mail.atheros.com ([12.19.149.2]:47728 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754116Ab1EZKpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 06:45:50 -0400
-Message-ID: <4DDE2F5B.3020804@openwrt.org> (sfid-20110526_124554_777672_65E0E0DB)
-Date: Thu, 26 May 2011 12:45:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752169Ab1ELKym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 06:54:42 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 03:54:13 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <ray.li@greenwavereality.com>, <kathy.giori@atheros.com>,
+	<aeolus.yang@atheros.com>, <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	<stable@kernel.org>, <compat@orbit-lab.org>
+Subject: [PATCH 1/1] ath9k_hw: Fix STA connection issues with AR9380 (XB113).
+Date: Thu, 12 May 2011 16:24:28 +0530
+Message-ID: <1305197668-1883-1-git-send-email-senthilkumar@atheros.com> (sfid-20110512_125450_901323_04B98017)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-Subject: Re: Initial automatic channel selection implementation
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com> <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com> <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com> <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com> <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com>
-In-Reply-To: <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-25 9:27 PM, Luis R. Rodriguez wrote:
-> On Wed, May 25, 2011 at 12:24 PM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
->>  On Wed, May 25, 2011 at 12:20 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>  On 2011-05-25 5:01 PM, Luis R. Rodriguez wrote:
->>>>
->>>>  On Wed, May 25, 2011 at 7:45 AM, Helmut Schaa
->>>>  <helmut.schaa@googlemail.com>    wrote:
->>>>>
->>>>>    On Wed, May 25, 2011 at 4:37 PM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>>>    wrote:
->>>>>>
->>>>>>    On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
->>>>>>    <helmut.schaa@googlemail.com>    wrote:
->>>>>>>
->>>>>>>    On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>>>>>    wrote:
->>>>>>>>
->>>>>>>>    Yes, thanks this is a lot of work already done. Now we just need a
->>>>>>>>    basic algorithm to parse this, quantify how ideal this channel is and
->>>>>>>>    then spit out a desired optimal channel.
->>>>>>>
->>>>>>>    That's what I've hacked some time ago (in form of the attached _ugly_
->>>>>>>  shell
->>>>>>>    script that does auto channel selection with rt2x00, not sure if it
->>>>>>>  works
->>>>>>>    correct with other drivers as the survey dump differs somehow between
->>>>>>>    rt2x00, ath5k and ath9k, and it only does channel 1-11):
->>>>>>>
->>>>>>>    - Iterate over all channels and stay on each channel for some time
->>>>>>
->>>>>>    Nice, yeah I was thinking of using the offchannel operation if we want
->>>>>>    to spend more time there for inspection and if associated. For first
->>>>>>    iteration it should be possible to just move around. In fact for AP
->>>>>>    purposes I suppose one will want to just start AP mode ASAP and then
->>>>>>    later do offchannel operations to do the inspection on the ideal
->>>>>>    channel. Otherwise we sit there idle until we complete the Automatic
->>>>>>    Channel Selection thingy.
->>>>>
->>>>>    Correct, especially if we also consider 5Ghz channels. Offchannel
->>>>>  operations
->>>>>    would be nice but how can we ensure AP mode while being offchannel?
->>>>
->>>>  Notification of absence.
->>>>
->>>>>>>    - Store busy time stats for each channel
->>>>>>>    - Choose the channel with the lowest busy time (and on 2.4Ghz also
->>>>>>>     check the busy times on adjacent channels)
->>>>>>
->>>>>>    So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
->>>>>>    we should skip that time from the busy time, otherwise the "busy" time
->>>>>>    includes time we induced on TX'ing or RX'ing ourselves. So I was
->>>>>>    thinking of using the:
->>>>>>
->>>>>>     (active time - rx time - tx time)  / busy time
->>>>>
->>>>>    Looks good ;) just one problem from a rt2x00 POV: We can't report rx/tx
->>>>>  busy
->>>>>    time separately, we can only advice the hw to include or exclude rx/tx
->>>>>  time
->>>>>    from the busy time statistics.
->>>>
->>>>  Doh, I see.. well in order for the above math to be useful we'd have
->>>>  to be consistent across drivers. What is being done by rt2x00 right
->>>>  now? If the later then the math would still work, otherwise then we'd
->>>>  need to adjust.
->>>
->>>  Excluding rx time isn't even a good idea, since it makes no distinction
->>>  between local BSS or other activity in the area.
->>
->>  What if we do an offchannel operation?
->
-> Once we figure out that...
->
-> The missing piece is how to deal with noise info here. In short the
-> lower noise we have the better signal we'll get. The challenge then is
-> to take into consideration the noise mathematically in such a that a
-> high noise value would nullify any clean idle air time ratio
-> conditions from the formula postulated before. Let me review again
-> with some modifications.
->
-> Active time is the time we spend on the channel, so to get an idea of
-> how "busy" that channel is we have to remove the tx and rx time from
-> that channel. That gives us the time we spent idle on that channel.
-> Then the busy time is a subset of the entire active time but we should
-> also exclude the time we spent tx'ing and rx'ing as well. We then
-> have:
->
->   (busy time - rx time - tx time) / (active time - rx time - tx time)
->
-> This is a bounded ratio already, given that if we spent 0 time tx'ing
-> 0 time rx'ing, but 10 ms on a channel, and all that time we had busy
-> time as well we'd have a ratio of 10 / 10 = 1. In the best case we'd
-> have  0 / 10 = 0.
->
-> What I'd like to do is to affect the ratio to nullify it if the noise
-> is very low on the channel. Given that noise is logarithmic we'd have
-> to use a logarithmic function as well. Working on that now.
-Please explain why you want to remove the rx time, it makes no sense to 
-me. Without rx time you will usually not get any useful indication of 
-how busy the channel is.
+XB113 (AR9380) 3x3 SB 5G only cards were failing to connect to APs
+due to incorrect xpabiaslevel configuration. fix it.
 
-- Felix
+Cc: stable@kernel.org
+Cc: Ray Li <ray.li@greenwavereality.com>
+Cc: Kathy Giori <kathy.giori@atheros.com>
+Cc: Aeolus Yang <aeolus.yang@atheros.com>
+Cc: compat@orbit-lab.org
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8b2125a..d76a1bd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -922,7 +922,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		.db_stage2 = {3, 3, 3}, /* 3 chain */
+ 		.db_stage3 = {3, 3, 3}, /* doesn't exist for 2G */
+ 		.db_stage4 = {3, 3, 3},	 /* don't exist for 2G */
+-		.xpaBiasLvl = 0,
++		.xpaBiasLvl = 0xf,
+ 		.txFrameToDataStart = 0x0e,
+ 		.txFrameToPaOn = 0x0e,
+ 		.txClip = 3, /* 4 bits tx_clip, 4 bits dac_scale_cck */
+-- 
+1.7.0.4
+
