@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64572 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab1EIPUi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 11:20:38 -0400
-Received: by vxi39 with SMTP id 39so5843161vxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 08:20:37 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:40680 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750899Ab1ELPFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 11:05:51 -0400
+Date: Thu, 12 May 2011 17:05:31 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, eliad@wizery.com
+Subject: Re: [PATCH v3 1/3] cfg80211/nl80211: add support for scheduled scans
+Message-ID: <20110512150530.GB2171@redhat.com> (sfid-20110512_170554_278966_1AE17D13)
+References: <1305122977-6740-1-git-send-email-coelho@ti.com>
+ <1305122977-6740-2-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTikAYtW5o9rVS_WT-1XuGQVXOucjZg@mail.gmail.com>
-References: <4DC2C743.9060004@01019freenet.de>
-	<BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
-	<20110509114601.GA27067@zenon.in.qult.net>
-	<BANLkTikAYtW5o9rVS_WT-1XuGQVXOucjZg@mail.gmail.com>
-Date: Mon, 9 May 2011 17:20:37 +0200
-Message-ID: <BANLkTimsS+efr9WJ8FnLt5WM7H4V9itZiw@mail.gmail.com> (sfid-20110509_172041_737303_96764CCA)
-Subject: =?windows-1252?Q?Re=3A_compile=2Derror_agg=2Dtx=2Ec=3A_error=3A_implicit_declarat?=
-	=?windows-1252?Q?ion_of_function_=91kfree=5Frcu=92?=
-From: Juan Carlos Garza <juancarlosgarza@gmail.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1305122977-6740-2-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, May 11, 2011 at 05:09:35PM +0300, Luciano Coelho wrote:
+> Implement new functionality for scheduled scan offload.  With this feature we
+> can scan automatically at certain intervals.
+> 
+> The idea is that the hardware can perform scan automatically and filter on
+> desired results without waking up the host unnecessarily.
 
-On Mon, May 9, 2011 at 3:32 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> On Mon, May 9, 2011 at 5:16 PM, Ignacy Gawedzki <i@lri.fr> wrote:
->> On Fri, May 06, 2011 at 10:35:08AM +0530, thus spake Mohammed Shafi:
->>> On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
->>> <andihartmann@01019freenet.de> wrote:
->>> > Hello,
->>> >
->>> > since May, there is a compile error in compat-wireless (against kernel
->>> > 2.6.34):
->>
->> I, as it appears with many others, have the same kind of trouble compiling the
->> latests compat-wireless snapshots on some kernels (2.6.38 for me).
+Can you elaborate more about this?
 
-I'm having this problem as well with a 2.6.24 kernel.
+> Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
+> commands to the nl80211 interface.  When results are available they are
+> reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
+> informed when the scheduled scan has stopped with a
+> NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
+> the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  include/linux/nl80211.h |   25 +++++
+>  include/net/cfg80211.h  |   57 +++++++++++
+>  net/wireless/core.c     |   12 ++-
+>  net/wireless/core.h     |    7 ++
+>  net/wireless/nl80211.c  |  250 +++++++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/nl80211.h  |    4 +
+>  net/wireless/scan.c     |   70 +++++++++++++
+>  7 files changed, 424 insertions(+), 1 deletions(-)
 
-The file /include/linux/rcupdate.h , and maybe other files too,
-need to be included in the compat-wireless package
-as the function kfree_rcu is actually introduced in a patch for
-the current linux-next tree.
+And explain, why all of this is needed, instead of modify existing scan
+code and reuse existing infrastructure. This sched_scan does not seems to
+be something different than normal hardware scan we have already, or I'm
+wrong.
 
-I guess they'll be fixing that soon, in the meantime try copying the missing
- file(s) manually.
-
->>
->> Obviously the kfree_rcu machinery should go into some compat/ source file.  In
->> the meantime, I personnaly reverted these changes (see attached patch) and it
->> works just fine.
->
-> I blindly used your patch and now the compat-wireless is compiling for me.
-> thanks a lot.
->
-> with regards,
-> shafi
->
->>
->> --
->> /* This is not a comment */
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
--- 
-Juan Carlos Garza
+Thanks
+Stanislaw
