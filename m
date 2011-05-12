@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37317 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253Ab1EDUJb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 16:09:31 -0400
-Received: by eyx24 with SMTP id 24so468890eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 13:09:29 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Andrew V. Stepanov" <stanv@altlinux.org>
-Subject: Re: carl9170.ko RX - DMA, TX - COPY
-Date: Wed, 4 May 2011 22:09:29 +0000
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTiniamP_zXeGkW2TgatdkSv1+rdfeg@mail.gmail.com> <201105041558.00377.chunkeey@googlemail.com> <BANLkTin3nks48iCQw34kFfMAwT3QyhG08A@mail.gmail.com>
-In-Reply-To: <BANLkTin3nks48iCQw34kFfMAwT3QyhG08A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:7852 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756023Ab1ELKhz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2011 06:37:55 -0400
+Date: Thu, 12 May 2011 12:37:03 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [PATCH] iwlwifi: fix TX power configuration on 3945 and 4965
+ devices
+Message-ID: <20110512103702.GA3292@redhat.com> (sfid-20110512_123802_768510_8906BBB2)
+References: <1305194124-46828-1-git-send-email-jslaby@suse.cz>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201105042209.29950.chunkeey@googlemail.com> (sfid-20110504_220935_137843_240637E5)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1305194124-46828-1-git-send-email-jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 May 2011 18:52:58 Andrew V. Stepanov wrote:
-> I think it is possible to align SKB frames in carl9170.ko driver.
+On Thu, May 12, 2011 at 11:55:24AM +0200, Jiri Slaby wrote:
+> From: Reinette Chatre <reinette.chatre@intel.com>
 > 
-> rt2800usb do such think in next way:
+> When receiving a TX power change request from mac80211 the functions
+> servicing these requests for 3945 and 4965 uses information in the
+> active RXON. In iwl_mac_config the staging RXON is prepared based on
+> various directions from mac80211 and only at the end is the staging
+> RXON committed to the device and the active RXON updated.
 > 
-> void rt2x00queue_align_frame(struct sk_buff *skb)
-> {
-> 环贩unsigned int frame_length = skb->len;
-> 环贩unsigned int align = ALIGN_SIZE(skb, 0);
+> By servicing the TX power change request while servicing the other
+> requests that modify the staging RXON we loose the new information
+> provided by mac80211.
 > 
-> 环贩if (!align)
-> 环贩环贩return;
+> Fix this by servicing the TX power change request after the RXON has
+> been committed to the device and active RXON thus contains accurate
+> information.
 > 
-> 环贩skb_push(skb, align);
-> 环贩memmove(skb->data, skb->data + align, frame_length);
-> 环贩skb_trim(skb, frame_length);
-> }
-> 
-> What do you think about this?
-No that's wrong, here's the comment from rt2x00queue.c
+> References: https://bugzilla.novell.com/show_bug.cgi?id=610421
 
-"When DMA allocation is required we should guarantee to the
- driver that the DMA is aligned to a 4-byte boundary.
- However some drivers require L2 padding to pad the payload
- rather then the header. This could be a requirement for
- PCI and USB devices, while header alignment only is valid
- for PCI devices."
+That problem is already fixed in 2.6.38 by:
 
-Do you see the difference there; header alignment is only needed
-for PCI whereas rt2800usb hw/fw allows just the L2 data to be
-padded and sadly AR9170 hw does not have this feature. 
+commit 21db55a9dc4e52d8d2cac30f47efcec3afccb0c5
+Author:     Stanislaw Gruszka <sgruszka@redhat.com>
+AuthorDate: Fri Jan 28 16:47:44 2011 +0100
+Commit:     Greg Kroah-Hartman <gregkh@suse.de>
+CommitDate: Mon May 2 09:19:48 2011 -0700
 
-Also, someone <https://patchwork.kernel.org/patch/98997/> added
-bounce buffers to musb some time ago, so why not use this approach
-instead? The advantage is that you won't need to modify any other
-drivers when you will (inevitable) replace the device with a
-better one, right?
+    iwlwifi: do not set tx power when channel is changing
 
-Regards,
-	Chr
+> --- a/drivers/net/wireless/iwlegacy/iwl-core.c
+> +++ b/drivers/net/wireless/iwlegacy/iwl-core.c
+> @@ -2220,13 +2220,6 @@ int iwl_legacy_mac_config(struct ieee802
+>  			IWL_DEBUG_MAC80211(priv, "Error setting sleep level\n");
+>  	}
+>  
+> -	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+> -		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
+> -			priv->tx_power_user_lmt, conf->power_level);
+> -
+> -		iwl_legacy_set_tx_power(priv, conf->power_level, false);
+> -	}
+> -
+>  	if (!iwl_legacy_is_ready(priv)) {
+>  		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+>  		goto out;
+> @@ -2245,6 +2238,14 @@ int iwl_legacy_mac_config(struct ieee802
+>  			iwl_legacy_update_qos(priv, ctx);
+>  	}
+>  
+> +	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+> +		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
+> +			priv->tx_power_user_lmt, conf->power_level);
+> +
+> +		iwl_legacy_set_tx_power(priv, conf->power_level, false);
+> +	}
+
+This disallow to set tx power during scan process, NACK.
+
+Stanislaw
