@@ -1,109 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.solarflare.com ([216.237.3.220]:51914 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755062Ab1EBCYr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46599 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758537Ab1EMXzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 May 2011 22:24:47 -0400
-Subject: Re: Frequent spurious tx_timeouts for libertas
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
-References: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
+	Fri, 13 May 2011 19:55:24 -0400
+Subject: [PATCH] mac80211: verify IBSS in interface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 May 2011 03:24:42 +0100
-Message-ID: <1304303082.2833.159.camel@localhost> (sfid-20110502_042508_148851_AE1BB944)
+Date: Sat, 14 May 2011 01:55:23 +0200
+Message-ID: <1305330923.680.5.camel@jlt3.sipsolutions.net> (sfid-20110514_015528_664811_F99F01FF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-05-01 at 22:21 +0100, Daniel Drake wrote:
-[...]
-> Sometimes the TX queue is stopped and started from other places (e.g.
-> while scanning for networks, which NetworkManager triggers every
-> couple of minutes)
-> 
-> Thus the TX queue is stopped and started very often.
-> 
-> The libertas tx_timeout handler is being called quite a lot, and quite
-> soon after boot we get this in the kernel logs (the first time it
-> happens):
-> 
-> [   97.050101] ------------[ cut here ]------------
-> [   97.054866] WARNING: at net/sched/sch_generic.c:258 dev_watchdog+0x102/0x17c
-> [   97.062277] Hardware name: XO
-> [   97.065335] NETDEV WATCHDOG: eth0 (libertas_sdio): transmit queue 0 timed out
-> <snip large trace>
-> 
-> This message seems bogus - all the recent transmissions happened correctly.
-> 
-> What is this watchdog trying to detect exactly? Using what criteria?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'll repeat my answer from the last time this was asked on netdev:
+Drivers shouldn't attempt to advertise support
+for more than one IBSS interface since mac80211
+doesn't support that. Check and return an error
+from ieee80211_register_hw() in that case.
 
-The watchdog fires when the software queue has been stopped *and* the
-link has been reported as up for over dev->watchdog_timeo ticks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/main.c |   20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-The software queue should be stopped iff the hardware queue is full or
-nearly full.  If the software queue remains stopped and the link is
-still reported up, then one of these things is happening:
+--- a/net/mac80211/main.c	2011-05-14 01:48:56.000000000 +0200
++++ b/net/mac80211/main.c	2011-05-14 01:52:40.000000000 +0200
+@@ -752,11 +752,25 @@ int ieee80211_register_hw(struct ieee802
+ 	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
+ 	hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_MONITOR);
+ 
+-	/* mac80211 doesn't support more than 1 channel */
+-	for (i = 0; i < hw->wiphy->n_iface_combinations; i++)
+-		if (hw->wiphy->iface_combinations[i].num_different_channels > 1)
++	/*
++	 * mac80211 doesn't support more than 1 channel, and also not more
++	 * than one IBSS interface
++	 */
++	for (i = 0; i < hw->wiphy->n_iface_combinations; i++) {
++		const struct ieee80211_iface_combination *c;
++		int j;
++
++		c = &hw->wiphy->iface_combinations[i];
++
++		if (c->num_different_channels > 1)
+ 			return -EINVAL;
+ 
++		for (j = 0; j < c->n_limits; j++)
++			if ((c->limits[j].types & BIT(NL80211_IFTYPE_ADHOC)) &&
++			    c->limits[j].max > 1)
++				return -EINVAL;
++	}
++
+ #ifndef CONFIG_MAC80211_MESH
+ 	/* mesh depends on Kconfig, but drivers should set it if they want */
+ 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
 
-1. The link went down but the driver didn't notice
-2. TX completions are not being indicated or handled correctly
-3. The hardware TX path has locked up
-4. The link is stalled by excessive pause frames or collisions
-5. Timeout is too low and/or low watermark is too high
-(there may be other explanations)
-
-I think the watchdog is primarily meant to deal with case 3, though all
-of cases 1-3 may be worked around by resetting the hardware.
-
-And now, for the specific case of libertas:
-
-It appears that libertas reports carrier off (link down) while scanning,
-so that should mean the watchdog does not fire.  However:
-
-1. The watchdog will only check the current link state, which might be
-up again when it runs.
-2. The watchdog assumes that TX queues only fill up in response to
-packets sent by the TX scheduler.
-
-[...]
-> Is libertas doing something wrong, or is this a bug/oddity in the network layer?
-
-Since the TX scheduler doesn't know about the extra packets you are
-injecting to do channel scanning, I think you need to call
-txq_trans_update() when you do that.  And I don't think it's a good idea
-to call netif_carrier_off() there at all.  If it has any effect at all
-(which I don't think it will, as channel scanning is being done under
-RTNL lock and link change notifications also require that lock) it will
-be to confuse userland.
-
-> Also, while looking at this code, I spotted a bug in dev_watchdog():
-> 				/*
-> 				 * old device drivers set dev->trans_start
-> 				 */
-> 				trans_start = txq->trans_start ? : dev->trans_start;
-> 
-> i.e. it is trying to figure out whether to read trans_start from txq
-> or dev. In both cases, trans_start is updated based on the value of
-> jiffies, which will occasionally be 0 (as it wraps around). Therefore
-> this line of code will occasionally make the wrong decision.
-
-No, I don't think so.
-
-If only dev->trans_start is being updated then the watchdog reads that.
-If both txq->trans_start and dev->trans_start are being updated then it
-doesn't matter much which the watchdog reads.
-If only txq->trans_start is being updated then dev->trans_start is
-always set to 0, so when txq->trans_start is 0 the watchdog still gets
-0.
-
-Ben.
-
--- 
-Ben Hutchings, Senior Software Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
 
