@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out0.tiscali.nl ([195.241.79.175]:40518 "EHLO
-	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755091Ab1EGMcJ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:60902 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758695Ab1EMTF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 08:32:09 -0400
-Subject: [PATCH] [RESEND] iwl4965: drop a lone pr_err()
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 May 2011 14:31:59 +0200
-Message-ID: <1304771519.2227.6.camel@x61.thuisdomein> (sfid-20110507_143247_992379_955724D7)
-Mime-Version: 1.0
+	Fri, 13 May 2011 15:05:58 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id AA2BE5401CC
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 15:11:44 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110513190556.DC0FB40EC3@repository3.orbit-lab.org> (sfid-20110513_210606_218558_34E14D76)
+Date: Fri, 13 May 2011 15:05:56 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl4965_rate_control_register() prints a message at KERN_ERR level. It
-looks like it's just a debugging message, so pr_err() seems to be
-overdone. But none of the similar functions in drivers/net/wireless
-print a message, so let's just drop it entirely.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   961b961..501c91f  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 9bb2a3f...cdab2bb akpm-end   -> origin/akpm-end  (forced update)
+   9f381a6..411f05f  akpm-start -> origin/akpm-start
+   4e31af7..17c5c36  history    -> origin/history
+ + b9aec9c...e7d93d1 master     -> origin/master  (forced update)
+   9f381a6..411f05f  stable     -> origin/stable
+ * [new tag]         next-20110513 -> next-20110513
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Previously sent for (I guess) v2.6.39-rc2. Still present in v2.6.39-rc6.
+compat-wireless code metrics
 
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 31ac672..8950939 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -2860,7 +2860,6 @@ static struct rate_control_ops rs_4965_ops = {
- 
- int iwl4965_rate_control_register(void)
- {
--	pr_err("Registering 4965 rate control operations\n");
- 	return ieee80211_rate_control_register(&rs_4965_ops);
- }
- 
--- 
-1.7.4.4
-
-
-
+    821928 - Total upstream lines of code being pulled
+      2347 - backport code changes
+      2044 - backport code additions
+       303 - backport code deletions
+      8106 - backport from compat module
+     10453 - total backport code
+    1.2718 - % of code consists of backport work
