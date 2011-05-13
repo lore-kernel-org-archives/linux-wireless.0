@@ -1,109 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57019 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140Ab1EQX3C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 19:29:02 -0400
-Received: by eyx24 with SMTP id 24so286932eyx.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 16:29:01 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/9] b43: rename ssb_device variable in ssb specific functions
-Date: Wed, 18 May 2011 02:06:35 +0200
-Message-Id: <1305677203-16660-1-git-send-email-zajec5@gmail.com> (sfid-20110518_012907_655368_0943490B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:53515 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911Ab1EMTim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 15:38:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/13] update for 2.6.40
+Date: Fri, 13 May 2011 12:13:17 -0700
+Message-Id: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213846_051793_FFF2AFCE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We add support for multi-TB commands
+We also change the default beacon interval for PAN conext
+We also make sure uCode is in disassocate state before associate 
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   29 +++++++++++++++--------------
- 1 files changed, 15 insertions(+), 14 deletions(-)
+Johannes Berg (6):
+  iwlagn: prepare for multi-TB commands
+  iwlagn: clean up TXQ indirection
+  iwlagn: remove unused pad argument
+  iwlagn: support multiple TBs per command
+  iwlagn: remove set but unused vars
+  iwlagn: change default beacon interval
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index eb41596..1e81a0d 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4982,26 +4982,27 @@ static struct b43_wl *b43_wireless_init(struct ssb_device *dev)
- 	return wl;
- }
- 
--static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
-+static
-+int b43_ssb_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
- {
- 	struct b43_wl *wl;
- 	int err;
- 	int first = 0;
- 
--	wl = ssb_get_devtypedata(dev);
-+	wl = ssb_get_devtypedata(sdev);
- 	if (!wl) {
- 		/* Probing the first core. Must setup common struct b43_wl */
- 		first = 1;
--		b43_sprom_fixup(dev->bus);
--		wl = b43_wireless_init(dev);
-+		b43_sprom_fixup(sdev->bus);
-+		wl = b43_wireless_init(sdev);
- 		if (IS_ERR(wl)) {
- 			err = PTR_ERR(wl);
- 			goto out;
- 		}
--		ssb_set_devtypedata(dev, wl);
--		B43_WARN_ON(ssb_get_devtypedata(dev) != wl);
-+		ssb_set_devtypedata(sdev, wl);
-+		B43_WARN_ON(ssb_get_devtypedata(sdev) != wl);
- 	}
--	err = b43_one_core_attach(dev, wl);
-+	err = b43_one_core_attach(sdev, wl);
- 	if (err)
- 		goto err_wireless_exit;
- 
-@@ -5016,17 +5017,17 @@ static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
- 	return err;
- 
-       err_one_core_detach:
--	b43_one_core_detach(dev);
-+	b43_one_core_detach(sdev);
-       err_wireless_exit:
- 	if (first)
--		b43_wireless_exit(dev, wl);
-+		b43_wireless_exit(sdev, wl);
- 	return err;
- }
- 
--static void b43_ssb_remove(struct ssb_device *dev)
-+static void b43_ssb_remove(struct ssb_device *sdev)
- {
--	struct b43_wl *wl = ssb_get_devtypedata(dev);
--	struct b43_wldev *wldev = ssb_get_drvdata(dev);
-+	struct b43_wl *wl = ssb_get_devtypedata(sdev);
-+	struct b43_wldev *wldev = ssb_get_drvdata(sdev);
- 
- 	/* We must cancel any work here before unregistering from ieee80211,
- 	 * as the ieee80211 unreg will destroy the workqueue. */
-@@ -5042,14 +5043,14 @@ static void b43_ssb_remove(struct ssb_device *dev)
- 		ieee80211_unregister_hw(wl->hw);
- 	}
- 
--	b43_one_core_detach(dev);
-+	b43_one_core_detach(sdev);
- 
- 	if (list_empty(&wl->devlist)) {
- 		b43_leds_unregister(wl);
- 		/* Last core on the chip unregistered.
- 		 * We can destroy common struct b43_wl.
- 		 */
--		b43_wireless_exit(dev, wl);
-+		b43_wireless_exit(sdev, wl);
- 	}
- }
- 
--- 
-1.7.3.4
+Wey-Yi Guy (7):
+  iwlagn: more ucode error log info
+  iwlagn: add testmode trace command
+  iwlagn: add eeprom command to testmode
+  iwlagn: add testmode set fixed rate command
+  iwlagn: clear STATUS_HCMD_ACTIVE bit if fail enqueue
+  iwlagn: always send RXON with disassociate flag before associate
+  iwlagn: remove unused old_assoc parameter
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.gi
+
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |    4 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c      |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |   86 ++++---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  250 ++++--------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h  |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h      |   10 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   66 ++++--
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h  |   58 ++++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c    |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c      |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c       |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c   |  177 +++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-testmode.h  |   34 +++
+ drivers/net/wireless/iwlwifi/iwl-tx.c        |  359 +++++++++++++++++++-------
+ 24 files changed, 716 insertions(+), 473 deletions(-)
 
