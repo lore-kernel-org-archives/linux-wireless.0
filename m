@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52738 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088Ab1DKPZn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2011 11:25:43 -0400
-Received: by iwn34 with SMTP id 34so5722027iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2011 08:25:43 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3390 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753986Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/32] staging: brcm80211: got rid of #ifdef __mips__ by
+ new dma_spin_for_len()
+Date: Fri, 13 May 2011 11:59:25 +0200
+Message-ID: <1305280792-9475-5-git-send-email-arend@broadcom.com> (sfid-20110513_120011_950058_6691F044)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19875.7684.859710.807182@gargle.gargle.HOWL>
-Date: Mon, 11 Apr 2011 20:58:04 +0530
-To: Richard Farina <sidhayn@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc oddity
-In-Reply-To: <4DA311F3.6010007@gmail.com>
-References: <4D9FCC70.1020805@gmail.com>
-	<19871.62035.829719.402615@gargle.gargle.HOWL>
-	<4DA311F3.6010007@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard Farina wrote:
-> The following commit causes extreme sadness:
-> [ 4094.241243] usb 2-5: new high speed USB device using ehci_hcd and 
-> address 3
-> [ 4095.550452] usb 2-5: ath9k_htc: Transferred FW: ar9271.fw, size: 51312
-> [ 4095.816072] ath9k_htc 2-5:1.0: ath9k_htc: HTC initialized with 33 credits
-> [ 4159.812888] usb 2-5: USB disconnect, address 3
-> [ 4159.929317] ath: Couldn't reset chip
-> [ 4159.929321] ath: Unable to initialize hardware; initialization status: -5
-> [ 4159.929323] ath: Unable to initialize hardware; initialization status: -5
-> [ 4159.929340] Failed to initialize the device
-> [ 4160.012603] ath9k_htc: probe of 2-5:1.0 failed with error -22
-> [ 4160.012771] usbcore: registered new interface driver ath9k_htc
-> [ 4163.595059] usb 2-5: new high speed USB device using ehci_hcd and 
-> address 4
-> [ 4164.018920] usb 2-5: ath9k_htc: Transferred FW: ar9271.fw, size: 51312
-> [ 4164.284420] ath9k_htc 2-5:1.0: ath9k_htc: HTC initialized with 33 credits
-> 
-> I'm guessing because I need the mentioned firmware update? Where can I 
-> get it? Or better yet can you (this is almost laughable considering the 
-> ralink thread right now) get it into linux-firmware? Or is the needed 
-> firmware update an unstable thing?
+From: Roland Vossen <rvossen@broadcom.com>
 
-The new FW has to be formally/officially tested before it is merged into
-linux-firmware.
+Code cleanup.
 
-> Either way I can wait on the firmware-version fix but where can I find 
-> the patch that shows fixes the "driver: usb" issue? Your obviously shows 
-> properly :-)
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/hnddma.c |   11 +----------
+ drivers/staging/brcm80211/include/hnddma.h  |   19 +++++++++++++++++++
+ 2 files changed, 20 insertions(+), 10 deletions(-)
 
-http://linuxwireless.org/en/users/Drivers/ath9k_htc
+diff --git a/drivers/staging/brcm80211/brcmsmac/hnddma.c b/drivers/staging/brcm80211/brcmsmac/hnddma.c
+index 33432e6..5f11147 100644
+--- a/drivers/staging/brcm80211/brcmsmac/hnddma.c
++++ b/drivers/staging/brcm80211/brcmsmac/hnddma.c
+@@ -721,16 +721,7 @@ static void *_dma_rx(dma_info_t *di)
+ 
+ 	len = le16_to_cpu(*(u16 *) (head->data));
+ 	DMA_TRACE(("%s: dma_rx len %d\n", di->name, len));
+-
+-#if defined(__mips__)
+-#define OSL_UNCACHED(va)        ((void *)KSEG1ADDR((va)))
+-	if (!len) {
+-		while (!(len = *(u16 *) OSL_UNCACHED(head->data)))
+-			udelay(1);
+-
+-		*(u16 *) (head->data) = cpu_to_le16((u16) len);
+-	}
+-#endif				/* defined(__mips__) */
++	dma_spin_for_len(len, head);
+ 
+ 	/* set actual length */
+ 	pkt_len = min((di->rxoffset + len), di->rxbufsize);
+diff --git a/drivers/staging/brcm80211/include/hnddma.h b/drivers/staging/brcm80211/include/hnddma.h
+index 5d079e7..fbbcb9b 100644
+--- a/drivers/staging/brcm80211/include/hnddma.h
++++ b/drivers/staging/brcm80211/include/hnddma.h
+@@ -204,4 +204,23 @@ extern const di_fcn_t dma64proc;
+ extern uint dma_addrwidth(si_t *sih, void *dmaregs);
+ void dma_walk_packets(struct hnddma_pub *dmah, void (*callback_fnc)
+ 		      (void *pkt, void *arg_a), void *arg_a);
++
++/*
++ * DMA(Bug) on some chips seems to declare that the packet is ready, but the
++ * packet length is not updated yet (by DMA) on the expected time.
++ * Workaround is to hold processor till DMA updates the length, and stay off
++ * the bus to allow DMA update the length in buffer
++ */
++static inline void dma_spin_for_len(uint len, struct sk_buff *head)
++{
++#if defined(__mips__)
++	if (!len) {
++		while (!(len = *(u16 *) KSEG1ADDR(head->data)))
++			udelay(1);
++
++		*(u16 *) (head->data) = cpu_to_le16((u16) len);
++	}
++#endif				/* defined(__mips__) */
++}
++
+ #endif				/* _hnddma_h_ */
+-- 
+1.7.4.1
 
-Sujith
+
