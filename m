@@ -1,31 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:41636 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755561Ab1EWW6E (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57664 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758516Ab1EMXag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 18:58:04 -0400
-Received: by iwn34 with SMTP id 34so5241048iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 15:58:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
-References: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 May 2011 15:57:44 -0700
-Message-ID: <BANLkTimKAm9n+2Z0DeDzmJMXi5FPm1S1+A@mail.gmail.com> (sfid-20110524_005809_803547_EB8757EB)
-Subject: Re: [PATCH 1/3] Revert "compat-wireless: fix rfkill patches from applying"
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 May 2011 19:30:36 -0400
+Subject: Re: mesh RCU issues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org
+In-Reply-To: <BANLkTi=R_Eyz8+iZsk+=Gs4vaNo-0eUVng@mail.gmail.com> (sfid-20110513_222925_238565_758AD262)
+References: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
+	 <BANLkTinDyLyVX3HFHU7i4GFUi8SixOdzAQ@mail.gmail.com>
+	 <1305270793.3487.3.camel@jlt3.sipsolutions.net>
+	 <BANLkTi=R_Eyz8+iZsk+=Gs4vaNo-0eUVng@mail.gmail.com>
+	 (sfid-20110513_222925_238565_758AD262)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 14 May 2011 01:30:34 +0200
+Message-ID: <1305329434.32461.2.camel@jlt3.sipsolutions.net> (sfid-20110514_013039_651933_DBC30774)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 22, 2011 at 3:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> The commit was removed from linux-next, so this backport patch should also be removed.
->
-> This reverts commit b8e46e19937710d2ae14731871cf8c45a0fc9d74.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Fri, 2011-05-13 at 13:28 -0700, Javier Cardona wrote:
 
-Applied these and also the compat.git ones, and pushed, thanks!
+> >> Isn't the call to del_timer_sync() you are looking for in
+> >> mesh_path_node_reclaim() ?
+> >
+> > Hmm, indeed, but it looks like mesh_path_node_free() also frees a node,
+> > no? I'd only found the latter function freeing it and got worried.
+> 
+> Ah, I see.  Yes, looks like the timer should be deleted there as well.
+>  Patch will follow.
 
-  Luis
+Thanks!
+
+> > You'll want to apply
+> > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-rcu-annotations.patch to get rid of all the other spurious RCU warnings with CONFIG_SPARSE_RCU.
+> 
+> (You probably meant CONFIG_SPARSE_RCU_POINTER)
+
+Yeah, sorry.
+
+> I must be doing something wrong because I don't see the RCU warnings
+> after making {mesh,mpp}_paths __rcu.  I only see two "different
+> address spaces" errors that are fixed in the patch below.
+> I do see a bunch of 'warning' errors:
+> 
+> /home/javier/dev/wireless-testing/arch/x86/include/asm/uaccess_32.h:199:2:
+> error: attribute 'warning': unknown attribute
+
+Oh, damn. You're running into a sparse issue: upon encountering an
+error, it aborts parsing/checking. So since you're getting an error from
+an include file, you never see any warnings from the rest of the file.
+
+> 
+> 
+> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+> index 83ce48e..1db8bba 100644
+> --- a/net/mac80211/mesh_pathtbl.c
+> +++ b/net/mac80211/mesh_pathtbl.c
+> @@ -36,8 +36,8 @@ struct mpath_node {
+>         struct mesh_path *mpath;
+>  };
+> 
+> -static struct mesh_table *mesh_paths;
+> -static struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
+> +static struct mesh_table __rcu *mesh_paths;
+> +static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
+> 
+>  int mesh_paths_generation;
+> 
+> @@ -513,7 +513,7 @@ void mesh_plink_broken(struct sta_info *sta)
+>         for_each_mesh_entry(mesh_paths, p, node, i) {
+>                 mpath = node->mpath;
+>                 spin_lock_bh(&mpath->state_lock);
+> -               if (mpath->next_hop == sta &&
+> +               if (rcu_dereference(mpath->next_hop) == sta &&
+>                     mpath->flags & MESH_PATH_ACTIVE &&
+>                     !(mpath->flags & MESH_PATH_FIXED)) {
+>                         mpath->flags &= ~MESH_PATH_ACTIVE;
+> @@ -549,7 +549,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+> 
+>         for_each_mesh_entry(mesh_paths, p, node, i) {
+>                 mpath = node->mpath;
+> -               if (mpath->next_hop == sta)
+> +               if (rcu_dereference(mpath->next_hop) == sta)
+>                         mesh_path_del(mpath->dst, mpath->sdata);
+>         }
+>  }
+> 
+> Thoughts?
+
+I'll try if this is sufficient but it seemed there were more warnings
+when I tried.
+
+johannes
+
