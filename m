@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37570 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752582Ab1EPSRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 14:17:37 -0400
-Message-ID: <4DD16A3A.20705@hauke-m.de> (sfid-20110516_201933_706751_BD6ED637)
-Date: Mon, 16 May 2011 20:17:30 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:2929 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758835Ab1EMKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:16 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 28/32] staging: brcm80211: Removed unused variable from
+ brcmfmac driver
+Date: Fri, 13 May 2011 11:59:48 +0200
+Message-ID: <1305280792-9475-28-git-send-email-arend@broadcom.com> (sfid-20110513_120041_392420_D80027D0)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] compat: backport PCI_EEPROM_WIDTH_93C86
-References: <1305567815-73528-1-git-send-email-nbd@openwrt.org> <1305567815-73528-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1305567815-73528-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2011 07:43 PM, Felix Fietkau wrote:
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  include/linux/compat-2.6.36.h |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-> index 7a82522..2d756d1 100644
-> --- a/include/linux/compat-2.6.36.h
-> +++ b/include/linux/compat-2.6.36.h
-> @@ -123,6 +123,8 @@ static inline void tty_unlock(void) __releases(kernel_lock)
->  
->  #define __rcu
->  
-> +#define PCI_EEPROM_WIDTH_93C86	8
-> +
->  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
->  
->  #endif /* LINUX_26_36_COMPAT_H */
+From: Sukesh Srikakula <sukeshs@broadcom.com>
 
-NACK on this patch.
+Removed unused variable from wl_profile structure
 
-PCI_EEPROM_WIDTH_93C86 is already defined in
-include/linux/eeprom_93cx6.h which is shipped with compat-wireless.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    5 -----
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    1 -
+ 2 files changed, 0 insertions(+), 6 deletions(-)
 
-Hauke
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index abdf857..eb7f611 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4107,8 +4107,6 @@ static void *wl_read_prof(struct wl_priv *wl, s32 item)
+ 	switch (item) {
+ 	case WL_PROF_SEC:
+ 		return &wl->profile->sec;
+-	case WL_PROF_ACT:
+-		return &wl->profile->active;
+ 	case WL_PROF_BSSID:
+ 		return &wl->profile->bssid;
+ 	case WL_PROF_SSID:
+@@ -4142,9 +4140,6 @@ wl_update_prof(struct wl_priv *wl, const wl_event_msg_t *e, void *data,
+ 	case WL_PROF_SEC:
+ 		memcpy(&wl->profile->sec, data, sizeof(wl->profile->sec));
+ 		break;
+-	case WL_PROF_ACT:
+-		wl->profile->active = *(bool *)data;
+-		break;
+ 	case WL_PROF_BEACONINT:
+ 		wl->profile->beacon_interval = *(u16 *)data;
+ 		break;
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+index ced637d..2e8e14d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -235,7 +235,6 @@ struct wl_profile {
+ 	struct wl_security sec;
+ 	struct wl_ibss ibss;
+ 	s32 band;
+-	bool active;
+ };
+ 
+ /* dongle iscan event loop */
+-- 
+1.7.4.1
+
+
