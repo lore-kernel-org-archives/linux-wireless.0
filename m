@@ -1,82 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:52259 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751564Ab1EFWPz (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54125 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178Ab1EMTrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:15:55 -0400
-Date: Fri, 6 May 2011 15:15:43 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: <akpm@linux-foundation.org>, <mingo@redhat.com>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<allen.kao@atheros.com>, <roman.gezikov@atheros.com>,
-	<joonas.viskari@atheros.com>
-Subject: Re: [RFC 1/2] misc: add Atheros ar1520 GPS support
-Message-Id: <20110506151543.c96ece07.rdunlap@xenotime.net> (sfid-20110507_001613_672500_B2B1B7BF)
-In-Reply-To: <1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
-References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
-	<1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 13 May 2011 15:47:42 -0400
+Received: by fxm17 with SMTP id 17so1980128fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 12:47:41 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: add zoom 4410 usbid
+Date: Fri, 13 May 2011 21:47:23 +0200
+Cc: linville@tuxdriver.com, marked86@gmail.com
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201105132147.24486.chunkeey@googlemail.com> (sfid-20110513_214802_823606_5D174499)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 May 2011 15:09:39 -0700 Luis R. Rodriguez wrote:
-
-> From: Allen Kao <allen.kao@atheros.com>
-> 
-> This adds support for the Atheros ar1520 GPS device.
-> 
-> Cc: Roman Gezikov <roman.gezikov@atheros.com>
-> Cc: Joonas Viskari <joonas.viskari@atheros.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: x86@kernel.org
-> Signed-off-by: Allen Kao <allen.kao@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/misc/Kconfig   |   10 ++
->  drivers/misc/Makefile  |    1 +
->  drivers/misc/ar1520.c  |  406 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/ar1520.h |   49 ++++++
->  4 files changed, 466 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/misc/ar1520.c
->  create mode 100644 include/linux/ar1520.h
-> 
-> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-> index 4e007c6..7108214 100644
-> --- a/drivers/misc/Kconfig
-> +++ b/drivers/misc/Kconfig
-> @@ -379,6 +379,16 @@ config HMC6352
->  	  This driver provides support for the Honeywell HMC6352 compass,
->  	  providing configuration and heading data via sysfs.
->  
-> +config AR1520
-> +	tristate "Atheros AR1520 support"
-> +	depends on I2C
-
-Looks like it also depends on GPIOLIB.
-
-> +	help
-> +	  If you say yes here you get support for the Atheros
-> +	  AR1520 GPS chip.
-> +
-> +	  To compile this driver as a module, choose M here: the
-> +	  module will be called ar1520. If unsure, say N here.
-> +
->  config EP93XX_PWM
->  	tristate "EP93xx PWM support"
->  	depends on ARCH_EP93XX
-
-
-
-+#define AR1520_IOCTL_MAGIC      0xc2
-
-^^^^^ needs to be added to Documentation/ioctl/ioctl-number.txt, please.
-
+Cc: <stable@kernel.org>
+Reported-by: Mark Davis <marked86@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index e183587..a8f3bc7 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -82,6 +82,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
+ 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
+ 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
++	{USB_DEVICE(0x083a, 0xc501)},	/* Zoom Wireless-G 4410 */
+ 	{USB_DEVICE(0x083a, 0xf503)},	/* Accton FD7050E ver 1010ec  */
+ 	{USB_DEVICE(0x0846, 0x4240)},	/* Netgear WG111 (v2) */
+ 	{USB_DEVICE(0x0915, 0x2000)},	/* Cohiba Proto board */
