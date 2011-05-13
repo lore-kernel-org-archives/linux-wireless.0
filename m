@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42019 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab1EINcs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37015 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757086Ab1EMHPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 09:32:48 -0400
-Received: by wya21 with SMTP id 21so3869912wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:32:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110509114601.GA27067@zenon.in.qult.net>
-References: <4DC2C743.9060004@01019freenet.de>
-	<BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
-	<20110509114601.GA27067@zenon.in.qult.net>
-Date: Mon, 9 May 2011 19:02:47 +0530
-Message-ID: <BANLkTikAYtW5o9rVS_WT-1XuGQVXOucjZg@mail.gmail.com> (sfid-20110509_153254_519124_57D3C2B2)
-Subject: =?windows-1252?Q?Re=3A_compile=2Derror_agg=2Dtx=2Ec=3A_error=3A_implicit_declarat?=
-	=?windows-1252?Q?ion_of_function_=91kfree=5Frcu=92?=
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 May 2011 03:15:49 -0400
+Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rhyland Klein <rklein@nvidia.com>
+Cc: "olof@lixom.net" <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1305235386.10961.13.camel@rklein-linux2>
+References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
+	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+	 <1305224592.10961.10.camel@rklein-linux2>
+	 <1305225648.3461.37.camel@jlt3.sipsolutions.net>
+	 <1305226377.10961.12.camel@rklein-linux2>
+	 <1305226969.3461.38.camel@jlt3.sipsolutions.net>
+	 <1305235386.10961.13.camel@rklein-linux2>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 09:15:43 +0200
+Message-ID: <1305270943.3487.5.camel@jlt3.sipsolutions.net> (sfid-20110513_091606_877405_8DAFD043)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 9, 2011 at 5:16 PM, Ignacy Gawedzki <i@lri.fr> wrote:
-> On Fri, May 06, 2011 at 10:35:08AM +0530, thus spake Mohammed Shafi:
->> On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
->> <andihartmann@01019freenet.de> wrote:
->> > Hello,
->> >
->> > since May, there is a compile error in compat-wireless (against kernel
->> > 2.6.34):
->
-> I, as it appears with many others, have the same kind of trouble compiling the
-> latests compat-wireless snapshots on some kernels (2.6.38 for me).
->
-> Obviously the kfree_rcu machinery should go into some compat/ source file.  In
-> the meantime, I personnaly reverted these changes (see attached patch) and it
-> works just fine.
+On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
+> On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
+> > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
+> > 
+> > > > If, on the other hand, rfkill decides that at the time of loading the
+> > > > driver wifi should be on, then the first change would be +1 and it'll
+> > > > flip between 0 and +1.
+> > > > 
+> > > > This seems like it'll cause issues at some point, so I think you should
+> > > > either allow the driver to set the initial state or hardcode one of
+> > > > these possibilities (so at least it's predictable)
+> > 
+> > > I won't go negative, if you look, it only will disable clock if it knows
+> > > it has already enabled it. 
+> > 
+> > Ah, you're right, I misread the macros.
 
-I blindly used your patch and now the compat-wireless is compiling for me.
-thanks a lot.
+> So the patch is good as is?
 
-with regards,
-shafi
+I think so, yes.
 
->
-> --
-> /* This is not a comment */
->
+johannes
+
