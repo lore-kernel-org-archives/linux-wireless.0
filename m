@@ -1,89 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:34285 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755788Ab1EJMDX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 08:03:23 -0400
-Received: by ewy6 with SMTP id 6so2379314ewy.24
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 05:03:19 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+Received: from lo.gmane.org ([80.91.229.12]:43508 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750998Ab1EMLuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 07:50:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QKqse-0002NY-Vr
+	for linux-wireless@vger.kernel.org; Fri, 13 May 2011 13:50:05 +0200
+Received: from avtorif-209-107.intellin-tech.ru ([188.94.209.107])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 13:50:04 +0200
+Received: from oganer by avtorif-209-107.intellin-tech.ru with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 13:50:04 +0200
 To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/5] wl12xx: add configuration values for scheduled scan
-Date: Tue, 10 May 2011 15:03:06 +0300
-Message-Id: <1305028990-14044-2-git-send-email-coelho@ti.com> (sfid-20110510_140327_603836_A57C8123)
-In-Reply-To: <1305028990-14044-1-git-send-email-coelho@ti.com>
-References: <1305028990-14044-1-git-send-email-coelho@ti.com>
+From: woto <oganer@gmail.com>
+Subject: Re: Broadcom 4331 wireless device
+Date: Fri, 13 May 2011 10:22:25 +0000 (UTC)
+Message-ID: <loom.20110513T122134-409@post.gmane.org> (sfid-20110513_135012_892291_14161FBF)
+References: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com> <AANLkTikHx2J-zzCob+xVy04=RYX+K9T2HJ_14zyrto2J@mail.gmail.com> <loom.20110425T203659-857@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the structures and values for driver-configured scheduled scan
-parameters.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/conf.h |   21 +++++++++++++++++++++
- drivers/net/wireless/wl12xx/main.c |    9 +++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 6620840..1ab6c86 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1147,6 +1147,26 @@ struct conf_scan_settings {
- 
- };
- 
-+struct conf_sched_scan_settings {
-+	/* minimum time to wait on the channel for active scans (in TUs) */
-+	u16 min_dwell_time_active;
-+
-+	/* maximum time to wait on the channel for active scans (in TUs) */
-+	u16 max_dwell_time_active;
-+
-+	/* time to wait on the channel for passive scans (in TUs) */
-+	u32 dwell_time_passive;
-+
-+	/* number of probe requests to send on each channel in active scans */
-+	u8 num_probe_reqs;
-+
-+	/* RSSI threshold to be used for filtering */
-+	s8 rssi_threshold;
-+
-+	/* SNR threshold to be used for filtering */
-+	s8 snr_threshold;
-+};
-+
- /* these are number of channels on the band divided by two, rounded up */
- #define CONF_TX_PWR_COMPENSATION_LEN_2 7
- #define CONF_TX_PWR_COMPENSATION_LEN_5 18
-@@ -1234,6 +1254,7 @@ struct conf_drv_settings {
- 	struct conf_pm_config_settings pm_config;
- 	struct conf_roam_trigger_settings roam_trigger;
- 	struct conf_scan_settings scan;
-+	struct conf_sched_scan_settings sched_scan;
- 	struct conf_rf_settings rf;
- 	struct conf_ht_setting ht;
- 	struct conf_memory_settings mem_wl127x;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f82e736..cb4ed90 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -302,6 +302,15 @@ static struct conf_drv_settings default_conf = {
- 		.max_dwell_time_passive       = 100000,
- 		.num_probe_reqs               = 2,
- 	},
-+	.sched_scan = {
-+		/* sched_scan requires dwell times in TU instead of TU/1000 */
-+		.min_dwell_time_active = 8,
-+		.max_dwell_time_active = 30,
-+		.dwell_time_passive    = 100,
-+		.num_probe_reqs        = 2,
-+		.rssi_threshold        = -90,
-+		.snr_threshold         = 0,
-+	},
- 	.rf = {
- 		.tx_per_channel_power_compensation_2 = {
- 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--- 
-1.7.1
+Interesting too... :(
 
