@@ -1,102 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:65263 "EHLO mgw-sa01.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:30975 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070Ab1EJE6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 00:58:15 -0400
-Subject: Re: Wireless-regdb US and CA settings incorrect?
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Michael Green <Michael.Green@Atheros.com>
-Cc: "ext Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1700646FD6@SC1EXMB-MBCL.global.atheros.com>
-References: <93781E992CBA7843962D8B0E7D683F3C1700646FD6@SC1EXMB-MBCL.global.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 May 2011 07:57:49 +0300
-Message-ID: <1305003469.3749.118.camel@wimaxnb> (sfid-20110510_065818_567040_2736BF5E)
-Mime-Version: 1.0
+	id S1759070Ab1EMPAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 11:00:51 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:00:22 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
+	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: [PATCH 5/9] ath9k_hw: define modules to get/set Antenna diversity paramaters
+Date: Fri, 13 May 2011 20:30:41 +0530
+Message-ID: <1305298841-3465-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_170055_299569_B90F036B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 06:31 -0700, ext Michael Green wrote:
-> 1) Canada:    Industry Canada allows STAs to passive scan (ie enable operation) in those weather radar channels (5.6 to 5.65 GHz).  
-> APs must disable operation in those channels in Canada.  
-> 
-> 2) U.S.:  I hope the entire industry (including Open Source) is aware and understands latest FCC rules for this band (attached "interim rules").    Here again, APs must disable operation in those channels and follow other restrictions about usage and installation, warnings to installers as described in this attachment.
-> STAs in US are not subject to these restrictions.
-> 
-> 3) Atheros licensed software has two different reg domains for some countries like U.S. to support this case (ie different channels sets for AP vs. STA for the same country).
-> 
-> 
-> And somewhat related note:  in future when peer to peer technologies are supported in open source, then we need to be careful that sw and hw complies with these same rules (when a client device acts like a  "Master" per FCC definition using radar channels, then it must meet the full AP/DFS rules).  This point is not directly related to above Q&A, but thought I would mention it now.
-> 
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Thanks a lot for the clarification.
+these are the two important modules that will be called by the antenna
+diversity algorithm module in the rx. this will continuosly configure
+the hardware based on the current diversity status obtained
+from the algorithm
 
--Juuso
+Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
+Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   44 +++++++++++++++++++++++++++
+ 1 files changed, 44 insertions(+), 0 deletions(-)
 
-> 
-> Michael Green
-> Atheros Communications, Inc.
-> mgreen@atheros.com
-> Desk:   +1-781-400-1491
-> Mobile: +1-508-380-4921
-> 
-> -----Original Message-----
-> From: Juuso Oikarinen [mailto:juuso.oikarinen@nokia.com] 
-> Sent: Monday, May 09, 2011 6:29 AM
-> To: ext Luis R. Rodriguez
-> Cc: Michael Green; ext John W. Linville; linux-wireless@vger.kernel.org; wireless-regdb@lists.infradead.org
-> Subject: Re: wireless-regdb US and CA settings incorrect?
-> 
-> On Thu, 2011-05-05 at 08:57 -0700, ext Luis R. Rodriguez wrote:
-> > On Thu, May 5, 2011 at 4:21 AM, Juuso Oikarinen 
-> > <juuso.oikarinen@nokia.com> wrote:
-> > > Hi John, all,
-> > >
-> > > The following is an excerpt of the db.txt from most recent 
-> > > wireless-regdb.
-> > >
-> > > country US:
-> > >         (2402 - 2472 @ 40), (3, 27)
-> > >         (5170 - 5250 @ 40), (3, 17)
-> > >         (5250 - 5330 @ 40), (3, 20), DFS
-> > >         (5490 - 5600 @ 40), (3, 20), DFS
-> > >         (5650 - 5710 @ 40), (3, 20), DFS
-> > >         (5735 - 5835 @ 40), (3, 30)
-> > >
-> > > country CA:
-> > >         (2402 - 2472 @ 40), (3, 27)
-> > >         (5170 - 5250 @ 40), (3, 17)
-> > >         (5250 - 5330 @ 40), (3, 20), DFS
-> > >         (5490 - 5710 @ 40), (3, 20), DFS
-> > >         (5735 - 5835 @ 40), (3, 30)
-> > >
-> > > We are under the understanding that the Canadian national rules deny 
-> > > the usage of the 5490-5710 range of frequencies (ref from RSS-210), 
-> > > but the range is present in the allowed range of frequencies for the CA region:
-> > >
-> > > "Additional requirements for the band 5600-5650 MHz: Until further 
-> > > notice, devices subject to this Section shall not be capable of 
-> > > transmitting in the band 5600-5650 MHz, so that Environment Canada 
-> > > weather radars operating in this band are protected."
-> > >
-> > > Then again, the FCC rules (15.407) do not prohibit the mentioned 
-> > > range of frequencies within the US (with DFS and limited power 
-> > > level) but in the regulatory database that range is missing.
-> > >
-> > >
-> > > Is there a bug in the regulatory db, or am I misunderstanding something?
-> > 
-> > 
-> > Michael, any opinion on this?
-> 
-> Any take on this one?
-> 
-> -Juuso
-> 
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c83be2d..d2a5d27 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1184,9 +1184,50 @@ static void ar9003_hw_set_radar_conf(struct ath_hw *ah)
+ 	conf->radar_inband = 8;
+ }
+ 
++static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
++				   struct ath_hw_antcomb_conf *antconf)
++{
++	u32 regval;
++
++	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++	antconf->main_lna_conf = (regval & AR_PHY_9485_ANT_DIV_MAIN_LNACONF) >>
++				  AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S;
++	antconf->alt_lna_conf = (regval & AR_PHY_9485_ANT_DIV_ALT_LNACONF) >>
++				 AR_PHY_9485_ANT_DIV_ALT_LNACONF_S;
++	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
++				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
++}
++
++static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
++				   struct ath_hw_antcomb_conf *antconf)
++{
++	u32 regval;
++
++	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
++	regval &= ~(AR_PHY_9485_ANT_DIV_MAIN_LNACONF |
++		    AR_PHY_9485_ANT_DIV_ALT_LNACONF |
++		    AR_PHY_9485_ANT_FAST_DIV_BIAS |
++		    AR_PHY_9485_ANT_DIV_MAIN_GAINTB |
++		    AR_PHY_9485_ANT_DIV_ALT_GAINTB);
++	regval |= ((antconf->main_lna_conf <<
++					AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S)
++		   & AR_PHY_9485_ANT_DIV_MAIN_LNACONF);
++	regval |= ((antconf->alt_lna_conf << AR_PHY_9485_ANT_DIV_ALT_LNACONF_S)
++		   & AR_PHY_9485_ANT_DIV_ALT_LNACONF);
++	regval |= ((antconf->fast_div_bias << AR_PHY_9485_ANT_FAST_DIV_BIAS_S)
++		   & AR_PHY_9485_ANT_FAST_DIV_BIAS);
++	regval |= ((antconf->main_gaintb << AR_PHY_9485_ANT_DIV_MAIN_GAINTB_S)
++		   & AR_PHY_9485_ANT_DIV_MAIN_GAINTB);
++	regval |= ((antconf->alt_gaintb << AR_PHY_9485_ANT_DIV_ALT_GAINTB_S)
++		   & AR_PHY_9485_ANT_DIV_ALT_GAINTB);
++
++	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
++}
++
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 	static const u32 ar9300_cca_regs[6] = {
+ 		AR_PHY_CCA_0,
+ 		AR_PHY_CCA_1,
+@@ -1213,6 +1254,9 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
+ 	priv_ops->set_radar_params = ar9003_hw_set_radar_params;
+ 
++	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
++	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
++
+ 	ar9003_hw_set_nf_limits(ah);
+ 	ar9003_hw_set_radar_conf(ah);
+ 	memcpy(ah->nf_regs, ar9300_cca_regs, sizeof(ah->nf_regs));
+-- 
+1.7.0.4
 
