@@ -1,121 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:54844 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751310Ab1EWGHK (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41579 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932353Ab1EMI5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 02:07:10 -0400
-Received: by mail-bw0-f47.google.com with SMTP id 5so6812803bwz.34
-        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 23:07:08 -0700 (PDT)
-Date: Mon, 23 May 2011 09:07:02 +0300
-From: Felipe Balbi <balbi@ti.com>
+	Fri, 13 May 2011 04:57:22 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so2644123wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:22 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Luciano Coelho <coelho@ti.com>
-Cc: Eliad Peller <eliad@wizery.com>, Felipe Balbi <balbi@ti.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
-Message-ID: <20110523060659.GB3095@legolas.emea.dhcp.ti.com> (sfid-20110523_080720_448846_A391D600)
-Reply-To: balbi@ti.com
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
- <1305321990-22041-4-git-send-email-balbi@ti.com>
- <BANLkTinPipSVdsH5cTb24HKex_h7pOwpAg@mail.gmail.com>
- <BANLkTi=LKE_wWKxcN0+Unkcqv-tLOKqDXw@mail.gmail.com>
- <1306085440.12586.1696.camel@cumari>
- <BANLkTimf8+hLym2RHGeG1r=7EOj91c3Uzg@mail.gmail.com>
- <1306128773.12586.1704.camel@cumari>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
-In-Reply-To: <1306128773.12586.1704.camel@cumari>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 6/6] wl12xx: enter/exit psm on wowlan suspend/resume
+Date: Fri, 13 May 2011 11:57:13 +0300
+Message-Id: <1305277033-6662-7-git-send-email-eliad@wizery.com> (sfid-20110513_105727_999435_E3FD5C3B)
+In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When operating as station, enter psm before suspending
+the device into wowlan state.
 
---VrqPEDrXMn8OVzN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Add a new completion event to signal when psm was entered
+successfully.
 
-Hi,
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v1->v2:
+	define WL1271_PS_COMPLETE_TIMEOUT
 
-On Mon, May 23, 2011 at 08:32:53AM +0300, Luciano Coelho wrote:
-> > >> > in fact, i find these prints pretty useful.
-> > >> > does changing wl1271_notice to wl1271_debug(DEBUG_MAC80211) will s=
-olve
-> > >> > the "nosiness"?
-> > >> > (i use DEBUG_MAC80211 rather than DEBUG_SDIO, as DEBUG_SDIO is rea=
-lly
-> > >> > *very* noisy)
-> > >> >
-> > >> > (i'll send it as a new patch as the original patch was already app=
-lied)
-> > >> >
-> > >> > Eliad.
-> > >> >
-> > >>
-> > >> err... s/nosiness/noisiness/
-> > >
-> > > I think these are pretty useless.  You can see whether the driver is
-> > > loaded or not by lsmod'ing.  You can also use ftrace to get the same
-> > > stuff, if you want to know whether the driver is loaded or not offlin=
-e.
-> > > Or what is the scenario where you think this is useful?
-> > >
-> > i was thinking about a simple offline log analysis, where it's pretty
-> > useful to know when the wl12xx_sdio was insmod'ed/rmmod'ed.
+ drivers/net/wireless/wl12xx/event.c  |    7 +++
+ drivers/net/wireless/wl12xx/main.c   |   81 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/ps.h     |    2 +
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 4 files changed, 91 insertions(+), 0 deletions(-)
 
-It's quite weird statement IMHO. Drivers will load either if you
-modprobe by hand of a device is created and matches a driver, in which
-case udev will load it for you. In both cases, either you know driver is
-loaded because you manually loaded it or, if you're connected to web, or
-ifconfig -a shows something, or you can ping around etc...
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index ae69330..21e52ed 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -135,6 +135,13 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 
+ 		/* enable beacon early termination */
+ 		ret = wl1271_acx_bet_enable(wl, true);
++		if (ret < 0)
++			break;
++
++		if (wl->ps_compl) {
++			complete(wl->ps_compl);
++			wl->ps_compl = NULL;
++		}
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 308855a..1de0963 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1332,6 +1332,79 @@ static struct notifier_block wl1271_dev_notifier = {
+ 	.notifier_call = wl1271_dev_notify,
+ };
+ 
++static int wl1271_configure_suspend(struct wl1271 *wl)
++{
++	int ret;
++
++	if (wl->bss_type != BSS_TYPE_STA_BSS)
++		return 0;
++
++	mutex_lock(&wl->mutex);
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
++	/* enter psm if needed*/
++	if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
++		DECLARE_COMPLETION_ONSTACK(compl);
++
++		wl->ps_compl = &compl;
++		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
++				   wl->basic_rate, true);
++		if (ret < 0)
++			goto out_sleep;
++
++		/* we must unlock here so we will be able to get events */
++		wl1271_ps_elp_sleep(wl);
++		mutex_unlock(&wl->mutex);
++
++		ret = wait_for_completion_timeout(
++			&compl, msecs_to_jiffies(WL1271_PS_COMPLETE_TIMEOUT));
++		if (ret <= 0) {
++			wl1271_warning("couldn't enter ps mode!");
++			ret = -EBUSY;
++			goto out;
++		}
++
++		/* take mutex again, and wakeup */
++		mutex_lock(&wl->mutex);
++
++		ret = wl1271_ps_elp_wakeup(wl);
++		if (ret < 0)
++			goto out_unlock;
++	}
++out_sleep:
++	wl1271_ps_elp_sleep(wl);
++out_unlock:
++	mutex_unlock(&wl->mutex);
++out:
++	return ret;
++
++}
++
++static void wl1271_configure_resume(struct wl1271 *wl)
++{
++	int ret;
++
++	if (wl->bss_type != BSS_TYPE_STA_BSS)
++		return;
++
++	mutex_lock(&wl->mutex);
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* exit psm if it wasn't configured */
++	if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
++		wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
++				   wl->basic_rate, true);
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 			    struct cfg80211_wowlan *wow)
+ {
+@@ -1339,6 +1412,12 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
+ 	wl->wow_enabled = !!wow;
+ 	if (wl->wow_enabled) {
++		int ret;
++		ret = wl1271_configure_suspend(wl);
++		if (ret < 0) {
++			wl1271_warning("couldn't prepare device to suspend");
++			return ret;
++		}
+ 		/* flush any remaining work */
+ 		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
+ 		flush_delayed_work(&wl->scan_complete_work);
+@@ -1390,6 +1469,8 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 			wl1271_irq(0, wl);
+ 			wl1271_enable_interrupts(wl);
+ 		}
++
++		wl1271_configure_resume(wl);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/wl12xx/ps.h b/drivers/net/wireless/wl12xx/ps.h
+index c41bd0a..25eb9bc 100644
+--- a/drivers/net/wireless/wl12xx/ps.h
++++ b/drivers/net/wireless/wl12xx/ps.h
+@@ -35,4 +35,6 @@ void wl1271_elp_work(struct work_struct *work);
+ void wl1271_ps_link_start(struct wl1271 *wl, u8 hlid, bool clean_queues);
+ void wl1271_ps_link_end(struct wl1271 *wl, u8 hlid);
+ 
++#define WL1271_PS_COMPLETE_TIMEOUT 500
++
+ #endif /* __WL1271_PS_H__ */
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index daf941d..cf08a9d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -512,6 +512,7 @@ struct wl1271 {
+ 	unsigned int rx_filter;
+ 
+ 	struct completion *elp_compl;
++	struct completion *ps_compl;
+ 	struct delayed_work elp_work;
+ 	struct delayed_work pspoll_work;
+ 
+-- 
+1.7.0.4
 
-Besides, if the driver doesn't load because e.g. it failed to allocate
-memory, you should get a failure report on dmesg.
-
-The best way to handle this is to be as silent as possible on the
-working case and only bother people on failures ;-)
-
-> > i haven't tried ftrace yet. i'll give it a look.
-> > anyway, the whole wl12xx driver is full of similar logs that get
-> > called multiple times, so i don't see the real advantage of removing 2
-> > prints that get called only once.
->=20
-> Yeah, the driver is full of useless logs.  That's why I'm going to
-> rework it.  My idea is to use more standard tracing (nobody needs to
-> learn wl12xx debug bitmask and how to set it), using ftrace and friends.
-
-you can also play around with dynamic printk ;-) You use standard
-dev_dbg() macros but can enable disable those by line, file, module, or
-some simple regexes.
-
-> > > I'm reworking the whole way our traces are handled, so I don't think
-> > > reintroducing them is a good thing.
-> >=20
-> > ok. so i'll just wait for your rework :)
->=20
-> It may still take a bit of time, because it's not my highest priority
-> right now and the changes are quite intrusive (in the sense that they
-> will touch every file), but when it's ready, I think it's going to be
-> cool, you'll be able to use trace-cmd, kernelshark etc.
-
-that's neat. I should do the same for musb ;-)
-
---=20
-balbi
-
---VrqPEDrXMn8OVzN4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJN2fmDAAoJEAv8Txj19kN1e6sH/02DZcGg4cnwPZGzmTTedN83
-DK6bSEfkIOXN3hKD6/PgaWoNRwH7wl/8+qIQ2/GjPlFxYFTFIO1AHhPHy39fpI0M
-/fqZ5iZXNYhZGFxeQl/3y51+l3S7j9gvfl7H7Y8bGP02f3/5e/2gsSfmVYl+GhzH
-EKe6QdPYNunmCWWT70eBeu9p745V9VC+dzfgPZ8DkYyWrIjK3DjBxi1Gpi6IYvo1
-VYPeyGT7thX9TssES/P8mzglSPqmdKoYoqIp5OnzRMBTd+phyxB0GV2PthjBp54v
-HqIPd7vPZECLBrY6BWz5k47QoCPj5XX7BhAOKPYNnIKetXGB69QOlG2Kpwwd7v0=
-=dxjE
------END PGP SIGNATURE-----
-
---VrqPEDrXMn8OVzN4--
