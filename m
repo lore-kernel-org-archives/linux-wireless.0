@@ -1,57 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:47167 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754367Ab1EFP6O convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:46965 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759733Ab1EMV1l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 11:58:14 -0400
-Date: Fri, 6 May 2011 08:58:03 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: sedat.dilek@gmail.com
-Cc: Sedat Dilek <sedat.dilek@googlemail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: linux-next: Tree for May 6 (wireless)
-Message-Id: <20110506085803.c15692bb.randy.dunlap@oracle.com> (sfid-20110506_175831_645370_A41C1927)
-In-Reply-To: <BANLkTimqboATe5cO+19Bv5p9dStnwevwng@mail.gmail.com>
-References: <20110506154921.47700781.sfr@canb.auug.org.au>
-	<20110506084031.a1f2e483.randy.dunlap@oracle.com>
-	<BANLkTimqboATe5cO+19Bv5p9dStnwevwng@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 May 2011 17:27:41 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 12/13] net: wireless: wl12xx: mark some symbols static
+Date: Sat, 14 May 2011 00:26:29 +0300
+Message-Id: <1305321990-22041-13-git-send-email-balbi@ti.com> (sfid-20110513_232822_934056_2B324F64)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 May 2011 17:44:44 +0200 Sedat Dilek wrote:
+after re-factoring a bunch of symbols are only
+used inside main.c which allows us to mark
+them as static.
 
-> On Fri, May 6, 2011 at 5:40 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
-> > On Fri, 6 May 2011 15:49:21 +1000 Stephen Rothwell wrote:
-> >
-> >> Hi all,
-> >>
-> >> Changes since 20110505:
-> >
-> >
-> > when PM is not enabled:
-> >
-> > net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'suspend'
-> > net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no member named 'resume'
-> >
-> > ---
-> > ~Randy
-> > *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-next" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> There was a patch sent today, see "[PATCH] mac80211: Fix build error
-> when CONFIG_PM is not defined" from Larry.
-
-Thanks.  That works.
-
+Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/net/wireless/wl12xx/io.h   |    7 -------
+ drivers/net/wireless/wl12xx/main.c |   18 ++++++------------
+ 2 files changed, 6 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
+index 2bb2295..34ead79 100644
+--- a/drivers/net/wireless/wl12xx/io.h
++++ b/drivers/net/wireless/wl12xx/io.h
+@@ -157,11 +157,4 @@ int wl1271_set_partition(struct wl1271 *wl,
+ 
+ /* Functions from wl1271_main.c */
+ 
+-int wl1271_register_hw(struct wl1271 *wl);
+-void wl1271_unregister_hw(struct wl1271 *wl);
+-int wl1271_init_ieee80211(struct wl1271 *wl);
+-struct ieee80211_hw *wl1271_alloc_hw(void);
+-int wl1271_free_hw(struct wl1271 *wl);
+-irqreturn_t wl1271_irq(int irq, void *data);
+-
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 628f7a3..d3c056d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -661,7 +661,7 @@ static void wl1271_netstack_work(struct work_struct *work)
+ 
+ #define WL1271_IRQ_MAX_LOOPS 256
+ 
+-irqreturn_t wl1271_irq(int irq, void *cookie)
++static irqreturn_t wl1271_irq(int irq, void *cookie)
+ {
+ 	int ret;
+ 	u32 intr;
+@@ -776,7 +776,6 @@ out:
+ 
+ 	return IRQ_HANDLED;
+ }
+-EXPORT_SYMBOL_GPL(wl1271_irq);
+ 
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ {
+@@ -3265,7 +3264,7 @@ static ssize_t wl1271_sysfs_show_hw_pg_ver(struct device *dev,
+ static DEVICE_ATTR(hw_pg_ver, S_IRUGO | S_IWUSR,
+ 		   wl1271_sysfs_show_hw_pg_ver, NULL);
+ 
+-int wl1271_register_hw(struct wl1271 *wl)
++static int wl1271_register_hw(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+@@ -3302,9 +3301,8 @@ int wl1271_register_hw(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(wl1271_register_hw);
+ 
+-void wl1271_unregister_hw(struct wl1271 *wl)
++static void wl1271_unregister_hw(struct wl1271 *wl)
+ {
+ 	if (wl->state == WL1271_STATE_PLT)
+ 		__wl1271_plt_stop(wl);
+@@ -3314,9 +3312,8 @@ void wl1271_unregister_hw(struct wl1271 *wl)
+ 	wl->mac80211_registered = false;
+ 
+ }
+-EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
+ 
+-int wl1271_init_ieee80211(struct wl1271 *wl)
++static int wl1271_init_ieee80211(struct wl1271 *wl)
+ {
+ 	static const u32 cipher_suites[] = {
+ 		WLAN_CIPHER_SUITE_WEP40,
+@@ -3386,11 +3383,10 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
+ 
+ #define WL1271_DEFAULT_CHANNEL 0
+ 
+-struct ieee80211_hw *wl1271_alloc_hw(void)
++static struct ieee80211_hw *wl1271_alloc_hw(void)
+ {
+ 	struct ieee80211_hw *hw;
+ 	struct platform_device *plat_dev = NULL;
+@@ -3523,9 +3519,8 @@ err_hw_alloc:
+ 
+ 	return ERR_PTR(ret);
+ }
+-EXPORT_SYMBOL_GPL(wl1271_alloc_hw);
+ 
+-int wl1271_free_hw(struct wl1271 *wl)
++static int wl1271_free_hw(struct wl1271 *wl)
+ {
+ 	platform_device_unregister(wl->plat_dev);
+ 	free_pages((unsigned long)wl->aggr_buf,
+@@ -3546,7 +3541,6 @@ int wl1271_free_hw(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(wl1271_free_hw);
+ 
+ static irqreturn_t wl12xx_hardirq(int irq, void *_wl)
+ {
+-- 
+1.7.4.1.343.ga91df
+
