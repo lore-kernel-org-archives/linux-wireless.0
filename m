@@ -1,31 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1392 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873Ab1EPLLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 07:11:43 -0400
-Message-ID: <4DD10663.90307@broadcom.com> (sfid-20110516_131146_997376_7F834560)
-Date: Mon, 16 May 2011 13:11:31 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Clemens Noss" <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: [PATCH] staging: brcm80211: use correct pointer types in
- bcm_pktq_flush
-References: <4DD02F72.3070905@broadcom.com>
- <1305492646-20122-1-git-send-email-cnoss@gmx.de>
-In-Reply-To: <1305492646-20122-1-git-send-email-cnoss@gmx.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:2413 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964Ab1EMTFq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 15:05:46 -0400
+Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
+From: Rhyland Klein <rklein@nvidia.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "olof@lixom.net" <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1305270943.3487.5.camel@jlt3.sipsolutions.net>
+References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
+	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+	 <1305224592.10961.10.camel@rklein-linux2>
+	 <1305225648.3461.37.camel@jlt3.sipsolutions.net>
+	 <1305226377.10961.12.camel@rklein-linux2>
+	 <1305226969.3461.38.camel@jlt3.sipsolutions.net>
+	 <1305235386.10961.13.camel@rklein-linux2>
+	 <1305270943.3487.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 12:02:54 -0700
+Message-ID: <1305313374.10961.23.camel@rklein-linux2> (sfid-20110513_210604_802999_F2BF680E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Reported-by: Hauke Mehrtens<hauke@hauke-m.de>
-> Signed-off-by: Clemens Noss<cnoss@gmx.de>
+On Fri, 2011-05-13 at 00:15 -0700, Johannes Berg wrote:
+> On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
+> > On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
+> > > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
+> > > 
+> > > > > If, on the other hand, rfkill decides that at the time of loading the
+> > > > > driver wifi should be on, then the first change would be +1 and it'll
+> > > > > flip between 0 and +1.
+> > > > > 
+> > > > > This seems like it'll cause issues at some point, so I think you should
+> > > > > either allow the driver to set the initial state or hardcode one of
+> > > > > these possibilities (so at least it's predictable)
+> > > 
+> > > > I won't go negative, if you look, it only will disable clock if it knows
+> > > > it has already enabled it. 
+> > > 
+> > > Ah, you're right, I misread the macros.
+> 
+> > So the patch is good as is?
+> 
+> I think so, yes.
+> 
+> johannes
+> 
 
-Acked-by: Roland Vossen <rvossen@broadcom.com>
+John, Johannes suggested you are able to pull in this patch?
+
+rhyland
 
