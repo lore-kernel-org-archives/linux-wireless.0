@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53488 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757862Ab1EaTrt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37031 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932807Ab1EMTa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 20/32] ath9k: set NF limits for AR9330
-Date: Tue, 31 May 2011 21:37:11 +0200
-Message-Id: <1306870643-7935-21-git-send-email-juhosg@openwrt.org> (sfid-20110531_214922_694168_AD9903CB)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Fri, 13 May 2011 15:30:56 -0400
+Date: Fri, 13 May 2011 15:20:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rhyland Klein <rklein@nvidia.com>
+Cc: "olof@lixom.net" <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
+Message-ID: <20110513192019.GC10555@tuxdriver.com> (sfid-20110513_213120_151734_1C5517B6)
+References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
+ <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+ <1305224592.10961.10.camel@rklein-linux2>
+ <1305225648.3461.37.camel@jlt3.sipsolutions.net>
+ <1305226377.10961.12.camel@rklein-linux2>
+ <1305226969.3461.38.camel@jlt3.sipsolutions.net>
+ <1305235386.10961.13.camel@rklein-linux2>
+ <1305270943.3487.5.camel@jlt3.sipsolutions.net>
+ <1305313374.10961.23.camel@rklein-linux2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1305313374.10961.23.camel@rklein-linux2>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 ++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+On Fri, May 13, 2011 at 12:02:54PM -0700, Rhyland Klein wrote:
+> On Fri, 2011-05-13 at 00:15 -0700, Johannes Berg wrote:
+> > On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
+> > > On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
+> > > > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
+> > > > 
+> > > > > > If, on the other hand, rfkill decides that at the time of loading the
+> > > > > > driver wifi should be on, then the first change would be +1 and it'll
+> > > > > > flip between 0 and +1.
+> > > > > > 
+> > > > > > This seems like it'll cause issues at some point, so I think you should
+> > > > > > either allow the driver to set the initial state or hardcode one of
+> > > > > > these possibilities (so at least it's predictable)
+> > > > 
+> > > > > I won't go negative, if you look, it only will disable clock if it knows
+> > > > > it has already enabled it. 
+> > > > 
+> > > > Ah, you're right, I misread the macros.
+> > 
+> > > So the patch is good as is?
+> > 
+> > I think so, yes.
+> > 
+> > johannes
+> > 
+> 
+> John, Johannes suggested you are able to pull in this patch?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index a0ca1eb..eb18b63 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1089,7 +1089,10 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
- {
- 	ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
- 	ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
--	ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
-+	if (AR_SREV_9300(ah))
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
-+	else
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
- 	ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_9300_5GHZ;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 443090d..d259278 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -332,6 +332,8 @@
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
- 
-+#define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
-+
- /*
-  * AGC Field Definitions
-  */
+I've got it, thanks.
+
 -- 
-1.7.2.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
