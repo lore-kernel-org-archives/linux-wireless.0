@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:42841 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab1EEBsK (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:44400 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757986Ab1EMV1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 21:48:10 -0400
-Received: by pwi15 with SMTP id 15so775453pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 18:48:09 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19906.621.413439.414030@gargle.gargle.HOWL> (sfid-20110505_034846_227085_8A755104)
-Date: Thu, 5 May 2011 07:20:37 +0530
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless@vger.kernel.org
-Subject: bug: 2 second wireless stall on ath9k link
-In-Reply-To: <19906.158.278401.536454@gargle.gargle.HOWL>
-References: <BANLkTinJK3B_dcX4Qmuo=hC5j654YLLmCA@mail.gmail.com>
-	<19906.158.278401.536454@gargle.gargle.HOWL>
+	Fri, 13 May 2011 17:27:05 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 04/13] net: wl12xx: care for optional operations
+Date: Sat, 14 May 2011 00:26:21 +0300
+Message-Id: <1305321990-22041-5-git-send-email-balbi@ti.com> (sfid-20110513_233207_586836_E1037DF6)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith wrote:
-> Daniel Halperin wrote:
-> > Hi,
-> > 
-> > I have two identical Dell Inspiron 530n desktops running latest w-t
-> > (07e789c5094735747b3df8a7840f61467575ba9e, master 2011-05-04) on
-> > Ubuntu 10.04.2 LTS. I have uninstalled network-manager from both
-> > devices and, as far as I can tell, no software processes or daemons
-> > interfere with my wireless configurations.
-> > 
-> > The AP machine has an AR9280-based device and an IWL5300 based device.
-> > I blacklist ath9k and iwlagn modules from loading on boot. It is
-> > running latest hostap.git, though I've seen the same issue with older
-> > versions.
-> > 
-> > The client machine has one AR9380-based NIC, one IWL5300-based NIC,
-> > and one RT2800pci NIC. I blacklist ath9k, iwlagn, and rt2800pci from
-> > loading on boot.
-> > 
-> > When I set up the client to connect (using iwconfig essid) to the AP
-> > (no encryption, channel 48 with HT40-) and run iperf, I sometimes see
-> > 2-second drops of the connection. I run iperf to generate elastic TCP
-> > flows that see ~150 Mbps, and in parallel I run ping <AP> -i 0.2.
-> > Here's the ping log:
-> 
-> Your timing couldn't be better. :)
-> https://patchwork.kernel.org/patch/753862/
+->init and ->reset are optional - at least
+sdio.c doesn't implement them - so allow those
+pointers to be NULL.
 
-Hm, is ath9k in AP mode ?
-That fix is meant primarily for station mode.
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/wl12xx/io.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Disabling ANI would be useful to narrow down the issue.
-(Since long calibration is every 30 seconds).
+diff --git a/drivers/net/wireless/wl12xx/io.c b/drivers/net/wireless/wl12xx/io.c
+index d557f73..57bc646 100644
+--- a/drivers/net/wireless/wl12xx/io.c
++++ b/drivers/net/wireless/wl12xx/io.c
+@@ -117,12 +117,14 @@ EXPORT_SYMBOL_GPL(wl1271_set_partition);
+ 
+ void wl1271_io_reset(struct wl1271 *wl)
+ {
+-	wl->if_ops->reset(wl);
++	if (wl->if_ops->reset)
++		wl->if_ops->reset(wl);
+ }
+ 
+ void wl1271_io_init(struct wl1271 *wl)
+ {
+-	wl->if_ops->init(wl);
++	if (wl->if_ops->init)
++		wl->if_ops->init(wl);
+ }
+ 
+ void wl1271_top_reg_write(struct wl1271 *wl, int addr, u16 val)
+-- 
+1.7.4.1.343.ga91df
 
-Sujith
