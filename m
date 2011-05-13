@@ -1,94 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49498 "EHLO mx1.suse.de"
+Received: from mga03.intel.com ([143.182.124.21]:20087 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933951Ab1ETNfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 09:35:07 -0400
-Date: Fri, 20 May 2011 06:36:00 -0700
-From: Greg KH <gregkh@suse.de>
-To: Kalle Valo <kalle.valo@atheros.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@linuxdriverproject.org
-Subject: Re: Plan for ath6kl cleanup
-Message-ID: <20110520133600.GA10521@suse.de> (sfid-20110520_153516_850864_5A5F111E)
-References: <4DD668F4.6090308@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DD668F4.6090308@atheros.com>
+	id S1754546Ab1EMTio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 15:38:44 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/13] iwlagn: add testmode trace command
+Date: Fri, 13 May 2011 12:13:23 -0700
+Message-Id: <1305314010-18073-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213906_940279_1C360482)
+In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 20, 2011 at 04:13:24PM +0300, Kalle Valo wrote:
-> We have been thinking about how to get ath6kl out from staging and get
-> it to a first class citizen under drivers/net/wireless. There's quite a
-> lot of work to do get ath6kl cleaned up and the prospect of doing all
-> that through the staging-next tree wasn't that exciting. We would be
-> sending hundreds of patches and it would take a long time to cleanup the
-> driver. And the disconnection from the wireless core development also
-> sounded very daunting (cfg80211 API changes etc.).
+Adding testmode trace/debug capability
 
-This sounds like, "We don't like the kernel development model, it
-requires us to break everything up into small patches and show our work
-to everyone."
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   11 ++
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c  |  133 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |   15 +++
+ 5 files changed, 165 insertions(+), 0 deletions(-)
 
-Hopefully that is not the case here.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index a7054a5..e027f99 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3659,6 +3659,7 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 	 */
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
++	iwl_testmode_cleanup(priv);
+ 	iwl_leds_exit(priv);
+ 
+ 	if (priv->mac80211_registered) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index fc7dc06..2495fe7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -343,6 +343,7 @@ extern int iwl_alive_start(struct iwl_priv *priv);
+ #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ extern int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len);
+ extern void iwl_testmode_init(struct iwl_priv *priv);
++extern void iwl_testmode_cleanup(struct iwl_priv *priv);
+ #else
+ static inline
+ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+@@ -353,6 +354,10 @@ static inline
+ void iwl_testmode_init(struct iwl_priv *priv)
+ {
+ }
++static inline
++void iwl_testmode_cleanup(struct iwl_priv *priv)
++{
++}
+ #endif
+ 
+ #endif /* __iwl_agn_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 3e3b8b8..12fb2f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1179,6 +1179,14 @@ enum iwl_scan_type {
+ 	IWL_SCAN_OFFCH_TX,
+ };
+ 
++#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++struct iwl_testmode_trace {
++	u8 *cpu_addr;
++	u8 *trace_addr;
++	dma_addr_t dma_addr;
++	bool trace_enabled;
++};
++#endif
+ struct iwl_priv {
+ 
+ 	/* ieee device used by generic ieee processing code */
+@@ -1510,6 +1518,9 @@ struct iwl_priv {
+ 	struct led_classdev led;
+ 	unsigned long blink_on, blink_off;
+ 	bool led_registered;
++#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++	struct iwl_testmode_trace testmode_trace;
++#endif
+ }; /*iwl_priv */
+ 
+ static inline void iwl_txq_ctx_activate(struct iwl_priv *priv, int txq_id)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index dd2904a..b778c3f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -97,6 +97,10 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+ 
+ 	[IWL_TM_ATTR_SYNC_RSP] = { .type = NLA_UNSPEC, },
+ 	[IWL_TM_ATTR_UCODE_RX_PKT] = { .type = NLA_UNSPEC, },
++
++	[IWL_TM_ATTR_TRACE_ADDR] = { .type = NLA_UNSPEC, },
++	[IWL_TM_ATTR_TRACE_DATA] = { .type = NLA_UNSPEC, },
++
+ };
+ 
+ /*
+@@ -167,6 +171,31 @@ nla_put_failure:
+ void iwl_testmode_init(struct iwl_priv *priv)
+ {
+ 	priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
++	priv->testmode_trace.trace_enabled = false;
++}
++
++static void iwl_trace_cleanup(struct iwl_priv *priv)
++{
++	struct device *dev = &priv->pci_dev->dev;
++
++	if (priv->testmode_trace.trace_enabled) {
++		if (priv->testmode_trace.cpu_addr &&
++		    priv->testmode_trace.dma_addr)
++			dma_free_coherent(dev,
++					TRACE_TOTAL_SIZE,
++					priv->testmode_trace.cpu_addr,
++					priv->testmode_trace.dma_addr);
++		priv->testmode_trace.trace_enabled = false;
++		priv->testmode_trace.cpu_addr = NULL;
++		priv->testmode_trace.trace_addr = NULL;
++		priv->testmode_trace.dma_addr = 0;
++	}
++}
++
++
++void iwl_testmode_cleanup(struct iwl_priv *priv)
++{
++	iwl_trace_cleanup(priv);
+ }
+ 
+ /*
+@@ -400,6 +429,102 @@ nla_put_failure:
+ 	return -EMSGSIZE;
+ }
+ 
++
++/*
++ * This function handles the user application commands for uCode trace
++ *
++ * It retrieves command ID carried with IWL_TM_ATTR_COMMAND and calls to the
++ * handlers respectively.
++ *
++ * If it's an unknown commdn ID, -ENOSYS is replied; otherwise, the returned
++ * value of the actual command execution is replied to the user application.
++ *
++ * @hw: ieee80211_hw object that represents the device
++ * @tb: gnl message fields from the user space
++ */
++static int iwl_testmode_trace(struct ieee80211_hw *hw, struct nlattr **tb)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct sk_buff *skb;
++	int status = 0;
++	struct device *dev = &priv->pci_dev->dev;
++
++	switch (nla_get_u32(tb[IWL_TM_ATTR_COMMAND])) {
++	case IWL_TM_CMD_APP2DEV_BEGIN_TRACE:
++		if (priv->testmode_trace.trace_enabled)
++			return -EBUSY;
++
++		priv->testmode_trace.cpu_addr =
++			dma_alloc_coherent(dev,
++					   TRACE_TOTAL_SIZE,
++					   &priv->testmode_trace.dma_addr,
++					   GFP_KERNEL);
++		if (!priv->testmode_trace.cpu_addr)
++			return -ENOMEM;
++		priv->testmode_trace.trace_enabled = true;
++		priv->testmode_trace.trace_addr = (u8 *)PTR_ALIGN(
++			priv->testmode_trace.cpu_addr, 0x100);
++		memset(priv->testmode_trace.trace_addr, 0x03B,
++			TRACE_BUFF_SIZE);
++		skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
++			sizeof(priv->testmode_trace.dma_addr) + 20);
++		if (!skb) {
++			IWL_DEBUG_INFO(priv,
++				"Error allocating memory\n");
++			iwl_trace_cleanup(priv);
++			return -ENOMEM;
++		}
++		NLA_PUT(skb, IWL_TM_ATTR_TRACE_ADDR,
++			sizeof(priv->testmode_trace.dma_addr),
++			(u64 *)&priv->testmode_trace.dma_addr);
++		status = cfg80211_testmode_reply(skb);
++		if (status < 0) {
++			IWL_DEBUG_INFO(priv,
++				       "Error sending msg : %d\n",
++				       status);
++		}
++		break;
++
++	case IWL_TM_CMD_APP2DEV_END_TRACE:
++		iwl_trace_cleanup(priv);
++		break;
++
++	case IWL_TM_CMD_APP2DEV_READ_TRACE:
++		if (priv->testmode_trace.trace_enabled &&
++		    priv->testmode_trace.trace_addr) {
++			skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
++				20 + TRACE_BUFF_SIZE);
++			if (skb == NULL) {
++				IWL_DEBUG_INFO(priv,
++					"Error allocating memory\n");
++				return -ENOMEM;
++			}
++			NLA_PUT(skb, IWL_TM_ATTR_TRACE_DATA,
++				TRACE_BUFF_SIZE,
++				priv->testmode_trace.trace_addr);
++			status = cfg80211_testmode_reply(skb);
++			if (status < 0) {
++				IWL_DEBUG_INFO(priv,
++				       "Error sending msg : %d\n", status);
++			}
++		} else
++			return -EFAULT;
++		break;
++
++	default:
++		IWL_DEBUG_INFO(priv, "Unknown testmode mem command ID\n");
++		return -ENOSYS;
++	}
++	return status;
++
++nla_put_failure:
++	kfree_skb(skb);
++	if (nla_get_u32(tb[IWL_TM_ATTR_COMMAND]) ==
++	    IWL_TM_CMD_APP2DEV_BEGIN_TRACE)
++		iwl_trace_cleanup(priv);
++	return -EMSGSIZE;
++}
++
+ /* The testmode gnl message handler that takes the gnl message from the
+  * user space and parses it per the policy iwl_testmode_gnl_msg_policy, then
+  * invoke the corresponding handlers.
+@@ -459,6 +584,14 @@ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 		IWL_DEBUG_INFO(priv, "testmode cmd to driver\n");
+ 		result = iwl_testmode_driver(hw, tb);
+ 		break;
++
++	case IWL_TM_CMD_APP2DEV_BEGIN_TRACE:
++	case IWL_TM_CMD_APP2DEV_END_TRACE:
++	case IWL_TM_CMD_APP2DEV_READ_TRACE:
++		IWL_DEBUG_INFO(priv, "testmode uCode trace cmd to driver\n");
++		result = iwl_testmode_trace(hw, tb);
++		break;
++
+ 	default:
+ 		IWL_DEBUG_INFO(priv, "Unknown testmode command\n");
+ 		result = -ENOSYS;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 31f8949..34634ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -91,6 +91,10 @@ enum iwl_tm_cmd_t {
+ 	/* if there is other new command for the driver layer operation,
+ 	 * append them here */
+ 
++	/* commands fom user space for uCode trace operations */
++	IWL_TM_CMD_APP2DEV_BEGIN_TRACE,
++	IWL_TM_CMD_APP2DEV_END_TRACE,
++	IWL_TM_CMD_APP2DEV_READ_TRACE,
+ 
+ 	/* commands from kernel space to carry the synchronous response
+ 	 * to user application */
+@@ -144,8 +148,19 @@ enum iwl_tm_attr_t {
+ 	 * application */
+ 	IWL_TM_ATTR_UCODE_RX_PKT,
+ 
++	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_XXX_TRACE,
++	 * The mandatory fields are:
++	 * IWL_TM_ATTR_MEM_TRACE_ADDR for the trace address
++	 */
++	IWL_TM_ATTR_TRACE_ADDR,
++	IWL_TM_ATTR_TRACE_DATA,
++
+ 	IWL_TM_ATTR_MAX,
+ };
+ 
++/* uCode trace buffer */
++#define TRACE_BUFF_SIZE		0x20000
++#define TRACE_BUFF_PADD		0x2000
++#define TRACE_TOTAL_SIZE	(TRACE_BUFF_SIZE + TRACE_BUFF_PADD)
+ 
+ #endif
+-- 
+1.7.0.4
 
-> So we started to find a faster way to clean up ath6kl and ended up with
-> a setup where we would have a separate tree in kernel.org just for
-> ath6kl clean up. Once we think that the driver is ready, we will take
-> the driver from the cleanup tree and submit as a single patch for
-> review. As we will submit the driver as a single commit, history doesn't
-> matter and this makes it possible to use not so perfect patches in our
-> tree and save a lot of time.
-
-Yup, that is the case :(
-
-> During the transition period we will still fix the important bugs in the
-> staging driver, and naturally port them to the cleaned up driver. But
-> once the cleaned up driver is accepted we plan to remove the staging driver.
-> 
-> We already started the cleanup and created ath6kl-clean git tree here:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary
-> 
-> The tree is based on wireless-testing and I have cherry picked missing
-> ath6kl patches from staging-next tree. Also the driver is already moved
-> to drivers/net/wireless/ath/ath6kl directory to make it easy to submit
-> the driver for review once it's ready.
-> 
-> Everyone is free to send patches and participate in the ath6kl cleanup.
-> As we don't want to clutter linux-wireless mailing list with hundreds of
-> useless "staging" patches, please send the patches to kvalo@adurom.com
-> (have to use my private email due to buggy email servers) and I will
-> apply them.
-> 
-> We have irc channel #ath6kl on freenode where some of the ath6kl devs
-> hang out. Feel free to make any questions also there, just give enough
-> time for people to answer. But naturally linux-wireless mailing list is
-> the best place to ask questions.
-> 
-> Also the wiki page contains some information and we will start adding more:
-> 
-> http://wireless.kernel.org/en/users/Drivers/ath6kl
-> 
-> Thoughts?
-
-Why don't I just delete the whole driver from the tree right now as you
-all don't seem to understand how to develop stuff within the community
-and want to do it all external until some magic "it is done" time when
-you want us to take it back?
-
-That's not nice at all.
-
-Don't worry about "cluttering" up the mailing list, send them to me, and
-to the driver devel mailing list, and I will take them just fine.
-
-Have you somehow been finding that I not accept patches quick enough?
-Do you not like the fact that others comment, review, and contribute
-patches for this driver?
-
-This sounds like a very big step back for your development effort, I
-strongly advise you to not do this at all.
-
-thanks,
-
-greg k-h
