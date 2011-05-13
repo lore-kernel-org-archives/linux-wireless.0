@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37401 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845Ab1ELO6D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:58:03 -0400
-Received: by vxi39 with SMTP id 39so1175180vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:58:01 -0700 (PDT)
-Message-ID: <4DCBF576.1040802@lwfinger.net> (sfid-20110512_165808_007815_B6B012F5)
-Date: Thu, 12 May 2011 09:57:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:22668 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125Ab1EMEWj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 00:22:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 21:22:10 -0700
+Message-ID: <4DCCB208.1060403@atheros.com> (sfid-20110513_062246_563319_673CCDCF)
+Date: Fri, 13 May 2011 09:52:32 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-To: Flaminigo <sunnyiez@gmail.com>
-CC: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org,
-	'Chaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>	<4DCB3DFF.1030809@lockie.ca> <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
-In-Reply-To: <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [RFC/RFT 0/9] ath9k: Add Antenna diversity support for AR9485
+References: <1304000579-5784-1-git-send-email-mshajakhan@atheros.com> <BANLkTi=8Vc5MGjK=K3=hkFLy=kiFy1osCg@mail.gmail.com> <BANLkTinFYwvWSWreUd66DGdsdyo2uU53Hw@mail.gmail.com> <4DBA4417.40604@atheros.com> <20110512165907.GM2490@tuxdriver.com>
+In-Reply-To: <20110512165907.GM2490@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/12/2011 08:59 AM, Flaminigo wrote:
-> Thank you for the reply. I think N network in the university is OK.
-> Because,  old computer connected it without any problem. The windows
-> system can also connect it. From the output of wpa_supplicant, the
-> authentication part works well. I've tried to use the latest drive
-> from realtek. The firmware distribute is exactly the same as that in
-> Ubuntu 11.04. But this will make core dump.
+On Thursday 12 May 2011 10:29 PM, John W. Linville wrote:
+> On Fri, Apr 29, 2011 at 10:22:39AM +0530, Mohammed Shafi wrote:
+>> On Thursday 28 April 2011 11:42 PM, Luis R. Rodriguez wrote:
+>>> On Thu, Apr 28, 2011 at 11:12 AM, Luis R. Rodriguez
+>>> <lrodriguez@atheros.com>   wrote:
+>>>> On Thu, Apr 28, 2011 at 7:22 AM, Mohammed Shafi Shajakhan
+>>>> <mshajakhan@atheros.com>   wrote:
+>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>>
+>>>>> *These are purely RFC/RFT patches, none of them are tested.
+>>>>>   once tested we will send it as patches.
+>>>>> *This patch set adds Antenna diversity support for AR9485, previously
+>>>>>   antenna diversity is only supported in AR9285
+>>>>> *The basic antenna diversity algorithm remains the same
+>>>>> *slight change in the diversity field in eeprom
+>>>>> *introduction of main/alt gain table and lna1_lna2 delta fields
+>>>>> *initially set LNA1 for main antenna
+>>>>> *introduction of diversity group
+>>>>> *based on diversity group, fast diversity bias parmaters and
+>>>>> lna1_lna2_delta varies
+>>>>> *implement an API to take the decision of swapping main/ALT LNA's
+>>>>> for AR9485
+>>>>> *configure fast diversity bias based on diversity group
+>>>> Apart from my one comment:
+>>>>
+>>>> Reviewed-by: Luis R. Rodriguez<lrodriguez@atheros.com>
+>>> Oh yeah and great job on your patch split!
+>> thanks!
+>>>    Luis
 >
-> I will try some other distributions. But the driver and the kernel are
-> the same,  so I don't think this will make any difference.
+> This series was posted RFC -- do you want it merged now?
 
-What kind of 802.11n network is your university running? What is the maximum 
-data rate in Mbps? Are they using a 20 or 40 MHz bandwidth? Please have your 
-network administrators give you that information so that I can try to duplicate 
-the results. With my setup here, I have connected using the 2.4 GHz band with 
-rates up to 130 Mbps. My setup uses WPA2-PSK, not EAP, but authentication does 
-not seem to be your problem.
+John, today I will send the complete patch set, I am almost done with 
+the testing.
 
-Every driver contains information about its authors. Use the 'modinfo rtl8192ce' 
-command to get that information. Any reports of problems with a given driver 
-should be sent to those listed authors with a Cc to the appropriate mailing 
-list. I read the linux-wireless mailing list, thus I saw your posting, but my 
-Chinese colleagues do not.
-
-I received a new driver version from Realtek yesterday. I am still going through 
-it to port the changes to the kernel driver. It is possible that your problem 
-may have been found and fixed, but until you report what exact network 
-conditions you have, I will not be able to confirm that.
-
-Larry
+>
