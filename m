@@ -1,63 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from brent.tribalogic.net ([78.86.109.144]:37106 "EHLO
-	summit.brent.tribalogic.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753759Ab1EIRJa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 13:09:30 -0400
-Message-ID: <4DC81FC7.9040503@colin.guthr.ie> (sfid-20110509_190933_590239_8E5CF4F1)
-Date: Mon, 09 May 2011 18:09:27 +0100
-From: Colin Guthrie <gmane@colin.guthr.ie>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	platform-driver-x86@vger.kernel.org
-Subject: Re: [Regression] Problem with rfkill on 2.6.38
-References: <ip6j66$o5f$1@dough.gmane.org>	 (sfid-20110426_170016_050429_A6E2C01A) <1304930195.3475.17.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1304930195.3475.17.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:53515 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751398Ab1EMTin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 15:38:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/13] iwlagn: remove unused pad argument
+Date: Fri, 13 May 2011 12:13:20 -0700
+Message-Id: <1305314010-18073-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213849_287780_FDB57A34)
+In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Johannes Berg <johannes.berg@intel.com>
 
-'Twas brillig, and Johannes Berg at 09/05/11 09:36 did gyre and gimble:
-> [Matthew, everybody from the platform list, please see
-> http://mid.gmane.org/ip6j66$o5f$1@dough.gmane.org for the full email
-> thread]
-> 
-> Sorry, took me a while to get back to your email.
-> 
->> wifi works fine generally, but after cycling RFKILL I have to reload the
->> various modules before it works again.
-> 
-> 
->> [root@jimmy ~]# rmmod dell_laptop
-> 
-> I'm pretty sure this one's at fault, see below.
+The pad argument to iwlagn_txq_free_tfd
+isn't used, remove it.
 
-Just a quick (non-compile) followup from my last email... blacklisting
-the dell-laptop module works around the issue, so I think the commit
-previously mentioned is indeed the culprit (as it's the only recent
-commit and does fiddle with the rfkill stuff).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 --
+ drivers/net/wireless/iwlwifi/iwl-tx.c     |    5 ++---
+ 4 files changed, 5 insertions(+), 8 deletions(-)
 
-Not sure what the best track forward is, but it's certainly a
-regression, so should probably be fixed or reverted until a more
-complete fix is found.
-
-Cheers
-
-Col
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index d34e103..9acf0e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -750,10 +750,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	spin_unlock(&priv->sta_lock);
+ 
+ 	/* Attach buffers to TFD */
+-	iwlagn_txq_attach_buf_to_tfd(priv, txq, txcmd_phys, firstlen, 1, 0);
++	iwlagn_txq_attach_buf_to_tfd(priv, txq, txcmd_phys, firstlen, 1);
+ 	if (secondlen > 0)
+ 		iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr,
+-					     secondlen, 0, 0);
++					     secondlen, 0);
+ 
+ 	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
+ 				offsetof(struct iwl_tx_cmd, scratch);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 269e0c4..fc7dc06 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -194,7 +194,7 @@ void iwl_setup_rx_handlers(struct iwl_priv *priv);
+ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq);
+ int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
+ 				 struct iwl_tx_queue *txq,
+-				 dma_addr_t addr, u16 len, u8 reset, u8 pad);
++				 dma_addr_t addr, u16 len, u8 reset);
+ void iwlagn_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
+ 			      struct ieee80211_tx_info *info);
+ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 9daf964..38254bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -48,8 +48,6 @@
+ #include "iwl-agn-rs.h"
+ #include "iwl-agn-tt.h"
+ 
+-#define U32_PAD(n)		((4-(n))&0x3)
+-
+ struct iwl_tx_queue;
+ 
+ /* CT-KILL constants */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 302284b..a47558f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -182,7 +182,7 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
+ 				 struct iwl_tx_queue *txq,
+ 				 dma_addr_t addr, u16 len,
+-				 u8 reset, u8 pad)
++				 u8 reset)
+ {
+ 	struct iwl_queue *q;
+ 	struct iwl_tfd *tfd, *tfd_tmp;
+@@ -702,8 +702,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 
+ 	trace_iwlwifi_dev_hcmd(priv, &out_cmd->hdr, fix_size, cmd->flags);
+ 
+-	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, fix_size, 1,
+-				     U32_PAD(cmd->len[0]));
++	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, fix_size, 1);
+ 
+ 	/* Increment and update queue's write index */
+ 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
 -- 
+1.7.0.4
 
-Colin Guthrie
-gmane(at)colin.guthr.ie
-http://colin.guthr.ie/
-
-Day Job:
-  Tribalogic Limited [http://www.tribalogic.net/]
-Open Source:
-  Mageia Contributor [http://www.mageia.org/]
-  PulseAudio Hacker [http://www.pulseaudio.org/]
-  Trac Hacker [http://trac.edgewall.org/]
