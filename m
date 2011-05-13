@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:48622 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757446Ab1EZNxM (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:59429 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755421Ab1EMRnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 09:53:12 -0400
-Received: by wwa36 with SMTP id 36so795403wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 06:53:11 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC 1/2] mac80211: add ieee80211_get_operstate() function
-Date: Thu, 26 May 2011 16:53:26 +0300
-Message-Id: <1306418007-27573-1-git-send-email-eliad@wizery.com> (sfid-20110526_155336_172142_4D838857)
+	Fri, 13 May 2011 13:43:22 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Fri, 13 May 2011 10:40:02 -0700
+Subject: RE: [PATCH] cfg80211: make stripping of 802.11 header optional from
+ AMSDU
+Message-ID: <477F20668A386D41ADCC57781B1F704307FD238BBA@SC-VEXCH1.marvell.com> (sfid-20110513_194324_711708_A2EB1C7C)
+References: <1305168432-15569-1-git-send-email-bzhao@marvell.com>
+	 <1305168432-15569-2-git-send-email-bzhao@marvell.com>
+ <1305188893.3461.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1305188893.3461.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ieee80211_get_operstate() function to get the operstate
-of the netdevice.
-
-This is needed for drivers that need to know when the interface
-is IF_OPER_UP (e.g. wl12xx), and block notifiers can't be used
-(e.g. because the interface is already IF_OPER_UP, like after
-resuming from suspend)
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-i didn't find a better way to get this information, but i might
-have missed something.
-
- include/net/mac80211.h |   10 ++++++++++
- net/mac80211/mlme.c    |    7 +++++++
- 2 files changed, 17 insertions(+), 0 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8c7189c..d19e325 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2915,6 +2915,16 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       gfp_t gfp);
- 
- /**
-+ * ieee80211_get_operstate - get the operstate of the vif
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * The driver might need to know the operstate of the net_device
-+ * (specifically, whether the link is IF_OPER_UP after resume)
-+ */
-+unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif);
-+
-+/**
-  * ieee80211_chswitch_done - Complete channel switch process
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @success: make the channel switch successful or not
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4f6b267..c81a99d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2651,3 +2651,10 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
- }
- EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
-+
-+unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	return sdata->dev->operstate;
-+}
-+EXPORT_SYMBOL(ieee80211_get_operstate);
--- 
-1.7.0.4
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiBDdXJyZW50bHkgdGhlIGRldmljZXMgdGhhdCBoYXZlIGFscmVh
+ZHkgc3RyaXBwZWQgSUVFRSA4MDIuMTENCj4gPiBoZWFkZXIgZnJvbSB0aGUgQU1TRFUgU0tCIGNh
+biBub3QgdXNlIGllZWU4MDIxMV9hbXNkdV90b184MDIzcw0KPiA+IHJvdXRpbmUuIFRoaXMgcGF0
+Y2ggZW5oYW5jZXMgaWVlZTgwMjExX2Ftc2R1X3RvXzgwMjNzKCkgQVBJIGJ5DQo+ID4gY2hhbmdp
+bmcgbWFuZGF0b3J5IHJlbW92aW5nIG9mIElFRUUgODAyLjExIGhlYWRlciBmcm9tIEFNU0RVDQo+
+ID4gdG8gb3B0aW9uYWwuDQo+IA0KPiBOaWNlLg0KPiANCj4gPiBAQCAtMjE3MywxMCArMjE3Mywx
+MyBAQCBpbnQgaWVlZTgwMjExX2RhdGFfZnJvbV84MDIzKHN0cnVjdCBza19idWZmICpza2IsIGNv
+bnN0IHU4ICphZGRyLA0KPiA+ICAgKiBAYWRkcjogVGhlIGRldmljZSBNQUMgYWRkcmVzcy4NCj4g
+PiAgICogQGlmdHlwZTogVGhlIGRldmljZSBpbnRlcmZhY2UgdHlwZS4NCj4gPiAgICogQGV4dHJh
+X2hlYWRyb29tOiBUaGUgaGFyZHdhcmUgZXh0cmEgaGVhZHJvb20gZm9yIFNLQnMgaW4gdGhlIEBs
+aXN0Lg0KPiA+ICsgKiBAc3RyaXBwZWRfODAyMTFfaGVhZGVyOiBTZXQgaXQgdHJ1ZSBpZiBTS0Ig
+aXMgd2l0aG91dCBJRUVFIDgwMi4xMQ0KPiA+ICsgKgloZWFkZXIuDQo+IA0KPiBJIHRoaW5rIEkn
+ZCBwcmVmZXIgdGhpcyBiZSB0aGUgb3RoZXIgd2F5IGFyb3VuZCB0aG91Z2gsIGxpa2UNCj4gImhh
+c184MDIxMV9oZWFkZXIiIChvciBzbyksIHRoYXQgc2VlbXMgbW9yZSBuYXR1cmFsIGhlcmUgYW5k
+IGluIHRoZQ0KPiBjb2RlPyBOb3QgdGhhdCBpdCBtYXR0ZXJzIG11Y2guDQoNClRoYW5rcyBmb3Ig
+eW91ciBzdWdnZXN0aW9uLiBJIHdpbGwgcmVzZW5kIHRoZSB1cGRhdGVkIHBhdGNoLg0KDQpSZWdh
+cmRzLA0KQmluZw0KDQo=
