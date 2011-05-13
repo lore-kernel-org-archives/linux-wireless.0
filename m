@@ -1,125 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65472 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab1EYT2B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 15:28:01 -0400
-Received: by iyb14 with SMTP id 14so26442iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 12:28:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
- <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
- <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com>
- <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
- <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 25 May 2011 12:27:41 -0700
-Message-ID: <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com> (sfid-20110525_212806_880322_99CC5566)
-Subject: Re: Initial automatic channel selection implementation
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:53515 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756179Ab1EMTio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 15:38:44 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/13] iwlagn: add eeprom command to testmode
+Date: Fri, 13 May 2011 12:13:24 -0700
+Message-Id: <1305314010-18073-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213909_134665_55C35D17)
+In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 25, 2011 at 12:24 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, May 25, 2011 at 12:20 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2011-05-25 5:01 PM, Luis R. Rodriguez wrote:
->>>
->>> On Wed, May 25, 2011 at 7:45 AM, Helmut Schaa
->>> <helmut.schaa@googlemail.com>  wrote:
->>>>
->>>>  On Wed, May 25, 2011 at 4:37 PM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>>  wrote:
->>>>>
->>>>>  On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
->>>>>  <helmut.schaa@googlemail.com>  wrote:
->>>>>>
->>>>>>  On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>>>>  wrote:
->>>>>>>
->>>>>>>  Yes, thanks this is a lot of work already done. Now we just need a
->>>>>>>  basic algorithm to parse this, quantify how ideal this channel is and
->>>>>>>  then spit out a desired optimal channel.
->>>>>>
->>>>>>  That's what I've hacked some time ago (in form of the attached _ugly_
->>>>>> shell
->>>>>>  script that does auto channel selection with rt2x00, not sure if it
->>>>>> works
->>>>>>  correct with other drivers as the survey dump differs somehow between
->>>>>>  rt2x00, ath5k and ath9k, and it only does channel 1-11):
->>>>>>
->>>>>>  - Iterate over all channels and stay on each channel for some time
->>>>>
->>>>>  Nice, yeah I was thinking of using the offchannel operation if we want
->>>>>  to spend more time there for inspection and if associated. For first
->>>>>  iteration it should be possible to just move around. In fact for AP
->>>>>  purposes I suppose one will want to just start AP mode ASAP and then
->>>>>  later do offchannel operations to do the inspection on the ideal
->>>>>  channel. Otherwise we sit there idle until we complete the Automatic
->>>>>  Channel Selection thingy.
->>>>
->>>>  Correct, especially if we also consider 5Ghz channels. Offchannel
->>>> operations
->>>>  would be nice but how can we ensure AP mode while being offchannel?
->>>
->>> Notification of absence.
->>>
->>>>>>  - Store busy time stats for each channel
->>>>>>  - Choose the channel with the lowest busy time (and on 2.4Ghz also
->>>>>>   check the busy times on adjacent channels)
->>>>>
->>>>>  So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
->>>>>  we should skip that time from the busy time, otherwise the "busy" time
->>>>>  includes time we induced on TX'ing or RX'ing ourselves. So I was
->>>>>  thinking of using the:
->>>>>
->>>>>   (active time - rx time - tx time)  / busy time
->>>>
->>>>  Looks good ;) just one problem from a rt2x00 POV: We can't report rx/tx
->>>> busy
->>>>  time separately, we can only advice the hw to include or exclude rx/tx
->>>> time
->>>>  from the busy time statistics.
->>>
->>> Doh, I see.. well in order for the above math to be useful we'd have
->>> to be consistent across drivers. What is being done by rt2x00 right
->>> now? If the later then the math would still work, otherwise then we'd
->>> need to adjust.
->>
->> Excluding rx time isn't even a good idea, since it makes no distinction
->> between local BSS or other activity in the area.
->
-> What if we do an offchannel operation?
+Add the capability to dump eeprom through testmode request
 
-Once we figure out that...
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c  |   26 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |   12 ++++++++++++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
 
-The missing piece is how to deal with noise info here. In short the
-lower noise we have the better signal we'll get. The challenge then is
-to take into consideration the noise mathematically in such a that a
-high noise value would nullify any clean idle air time ratio
-conditions from the formula postulated before. Let me review again
-with some modifications.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index b778c3f..e77ccaa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -98,6 +98,8 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+ 	[IWL_TM_ATTR_SYNC_RSP] = { .type = NLA_UNSPEC, },
+ 	[IWL_TM_ATTR_UCODE_RX_PKT] = { .type = NLA_UNSPEC, },
+ 
++	[IWL_TM_ATTR_EEPROM] = { .type = NLA_UNSPEC, },
++
+ 	[IWL_TM_ATTR_TRACE_ADDR] = { .type = NLA_UNSPEC, },
+ 	[IWL_TM_ATTR_TRACE_DATA] = { .type = NLA_UNSPEC, },
+ 
+@@ -418,6 +420,29 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 				"Error starting the device: %d\n", status);
+ 		break;
+ 
++	case IWL_TM_CMD_APP2DEV_GET_EEPROM:
++		if (priv->eeprom) {
++			skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
++				priv->cfg->base_params->eeprom_size + 20);
++			if (!skb) {
++				IWL_DEBUG_INFO(priv,
++				       "Error allocating memory\n");
++				return -ENOMEM;
++			}
++			NLA_PUT_U32(skb, IWL_TM_ATTR_COMMAND,
++				IWL_TM_CMD_DEV2APP_EEPROM_RSP);
++			NLA_PUT(skb, IWL_TM_ATTR_EEPROM,
++				priv->cfg->base_params->eeprom_size,
++				priv->eeprom);
++			status = cfg80211_testmode_reply(skb);
++			if (status < 0)
++				IWL_DEBUG_INFO(priv,
++					       "Error sending msg : %d\n",
++					       status);
++		} else
++			return -EFAULT;
++		break;
++
+ 	default:
+ 		IWL_DEBUG_INFO(priv, "Unknown testmode driver command ID\n");
+ 		return -ENOSYS;
+@@ -581,6 +606,7 @@ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 	case IWL_TM_CMD_APP2DEV_LOAD_INIT_FW:
+ 	case IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB:
+ 	case IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW:
++	case IWL_TM_CMD_APP2DEV_GET_EEPROM:
+ 		IWL_DEBUG_INFO(priv, "testmode cmd to driver\n");
+ 		result = iwl_testmode_driver(hw, tb);
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 34634ec..4171d29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -88,6 +88,7 @@ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_APP2DEV_LOAD_INIT_FW,
+ 	IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB,
+ 	IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW,
++	IWL_TM_CMD_APP2DEV_GET_EEPROM,
+ 	/* if there is other new command for the driver layer operation,
+ 	 * append them here */
+ 
+@@ -103,6 +104,11 @@ enum iwl_tm_cmd_t {
+ 	/* commands from kernel space to multicast the spontaneous messages
+ 	 * to user application */
+ 	IWL_TM_CMD_DEV2APP_UCODE_RX_PKT,
++
++	/* commands from kernel space to carry the eeprom response
++	 * to user application */
++	IWL_TM_CMD_DEV2APP_EEPROM_RSP,
++
+ 	IWL_TM_CMD_MAX,
+ };
+ 
+@@ -148,6 +154,12 @@ enum iwl_tm_attr_t {
+ 	 * application */
+ 	IWL_TM_ATTR_UCODE_RX_PKT,
+ 
++	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_EEPROM,
++	 * The mandatory fields are:
++	 * IWL_TM_ATTR_EEPROM for the data content responging to the user
++	 * application */
++	IWL_TM_ATTR_EEPROM,
++
+ 	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_XXX_TRACE,
+ 	 * The mandatory fields are:
+ 	 * IWL_TM_ATTR_MEM_TRACE_ADDR for the trace address
+-- 
+1.7.0.4
 
-Active time is the time we spend on the channel, so to get an idea of
-how "busy" that channel is we have to remove the tx and rx time from
-that channel. That gives us the time we spent idle on that channel.
-Then the busy time is a subset of the entire active time but we should
-also exclude the time we spent tx'ing and rx'ing as well. We then
-have:
-
- (busy time - rx time - tx time) / (active time - rx time - tx time)
-
-This is a bounded ratio already, given that if we spent 0 time tx'ing
-0 time rx'ing, but 10 ms on a channel, and all that time we had busy
-time as well we'd have a ratio of 10 / 10 = 1. In the best case we'd
-have  0 / 10 = 0.
-
-What I'd like to do is to affect the ratio to nullify it if the noise
-is very low on the channel. Given that noise is logarithmic we'd have
-to use a logarithmic function as well. Working on that now.
-
-  Luis
