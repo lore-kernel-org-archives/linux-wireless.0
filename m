@@ -1,33 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27173 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753348Ab1ELDO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 23:14:56 -0400
-Subject: Re: ath5k and ath9k bugs still in 2.6.39-rc7
-From: Dan Williams <dcbw@redhat.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 11 May 2011 22:17:00 -0500
-In-Reply-To: <4DC968FD.1040906@candelatech.com>
-References: <4DC968FD.1040906@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1305170221.8054.20.camel@dcbw.foobar.com> (sfid-20110512_051459_980606_AB0BA6A0)
-Mime-Version: 1.0
+Received: from dakia2.marvell.com ([65.219.4.35]:60912 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755695Ab1EMSRz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 14:17:55 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2] cfg80211: make stripping of 802.11 header optional from AMSDU
+Date: Fri, 13 May 2011 11:22:31 -0700
+Message-Id: <1305310952-19572-1-git-send-email-bzhao@marvell.com> (sfid-20110513_201800_705177_47E43310)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-10 at 09:34 -0700, Ben Greear wrote:
-> As far as I can tell, ath5k is critically broken due to un-initilized
-> spinlock (fixed in the patch I posted a few days ago), and ath9k stations
-> won't work due to PS bugs that Felix posted fixes for yesterday.
-> 
-> It looks like -rc7 is the last RC before the final .39, so I'm hoping
-> these patches can be pushed quickly to Linus!
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Johannes and I found out yesterday that ath5k doesn't implement the
-tx_last_beacon hook either, which breaks IBSS mode.  Anyone know how to
-fix that one?  It's been broken since at least 2.6.38 so it's not
-technically a regression in current linux-2.6, but it's still broken.
+Currently the devices that have already stripped IEEE 802.11
+header from the AMSDU SKB can not use ieee80211_amsdu_to_8023s
+routine. This patch enhances ieee80211_amsdu_to_8023s() API by
+changing mandatory removing of IEEE 802.11 header from AMSDU
+to optional.
 
-Dan
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v2: Changed newly added flag from 'stripped_80211_header' to
+    'has_80211_header' (suggested by Johannes)
+
+ drivers/net/wireless/iwmc3200wifi/rx.c |    3 ++-
+ include/net/cfg80211.h                 |    4 +++-
+ net/mac80211/rx.c                      |    2 +-
+ net/wireless/util.c                    |   21 +++++++++++++--------
+ 4 files changed, 19 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index 9a57cf6..5665a1a 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1576,7 +1576,8 @@ static void iwm_rx_process_amsdu(struct iwm_priv *iwm, struct sk_buff *skb)
+ 	IWM_HEXDUMP(iwm, DBG, RX, "A-MSDU: ", skb->data, skb->len);
+ 
+ 	__skb_queue_head_init(&list);
+-	ieee80211_amsdu_to_8023s(skb, &list, ndev->dev_addr, wdev->iftype, 0);
++	ieee80211_amsdu_to_8023s(skb, &list, ndev->dev_addr, wdev->iftype, 0,
++									true);
+ 
+ 	while ((frame = __skb_dequeue(&list))) {
+ 		ndev->stats.rx_packets++;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e1f1b41..c0fad47 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2176,10 +2176,12 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+  * @addr: The device MAC address.
+  * @iftype: The device interface type.
+  * @extra_headroom: The hardware extra headroom for SKBs in the @list.
++ * @has_80211_header: Set it true if SKB is with IEEE 802.11 header.
+  */
+ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 			      const u8 *addr, enum nl80211_iftype iftype,
+-			      const unsigned int extra_headroom);
++			      const unsigned int extra_headroom,
++			      bool has_80211_header);
+ 
+ /**
+  * cfg80211_classify8021d - determine the 802.1p/1d tag for a data frame
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b6bde2e..866116c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1783,7 +1783,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+ 				 rx->sdata->vif.type,
+-				 rx->local->hw.extra_tx_headroom);
++				 rx->local->hw.extra_tx_headroom, true);
+ 
+ 	while (!skb_queue_empty(&frame_list)) {
+ 		rx->skb = __skb_dequeue(&frame_list);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 414c9f6..ad7ffc7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -544,7 +544,8 @@ EXPORT_SYMBOL(ieee80211_data_from_8023);
+ 
+ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 			      const u8 *addr, enum nl80211_iftype iftype,
+-			      const unsigned int extra_headroom)
++			      const unsigned int extra_headroom,
++			      bool has_80211_header)
+ {
+ 	struct sk_buff *frame = NULL;
+ 	u16 ethertype;
+@@ -553,14 +554,18 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 	int remaining, err;
+ 	u8 dst[ETH_ALEN], src[ETH_ALEN];
+ 
+-	err = ieee80211_data_to_8023(skb, addr, iftype);
+-	if (err)
+-		goto out;
++	if (has_80211_header) {
++		err = ieee80211_data_to_8023(skb, addr, iftype);
++		if (err)
++			goto out;
+ 
+-	/* skip the wrapping header */
+-	eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
+-	if (!eth)
+-		goto out;
++		/* skip the wrapping header */
++		eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
++		if (!eth)
++			goto out;
++	} else {
++		eth = (struct ethhdr *) skb->data;
++	}
+ 
+ 	while (skb != frame) {
+ 		u8 padding;
+-- 
+1.7.0.2
 
