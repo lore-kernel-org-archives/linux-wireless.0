@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34271 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213Ab1ECOAy (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41579 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380Ab1EMI5V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 10:00:54 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1QHG9j-0003vJ-3v
-	for linux-wireless@vger.kernel.org; Tue, 03 May 2011 10:00:51 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p43Dl5HR003545
-	for <linux-wireless@vger.kernel.org>; Tue, 3 May 2011 09:47:05 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id p43Dl4Ot003543
-	for linux-wireless@vger.kernel.org; Tue, 3 May 2011 09:47:04 -0400
-Date: Tue, 3 May 2011 09:30:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: [davem@davemloft.net: net-2.6 state...]
-Message-ID: <20110503133009.GA2467@tuxdriver.com> (sfid-20110503_160057_492572_4CAA65AF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 13 May 2011 04:57:21 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so2644123wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:20 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 5/6] wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
+Date: Fri, 13 May 2011 11:57:12 +0300
+Message-Id: <1305277033-6662-6-git-send-email-eliad@wizery.com> (sfid-20110513_105726_164294_01A1AA35)
+In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI...obviously, this affects wireless-2.6 as well...
+Since wowlan requires the ability to stay awake while the host
+is suspended, declare support for NL80211_WOW_TRIGGER_ANYTHING
+if the MMC_PM_KEEP_POWER capability is being supported.
 
------ Forwarded message from David Miller <davem@davemloft.net> -----
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-> Date: Mon, 02 May 2011 15:20:44 -0700 (PDT)
-> From: David Miller <davem@davemloft.net>
-> To: netdev@vger.kernel.org
-> Subject: net-2.6 state...
-> X-Mailer: Mew version 6.3 on Emacs 23.1 / Mule 6.0 (HANACHIRUSATO)
-> 
-> 
-> Right now I'm sorting through patchwork to make sure anything that
-> belongs in net-2.6, is there.
-> 
-> Then I'm going to push things out to Linus.
-> 
-> We will be in a more serious lock down mode after that.  So I really
-> only want to see obvious critical fixes going into net-2.6.  Even
-> comment typos will be put into net-next-2.6.
-> 
-> Please cooperate with this policy and everything will go smoothly.
-> 
-> There is nothing I like more than seeing people work on bug fixes at
-> this point in the -rc* series, so if you want to make me (as well as
-> the users reporting these things) really happy, fix some bugs. :-)
-> 
-> Thanks!
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
------ End forwarded message -----
-
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 41183db..92d29a8 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -231,6 +231,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	const struct wl12xx_platform_data *wlan_data;
+ 	struct wl1271 *wl;
+ 	unsigned long irqflags;
++	mmc_pm_flag_t mmcflags;
+ 	int ret;
+ 
+ 	/* We are only able to handle the wlan function */
+@@ -282,6 +283,13 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 
+ 	disable_irq(wl->irq);
+ 
++	/* if sdio can keep power while host is suspended, enable wow */
++	mmcflags = sdio_get_host_pm_caps(func);
++	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
++
++	if (mmcflags & MMC_PM_KEEP_POWER)
++		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
++
+ 	ret = wl1271_init_ieee80211(wl);
+ 	if (ret)
+ 		goto out_irq;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
