@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582Ab1EIQzH (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:38639 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757986Ab1EMV1K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:55:07 -0400
-Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4DC81BFB.3020103@candelatech.com>
-References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-	 <4DC81A61.9080101@candelatech.com>
-	 <1304959783.12202.7.camel@jlt3.sipsolutions.net>
-	 <4DC81BFB.3020103@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 18:55:05 +0200
-Message-ID: <1304960105.12202.8.camel@jlt3.sipsolutions.net> (sfid-20110509_185518_207312_804935C4)
-Mime-Version: 1.0
+	Fri, 13 May 2011 17:27:10 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 05/13] net: wl12xx: remove the nops
+Date: Sat, 14 May 2011 00:26:22 +0300
+Message-Id: <1305321990-22041-6-git-send-email-balbi@ti.com> (sfid-20110513_233159_431168_340DD41C)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 09:53 -0700, Ben Greear wrote:
+Nops aren't needed. When we actually need
+those calls, then we add them with meat
+and barbecue sauce.
 
-> >> I think there is no problem with having different beacon
-> >> intervals, as long as they are all a multiple of
-> >> the smallest interval and the driver does things properly.
-> >>
-> >> I'm not sure ath9k or ath5k currently supports this properly,
-> >> but there was a patch floating around for a while that did
-> >> this for ath9k I think...
-> >
-> > Yes, in theory that's possible, but apparently no driver actually did
-> > this correctly. Also, it didn't seem like anyone really cares, and we
-> > need to enforce some restrictions because otherwise drivers will end up
-> > doing it wrong, and you'll end up having a beacon interval of 200 while
-> > advertising 150 for example, which will totally throw off powersaving
-> > clients.
-> >
-> > If you really care greatly about having different beacon intervals (and
-> > I don't see why you would?) then maybe you can think how we can enforce
-> > and advertise that to userspace. For now, I'm more comfortable just
-> > restricting it.
-> 
-> I guess we could add a flag to the driver when it supports it properly
-> and modify your logic to check for even multiples instead of just ==
-> if that flag is set?
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |   30 ------------------------------
+ 1 files changed, 0 insertions(+), 30 deletions(-)
 
-Yes, but it's not just a flag, you also need the smallest divisor that
-the driver needs, for example at least 50 TU. Also, when multiple
-channels are used (not right now of course) that might factor into the
-calculations of when which beacon is sent.
-
-johannes
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 0832b80..bb7569c 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -95,14 +95,6 @@ static void wl1271_sdio_enable_interrupts(struct wl1271 *wl)
+ 	enable_irq(wl->irq);
+ }
+ 
+-static void wl1271_sdio_reset(struct wl1271 *wl)
+-{
+-}
+-
+-static void wl1271_sdio_init(struct wl1271 *wl)
+-{
+-}
+-
+ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 				 size_t len, bool fixed)
+ {
+@@ -207,8 +199,6 @@ static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ static struct wl1271_if_operations sdio_ops = {
+ 	.read		= wl1271_sdio_raw_read,
+ 	.write		= wl1271_sdio_raw_write,
+-	.reset		= wl1271_sdio_reset,
+-	.init		= wl1271_sdio_init,
+ 	.power		= wl1271_sdio_set_power,
+ 	.dev		= wl1271_sdio_wl_to_dev,
+ 	.enable_irq	= wl1271_sdio_enable_interrupts,
+@@ -316,31 +306,11 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	kfree(glue);
+ }
+ 
+-static int wl1271_suspend(struct device *dev)
+-{
+-	/* Tell MMC/SDIO core it's OK to power down the card
+-	 * (if it isn't already), but not to remove it completely */
+-	return 0;
+-}
+-
+-static int wl1271_resume(struct device *dev)
+-{
+-	return 0;
+-}
+-
+-static const struct dev_pm_ops wl1271_sdio_pm_ops = {
+-	.suspend	= wl1271_suspend,
+-	.resume		= wl1271_resume,
+-};
+-
+ static struct sdio_driver wl1271_sdio_driver = {
+ 	.name		= "wl1271_sdio",
+ 	.id_table	= wl1271_devices,
+ 	.probe		= wl1271_probe,
+ 	.remove		= __devexit_p(wl1271_remove),
+-	.drv = {
+-		.pm = &wl1271_sdio_pm_ops,
+-	},
+ };
+ 
+ static int __init wl1271_init(void)
+-- 
+1.7.4.1.343.ga91df
 
