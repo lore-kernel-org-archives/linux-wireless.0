@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51658 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755576Ab1ERJQW convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:50992 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759149Ab1EMNFr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 05:16:22 -0400
-Received: by wya21 with SMTP id 21so1020432wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 02:16:21 -0700 (PDT)
+	Fri, 13 May 2011 09:05:47 -0400
+Received: by qwk3 with SMTP id 3so1268998qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 06:05:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <444460.90936.qm@web161614.mail.bf1.yahoo.com>
-References: <444460.90936.qm@web161614.mail.bf1.yahoo.com>
-Date: Wed, 18 May 2011 14:46:21 +0530
-Message-ID: <BANLkTi=3i6LEYFivGYB0OZDKmjXxeo+yrQ@mail.gmail.com> (sfid-20110518_111627_016294_548C8379)
-Subject: Re: rt2x00: rt2800usb causing kernel panic /compat-wireless/
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	gwingerde@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+In-Reply-To: <1305291653.4065.437.camel@localhost>
+References: <13602.31426.qm@web161615.mail.bf1.yahoo.com>
+	<1305262715.4065.436.camel@localhost>
+	<BANLkTim75f2p8wXyfeoz02asRd+Qm9aepA@mail.gmail.com>
+	<1305291653.4065.437.camel@localhost>
+Date: Fri, 13 May 2011 15:05:45 +0200
+Message-ID: <BANLkTinPGw2jMT-uKYrW5i2pUqxmr3Lo_w@mail.gmail.com> (sfid-20110513_150551_801258_C0534190)
+Subject: Re: Bug#596626: [gsimmons@gsimmons.org: Bug#596626: Please support
+ Linksys WUSB600N v2 WiFi USB stick]
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Walter Goldens <goldenstranger@yahoo.com>, 596626@bugs.debian.org,
+	maximilian attems <max@stro.at>,
+	linux-wireless@vger.kernel.org,
+	Geoff Simmons <gsimmons@gsimmons.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2011 at 1:48 PM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> A very peculiar bug.
+Hi,
+
+>> >> > As mentioned by Jan, the device contains a RT3572
+>> >> > chipset.  Its entry
+>> >> > could moved into the section for known RT35XX devices (i.e.
+>> >> > "#ifdef
+>> >> > CONFIG_RT2800USB_RT35XX") as an alternative.
+>> >> >
+>> >> > Geoff
+>> >>
+>> >> This has already been done: http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commitdiff;h=ce2919c9fffe2aa52f9c3e327176d03764dbf9b5
+>> >
+>> > That's all very well, but that isn't going to get into a stable release
+>> > for another 3 months!  Device ID updates that don't require new
+>> > supporting code should be sent upstream straight away (and cc'd to
+>> > stable@kernel.org).
+>>
+>> The patch has been send upstream, it has been in wireless-next-2.6.git
+>> since April 19...
+>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=ce2919c9fffe2aa52f9c3e327176d03764dbf9b5
+>> The patch depends on the RT53xx support patch which was also intented
+>> for 2.6.40.
 >
-> With compat-wireless from 16.05 a nasty bug started to manifest itself. Right around association time, the rt2800usb causes kernel panic. The system freezes and the Caps Lock and Num Lock leds on the keyboard begin to flash.
+> What is it, RT35XX or RT53XX?!
 
-also ath9k, iwlagn.
+Oh sorry, RT35xx in this case, but basically the rest of the reply
+still applies.
+Both chipsets series have the same experimental state.
 
->
-> Unfortunately there are no recoverable traces after the system failure to aid this bug report or to indicate its origin.
->
-> I believe it may somehow be related to Ubuntu's network-manager. If I turn off the network-manager service, I can go into monitor mode for example, but if network-manager is running and I plug my USB dongle, it starts to associate, a second or two later the system is in complete meltdown.
-
-same thing, monitor mode worked perfectly fine.
-
->
-> Nothing concrete, but a hunch is telling me this has something to do with the association mechanism of the rt2800usb. Compat-wireless from few days back exhibits no such foul play.
-
-yes just right at the association complete freeze.
-
->
-> Walter
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-shafi
+Ivo
