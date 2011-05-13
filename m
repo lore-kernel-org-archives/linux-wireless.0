@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24808 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751911Ab1ELDJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 23:09:46 -0400
-Subject: Re: [PATCH] Add libertas_disablemesh module parameter to disable
- mesh interface
-From: Dan Williams <dcbw@redhat.com>
-To: Sascha Silbe <silbe@activitycentral.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.laptop.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 11 May 2011 22:11:36 -0500
-In-Reply-To: <1305118354-17337-1-git-send-email-silbe@activitycentral.com>
-References: <1305118354-17337-1-git-send-email-silbe@activitycentral.com>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:52043 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753705Ab1EMMO5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 08:14:57 -0400
+Received: by mail-ew0-f54.google.com with SMTP id 1so1604758ewy.27
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 05:14:55 -0700 (PDT)
+Subject: Re: [PATCH v2 0/6] wl12xx: add initial wowlan support
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1305169898.8054.19.camel@dcbw.foobar.com> (sfid-20110512_051008_906880_9C0B866D)
+Date: Fri, 13 May 2011 15:14:52 +0300
+Message-ID: <1305288892.12586.1107.camel@cumari> (sfid-20110513_141502_569579_689AC7B9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-11 at 14:52 +0200, Sascha Silbe wrote:
-> This allows individual users and deployments to disable mesh support at
-> runtime, i.e. without having to build and maintain a custom kernel.
+On Fri, 2011-05-13 at 11:57 +0300, Eliad Peller wrote:
+> Add initial support for Wake-On-Wireless.
+> 
+> Currently, we support only the ANY trigger, which basically means
+> the device stays awake while the host is being suspended, and will
+> wake up the host by any irq it will trigger (but since the wl12xx
+> fw offloads a lot of its work, it will probably wake up the host
+> because of rx frame/beacon loss)
+> 
+> Note that this patchset needs some additional omap/mmc patches in 
+> order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
+> (however, if the MMC_PM_KEEP_POWER flag is not being supported we 
+> don't advertise support for wowlan triggers, so this patchset alone
+> shouldn't harm).
+> 
+> Changes from v1:
+> * reflow wl1271_hardirq (return immediately)
+> * squash one patch 
+> * define WL1271_PS_COMPLETE_TIMEOUT
+> 
+> Eliad Peller (6):
+>   wl12xx_sdio: set interrupt as wake_up interrupt
+>   wl12xx: declare suspend/resume callbacks (for wowlan)
+>   wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
+>   wl12xx: prevent scheduling while suspending (WoW enabled)
+>   wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
+>   wl12xx: enter/exit psm on wowlan suspend/resume
+> 
+>  drivers/net/wireless/wl12xx/event.c  |    7 ++
+>  drivers/net/wireless/wl12xx/main.c   |  146 ++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/wl12xx/ps.h     |    2 +
+>  drivers/net/wireless/wl12xx/sdio.c   |   64 +++++++++++++++-
+>  drivers/net/wireless/wl12xx/wl12xx.h |    9 ++
+>  5 files changed, 227 insertions(+), 1 deletions(-)
 
-Does the mesh interface somehow cause problems, even when nothing is
-using it?  I'd expect that if the mesh interface was simply left alone,
-there would be no need to disable it.
+Applied the series.  Thank you!
 
-Dan
-
-> Based on a patch by Paul Fox <pgf@laptop.org>.
-> Signed-off-by: Sascha Silbe <silbe@activitycentral.com>
-> ---
->  drivers/net/wireless/libertas/main.c |    9 ++++++++-
->  1 files changed, 8 insertions(+), 1 deletions(-)
-> 
-> The patch is based on the OLPC 2.6.35 kernel tree, but applies cleanly to
-> wireless-next.
-> 
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 8445473..62069e2 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -41,6 +41,10 @@ unsigned int lbs_debug;
->  EXPORT_SYMBOL_GPL(lbs_debug);
->  module_param_named(libertas_debug, lbs_debug, int, 0644);
-> 
-> +unsigned int lbs_disablemesh;
-> +EXPORT_SYMBOL_GPL(lbs_disablemesh);
-> +module_param_named(libertas_disablemesh, lbs_disablemesh, int, 0644);
-> +
-> 
->  /* This global structure is used to send the confirm_sleep command as
->   * fast as possible down to the firmware. */
-> @@ -1086,7 +1090,10 @@ int lbs_start_card(struct lbs_private *priv)
-> 
->  	lbs_update_channel(priv);
-> 
-> -	lbs_init_mesh(priv);
-> +	if (!lbs_disablemesh)
-> +		lbs_init_mesh(priv);
-> +	else
-> +		lbs_pr_info("%s: mesh disabled\n", dev->name);
-> 
->  	/*
->  	 * While rtap isn't related to mesh, only mesh-enabled
-> --
-> 1.7.4.1
-> 
-
+-- 
+Cheers,
+Luca.
 
