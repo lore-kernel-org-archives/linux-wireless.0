@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59110 "EHLO nbd.name"
+Received: from mgw2.diku.dk ([130.225.96.92]:38811 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755049Ab1EFREA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 13:04:00 -0400
-Message-ID: <4DC429FE.7040500@openwrt.org> (sfid-20110506_190403_867754_97C03AC1)
-Date: Fri, 06 May 2011 19:03:58 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
- AP mode broke STA association.
-References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com> <4DC31A0B.4040409@candelatech.com> <4DC31C91.1030303@openwrt.org> <4DC33DE2.1070508@candelatech.com> <4DC34465.6090108@openwrt.org> <4DC421D8.3050403@candelatech.com> <4DC42707.2080503@openwrt.org> <4DC428C2.9080403@candelatech.com>
-In-Reply-To: <4DC428C2.9080403@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1756414Ab1EMNwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 09:52:17 -0400
+From: Julia Lawall <julia@diku.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] net/rfkill/core.c: Avoid leaving freed data in a list
+Date: Fri, 13 May 2011 15:52:10 +0200
+Message-Id: <1305294731-12127-2-git-send-email-julia@diku.dk> (sfid-20110513_155258_900090_5BADFB6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-06 6:58 PM, Ben Greear wrote:
-> On 05/06/2011 09:51 AM, Felix Fietkau wrote:
->>  On 2011-05-06 6:29 PM, Ben Greear wrote:
->>>  On 05/05/2011 05:44 PM, Felix Fietkau wrote:
->>>
->>>>    This should fix the second issue:
->>>>
->>>>    --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>    +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>    @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
->>>>      	struct ath_node *an = (struct ath_node *) sta->drv_priv;
->>>>      	struct ieee80211_key_conf ps_key = { };
->>>>
->>>>    +	if (vif->opmode != NL80211_IFTYPE_AP&&
->>>>    +	    vif->opmode != NL80211_IFTYPE_AP_VLAN)
->>>>    +		return 0;
->>>>    +
->>>>      	ath_node_attach(sc, sta);
->>>>      	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
->>>
->>>  This doesn't compile..appears there is no vif->opmode member?
->>>
->>>  Also, if you are trying to compare the hardware opmode, I'm not
->>>  sure that would be correct since you can be in AP mode and still
->>>  have stations.  Maybe I'm just confused though...
->>  I sent the wrong version of the patch, forgot to refresh it.
->>  Here's the correct one:
->>
->>  --- a/drivers/net/wireless/ath/ath9k/main.c
->>  +++ b/drivers/net/wireless/ath/ath9k/main.c
->>  @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
->>    	struct ath_node *an = (struct ath_node *) sta->drv_priv;
->>    	struct ieee80211_key_conf ps_key = { };
->>
->>  +	if (vif->type != NL80211_IFTYPE_AP&&
->>  +	    vif->type != NL80211_IFTYPE_AP_VLAN)
->>  +		return 0;
->>  +
->>    	ath_node_attach(sc, sta);
->>    	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
->>
->
->
-> This patch appears to fix things.  I'll let you send it proper
-> for submittal since you have a better idea of what it's doing:
-OK, thanks. I'll combine this with another ath9k patch to replace the 
-rejected mac80211 PS filter patch and submit that for 2.6.39.
+The list_for_each_entry loop can fail, in which case the list element is
+not removed from the list rfkill_fds.  Since this list is not accessed by
+the loop, the addition of &data->list into the list is just moved after the
+loop.
 
-- Felix
+The sematic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression E,E1,E2;
+identifier l;
+@@
+
+*list_add(&E->l,E1);
+... when != E1
+    when != list_del(&E->l)
+    when != list_del_init(&E->l)
+    when != E = E2
+*kfree(E);// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+I have only verified that rfkill_fds is not accessed by the loop by
+inspecting the code.  If this analysis is not correct, the other solution
+would be to leave the list_add where it is and delete the element from the
+list explicitly.
+
+ net/rfkill/core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 0198191..be90640 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1024,7 +1024,6 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
+ 	 * start getting events from elsewhere but hold mtx to get
+ 	 * startup events added first
+ 	 */
+-	list_add(&data->list, &rfkill_fds);
+ 
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
+@@ -1033,6 +1032,7 @@ static int rfkill_fop_open(struct inode *inode, struct file *file)
+ 		rfkill_fill_event(&ev->ev, rfkill, RFKILL_OP_ADD);
+ 		list_add_tail(&ev->list, &data->events);
+ 	}
++	list_add(&data->list, &rfkill_fds);
+ 	mutex_unlock(&data->mtx);
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+
