@@ -1,89 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38112 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200Ab1EaS7h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 14:59:37 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 15so2187996pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 11:59:37 -0700 (PDT)
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Content-Type: text/plain; charset=us-ascii
-Subject: [PATCH] ath9k: fix two more bugs in tx power
-Date: Tue, 31 May 2011 11:59:30 -0700
-Message-Id: <BC07EC2E-2433-463F-B4A5-056EDEDC9630@cs.washington.edu> (sfid-20110531_205945_962403_3EC3732A)
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Mime-Version: 1.0 (Apple Message framework v1084)
+Received: from mms1.broadcom.com ([216.31.210.17]:3386 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756772Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/32] staging: brcm80211: make function definitions and
+ prototype consistent
+Date: Fri, 13 May 2011 11:59:28 +0200
+Message-ID: <1305280792-9475-8-git-send-email-arend@broadcom.com> (sfid-20110513_120125_312235_BCC0F827)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the same fix as
+Couple of functions that are only used within wlc_channel.c have been
+prototyped with static keyword. For the function definition itself this
+has been added when missing.
 
-   commit 841051602e3fa18ea468fe5a177aa92b6eb44b56
-   Author: Matteo Croce <technoboy85@gmail.com>
-   Date:   Fri Dec 3 02:25:08 2010 +0100
-
-   The ath9k driver subtracts 3 dBm to the txpower as with two radios the
-   signal power is doubled.
-   The resulting value is assigned in an u16 which overflows and makes
-   the card work at full power.
-
-in two more places. I grepped the ath tree and didn't find any others.
-
-Cc: stable@kernel.org
-Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Removed RFC.
----
-drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 ++++++++--
-drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   10 ++++++++--
-2 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 729534c..934e419 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4645,10 +4645,16 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
-	case 1:
-		break;
-	case 2:
--		scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		else
-+			scaledPower = 0;
-		break;
-	case 3:
--		scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		else
-+			scaledPower = 0;
-		break;
-	}
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 7856f0d..343fc9f 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -524,10 +524,16 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
-	case 1:
-		break;
-	case 2:
--		scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		else
-+			scaledPower = 0;
-		break;
-	case 3:
--		scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		else
-+			scaledPower = 0;
-		break;
-	}
-	scaledPower = max((u16)0, scaledPower);
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+index d6b1dcd..e31e392 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+@@ -107,7 +107,7 @@ static void wlc_channel_min_txpower_limits_with_local_constraint(wlc_cm_info_t *
+ 								 *txpwr,
+ 								 u8
+ 								 local_constraint_qdbm);
+-void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels);
++static void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels);
+ static const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx);
+ static const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx);
+ 
+@@ -397,7 +397,7 @@ static const chanvec_t *g_table_locale_base[] = {
+ 	&locale_5g_HIGH4
+ };
+ 
+-void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels)
++static void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels)
+ {
+ 	u8 i;
+ 	for (i = 0; i < sizeof(chanvec_t); i++) {
+@@ -608,7 +608,7 @@ static const locale_info_t *wlc_get_locale_5g(u8 locale_idx)
+ 	return g_locale_5g_table[locale_idx];
+ }
+ 
+-const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
++static const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
+ {
+ 	if (locale_idx >= ARRAY_SIZE(g_mimo_2g_table)) {
+ 		return NULL;
+@@ -616,7 +616,7 @@ const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
+ 	return g_mimo_2g_table[locale_idx];
+ }
+ 
+-const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx)
++static const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx)
+ {
+ 	if (locale_idx >= ARRAY_SIZE(g_mimo_5g_table)) {
+ 		return NULL;
 -- 
-1.7.0.4
+1.7.4.1
+
 
