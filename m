@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:39779 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab1EZIJq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40561 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087Ab1EMTOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 04:09:46 -0400
-Received: from [82.94.249.234] (latitanza [82.94.249.234]) (Authenticated sender: ordex@autistici.org) by localhost (Postfix) with ESMTPSA id C55D89830D
-	for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 07:49:59 +0000 (UTC)
-Date: Thu, 26 May 2011 09:50:04 +0200
-From: Antonio Quartulli <ordex@ritirata.org>
+	Fri, 13 May 2011 15:14:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Subject: ieee80211_ptr and pre-cfg80211 drivers
-Message-ID: <20110526075004.GC28174@ritirata.org> (sfid-20110526_100950_078653_800E96D3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3] ssb: fix pcicore build breakage
+Date: Fri, 13 May 2011 15:07:01 -0400
+Message-Id: <1305313621-7901-1-git-send-email-linville@tuxdriver.com> (sfid-20110513_211408_407867_148D1906)
+In-Reply-To: <20110513094657.5d38e959.randy.dunlap@oracle.com>
+References: <20110513094657.5d38e959.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hell everyone,
+drivers/ssb/main.c:1336: error: 'SSB_PCICORE_BCAST_ADDR' undeclared (first use in this function)
+drivers/ssb/main.c:1337: error: 'SSB_PCICORE_BCAST_DATA' undeclared (first use in this function)
+drivers/ssb/main.c:1349: error: 'struct ssb_pcicore' has no member named 'dev'
 
-I'm currenctly writing a little program that have to do some stuff with
-a wireless card. Actually I need to understand whether a struct
-net_device is associated to a wireless card or not.
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/ssb/main.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-Someone suggested me to check for net_device->ieee80211_ptr != NULL.
-If so, I can assume the device is a wireless card. But can I also assume
-the opposite? I mean, if ieee80211_ptr == NULL can I be sure the device
-is not wireless?
-
-Digging into the kernel code it seems to me that pre-cfg80211 drivers
-doesn't handle such field.
-
-Do you have any suggestion how I can solve this problem?
-
-Thank you.
-
-Regards,
-
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index ee2937c..f8a13f8 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1332,21 +1332,27 @@ EXPORT_SYMBOL(ssb_bus_powerup);
+ static void ssb_broadcast_value(struct ssb_device *dev,
+ 				u32 address, u32 data)
+ {
++#ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	/* This is used for both, PCI and ChipCommon core, so be careful. */
+ 	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
+ 	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
++#endif
+ 
+-	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
+-	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
+-	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
+-	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
++	ssb_write32(dev, SSB_CHIPCO_BCAST_ADDR, address);
++	ssb_read32(dev, SSB_CHIPCO_BCAST_ADDR); /* flush */
++	ssb_write32(dev, SSB_CHIPCO_BCAST_DATA, data);
++	ssb_read32(dev, SSB_CHIPCO_BCAST_DATA); /* flush */
+ }
+ 
+ void ssb_commit_settings(struct ssb_bus *bus)
+ {
+ 	struct ssb_device *dev;
+ 
++#ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	dev = bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev;
++#else
++	dev = bus->chipco.dev;
++#endif
+ 	if (WARN_ON(!dev))
+ 		return;
+ 	/* This forces an update of the cached registers. */
 -- 
-Antonio Quartulli
+1.7.4.4
 
-..each of us alone is worth nothing..
-Ernesto "Che" Guevara
