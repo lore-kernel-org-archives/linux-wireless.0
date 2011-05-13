@@ -1,113 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41394 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757109Ab1EMHlX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 03:41:23 -0400
-Received: by bwz15 with SMTP id 15so1914813bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 00:41:22 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4898 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758779Ab1EMKAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:15 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 25/32] staging: brcm80211: Added support to change
+ roaming parameters from brcmfmac driver
+Date: Fri, 13 May 2011 11:59:45 +0200
+Message-ID: <1305280792-9475-25-git-send-email-arend@broadcom.com> (sfid-20110513_120023_788083_7A8B866C)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1305229737.12586.1027.camel@cumari>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-	<1305104068-32240-5-git-send-email-eliad@wizery.com>
-	<1305229737.12586.1027.camel@cumari>
-Date: Fri, 13 May 2011 10:41:21 +0300
-Message-ID: <BANLkTinuHS-QOG_d9VkX9tCCY4HRZqEFsQ@mail.gmail.com> (sfid-20110513_094127_478047_AC4D3FB9)
-Subject: Re: [PATCH 4/7] wl12xx: prevent scheduling while suspending (WoW enabled)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 12, 2011 at 10:48 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
->> When WoW is enabled, the interface will stay up and the chip will
->> be powered on, so we have to flush/cancel any remaining work, and
->> prevent the irq handler from scheduling a new work until the system
->> is resumed.
->>
->> Add 2 new flags:
->> * WL1271_FLAG_SUSPENDED - the system is (about to be) suspended.
->> * WL1271_FLAG_PENDING_WORK - there is a pending irq work which
->>    should be scheduled when the system is being resumed.
->>
->> In order to wake-up the system while getting an irq, we initialize
->> the device as wakeup device, and calling pm_wakeup_event() upon
->> getting the interrupt (while the system is about to be suspended)
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> [...]
->
->> +             if (run_irq_work) {
->> +                     wl1271_debug(DEBUG_MAC80211,
->> +                                  "run postponed irq_work directly");
->> +                     wl1271_irq(0, wl);
->> +                     wl1271_enable_interrupts(wl);
->
-> Shouldn't this wl1271_enable_interrupts() be outside the if? Don't you
-> want to enable interrupts again when there was no pending work?
+From: Sukesh Srikakula <sukeshs@broadcom.com>
 
-by default, the interrupts are enabled (we need them in order to wake
-up the device).
-we disable them only after getting an interrupt and setting the
-pending_work bit (see wl1271_hardirq())
+'wl_dongle_roam' function moved out of conditional compilation to allow
+the fullmac driver to change FW roaming parameters
 
->
->
->> diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
->> index 5b03fd5..bf2a6ad 100644
->> --- a/drivers/net/wireless/wl12xx/sdio.c
->> +++ b/drivers/net/wireless/wl12xx/sdio.c
->> @@ -72,6 +72,7 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
->>  {
->>       struct wl1271 *wl = cookie;
->>       unsigned long flags;
->> +     bool skip = false;
->>
->>       wl1271_debug(DEBUG_IRQ, "IRQ");
->>
->> @@ -82,8 +83,20 @@ static irqreturn_t wl1271_hardirq(int irq, void *cookie)
->>               complete(wl->elp_compl);
->>               wl->elp_compl = NULL;
->>       }
->> +
->> +     if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
->> +             /* don't enqueue a work right now. mark it as pending */
->> +             set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
->> +             wl1271_debug(DEBUG_IRQ, "should not enqueue work");
->> +             disable_irq_nosync(wl->irq);
->> +             pm_wakeup_event(wl1271_sdio_wl_to_dev(wl), 0);
->> +             skip = true;
->> +     }
->>       spin_unlock_irqrestore(&wl->wl_lock, flags);
->>
->> +     if (skip)
->> +             return IRQ_HANDLED;
->> +
->>       return IRQ_WAKE_THREAD;
->>  }
->
-> Could be nicer to just skip the skip variable (unintended pun
-> intended ;).  You can do it like this:
->
-> if (test_bit...) {
->        ...
->        spin_unlock_irqrestore();
->        return IRQ_HANDLED;
-> }
-> spin_unlock_irqrestore();
-> return IRQ_WAKE_THREAD;
->
-> Looks a bit nicer to me, but I don't mind if you prefer not skipping the
-> skip. :)
->
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   97 ++++++++++++++--------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    4 +
+ 2 files changed, 66 insertions(+), 35 deletions(-)
 
-well, i don't have a preference here how to handle the HANDLED case. ;)
-so i'll change it if you prefer it that way.
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 27baf56..e90015c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -259,8 +259,6 @@ static s32 wl_dongle_up(struct net_device *ndev, u32 up);
+ static s32 wl_dongle_power(struct net_device *ndev, u32 power_mode);
+ static s32 wl_dongle_glom(struct net_device *ndev, u32 glom,
+ 			    u32 dongle_align);
+-static s32 wl_dongle_roam(struct net_device *ndev, u32 roamvar,
+-			    u32 bcn_timeout);
+ static s32 wl_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
+ 				s32 scan_unassoc_time);
+ static s32 wl_dongle_offload(struct net_device *ndev, s32 arpoe,
+@@ -272,6 +270,8 @@ static s32 wl_update_wiphybands(struct wl_priv *wl);
+ 
+ static s32 wl_dongle_eventmsg(struct net_device *ndev);
+ static s32 wl_config_dongle(struct wl_priv *wl, bool need_lock);
++static s32 wl_dongle_roam(struct net_device *ndev, u32 roamvar,
++			    u32 bcn_timeout);
+ 
+ /*
+ ** iscan handler
+@@ -3633,36 +3633,6 @@ dongle_glom_out:
+ }
+ 
+ static s32
+-wl_dongle_roam(struct net_device *ndev, u32 roamvar, u32 bcn_timeout)
+-{
+-	s8 iovbuf[WL_EVENTING_MASK_LEN + 12];	/*  Room for "event_msgs" +
+-						 '\0' + bitvec  */
+-	s32 err = 0;
+-
+-	/* Setup timeout if Beacons are lost and roam is
+-		 off to report link down */
+-	if (roamvar) {
+-		bcm_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
+-			    sizeof(iovbuf));
+-		err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
+-		if (unlikely(err)) {
+-			WL_ERR("bcn_timeout error (%d)\n", err);
+-			goto dongle_rom_out;
+-		}
+-	}
+-	/* Enable/Disable built-in roaming to allow supplicant
+-		 to take care of roaming */
+-	bcm_mkiovar("roam_off", (char *)&roamvar, 4, iovbuf, sizeof(iovbuf));
+-	err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
+-	if (unlikely(err)) {
+-		WL_ERR("roam_off error (%d)\n", err);
+-		goto dongle_rom_out;
+-	}
+-dongle_rom_out:
+-	return err;
+-}
+-
+-static s32
+ wl_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
+ 		   s32 scan_unassoc_time)
+ {
+@@ -3890,6 +3860,63 @@ dongle_eventmsg_out:
+ 	return err;
+ }
+ 
++static s32
++wl_dongle_roam(struct net_device *ndev, u32 roamvar, u32 bcn_timeout)
++{
++	s8 iovbuf[32];
++	s32 roamtrigger[2];
++	s32 roam_delta[2];
++	s32 err = 0;
++
++	/*
++	 * Setup timeout if Beacons are lost and roam is
++	 * off to report link down
++	 */
++	if (roamvar) {
++		bcm_mkiovar("bcn_timeout", (char *)&bcn_timeout,
++			sizeof(bcn_timeout), iovbuf, sizeof(iovbuf));
++		err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
++		if (unlikely(err)) {
++			WL_ERR("bcn_timeout error (%d)\n", err);
++			goto dongle_rom_out;
++		}
++	}
++
++	/*
++	 * Enable/Disable built-in roaming to allow supplicant
++	 * to take care of roaming
++	 */
++	WL_INFO("Internal Roaming = %s\n", roamvar ? "Off" : "On");
++	bcm_mkiovar("roam_off", (char *)&roamvar,
++				sizeof(roamvar), iovbuf, sizeof(iovbuf));
++	err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
++	if (unlikely(err)) {
++		WL_ERR("roam_off error (%d)\n", err);
++		goto dongle_rom_out;
++	}
++
++	roamtrigger[0] = WL_ROAM_TRIGGER_LEVEL;
++	roamtrigger[1] = WLC_BAND_ALL;
++	err = wl_dev_ioctl(ndev, WLC_SET_ROAM_TRIGGER,
++			(void *)roamtrigger, sizeof(roamtrigger));
++	if (unlikely(err)) {
++		WL_ERR("WLC_SET_ROAM_TRIGGER error (%d)\n", err);
++		goto dongle_rom_out;
++	}
++
++	roam_delta[0] = WL_ROAM_DELTA;
++	roam_delta[1] = WLC_BAND_ALL;
++	err = wl_dev_ioctl(ndev, WLC_SET_ROAM_DELTA,
++				(void *)roam_delta, sizeof(roam_delta));
++	if (unlikely(err)) {
++		WL_ERR("WLC_SET_ROAM_DELTA error (%d)\n", err);
++		goto dongle_rom_out;
++	}
++
++dongle_rom_out:
++	return err;
++}
++
+ s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
+ {
+ #ifndef DHD_SDALIGN
+@@ -3920,9 +3947,6 @@ s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
+ 	err = wl_dongle_glom(ndev, 0, DHD_SDALIGN);
+ 	if (unlikely(err))
+ 		goto default_conf_out;
+-	err = wl_dongle_roam(ndev, (wl->roam_on ? 0 : 1), 3);
+-	if (unlikely(err))
+-		goto default_conf_out;
+ 	wl_dongle_scantime(ndev, 40, 80);
+ 	wl_dongle_offload(ndev, 1, 0xf);
+ 	wl_dongle_filter(ndev, 1);
+@@ -3931,6 +3955,9 @@ s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
+ 	err = wl_dongle_eventmsg(ndev);
+ 	if (unlikely(err))
+ 		goto default_conf_out;
++	err = wl_dongle_roam(ndev, (wl->roam_on ? 0 : 1), WL_BEACON_TIMEOUT);
++	if (unlikely(err))
++		goto default_conf_out;
+ 	err = wl_dongle_mode(ndev, wdev->iftype);
+ 	if (unlikely(err && err != -EINPROGRESS))
+ 		goto default_conf_out;
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+index 6b61010..04381a9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -95,6 +95,10 @@ do {								\
+ 				 */
+ #define WL_FILE_NAME_MAX		256
+ 
++#define WL_ROAM_TRIGGER_LEVEL		-75
++#define WL_ROAM_DELTA			20
++#define WL_BEACON_TIMEOUT		3
++
+ /* dongle status */
+ enum wl_status {
+ 	WL_STATUS_READY,
+-- 
+1.7.4.1
 
-thanks,
-Eliad.
+
