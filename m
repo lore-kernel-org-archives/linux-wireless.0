@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45875 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756775Ab1EWTwK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57375 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757522Ab1EMPRH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 15:52:10 -0400
-Received: by vws1 with SMTP id 1so4389522vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:52:09 -0700 (PDT)
-Message-ID: <4DDABAE6.10601@lwfinger.net> (sfid-20110523_215215_808287_59F179ED)
-Date: Mon, 23 May 2011 14:52:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Mike McCormack <mikem@ring3k.org>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/8] rtlwifi: Assign rx buffer ownership to hardware last
-References: <4DDA6724.1070809@ring3k.org>
-In-Reply-To: <4DDA6724.1070809@ring3k.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 13 May 2011 11:17:07 -0400
+Subject: Re: concurrency advertising -- driver maintainers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTi=CfZxWGboaOizjDQwf_7gwxJmNkA@mail.gmail.com> (sfid-20110513_164519_683739_0E9A15B4)
+References: <1305290657.3487.32.camel@jlt3.sipsolutions.net>
+	 <BANLkTi=CfZxWGboaOizjDQwf_7gwxJmNkA@mail.gmail.com>
+	 (sfid-20110513_164519_683739_0E9A15B4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 16:52:50 +0200
+Message-ID: <1305298370.3468.6.camel@jlt3.sipsolutions.net> (sfid-20110513_171711_017861_5F390B09)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 08:54 AM, Mike McCormack wrote:
-> Ownership of an rx buffer should only be given to the hardware
-> after all other changes are written, otherwise there's
-> a potential race.
->
-> Signed-off-by: Mike McCormack<mikem@ring3k.org>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c |    5 +++--
->   1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index fd74396..4fe405a 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -782,8 +782,6 @@ done:
->   		rtlpriv->cfg->ops->set_desc((u8 *) pdesc, false,
->   					    HW_DESC_RXBUFF_ADDR,
->   					    (u8 *)&bufferaddress);
-> -		rtlpriv->cfg->ops->set_desc((u8 *)pdesc, false, HW_DESC_RXOWN,
-> -					    (u8 *)&tmp_one);
->   		rtlpriv->cfg->ops->set_desc((u8 *)pdesc, false,
->   					    HW_DESC_RXPKT_LEN,
->   					    (u8 *)&rtlpci->rxbuffersize);
-> @@ -793,6 +791,9 @@ done:
->   						    HW_DESC_RXERO,
->   						    (u8 *)&tmp_one);
->
-> +		rtlpriv->cfg->ops->set_desc((u8 *)pdesc, false, HW_DESC_RXOWN,
-> +					    (u8 *)&tmp_one);
-> +
->   		index = (index + 1) % rtlpci->rxringcount;
->   	}
->
+On Fri, 2011-05-13 at 16:44 +0200, Gertjan van Wingerde wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> I seem to have missed the patch that introduces this advertisement of
+> valid combinations
+> in mac80211. Do you have a pointer towards this patch and/or some of
+> the documentation
+> for it?
+> 
+> That would make it a lot easier to see if your RFC patch for rt2x00
+> actually makes sense ;-)
 
-Larry
+:-)
+
+I submitted it a little bit earlier, here:
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/69917
+
+johannes
 
