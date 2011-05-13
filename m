@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53920 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755303Ab1EPNsG convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:52917 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753986Ab1EMV0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 09:48:06 -0400
-Received: by bwz15 with SMTP id 15so3743605bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 06:48:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DD0518D.1090300@lwfinger.net>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
-	<4DCB3DFF.1030809@lockie.ca>
-	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
-	<4DCE9DB8.7080404@lwfinger.net>
-	<BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
-	<BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
-	<4DD0518D.1090300@lwfinger.net>
-Date: Mon, 16 May 2011 08:48:04 -0500
-Message-ID: <BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com> (sfid-20110516_154811_366069_184538D5)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-From: Flaminigo <sunnyiez@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 May 2011 17:26:40 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 00/13] wl12xx re-factor
+Date: Sat, 14 May 2011 00:26:17 +0300
+Message-Id: <1305321990-22041-1-git-send-email-balbi@ti.com> (sfid-20110513_233243_137193_1B1B9CBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
-right? I browse the www.kernel.org but I cannot find the source code
-for RC1.
-What should I  do ? Find the RC1 code. Apply your patch. Recompile the
-kernel and install it? I appreciate your help.
+Hi Luca,
 
-Regards
-Sunny
+this is the re-factor I was talking to you
+about. Please have a look and give your
+comments.
 
-On Sun, May 15, 2011 at 5:19 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/15/2011 04:32 PM, Flaminigo wrote:
->>
->> Hi,
->>    I have another question. Is it possible to turn of the N network
->> ratio on this NIC? My notebook works well in a 802.11 b/g network. If
->> I can turn the N network radio off, at least, I can use it now in my
->> office building.
->
-> If you just connect to a b/g network, it will work. If the office building
-> only has what I suspect is an HT40 network, then it will fail.
->
-> Did you look at the kernel bugzilla number that I sent to you the other day.
-> It has a patch for using the device with an HT40 network. For me, everything
-> else (B/G and HT20) worked before.
->
-> Larry
->
->
+It probably won't work as is, I compile
+tested only, but it shows the idea.
+
+Felipe Balbi (13):
+  net: wl12xx: sdio: id_tables should be __devinitconst
+  net: wl12xx: sdio: add a context structure
+  net: wl12xx: remove some unnecessary prints
+  net: wl12xx: care for optional operations
+  net: wl12xx: remove the nops
+  net: wl12xx: remove unnecessary prints
+  net: wl12xx: spi: add a context structure
+  net: wl12xx: spi: add a platform_device
+  net: wl12xx: sdio: add a platform_device
+  net: wl12xx: main: add platform device
+  net: wireless: wl12xx: re-factor all drivers
+  net: wireless: wl12xx: mark some symbols static
+  net: wl12xx: main: drop unneded plat_dev
+
+ drivers/net/wireless/wl12xx/io.c                   |   10 +-
+ drivers/net/wireless/wl12xx/io.h                   |   21 +--
+ drivers/net/wireless/wl12xx/main.c                 |  191 +++++++++++-----
+ drivers/net/wireless/wl12xx/sdio.c                 |  220 +++++++-----------
+ drivers/net/wireless/wl12xx/spi.c                  |  246 ++++++++------------
+ drivers/net/wireless/wl12xx/wl12xx.h               |   16 +-
+ drivers/net/wireless/wl12xx/wl12xx_platform_data.c |    4 +-
+ include/linux/wl12xx.h                             |    4 +-
+ 8 files changed, 336 insertions(+), 376 deletions(-)
+
+-- 
+1.7.4.1.343.ga91df
+
