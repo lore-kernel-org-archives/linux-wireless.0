@@ -1,108 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50981 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:42240 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752711Ab1E3RAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 13:00:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>, stable@kernel.org
-Subject: [PATCH wireless-2.6] iwlagn: fix incorrect PCI subsystem id for 6150 devices
-Date: Mon, 30 May 2011 09:32:52 -0700
-Message-Id: <1306773172-21745-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110530_190047_299787_6CDCA84A)
+	id S1759568Ab1EMRSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 13:18:54 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 10:18:25 -0700
+Date: Fri, 13 May 2011 22:48:49 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: cancel scan_work in ieee80211_unregister_hw
+Message-ID: <20110513171849.GA2760@vmraj-lnx.users.atheros.com> (sfid-20110513_191858_814882_41682109)
+References: <1305220188-13098-1-git-send-email-rmanoharan@atheros.com>
+ <1305221121.3461.32.camel@jlt3.sipsolutions.net>
+ <20110513053533.GA20459@vmraj-lnx.users.atheros.com>
+ <1305301416.3468.9.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1305301416.3468.9.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Fri, May 13, 2011 at 09:13:36PM +0530, Johannes Berg wrote:
+> On Fri, 2011-05-13 at 11:05 +0530, Rajkumar Manoharan wrote:
+> 
+> > > How did you come to that conclusion? ieee80211_do_stop() does stop the
+> > > scan.
+> > >
+> > True. But Sometimes ieee80211_scan_cancel is waiting for mutex where
+> > the lock was already aquired by scan work and scan_work never releases
+> > the lock till scan completion whenever next_delay == 0.
+> 
+> But that shouldn't take a long time. And if it's "stuck" there, then
+> cancel_delayed_work_sync() will also wait for it.
+>
+Agree. cancel_delayed_work_sync does not help to abort scan when
+scan_work is in next_scan_state loop.
 
-For 6150 devices, modify the supported PCI subsystem ID.
+> > This scenario was observed while unplug the card during scan.
+> 
+> If this happens then mac80211 will still make calls to the driver, I
+> don't think we can avoid this and drivers will need to handle it. Maybe
+> the driver is repeatedly timing out somewhere?
+>
+These unneccesary driver calls has to be avoided. How about the following
+change to abort scan during scan loop.
 
-Cc: stable@kernel.org
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-these patches are also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-6000.c |   29 ++++++++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
- 3 files changed, 22 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a745b01..45d16a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -696,20 +696,27 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	IWL_DEVICE_6050,
- };
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4054399..9d18c43 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -384,11 +384,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+        int i;
+        enum nl80211_channel_type orig_ct;
  
-+#define IWL_DEVICE_6150						\
-+	.fw_name_pre = IWL6050_FW_PRE,				\
-+	.ucode_api_max = IWL6050_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL6050_UCODE_API_MIN,			\
-+	.ops = &iwl6150_ops,					\
-+	.eeprom_ver = EEPROM_6150_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6150_TX_POWER_VERSION,	\
-+	.base_params = &iwl6050_base_params,			\
-+	.need_dc_calib = true,					\
-+	.led_mode = IWL_LED_BLINK,				\
-+	.internal_wimax_coex = true
++       clear_bit(SDATA_STATE_RUNNING, &sdata->state);
 +
- struct iwl_cfg iwl6150_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
--	.fw_name_pre = IWL6050_FW_PRE,
--	.ucode_api_max = IWL6050_UCODE_API_MAX,
--	.ucode_api_min = IWL6050_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6150_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6150_TX_POWER_VERSION,
--	.ops = &iwl6150_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6050_base_params,
-+	IWL_DEVICE_6150,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.internal_wimax_coex = true,
-+};
+        if (local->scan_sdata == sdata)
+                ieee80211_scan_cancel(local);
+ 
+-       clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+-
+        /*
+         * Stop TX on this interface first.
+         */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index ea44a8e..6353f93 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -719,6 +719,11 @@ void ieee80211_scan_work(struct work_struct *work)
+         * without scheduling a new work
+         */
+        do {
++               if (!test_bit(SDATA_STATE_RUNNING, &sdata->state)) {
++                       aborted = true;
++                       goto out_complete;
++               }
 +
-+struct iwl_cfg iwl6150_bg_cfg = {
-+	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BG",
-+	IWL_DEVICE_6150,
- };
- 
- struct iwl_cfg iwl6000_3agn_cfg = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 321b18b..8960052 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4458,11 +4458,11 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 
- /* 6150 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0885, 0x1305, iwl6150_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0885, 0x1306, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1307, iwl6150_bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0885, 0x1325, iwl6150_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0885, 0x1326, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1327, iwl6150_bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0886, 0x1315, iwl6150_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0886, 0x1316, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0886, 0x1317, iwl6150_bg_cfg)},
- 
- /* 1000 Series WiFi */
- 	{IWL_PCI_DEVICE(0x0083, 0x1205, iwl1000_bgn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 20f8e41..89050b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -90,6 +90,7 @@ extern struct iwl_cfg iwl6000_3agn_cfg;
- extern struct iwl_cfg iwl6050_2agn_cfg;
- extern struct iwl_cfg iwl6050_2abg_cfg;
- extern struct iwl_cfg iwl6150_bgn_cfg;
-+extern struct iwl_cfg iwl6150_bg_cfg;
- extern struct iwl_cfg iwl1000_bgn_cfg;
- extern struct iwl_cfg iwl1000_bg_cfg;
- extern struct iwl_cfg iwl100_bgn_cfg;
--- 
-1.7.0.4
+                switch (local->next_scan_state) {
+                case SCAN_DECISION:
+                        /* if no more bands/channels left, complete scan */
 
+--
+Rajkumar
