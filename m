@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43856 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:32795 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269Ab1ELNLi (ORCPT
+	with ESMTP id S1757413Ab1EMNzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 09:11:38 -0400
-Subject: [PATCH] mac80211: fix a few RCU issues
+	Fri, 13 May 2011 09:55:23 -0400
+Subject: Re: [PATCH 2/3] net/rfkill/core.c: Avoid leaving freed data in a
+ list
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+To: Julia Lawall <julia@diku.dk>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1305294731-12127-2-git-send-email-julia@diku.dk>
+References: <1305294731-12127-2-git-send-email-julia@diku.dk>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 15:11:37 +0200
-Message-ID: <1305205897.3461.29.camel@jlt3.sipsolutions.net> (sfid-20110512_151148_842962_1DCDD9AF)
+Date: Fri, 13 May 2011 15:55:12 +0200
+Message-ID: <1305294912.3468.0.camel@jlt3.sipsolutions.net> (sfid-20110513_155601_458463_D809CF3A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2011-05-13 at 15:52 +0200, Julia Lawall wrote:
+> The list_for_each_entry loop can fail, in which case the list element is
+> not removed from the list rfkill_fds.  Since this list is not accessed by
+> the loop, the addition of &data->list into the list is just moved after the
+> loop.
+> 
+> The sematic match that finds this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @@
+> expression E,E1,E2;
+> identifier l;
+> @@
+> 
+> *list_add(&E->l,E1);
+> ... when != E1
+>     when != list_del(&E->l)
+>     when != list_del_init(&E->l)
+>     when != E = E2
+> *kfree(E);// </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> ---
+> I have only verified that rfkill_fds is not accessed by the loop by
+> inspecting the code.  If this analysis is not correct, the other solution
+> would be to leave the list_add where it is and delete the element from the
+> list explicitly.
 
-A few configuration functions correctly do
-rcu_read_lock() but don't correctly reference
-some pointers protected by RCU. Fix that.
+Looks right to me, thanks!
 
-Cc: stable@kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
---- a/net/mac80211/cfg.c	2011-05-12 15:10:47.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-05-12 15:10:48.000000000 +0200
-@@ -228,11 +228,11 @@ static int ieee80211_get_key(struct wiph
- 			goto out;
- 
- 		if (pairwise)
--			key = sta->ptk;
-+			key = rcu_dereference(sta->ptk);
- 		else if (key_idx < NUM_DEFAULT_KEYS)
--			key = sta->gtk[key_idx];
-+			key = rcu_dereference(sta->gtk[key_idx]);
- 	} else
--		key = sdata->keys[key_idx];
-+		key = rcu_dereference(sdata->keys[key_idx]);
- 
- 	if (!key)
- 		goto out;
-@@ -943,8 +943,10 @@ static int ieee80211_change_mpath(struct
- static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
- 			    struct mpath_info *pinfo)
- {
--	if (mpath->next_hop)
--		memcpy(next_hop, mpath->next_hop->sta.addr, ETH_ALEN);
-+	struct sta_info *next_hop_sta = rcu_dereference(mpath->next_hop);
-+
-+	if (next_hop_sta)
-+		memcpy(next_hop, next_hop_sta->sta.addr, ETH_ALEN);
- 	else
- 		memset(next_hop, 0, ETH_ALEN);
- 
-
+johannes
 
