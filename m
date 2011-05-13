@@ -1,67 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47764 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755301Ab1EKPtI convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:52948 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759756Ab1EMV1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 11:49:08 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so550749bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:49:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <19914.42954.285439.226672@gargle.gargle.HOWL>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
-	<19908.11423.898062.510184@gargle.gargle.HOWL>
-	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
-	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
-	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
-	<19912.44045.774181.844464@gargle.gargle.HOWL>
-	<19912.55320.817869.173186@gargle.gargle.HOWL>
-	<19912.55857.505921.694732@gargle.gargle.HOWL>
-	<BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com>
-	<19912.57383.634547.405469@gargle.gargle.HOWL>
-	<BANLkTi=BrJPhjA5StJcktkKE7zs3Ob=iOg@mail.gmail.com>
-	<19913.25619.615324.60744@gargle.gargle.HOWL>
-	<BANLkTinv0XrfhDZWYpmdzSdVXZCovzhy_g@mail.gmail.com>
-	<19914.42954.285439.226672@gargle.gargle.HOWL>
-Date: Wed, 11 May 2011 11:22:42 -0400
-Message-ID: <BANLkTi=uW+fVNyFJBS0fHMRAQxMKTDgaLw@mail.gmail.com> (sfid-20110511_174930_050929_238C3338)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 May 2011 17:27:46 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 13/13] net: wl12xx: main: drop unneded plat_dev
+Date: Sat, 14 May 2011 00:26:30 +0300
+Message-Id: <1305321990-22041-14-git-send-email-balbi@ti.com> (sfid-20110513_232817_187883_09A93763)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 11, 2011 at 11:14 AM, Sujith <m.sujith@gmail.com> wrote:
-> George Nychis wrote:
->> Great, thanks Sujith!  Are we positive that the Xbox adapter is also
->> not UB94 now that we have seen both of these with this problem?  I am
->> not sure if this was speculation after seeing the initial error, or if
->> it is a known fact.
->
-> Yes, the Xbox adapter is not based on UB94.
->
-> And apparently no changes are required to use UWA-BR100, as an internal
-> engineer was able to use ath9k_htc as is, after adding the PID/VID
-> to the driver. So maybe the card that you have bought is different
-> from the UWA-BR100 sample that he used. Will poke some more people and
-> see if we're missing something.
->
+now that useless plat_dev is unnecessary,
+we can remove it.
 
-Maybe if we can compare lsusb of both devices to ensure that they are
-actually the same.
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   48 +++-------------------------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 -
+ 2 files changed, 4 insertions(+), 45 deletions(-)
 
-Could you have him read what the FCC ID is on the back of the stick?
-My details are:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d3c056d..55cedcd 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -315,21 +315,6 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl);
+ static void wl1271_free_ap_keys(struct wl1271 *wl);
+ 
+ 
+-static void wl1271_device_release(struct device *dev)
+-{
+-
+-}
+-
+-static struct platform_device wl1271_device = {
+-	.name           = "wl1271",
+-	.id             = -1,
+-
+-	/* device model insists to have a release function */
+-	.dev            = {
+-		.release = wl1271_device_release,
+-	},
+-};
+-
+ static LIST_HEAD(wl_list);
+ 
+ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+@@ -3389,7 +3374,6 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ {
+ 	struct ieee80211_hw *hw;
+-	struct platform_device *plat_dev = NULL;
+ 	struct wl1271 *wl;
+ 	int i, j, ret;
+ 	unsigned int order;
+@@ -3401,20 +3385,12 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ 		goto err_hw_alloc;
+ 	}
+ 
+-	plat_dev = kmemdup(&wl1271_device, sizeof(wl1271_device), GFP_KERNEL);
+-	if (!plat_dev) {
+-		wl1271_error("could not allocate platform_device");
+-		ret = -ENOMEM;
+-		goto err_plat_alloc;
+-	}
+-
+ 	wl = hw->priv;
+ 	memset(wl, 0, sizeof(*wl));
+ 
+ 	INIT_LIST_HEAD(&wl->list);
+ 
+ 	wl->hw = hw;
+-	wl->plat_dev = plat_dev;
+ 
+ 	for (i = 0; i < NUM_TX_QUEUES; i++)
+ 		skb_queue_head_init(&wl->tx_queue[i]);
+@@ -3475,23 +3451,15 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ 		goto err_hw;
+ 	}
+ 
+-	/* Register platform device */
+-	ret = platform_device_register(wl->plat_dev);
+-	if (ret) {
+-		wl1271_error("couldn't register platform device");
+-		goto err_aggr;
+-	}
+-	dev_set_drvdata(&wl->plat_dev->dev, wl);
+-
+ 	/* Create sysfs file to control bt coex state */
+-	ret = device_create_file(&wl->plat_dev->dev, &dev_attr_bt_coex_state);
++	ret = device_create_file(wl->dev, &dev_attr_bt_coex_state);
+ 	if (ret < 0) {
+ 		wl1271_error("failed to create sysfs file bt_coex_state");
+-		goto err_platform;
++		goto err_aggr;
+ 	}
+ 
+ 	/* Create sysfs file to get HW PG version */
+-	ret = device_create_file(&wl->plat_dev->dev, &dev_attr_hw_pg_ver);
++	ret = device_create_file(wl->dev, &dev_attr_hw_pg_ver);
+ 	if (ret < 0) {
+ 		wl1271_error("failed to create sysfs file hw_pg_ver");
+ 		goto err_bt_coex_state;
+@@ -3500,19 +3468,13 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	return hw;
+ 
+ err_bt_coex_state:
+-	device_remove_file(&wl->plat_dev->dev, &dev_attr_bt_coex_state);
+-
+-err_platform:
+-	platform_device_unregister(wl->plat_dev);
++	device_remove_file(wl->dev, &dev_attr_bt_coex_state);
+ 
+ err_aggr:
+ 	free_pages((unsigned long)wl->aggr_buf, order);
+ 
+ err_hw:
+ 	wl1271_debugfs_exit(wl);
+-	kfree(plat_dev);
+-
+-err_plat_alloc:
+ 	ieee80211_free_hw(hw);
+ 
+ err_hw_alloc:
+@@ -3522,10 +3484,8 @@ err_hw_alloc:
+ 
+ static int wl1271_free_hw(struct wl1271 *wl)
+ {
+-	platform_device_unregister(wl->plat_dev);
+ 	free_pages((unsigned long)wl->aggr_buf,
+ 			get_order(WL1271_AGGR_BUFFER_SIZE));
+-	kfree(wl->plat_dev);
+ 
+ 	wl1271_debugfs_exit(wl);
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index eb3d3fc..279bd82 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -339,7 +339,6 @@ struct wl1271_link {
+ };
+ 
+ struct wl1271 {
+-	struct platform_device *plat_dev;
+ 	struct ieee80211_hw *hw;
+ 	bool mac80211_registered;
+ 
+-- 
+1.7.4.1.343.ga91df
 
-IC: 409B-UWABR100
-FCC ID: AK8UWABR100
-ANATEL: 0010-10-4749
