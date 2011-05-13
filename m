@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:39221 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755237Ab1EZUbN (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51481 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932303Ab1EMI5S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 16:31:13 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: Set command sequence number later to ensure consistency
-Message-Id: <20110526203108.ADEDB9D401C@zog.reactivated.net> (sfid-20110526_223116_203647_BE68C6A7)
-Date: Thu, 26 May 2011 21:31:08 +0100 (BST)
+	Fri, 13 May 2011 04:57:18 -0400
+Received: by wya21 with SMTP id 21so1752034wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:17 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/6] wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
+Date: Fri, 13 May 2011 11:57:10 +0300
+Message-Id: <1305277033-6662-4-git-send-email-eliad@wizery.com> (sfid-20110513_105721_816686_89A8FAFE)
+In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before this patch, the command sequence number is being set before
-lbs_queue_cmd() adds the command to the queue. However, lbs_queue_cmd()
-sometimes forces commands to queue-jump (e.g. CMD_802_11_WAKEUP_CONFIRM).
-It currently does this without considering that sequence numbers might need
-adjusting to keep things running in order.
+if a wow trigger was configured, set the MMC_PM_KEEP_POWER flag
+on suspend, so our power will be kept while the system is suspended.
 
-Fix this by setting the sequence number at a later stage, just before
-we're actually submitting the command to the hardware. Also fixes a
-possible race where seqnum was being modified outside of the driver
-lock.
+We needed to set this flag on each suspend attempt (when we want
+to keep power)
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/libertas/cmd.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/sdio.c |   29 ++++++++++++++++++++++++++++-
+ 1 files changed, 28 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 84566db..71c8f3f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -994,6 +994,8 @@ static void lbs_submit_command(struct lbs_private *priv,
- 	cmd = cmdnode->cmdbuf;
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 1298461..5b03fd5 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -314,7 +314,34 @@ static int wl1271_suspend(struct device *dev)
+ {
+ 	/* Tell MMC/SDIO core it's OK to power down the card
+ 	 * (if it isn't already), but not to remove it completely */
+-	return 0;
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct wl1271 *wl = sdio_get_drvdata(func);
++	mmc_pm_flag_t sdio_flags;
++	int ret = 0;
++
++	wl1271_debug(DEBUG_MAC80211, "wl1271 suspend. wow_enabled: %d",
++		     wl->wow_enabled);
++
++	/* check whether sdio should keep power */
++	if (wl->wow_enabled) {
++		sdio_flags = sdio_get_host_pm_caps(func);
++
++		if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
++			wl1271_error("can't keep power while host "
++				     "is suspended");
++			ret = -EINVAL;
++			goto out;
++		}
++
++		/* keep power while host suspended */
++		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++		if (ret) {
++			wl1271_error("error while trying to keep power");
++			goto out;
++		}
++	}
++out:
++	return ret;
+ }
  
- 	spin_lock_irqsave(&priv->driver_lock, flags);
-+	priv->seqnum++;
-+	cmd->seqnum = cpu_to_le16(priv->seqnum);
- 	priv->cur_cmd = cmdnode;
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
-@@ -1621,11 +1623,9 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 	/* Copy the incoming command to the buffer */
- 	memcpy(cmdnode->cmdbuf, in_cmd, in_cmd_size);
- 
--	/* Set sequence number, clean result, move to buffer */
--	priv->seqnum++;
-+	/* Set command, clean result, move to buffer */
- 	cmdnode->cmdbuf->command = cpu_to_le16(command);
- 	cmdnode->cmdbuf->size    = cpu_to_le16(in_cmd_size);
--	cmdnode->cmdbuf->seqnum  = cpu_to_le16(priv->seqnum);
- 	cmdnode->cmdbuf->result  = 0;
- 
- 	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
+ static int wl1271_resume(struct device *dev)
 -- 
-1.7.5.1
+1.7.0.4
 
