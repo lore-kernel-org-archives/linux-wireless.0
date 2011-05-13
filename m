@@ -1,80 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:41981 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411Ab1EGR5X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 13:57:23 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v12.0.0)
-	with ESMTP id md50000002738.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 20:57:12 +0300
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
-	driver
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	 <201105061605.31625.arnd@arndb.de>
-	 <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-	 <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Sat, 07 May 2011 20:51:05 +0300
-Message-Id: <1304790665.13983.10.camel@dev.znau.edu.ua> (sfid-20110507_195735_120683_CF00D875)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:51407 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756437Ab1EMKpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:45:44 -0400
+Date: Fri, 13 May 2011 12:45:25 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, eliad@wizery.com
+Subject: Re: [PATCH v3 1/3] cfg80211/nl80211: add support for scheduled scans
+Message-ID: <20110513104524.GA14971@redhat.com> (sfid-20110513_124548_315996_39387F1C)
+References: <1305122977-6740-1-git-send-email-coelho@ti.com>
+ <1305122977-6740-2-git-send-email-coelho@ti.com>
+ <20110512150530.GB2171@redhat.com>
+ <1305217201.12586.949.camel@cumari>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1305217201.12586.949.camel@cumari>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> 2011/5/6 Rafał Miłecki <zajec5@gmail.com>:
-> > 2011/5/6 Arnd Bergmann <arnd@arndb.de>:
-> >>> +const char *bcma_device_name(u16 coreid)
-> >>> +{
-> >>> +     switch (coreid) {
-> >>> +     case BCMA_CORE_OOB_ROUTER:
-> >>> +             return "OOB Router";
-> >>> +     case BCMA_CORE_INVALID:
-> >>> +             return "Invalid";
-> >>> +     case BCMA_CORE_CHIPCOMMON:
-> >>> +             return "ChipCommon";
-> >>> +     case BCMA_CORE_ILINE20:
-> >>> +             return "ILine 20";
-> >>
-> >> It's better to make that a data structure than a switch() statement,
-> >> both from readability and efficiency aspects.
-> >
-> > Well, maybe. We call it only once, at init time. In any case we're
-> > still waiting for Broadcom to clarify which cores are really used for
-> > BCMA.
+On Thu, May 12, 2011 at 07:20:01PM +0300, Luciano Coelho wrote:
+> > > The idea is that the hardware can perform scan automatically and filter on
+> > > desired results without waking up the host unnecessarily.
+> > 
+> > Can you elaborate more about this?
 > 
-> Arnd: did you have a look at defines at all?
+> Some devices require very low power consumption, like mobile phones and
+> other mobile devices, as you know. ;)
 > 
-> Most of the defines have values in range 0x800 → 0x837. Converting
-> this to array means loosing 0x800 u16 entries. We can not use 0x800
-> offset, because there are also some defined between 0x000 and 0x800:
-> #define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
-> #define BCMA_CORE_INVALID              0x700
+> With this feature, we can offload the scanning entirely to the wireless
+> chip, when we're not connected but looking for APs to connect to, so the
+> host can keep sleeping and consuming very low power.
 > 
-> Oh and there is still:
-> #define BCMA_CORE_DEFAULT              0xFFF
-> we could want to include. Then we would loose additional (0xFFF -
-> 0x837) u16 entries in array.
-What is the purpose for bcma_device_name in bus driver code ? Why not
-define const char *name in struct bcma_driver and let driver writers
-supply kernel with knowledge on new cores' names rather than hard type
-those into the bus code ? Also this will close the question Arend asked
-you regarding same core ids with different manufacturer ids.
+> Let's say you're looking for an AP with SSID "myap".  You can keep your
+> device scanning for it, so that it's able to connect automatically when
+> it shows up without having to keep your device's main CPU awake and
+> consuming power.  When "myap" shows in the scan results, the main CPU is
+> awoken and the device can connect to it.
 
-Have nice day,
-George
+I see, thanks for the explanations.
 
+> > > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
+> > > commands to the nl80211 interface.  When results are available they are
+> > > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
+> > > informed when the scheduled scan has stopped with a
+> > > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
+> > > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
+> > > 
+> > > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > > ---
+> > >  include/linux/nl80211.h |   25 +++++
+> > >  include/net/cfg80211.h  |   57 +++++++++++
+> > >  net/wireless/core.c     |   12 ++-
+> > >  net/wireless/core.h     |    7 ++
+> > >  net/wireless/nl80211.c  |  250 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  net/wireless/nl80211.h  |    4 +
+> > >  net/wireless/scan.c     |   70 +++++++++++++
+> > >  7 files changed, 424 insertions(+), 1 deletions(-)
+> > 
+> > And explain, why all of this is needed, instead of modify existing scan
+> > code and reuse existing infrastructure. This sched_scan does not seems to
+> > be something different than normal hardware scan we have already, or I'm
+> > wrong.
+> 
+> It is something different.  At first, I was thinking about modifying the
+> existing scan mechanism.  But it turned out to be too complicated,
 
+I wonder if at least at user space we could have some consolidations, i.e.
+merge NL80211_CMD_START_SCHED_SCAN to NL80211_CMD_TRIGGER_SCAN, and
+create new command NL80211_CMD_CANCEL_SCAN like NL80211_CMD_STOP_SCHED_SCAN
+but worked also on normal scan. Anyway this probably does not matter now,
+since patches were applied, and we have that API now.
+
+> because the scheduled scan is a long-term operation and the normal scan
+> is done for a very short time (and the rest of the stack assumes it will
+> complete quickly enough as not to interfere with the connection.
+
+Hmm, is this drawback of implementation or can not be done technically
+(question to myself :-) ? I can image that in ideal case hardware scanning
+will not affect normal operation, no matter how long it will take.
+Software scan is much worse, since we have to change channels manually.
+We currently share code between software scan and hardware scan in
+mac80211. Perhaps separating hw and sw scan code, would be a good idea
+and allow to consolidate hw scan and sched scan. I planning to look
+at this more closely.
+
+Thanks
+Stanislaw
