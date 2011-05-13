@@ -1,79 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34500 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3385 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751280Ab1E0PKY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 11:10:24 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 27 May 2011 08:09:52 -0700
-Message-ID: <4DDFBED5.7030508@atheros.com> (sfid-20110527_171027_617323_6BCDB93E)
-Date: Fri, 27 May 2011 20:40:13 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+	id S1757972Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/32] staging: brcm80211: got rid of #ifdef __mips__
+ sections in hnddma.c
+Date: Fri, 13 May 2011 11:59:24 +0200
+Message-ID: <1305280792-9475-4-git-send-email-arend@broadcom.com> (sfid-20110513_120121_247875_B77C528A)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Mohammed Shafi <mshajakhan@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] ath9k: make use of get_paprd_scale_factor helper
-References: <1306508895-22960-1-git-send-email-mshajakhan@atheros.com>
-In-Reply-To: <1306508895-22960-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 May 2011 08:38 PM, Mohammed Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->
-> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> ---
->   drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   18 +++---------------
->   1 files changed, 3 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> index e4d6a87..4985a81 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> @@ -46,11 +46,10 @@ EXPORT_SYMBOL(ar9003_paprd_enable);
->
->   static int ar9003_get_training_power_2g(struct ath_hw *ah)
->   {
-> -	struct ar9300_eeprom *eep =&ah->eeprom.ar9300_eep;
-> -	struct ar9300_modal_eep_header *hdr =&eep->modalHeader2G;
-> +	struct ath9k_channel *chan = ah->curchan;
->   	unsigned int power, scale, delta;
->
-> -	scale = MS(le32_to_cpu(hdr->papdRateMaskHt20), AR9300_PAPRD_SCALE_1);
-> +	scale = ar9003_get_paprd_scale_factor(ah, chan);
->   	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
->   			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
->
-> @@ -67,21 +66,10 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
->   static int ar9003_get_training_power_5g(struct ath_hw *ah)
->   {
->   	struct ath_common *common = ath9k_hw_common(ah);
-> -	struct ar9300_eeprom *eep =&ah->eeprom.ar9300_eep;
-> -	struct ar9300_modal_eep_header *hdr =&eep->modalHeader5G;
->   	struct ath9k_channel *chan = ah->curchan;
->   	unsigned int power, scale, delta;
->
-> -	if (chan->channel>= 5700)
-> -		scale = MS(le32_to_cpu(hdr->papdRateMaskHt20),
-> -			   AR9300_PAPRD_SCALE_1);
-> -	else if (chan->channel>= 5400)
-> -		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
-> -			   AR9300_PAPRD_SCALE_2);
-> -	else
-> -		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
-> -			   AR9300_PAPRD_SCALE_1);
-> -
-> +	scale = ar9003_get_paprd_scale_factor(ah, chan);
->   	if (IS_CHAN_HT40(chan))
->   		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE8,
->   			AR_PHY_POWERTX_RATE8_POWERTXHT40_5);
+From: Roland Vossen <rvossen@broadcom.com>
 
-currently sending it as an RFC as there are some issues in PAPRD and I 
-doubt fixing may cause merge conflicts
+Code cleanup. Broadcom MIPS chips in big endian mode have a memory window
+in which sdram contents is byte swapped. Code in hnddmac.c makes use of
+this window. Reworked code so the #ifdef __mips__ is moved from .c to
+.h file.
 
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 --
+ drivers/staging/brcm80211/brcmsmac/hnddma.c  |    7 -------
+ drivers/staging/brcm80211/include/hndsoc.h   |    6 ++++++
+ 3 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index b98099e..1168b53 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -38,8 +38,6 @@
+ #define SI_PCI_MEM_SZ		(64 * 1024 * 1024)
+ /* Host Mode sb2pcitranslation1 (64 MB) */
+ #define SI_PCI_CFG		0x0c000000
+-/* Byteswapped Physical SDRAM */
+-#define	SI_SDRAM_SWAPPED	0x10000000
+ /* Region 2 for sdram (512 MB) */
+ #define SI_SDRAM_R2		0x80000000
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/hnddma.c b/drivers/staging/brcm80211/brcmsmac/hnddma.c
+index 962010f..33432e6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/hnddma.c
++++ b/drivers/staging/brcm80211/brcmsmac/hnddma.c
+@@ -352,9 +352,7 @@ struct hnddma_pub *dma_attach(char *name, si_t *sih,
+ 		di->dataoffsetlow = di->ddoffsetlow;
+ 		di->dataoffsethigh = di->ddoffsethigh;
+ 	}
+-#if defined(__mips__) && defined(IL_BIGENDIAN)
+ 	di->dataoffsetlow = di->dataoffsetlow + SI_SDRAM_SWAPPED;
+-#endif				/* defined(__mips__) && defined(IL_BIGENDIAN) */
+ 	/* WAR64450 : DMACtl.Addr ext fields are not supported in SDIOD core. */
+ 	if ((ai_coreid(sih) == SDIOD_CORE_ID)
+ 	    && ((ai_corerev(sih) > 0) && (ai_corerev(sih) <= 2)))
+@@ -469,13 +467,8 @@ dma64_dd_upd(dma_info_t *di, dma64dd_t *ddring, dmaaddr_t pa, uint outidx,
+ 	u32 ctrl2 = bufcount & D64_CTRL2_BC_MASK;
+ 
+ 	/* PCI bus with big(>1G) physical address, use address extension */
+-#if defined(__mips__) && defined(IL_BIGENDIAN)
+ 	if ((di->dataoffsetlow == SI_SDRAM_SWAPPED)
+ 	    || !(PHYSADDRLO(pa) & PCI32ADDR_HIGH)) {
+-#else
+-	if ((di->dataoffsetlow == 0) || !(PHYSADDRLO(pa) & PCI32ADDR_HIGH)) {
+-#endif				/* defined(__mips__) && defined(IL_BIGENDIAN) */
+-
+ 		W_SM(&ddring[outidx].addrlow,
+ 		     BUS_SWAP32(PHYSADDRLO(pa) + di->dataoffsetlow));
+ 		W_SM(&ddring[outidx].addrhigh,
+diff --git a/drivers/staging/brcm80211/include/hndsoc.h b/drivers/staging/brcm80211/include/hndsoc.h
+index 6435686..4754934 100644
+--- a/drivers/staging/brcm80211/include/hndsoc.h
++++ b/drivers/staging/brcm80211/include/hndsoc.h
+@@ -29,7 +29,13 @@
+ #define SI_PCI_MEM		0x08000000	/* Host Mode sb2pcitranslation0 (64 MB) */
+ #define SI_PCI_MEM_SZ		(64 * 1024 * 1024)
+ #define SI_PCI_CFG		0x0c000000	/* Host Mode sb2pcitranslation1 (64 MB) */
++
++#if defined(__mips__) && defined(__BIG_ENDIAN)
+ #define	SI_SDRAM_SWAPPED	0x10000000	/* Byteswapped Physical SDRAM */
++#else
++#define	SI_SDRAM_SWAPPED	0x0		/* Already byte swapped */
++#endif
++
+ #define SI_SDRAM_R2		0x80000000	/* Region 2 for sdram (512 MB) */
+ 
+ #ifdef SI_ENUM_BASE_VARIABLE
 -- 
-thanks,
-shafi
+1.7.4.1
+
+
