@@ -1,83 +1,556 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37810 "EHLO mga11.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3400 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932212Ab1EFS2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 14:28:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/7] iwlagn: remove get_hcmd_size indirection
-Date: Fri,  6 May 2011 11:04:35 -0700
-Message-Id: <1304705080-29349-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202851_869042_9180DE74)
-In-Reply-To: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1757963Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 06:00:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/32] staging: brcm80211: cleanup functions in nvram.c
+Date: Fri, 13 May 2011 11:59:29 +0200
+Message-ID: <1305280792-9475-9-git-send-email-arend@broadcom.com> (sfid-20110513_120118_089750_6C390877)
+In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Several function in nvram.c take a pointer value which is not
+actually used. These are removed and the header file contained
+some other prototypes that were not implemented. As this source
+file was the only one using the header file siutils.h it has been
+removed.
 
-There's no need for this, all commands are the right size.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    7 -------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    1 -
- 3 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    4 +-
+ drivers/staging/brcm80211/brcmsmac/nvram.c   |   13 +-
+ drivers/staging/brcm80211/include/bcmnvram.h |   25 +--
+ drivers/staging/brcm80211/include/siutils.h  |  361 --------------------------
+ 4 files changed, 10 insertions(+), 393 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/include/siutils.h
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 49dd03f..b12c72d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -54,12 +54,6 @@ int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 3d7a2d6..a61185f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -860,7 +860,7 @@ static si_info_t *ai_doattach(si_info_t *sii, uint devid,
  	}
+ 
+ 	/* Init nvram from flash if it exists */
+-	nvram_init((void *)&(sii->pub));
++	nvram_init();
+ 
+ 	/* Init nvram from sprom/otp if they exist */
+ 	if (srom_var_init
+@@ -970,7 +970,7 @@ void ai_detach(si_t *sih)
+ 				sii->regs[idx] = NULL;
+ 			}
+ 
+-	nvram_exit((void *)si_local);	/* free up nvram buffers */
++	nvram_exit();	/* free up nvram buffers */
+ 
+ 	if (sih->bustype == PCI_BUS) {
+ 		if (sii->pch)
+diff --git a/drivers/staging/brcm80211/brcmsmac/nvram.c b/drivers/staging/brcm80211/brcmsmac/nvram.c
+index 830e30f..085ec0b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nvram.c
++++ b/drivers/staging/brcm80211/brcmsmac/nvram.c
+@@ -18,10 +18,8 @@
+ #include <linux/string.h>
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
+-#include <siutils.h>
+ #include <bcmnvram.h>
+ #include <sbchipc.h>
+-#include <bcmsrom.h>
+ #include <bcmdevs.h>
+ #include <hndsoc.h>
+ 
+@@ -42,7 +40,7 @@ static vars_t *vars;
+ 
+ static char *findvar(char *vars, char *lim, const char *name);
+ 
+-int nvram_init(void *si)
++int nvram_init(void)
+ {
+ 
+ 	/* Make sure we read nvram in flash just once before freeing the memory */
+@@ -53,7 +51,7 @@ int nvram_init(void *si)
+ 	return 0;
  }
  
--/* Currently this is the superset of everything */
--static u16 iwlagn_get_hcmd_size(u8 cmd_id, u16 len)
--{
--	return len;
--}
--
- static u16 iwlagn_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+-int nvram_append(void *si, char *varlst, uint varsz)
++int nvram_append(char *varlst, uint varsz)
  {
- 	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
-@@ -332,7 +326,6 @@ struct iwl_hcmd_ops iwlagn_bt_hcmd = {
+ 	uint bufsz = VARS_T_OH;
+ 	vars_t *new;
+@@ -71,14 +69,11 @@ int nvram_append(void *si, char *varlst, uint varsz)
+ 	return 0;
+ }
+ 
+-void nvram_exit(void *si)
++void nvram_exit(void)
+ {
+ 	vars_t *this, *next;
+-	si_t *sih;
+ 
+-	sih = (si_t *) si;
+ 	this = vars;
+-
+ 	if (this)
+ 		kfree(this->vars);
+ 
+@@ -175,7 +170,7 @@ int nvram_unset(const char *name)
+ 	return 0;
+ }
+ 
+-int nvram_reset(void *si)
++int nvram_reset(void)
+ {
+ 	return 0;
+ }
+diff --git a/drivers/staging/brcm80211/include/bcmnvram.h b/drivers/staging/brcm80211/include/bcmnvram.h
+index e58151c..12645dd 100644
+--- a/drivers/staging/brcm80211/include/bcmnvram.h
++++ b/drivers/staging/brcm80211/include/bcmnvram.h
+@@ -30,31 +30,26 @@ struct nvram_header {
  };
  
- struct iwl_hcmd_utils_ops iwlagn_hcmd_utils = {
--	.get_hcmd_size = iwlagn_get_hcmd_size,
- 	.build_addsta_hcmd = iwlagn_build_addsta_hcmd,
- 	.gain_computation = iwlagn_gain_computation,
- 	.chain_noise_reset = iwlagn_chain_noise_reset,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index dec9820..9d7e36d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -99,7 +99,6 @@ struct iwl_hcmd_ops {
- };
+ /*
+- * Get default value for an NVRAM variable
+- */
+-extern char *nvram_default_get(const char *name);
+-
+-/*
+  * Initialize NVRAM access. May be unnecessary or undefined on certain
+  * platforms.
+  */
+-extern int nvram_init(void *sih);
++extern int nvram_init(void);
  
- struct iwl_hcmd_utils_ops {
--	u16 (*get_hcmd_size)(u8 cmd_id, u16 len);
- 	u16 (*build_addsta_hcmd)(const struct iwl_addsta_cmd *cmd, u8 *data);
- 	void (*gain_computation)(struct iwl_priv *priv,
- 			u32 *average_noise,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 52b1b66..608d7a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -447,7 +447,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	u16 fix_size;
- 	bool is_ct_kill = false;
+ /*
+  * Append a chunk of nvram variables to the global list
+  */
+-extern int nvram_append(void *si, char *vars, uint varsz);
++extern int nvram_append(char *vars, uint varsz);
  
--	cmd->len = priv->cfg->ops->utils->get_hcmd_size(cmd->id, cmd->len);
- 	fix_size = (u16)(cmd->len + sizeof(out_cmd->hdr));
+ /*
+  * Check for reset button press for restoring factory defaults.
+  */
+-extern int nvram_reset(void *sih);
++extern int nvram_reset(void);
  
- 	/*
+ /*
+  * Disable NVRAM access. May be unnecessary or undefined on certain
+  * platforms.
+  */
+-extern void nvram_exit(void *sih);
++extern void nvram_exit(void);
+ 
+ /*
+  * Get the value of an NVRAM variable. The pointer returned may be
+@@ -65,12 +60,6 @@ extern void nvram_exit(void *sih);
+ extern char *nvram_get(const char *name);
+ 
+ /*
+- * Read the reset GPIO value from the nvram and set the GPIO
+- * as input
+- */
+-extern int nvram_resetgpio_init(void *sih);
+-
+-/*
+  * Get the value of an NVRAM variable.
+  * @param	name	name of variable to get
+  * @return	value of variable or NUL if undefined
+@@ -139,12 +128,6 @@ extern int nvram_commit(void);
+  */
+ extern int nvram_getall(char *nvram_buf, int count);
+ 
+-/*
+- * returns the crc value of the nvram
+- * @param	nvh	nvram header pointer
+- */
+-u8 nvram_calc_crc(struct nvram_header *nvh);
+-
+ #endif				/* _LANGUAGE_ASSEMBLY */
+ 
+ /* variable access */
+diff --git a/drivers/staging/brcm80211/include/siutils.h b/drivers/staging/brcm80211/include/siutils.h
+deleted file mode 100644
+index 101e9a4..0000000
+--- a/drivers/staging/brcm80211/include/siutils.h
++++ /dev/null
+@@ -1,361 +0,0 @@
+-/*
+- * Copyright (c) 2010 Broadcom Corporation
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#ifndef	_siutils_h_
+-#define	_siutils_h_
+-
+-#include <hndsoc.h>
+-
+-/*
+- * Data structure to export all chip specific common variables
+- *   public (read-only) portion of siutils handle returned by si_attach()
+- */
+-struct si_pub {
+-	uint socitype;		/* SOCI_SB, SOCI_AI */
+-
+-	uint bustype;		/* SI_BUS, PCI_BUS */
+-	uint buscoretype;	/* PCI_CORE_ID, PCIE_CORE_ID, PCMCIA_CORE_ID */
+-	uint buscorerev;	/* buscore rev */
+-	uint buscoreidx;	/* buscore index */
+-	int ccrev;		/* chip common core rev */
+-	u32 cccaps;		/* chip common capabilities */
+-	u32 cccaps_ext;	/* chip common capabilities extension */
+-	int pmurev;		/* pmu core rev */
+-	u32 pmucaps;		/* pmu capabilities */
+-	uint boardtype;		/* board type */
+-	uint boardvendor;	/* board vendor */
+-	uint boardflags;	/* board flags */
+-	uint boardflags2;	/* board flags2 */
+-	uint chip;		/* chip number */
+-	uint chiprev;		/* chip revision */
+-	uint chippkg;		/* chip package option */
+-	u32 chipst;		/* chip status */
+-	bool issim;		/* chip is in simulation or emulation */
+-	uint socirev;		/* SOC interconnect rev */
+-	bool pci_pr32414;
+-
+-};
+-
+-/* for HIGH_ONLY driver, the si_t must be writable to allow states sync from BMAC to HIGH driver
+- * for monolithic driver, it is readonly to prevent accident change
+- */
+-typedef const struct si_pub si_t;
+-
+-/*
+- * Many of the routines below take an 'sih' handle as their first arg.
+- * Allocate this by calling si_attach().  Free it by calling si_detach().
+- * At any one time, the sih is logically focused on one particular si core
+- * (the "current core").
+- * Use si_setcore() or si_setcoreidx() to change the association to another core.
+- */
+-
+-#define	BADIDX		(SI_MAXCORES + 1)
+-
+-/* clkctl xtal what flags */
+-#define	XTAL			0x1	/* primary crystal oscillator (2050) */
+-#define	PLL			0x2	/* main chip pll */
+-
+-/* clkctl clk mode */
+-#define	CLK_FAST		0	/* force fast (pll) clock */
+-#define	CLK_DYNAMIC		2	/* enable dynamic clock control */
+-
+-/* GPIO usage priorities */
+-#define GPIO_DRV_PRIORITY	0	/* Driver */
+-#define GPIO_APP_PRIORITY	1	/* Application */
+-#define GPIO_HI_PRIORITY	2	/* Highest priority. Ignore GPIO reservation */
+-
+-/* GPIO pull up/down */
+-#define GPIO_PULLUP		0
+-#define GPIO_PULLDN		1
+-
+-/* GPIO event regtype */
+-#define GPIO_REGEVT		0	/* GPIO register event */
+-#define GPIO_REGEVT_INTMSK	1	/* GPIO register event int mask */
+-#define GPIO_REGEVT_INTPOL	2	/* GPIO register event int polarity */
+-
+-/* device path */
+-#define SI_DEVPATH_BUFSZ	16	/* min buffer size in bytes */
+-
+-/* SI routine enumeration: to be used by update function with multiple hooks */
+-#define	SI_DOATTACH	1
+-#define SI_PCIDOWN	2
+-#define SI_PCIUP	3
+-
+-#define	ISSIM_ENAB(sih)	0
+-
+-/* PMU clock/power control */
+-#if defined(BCMPMUCTL)
+-#define PMUCTL_ENAB(sih)	(BCMPMUCTL)
+-#else
+-#define PMUCTL_ENAB(sih)	((sih)->cccaps & CC_CAP_PMU)
+-#endif
+-
+-/* chipcommon clock/power control (exclusive with PMU's) */
+-#if defined(BCMPMUCTL) && BCMPMUCTL
+-#define CCCTL_ENAB(sih)		(0)
+-#define CCPLL_ENAB(sih)		(0)
+-#else
+-#define CCCTL_ENAB(sih)		((sih)->cccaps & CC_CAP_PWR_CTL)
+-#define CCPLL_ENAB(sih)		((sih)->cccaps & CC_CAP_PLL_MASK)
+-#endif
+-
+-typedef void (*gpio_handler_t) (u32 stat, void *arg);
+-
+-/* External PA enable mask */
+-#define GPIO_CTRL_EPA_EN_MASK 0x40
+-
+-/* === exported functions === */
+-extern si_t *si_attach(uint pcidev, void *regs, uint bustype,
+-		       void *sdh, char **vars, uint *varsz);
+-
+-extern void si_detach(si_t *sih);
+-extern bool si_pci_war16165(si_t *sih);
+-
+-extern uint si_coreid(si_t *sih);
+-extern uint si_flag(si_t *sih);
+-extern uint si_coreidx(si_t *sih);
+-extern uint si_corerev(si_t *sih);
+-extern uint si_corereg(si_t *sih, uint coreidx, uint regoff, uint mask,
+-		uint val);
+-extern void si_write_wrapperreg(si_t *sih, u32 offset, u32 val);
+-extern u32 si_core_cflags(si_t *sih, u32 mask, u32 val);
+-extern u32 si_core_sflags(si_t *sih, u32 mask, u32 val);
+-extern bool si_iscoreup(si_t *sih);
+-extern uint si_findcoreidx(si_t *sih, uint coreid, uint coreunit);
+-#ifndef BCMSDIO
+-extern void *si_setcoreidx(si_t *sih, uint coreidx);
+-#endif
+-extern void *si_setcore(si_t *sih, uint coreid, uint coreunit);
+-extern void *si_switch_core(si_t *sih, uint coreid, uint *origidx,
+-			    uint *intr_val);
+-extern void si_restore_core(si_t *sih, uint coreid, uint intr_val);
+-extern void si_core_reset(si_t *sih, u32 bits, u32 resetbits);
+-extern void si_core_disable(si_t *sih, u32 bits);
+-extern u32 si_alp_clock(si_t *sih);
+-extern u32 si_ilp_clock(si_t *sih);
+-extern void si_pci_setup(si_t *sih, uint coremask);
+-extern void si_setint(si_t *sih, int siflag);
+-extern bool si_backplane64(si_t *sih);
+-extern void si_register_intr_callback(si_t *sih, void *intrsoff_fn,
+-				      void *intrsrestore_fn,
+-				      void *intrsenabled_fn, void *intr_arg);
+-extern void si_deregister_intr_callback(si_t *sih);
+-extern void si_clkctl_init(si_t *sih);
+-extern u16 si_clkctl_fast_pwrup_delay(si_t *sih);
+-extern bool si_clkctl_cc(si_t *sih, uint mode);
+-extern int si_clkctl_xtal(si_t *sih, uint what, bool on);
+-extern bool si_deviceremoved(si_t *sih);
+-extern u32 si_socram_size(si_t *sih);
+-
+-extern void si_watchdog(si_t *sih, uint ticks);
+-extern u32 si_gpiocontrol(si_t *sih, u32 mask, u32 val,
+-			     u8 priority);
+-
+-#ifdef BCMSDIO
+-extern void si_sdio_init(si_t *sih);
+-#endif
+-
+-#define si_eci(sih) 0
+-#define si_eci_init(sih) (0)
+-#define si_eci_notify_bt(sih, type, val)  (0)
+-#define si_seci(sih) 0
+-
+-/* OTP status */
+-extern bool si_is_otp_disabled(si_t *sih);
+-extern bool si_is_otp_powered(si_t *sih);
+-extern void si_otp_power(si_t *sih, bool on);
+-
+-/* SPROM availability */
+-extern bool si_is_sprom_available(si_t *sih);
+-#ifdef SI_SPROM_PROBE
+-extern void si_sprom_init(si_t *sih);
+-#endif				/* SI_SPROM_PROBE */
+-
+-#define	SI_ERROR(args)
+-
+-#ifdef BCMDBG
+-#define	SI_MSG(args)	printk args
+-#else
+-#define	SI_MSG(args)
+-#endif				/* BCMDBG */
+-
+-/* Define SI_VMSG to printf for verbose debugging, but don't check it in */
+-#define	SI_VMSG(args)
+-
+-#define	IS_SIM(chippkg)	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+-
+-typedef u32(*si_intrsoff_t) (void *intr_arg);
+-typedef void (*si_intrsrestore_t) (void *intr_arg, u32 arg);
+-typedef bool(*si_intrsenabled_t) (void *intr_arg);
+-
+-typedef struct gpioh_item {
+-	void *arg;
+-	bool level;
+-	gpio_handler_t handler;
+-	u32 event;
+-	struct gpioh_item *next;
+-} gpioh_item_t;
+-
+-/* misc si info needed by some of the routines */
+-typedef struct si_info {
+-	struct si_pub pub;	/* back plane public state (must be first) */
+-	void *pbus;		/* handle to bus (pci/sdio/..) */
+-	uint dev_coreid;	/* the core provides driver functions */
+-	void *intr_arg;		/* interrupt callback function arg */
+-	si_intrsoff_t intrsoff_fn;	/* turns chip interrupts off */
+-	si_intrsrestore_t intrsrestore_fn;	/* restore chip interrupts */
+-	si_intrsenabled_t intrsenabled_fn;	/* check if interrupts are enabled */
+-
+-	void *pch;		/* PCI/E core handle */
+-
+-	gpioh_item_t *gpioh_head;	/* GPIO event handlers list */
+-
+-	bool memseg;		/* flag to toggle MEM_SEG register */
+-
+-	char *vars;
+-	uint varsz;
+-
+-	void *curmap;		/* current regs va */
+-	void *regs[SI_MAXCORES];	/* other regs va */
+-
+-	uint curidx;		/* current core index */
+-	uint numcores;		/* # discovered cores */
+-	uint coreid[SI_MAXCORES];	/* id of each core */
+-	u32 coresba[SI_MAXCORES];	/* backplane address of each core */
+-	void *regs2[SI_MAXCORES];	/* va of each core second register set (usbh20) */
+-	u32 coresba2[SI_MAXCORES];	/* address of each core second register set (usbh20) */
+-	u32 coresba_size[SI_MAXCORES];	/* backplane address space size */
+-	u32 coresba2_size[SI_MAXCORES];	/* second address space size */
+-
+-	void *curwrap;		/* current wrapper va */
+-	void *wrappers[SI_MAXCORES];	/* other cores wrapper va */
+-	u32 wrapba[SI_MAXCORES];	/* address of controlling wrapper */
+-
+-	u32 cia[SI_MAXCORES];	/* erom cia entry for each core */
+-	u32 cib[SI_MAXCORES];	/* erom cia entry for each core */
+-	u32 oob_router;	/* oob router registers for axi */
+-} si_info_t;
+-
+-#define	SI_INFO(sih)	((si_info_t *)(sih))
+-
+-#define	GOODCOREADDR(x, b) (((x) >= (b)) && ((x) < ((b) + SI_MAXCORES * SI_CORE_SIZE)) && \
+-		IS_ALIGNED((x), SI_CORE_SIZE))
+-#define	GOODREGS(regs)	((regs) != NULL && IS_ALIGNED((unsigned long)(regs), SI_CORE_SIZE))
+-#define BADCOREADDR	0
+-#define	GOODIDX(idx)	(((uint)idx) < SI_MAXCORES)
+-#define	NOREV		-1	/* Invalid rev */
+-
+-/* Newer chips can access PCI/PCIE and CC core without requiring to change
+- * PCI BAR0 WIN
+- */
+-#define SI_FAST(si) (((si)->pub.buscoretype == PCIE_CORE_ID) ||	\
+-		     (((si)->pub.buscoretype == PCI_CORE_ID) && (si)->pub.buscorerev >= 13))
+-
+-#define PCIEREGS(si) (((char *)((si)->curmap) + PCI_16KB0_PCIREGS_OFFSET))
+-#define CCREGS_FAST(si) (((char *)((si)->curmap) + PCI_16KB0_CCREGS_OFFSET))
+-
+-/*
+- * Macros to disable/restore function core(D11, ENET, ILINE20, etc) interrupts
+- * before after core switching to avoid invalid register access inside ISR.
+- */
+-#define INTR_OFF(si, intr_val) \
+-	if ((si)->intrsoff_fn && (si)->coreid[(si)->curidx] == (si)->dev_coreid) {	\
+-		intr_val = (*(si)->intrsoff_fn)((si)->intr_arg); }
+-#define INTR_RESTORE(si, intr_val) \
+-	if ((si)->intrsrestore_fn && (si)->coreid[(si)->curidx] == (si)->dev_coreid) {	\
+-		(*(si)->intrsrestore_fn)((si)->intr_arg, intr_val); }
+-
+-/* dynamic clock control defines */
+-#define	LPOMINFREQ		25000	/* low power oscillator min */
+-#define	LPOMAXFREQ		43000	/* low power oscillator max */
+-#define	XTALMINFREQ		19800000	/* 20 MHz - 1% */
+-#define	XTALMAXFREQ		20200000	/* 20 MHz + 1% */
+-#define	PCIMINFREQ		25000000	/* 25 MHz */
+-#define	PCIMAXFREQ		34000000	/* 33 MHz + fudge */
+-
+-#define	ILP_DIV_5MHZ		0	/* ILP = 5 MHz */
+-#define	ILP_DIV_1MHZ		4	/* ILP = 1 MHz */
+-
+-#define PCI(si)		(((si)->pub.bustype == PCI_BUS) &&	\
+-			 ((si)->pub.buscoretype == PCI_CORE_ID))
+-#define PCIE(si)	(((si)->pub.bustype == PCI_BUS) &&	\
+-			 ((si)->pub.buscoretype == PCIE_CORE_ID))
+-#define PCI_FORCEHT(si)	\
+-	(PCIE(si) && (si->pub.chip == BCM4716_CHIP_ID))
+-
+-/* GPIO Based LED powersave defines */
+-#define DEFAULT_GPIO_ONTIME	10	/* Default: 10% on */
+-#define DEFAULT_GPIO_OFFTIME	90	/* Default: 10% on */
+-
+-#ifndef DEFAULT_GPIOTIMERVAL
+-#define DEFAULT_GPIOTIMERVAL  ((DEFAULT_GPIO_ONTIME << GPIO_ONTIME_SHIFT) | DEFAULT_GPIO_OFFTIME)
+-#endif
+-
+-/*
+- * Build device path. Path size must be >= SI_DEVPATH_BUFSZ.
+- * The returned path is NULL terminated and has trailing '/'.
+- * Return 0 on success, nonzero otherwise.
+- */
+-extern int si_devpath(si_t *sih, char *path, int size);
+-/* Read variable with prepending the devpath to the name */
+-extern char *si_getdevpathvar(si_t *sih, const char *name);
+-extern int si_getdevpathintvar(si_t *sih, const char *name);
+-
+-extern void si_war42780_clkreq(si_t *sih, bool clkreq);
+-extern void si_pci_sleep(si_t *sih);
+-extern void si_pci_down(si_t *sih);
+-extern void si_pci_up(si_t *sih);
+-extern void si_pcie_extendL1timer(si_t *sih, bool extend);
+-extern int si_pci_fixcfg(si_t *sih);
+-
+-extern void si_chipcontrl_epa4331(si_t *sih, bool on);
+-/* Enable Ex-PA for 4313 */
+-extern void si_epa_4313war(si_t *sih);
+-
+-char *si_getnvramflvar(si_t *sih, const char *name);
+-
+-/* AMBA Interconnect exported externs */
+-extern si_t *ai_attach(uint pcidev, void *regs, uint bustype,
+-		       void *sdh, char **vars, uint *varsz);
+-extern si_t *ai_kattach(void);
+-extern void ai_scan(si_t *sih, void *regs, uint devid);
+-
+-extern uint ai_flag(si_t *sih);
+-extern void ai_setint(si_t *sih, int siflag);
+-extern uint ai_coreidx(si_t *sih);
+-extern uint ai_corevendor(si_t *sih);
+-extern uint ai_corerev(si_t *sih);
+-extern bool ai_iscoreup(si_t *sih);
+-extern void *ai_setcoreidx(si_t *sih, uint coreidx);
+-extern u32 ai_core_cflags(si_t *sih, u32 mask, u32 val);
+-extern void ai_core_cflags_wo(si_t *sih, u32 mask, u32 val);
+-extern u32 ai_core_sflags(si_t *sih, u32 mask, u32 val);
+-extern uint ai_corereg(si_t *sih, uint coreidx, uint regoff, uint mask,
+-		       uint val);
+-extern void ai_core_reset(si_t *sih, u32 bits, u32 resetbits);
+-extern void ai_core_disable(si_t *sih, u32 bits);
+-extern int ai_numaddrspaces(si_t *sih);
+-extern u32 ai_addrspace(si_t *sih, uint asidx);
+-extern u32 ai_addrspacesize(si_t *sih, uint asidx);
+-extern void ai_write_wrap_reg(si_t *sih, u32 offset, u32 val);
+-
+-#ifdef BCMSDIO
+-#define si_setcoreidx(sih, idx) sb_setcoreidx(sih, idx)
+-#define si_coreid(sih) sb_coreid(sih)
+-#define si_corerev(sih) sb_corerev(sih)
+-#endif
+-
+-#endif				/* _siutils_h_ */
 -- 
-1.7.0.4
+1.7.4.1
+
 
