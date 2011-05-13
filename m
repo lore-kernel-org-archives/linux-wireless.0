@@ -1,70 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50489 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1EFXcI convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:51773 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759155Ab1EMV1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 19:32:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110506232638.72e8900a@lxorguk.ukuu.org.uk>
-References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
- <1304719780-27347-2-git-send-email-lrodriguez@atheros.com> <20110506232638.72e8900a@lxorguk.ukuu.org.uk>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 6 May 2011 16:31:48 -0700
-Message-ID: <BANLkTimB7MB=E2gq80Gu5==anxwJsqjZCA@mail.gmail.com> (sfid-20110507_013223_779522_76BEBC92)
-Subject: Re: [RFC 1/2] misc: add Atheros ar1520 GPS support
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@linux-foundation.org, mingo@redhat.com, tglx@linutronix.de,
-	hpa@zytor.com, x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, allen.kao@atheros.com,
-	roman.gezikov@atheros.com, joonas.viskari@atheros.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 May 2011 17:27:31 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 09/13] net: wl12xx: sdio: add a platform_device
+Date: Sat, 14 May 2011 00:26:26 +0300
+Message-Id: <1305321990-22041-10-git-send-email-balbi@ti.com> (sfid-20110513_232855_443036_07EEFBBB)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 6, 2011 at 3:26 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Last time this driver came up the answer was that the userspace was
-> proprietary and this was in fact part of a mixed user/kernel driver which
-> seemed to raise all sorts of interesting questions.
->
-> This was NAKked before for that reason so why the resubmit. Kernel policy
-> is clear enough ?
+that device will match with a driver to
+be added to the core driver.
 
-I was not aware such a patch was even submitted before..
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |   45 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
->> + * You need a userspace application to cooperate with this driver. It and
->> + * more information about this driver can be obtained here:
->> + *
->> + * http://wireless.kernel.org/en/users/Drivers/ar5120
->
-> Which says:
->
-> Userspace application
->
-> This driver requires a userspace application which will interact with the
-> driver via ioctl. More information on this to be posted later.
->
-> So NAK
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index bb7569c..5c5e4f2 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/crc7.h>
+ #include <linux/vmalloc.h>
++#include <linux/platform_device.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+@@ -48,6 +49,7 @@
+ struct wl12xx_sdio_glue {
+ 	struct device		*dev;
+ 	struct wl1271		*wl;
++	struct platform_device	*core;
+ };
+ 
+ static const struct sdio_device_id wl1271_devices[] __devinitconst = {
+@@ -210,6 +212,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ {
+ 	const struct wl12xx_platform_data *wlan_data;
+ 
++	struct platform_device		*core;
++	struct resource			res[1];
+ 	struct wl12xx_sdio_glue		*glue;
+ 	struct ieee80211_hw		*hw;
+ 	struct wl1271			*wl;
+@@ -277,8 +281,47 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	/* Tell PM core that we don't need the card to be powered now */
+ 	pm_runtime_put_noidle(&func->dev);
+ 
++	core = platform_device_alloc("wl12xx-sdio", -1);
++	if (!core) {
++		dev_err(&func->dev, "can't allocate platform_device\n");
++		ret = -ENOMEM;
++		goto err4;
++	}
++
++	core->dev.parent = &func->dev;
++
++	memset(res, 0x00, sizeof(res) * ARRAY_SIZE(res));
++
++	res[0].start	= wlan_data->irq;
++	res[0].flags	= IORESOURCE_IRQ;
++	res[0].name	= "irq";
++
++	ret = platform_device_add_resources(core, res, ARRAY_SIZE(res));
++	if (ret) {
++		dev_err(&func->dev, "can't add resources\n");
++		goto err5;
++	}
++
++	ret = platform_device_add_data(core, wlan_data, sizeof(*wlan_data));
++	if (ret) {
++		dev_err(&func->dev, "can't add platform data\n");
++		goto err5;
++	}
++
++	ret = platform_device_register(core);
++	if (ret) {
++		dev_err(&func->dev, "can't register platform device\n");
++		goto err5;
++	}
++
+ 	return 0;
+ 
++err5:
++	platform_device_put(core);
++
++err4:
++	wl1271_unregister_hw(wl);
++
+ err3:
+ 	free_irq(wl->irq, wl);
+ 
+@@ -303,6 +346,8 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	wl1271_unregister_hw(wl);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
++	platform_device_del(glue->core);
++	platform_device_put(glue->core);
+ 	kfree(glue);
+ }
+ 
+-- 
+1.7.4.1.343.ga91df
 
-Umm, yeah, also unaware there was no userspace app which was open that
-was going to be provided, sorry about that, I'll check with the
-team...
-
-> Let's see an open userspace and then this driver can be submitted
->
-> +               time =
->  wait_event_interruptible_timeout(ar1520_data->wait_irq,
-> +
->  ar1520_data->irq_rx, +
->  msecs_to_jiffies(3142));
->
-> Why 3142 ?
-
-Really arbitrary as pi is, this didn't have a timeout before so I just
-added this for now. Was hoping Roman or Joonas can better estimate a
-better value here.
-
-> Come to think of it why not fixes the races while you are it.
-
-Sure.
-
-  Luis
