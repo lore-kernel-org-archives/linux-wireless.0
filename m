@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36029 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082Ab1EDXR3 (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:64319 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759552Ab1EMQjx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 19:17:29 -0400
-Received: by iyb14 with SMTP id 14so1369401iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 16:17:29 -0700 (PDT)
+	Fri, 13 May 2011 12:39:53 -0400
+Received: by pvg12 with SMTP id 12so1223379pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 09:39:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinB7cAmCahuK-qqejVWzO7T3Xq4Gg@mail.gmail.com>
-References: <1304413928-17673-1-git-send-email-arik@wizery.com>
- <1304527857.3563.24.camel@jlt3.sipsolutions.net> <BANLkTinB7cAmCahuK-qqejVWzO7T3Xq4Gg@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 5 May 2011 02:17:14 +0300
-Message-ID: <BANLkTi=S1X1RRaeNmqAoqugoB-dByDsaSQ@mail.gmail.com> (sfid-20110505_011733_390842_89D6D898)
-Subject: Re: [RFC] mac80211: reestablish mis-configured existing Rx BA sessions
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20110513160113.GA14293@zenon.in.qult.net>
+References: <20110513160113.GA14293@zenon.in.qult.net>
+Date: Fri, 13 May 2011 12:39:53 -0400
+Message-ID: <BANLkTikiWNXnB6NcS48-1x9KYes_o=omjg@mail.gmail.com> (sfid-20110513_183957_159701_71619D4C)
+Subject: Re: WPA in ad-hoc mode with carl9170
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 5, 2011 at 02:15, Arik Nemtsov <arik@wizery.com> wrote:
+On Fri, May 13, 2011 at 12:01 PM, Ignacy Gawedzki <i@lri.fr> wrote:
+> Hi,
 >
+> I've been trying to setup WPA using wpa_supplicant in an ad-hoc network,
+> specifically using AR9170 USB interfaces with the carl9170 driver and
+> firmware.
 >
-> On Wed, May 4, 2011 at 19:50, Johannes Berg <johannes@sipsolutions.net>
-> wrote:
->>
->> On Tue, 2011-05-03 at 12:12 +0300, Arik Nemtsov wrote:
->> > When forming a Rx BA session, sometimes the ADDBA response gets lost.
->> > This leads to a situation where the session is configured locally, but
->> > doesn't exist on the remote side. Subsequent ADDBA requests are declined
->> > by mac80211.
->> >
->> > Fix this by assuming the session state of the initiator is the correct
->> > one. When receiving an unexpected ADDBA request on a TID with an active
->> > Rx BA session, delete the existing one and establish a new session.
->>
->> I thought about this for a while but I don't really have an opinion I
->> think. Maybe the behaviour could be avoided by checking the ack status,
->> but that wouldn't be good enough for devices that don't have that...
+> Although wpa_supplicant is supposed to be able to setup a single shared group
+> key for all communications, it appears at least the broadcast traffic is
+> neither enciphered at the sending end nor received at the receiving end
+> (tested with both TKIP and CCMP).
 >
-> It helped me with at least two APs (when I put them far enough from the
-> station). I guess it won't hurt anything.
-> Checking the ack won't do any actual good - if the AP doesn't send another
-> ADDBA request we won't have a session up anyway. It just saves a little
-> memory on the reorder buffer.
-> Arik
+> I was wondering whether this is supposed to work or it is just too soon.  If
+> there's anything that I could do to contribute, I'd be happy to help.
+>
+> Thanks.
+>
+> Ignacy
 
-[replying again with a plain text email]
+Have you tested only with hw crypto?  Try passing the nohwcrypt param
+to the module while loading.
+
+-Brian
