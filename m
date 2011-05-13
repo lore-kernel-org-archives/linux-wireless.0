@@ -1,26 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:52752 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070Ab1E2QTW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51138 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759111Ab1EMMoV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 12:19:22 -0400
-Received: by ewy4 with SMTP id 4so1106632ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 09:19:20 -0700 (PDT)
+	Fri, 13 May 2011 08:44:21 -0400
+Subject: concurrency advertising -- driver maintainers
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: AP mode - usb wlan interface: Sagem XG-76NA 802.11bg
-From: mafeuser@gmail.com
-Date: Sun, 29 May 2011 18:19:17 +0200
-Message-ID: <umt4k4d932ey.fsf@gmail.com> (sfid-20110529_181926_271309_3C7B930F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 14:44:17 +0200
+Message-ID: <1305290657.3487.32.camel@jlt3.sipsolutions.net> (sfid-20110513_144426_187099_CDAFE5E0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo group members.
+Please excuse the long CC list. I want to make you aware that I plan to
+remove the WIPHY_FLAG_ENFORCE_COMBINATIONS flag again soon, so that all
+drivers that don't advertise valid combinations will not be able to have
+multiple virtual interfaces.
 
-I wonder if I can put it to AP (master mode) or in other words, does
-AP/master mode have to be supported by hardware or is it only matter of
-software(driver)?
+The affected drivers, as far as I can tell, are:
+ * ath5k
+ * ath9k
+ * carl9170
+ * hwsim (I'll look at this)
+ * iwlagn (I'm handling that of course)
+ * mwl8k
+ * rt2x00 (see RFC patch)
 
-best redards,
-Paul
+I'm happy to help out with the restrictions code, please let me know.
+
+I'd like to remove the flag again before it ever goes upstream, but I
+understand the timing is bad, unless we hold my patch out of 2.6.40.
+
+For completeness, I checked all drivers, and the following drivers don't
+support more than a single virtual interface anyway:
+ * adm8211
+ * at76c50x-usb -- but it is broken because it has no checks
+ * b43
+ * b43legacy
+ * iwlegacy
+ * libertas_tf
+ * p54
+ * rtl8180
+ * rtl8187
+ * rtlwifi
+ * wl1251
+ * wl12xx
+ * zd1211
+(Staging drivers:)
+ * brcm80211 is broken, allows multiple but can't handle it
+ * winbond is also broken the same way
+
+johannes
+
+
