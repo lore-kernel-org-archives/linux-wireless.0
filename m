@@ -1,31 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:41311 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754667Ab1E2PhU (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:51821 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759320Ab1EMV1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 11:37:20 -0400
-Received: by iwn34 with SMTP id 34so2423440iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 08:37:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1306524533.11997.2.camel@Nokia-N900-51-1>
-References: <1306506242-7552-1-git-send-email-lrodriguez@atheros.com> <1306524533.11997.2.camel@Nokia-N900-51-1>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 29 May 2011 08:37:00 -0700
-Message-ID: <BANLkTi=ATCCpnH=3Wk-125W82zPgXFJTrQ@mail.gmail.com> (sfid-20110529_173724_577665_FD008D83)
-Subject: Re: [PATCH] cfg80211: skip disabled channels on channel survey
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 May 2011 17:27:33 -0400
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
+Subject: [RFC/PATCH 10/13] net: wl12xx: main: add platform device
+Date: Sat, 14 May 2011 00:26:27 +0300
+Message-Id: <1305321990-22041-11-git-send-email-balbi@ti.com> (sfid-20110513_232906_146260_47033926)
+In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 27, 2011 at 12:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> The channel survey information will be empy for
->> disabled channels so simply discard those entries.
->
-> What if the channel was recently disabled?
+now that we have a platform_driver on both
+glue layers, add a platform_device to the
+core driver.
 
-Then we'd stop sending survey data for it.
+It's currently an empty platform_driver but
+more functionality will be added on later
+patches.
 
-  Luis
+Signed-off-by: Felipe Balbi <balbi@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8b3c8d1..d377e1f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3547,6 +3547,41 @@ int wl1271_free_hw(struct wl1271 *wl)
+ }
+ EXPORT_SYMBOL_GPL(wl1271_free_hw);
+ 
++static int __devinit wl12xx_probe(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static int __devexit wl12xx_remove(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static const struct platform_device_id wl12xx_id_table[] __devinitconst = {
++	{ "wl12xx-sdio", 0 },
++	{ "wl12xx-spi", 0 },
++	{  }	/* Terminating Entry */
++};
++MODULE_DEVICE_TABLE(platform, wl12xx_id_table);
++
++static struct platform_driver wl12xx_driver = {
++	.probe		= wl12xx_probe,
++	.remove		= __devexit_p(wl12xx_remove),
++	.id_table	= wl12xx_id_table,
++};
++
++static int __init wl12xx_init(void)
++{
++	return platform_driver_register(&wl12xx_driver);
++}
++module_init(wl12xx_init);
++
++static void __exit wl12xx_exit(void)
++{
++	platform_driver_unregister(&wl12xx_driver);
++}
++module_exit(wl12xx_exit);
++
+ u32 wl12xx_debug_level = DEBUG_NONE;
+ EXPORT_SYMBOL_GPL(wl12xx_debug_level);
+ module_param_named(debug_level, wl12xx_debug_level, uint, S_IRUSR | S_IWUSR);
+-- 
+1.7.4.1.343.ga91df
+
