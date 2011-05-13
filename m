@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39770 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932747Ab1ERCQE (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:38970 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932423Ab1EMVPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 22:16:04 -0400
-Received: by ywe9 with SMTP id 9so217366ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 19:16:02 -0700 (PDT)
+	Fri, 13 May 2011 17:15:46 -0400
+Received: by vxi39 with SMTP id 39so2128593vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 14:15:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=napNyMOSKT-cDR79X4ZMka9bMsg@mail.gmail.com>
-References: <19922.8044.978298.696663@gargle.gargle.HOWL>
-	<BANLkTi=RvaQcTuvi+sXxNpOv6qYU_FvoEQ@mail.gmail.com>
-	<19922.38456.333268.853074@gargle.gargle.HOWL>
-	<BANLkTi=8JtAEO+49sgEAAkmGVJNmZmqBog@mail.gmail.com>
-	<BANLkTi=napNyMOSKT-cDR79X4ZMka9bMsg@mail.gmail.com>
-Date: Wed, 18 May 2011 10:16:02 +0800
-Message-ID: <BANLkTinNmGPh6VNF28Lr8pYmCRUKbJG4Wg@mail.gmail.com> (sfid-20110518_041607_684591_F95B1485)
-Subject: Re: [ath9k-devel] [PATCH 0/8] ath9k_htc patches
-From: Adrian Chadd <adrian@freebsd.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Keith Berkoben <berkoben@gmail.com>, Sujith <m.sujith@gmail.com>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis.Rodriguez@atheros.com
+In-Reply-To: <1305290751.3487.33.camel@jlt3.sipsolutions.net>
+References: <BANLkTi=pupNh=LMO-OEK+BbfNkpJz0nUkw@mail.gmail.com>
+	<20110513115030.GB5516@redhat.com>
+	<1305287703.3487.16.camel@jlt3.sipsolutions.net>
+	<20110513122235.GC5516@redhat.com>
+	<1305289642.3487.18.camel@jlt3.sipsolutions.net>
+	<20110513123913.GD5516@redhat.com>
+	<1305290751.3487.33.camel@jlt3.sipsolutions.net>
+Date: Fri, 13 May 2011 23:15:45 +0200
+Message-ID: <BANLkTin741=RL4Q4Tsn6w8LOv45xALyqMQ@mail.gmail.com> (sfid-20110513_231602_779870_F58C930D)
+Subject: Re: Setting my WiFi adhoc connection in power save mode
+From: Jorge Miguel <jmiggal@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 May 2011 04:46, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+Hi,
 
-> Patches go first into wireless-next, then stable stuff goes into
-> wirless-2.6 (current RC), and then both of these get pulled into
-> wireless-testing, which provides the RC fixes + the next bits, on a
-> stable kernel (RC).
+I am really glad I got all your answers. Thanks a lot. Now it is clear to me.
+Jorge.
+
+
+
+On 13 May 2011 14:45, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2011-05-13 at 14:39 +0200, Stanislaw Gruszka wrote:
 >
-> Compat-wireless daily snapshots use linux-next so changes take a bit
-> to propagate there.
+>> > I doubt it, iirc it was just some DMA issue that was discovered at some
+>> > point and nobody could really pinpoint it. Those old devices stored some
+>> > internal data into a host memory buffer, and reading them back sometimes
+>> > corrupted them.
+>>
+>> Ok, so I will probably not try to reenable PS (as long someone clearly
+>> state that it works in the past, and this is a regression).
 >
-> OpenWrt uses wireless-testing as the base tree, you can tell by
-> loading the compat module, it will tell you the base tree and git tree
-> tags that was used as source.
-
-And some (eg Felix) will merge in immediate bugfixes into openwrt that
-hasn't yet made it into a baked compat-wireless release.
-
-
-Adrian
+> Well, problem is that it _did_ work for some people, since it seemed to
+> depend on the platform. I don't remember all the details though.
+>
+>> Does this problem happen on both 4965 and 3945 ?
+>
+> I'm not sure on 3945. ISTR there was an issue, but I don't know if it
+> was the same one.
+>
+> johannes
+>
+>
