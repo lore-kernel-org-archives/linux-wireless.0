@@ -1,73 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51659 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756829Ab1ELJz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 05:55:26 -0400
-From: Jiri Slaby <jslaby@suse.cz>
-To: wey-yi.w.guy@intel.com
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH] iwlwifi: fix TX power configuration on 3945 and 4965 devices
-Date: Thu, 12 May 2011 11:55:24 +0200
-Message-Id: <1305194124-46828-1-git-send-email-jslaby@suse.cz> (sfid-20110512_115530_052802_E1B73537)
-References: bnc#619440 bnc#610421
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41579 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932201Ab1EMI5M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 04:57:12 -0400
+Received: by wwa36 with SMTP id 36so2644123wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:11 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 0/6] wl12xx: add initial wowlan support
+Date: Fri, 13 May 2011 11:57:07 +0300
+Message-Id: <1305277033-6662-1-git-send-email-eliad@wizery.com> (sfid-20110513_105716_166074_122C7F99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Add initial support for Wake-On-Wireless.
 
-When receiving a TX power change request from mac80211 the functions
-servicing these requests for 3945 and 4965 uses information in the
-active RXON. In iwl_mac_config the staging RXON is prepared based on
-various directions from mac80211 and only at the end is the staging
-RXON committed to the device and the active RXON updated.
+Currently, we support only the ANY trigger, which basically means
+the device stays awake while the host is being suspended, and will
+wake up the host by any irq it will trigger (but since the wl12xx
+fw offloads a lot of its work, it will probably wake up the host
+because of rx frame/beacon loss)
 
-By servicing the TX power change request while servicing the other
-requests that modify the staging RXON we loose the new information
-provided by mac80211.
+Note that this patchset needs some additional omap/mmc patches in 
+order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
+(however, if the MMC_PM_KEEP_POWER flag is not being supported we 
+don't advertise support for wowlan triggers, so this patchset alone
+shouldn't harm).
 
-Fix this by servicing the TX power change request after the RXON has
-been committed to the device and active RXON thus contains accurate
-information.
+Changes from v1:
+* reflow wl1271_hardirq (return immediately)
+* squash one patch 
+* define WL1271_PS_COMPLETE_TIMEOUT
 
-References: https://bugzilla.novell.com/show_bug.cgi?id=610421
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Jeff Mahoney <jeffm@suse.com>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
----
- drivers/net/wireless/iwlegacy/iwl-core.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+Eliad Peller (6):
+  wl12xx_sdio: set interrupt as wake_up interrupt
+  wl12xx: declare suspend/resume callbacks (for wowlan)
+  wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
+  wl12xx: prevent scheduling while suspending (WoW enabled)
+  wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
+  wl12xx: enter/exit psm on wowlan suspend/resume
 
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -2220,13 +2220,6 @@ int iwl_legacy_mac_config(struct ieee802
- 			IWL_DEBUG_MAC80211(priv, "Error setting sleep level\n");
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_POWER) {
--		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
--			priv->tx_power_user_lmt, conf->power_level);
--
--		iwl_legacy_set_tx_power(priv, conf->power_level, false);
--	}
--
- 	if (!iwl_legacy_is_ready(priv)) {
- 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		goto out;
-@@ -2245,6 +2238,14 @@ int iwl_legacy_mac_config(struct ieee802
- 			iwl_legacy_update_qos(priv, ctx);
- 	}
- 
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-+		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
-+			priv->tx_power_user_lmt, conf->power_level);
-+
-+		iwl_legacy_set_tx_power(priv, conf->power_level, false);
-+	}
-+
-+
- out:
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	mutex_unlock(&priv->mutex);
+ drivers/net/wireless/wl12xx/event.c  |    7 ++
+ drivers/net/wireless/wl12xx/main.c   |  146 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/ps.h     |    2 +
+ drivers/net/wireless/wl12xx/sdio.c   |   64 +++++++++++++++-
+ drivers/net/wireless/wl12xx/wl12xx.h |    9 ++
+ 5 files changed, 227 insertions(+), 1 deletions(-)
+
