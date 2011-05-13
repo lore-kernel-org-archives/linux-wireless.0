@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59421 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754258Ab1ECTFx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 15:05:53 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 24E14540157
-	for <linux-wireless@vger.kernel.org>; Tue,  3 May 2011 15:11:19 -0400 (EDT)
-Subject: Compat-wireless release for 2011-05-03 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110503190552.748E440EC5@repository3.orbit-lab.org> (sfid-20110503_210556_989932_55C67D46)
-Date: Tue,  3 May 2011 15:05:52 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mout8.freenet.de ([195.4.92.98]:59310 "EHLO mout8.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755258Ab1EMVe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 17:34:59 -0400
+Received: from [195.4.92.18] (helo=8.mx.freenet.de)
+	by mout8.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
+	id 1QL00f-0007tl-0F
+	for linux-wireless@vger.kernel.org; Fri, 13 May 2011 23:34:57 +0200
+Received: from p54a1954a.dip0.t-ipconnect.de ([84.161.149.74]:46891 helo=mail.maya.org)
+	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1QL00e-0002vH-MT
+	for linux-wireless@vger.kernel.org; Fri, 13 May 2011 23:34:56 +0200
+Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
+	by mail.maya.org (8.14.4/8.13.8) with ESMTP id p4DLYsWU002951
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 23:34:55 +0200
+Message-ID: <4DCDA3FA.2030007@01019freenet.de> (sfid-20110513_233504_334969_BCD763EE)
+Date: Fri, 13 May 2011 23:34:50 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [Regression] Kernel panic with ath9k
+References: <BANLkTi=9MWn8EWKD0-nFawNnfyEyMDT9sQ@mail.gmail.com>
+In-Reply-To: <BANLkTi=9MWn8EWKD0-nFawNnfyEyMDT9sQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + deb1f4e...4333b4b akpm-end   -> origin/akpm-end  (forced update)
-   3fd9952..adadfe4  akpm-start -> origin/akpm-start
-   56ccf59..8748375  history    -> origin/history
- + f361450...295f62d master     -> origin/master  (forced update)
-   3fd9952..adadfe4  stable     -> origin/stable
- * [new tag]         next-20110503 -> next-20110503
+Hello,
 
-compat-wireless code metrics
+well, there is really something broken with compat-wireless-2011-05-11.
+On 2.6.34 and rt2800pci, my machine crashed meanwhile 3 times always
+after the first wlan machine was authenticated. Unfortunately, I do not
+have any trace, because the machine always was locked up hard.
 
-    846702 - Total upstream lines of code being pulled
-      2355 - backport code changes
-      2048 - backport code additions
-       307 - backport code deletions
-      8033 - backport from compat module
-     10388 - total backport code
-    1.2269 - % of code consists of backport work
+compat-wireless-2011-05-05 does work fine.
+
+
+Regards,
+Andreas
