@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:56217 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320Ab1EHMzz convert rfc822-to-8bit (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:47163 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754620Ab1EME6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 08:55:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <4DC6910F.2020008@hauke-m.de>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	<4DC6910F.2020008@hauke-m.de>
-Date: Sun, 8 May 2011 14:55:54 +0200
-Message-ID: <BANLkTi=wtxH6suf8D=nzYKrBjWV9-yAQLw@mail.gmail.com> (sfid-20110508_145611_846935_D07DFEB4)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 May 2011 00:58:45 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Walter Goldens <goldenstranger@yahoo.com>, 596626@bugs.debian.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, maximilian attems <max@stro.at>,
+	linux-wireless@vger.kernel.org,
+	Geoff Simmons <gsimmons@gsimmons.org>
+In-Reply-To: <13602.31426.qm@web161615.mail.bf1.yahoo.com>
+References: <13602.31426.qm@web161615.mail.bf1.yahoo.com>
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-pGjoYFEfyT/5MdVSoIXW"
+Date: Fri, 13 May 2011 05:58:35 +0100
+Message-ID: <1305262715.4065.436.camel@localhost> (sfid-20110513_065850_737429_DCF0D25A)
+Mime-Version: 1.0
+Subject: Re: Bug#596626: [gsimmons@gsimmons.org: Bug#596626: Please support
+ Linksys WUSB600N v2 WiFi USB stick]
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/8 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 05/05/2011 11:59 PM, Rafał Miłecki wrote:
-> .....
->> --- /dev/null
->> +++ b/drivers/bcma/bcma_private.h
-> .....
->> +
->> +#define BCMA_ADDR_BASE               0x18000000
->> +#define BCMA_WRAP_BASE               0x18100000
->> +
-> ......
->> --- /dev/null
->> +++ b/drivers/bcma/scan.h
->> @@ -0,0 +1,56 @@
->> +#ifndef BCMA_SCAN_H_
->> +#define BCMA_SCAN_H_
->> +
->> +#define BCMA_ADDR_BASE               0x18000000
->> +#define BCMA_WRAP_BASE               0x18100000
->> +
-> .....
->
-> While graping through the code I found this. BCMA_ADDR_BASE and
-> BCMA_WRAP_BASE are defined twice.
 
-Will fix, thx.
+--=-pGjoYFEfyT/5MdVSoIXW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2011-05-11 at 09:25 -0700, Walter Goldens wrote:
+> > As mentioned by Jan, the device contains a RT3572
+> > chipset.  Its entry
+> > could moved into the section for known RT35XX devices (i.e.
+> > "#ifdef
+> > CONFIG_RT2800USB_RT35XX") as an alternative.
+> >=20
+> > Geoff
+>=20
+> This has already been done: http://git.kernel.org/?p=3Dlinux/kernel/git/i=
+vd/rt2x00.git;a=3Dcommitdiff;h=3Dce2919c9fffe2aa52f9c3e327176d03764dbf9b5
 
-> Why are some constants defined in purpose specific headers in
-> drivers/bcma/*.h like drivers/bcma/scan.h and some in
-> drivers/bcma/bcma_private.h and other in include/linux/bcma/bcma_regs.h ?
+That's all very well, but that isn't going to get into a stable release
+for another 3 months!  Device ID updates that don't require new
+supporting code should be sent upstream straight away (and cc'd to
+stable@kernel.org).
 
-What is unclear to you in this split? It says everything. scan.h for
-scanning, regs for registers, private for internal functions.
+I've cherry-picked this and the other two updates in rt2800usb that
+aren't in Linus's tree, but that doesn't help the users of other
+distributions that would benefit from them.
 
--- 
-Rafał
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-pGjoYFEfyT/5MdVSoIXW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATcy6dee/yOyVhhEJAQoj0RAArlQqcADa6Ajprrvid2XlgLbwZzevGnpe
+YRAl3dfezQHRBkjwSmAb3MkV1m7iiHLwsNkYO+SLVI3epx+bwMQw7UZA8TVHVngV
+ikQyp/7OOd9vAhvPLZgH8E/LxHS4Kyu1F/QZBT1MmTk1IW0kRhmIvXlsYJmZzVVP
+66ei/xRiH0qOgJnIS4Astq0kx5o3wKEqCDpfd/j1HU2M/624q6eyLaw7woAVNIXu
+5UcAsHIDPQzHPqE9BMxN/eODhu/Y3h5gjVqwmeMaPxsPDEeudGcLwI+14fWdQGIX
+tvV3adQRDgnngjjyh29ZblC2/U/HxS2NSVPxMfLVRlvTQPd4iBxSNPOGBoJkVnKW
+GbCNwqIeJSqAEJemMQREfvM1k3UA5F6t1Upx2d87urdwfbQOPFEESPyOsP/rDleX
+iw39IFK3y2CStry7zXmRvQKR6HRRm/lawz54y6iexr2ZhpksXDGuZAmOn0RO7XwV
+is4XIGBqEtBY8FuzNevFISi9kUoin3asu6Pv2xQAVr0mpTqYw7OoqEZRAMHifphS
+YCwXcb0TNpY91P8lWu1NnE4FtQChHS9dw+D9ZnJkUGKVNjxxuWeRdsuM5HdJO6En
+ju5mlaxuDjmpk78nWR0dTeQrChsiVcjHukXo26mJDuXx+tiSfYJ/sq3xliHBFZBx
+n3OjrgBOfuY=
+=c6zq
+-----END PGP SIGNATURE-----
+
+--=-pGjoYFEfyT/5MdVSoIXW--
