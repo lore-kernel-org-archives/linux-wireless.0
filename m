@@ -1,164 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59052 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:30885 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935737Ab1ETMWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 08:22:43 -0400
-Received: from mail.atheros.com ([10.234.20.105])
+	id S1759230Ab1EMO7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 10:59:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 05:22:13 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 07:58:45 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 3/6] ath9k: Handle IBSS status changes in BSS_CHANGED_IBSS
-Date: Fri, 20 May 2011 17:52:12 +0530
-Message-ID: <1305894135-14036-3-git-send-email-rmanoharan@atheros.com> (sfid-20110520_142246_780624_15980B93)
-In-Reply-To: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
+	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: [PATCH 1/9] ath9k_hw: make antenna diversity modules chip specific
+Date: Fri, 13 May 2011 20:29:04 +0530
+Message-ID: <1305298744-3269-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_165917_584634_C18B1656)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure ibss node's bss_changes under BSS_CHANGED_IBSS.
-And also start/stop ani timer only if the station join/leave
-the group.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+this is necessary to support Antenna diversity and combining in new chip
+sets such as AR9485, previously Antenna diversity support is available
+only in AR9285
+
+Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
+Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   85 +++++++++++++++++----------------
- 1 files changed, 44 insertions(+), 41 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |   42 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |   12 +++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    9 +++--
+ 3 files changed, 39 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2ca351f..81708ed 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1412,7 +1412,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
- 	/* Set up ANI */
--	if ((iter_data.naps + iter_data.nadhocs) > 0) {
-+	if (iter_data.naps > 0) {
- 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 		sc->sc_flags |= SC_OP_ANI_RUN;
- 		ath_start_ani(common);
-@@ -1952,50 +1952,35 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 
--	switch (sc->sc_ah->opmode) {
--	case NL80211_IFTYPE_ADHOC:
--		/* There can be only one vif available */
-+	/*
-+	 * Skip iteration if primary station vif's bss info
-+	 * was not changed
-+	 */
-+	if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
-+		return;
-+
-+	if (bss_conf->assoc) {
-+		sc->sc_flags |= SC_OP_PRIM_STA_VIF;
-+		avp->primary_sta_vif = true;
- 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
- 		common->curaid = bss_conf->aid;
- 		ath9k_hw_write_associd(sc->sc_ah);
--		/* configure beacon */
--		if (bss_conf->enable_beacon)
--			ath_beacon_config(sc, vif);
--		break;
--	case NL80211_IFTYPE_STATION:
--		/*
--		 * Skip iteration if primary station vif's bss info
--		 * was not changed
--		 */
--		if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
--			break;
--
--		if (bss_conf->assoc) {
--			sc->sc_flags |= SC_OP_PRIM_STA_VIF;
--			avp->primary_sta_vif = true;
--			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
--			common->curaid = bss_conf->aid;
--			ath9k_hw_write_associd(sc->sc_ah);
--			ath_dbg(common, ATH_DBG_CONFIG,
-+		ath_dbg(common, ATH_DBG_CONFIG,
- 				"Bss Info ASSOC %d, bssid: %pM\n",
- 				bss_conf->aid, common->curbssid);
--			ath_beacon_config(sc, vif);
--			/*
--			 * Request a re-configuration of Beacon related timers
--			 * on the receipt of the first Beacon frame (i.e.,
--			 * after time sync with the AP).
--			 */
--			sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
--			/* Reset rssi stats */
--			sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
--			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
-+		ath_beacon_config(sc, vif);
-+		/*
-+		 * Request a re-configuration of Beacon related timers
-+		 * on the receipt of the first Beacon frame (i.e.,
-+		 * after time sync with the AP).
-+		 */
-+		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
-+		/* Reset rssi stats */
-+		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 
--			sc->sc_flags |= SC_OP_ANI_RUN;
--			ath_start_ani(common);
--		}
--		break;
--	default:
--		break;
-+		sc->sc_flags |= SC_OP_ANI_RUN;
-+		ath_start_ani(common);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 7d68d61..b4a0c1d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -517,23 +517,7 @@ static void ar9002_hw_set_nf_limits(struct ath_hw *ah)
  	}
  }
  
-@@ -2005,6 +1990,9 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
+-void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+-{
+-	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+-
+-	priv_ops->set_rf_regs = NULL;
+-	priv_ops->rf_alloc_ext_banks = NULL;
+-	priv_ops->rf_free_ext_banks = NULL;
+-	priv_ops->rf_set_freq = ar9002_hw_set_channel;
+-	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
+-	priv_ops->olc_init = ar9002_olc_init;
+-	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
+-	priv_ops->do_getnf = ar9002_hw_do_getnf;
+-
+-	ar9002_hw_set_nf_limits(ah);
+-}
+-
+-void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
++static void ar9002_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 				   struct ath_hw_antcomb_conf *antconf)
+ {
+ 	u32 regval;
+@@ -546,9 +530,8 @@ void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 	antconf->fast_div_bias = (regval & AR_PHY_9285_FAST_DIV_BIAS) >>
+ 				  AR_PHY_9285_FAST_DIV_BIAS_S;
+ }
+-EXPORT_SYMBOL(ath9k_hw_antdiv_comb_conf_get);
  
-+	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
-+		return;
-+
- 	/* Reconfigure bss info */
- 	if (avp->primary_sta_vif && !bss_conf->assoc) {
- 		ath_dbg(common, ATH_DBG_CONFIG,
-@@ -2023,8 +2011,7 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	 * None of station vifs are associated.
- 	 * Clear bssid & aid
- 	 */
--	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
--	    !(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
-+	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
- 		ath9k_hw_write_associd(sc->sc_ah);
- 		/* Stop ANI */
- 		sc->sc_flags &= ~SC_OP_ANI_RUN;
-@@ -2054,6 +2041,22 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 			common->curbssid, common->curaid);
- 	}
+-void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
++static void ar9002_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 				   struct ath_hw_antcomb_conf *antconf)
+ {
+ 	u32 regval;
+@@ -566,4 +549,23 @@ void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
  
-+	if (changed & BSS_CHANGED_IBSS) {
-+		/* There can be only one vif available */
-+		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
-+		common->curaid = bss_conf->aid;
-+		ath9k_hw_write_associd(sc->sc_ah);
+ 	REG_WRITE(ah, AR_PHY_MULTICHAIN_GAIN_CTL, regval);
+ }
+-EXPORT_SYMBOL(ath9k_hw_antdiv_comb_conf_set);
 +
-+		if (bss_conf->ibss_joined) {
-+			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
-+			sc->sc_flags |= SC_OP_ANI_RUN;
-+			ath_start_ani(common);
-+		} else {
-+			sc->sc_flags &= ~SC_OP_ANI_RUN;
-+			del_timer_sync(&common->ani.timer);
-+		}
-+	}
++void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
 +
- 	/* Enable transmission of beacons (AP, IBSS, MESH) */
- 	if ((changed & BSS_CHANGED_BEACON) ||
- 	    ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon)) {
++	priv_ops->set_rf_regs = NULL;
++	priv_ops->rf_alloc_ext_banks = NULL;
++	priv_ops->rf_free_ext_banks = NULL;
++	priv_ops->rf_set_freq = ar9002_hw_set_channel;
++	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
++	priv_ops->olc_init = ar9002_olc_init;
++	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
++	priv_ops->do_getnf = ar9002_hw_do_getnf;
++
++	ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
++	ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
++
++	ar9002_hw_set_nf_limits(ah);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 99f8334..8b8f044 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -121,6 +121,18 @@ static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
+ 	ath9k_hw_ops(ah)->set_clrdmask(ah, ds, val);
+ }
+ 
++static inline void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
++		struct ath_hw_antcomb_conf *antconf)
++{
++	ath9k_hw_ops(ah)->antdiv_comb_conf_get(ah, antconf);
++}
++
++static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
++		struct ath_hw_antcomb_conf *antconf)
++{
++	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b2248bb..67cca10 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -629,6 +629,11 @@ struct ath_hw_ops {
+ 	void (*set11n_aggr_last)(struct ath_hw *ah, void *ds);
+ 	void (*clr11n_aggr)(struct ath_hw *ah, void *ds);
+ 	void (*set_clrdmask)(struct ath_hw *ah, void *ds, bool val);
++	void (*antdiv_comb_conf_get)(struct ath_hw *ah,
++			struct ath_hw_antcomb_conf *antconf);
++	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
++			struct ath_hw_antcomb_conf *antconf);
++
+ };
+ 
+ struct ath_nf_limits {
+@@ -904,10 +909,6 @@ void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
+ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
+ u32 ath9k_hw_getdefantenna(struct ath_hw *ah);
+ void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
+-void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+-				   struct ath_hw_antcomb_conf *antconf);
+-void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+-				   struct ath_hw_antcomb_conf *antconf);
+ 
+ /* General Operation */
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
 -- 
-1.7.5.1
+1.7.0.4
 
