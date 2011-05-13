@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56905 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754658Ab1EKT3I (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:49159 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758028Ab1EMMSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 15:29:08 -0400
-Received: by bwz15 with SMTP id 15so714924bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 12:29:07 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 11 May 2011 14:29:06 -0500
-Message-ID: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com> (sfid-20110511_212926_919551_DA5BA33B)
-Subject: rtl8192ce.ko doesn't work with 802.11n?
-From: Flaminigo <sunnyiez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 May 2011 08:18:12 -0400
+Received: by mail-ew0-f47.google.com with SMTP id 5so724527ewy.6
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 05:18:10 -0700 (PDT)
+Subject: Re: [PATCH v3 1/3] cfg80211/nl80211: add support for scheduled
+ scans
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, eliad@wizery.com
+In-Reply-To: <1305283963.3487.12.camel@jlt3.sipsolutions.net>
+References: <1305122977-6740-1-git-send-email-coelho@ti.com>
+	 <1305122977-6740-2-git-send-email-coelho@ti.com>
+	 <20110512150530.GB2171@redhat.com> <1305217201.12586.949.camel@cumari>
+	 <20110513104524.GA14971@redhat.com>
+	 <1305283963.3487.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 May 2011 15:18:06 +0300
+Message-ID: <1305289086.12586.1111.camel@cumari> (sfid-20110513_141815_930735_82DC372A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MY university deployed 802.11n wireless LAN. However, my new T420
-cannot connect to the network under ubuntu 11.04. I found the driver
-for realtek 8188CE is rtl8192ce.ko, rtlwifi. I asked network
-administrator to help me. They told me my wireless adapter didn't work
-well with the 802.11n network. Is this because of the driver? The
-following are the wpa_supplicant output. FYI
+On Fri, 2011-05-13 at 12:52 +0200, Johannes Berg wrote:
+> On Fri, 2011-05-13 at 12:45 +0200, Stanislaw Gruszka wrote:
+> 
+> > > because the scheduled scan is a long-term operation and the normal scan
+> > > is done for a very short time (and the rest of the stack assumes it will
+> > > complete quickly enough as not to interfere with the connection.
+> > 
+> > Hmm, is this drawback of implementation or can not be done technically
+> > (question to myself :-) ? I can image that in ideal case hardware scanning
+> > will not affect normal operation, no matter how long it will take.
+> > Software scan is much worse, since we have to change channels manually.
+> > We currently share code between software scan and hardware scan in
+> > mac80211. Perhaps separating hw and sw scan code, would be a good idea
+> > and allow to consolidate hw scan and sched scan. I planning to look
+> > at this more closely.
+> 
+> Well, it's also a semantic question. If you trigger a scan, you expect a
+> result (or an abort) after a while. It could of course be extended with
+> a new attribute, but the error checking for that gets complicated,
+> especially if you consider older kernels that would simply ignore that
+> new attribute.
+> 
+> So basically, the only difference between "trigger scan (scheduled=1)"
+> and "trigger scheduled scan" (which this implements) would be in
+> nl80211. Everything else would have to separate them, since there are a
+> lot of internal things that behave differently depending on whether a
+> scan is running or not. Add the error checking, and I think we've got a
+> good case for new API :)
 
-------------------
-Trying to authenticate with 00:0b:85:97:33:0c (SSID='tamulink-wpa'
-freq=2462 MHz)
-Trying to associate with 00:0b:85:97:33:0c (SSID='tamulink-wpa' freq=2462 MHz)
-Associated with 00:0b:85:97:33:0c
-CTRL-EVENT-EAP-STARTED EAP authentication started
-CTRL-EVENT-EAP-FAILURE EAP authentication failed
-CTRL-EVENT-DISCONNECTED bssid=00:0b:85:97:33:0c reason=7
-Authentication with 00:00:00:00:00:00 timed out.
-Failed to initiate AP scan.
-Trying to authenticate with 00:24:6c:d0:48:42 (SSID='tamulink-wpa'
-freq=2462 MHz)
-Trying to associate with 00:24:6c:d0:48:42 (SSID='tamulink-wpa' freq=2462 MHz)
-Associated with 00:24:6c:d0:48:42
-CTRL-EVENT-EAP-STARTED EAP authentication started
-CTRL-EVENT-EAP-PROPOSED-METHOD vendor=0 method=26 -> NAK
-CTRL-EVENT-EAP-PROPOSED-METHOD vendor=0 method=25
-CTRL-EVENT-EAP-METHOD EAP vendor 0 method 25 (PEAP) selected
-CTRL-EVENT-EAP-PEER-CERT depth=3 subject='/L=ValiCert Validation
-Network/O=ValiCert, Inc./OU=ValiCert Class 2 Policy Validation
-Authority/CN=http://www.valicert.com//emailAddress=info@valicert.com'
-CTRL-EVENT-EAP-PEER-CERT depth=2 subject='/C=US/O=The Go Daddy Group,
-Inc./OU=Go Daddy Class 2 Certification Authority'
-CTRL-EVENT-EAP-PEER-CERT depth=1
-subject='/C=US/ST=Arizona/L=Scottsdale/O=GoDaddy.com,
-Inc./OU=http://certificates.godaddy.com/repository/CN=Go Daddy Secure
-Certification Authority/serialNumber=07969287'
-CTRL-EVENT-EAP-PEER-CERT depth=0 subject='/O=net.tamu.edu/OU=Domain
-Control Validated/CN=net.tamu.edu'
-EAP-MSCHAPV2: Authentication succeeded
-EAP-TLV: TLV Result - Success - EAP-TLV/Phase2 Completed
-CTRL-EVENT-EAP-SUCCESS EAP authentication completed successfully
-WPA: Key negotiation completed with 00:24:6c:d0:48:42 [PTK=CCMP GTK=TKIP]
-CTRL-EVENT-CONNECTED - Connection to 00:24:6c:d0:48:42 completed
-(auth) [id=0 id_str=]
-Michael MIC failure detected
-WPA: Sending EAPOL-Key Request (error=1 pairwise=0 ptk_set=1 len=99)
-Michael MIC failure detected
-WPA: Sending EAPOL-Key Request (error=1 pairwise=0 ptk_set=1 len=99)
-TKIP countermeasures started
-CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=14
-^CCTRL-EVENT-TERMINATING - signal 2 received
+I agree.  I think it's better to keep it simpler with a new command.
+Especially because the scheduled scan command will be extended with a
+few more arguments, which may not make sense with normal scans, such as
+filters etc.
 
 -- 
-Regards
-sunny
+Cheers,
+Luca.
+
