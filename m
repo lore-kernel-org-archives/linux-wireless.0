@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:12854 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758190Ab1ELSXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 14:23:54 -0400
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-From: Rhyland Klein <rklein@nvidia.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1305189092.3461.10.camel@jlt3.sipsolutions.net>
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:52044 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933082Ab1EMNnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 09:43:41 -0400
+Subject: Re: [PATCH] ssb: fix pcicore build breakage
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <randy.dunlap@oracle.com>
+In-Reply-To: <1305293189-20605-1-git-send-email-linville@tuxdriver.com>
+References: <20110512161914.e16be4d3.randy.dunlap@oracle.com>
+	 <1305293189-20605-1-git-send-email-linville@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 11:23:12 -0700
-Message-ID: <1305224592.10961.10.camel@rklein-linux2> (sfid-20110512_202411_707440_ABD347EA)
+Date: Fri, 13 May 2011 15:43:34 +0200
+Message-ID: <1305294214.12573.3.camel@maggie> (sfid-20110513_154344_754486_C705E94F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 01:31 -0700, Johannes Berg wrote:
-> On Wed, 2011-05-11 at 17:21 -0700, Rhyland Klein wrote:
+On Fri, 2011-05-13 at 09:26 -0400, John W. Linville wrote: 
+> drivers/ssb/main.c:1336: error: 'SSB_PCICORE_BCAST_ADDR' undeclared (first use in this function)
+> drivers/ssb/main.c:1337: error: 'SSB_PCICORE_BCAST_DATA' undeclared (first use in this function)
+> drivers/ssb/main.c:1349: error: 'struct ssb_pcicore' has no member named 'dev'
 > 
-> > +enum rfkill_gpio_clk_state {
-> > +	UNSPECIFIED = 0,
-> > +	PWR_ENABLED,
-> > +	PWR_DISABLED
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/ssb/main.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> Are you sure starting out with UNSPECIFIED works? Then you'll always
-> change, but if the clock was enabled already you still enable it on the
-> first set_block() from rfkill, which still has the refcount problem, no?
-> It seems to me that the original state has to be passed in from the
-> platform?
-> 
-> johannes
-> 
+> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> index ee2937c..a53fc4d 100644
+> --- a/drivers/ssb/main.c
+> +++ b/drivers/ssb/main.c
+> @@ -1332,6 +1332,7 @@ EXPORT_SYMBOL(ssb_bus_powerup);
+>  static void ssb_broadcast_value(struct ssb_device *dev,
+>  				u32 address, u32 data)
+>  {
+> +#ifdef CONFIG_SSB_DRIVER_PCICORE
+>  	/* This is used for both, PCI and ChipCommon core, so be careful. */
+>  	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
+>  	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
+> @@ -1340,6 +1341,7 @@ static void ssb_broadcast_value(struct ssb_device *dev,
+>  	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
+>  	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
+>  	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
+> +#endif
+>  }
+>  
+>  void ssb_commit_settings(struct ssb_bus *bus)
 
-I thought about that. But I decided the clock that it is possible to
-have the clock used for the radio used for something else right? in
-which case, the driver will leave the clk in whatever state it initially
-finds it. I.e. if the clock is disabled, then it will enable it only
-once and work, if it is enabled, it will add a refcount (only once) and
-then work and disable it again only once. It never changes the refcount
-in either direction by more than 1, and this way the initial setting of
-the clock is irrelevant. The board files can simply initialize the block
-as off if that is the initial clk state they want.
+This clearly is incorrect. Read the comment, please.
 
-rhyland
-
-
+-- 
+Greetings Michael.
 
