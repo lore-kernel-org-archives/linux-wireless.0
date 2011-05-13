@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16377 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759014Ab1EMAFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 20:05:00 -0400
-Subject: Re: [PATCH 1/9] iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y
- warning
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stephen Boyd <sboyd@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <1305244212-19183-2-git-send-email-sboyd@codeaurora.org>
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-	 <1305244212-19183-2-git-send-email-sboyd@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 17:01:42 -0700
-Message-ID: <1305244903.3589.0.camel@wwguy-ubuntu> (sfid-20110513_020527_664515_2C307406)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41579 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932245Ab1EMI5N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 04:57:13 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so2644123wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:13 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/6] wl12xx_sdio: set interrupt as wake_up interrupt
+Date: Fri, 13 May 2011 11:57:08 +0300
+Message-Id: <1305277033-6662-2-git-send-email-eliad@wizery.com> (sfid-20110513_105718_123753_9666BFA8)
+In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 16:50 -0700, Stephen Boyd wrote:
-> Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
-> warning:
-> 
-> In file included from arch/x86/include/asm/uaccess.h:573,
->                  from include/net/checksum.h:25,
->                  from include/linux/skbuff.h:28,
->                  from drivers/net/wireless/iwlegacy/iwl-4965-rs.c:28:
-> In function 'copy_from_user',
->     inlined from 'iwl4965_rs_sta_dbgfs_scale_table_write' at
->     drivers/net/wireless/iwlegacy/iwl-4965-rs.c:2616:
-> arch/x86/include/asm/uaccess_64.h:65:
-> warning: call to 'copy_from_user_overflow' declared with
-> attribute warning: copy_from_user() buffer size is not provably
-> correct
-> 
-> presumably due to buf_size being signed causing GCC to fail to
-> see that buf_size can't become negative.
-> 
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
-> ---
->  drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-Stanislaw Gruszka <sgruszka@redhat.com> is the maintainer for iwlegacy
+set the sdio interrupt as wake_up interrupt, so we will be able
+to wake up the suspended system (Wake-On-Wireless)
 
-Thanks
-Wey
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index bcd4ad7..1298461 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -267,6 +267,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 		goto out_free;
+ 	}
+ 
++	enable_irq_wake(wl->irq);
++
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+@@ -303,6 +305,7 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	wl1271_unregister_hw(wl);
++	disable_irq_wake(wl->irq);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
+ }
+-- 
+1.7.0.4
 
