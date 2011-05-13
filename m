@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757387Ab1ELSN0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 14:13:26 -0400
-Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTin2ZxDhZ+aotC=HDz9Fc==tf2gsgQ@mail.gmail.com> (sfid-20110512_200918_382044_0D97DD34)
-References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-	 <4DC81A61.9080101@candelatech.com>
-	 <1304959783.12202.7.camel@jlt3.sipsolutions.net>
-	 <BANLkTinHqMi=sy=sEzQPTz4QEsoucQXYVA@mail.gmail.com>
-	 <1305132500.17892.1.camel@jlt3.sipsolutions.net>
-	 <BANLkTikL0iLEWcseFdq572rZcVxVkKg8Hg@mail.gmail.com>
-	 <1305188063.3461.3.camel@jlt3.sipsolutions.net>
-	 <BANLkTin2ZxDhZ+aotC=HDz9Fc==tf2gsgQ@mail.gmail.com>
-	 (sfid-20110512_200918_382044_0D97DD34)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 20:13:22 +0200
-Message-ID: <1305224002.3461.34.camel@jlt3.sipsolutions.net> (sfid-20110512_201329_669142_60126847)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:31000 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759070Ab1EMPBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 May 2011 11:01:17 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:00:48 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
+	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: [PATCH 7/9] ath9k: Implement an API to swap main/ALT LNA's
+Date: Fri, 13 May 2011 20:31:09 +0530
+Message-ID: <1305298869-3542-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_170121_468977_3EB7F123)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 20:08 +0200, Björn Smedman wrote:
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-> > That has a failure path, and recently I posted a patch to advertise the
-> > interface type combinations. I don't think MAC addresses impose any sort
-> > of restriction.
-> 
-> I think at least some rt2x00 hw may not be able to handle all
-> combinations of multi-vif MAC addresses.
-> 
-> If I understand correctly ath9k will happily configure the hardware to
-> ack all BSSIDs if multi-vif MAC addresses are poorly chosen. I don't
-> know if that's a reason to fail but it wouldn't be good, right?
+for the diversity group 2(AR9485) we swap the LNA's of main/ALT antenna
+based on alternate antenna's rssi average in comparision with main
+antenna's rssi, while for AR9285(antenna diversity group 0)we still
+follow the older method of looking at the packet count in alternate
+antenna
 
-That'd be possible I guess if you configure them so their XOR is all
-ones, but it doesn't matter -- you can fail that right now. Also, if the
-user configures it like that maybe that's their fault?
+Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
+Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   31 ++++++++++++++++++++++++++++++-
+ 1 files changed, 30 insertions(+), 1 deletions(-)
 
-> Another case where cross-vif constraints are difficult to handle is
-> BSS_CHANGED_ERP_SLOT / BSS_CHANGED_ERP_PREAMBLE. Again, I'm not sure
-> failing is the right way to handle this but at least ath9k seems
-> incapable of having separate slot times / preambles for separate
-> vifs...
-
-That's hard to believe since it's rate control stuff?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 85e0532..47e0fc1 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -28,6 +28,33 @@ static inline bool ath_is_alt_ant_ratio_better(int alt_ratio, int maxdelta,
+ 		(alt_rssi_avg > main_rssi_avg + mindelta)) && (pkt_count > 50);
+ }
+ 
++static inline bool ath_ant_div_comb_alt_check(u8 div_group, int alt_ratio,
++					int curr_main_set, int curr_alt_set,
++					int alt_rssi_avg, int main_rssi_avg)
++{
++	bool result = false;
++	switch (div_group) {
++	case 0:
++		if (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO)
++			result = true;
++		break;
++	case 1:
++		if ((((curr_main_set == ATH_ANT_DIV_COMB_LNA2) &&
++			(curr_alt_set == ATH_ANT_DIV_COMB_LNA1) &&
++				(alt_rssi_avg >= (main_rssi_avg - 5))) ||
++			((curr_main_set == ATH_ANT_DIV_COMB_LNA1) &&
++			(curr_alt_set == ATH_ANT_DIV_COMB_LNA2) &&
++				(alt_rssi_avg >= (main_rssi_avg - 2)))) &&
++							(alt_rssi_avg >= 4))
++			result = true;
++		else
++			result = false;
++		break;
++	}
++
++	return result;
++}
++
+ static inline bool ath9k_check_auto_sleep(struct ath_softc *sc)
+ {
+ 	return sc->ps_enabled &&
+@@ -1413,7 +1440,9 @@ static void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs)
+ 	}
+ 
+ 	if (!antcomb->scan) {
+-		if (alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO) {
++		if (ath_ant_div_comb_alt_check(div_ant_conf.div_group,
++					alt_ratio, curr_main_set, curr_alt_set,
++					alt_rssi_avg, main_rssi_avg)) {
+ 			if (curr_alt_set == ATH_ANT_DIV_COMB_LNA2) {
+ 				/* Switch main and alt LNA */
+ 				div_ant_conf.main_lna_conf =
+-- 
+1.7.0.4
 
