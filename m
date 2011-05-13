@@ -1,67 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:37768 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753629Ab1EIN77 (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:45978 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366Ab1EMPWz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 09:59:59 -0400
-Received: by ewy19 with SMTP id 19so2278548ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:59:57 -0700 (PDT)
-Subject: Re: [PATCH 1/3] cfg80211/nl80211: add support for scheduled scans
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-In-Reply-To: <BANLkTinfovOLWL1b57kpV5S_LeUMbCatHQ@mail.gmail.com>
-References: <1304600420-24227-1-git-send-email-coelho@ti.com>
-	 <1304600420-24227-2-git-send-email-coelho@ti.com>
-	 <BANLkTinfovOLWL1b57kpV5S_LeUMbCatHQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 16:59:53 +0300
-Message-ID: <1304949593.12586.547.camel@cumari> (sfid-20110509_160236_602892_31BA54E9)
-Mime-Version: 1.0
+	Fri, 13 May 2011 11:22:55 -0400
+Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
+	by smtp-out.google.com with ESMTP id p4DFMrY8024238
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:22:53 -0700
+Received: from gxk2 (gxk2.prod.google.com [10.202.11.2])
+	by hpaq6.eem.corp.google.com with ESMTP id p4DFLqOc028537
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:22:52 -0700
+Received: by gxk2 with SMTP id 2so1210265gxk.8
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:22:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1305280792-9475-18-git-send-email-arend@broadcom.com>
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+	<1305280792-9475-18-git-send-email-arend@broadcom.com>
+Date: Fri, 13 May 2011 08:22:51 -0700
+Message-ID: <BANLkTikiPcWwPS91_jOLCD7bX=D3j0pkGg@mail.gmail.com> (sfid-20110513_172258_906222_BB967740)
+Subject: Re: [PATCH 18/32] staging: brcm80211: Fix for WPA GTK install issue
+ in brcmfmac driver
+From: Grant Grundler <grundler@chromium.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: gregkh@suse.de, Sukesh Srikakula <sukeshs@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 12:50 +0300, Eliad Peller wrote:
-> On Thu, May 5, 2011 at 4:00 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > Implement new functionality for scheduled scan offload.  With this feature we
-> > can scan automatically at certain intervals.
-> >
-> > The idea is that the hardware can perform scan automatically and filter on
-> > desired results without waking up the host unnecessarily.
-> >
-> > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
-> > commands to the nl80211 interface.  When results are available they are
-> > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
-> > informed when the scheduled scan has stopped with a
-> > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
-> > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
-> >
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> [...]
-> 
-> > +
-> > +       err = rdev->ops->sched_scan_start(&rdev->wiphy, dev, request);
-> > +       if (!err)
-> > +               nl80211_send_sched_scan(rdev, dev,
-> > +                                       NL80211_CMD_START_SCHED_SCAN);
-> > +       else {
-> > +out_free:
-> > +               kfree(request);
-> > +               rdev->sched_scan_req = NULL;
-> > +       }
-> > +
-> > +       return err;
-> > +}
-> 
-> i know it's the same in nl80211_trigger_scan(), but it still looks
-> very odd - goto into else block?!
+On Fri, May 13, 2011 at 2:59 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Sukesh Srikakula <sukeshs@broadcom.com>
+>
+> Last 16 bytes of the key sent by cfg80211 needs to be swapped before
+> installing it to FW for TKIP encryption. This is not done for group
+> key in current code, which is corrected with this fix.
+>
+> Cc: devel@linuxdriverproject.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: Grant Grundler <grundler@chromium.org>
 
-Good point, looks a bit ugly and it was indeed copied.  I'll clean it up
-a bit.
+Thanks Arend+Sukesh for posting this! :)
 
--- 
-Cheers,
-Luca.
+Tested-by: Grant Grundler <grundler@chromium.org>
 
+Please add the same line for Aaron Plattner <aplattner@nvidia.com>
+    http://gerrit.chromium.org/gerrit/502
+
+cheers,
+grant
+
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Brett Rudley <brudley@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+> index b44daf9..c60fc7c 100644
+> --- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+> +++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+> @@ -1616,6 +1616,7 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+>        s32 val;
+>        s32 wsec;
+>        s32 err = 0;
+> +       u8 keybuf[8];
+>
+>        WL_DBG("key index (%d)\n", key_idx);
+>        CHECK_SYS_UP();
+> @@ -1644,6 +1645,9 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+>                WL_DBG("WLAN_CIPHER_SUITE_WEP104\n");
+>                break;
+>        case WLAN_CIPHER_SUITE_TKIP:
+> +               memcpy(keybuf, &key.data[24], sizeof(keybuf));
+> +               memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
+> +               memcpy(&key.data[16], keybuf, sizeof(keybuf));
+>                key.algo = CRYPTO_ALGO_TKIP;
+>                WL_DBG("WLAN_CIPHER_SUITE_TKIP\n");
+>                break;
+> --
+> 1.7.4.1
+>
+>
+>
