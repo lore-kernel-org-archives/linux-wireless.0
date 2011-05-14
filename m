@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33886 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53453 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933183Ab1ETPKm (ORCPT
+	with ESMTP id S1753200Ab1ENI1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 11:10:42 -0400
-Subject: Re: [PATCH 1/2]: mac80211: set tx rate and retries when injecting
+	Sat, 14 May 2011 04:27:42 -0400
+Subject: Re: iw connect syntax for wep
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Matteo Croce <matteo@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTin6ettB1nhnrAjDncX1MrahfS4Z6g@mail.gmail.com> (sfid-20110520_011405_835059_85A96447)
-References: <BANLkTin6ettB1nhnrAjDncX1MrahfS4Z6g@mail.gmail.com>
-	 (sfid-20110520_011405_835059_85A96447)
+To: John Frankish <j-frankish@slb.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <654DF80AD31A344E93DBCC6280BD6DEF19352F42@NL0230MBX08N1.DIR.slb.com> (sfid-20110514_091121_246970_E2FF9308)
+References: <654DF80AD31A344E93DBCC6280BD6DEF19352F42@NL0230MBX08N1.DIR.slb.com>
+	 (sfid-20110514_091121_246970_E2FF9308)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 May 2011 08:11:46 -0700
-Message-ID: <1305904306.4640.0.camel@jlt3.sipsolutions.net> (sfid-20110520_171045_263111_D0C4EE51)
+Date: Sat, 14 May 2011 10:27:39 +0200
+Message-ID: <1305361659.3437.3.camel@jlt3.sipsolutions.net> (sfid-20110514_102747_082779_483E4E25)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +++ b/net/mac80211/ieee80211_i.h	2011-05-20 00:24:14.010640270 +0200
-> @@ -1217,6 +1217,10 @@
->  	u8 padding_for_rate;
->  	__le16 tx_flags;
->  	u8 data_retries;
-> +	/*HT info*/
-> +	u8 ht_known;
-> +	u8 ht_flag;
-> +	u8 ht_mcs;
->  } __packed;
+On Sat, 2011-05-14 at 07:01 +0000, John Frankish wrote:
+> The iw documentation and "iw --help" states the following for establishing a wep connection:
+> 
+> iw wlan0 connect foo keys 0:abcde d:1:0011223344
+> 
+> What command syntax is supposed to be used when connecting to an ap using a single wep code consisting of 13 hex pairs?
+> 
+> "iw wlan0 connect ssid keys 1:00112233445566778899AABBCC" does not work
 
-> --- a/include/net/mac80211.h	2011-05-20 00:22:56.210640264 +0200
-> +++ b/include/net/mac80211.h	2011-05-20 00:24:14.020640270 +0200
-> @@ -2278,7 +2278,7 @@
->   * The TX headroom reserved by mac80211 for its own tx_status functions.
->   * This is enough for the radiotap header.
->   */
-> -#define IEEE80211_TX_STATUS_HEADROOM	13
-> +#define IEEE80211_TX_STATUS_HEADROOM	16
-
-This both belongs to the other patch.
+13 hex pairs isn't a valid key. WEP keys are either 5 or 10 bytes.
 
 johannes
 
