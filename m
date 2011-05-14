@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:41000 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153Ab1E2UEg (ORCPT
+Received: from sx003.ddc-nl0105.slb.com ([199.6.154.22]:49970 "EHLO
+	nl0105mta01.mail.slb.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280Ab1ENHLK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:04:36 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh01-2.mail.saunalahti.fi (Postfix) with SMTP id D5A168C4AF
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:04:35 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id C4C51158A64
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:04:34 +0300 (EEST)
-Subject: [RFC PATCH 04/27] rtlwifi: include mac80211.h from core.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 29 May 2011 23:04:34 +0300
-Message-ID: <20110529200434.16479.84395.stgit@localhost6.localdomain6> (sfid-20110529_220439_697893_5940F696)
-In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+	Sat, 14 May 2011 03:11:10 -0400
+Received: from nl0105mta01.mail.slb.com (localhost.localdomain [127.0.0.1])
+	by localhost (Postfix) with SMTP id 5E52259024D
+	for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 07:01:12 +0000 (GMT)
+Received: from NL0230MBX01N1.DIR.slb.com (nl0230mbx01n1.dir.slb.com [199.6.132.5])
+	(using TLSv1 with cipher AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by nl0105mta01.mail.slb.com (Postfix) with ESMTPS id 18E7A59022F
+	for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 07:01:12 +0000 (GMT)
+From: John Frankish <j-frankish@slb.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: iw connect syntax for wep
+Date: Sat, 14 May 2011 07:01:10 +0000
+Message-ID: <654DF80AD31A344E93DBCC6280BD6DEF19352F42@NL0230MBX08N1.DIR.slb.com> (sfid-20110514_091121_246970_E2FF9308)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-core.h references ieee80211_ops but doesn't include mac80211.h, which issues
-a warning once mac80211-compat.h is taken into use.
+The iw documentation and "iw --help" states the following for establishing a wep connection:
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- drivers/net/wireless/rtlwifi/core.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+iw wlan0 connect foo keys 0:abcde d:1:0011223344
 
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 4b247db..f02824a 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -30,6 +30,8 @@
- #ifndef __RTL_CORE_H__
- #define __RTL_CORE_H__
- 
-+#include <net/mac80211.h>
-+
- #define RTL_SUPPORTED_FILTERS		\
- 	(FIF_PROMISC_IN_BSS | \
- 	FIF_ALLMULTI | FIF_CONTROL | \
+What command syntax is supposed to be used when connecting to an ap using a single wep code consisting of 13 hex pairs?
 
+"iw wlan0 connect ssid keys 1:00112233445566778899AABBCC" does not work
+
+Thanks
+John
