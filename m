@@ -1,75 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15132773.pureserver.info ([217.160.209.225]:36367 "EHLO
-	smtp.chost.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932345Ab1EMN0c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:26:32 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	devel <devel@lists.laptop.org>, Dan Williams <dcbw@redhat.com>,
-	John@xo15-sascha.sascha.silbe.org,
-	W.Linville@xo15-sascha.sascha.silbe.org, <linville@tuxdriver.com>,
-	libertas-dev <libertas-dev@lists.infradead.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Add libertas_disablemesh module parameter to disable mesh interface
-To: Randy Dunlap <rdunlap@xenotime.net>
-In-reply-to: <20110511100030.cad34893.rdunlap@xenotime.net>
-References: <1305118354-17337-1-git-send-email-silbe@activitycentral.com> <20110511100030.cad34893.rdunlap@xenotime.net>
-Date: Fri, 13 May 2011 15:26:24 +0200
-Message-Id: <1305292756-sup-4842@xo15-sascha.sascha.silbe.org> (sfid-20110513_152636_492231_8B023F84)
-MIME-Version: 1.0
-From: Sascha Silbe <sascha-ml-reply-to-2011-2@silbe.org>
-Content-Type: multipart/signed; boundary="=-1305293187-827477-1562-6606-12-="; protocol="application/pgp-signature"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58383 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755263Ab1ENSAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 May 2011 14:00:39 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: fix building of brcm80211
+Date: Sat, 14 May 2011 20:00:27 +0200
+Message-Id: <1305396027-5864-3-git-send-email-hauke@hauke-m.de> (sfid-20110514_200043_507531_FCF292C7)
+In-Reply-To: <1305396027-5864-1-git-send-email-hauke@hauke-m.de>
+References: <1305396027-5864-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The Broadcom brcm80211 driver now needs brcmutil.ko. Furthermore the
+config options are now set to m to, most parts are build as module when
+the options are set to m and y. Some options for this driver where at
+the wrong position in config.mk.
 
---=-1305293187-827477-1562-6606-12-=
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk                              |   15 ++++++++++-----
+ patches/35-fix-makefile-includes.patch |   13 +++++++++++++
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
-Excerpts from Randy Dunlap's message of Wed May 11 19:00:30 +0200 2011:
-> On Wed, 11 May 2011 14:52:34 +0200 Sascha Silbe wrote:
-> =
+diff --git a/config.mk b/config.mk
+index abe6030..99485a4 100644
+--- a/config.mk
++++ b/config.mk
+@@ -370,6 +370,10 @@ endif #CONFIG_WIRELESS_EXT
+ CONFIG_RTL8192CE=m
+ CONFIG_RTL8192SE=m
+ 
++ifdef CONFIG_COMPAT_STAGING
++CONFIG_BRCMSMAC=m
++endif #CONFIG_COMPAT_STAGING
++
+ endif #CONFIG_PCI
+ ## end of PCI
+ 
+@@ -540,10 +544,6 @@ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
+ ifdef CONFIG_COMPAT_STAGING
+-
+-CONFIG_BRCMSMAC=y
+-# CONFIG_BRCMDBG=y
+-
+ ifdef CONFIG_WIRELESS_EXT
+ # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+ # CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
+@@ -555,7 +555,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
+ 
+-CONFIG_BRCMFMAC=y
++CONFIG_BRCMFMAC=m
+ 
+ endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_COMPAT_STAGING
+@@ -595,6 +595,11 @@ endif #CONFIG_MAC80211_LEDS
+ CONFIG_ATH_COMMON=m
+ # CONFIG_ATH_DEBUG=y
+ 
++ifdef CONFIG_COMPAT_STAGING
++CONFIG_BRCMUTIL=m
++# CONFIG_BRCMDBG=y
++endif #CONFIG_COMPAT_STAGING
++
+ ifdef CONFIG_CRC7
+ CONFIG_WL1251=m
+ CONFIG_WL12XX=m
+diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
+index 7d1ceaf..4a01aa2 100644
+--- a/patches/35-fix-makefile-includes.patch
++++ b/patches/35-fix-makefile-includes.patch
+@@ -46,3 +46,16 @@ path the make process will search in the kernel tree for the headers.
+  
+  BRCMSMAC_OFILES := \
+  	wl_mac80211.o \
++--- a/drivers/staging/brcm80211/util/Makefile
+++++ b/drivers/staging/brcm80211/util/Makefile
++@@ -16,8 +16,8 @@
++ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ 
++ ccflags-y :=				\
++-	-Idrivers/staging/brcm80211/util \
++-	-Idrivers/staging/brcm80211/include
+++	-I$(obj)			\
+++	-I$(obj)/../include
++ 
++ BRCMUTIL_OFILES := \
++ 	bcmutils.o \
+-- 
+1.7.4.1
 
-> > This allows individual users and deployments to disable mesh support =
-at
-> > runtime, i.e. without having to build and maintain a custom kernel.
-> =
-
-> I guess a user could want to do this on a per-driver basis, but ISTM th=
-at
-> it would be better to be something like a sysctl that applies to all (w=
-ireless)
-> drivers.
-
-AFAIK libertas is the only driver with a mesh implementation based on an
-outdated 802.11s draft. To clarify, we could rename the parameter to
-lbs_disable_olpcmesh (or just disable_olpcmesh).
-Disabling 802.11s (latest draft) based mesh support is a separate
-matter.
-
-Sascha
-
--- =
-
-http://sascha.silbe.org/
-http://www.infra-silbe.de/
-
---=-1305293187-827477-1562-6606-12-=
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.1.0beta1 (GNU/Linux)
-
-iQEcBAEBCgAGBQJNzTGAAAoJELpz82VMF3DaJHYH+gMFPvB8brmrYbDVbteoIl+5
-aUQ43A9MxtJKDFXr/51azfBFxAVu7JSxhHA+I1U/lY3xjubqyslOObZ7sOnEh9iP
-lAP1nyjNNLNqZblwu5uPh7Z81Kz7cl4RLF4Li7dHc9Xq7Ewy/o6TQeOCPhHt/QAm
-eBlNEWXIbZSc5yRYD7HfTp+3enDKE6I/Wmj+bB+vL6mOq23yisx5E93tifZaNeNx
-etFGiOq35kUBZUjm7ibYcDgx+kDN01IbKynodHSFE4PPC64nmYRv02amR+bpl2QF
-67j4YNZCnAsqHdWcivHHfJ1j11c35TTmX4tQqOSu02qSfoWTxvoJxvMJjIhRd9o=
-=SSLj
------END PGP SIGNATURE-----
-
---=-1305293187-827477-1562-6606-12-=--
