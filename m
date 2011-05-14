@@ -1,112 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:44444 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932079Ab1ESGgH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 02:36:07 -0400
-Received: by ewy22 with SMTP id 22so688099ewy.7
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 23:35:22 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: remove deprecated CONFIG_WL12XX_HT flag
-Date: Thu, 19 May 2011 09:35:00 +0300
-Message-Id: <1305786900-16380-1-git-send-email-coelho@ti.com> (sfid-20110519_083611_451833_60A2660B)
+Received: from kroah.org ([198.145.64.141]:34711 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758266Ab1ENPqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 May 2011 11:46:32 -0400
+Date: Sat, 14 May 2011 08:46:36 -0700
+From: Greg KH <greg@kroah.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 02/32] staging: brcm80211: new Kconfig item to enable IO
+ reordering fix
+Message-ID: <20110514154636.GA25783@kroah.com> (sfid-20110514_174645_409913_84FB0F7A)
+References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+ <1305280792-9475-2-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1305280792-9475-2-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver now support HT properly, so we can always have HT enabled.
+On Fri, May 13, 2011 at 11:59:22AM +0200, Arend van Spriel wrote:
+> From: Roland Vossen <rvossen@broadcom.com>
+> 
+> bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+> transactions. As a fix, a read after write is performed on certain places
+> in the code. Older chips and the newer 5357 family don't require this fix.
+> 
+> Cc: devel@linuxdriverproject.org
+> Cc: linux-wireless@vger.kernel.org
+> Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+> Reviewed-by: Brett Rudley <brudley@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  drivers/staging/brcm80211/Kconfig                  |    8 ++++++++
+>  .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 ++--
+>  drivers/staging/brcm80211/include/bcmutils.h       |   11 +++++++++++
+>  3 files changed, 21 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
+> index f4cf9b2..a11ffc7 100644
+> --- a/drivers/staging/brcm80211/Kconfig
+> +++ b/drivers/staging/brcm80211/Kconfig
+> @@ -36,3 +36,11 @@ config BRCMDBG
+>  	depends on BRCMSMAC || BRCMFMAC
+>  	---help---
+>  	  Selecting this enables additional code for debug purposes.
+> +
+> +config BRCM_FIX_IO_ORDER
+> +	bool "Broadcom I/O order fix"
+> +	default n
+> +	depends on BRCMSMAC
+> +	---help---
+> +	  Select this for for platforms running on bcm4706, 4716, 4717 or 4718.
+> +	  It resolves an I/O issue with the PCIe core used in these chips.
 
-Remove the WL12XX_HT configuration.
+No, don't make a new kconfig option for something that everyone has to
+enable as they don't know what they have on their system (think
+universal kernels built by distros.)
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/Kconfig |   10 ----------
- drivers/net/wireless/wl12xx/main.c  |    6 ------
- drivers/net/wireless/wl12xx/rx.c    |    2 --
- drivers/net/wireless/wl12xx/tx.c    |    2 --
- 4 files changed, 0 insertions(+), 20 deletions(-)
+Do this check dynamically, depending on the chip the driver is running
+on, don't rely on a user to know what to do here.
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 35ce7b0..9baea0d 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -20,16 +20,6 @@ config WL12XX
- 	  If you choose to build a module, it will be called wl12xx. Say N if
- 	  unsure.
- 
--config WL12XX_HT
--        bool "TI wl12xx 802.11 HT support (EXPERIMENTAL)"
--        depends on WL12XX && EXPERIMENTAL
--        default n
--        ---help---
--          This will enable 802.11 HT support in the wl12xx module.
--
--	  That configuration is temporary due to the code incomplete and
--	  still in testing process.
--
- config WL12XX_SPI
- 	tristate "TI wl12xx SPI support"
- 	depends on WL12XX && SPI_MASTER
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index bc00e52..947e5fd 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3510,7 +3510,6 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
- /* 11n STA capabilities */
- #define HW_RX_HIGHEST_RATE	72
- 
--#ifdef CONFIG_WL12XX_HT
- #define WL12XX_HT_CAP { \
- 	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 | \
- 	       (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT), \
-@@ -3523,11 +3522,6 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
- 		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
- 		}, \
- }
--#else
--#define WL12XX_HT_CAP { \
--	.ht_supported = false, \
--}
--#endif
- 
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_supported_band wl1271_band_2ghz = {
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 7009103..95a24f1 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -57,11 +57,9 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 
- 	status->rate_idx = wl1271_rate_to_idx(desc->rate, status->band);
- 
--#ifdef CONFIG_WL12XX_HT
- 	/* 11n support */
- 	if (desc->rate <= CONF_HW_RXTX_RATE_MCS0)
- 		status->flag |= RX_FLAG_HT;
--#endif
- 
- 	status->signal = desc->rssi;
- 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index ca3ab1c..351d62c 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -425,7 +425,6 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
- 		rate_set >>= 1;
- 	}
- 
--#ifdef CONFIG_WL12XX_HT
- 	/* MCS rates indication are on bits 16 - 23 */
- 	rate_set >>= HW_HT_RATES_OFFSET - band->n_bitrates;
- 
-@@ -434,7 +433,6 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
- 			enabled_rates |= (CONF_HW_BIT_RATE_MCS_0 << bit);
- 		rate_set >>= 1;
- 	}
--#endif
- 
- 	return enabled_rates;
- }
--- 
-1.7.1
+So I'm not going to accept this patch, sorry.
 
+greg k-h
