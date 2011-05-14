@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65179 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757525Ab1EKQ2b (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51013 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758805Ab1ENAG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:28:31 -0400
-Received: by bwz15 with SMTP id 15so581945bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:28:30 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtlwifi: Fix panic due to memory allocation failure
-Date: Wed, 11 May 2011 18:28:25 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-References: <4dcab6af.skkZ1nWg46gP0cdM%Larry.Finger@lwfinger.net>
-In-Reply-To: <4dcab6af.skkZ1nWg46gP0cdM%Larry.Finger@lwfinger.net>
+	Fri, 13 May 2011 20:06:57 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p4E06ui5019884
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 17:06:57 -0700
+Message-ID: <4DCDC7A0.2020504@candelatech.com> (sfid-20110514_020759_726744_B04DBCFC)
+Date: Fri, 13 May 2011 17:06:56 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201105111828.26261.chunkeey@googlemail.com> (sfid-20110511_182856_975818_D4E5542B)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Can't get hostapd to start, channels are all passive-scanning?
+References: <4DCDC068.9060307@candelatech.com>
+In-Reply-To: <4DCDC068.9060307@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 May 2011 18:17:51 Larry Finger wrote:
-> The PCI routine of this driver is allocating receive buffers of order 2,
-> which causes an unnecessary fragmentation of memory. To make matters
-> worse, there are locations that fail to check for allocation failures,
-> or return success when the allocation actually failed. Kernel panics
-> result.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>              [2.6.37 and 2.6.38]
-> ---
-> 
-> John,
-> 
-> This is 2.6.39 material. I hope we make the cutoff.
-> 
-> Larry
-> ---
-> 
-> Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-> @@ -996,7 +998,7 @@ static void _rtl_pci_init_trx_var(struct
->  	 */
->  	rtlpci->txringcount[BE_QUEUE] = RT_TXDESC_NUM_BE_QUEUE;
->  
-> -	rtlpci->rxbuffersize = 9100;	/*2048/1024; */
-> +	rtlpci->rxbuffersize = 4096;
->  	rtlpci->rxringcount = RTL_PCI_MAX_RX_COUNT;	/*64; */
->  }
+On 05/13/2011 04:36 PM, Ben Greear wrote:
+> Any idea what would cause all of my 5Ghz channels to be passive
+> scanning (which keeps hostapd from being able to use them, evidently)
 >
-Are you sure this change won't break 8k AMSDU rx?
-[or is there some magic that disables disable_amsdu_8k
-for pci devices?]
+> Frequencies:
+> * 5180 MHz [36] (17.0 dBm) (passive scanning, no IBSS)
+> * 5200 MHz [40] (17.0 dBm) (passive scanning, no IBSS)
+> * 5220 MHz [44] (17.0 dBm) (passive scanning, no IBSS)
+> * 5240 MHz [48] (17.0 dBm) (passive scanning, no IBSS)
+> * 5260 MHz [52] (18.0 dBm) (passive scanning, no IBSS, radar detection)
+> * 5280 MHz [56] (18.0 dBm) (passive scanning, no IBSS, radar detection)
+> * 5300 MHz [60] (18.0 dBm) (passive scanning, no IBSS, radar detection)
+> * 5320 MHz [64] (18.0 dBm) (passive scanning, no IBSS, radar detection)
 
-Regards,
-	Chr
+Bleh...reboot and it comes up looking more normal (first 4 are usable, at least).
+
+Will post again if I can reproduce it.
+
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
