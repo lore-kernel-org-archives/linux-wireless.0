@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63988 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932667Ab1EWT0e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 15:26:34 -0400
-Received: by iwn34 with SMTP id 34so5063586iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:26:34 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:58129 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750756Ab1ENENd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 May 2011 00:13:33 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 21:13:03 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] mac80211: abort scan_work immediately when the device goes down
+Date: Sat, 14 May 2011 09:43:28 +0530
+Message-ID: <1305346408-3933-1-git-send-email-rmanoharan@atheros.com> (sfid-20110514_061337_534040_0445450F)
 MIME-Version: 1.0
-In-Reply-To: <4DDAACF3.3050705@candelatech.com>
-References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
- <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 May 2011 12:26:14 -0700
-Message-ID: <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com> (sfid-20110523_212653_703697_79FDD703)
-Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
-To: Ben Greear <greearb@candelatech.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 23, 2011 at 11:52 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/23/2011 11:39 AM, Ben Greear wrote:
->>
->> On 05/23/2011 09:54 AM, Ben Greear wrote:
->>>
->>> On 05/23/2011 04:28 AM, Mohammed Shafi wrote:
->>>>
->>>> On Sat, May 21, 2011 at 3:52 AM, Ben Greear<greearb@candelatech.com>
->>>> wrote:
->>>>>
->>>>> This is on 2.6.39-wl+
->>>>>
->>>>> All the 5Ghz channels are showing as passive scanning, which
->>>>> makes them unusable for APs if nothing else.
->>>>
->>>> for me channels 36,40,44,48 are ok in 5ghz. used the latest
->>>> wireless-testing just brought the card up as station mode.
->>>
->>> Most of my systems show the same, at least most of the time.
->>>
->>>
->>>>> Any idea why this is happening?
->>>>
->>>> don't know, may be regulatory.
->>>
->>> After a reboot and an idle weekend, mine also look normal.
->>> So, it's something transient it appears.
->>
->> Err, I mis-spoke..the 9380 system still shows passive
->> scanning everywhere...
->
-> Busted one:
->
-> ath: EEPROM regdomain: 0x6a
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: 00
-> ath: Regpair used: 0x6a
->
-> cfg80211: Calling CRDA for country: US
-> cfg80211: Regulatory domain changed to country: US
-> cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
-> max_eirp)
-> cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
-> cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
-> cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
->
->
-> Bleh, seems my Sparklan 127 NIC is set to world-roam :(
->
-> What a total pain in the arse!
+As long as no delay is required b/w channel change, scan work
+is proceeding without scheduling a new work. In such case, we
+can not abort scan work when the card was unplugged. This patch
+completes the scanning immediately whenever the device goes down.
 
-Its what the card was designed and programmed for. The only thing you
-can do with world roaming cards then is just scan, and if you find a
-beacon on a channel which is a non-DFS channel beaconing will be
-enabled then.
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ net/mac80211/iface.c |    4 ++--
+ net/mac80211/scan.c  |    5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4054399..9d18c43 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -384,11 +384,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	int i;
+ 	enum nl80211_channel_type orig_ct;
+ 
++	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
++
+ 	if (local->scan_sdata == sdata)
+ 		ieee80211_scan_cancel(local);
+ 
+-	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+-
+ 	/*
+ 	 * Stop TX on this interface first.
+ 	 */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index ea44a8e..102300c 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -719,6 +719,11 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	 * without scheduling a new work
+ 	 */
+ 	do {
++		if (!ieee80211_sdata_running(sdata)) {
++			aborted = true;
++			goto out_complete;
++		}
++
+ 		switch (local->next_scan_state) {
+ 		case SCAN_DECISION:
+ 			/* if no more bands/channels left, complete scan */
+-- 
+1.7.5.1
+
