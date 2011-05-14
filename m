@@ -1,57 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:38970 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932423Ab1EMVPq (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53853 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496Ab1ENNS3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 17:15:46 -0400
-Received: by vxi39 with SMTP id 39so2128593vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 14:15:46 -0700 (PDT)
+	Sat, 14 May 2011 09:18:29 -0400
+Received: by wwa36 with SMTP id 36so3716043wwa.1
+        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 06:18:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1305290751.3487.33.camel@jlt3.sipsolutions.net>
-References: <BANLkTi=pupNh=LMO-OEK+BbfNkpJz0nUkw@mail.gmail.com>
-	<20110513115030.GB5516@redhat.com>
-	<1305287703.3487.16.camel@jlt3.sipsolutions.net>
-	<20110513122235.GC5516@redhat.com>
-	<1305289642.3487.18.camel@jlt3.sipsolutions.net>
-	<20110513123913.GD5516@redhat.com>
-	<1305290751.3487.33.camel@jlt3.sipsolutions.net>
-Date: Fri, 13 May 2011 23:15:45 +0200
-Message-ID: <BANLkTin741=RL4Q4Tsn6w8LOv45xALyqMQ@mail.gmail.com> (sfid-20110513_231602_779870_F58C930D)
-Subject: Re: Setting my WiFi adhoc connection in power save mode
-From: Jorge Miguel <jmiggal@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTi=9MWn8EWKD0-nFawNnfyEyMDT9sQ@mail.gmail.com>
+References: <BANLkTi=9MWn8EWKD0-nFawNnfyEyMDT9sQ@mail.gmail.com>
+Date: Sat, 14 May 2011 18:48:27 +0530
+Message-ID: <BANLkTinG6636OgYc8KNt0sRL-aVUD_4LWQ@mail.gmail.com> (sfid-20110514_151853_163401_AF81F7B3)
+Subject: Re: [Regression] Kernel panic with ath9k
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: cyberGn0m <cy6ergn0m@gmail.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, May 14, 2011 at 1:36 AM, cyberGn0m <cy6ergn0m@gmail.com> wrote:
+> Hi everybody
+>
+> I've just build compat-wireless-2011-05-11 and facing kernel painc
+> with ath9k driver with kernel 2.6.33-7. Here is kernel backtrace
+>
+>
+> May 13 02:43:53 cgmachine kernel: Call Trace:
+> May 13 02:43:53 cgmachine kernel: <IRQ> [<ffffffff810e45b3>]
+> __alloc_pages_nodemask+0x573/0x6c0
+> May 13 02:43:53 cgmachine kernel: [<ffffffff81113dfb>]
+> alloc_pages_current+0x7b/0xe0
+>  May 13 02:43:53 cgmachine kernel: [<ffffffff8111b527>] new_slab+0x2f7/0x310
+> May 13 02:43:53 cgmachine kernel: [<ffffffff8111d6de>] __slab_alloc+0x1be/0x460
+> May 13 02:43:53 cgmachine kernel: [<ffffffffa021e039>] ?
+> ath_rxbuf_alloc+0x39/0xc0 [ath]
+>  May 13 02:43:53 cgmachine kernel: [<ffffffff8111f3fd>]
+> __kmalloc_node_track_caller+0xbd/0x190
+> May 13 02:43:53 cgmachine kernel: [<ffffffffa021e039>] ?
+> ath_rxbuf_alloc+0x39/0xc0 [ath]
+> May 13 02:43:53 cgmachine kernel: [<ffffffff813055f0>] __alloc_skb+0x80/0x190
+>  May 13 02:43:53 cgmachine kernel: [<ffffffffa021e039>]
+> ath_rxbuf_alloc+0x39/0xc0 [ath]
+> May 13 02:43:53 cgmachine kernel: [<ffffffffa0e92d28>]
+> ath_rx_tasklet+0x2b8/0x680 [ath9k]
+> May 13 02:43:53 cgmachine kernel: [<ffffffff81203c00>] ?
+> swiotlb_map_page+0x0/0xf0
+>  May 13 02:43:53 cgmachine kernel: [<ffffffffa0e91149>]
+> ath9k_tasklet+0xf9/0x130 [ath9k]
+> May 13 02:43:53 cgmachine kernel: [<ffffffff8105ceb5>] tasklet_action+0xd5/0xe0
+> May 13 02:43:53 cgmachine kernel: [<ffffffffa0e8f76f>] ?
+> ath_isr+0x12f/0x190 [ath9k]
+>  May 13 02:43:53 cgmachine kernel: [<ffffffff8105e3c9>] __do_softirq+0xb9/0x1f0
+> May 13 02:43:53 cgmachine kernel: [<ffffffff8100af5c>] call_softirq+0x1c/0x30
+> May 13 02:43:53 cgmachine kernel: [<ffffffff8100cc25>] do_softirq+0x65/0xa0
+>  May 13 02:43:53 cgmachine kernel: [<ffffffff8105e265>] irq_exit+0x85/0x90
+> May 13 02:43:53 cgmachine kernel: [<ffffffff8100c175>] do_IRQ+0x75/0xf0
+> May 13 02:43:53 cgmachine kernel: [<ffffffff813ba613>] ret_from_intr+0x0/0x11
+>  May 13 02:43:53 cgmachine kernel: <EOI> [<ffffffffa008183c>] ?
+> acpi_idle_enter_simple+0x117/0x14b [processor]
+> May 13 02:43:53 cgmachine kernel: [<ffffffffa0081835>] ?
+> acpi_idle_enter_simple+0x110/0x14b [processor]
+>  May 13 02:43:53 cgmachine kernel: [<ffffffff812f21a7>]
+> cpuidle_idle_call+0xa7/0x140
+> May 13 02:43:53 cgmachine kernel: [<ffffffff81008e23>] cpu_idle+0xb3/0x110
+> May 13 02:43:53 cgmachine kernel: [<ffffffff813b239f>]
+> start_secondary+0x1f3/0x236
+>
+>
+> Then I've build compat-wireless-2010-06-05 and it works fine so it's regression.
+.
+true, but wireless testing seems to work fine. please use that until its fixed
 
-I am really glad I got all your answers. Thanks a lot. Now it is clear to me.
-Jorge.
-
-
-
-On 13 May 2011 14:45, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-05-13 at 14:39 +0200, Stanislaw Gruszka wrote:
 >
->> > I doubt it, iirc it was just some DMA issue that was discovered at some
->> > point and nobody could really pinpoint it. Those old devices stored some
->> > internal data into a host memory buffer, and reading them back sometimes
->> > corrupted them.
->>
->> Ok, so I will probably not try to reenable PS (as long someone clearly
->> state that it works in the past, and this is a regression).
->
-> Well, problem is that it _did_ work for some people, since it seemed to
-> depend on the platform. I don't remember all the details though.
->
->> Does this problem happen on both 4965 and 3945 ?
->
-> I'm not sure on 3945. ISTR there was an issue, but I don't know if it
-> was the same one.
->
-> johannes
->
+>  -- CG
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
