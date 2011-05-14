@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:47290 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916Ab1EDROR convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41684 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab1ENPUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 13:14:17 -0400
-Received: by vxi39 with SMTP id 39so1369600vxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 10:14:17 -0700 (PDT)
+	Sat, 14 May 2011 11:20:30 -0400
+Received: by iwn34 with SMTP id 34so2929082iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 08:20:29 -0700 (PDT)
+Message-ID: <4DCE9DB8.7080404@lwfinger.net> (sfid-20110514_172033_386332_FCBA247F)
+Date: Sat, 14 May 2011 10:20:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4DC165D7.50403@openwrt.org>
-References: <1304467039-7730-1-git-send-email-javier@cozybit.com>
- <1304467039-7730-14-git-send-email-javier@cozybit.com> <4DC165D7.50403@openwrt.org>
-From: Javier Cardona <javier@cozybit.com>
-Date: Wed, 4 May 2011 10:13:56 -0700
-Message-ID: <BANLkTikOOvGfzV4YK6_0LWnF3jFQy-N0ig@mail.gmail.com> (sfid-20110504_191421_441702_E0BB1B39)
-Subject: Re: [PATCH 13/13] ath9k: fix beaconing for mesh interfaces
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Flaminigo <sunnyiez@gmail.com>
+CC: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>	<4DCB3DFF.1030809@lockie.ca> <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+In-Reply-To: <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 4, 2011 at 7:42 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-05-04 1:57 AM, Javier Cardona wrote:
->>
->> Mesh beaconing on ath9k was broken by this commit:
->>
->> commit 4801416c76a3a355076d6d371c00270dfe332e1c
->> Author: Ben Greear<greearb@candelatech.com>
->> Date:   Sat Jan 15 19:13:48 2011 +0000
->>
->> This patch assigns the right opmode when the device is used in mesh
->> mode.
->>
->> Reported-by: Fabrice Deyber fabricedeyber@agilemesh.com
->> Signed-off-by: Javier Cardona<javier@cozybit.com>
->
-> Any idea why exactly ath9k needs to use this opmode? If I understand the
-> specs correctly, 802.11s does not use distributed beacons like ad-hoc mode,
-> so theoretically it should be fine with using the AP iftype.
-> If beacons don't work at all in this opmode for 802.11s then this patch may
-> just be covering up an underlying bug rather than fixing the real issue.
+On 05/12/2011 08:59 AM, Flaminigo wrote:
+> Thank you for the reply. I think N network in the university is OK.
+> Because,  old computer connected it without any problem. The windows
+> system can also connect it. From the output of wpa_supplicant, the
+> authentication part works well. I've tried to use the latest drive
+> from realtek. The firmware distribute is exactly the same as that in
+> Ubuntu 11.04. But this will make core dump.
 
-Older versions of the 11s draft let implementers decide whether mesh
-nodes would beacon in ad-hoc or AP mode.  Apparently on ath9k ad-hoc
-mode was chosen when the earlier mesh draft was implemented.
+There is a problem with driver rtl8192ce with 802.11n networks that use a 40 MHz 
+bandwidth. As you never answered my questions, I don't know if that is the 
+problem that you are seeing. If you go to 
+http://bugzilla.kernel.org/show_bug.cgi?id=35082, there is a patch that may fix 
+your problem. At least it worked here.
 
-The current version of the draft defines a different beaconing mode
-specific for mesh.  This is very unlikely to change since 11s has
-already passed sponsor ballot.  My suggestion would be to keep using
-ad-hoc style beaconing in ath9k for mesh and to leave the opmode
-around for when mesh-specific beaconing is implemented in the driver.
+Larry
 
-But I know little about ath9k.  If someone can suggest a better way to
-"unbreak" mesh beaconing I'll be equally happy.
-
-Thanks!
-
-Javier
