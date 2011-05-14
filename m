@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:36563 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754010Ab1EQLce convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46977 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759848Ab1ENDxA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 07:32:34 -0400
-Received: by qyk7 with SMTP id 7so2011421qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 04:32:33 -0700 (PDT)
+	Fri, 13 May 2011 23:53:00 -0400
+Received: by vws1 with SMTP id 1so2228922vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 20:52:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com>
-References: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Tue, 17 May 2011 13:32:13 +0200
-Message-ID: <BANLkTimoju5LSrKcRe67c41mCkPU0PUOjg@mail.gmail.com> (sfid-20110517_133237_285533_EBAD08DF)
-Subject: Re: ssb: how did we get special reject bit for SSB rev 2.3?
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1305331247.680.7.camel@jlt3.sipsolutions.net>
+References: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
+ <BANLkTinDyLyVX3HFHU7i4GFUi8SixOdzAQ@mail.gmail.com> <1305270793.3487.3.camel@jlt3.sipsolutions.net>
+ <BANLkTi=R_Eyz8+iZsk+=Gs4vaNo-0eUVng@mail.gmail.com> <1305331247.680.7.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 13 May 2011 20:52:39 -0700
+Message-ID: <BANLkTinYGGnGoE2jeuAmEYGW7HyBsV2+BA@mail.gmail.com> (sfid-20110514_055306_691497_A4E85D86)
+Subject: Re: mesh RCU issues
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/17 Rafał Miłecki <zajec5@gmail.com>:
-> Currently we are using different REJECT bit for SSB rev 2.3:
-> #define  SSB_TMSLOW_REJECT      0x00000002 /* Reject (Standard Backplane) */
-> #define  SSB_TMSLOW_REJECT_23   0x00000004 /* Reject (Backplane rev 2.3) */
+On Fri, May 13, 2011 at 5:00 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2011-05-13 at 13:28 -0700, Javier Cardona wrote:
 >
-> Does anyone know where did we get this from?
-
-Broadcom public sources define it as follows:
-#define SBTML_REJ_MASK          0x0006          /* reject field */
-#define SBTML_REJ               0x0002          /* reject */
-#define SBTML_TMPREJ            0x0004          /* temporary reject,
-for error recovery */
-
+>> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+>> index 83ce48e..1db8bba 100644
+>> --- a/net/mac80211/mesh_pathtbl.c
+>> +++ b/net/mac80211/mesh_pathtbl.c
+> [snip]
 >
-> wl does never use this bit:
+> With this patch, I get the warnings below.
 
-It seems neither do the public ssb sources:
-# grep -r 'SBTML_TMPREJ' shared/ | wc -l
-0
-#
+Thanks.  Any ideas on how to fix sparse?  I'd like to see those too :)
 
-Jonas
+> The locking ones are definitely genuine bugs,
+
+I'm not sure I fully understand the sparse message... would this fix
+the two locking warnings?
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 83ce48e..fbf0c28 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -376,8 +376,10 @@ void mesh_mpath_table_grow(void)
+
+        rcu_read_lock();
+        newtbl = mesh_table_alloc(rcu_dereference(mesh_paths)->size_order + 1);
+-       if (!newtbl)
++       if (!newtbl) {
++               rcu_read_unlock();
+                return;
++       }
+        write_lock_bh(&pathtbl_resize_lock);
+        oldtbl = mesh_paths;
+        if (mesh_table_grow(mesh_paths, newtbl) < 0) {
+@@ -400,8 +402,10 @@ void mesh_mpp_table_grow(void)
+
+        rcu_read_lock();
+        newtbl = mesh_table_alloc(rcu_dereference(mpp_paths)->size_order + 1);
+-       if (!newtbl)
++       if (!newtbl) {
++               rcu_read_unlock();
+                return;
++       }
+        write_lock_bh(&pathtbl_resize_lock);
+        oldtbl = mpp_paths;
+        if (mesh_table_grow(mpp_paths, newtbl) < 0) {
+
+
+
+Javier
