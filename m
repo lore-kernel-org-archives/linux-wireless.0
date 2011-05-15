@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34076 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786Ab1EIP72 convert rfc822-to-8bit (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:56861 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750865Ab1EOUvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 11:59:28 -0400
-Received: by wya21 with SMTP id 21so3992287wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 08:59:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTimsS+efr9WJ8FnLt5WM7H4V9itZiw@mail.gmail.com>
-References: <4DC2C743.9060004@01019freenet.de>
-	<BANLkTi=V2=UpZENHek37q2D43KZyeAiO-Q@mail.gmail.com>
-	<20110509114601.GA27067@zenon.in.qult.net>
-	<BANLkTikAYtW5o9rVS_WT-1XuGQVXOucjZg@mail.gmail.com>
-	<BANLkTimsS+efr9WJ8FnLt5WM7H4V9itZiw@mail.gmail.com>
-Date: Mon, 9 May 2011 21:29:26 +0530
-Message-ID: <BANLkTi=6ve+qkOrMgCqxU8KxyEQRxu_-bw@mail.gmail.com> (sfid-20110509_175931_278500_24578541)
-Subject: =?windows-1252?Q?Re=3A_compile=2Derror_agg=2Dtx=2Ec=3A_error=3A_implicit_declarat?=
-	=?windows-1252?Q?ion_of_function_=91kfree=5Frcu=92?=
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Juan Carlos Garza <juancarlosgarza@gmail.com>
-Cc: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 15 May 2011 16:51:07 -0400
+From: Clemens Noss <cnoss@gmx.de>
+To: linux-wireless@vger.kernel.org, gregkh@suse.de
+Cc: arend@broadcom.com, rvossen@broadcom.com, henryp@broadcom.com,
+	brudley@broadcom.com, devel@linuxdriverproject.org
+Subject: [PATCH] staging: brcm80211: use correct pointer types in bcm_pktq_flush
+Date: Sun, 15 May 2011 22:50:46 +0200
+Message-Id: <1305492646-20122-1-git-send-email-cnoss@gmx.de> (sfid-20110515_225117_574001_36CEA7EA)
+In-Reply-To: <4DD02F72.3070905@broadcom.com>
+References: <4DD02F72.3070905@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 9, 2011 at 8:50 PM, Juan Carlos Garza
-<juancarlosgarza@gmail.com> wrote:
-> Hi,
->
-> On Mon, May 9, 2011 at 3:32 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->> On Mon, May 9, 2011 at 5:16 PM, Ignacy Gawedzki <i@lri.fr> wrote:
->>> On Fri, May 06, 2011 at 10:35:08AM +0530, thus spake Mohammed Shafi:
->>>> On Thu, May 5, 2011 at 9:20 PM, Andreas Hartmann
->>>> <andihartmann@01019freenet.de> wrote:
->>>> > Hello,
->>>> >
->>>> > since May, there is a compile error in compat-wireless (against kernel
->>>> > 2.6.34):
->>>
->>> I, as it appears with many others, have the same kind of trouble compiling the
->>> latests compat-wireless snapshots on some kernels (2.6.38 for me).
->
-> I'm having this problem as well with a 2.6.24 kernel.
->
-> The file /include/linux/rcupdate.h , and maybe other files too,
-> need to be included in the compat-wireless package
-> as the function kfree_rcu is actually introduced in a patch for
-> the current linux-next tree.
->
-> I guess they'll be fixing that soon, in the meantime try copying the missing
->  file(s) manually.
+to clarify the intention:
 
-Oh ok thanks!
+On Sun, May 15, 2011 at 09:54:26PM +0200, Arend van Spriel wrote:
+> On 05/15/2011 08:10 PM, Hauke Mehrtens wrote:
+[...]
+>> Why don't you use the correct pointer type here instead of casting then
+>> around and the parameter names are meaningless too.
+>>
+>> static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, struct
+>> cb_del_ampdu_pars *ampdu_pars)
+[...]
+> Actually this is a generic callback mechanism in which an additional
+> parameter can be passed, which can be of *any* type hence a void pointer
+> seems justified here and a meaningless name is used. I do agree that the
+> txi parameter will always be a struct sk_buff and should be indicated as
+> such.
 
->
->>>
->>> Obviously the kfree_rcu machinery should go into some compat/ source file.  In
->>> the meantime, I personnaly reverted these changes (see attached patch) and it
->>> works just fine.
->>
->> I blindly used your patch and now the compat-wireless is compiling for me.
->> thanks a lot.
->>
->> with regards,
->> shafi
->>
->>>
->>> --
->>> /* This is not a comment */
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> Juan Carlos Garza
->
+Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Clemens Noss <cnoss@gmx.de>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |    3 +--
+ drivers/staging/brcm80211/include/bcmutils.h   |    2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index 0d93bd6..b1bc1a6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -1225,9 +1225,8 @@ void wlc_ampdu_shm_upd(struct ampdu_info *ampdu)
+ /*
+  * callback function that helps flushing ampdu packets from a priority queue
+  */
+-static bool cb_del_ampdu_pkt(void *p, void *arg_a)
++static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
+ {
+-	struct sk_buff *mpdu = (struct sk_buff *)p;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(mpdu);
+ 	struct cb_del_ampdu_pars *ampdu_pars =
+ 				 (struct cb_del_ampdu_pars *)arg_a;
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index 1d57934..4dc190b 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -74,7 +74,7 @@
+ #define PKTQ_PREC_ITER(pq, prec)        for (prec = (pq)->num_prec - 1; prec >= 0; prec--)
+ 
+ /* fn(pkt, arg).  return true if pkt belongs to if */
+-	typedef bool(*ifpkt_cb_t) (void *, void *);
++typedef bool(*ifpkt_cb_t) (struct sk_buff *, void *);
+ 
+ /* operations on a specific precedence in packet queue */
+ 
+-- 
+1.7.4.5
+
