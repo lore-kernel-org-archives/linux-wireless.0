@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:57425 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754327Ab1EHP7G (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45154 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970Ab1EOBXG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 11:59:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH][WAS:bcmai, axi] bcma: add Broadcom specific AMBA bus driver
-Date: Sun, 8 May 2011 17:59:02 +0200
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	George Kashperko <george@znau.edu.ua>,
-	Russell King <rmk@arm.linux.org.uk>, Greg KH <greg@kroah.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev@lists.infradead.org,
-	Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	Andy Botting <andy@andybotting.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com> <201105081647.22091.arnd@arndb.de> <BANLkTimhOCL7O1ERqUKkH_4sgq5xNYJZRg@mail.gmail.com>
-In-Reply-To: <BANLkTimhOCL7O1ERqUKkH_4sgq5xNYJZRg@mail.gmail.com>
+	Sat, 14 May 2011 21:23:06 -0400
+Received: by bwz15 with SMTP id 15so2947641bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2011 18:23:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201105081759.03032.arnd@arndb.de> (sfid-20110508_175913_544694_AE1BF241)
+In-Reply-To: <4DCE9DB8.7080404@lwfinger.net>
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+	<4DCB3DFF.1030809@lockie.ca>
+	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+	<4DCE9DB8.7080404@lwfinger.net>
+Date: Sat, 14 May 2011 20:23:04 -0500
+Message-ID: <BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com> (sfid-20110515_032330_702710_1ED592B4)
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+From: Flaminigo <sunnyiez@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 May 2011 16:59:55 Rafał Miłecki wrote:
-> 2011/5/8 Arnd Bergmann <arnd@arndb.de>:
-> >> >> diff --git a/drivers/bcma/TODO b/drivers/bcma/TODO
-> >> >> new file mode 100644
-> >> >> index 0000000..45eadc9
-> >> >> --- /dev/null
-> >> >> +++ b/drivers/bcma/TODO
-> >> >> @@ -0,0 +1,3 @@
-> >> >> +- Interrupts
-> >> >> +- Defines for PCI core driver
-> >> >> +- Convert bcma_bus->cores into linked list
-> >> >
-> >> > The last item doesn't make sense to me. Since you are using the regular
-> >> > driver model, you can simply iterate over all child devices of any
-> >> > dev.
-> >>
-> >> It's about optimization. Right now bcma_bus->cores is static array, we
-> >> probably never will use all entries.
-> >
-> > Oh, I see. You should probably have neither of them. Instead allocate
-> > the devices dynamically as you find them and do a device_register,
-> > which will add the device into linked list.
-> 
-> As I said, and wrote: TODO.
+Thank you very much. I've forwarded your mail to administrator. But he
+didn't reply me. I am still waiting. I will let you know asap when he
+replies me.
+Regards
+Sunny
 
-Well, I think getting this part right is essential before the
-patch can get merged.
-
-> > Maybe you didn't understand what I said: This should be
-> >
-> > struct bcma_device {
-> >     struct bcma_bus *bus;
-> >     struct bcma_device_id id;
-> >     struct device dev;
-> >     u8 core_index;
-> >
-> >     u32 addr;
-> >     u32 wrap;
-> >
-> >     void *drvdata;
-> > };
-> >
-> > Here, bcma_device is the device, no need to follow pointers
-> > around. It's how all bus_types work, you should just do the same.
-> 
-> We can not use static "struct device", see Greg's comments in:
-> [RFC][PATCH V3] axi: add AXI bus driver
-> (not to mention we would have unused "struct device" in ChipCommon's
-> and PCI's "struct bcma_device").
-
-Please reread what Greg explained, it's actually the same as what
-I said here: Don't make the device static (you already don't),
-don't put the device structure as a member in the bus structure
-(as discussed above). Make the device a member of bcma_device,
-so you get proper reference counting for it, in the way that
-Greg explained.
-
-	Arnd
+On Sat, May 14, 2011 at 10:20 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 05/12/2011 08:59 AM, Flaminigo wrote:
+>>
+>> Thank you for the reply. I think N network in the university is OK.
+>> Because, �old computer connected it without any problem. The windows
+>> system can also connect it. From the output of wpa_supplicant, the
+>> authentication part works well. I've tried to use the latest drive
+>> from realtek. The firmware distribute is exactly the same as that in
+>> Ubuntu 11.04. But this will make core dump.
+>
+> There is a problem with driver rtl8192ce with 802.11n networks that use a 40
+> MHz bandwidth. As you never answered my questions, I don't know if that is
+> the problem that you are seeing. If you go to
+> http://bugzilla.kernel.org/show_bug.cgi?id=35082, there is a patch that may
+> fix your problem. At least it worked here.
+>
+> Larry
+>
+>
