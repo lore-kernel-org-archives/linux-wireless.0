@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52861 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756416Ab1EXNfN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 09:35:13 -0400
-Received: by bwz15 with SMTP id 15so5630985bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 06:35:12 -0700 (PDT)
+Received: from mout9.freenet.de ([195.4.92.99]:52555 "EHLO mout9.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048Ab1EORj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 May 2011 13:39:57 -0400
+Received: from [195.4.92.15] (helo=5.mx.freenet.de)
+	by mout9.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
+	id 1QLfIJ-0000FX-I8
+	for linux-wireless@vger.kernel.org; Sun, 15 May 2011 19:39:55 +0200
+Received: from p54a187d2.dip0.t-ipconnect.de ([84.161.135.210]:52534 helo=mail.maya.org)
+	by 5.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
+	id 1QLfIJ-0005aU-7x
+	for linux-wireless@vger.kernel.org; Sun, 15 May 2011 19:39:55 +0200
+Message-ID: <4DD00FD1.90703@01019freenet.de> (sfid-20110515_194001_300096_FF91AF3A)
+Date: Sun, 15 May 2011 19:39:29 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <4DDA9016.3090701@lwfinger.net>
-References: <4DDA66D5.2090801@ring3k.org>
-	<4DDA9016.3090701@lwfinger.net>
-Date: Tue, 24 May 2011 22:35:12 +0900
-Message-ID: <BANLkTimC-NndRxtpcL=+iCmmKYbfc0+qQw@mail.gmail.com> (sfid-20110524_153518_524766_B688D996)
-Subject: Re: [PATCH 0/8] rtl8192ce stability improvements
-From: Mike McCormack <mikem@ring3k.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: users@rt2x00.serialmonkey.com
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: rt2800pci: possible reason for: rt2800pci_txdone: Warning - Got TX
+ status for an empty queue 0, dropping - compiler?
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 May 2011 01:49, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Hello,
 
-> Are you using wireless-testing for your patches? There are some patches
-> pending in John's queue, but your patches got offsets and fuzz in files that
-> those patches do not touch. Everything seemed to apply despite the fuzz and
-> everything compiled, but I always get nervous about patches with anything
-> more serious than offsets.
+today, I had to switch to openSuSE 11.3 because of end of life of 
+openSuSE 11.2.
 
-I originally developed these patches against the staging-next tree, then
-ported them over to the wireless-testing tree.  They are on top of this commit:
+I thought, that this would be a small thing, because I used the same 
+kernel in 11.2 as in 11.3 (both times 2.6.34.9-7-desktop): openSUsE had 
+for 11.2 the same kernel additionally. The only difference between them: 
+the kernel for openSuSE 11.2 was compiled with gcc 4.4.1 (gcc 4.4 branch 
+revision 150839) - the kernel for openSuSE 11.3 is compiled with gcc 
+4.5.0 (gcc 4.5 branch revision 160292).
 
-commit 1e4541b73b33f9918255f36a60bdeacfae4fdb9d
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Thu May 19 13:54:47 2011 -0400
+With the gcc 4.4.1-compiled kernel, the "rt2800pci_txdone: Warning - Got 
+TX status for an empty queue 0, dropping" came up rarely (but it came 
+up, too), with the gcc 4.5.0 compiled kernel, this warning comes up 
+after a few seconds of sending data with netperf (throughput is > 10 
+MB's) and 45 times(!). The connection is dead after that storm!
 
-    Revert "mac80211_hwsim driver support userspace frame tx/rx"
+If you do not have this problem - which gcc do you use or which options 
+do you use for compiling?
 
-    This reverts commit 444c7896bf5b0c613fd58c8f08e60a8714eb7f05.
 
-I have done a fair bit of work on the rtl8192e driver in Greg KH's staging-next,
-and reused ideas from work I've done there in this series.
+Kind regards,
+Andreas
 
-Do you think it would be worthwhile to merge rtl8192e support into rtlwifi
-or is there something critical that will prevent that from working well?
-
-> Patches 3, 4, 6 and 8 do modify driver rtlwifi, but patches 1 and 7 change
-> driver rtl8192ce. Similarly, #2 changes rtl8192ce, rtl8192cu, and rtl8192se,
-> and #5 changes rtl8192ce and rtl8192se. The subject line for the patch
-> should indicate the driver that gets modified. I usually do it as "rtlwifi:
-> rtl8192ce: blah-blah", etc. The rtlwifi is included even though it does not
-> get changed by the patch.
-
-OK, I'll try follow your convention with the next series.
-
-> I do not see anything serious in the body of the patches and I expect that I
-> will be giving them an ACK, but I want to test first.
-
-Great.  Should I resend with your Acked-by: ?
-
-thanks,
-
-Mike
