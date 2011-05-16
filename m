@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:43248 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab1EZFAg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 01:00:36 -0400
-Received: by yia27 with SMTP id 27so150791yia.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 22:00:35 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1392 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750873Ab1EPLLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 07:11:43 -0400
+Message-ID: <4DD10663.90307@broadcom.com> (sfid-20110516_131146_997376_7F834560)
+Date: Mon, 16 May 2011 13:11:31 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Date: Thu, 26 May 2011 13:00:35 +0800
-Message-ID: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com> (sfid-20110526_070039_292611_4CC1D1D5)
-Subject: [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
-From: Adrian Chadd <adrian@freebsd.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Clemens Noss" <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH] staging: brcm80211: use correct pointer types in
+ bcm_pktq_flush
+References: <4DD02F72.3070905@broadcom.com>
+ <1305492646-20122-1-git-send-email-cnoss@gmx.de>
+In-Reply-To: <1305492646-20122-1-git-send-email-cnoss@gmx.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> Reported-by: Hauke Mehrtens<hauke@hauke-m.de>
+> Signed-off-by: Clemens Noss<cnoss@gmx.de>
 
-The AR9287 initial calibration in ar9002_hw_init_cal() isn't ever
-called because the Kite check (AR_SREV_9285_12_OR_LATER()) matches on
-MACs versioned Kite and later.
+Acked-by: Roland Vossen <rvossen@broadcom.com>
 
-The Atheros newma code checks it is Kite as well as being Kite >= 1.2.
-
-I don't currently have Linux ath9k on something with an AR9287 so I'd
-appreciate it if this were verified by someone who has.
-
-The patch is quite simple:
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 015d974..2d4c091 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -829,7 +829,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah,
-struct ath9k_channel *chan)
-        if (AR_SREV_9271(ah)) {
-                if (!ar9285_hw_cl_cal(ah, chan))
-                        return false;
--       } else if (AR_SREV_9285_12_OR_LATER(ah)) {
-+       } else if (AR_SREV_9285(ah) && AR_SREV_9285_12_OR_LATER(ah)) {
-                if (!ar9285_hw_clc(ah, chan))
-                        return false;
-        } else {
-
-Thanks,
-
-
-Adrian
