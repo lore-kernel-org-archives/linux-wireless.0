@@ -1,21 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42358 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932202Ab1EHTC1 (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:44266 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303Ab1EPV2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 15:02:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id ED54654004E
-	for <linux-wireless@vger.kernel.org>; Sun,  8 May 2011 15:08:02 -0400 (EDT)
-Subject: Compat-wireless release for 2011-05-08 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110508190225.BB48940EC5@repository3.orbit-lab.org> (sfid-20110508_210230_757914_EF63384F)
-Date: Sun,  8 May 2011 15:02:25 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 16 May 2011 17:28:32 -0400
+Date: Mon, 16 May 2011 17:27:26 -0400 (EDT)
+Message-Id: <20110516.172726.649208957302608650.davem@davemloft.net> (sfid-20110516_232841_164051_7A66D7AC)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-05-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110516211305.GG6551@tuxdriver.com>
+References: <20110516211305.GG6551@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 16 May 2011 17:13:06 -0400
 
-compat-wireless code metrics
+> Still another big batch of wireless LAN stuff intended for 2.6.40 -- the
+> wireless folks have really been eating their Wheaties this cycle!
+> 
+> Highlights of this batch include a new driver in the rtlwifi family,
+> some new AMBA-like bus infrastructure that is specific to Broadcom
+> devices, a Bluetooth pull from Gustavo and friends, a wl12xx pull from
+> Luca and friends, some mesh updates from the Cozybit folks, some more
+> fixups from the mwifiex team, a collection of mac80211 improvements from
+> Johannes, the usual flutter of patches around iwlwifi and ath9k, and a
+> spread of other updates.
+> 
+> Please let me know if there are problems!
 
-    815948 - Total upstream lines of code being pulled
+Wonderful, another strange bus layer :-)
+
+Pulled, thanks John!
+
