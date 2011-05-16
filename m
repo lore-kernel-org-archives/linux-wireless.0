@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57986 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754295Ab1EKQoH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:44:07 -0400
-Received: by qwk3 with SMTP id 3so351731qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:44:06 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:52407 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752976Ab1EPSTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 14:19:41 -0400
+Message-ID: <4DD16ABA.8040004@openwrt.org> (sfid-20110516_201949_347706_755129F7)
+Date: Mon, 16 May 2011 20:19:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4DC9D45C.6010505@lwfinger.net>
-References: <1305072659-4011-1-git-send-email-zajec5@gmail.com>
-	<1305072659-4011-2-git-send-email-zajec5@gmail.com>
-	<4DC9CD4D.6060002@lwfinger.net>
-	<BANLkTik-BZnGr1Kya3=KSskr3QrNHHY1SA@mail.gmail.com>
-	<4DC9D45C.6010505@lwfinger.net>
-Date: Wed, 11 May 2011 09:35:15 +0200
-Message-ID: <BANLkTimDQQSfDO-jUtVA0A5zSFxTQAvx7g@mail.gmail.com> (sfid-20110511_184417_523609_65923116)
-Subject: Re: [PATCH 2/2] b43: implement timeouts workaround
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] compat: backport PCI_EEPROM_WIDTH_93C86
+References: <1305567815-73528-1-git-send-email-nbd@openwrt.org> <1305567815-73528-2-git-send-email-nbd@openwrt.org> <4DD16A3A.20705@hauke-m.de>
+In-Reply-To: <4DD16A3A.20705@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 maja 2011 02:12 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 05/10/2011 06:56 PM, Rafał Miłecki wrote:
+On 2011-05-16 8:17 PM, Hauke Mehrtens wrote:
+> On 05/16/2011 07:43 PM, Felix Fietkau wrote:
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>   include/linux/compat-2.6.36.h |    2 ++
+>>   1 files changed, 2 insertions(+), 0 deletions(-)
 >>
->> W dniu 11 maja 2011 01:42 użytkownik Larry Finger
->> <Larry.Finger@lwfinger.net>  napisał:
->>>
->>> On 05/10/2011 07:10 PM, Rafał Miłecki wrote:
->>>>
->>>> Documented in:<4BB81CAD.10602@lwfinger.net>
->>>
->>> This reference is not correct.
+>>  diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+>>  index 7a82522..2d756d1 100644
+>>  --- a/include/linux/compat-2.6.36.h
+>>  +++ b/include/linux/compat-2.6.36.h
+>>  @@ -123,6 +123,8 @@ static inline void tty_unlock(void) __releases(kernel_lock)
 >>
->> Ouch, GMail seems to lie to me. Any change you can give me real message id
->> of:
->> http://www.mail-archive.com/b43-dev@lists.infradead.org/msg00049.html
+>>   #define __rcu
+>>
+>>  +#define PCI_EEPROM_WIDTH_93C86	8
+>>  +
+>>   #endif /* (LINUX_VERSION_CODE<  KERNEL_VERSION(2,6,36)) */
+>>
+>>   #endif /* LINUX_26_36_COMPAT_H */
 >
-> This one is good.
+> NACK on this patch.
+>
+> PCI_EEPROM_WIDTH_93C86 is already defined in
+> include/linux/eeprom_93cx6.h which is shipped with compat-wireless.
+Oh, seems like I overlooked that while carrying along an old patch.
+Thanks.
 
-Sorry, do you mean <4BB81CAD.10602@lwfinger.net> is OK? Or should I
-use link I posted instead of message ID? Or do you know how to get
-message ID from the link above?
-
--- 
-Rafał
+- Felix
