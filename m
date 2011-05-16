@@ -1,114 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47046 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223Ab1EWTqa (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51743 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755717Ab1EPPUY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 15:46:30 -0400
-Received: by vws1 with SMTP id 1so4384949vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:46:29 -0700 (PDT)
-Message-ID: <4DDAB992.1050006@lwfinger.net> (sfid-20110523_214633_795889_9B05CB52)
-Date: Mon, 23 May 2011 14:46:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 16 May 2011 11:20:24 -0400
+Received: by bwz15 with SMTP id 15so3824217bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 08:20:23 -0700 (PDT)
 MIME-Version: 1.0
-To: Mike McCormack <mikem@ring3k.org>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/8] rtlwifi: Remove set_rfpowerstate_inprogress
-References: <4DDA66F0.5000803@ring3k.org>
-In-Reply-To: <4DDA66F0.5000803@ring3k.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4DD13AA2.1000206@lwfinger.net>
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+	<4DCB3DFF.1030809@lockie.ca>
+	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+	<4DCE9DB8.7080404@lwfinger.net>
+	<BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
+	<BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
+	<4DD0518D.1090300@lwfinger.net>
+	<BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com>
+	<4DD13AA2.1000206@lwfinger.net>
+Date: Mon, 16 May 2011 10:20:22 -0500
+Message-ID: <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com> (sfid-20110516_172028_901046_1956FA4E)
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+From: Flaminigo <sunnyiez@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 08:53 AM, Mike McCormack wrote:
-> set_rfpowerstate_inprogress is only set and never read
-> so remove it.
->
-> Signed-off-by: Mike McCormack<mikem@ring3k.org>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |    2 --
->   drivers/net/wireless/rtlwifi/rtl8192cu/phy.c |    2 --
->   drivers/net/wireless/rtlwifi/rtl8192se/phy.c |    4 ----
->   drivers/net/wireless/rtlwifi/wifi.h          |    1 -
->   4 files changed, 0 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-> index abe0fcc..544e0b7 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-> @@ -521,7 +521,6 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	u8 i, queue_id;
->   	struct rtl8192_tx_ring *ring = NULL;
->
-> -	ppsc->set_rfpowerstate_inprogress = true;
->   	switch (rfpwr_state) {
->   	case ERFON:{
->   			if ((ppsc->rfpwr_state == ERFOFF)&&
-> @@ -617,7 +616,6 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	}
->   	if (bresult)
->   		ppsc->rfpwr_state = rfpwr_state;
-> -	ppsc->set_rfpowerstate_inprogress = false;
->   	return bresult;
->   }
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-> index 9a3d023..7285290 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-> @@ -470,7 +470,6 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	u8 i, queue_id;
->   	struct rtl8192_tx_ring *ring = NULL;
->
-> -	ppsc->set_rfpowerstate_inprogress = true;
->   	switch (rfpwr_state) {
->   	case ERFON:
->   		if ((ppsc->rfpwr_state == ERFOFF)&&
-> @@ -590,7 +589,6 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	}
->   	if (bresult)
->   		ppsc->rfpwr_state = rfpwr_state;
-> -	ppsc->set_rfpowerstate_inprogress = false;
->   	return bresult;
->   }
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-> index 63b45e6..2ad51b0 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-> @@ -546,8 +546,6 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	if (rfpwr_state == ppsc->rfpwr_state)
->   		return false;
->
-> -	ppsc->set_rfpowerstate_inprogress = true;
-> -
->   	switch (rfpwr_state) {
->   	case ERFON:{
->   			if ((ppsc->rfpwr_state == ERFOFF)&&
-> @@ -659,8 +657,6 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   	if (bresult)
->   		ppsc->rfpwr_state = rfpwr_state;
->
-> -	ppsc->set_rfpowerstate_inprogress = false;
-> -
->   	return bresult;
->   }
->
-> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-> index 693395e..0321328 100644
-> --- a/drivers/net/wireless/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -1188,7 +1188,6 @@ struct rtl_efuse {
->
->   struct rtl_ps_ctl {
->   	bool pwrdomain_protect;
-> -	bool set_rfpowerstate_inprogress;
->   	bool in_powersavemode;
->   	bool rfchange_inprogress;
->   	bool swrf_processing;
+Hi,
+    I appreciate your help greatly. I am not very familiar with kernel
+programming. Actually, I am a graphics guy. I try to apply your patch
+but I failed. That was my process. FYI
 
-Signed-off-by: Larry Finger <Larry.Fionger@lwfinger.net>
----
+1. Download RC7 code from
+http://www.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.39-rc7.tar.bz2
+2. Download the patch from
+http://www.kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.39-rc7.bz2
+3. apply the patch.
+sunny@samunder:~/Downloads/kernel/linux-2.6.39-rc7$ bzip2 -dc
+patch-2.6.39-rc7.bz2  | patch -p1
+4. copy and paste your patch
+https://bugzilla.kernel.org/attachment.cgi?id=57802 and place it in
+file `pa`
+5. apply your patch by patch -p1 < pa.
 
-Larry
+I failed :(
 
+
+
+On Mon, May 16, 2011 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/16/2011 08:48 AM, Flaminigo wrote:
+>>
+>> I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
+>> right? I browse the www.kernel.org but I cannot find the source code
+>> for RC1.
+>> What should I  do ? Find the RC1 code. Apply your patch. Recompile the
+>> kernel and install it? I appreciate your help.
+>
+> At the moment, you should get 2.6.39-rc7 sources, apply the patch, and build
+> that kernel. The patch should apply for any of the ...39-rcX kernels, but I
+> did in fact test it with rc7.
+>
+> Larry
+>
+>
