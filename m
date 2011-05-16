@@ -1,201 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:44038 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757476Ab1ELOP4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42943 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199Ab1EPSQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:15:56 -0400
-Received: by mail-ew0-f53.google.com with SMTP id 8so477220ewy.26
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:15:55 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/7] wl12xx: implement scheduled scan driver operations and reporting
-Date: Thu, 12 May 2011 17:15:37 +0300
-Message-Id: <1305209740-30287-5-git-send-email-coelho@ti.com> (sfid-20110512_161559_247551_BFA1E829)
-In-Reply-To: <1305209740-30287-1-git-send-email-coelho@ti.com>
-References: <1305209740-30287-1-git-send-email-coelho@ti.com>
+	Mon, 16 May 2011 14:16:03 -0400
+Date: Mon, 16 May 2011 14:13:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rhyland Klein <rklein@nvidia.com>
+Cc: "olof@lixom.net" <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: wireless-next-2.6 rebased -- Re: [PATCH v2] net: rfkill: add generic
+ gpio rfkill driver
+Message-ID: <20110516181348.GD6551@tuxdriver.com> (sfid-20110516_201637_758439_4B52E642)
+References: <1305189092.3461.10.camel@jlt3.sipsolutions.net>
+ <1305224592.10961.10.camel@rklein-linux2>
+ <1305225648.3461.37.camel@jlt3.sipsolutions.net>
+ <1305226377.10961.12.camel@rklein-linux2>
+ <1305226969.3461.38.camel@jlt3.sipsolutions.net>
+ <1305235386.10961.13.camel@rklein-linux2>
+ <1305270943.3487.5.camel@jlt3.sipsolutions.net>
+ <1305313374.10961.23.camel@rklein-linux2>
+ <20110513192019.GC10555@tuxdriver.com>
+ <20110513201130.GA10403@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110513201130.GA10403@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the mac80211 operations for scheduled scan and the
-scheduled scan results reporting.
+FYI, I'm rebasing wireless-next to avoid pushing this bad commit to
+net-next-2.6.  If you pulled wireless-next-2.6.git over the weekend,
+you may experience some rebase-related problems.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/event.c  |    6 +++
- drivers/net/wireless/wl12xx/main.c   |   70 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/scan.c   |    6 ++-
- drivers/net/wireless/wl12xx/wl12xx.h |    2 +
- 4 files changed, 83 insertions(+), 1 deletions(-)
+John
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index dc110e8..1e4bd6a 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -191,11 +191,17 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
- 		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_REPORT_EVENT "
- 			     "(status 0x%0x)", mbox->scheduled_scan_status);
-+
-+		wl1271_scan_sched_scan_results(wl);
- 	}
- 
- 	if (vector & PERIODIC_SCAN_COMPLETE_EVENT_ID) {
- 		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT "
- 			     "(status 0x%0x)", mbox->scheduled_scan_status);
-+		if (wl->sched_scanning) {
-+			wl1271_scan_sched_scan_stop(wl);
-+			ieee80211_sched_scan_stopped(wl->hw);
-+		}
- 	}
- 
- 	/* disable dynamic PS when requested by the firmware */
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index cb4ed90..b169dae 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -984,6 +984,11 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	/* Prevent spurious TX during FW restart */
- 	ieee80211_stop_queues(wl->hw);
- 
-+	if (wl->sched_scanning) {
-+		ieee80211_sched_scan_stopped(wl->hw);
-+		wl->sched_scanning = false;
-+	}
-+
- 	/* reboot the chipset */
- 	__wl1271_op_remove_interface(wl, false);
- 	ieee80211_restart_hw(wl->hw);
-@@ -1572,6 +1577,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 	memset(wl->ap_hlid_map, 0, sizeof(wl->ap_hlid_map));
- 	wl->ap_fw_ps_map = 0;
- 	wl->ap_ps_map = 0;
-+	wl->sched_scanning = false;
- 
- 	/*
- 	 * this is performed after the cancel_work calls and the associated
-@@ -1774,6 +1780,13 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
- 		wl->session_counter++;
- 		if (wl->session_counter >= SESSION_COUNTER_MAX)
- 			wl->session_counter = 0;
-+
-+		/* The current firmware only supports sched_scan in idle */
-+		if (wl->sched_scanning) {
-+			wl1271_scan_sched_scan_stop(wl);
-+			ieee80211_sched_scan_stopped(wl->hw);
-+		}
-+
- 		ret = wl1271_dummy_join(wl);
- 		if (ret < 0)
- 			goto out;
-@@ -2326,6 +2339,60 @@ out:
- 	return ret;
- }
- 
-+static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      struct cfg80211_sched_scan_request *req,
-+				      struct ieee80211_sched_scan_ies *ies)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_MAC80211, "wl1271_op_sched_scan_start");
-+
-+	mutex_lock(&wl->mutex);
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_scan_sched_scan_config(wl, req, ies);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+	ret = wl1271_scan_sched_scan_start(wl);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+	wl->sched_scanning = true;
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+}
-+
-+static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_MAC80211, "wl1271_op_sched_scan_stop");
-+
-+	mutex_lock(&wl->mutex);
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl1271_scan_sched_scan_stop(wl);
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+}
-+
- static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- {
- 	struct wl1271 *wl = hw->priv;
-@@ -3441,6 +3508,8 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.tx = wl1271_op_tx,
- 	.set_key = wl1271_op_set_key,
- 	.hw_scan = wl1271_op_hw_scan,
-+	.sched_scan_start = wl1271_op_sched_scan_start,
-+	.sched_scan_stop = wl1271_op_sched_scan_stop,
- 	.bss_info_changed = wl1271_op_bss_info_changed,
- 	.set_frag_threshold = wl1271_op_set_frag_threshold,
- 	.set_rts_threshold = wl1271_op_set_rts_threshold,
-@@ -3760,6 +3829,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->ap_fw_ps_map = 0;
- 	wl->quirks = 0;
- 	wl->platform_quirks = 0;
-+	wl->sched_scanning = false;
- 
- 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index d78044f..668ff46 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -548,8 +548,12 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
- 
- 	ret = wl1271_cmd_send(wl, CMD_STOP_PERIODIC_SCAN, stop,
- 			      sizeof(*stop), 0);
--	if (ret < 0)
-+	if (ret < 0) {
- 		wl1271_error("failed to send sched scan stop command");
-+		goto out_free;
-+	}
-+	wl->sched_scanning = false;
- 
-+out_free:
- 	kfree(stop);
- }
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index b760143..10f0767 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -480,6 +480,8 @@ struct wl1271 {
- 	struct wl1271_scan scan;
- 	struct delayed_work scan_complete_work;
- 
-+	bool sched_scanning;
-+
- 	/* probe-req template for the current AP */
- 	struct sk_buff *probereq;
- 
+On Fri, May 13, 2011 at 04:11:31PM -0400, John W. Linville wrote:
+> On Fri, May 13, 2011 at 03:20:20PM -0400, John W. Linville wrote:
+> > On Fri, May 13, 2011 at 12:02:54PM -0700, Rhyland Klein wrote:
+> > > On Fri, 2011-05-13 at 00:15 -0700, Johannes Berg wrote:
+> > > > On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
+> > > > > On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
+> > > > > > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
+> > > > > > 
+> > > > > > > > If, on the other hand, rfkill decides that at the time of loading the
+> > > > > > > > driver wifi should be on, then the first change would be +1 and it'll
+> > > > > > > > flip between 0 and +1.
+> > > > > > > > 
+> > > > > > > > This seems like it'll cause issues at some point, so I think you should
+> > > > > > > > either allow the driver to set the initial state or hardcode one of
+> > > > > > > > these possibilities (so at least it's predictable)
+> > > > > > 
+> > > > > > > I won't go negative, if you look, it only will disable clock if it knows
+> > > > > > > it has already enabled it. 
+> > > > > > 
+> > > > > > Ah, you're right, I misread the macros.
+> > > > 
+> > > > > So the patch is good as is?
+> > > > 
+> > > > I think so, yes.
+> > > > 
+> > > > johannes
+> > > > 
+> > > 
+> > > John, Johannes suggested you are able to pull in this patch?
+> > 
+> > I've got it, thanks.
+> 
+>   Building modules, stage 2.
+>   MODPOST 2346 modules
+> ERROR: "clk_get" [net/rfkill/rfkill-gpio.ko] undefined!
+> ERROR: "clk_enable" [net/rfkill/rfkill-gpio.ko] undefined!
+> ERROR: "clk_put" [net/rfkill/rfkill-gpio.ko] undefined!
+> ERROR: "clk_disable" [net/rfkill/rfkill-gpio.ko] undefined!
+> WARNING: modpost: Found 5 section mismatch(es).
+> To see full details build your kernel with:
+> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
+> 
+> Is there something we should add to Kconfig to prevent this?
+> 
+> John
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
