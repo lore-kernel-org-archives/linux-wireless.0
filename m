@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:15670 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615Ab1EFQPt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 12:15:49 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 09:15:21 -0700
-Date: Fri, 6 May 2011 21:45:42 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
-Subject: Re: [RFC] ath9k: make npending frames check as bool
-Message-ID: <20110506161541.GB6002@vasanth-laptop> (sfid-20110506_181553_187515_3E34EB83)
-References: <1304697291-6850-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:40751 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427Ab1EPUEz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 16:04:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1304697291-6850-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <BANLkTin_stn+7Ja3hbuaOgtrEVJEoT9Lhw@mail.gmail.com>
+References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
+	<BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
+	<BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com>
+	<BANLkTi=xJbL-26Hzg0Pp5zKPUi35bV6VmA@mail.gmail.com>
+	<BANLkTin_stn+7Ja3hbuaOgtrEVJEoT9Lhw@mail.gmail.com>
+Date: Mon, 16 May 2011 23:04:54 +0300
+Message-ID: <BANLkTimvCVcQX-7teQgG7EQV9eeLgG3JnQ@mail.gmail.com> (sfid-20110516_220504_598521_9CE58F7D)
+Subject: Re: several packets in a single buffer in Rx
+From: Tomas Winkler <tomasw@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 06, 2011 at 09:24:51PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c |    7 +++++--
->  1 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 3de115d..2b78ea2 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -2267,7 +2267,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
->  		timeout = 1;
->  
->  	for (j = 0; j < timeout; j++) {
-> -		int npend = 0;
-> +		bool npend = false;
->  
->  		if (j)
->  			usleep_range(1000, 2000);
-> @@ -2276,7 +2276,10 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
->  			if (!ATH_TXQ_SETUP(sc, i))
->  				continue;
->  
-> -			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
-> +			npend = ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
-> +
-> +			if (npend)
-> +				break;
+2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
+> 2011/5/16 Michał Mirosław <mirqus@gmail.com>:
+>> W dniu 16 maja 2011 14:59 użytkownik Emmanuel Grumbach
+>> <egrumbach@gmail.com> napisał:
+>>> 2011/5/16 Michał Mirosław <mirqus@gmail.com>:
+>>>> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
+>>>>> I would like to be able to deliver the same page several times to the
+>>>>> stack without having the stack consume it before the last time I
+>>>>> deliver it.
+>>>>> Of course I would like to avoid cloning it.
+>>>>
+>>>> Just do get_page() on the page having another packet in it before
+>>>> passing skb up.
+>>>>
+>>>
+>>> I can see the path:
+>>> __kfree_skb -> skb_release_all -> skb_release_data -> put_page
+>>> put_page will free the page iff the _count variable reaches 0. Of course,
+>>> _count is incremented by get_page.
+>>>
+>>> I will give it try.
+>>>
+>>> I understand that this will work regardless the order given to
+>>> alloc_pages right ?
+>>
+>> Yes. Remember that if you put a lot of packets in a big-order page
+>> then the memory will be freed only after all packets are freed.
+>
+> Sure. Thanks for the help.
 
-We need not bail out as soon as there is a pending frame in a queue.
-There is a possibility that it could be transmitted successfully by
-the time the given timeout expires.
+How it is ensured that skb manipulation won't corrupt another packet
+on the same page?
 
-Vasanth
+Thanks
+Tomas
