@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:33847 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab1EZOsb (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37555 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754162Ab1EPDjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 10:48:31 -0400
-Received: by pxi16 with SMTP id 16so463150pxi.4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 07:48:30 -0700 (PDT)
+	Sun, 15 May 2011 23:39:40 -0400
+Received: by iyb14 with SMTP id 14so3416584iyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2011 20:39:39 -0700 (PDT)
+Message-ID: <4DD09C78.2010304@lwfinger.net> (sfid-20110516_053948_785003_9178F673)
+Date: Sun, 15 May 2011 22:39:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=HQe_sVQOcsNN6CUJUEQDpqr2y=g@mail.gmail.com>
-References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
-	<BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com>
-	<BANLkTin=+9jZvm0RjBN0VGG50EXsnqcdvQ@mail.gmail.com>
-	<BANLkTikavLsFOizFG1RieEZNwngBj5Bg0w@mail.gmail.com>
-	<BANLkTi=HQe_sVQOcsNN6CUJUEQDpqr2y=g@mail.gmail.com>
-Date: Thu, 26 May 2011 20:18:30 +0530
-Message-ID: <BANLkTi=VKU_0+unoj3oUEsvhN7ZoPbivzg@mail.gmail.com> (sfid-20110526_164834_181694_CF8B15B5)
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
-From: Mohammed Shafi <shafi.ath9k@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Rob Browning <rlb@defaultvalue.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
+References: <87pqnl5i81.fsf@raven.defaultvalue.org>	<4DD074E3.3090502@lwfinger.net> <87vcxbe5xz.fsf@trouble.defaultvalue.org>
+In-Reply-To: <87vcxbe5xz.fsf@trouble.defaultvalue.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 26, 2011 at 7:41 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> On 26 May 2011 21:15, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+On 05/15/2011 09:26 PM, Rob Browning wrote:
+> Larry Finger<Larry.Finger@lwfinger.net>  writes:
 >
->>> What about RX sensitivity/errors?
->>
->> should I look recv debug stats?
+>> Could you please try the attached patch to see if it improves your
+>> throughput?
 >
-> I'm not a chip developer, so I don't really know. :)
+> Certainly.  Can I patch one of the linux-wireless trees, or should I get
+> the source and build the whole kernel?
 >
-> I hazard a guess that the rx calibration will affect RX sensitivity,
-> maybe CRC errors? Or maximum link distance?
+>> In addition, please file a Bugzilla report for this problem at
+>> http:bugzilla.kernel.org.
 
-Hmmm ok, if you got a chip please test it. I will be very happy if
-this patch improves some performance or  reduces some CRC errors :) I
-will also look into this
+You could patch either the linux-2.6 kernel (2.6.39-rc7), the wireless-testing 
+git tree, or get the source from your distro. You will have to build the entire 
+kernel as I do not have the necessary make files to build the driver as an out 
+of kernel module.
 
->
->
-> Adrian
->
+Larry
