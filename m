@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46599 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758537Ab1EMXzY (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60027 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755799Ab1EPUe5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 19:55:24 -0400
-Subject: [PATCH] mac80211: verify IBSS in interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 May 2011 01:55:23 +0200
-Message-ID: <1305330923.680.5.camel@jlt3.sipsolutions.net> (sfid-20110514_015528_664811_F99F01FF)
-Mime-Version: 1.0
+	Mon, 16 May 2011 16:34:57 -0400
+Date: Mon, 16 May 2011 13:33:33 -0700
+From: Greg KH <greg@kroah.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: Clemens Noss <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] staging: brcm80211: fix cast to pointer from integer
+Message-ID: <20110516203333.GB17698@kroah.com> (sfid-20110516_223509_495827_8FB770EF)
+References: <1305492330-19575-1-git-send-email-cnoss@gmx.de>
+ <4DD105FE.9040500@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DD105FE.9040500@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, May 16, 2011 at 01:09:50PM +0200, Roland Vossen wrote:
+> Greg, please also merge this to the staging-linus branch since it
+> might resolve an instability issue.
 
-Drivers shouldn't attempt to advertise support
-for more than one IBSS interface since mac80211
-doesn't support that. Check and return an error
-from ieee80211_register_hw() in that case.
+It "might"?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/main.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+Is this a regression?  Do people see the problem on the .38 kernel as
+well?
 
---- a/net/mac80211/main.c	2011-05-14 01:48:56.000000000 +0200
-+++ b/net/mac80211/main.c	2011-05-14 01:52:40.000000000 +0200
-@@ -752,11 +752,25 @@ int ieee80211_register_hw(struct ieee802
- 	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
- 	hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_MONITOR);
- 
--	/* mac80211 doesn't support more than 1 channel */
--	for (i = 0; i < hw->wiphy->n_iface_combinations; i++)
--		if (hw->wiphy->iface_combinations[i].num_different_channels > 1)
-+	/*
-+	 * mac80211 doesn't support more than 1 channel, and also not more
-+	 * than one IBSS interface
-+	 */
-+	for (i = 0; i < hw->wiphy->n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		int j;
-+
-+		c = &hw->wiphy->iface_combinations[i];
-+
-+		if (c->num_different_channels > 1)
- 			return -EINVAL;
- 
-+		for (j = 0; j < c->n_limits; j++)
-+			if ((c->limits[j].types & BIT(NL80211_IFTYPE_ADHOC)) &&
-+			    c->limits[j].max > 1)
-+				return -EINVAL;
-+	}
-+
- #ifndef CONFIG_MAC80211_MESH
- 	/* mesh depends on Kconfig, but drivers should set it if they want */
- 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+It's way too late for anything but severe regressions to be sent to
+Linus at this point in time...
 
+thanks,
 
+greg k-h
