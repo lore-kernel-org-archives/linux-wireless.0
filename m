@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:59694 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932122Ab1ELUYX (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:33828 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753671Ab1EPVgC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 16:24:23 -0400
-Received: by mail-ey0-f175.google.com with SMTP id 27so796721eye.34
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 13:24:22 -0700 (PDT)
-Subject: Re: [PATCH 7/7] wl12xx: enter/exit psm on wowlan suspend/resume
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
+	Mon, 16 May 2011 17:36:02 -0400
+Received: by iyb14 with SMTP id 14so4097023iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 14:36:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTika=8VetqGXMX7XbsVRM9dBe7AUKA@mail.gmail.com>
+References: <BANLkTimDudEKPEjTrWxm1wNA00Cmyot+sA@mail.gmail.com>
+ <BANLkTi=cx1CJkuBgvKkd9tm1u2hu7WGYYA@mail.gmail.com> <BANLkTika=8VetqGXMX7XbsVRM9dBe7AUKA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 16 May 2011 14:35:41 -0700
+Message-ID: <BANLkTi=k_HQ2jh5dAeHs5PzWNmUtyhViNQ@mail.gmail.com> (sfid-20110516_233610_527793_8D86A0CE)
+Subject: Re: what dictates the firmware directory of compat-wireless firmware?
+To: George Nychis <gnychis@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1305104068-32240-8-git-send-email-eliad@wizery.com>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-	 <1305104068-32240-8-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 23:24:18 +0300
-Message-ID: <1305231858.12586.1050.camel@cumari> (sfid-20110512_222426_452320_620F42A5)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
-> When operating as station, enter psm before suspending
-> the device into wowlan state.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+On Mon, May 16, 2011 at 2:09 PM, George Nychis <gnychis@gmail.com> wrote:
+>> compat-wireless uses a new module called compat_firmware so you need a
+>> respective new udev rule for it, it uses the same path for firmware
+>> though so you just need to slap on the right udev rule.
+>>
+>
+> Thanks for the response, Luis!
+>
+> I'm not a udev expert, and my problem might be slightly
+> Android-dependent, so feel free to punt the conversation at any point.
+>
+> I've tried setting up a set of rules on my Android device to handle
+> this situation.  There was no /etc/udev or anything related, before I
+> created them.  I created a udev.conf and a default set of rules, and
+> then migrated the compat_firmware rules on over.  But, udev seems to
+> be ignoring everything.
+>
+> Unfortunately, there's not a lot documented in terms of udev on
+> Android.  I did manage to find a little bit of information on a page
+> that's actually about root exploits on Android:
+> http://intrepidusgroup.com/insight/2010/09/android-root-source-code-looking-at-the-c-skills/
+>
+> Apparently one of them is a udev exploit, and the author mentions that:
+> "Android does not have a separate udev executable and process link
+> [like] on standard Linux deployments. However, large portions of the
+> udev code have been moved into the init daemon."
+>
+> I'm not sure if this customization of udev or migration of it into the
+> init daemon is affecting anything here.
+>
+> Is there any simple backwards compatible way of bypassing
+> compat_firmware?  If not, I will dig up some of the older
+> compat-wireless code to try and remedy the problem and get around
+> compat_firmware.
 
-[...]
+If android hacked udev into the init deamon then you will have to
+modify the init daemon too but I doubt that they would have kept udev
+rules statically in the init daemon, so try to find the udev rules.
 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 308855a..b4dd1d9 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -1332,6 +1332,79 @@ static struct notifier_block wl1271_dev_notifier = {
->  	.notifier_call = wl1271_dev_notify,
->  };
->  
-> +static int wl1271_configure_suspend(struct wl1271 *wl)
-> +{
-> +	int ret;
-> +
-> +	if (wl->bss_type != BSS_TYPE_STA_BSS)
-> +		return 0;
-> +
-> +	mutex_lock(&wl->mutex);
-> +
-> +	ret = wl1271_ps_elp_wakeup(wl);
-> +	if (ret < 0)
-> +		goto out_unlock;
-> +
-> +	/* enter psm if needed*/
-> +	if (!test_bit(WL1271_FLAG_PSM, &wl->flags)) {
-> +		DECLARE_COMPLETION_ONSTACK(compl);
-> +
-> +		wl->ps_compl = &compl;
-> +		ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
-> +				   wl->basic_rate, true);
-> +		if (ret < 0)
-> +			goto out_sleep;
-> +
-> +		/* we must unlock here so we will be able to get events */
-> +		wl1271_ps_elp_sleep(wl);
-> +		mutex_unlock(&wl->mutex);
-> +
-> +		ret = wait_for_completion_timeout(
-> +			&compl, msecs_to_jiffies(500));
-
-We have this for the ELP wakeup:
-
-#define WL1271_WAKEUP_TIMEOUT 500
-
-We should have a similar definition PS timeout.  And is this value just
-a guess or is there a real meaning to it? Can these timeouts be combined
-instead of having separate defines?
-
-
--- 
-Cheers,
-Luca.
-
+  Luis
