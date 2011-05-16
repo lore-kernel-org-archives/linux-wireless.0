@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38541 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534Ab1EKQWO convert rfc822-to-8bit (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:57784 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870Ab1EPOqw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:22:14 -0400
-Received: by qwk3 with SMTP id 3so341034qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:22:13 -0700 (PDT)
+	Mon, 16 May 2011 10:46:52 -0400
+Subject: [PATCH v3 2/2] net: postpone net device uevent to fix a race
+To: netdev@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 16 May 2011 17:46:47 +0300
+Message-ID: <20110516144647.13838.40897.stgit@localhost6.localdomain6> (sfid-20110516_165057_398709_8A385127)
+In-Reply-To: <20110516143913.13838.85357.stgit@localhost6.localdomain6>
+References: <20110516143913.13838.85357.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Date: Wed, 11 May 2011 18:22:13 +0200
-Message-ID: <BANLkTi=xOtAaxh8Q7Nk84Rwz9jM-6EP1Ww@mail.gmail.com> (sfid-20110511_182222_540132_ABD7C638)
-Subject: Optimization: keeping pointer all the time, or defining getter?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I try to abstract bus in b43 driver. For frequently used fields
-solution is obvious:
-At init time I get info from bus-specific stuct and put it in generic field.
-Example: core revision. We often refer to it, I put it in abstraction struct.
+From: Kalle Valo <kalle.valo@atheros.com>
 
-My question: what is the policy for cases with less frequently used fields?
-Example: I need to use "struct device" for registering some low lever stuff.
+There's a race in register_netdevice() so that the udev event is sent before
+the device is actually ready. This was visible with flimflam, chrome os
+connection manager:
 
-I have two solutions:
+00:21:35 roska flimflamd[2598]: src/udev.c:add_net_device()
+00:21:35 roska flimflamd[2598]: connman_inet_ifname: SIOCGIFNAME(index
+   4): No such device
 
-1) Realtime:
-struct device *get_device(...)
-{
-if (dev->bus_type = B43_BUS_SSB)
-return dev->ssbdev->device;
-else if (dev->bus_type = B43_BUS_BCMA)
-return dev->bcmadev->device;
-}
+So the kobject is visible in udev before the device is ready.
 
-2) Init time:
-void b43_ssb_init(struct ssb_device *ssbdev)
-{
-dev->struct = ssbdev->device;
-}
+The issue is reported here:
 
-The first one is slower but we don't keep "struct device" pointer in
-abstraction struct. Situation is opposite for the second one.
+https://bugzilla.kernel.org/show_bug.cgi?id=15606
 
-Does anyone care? ;)
+Fix this by postponing the uevent with device_add_noevent() and
+calling device_uevent() once the device is really ready.
 
--- 
-Rafał
+Thanks to Johannes Berg for the original idea.
+
+Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+---
+ net/core/dev.c       |    3 +++
+ net/core/net-sysfs.c |    2 +-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 856b6ee..80cfa23 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -5454,6 +5454,9 @@ int register_netdevice(struct net_device *dev)
+ 		rollback_registered(dev);
+ 		dev->reg_state = NETREG_UNREGISTERED;
+ 	}
++
++	device_uevent(&(dev->dev));
++
+ 	/*
+ 	 *	Prevent userspace races by waiting until the network
+ 	 *	device is fully setup before sending notifications.
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index 5ceb257..c10b1d5 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -1337,7 +1337,7 @@ int netdev_register_kobject(struct net_device *net)
+ #endif
+ #endif /* CONFIG_SYSFS */
+ 
+-	error = device_add(dev);
++	error = device_add_noevent(dev);
+ 	if (error)
+ 		return error;
+ 
+
