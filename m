@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:51772 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:56954 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752924Ab1EINlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 09:41:36 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 06:41:07 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 1/4] ath9k_hw: Corrected xpabiaslevel register settings for AR9340
-Date: Mon, 9 May 2011 19:11:26 +0530
-Message-ID: <1304948489-14585-1-git-send-email-rmanoharan@atheros.com> (sfid-20110509_154139_268081_06687D98)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754156Ab1EPRnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 13:43:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] compat: backport rcu_dereference_protected
+Date: Mon, 16 May 2011 19:43:35 +0200
+Message-Id: <1305567815-73528-3-git-send-email-nbd@openwrt.org> (sfid-20110516_194350_560357_93FF7F8D)
+In-Reply-To: <1305567815-73528-2-git-send-email-nbd@openwrt.org>
+References: <1305567815-73528-1-git-send-email-nbd@openwrt.org>
+ <1305567815-73528-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
+ include/linux/compat-2.6.34.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 3b13c1b..37f86c0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3442,17 +3442,15 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
+diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
+index f6ffde0..d1f9d80 100644
+--- a/include/linux/compat-2.6.34.h
++++ b/include/linux/compat-2.6.34.h
+@@ -246,6 +246,8 @@ static inline int usb_disable_autosuspend(struct usb_device *udev)
+ #define MMC_PM_KEEP_POWER	(1 << 0)	/* preserve card power during suspend */
+ #define sdio_set_host_pm_flags(a, b) 0
  
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
- 		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
- 	else {
- 		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
--		if (!AR_SREV_9340(ah)) {
--			REG_RMW_FIELD(ah, AR_CH0_THERM,
--				      AR_CH0_THERM_XPABIASLVL_MSB,
--				      bias >> 2);
--			REG_RMW_FIELD(ah, AR_CH0_THERM,
--				      AR_CH0_THERM_XPASHORT2GND, 1);
--		}
-+		REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				AR_CH0_THERM_XPABIASLVL_MSB,
-+				bias >> 2);
-+		REG_RMW_FIELD(ah, AR_CH0_THERM,
-+				AR_CH0_THERM_XPASHORT2GND, 1);
- 	}
- }
++#define rcu_dereference_protected(p, c) (p)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
  
+ #endif /* LINUX_26_34_COMPAT_H */
 -- 
-1.7.5.1
+1.7.3.2
 
