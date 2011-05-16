@@ -1,91 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9464 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932202Ab1EFS2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 14:28:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/7] iwlagn: dont update bytecount table for command queue
-Date: Fri,  6 May 2011 11:04:38 -0700
-Message-Id: <1304705080-29349-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202857_423767_62CB3CFD)
-In-Reply-To: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:44837 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754827Ab1EPWv7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 18:51:59 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] wireless: Support can-scan-one logic.
+Date: Mon, 16 May 2011 15:51:36 -0700
+Message-Id: <1305586296-23147-1-git-send-email-greearb@candelatech.com> (sfid-20110517_005202_689056_9240F1AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-The device doesn't use the bytecount table for the
-command queue, only for aggregation queues to make
-aggregation decisions. So don't update it for the
-command queue (and we even updated it with wrong
-values).
+Enable this by passing a -1 for a scan frequency.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+When enabled, the system will only scan the current active
+channel if at least one VIF is actively using it.  If no
+VIFS are active or this flag is disabled, then default
+behaviour is used.
+
+This helps when using multiple STA interfaces that otherwise might
+constantly be trying to scan all channels.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   28 +++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-tx.c     |    4 ----
- 2 files changed, 13 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 494de0e..5445fd6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -112,21 +112,19 @@ void iwlagn_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+v2:  Remove verbose printk commands, fix up comment syntax.
+
+:100644 100644 c32e683... c0be322... M	include/net/cfg80211.h
+:100644 100644 489b6ad... d00287f... M	net/mac80211/scan.c
+:100644 100644 0a199a1... c0b9cad... M	net/wireless/nl80211.c
+:100644 100644 e17b0be... 9044120... M	net/wireless/sme.c
+ include/net/cfg80211.h |    3 +++
+ net/mac80211/scan.c    |   42 ++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c |   22 ++++++++++++++++++++--
+ net/wireless/sme.c     |    6 ++++++
+ 4 files changed, 71 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c32e683..c0be322 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -780,6 +780,8 @@ struct cfg80211_ssid {
+  * @wiphy: the wiphy this was for
+  * @dev: the interface
+  * @aborted: (internal) scan request was notified as aborted
++ * @can_scan_one:  If true, only scan active channel if at least one
++ *       vif is already associated.
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -792,6 +794,7 @@ struct cfg80211_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	bool aborted;
++	bool can_scan_one;
  
- 	WARN_ON(len > 0xFFF || write_ptr >= TFD_QUEUE_SIZE_MAX);
- 
--	if (txq_id != priv->cmd_queue) {
--		sta_id = txq->cmd[txq->q.write_ptr]->cmd.tx.sta_id;
--		sec_ctl = txq->cmd[txq->q.write_ptr]->cmd.tx.sec_ctl;
--
--		switch (sec_ctl & TX_CMD_SEC_MSK) {
--		case TX_CMD_SEC_CCM:
--			len += CCMP_MIC_LEN;
--			break;
--		case TX_CMD_SEC_TKIP:
--			len += TKIP_ICV_LEN;
--			break;
--		case TX_CMD_SEC_WEP:
--			len += WEP_IV_LEN + WEP_ICV_LEN;
--			break;
--		}
-+	sta_id = txq->cmd[txq->q.write_ptr]->cmd.tx.sta_id;
-+	sec_ctl = txq->cmd[txq->q.write_ptr]->cmd.tx.sec_ctl;
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 489b6ad..d00287f 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -353,6 +353,48 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	 * nullfunc frames and probe requests will be dropped in
+ 	 * ieee80211_tx_h_check_assoc().
+ 	 */
++	int associated_station_vifs = 0;
++	int running_station_vifs = 0; /* not necessarily associated */
++	int running_other_vifs = 0; /* AP, etc */
++	struct ieee80211_sub_if_data *sdata;
 +
-+	switch (sec_ctl & TX_CMD_SEC_MSK) {
-+	case TX_CMD_SEC_CCM:
-+		len += CCMP_MIC_LEN;
-+		break;
-+	case TX_CMD_SEC_TKIP:
-+		len += TKIP_ICV_LEN;
-+		break;
-+	case TX_CMD_SEC_WEP:
-+		len += WEP_IV_LEN + WEP_ICV_LEN;
-+		break;
- 	}
++	if (local->scan_req->can_scan_one && local->scan_req->n_channels >= 1) {
++		struct sta_info *sta;
++		mutex_lock(&local->iflist_mtx);
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (!ieee80211_sdata_running(sdata))
++				continue;
++
++			if (sdata->vif.type == NL80211_IFTYPE_STATION)
++				running_station_vifs++;
++			else
++				running_other_vifs++;
++		}
++		mutex_unlock(&local->iflist_mtx);
++
++		rcu_read_lock();
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			if (!ieee80211_sdata_running(sta->sdata))
++				continue;
++			if (sta->sdata->vif.type != NL80211_IFTYPE_STATION)
++				continue;
++			if (test_sta_flags(sta, WLAN_STA_ASSOC))
++				associated_station_vifs++;
++		}
++		rcu_read_unlock();
++
++		/*
++		 * If one sta is associated, we don't want another to start
++		 * scanning on all channels, as that will interfere with the
++		 * one already associated.
++		 */
++		if ((running_other_vifs > 0) ||
++		    (associated_station_vifs > 1)) {
++			local->scan_req->channels[0] = local->hw.conf.channel;
++			local->scan_req->n_channels = 1;
++		}
++	}
++
+ 	drv_sw_scan_start(local);
  
- 	bc_ent = cpu_to_le16((len & 0xFFF) | (sta_id << 12));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 517d104..5a7cd17 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -540,10 +540,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- #endif
- 	txq->need_update = 1;
+ 	local->leave_oper_channel_time = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0a199a1..c0b9cad 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3176,6 +3176,9 @@ static int validate_scan_freqs(struct nlattr *freqs)
+ 	int n_channels = 0, tmp1, tmp2;
  
--	if (priv->cfg->ops->lib->txq_update_byte_cnt_tbl)
--		/* Set up entry in queue's byte count circular buffer */
--		priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq, 0);
--
- 	phys_addr = pci_map_single(priv->pci_dev, &out_cmd->hdr,
- 				   fix_size, PCI_DMA_BIDIRECTIONAL);
- 	dma_unmap_addr_set(out_meta, mapping, phys_addr);
+ 	nla_for_each_nested(attr1, freqs, tmp1) {
++		if (nla_get_u32(attr1) == 0xFFFFFFFF)
++			continue; /* skip can-scan-one flag */
++
+ 		n_channels++;
+ 		/*
+ 		 * Some hardware has a limited channel list for
+@@ -3207,6 +3210,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	int err, tmp, n_ssids = 0, n_channels, i;
+ 	enum ieee80211_band band;
+ 	size_t ie_len;
++	bool do_all_chan = true;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -3223,8 +3227,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		n_channels = validate_scan_freqs(
+ 				info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
+ 		if (!n_channels)
+-			return -EINVAL;
++			goto auto_channels;
+ 	} else {
++auto_channels:
+ 		n_channels = 0;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
+@@ -3270,6 +3275,17 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_FREQUENCIES], tmp) {
+ 			struct ieee80211_channel *chan;
+ 
++			/*
++			 * Special hack:  channel -1 means 'scan only active
++			 * channel if any VIFs on this device are associated
++			 * on the channel.
++			 */
++			if (nla_get_u32(attr) == 0xFFFFFFFF) {
++				request->can_scan_one = true;
++				continue;
++			}
++
++			do_all_chan = false;
+ 			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
+ 
+ 			if (!chan) {
+@@ -3284,7 +3300,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			request->channels[i] = chan;
+ 			i++;
+ 		}
+-	} else {
++	}
++
++	if (do_all_chan) {
+ 		/* all channels */
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			int j;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index e17b0be..9044120 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -105,6 +105,12 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 	if (!request)
+ 		return -ENOMEM;
+ 
++	/*
++	 * If at least one VIF on this hardware is already associated, then
++	 * only scan on the active channel.
++	 */
++	request->can_scan_one = true;
++
+ 	if (wdev->conn->params.channel)
+ 		request->channels[0] = wdev->conn->params.channel;
+ 	else {
 -- 
-1.7.0.4
+1.7.3.4
 
