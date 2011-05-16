@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:37074 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757476Ab1ELOQB (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:60151 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755036Ab1EPM7M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:16:01 -0400
-Received: by mail-ew0-f48.google.com with SMTP id 22so486844ewy.7
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 07:15:59 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/7] wl12xx: remove unused flag WL1271_FLAG_IDLE_REQUESTED
-Date: Thu, 12 May 2011 17:15:40 +0300
-Message-Id: <1305209740-30287-8-git-send-email-coelho@ti.com> (sfid-20110512_161607_874986_10342A24)
-In-Reply-To: <1305209740-30287-1-git-send-email-coelho@ti.com>
-References: <1305209740-30287-1-git-send-email-coelho@ti.com>
+	Mon, 16 May 2011 08:59:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
+References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
+	<BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
+Date: Mon, 16 May 2011 15:59:10 +0300
+Message-ID: <BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com> (sfid-20110516_145922_598449_F54EFEF5)
+Subject: Re: several packets in a single buffer in Rx
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag is not used anymore, remove it from the list.
+2011/5/16 Micha³ Miros³aw <mirqus@gmail.com>:
+> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
+>> I would like to be able to deliver the same page several times to the
+>> stack without having the stack consume it before the last time I
+>> deliver it.
+>> Of course I would like to avoid cloning it.
+>
+> Just do get_page() on the page having another packet in it before
+> passing skb up.
+>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/wl12xx.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+I can see the path:
+__kfree_skb -> skb_release_all -> skb_release_data -> put_page
+put_page will free the page iff the _count variable reaches 0. Of course,
+_count is incremented by get_page.
 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 10f0767..ab0c2f1 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -351,7 +351,6 @@ enum wl12xx_flags {
- 	WL1271_FLAG_PSM_REQUESTED,
- 	WL1271_FLAG_IRQ_RUNNING,
- 	WL1271_FLAG_IDLE,
--	WL1271_FLAG_IDLE_REQUESTED,
- 	WL1271_FLAG_PSPOLL_FAILURE,
- 	WL1271_FLAG_STA_STATE_SENT,
- 	WL1271_FLAG_FW_TX_BUSY,
--- 
-1.7.1
+I will give it try.
 
+I understand that this will work regardless the order given to
+alloc_pages right ?
+
+Thanks
