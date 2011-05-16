@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61846 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753912Ab1EDMnZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 08:43:25 -0400
-Received: by eyx24 with SMTP id 24so338104eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 05:43:24 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Subject: Re: [PATCH] carl9170: fix allmulticast mode
-Date: Wed, 4 May 2011 14:43:25 +0000
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <4DC13CC5.9050909@lri.fr>
-In-Reply-To: <4DC13CC5.9050909@lri.fr>
+Received: from defaultvalue.org ([70.85.129.156]:36294 "EHLO defaultvalue.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750876Ab1EPFSn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 01:18:43 -0400
+From: Rob Browning <rlb@defaultvalue.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
+References: <87pqnl5i81.fsf@raven.defaultvalue.org>
+	<4DD074E3.3090502@lwfinger.net>
+	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
+	<4DD09C78.2010304@lwfinger.net>
+Date: Mon, 16 May 2011 00:18:41 -0500
+In-Reply-To: <4DD09C78.2010304@lwfinger.net> (Larry Finger's message of "Sun,
+	15 May 2011 22:39:36 -0500")
+Message-ID: <8762pbkytq.fsf@trouble.defaultvalue.org> (sfid-20110516_071847_128815_CDA90A27)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201105041443.25501.chunkeey@googlemail.com> (sfid-20110504_144328_343419_5EF5BF54)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 04 May 2011 11:47:17 Nicolas Cavallari wrote:
-> Currently, the driver only disable multicast filtering when the
-> FIF_ALLMULTI driver flag has been just set (ie,
-> if changed_flags& FIF_ALLMULTI and *new_flags& FIF_ALLMULTI) or else
-> it will reenable multicast filtering.
-> 
-> But next time, this condition will be false and multicast filtering
-> will be reenabled, even through FIF_ALLMULTI is still set.
-> 
-> This mean that allmulticast only works for less than two minutes in
-> ad-hoc mode.  This patch fixes that to disable multicast filtering
-> as long as FIF_ALLMULTI is set.
-> 
-> Signed-off-by: Nicolas Cavallari  <cavallar@lri.fr>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-[Just a minor niggle]
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> ---
-> diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> index 1638468..7d5c65e 100644
-> --- a/drivers/net/wireless/ath/carl9170/main.c
-> +++ b/drivers/net/wireless/ath/carl9170/main.c
-> @@ -883,7 +883,7 @@ static void carl9170_op_configure_filter(struct
-> ieee80211_hw *hw,
-> 	 * then checking the error flags, later.
-> 	 */
-> 
-> -	if (changed_flags&  FIF_ALLMULTI&&  *new_flags&  FIF_ALLMULTI)
-                      ^^^            ^^^          ^^^
-It looks like your mailer realigned the spaces around the operators
-and added a line-wrap so it won't apply without some help. Can you
-fix the problem and send the patch again?
+> You could patch either the linux-2.6 kernel (2.6.39-rc7), the
+> wireless-testing git tree, or get the source from your distro. You
+> will have to build the entire kernel as I do not have the necessary
+> make files to build the driver as an out of kernel module.
 
-Thanks,
-	Christian
+That patch didn't seem to have an effect -- the receive rate still
+settles at about 60Kb/s.
+
+I patched the Debian linux-2.6 source package and rebuilt the kernel.
+The Debian kernel appeared to already have the wifi.h diff.
+
+Please let me know if I can help further.
+
+Thanks
+-- 
+Rob Browning
+rlb @defaultvalue.org and @debian.org
+GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
