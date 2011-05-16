@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57763 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:43179 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755702Ab1EGQCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 12:02:31 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 09:02:03 -0700
-Date: Sat, 7 May 2011 21:32:22 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Greg KH <greg@kroah.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Vipin Mehta" <Vipin.Mehta@Atheros.com>,
-	Naveen Singh <Naveen.Singh@Atheros.com>
-Subject: Re: [PATCH 1/2] ath6kl: Remove dead code with undefined
-	EXPORT_HCI_BRIDGE_INTERFACE
-Message-ID: <20110507160222.GB17465@vasanth-laptop> (sfid-20110507_180245_626198_E3EAD449)
-References: <1304524691-12652-1-git-send-email-vasanth@atheros.com> <20110506163320.GA15144@kroah.com> <20110507102907.GC6002@vasanth-laptop> <20110507154228.GD23672@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110507154228.GD23672@kroah.com>
+	id S1754698Ab1EPVWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 17:22:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com,
+	rmanoharan@atheros.com
+Subject: [PATCH] ath9k: fix ad-hoc mode beacon selection
+Date: Mon, 16 May 2011 23:22:00 +0200
+Message-Id: <1305580920-2021-1-git-send-email-nbd@openwrt.org> (sfid-20110516_232213_515001_EE9BE60C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 07, 2011 at 09:12:28PM +0530, Greg KH wrote:
-> On Sat, May 07, 2011 at 03:59:07PM +0530, Vasanthakumar Thiagarajan wrote:
-> > On Fri, May 06, 2011 at 10:03:20PM +0530, Greg KH wrote:
-> > > On Wed, May 04, 2011 at 09:28:10PM +0530, Vasanthakumar Thiagarajan wrote:
-> > > > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > > 
-> > > It's not as dead as you think it is, this series causes a build
-> > > breakage.
-> > > 
-> > > PLEASE TEST YOUR PATCHES!
-> > > 
-> > > To not do so, like you did here just makes me grumpy and not want to
-> > > deal with them at all...
-> > 
-> > I'm really sorry for any trouble with those patches. I do compile
-> > and test my patches. Unfortunately I do not see the build breakage
-> > with that patch series. Can you please share you config file?.
-> 
-> Attached.
+In ad-hoc mode, beacon timers are configured differently compared to AP
+mode, and (depending on the scenario) can vary enough to make the beacon
+tasklet not detect slot 0 based on the TSF.
+Since staggered beacons are not (and cannot be) used in ad-hoc mode, it
+makes more sense to just hardcode slot 0 here, avoiding unnecessary
+TSF reads and calculations.
 
-Really sorry again. I mistakenly moved a global variable
-to #ifdef ATH_DEBUG_MODULE. As I was testing with debug
-enabled I did not hit this issue.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |   32 +++++++++++++++++++-----------
+ 1 files changed, 20 insertions(+), 12 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 637dbc5..c7f4679 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -351,9 +351,7 @@ void ath_beacon_tasklet(unsigned long data)
+ 	struct ath_buf *bf = NULL;
+ 	struct ieee80211_vif *vif;
+ 	int slot;
+-	u32 bfaddr, bc = 0, tsftu;
+-	u64 tsf;
+-	u16 intval;
++	u32 bfaddr, bc = 0;
+ 
+ 	/*
+ 	 * Check if the previous beacon has gone out.  If
+@@ -388,17 +386,27 @@ void ath_beacon_tasklet(unsigned long data)
+ 	 * on the tsf to safeguard against missing an swba.
+ 	 */
+ 
+-	intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
+ 
+-	tsf = ath9k_hw_gettsf64(ah);
+-	tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
+-	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
+-	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
+-	vif = sc->beacon.bslot[slot];
++	if (ah->opmode == NL80211_IFTYPE_AP) {
++		u16 intval;
++		u32 tsftu;
++		u64 tsf;
++
++		intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
++		tsf = ath9k_hw_gettsf64(ah);
++		tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
++		tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
++		slot = (tsftu % (intval * ATH_BCBUF)) / intval;
++		vif = sc->beacon.bslot[slot];
++
++		ath_dbg(common, ATH_DBG_BEACON,
++			"slot %d [tsf %llu tsftu %u intval %u] vif %p\n",
++			slot, tsf, tsftu / ATH_BCBUF, intval, vif);
++	} else {
++		slot = 0;
++		vif = sc->beacon.bslot[slot];
++	}
+ 
+-	ath_dbg(common, ATH_DBG_BEACON,
+-		"slot %d [tsf %llu tsftu %u intval %u] vif %p\n",
+-		slot, tsf, tsftu / ATH_BCBUF, intval, vif);
+ 
+ 	bfaddr = 0;
+ 	if (vif) {
+-- 
+1.7.3.2
 
-Vasanth
