@@ -1,47 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57288 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753737Ab1EPJlJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 05:41:09 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:4876 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754904Ab1EPLKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 07:10:03 -0400
+Message-ID: <4DD105FE.9040500@broadcom.com> (sfid-20110516_131007_935012_78CD5591)
+Date: Mon, 16 May 2011 13:09:50 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Date: Mon, 16 May 2011 12:41:07 +0300
-Message-ID: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com> (sfid-20110516_114126_970394_5B78446A)
-Subject: several packets in a single buffer in Rx
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Clemens Noss" <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>
+cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] staging: brcm80211: fix cast to pointer from
+ integer
+References: <1305492330-19575-1-git-send-email-cnoss@gmx.de>
+In-Reply-To: <1305492330-19575-1-git-send-email-cnoss@gmx.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Greg, please also merge this to the staging-linus branch since it might 
+resolve an instability issue.
 
-I am trying to enable a HW feature on a wireless NIC that allows the
-HW to put several packets in the same Rx buffer coming from the NIC.
-This can save interrupts and traffic on the bus.
-Today, the driver allocates pages in which the PCI-e device puts its
-data. Then we create an skb and add a fragment that points to the
-beginning of the page. The offset of the fragment is set to the offset
-of the first byte of the mac header within the buffer. There is only
-one packet per page / buffer.
+On 05/15/2011 10:45 PM, Clemens Noss wrote:
+> bcm_pktq_flush and related functions only ever get 0 or a pointer for
+> arg, so make it a pointer.
+>
+> This might fix a crash on 64bit.
 
-I would like to be able to deliver the same page several times to the
-stack without having the stack consume it before the last time I
-deliver it.
-Of course I would like to avoid cloning it.
+Acked-by: Roland Vossen <rvossen@broadcom.com>
 
-I tried to look at shinfo->nr_frags but this looks more like a sgl
-related variable
-GRO doesn't seem to be related either since as far as I understood, it
-is relevant for packets after 802.11 to 802.3 translation.
+>
+> Signed-off-by: Clemens Noss<cnoss@gmx.de>
+> ---
+>   drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |    2 +-
+>   drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |    4 ++--
+>   drivers/staging/brcm80211/brcmsmac/wlc_main.c  |    4 ++--
+>   drivers/staging/brcm80211/include/bcmutils.h   |    6 +++---
+>   drivers/staging/brcm80211/util/bcmutils.c      |    4 ++--
+>   5 files changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+> index 8683eeb..a71c6f8 100644
+> --- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+> +++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+> @@ -2845,7 +2845,7 @@ void dhd_bus_stop(struct dhd_bus *bus, bool enforce_mutex)
+>   	dhdsdio_clkctl(bus, CLK_SDONLY, false);
+>
+>   	/* Clear the data packet queues */
+> -	bcm_pktq_flush(&bus->txq, true, NULL, 0);
+> +	bcm_pktq_flush(&bus->txq, true, NULL, NULL);
+>
+>   	/* Clear any held glomming stuff */
+>   	if (bus->glomd)
+> diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+> index 5b041a6..0d93bd6 100644
+> --- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+> +++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+> @@ -1225,7 +1225,7 @@ void wlc_ampdu_shm_upd(struct ampdu_info *ampdu)
+>   /*
+>    * callback function that helps flushing ampdu packets from a priority queue
+>    */
+> -static bool cb_del_ampdu_pkt(void *p, int arg_a)
+> +static bool cb_del_ampdu_pkt(void *p, void *arg_a)
+>   {
+>   	struct sk_buff *mpdu = (struct sk_buff *)p;
+>   	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(mpdu);
+> @@ -1269,7 +1269,7 @@ void wlc_ampdu_flush(struct wlc_info *wlc,
+>   	ampdu_pars.tid = tid;
+>   	for (prec = 0; prec<  pq->num_prec; prec++) {
+>   		bcm_pktq_pflush(pq, prec, true, cb_del_ampdu_pkt,
+> -			    (int)&ampdu_pars);
+> +			    (void *)&ampdu_pars);
+>   	}
+>   	wlc_inval_dma_pkts(wlc->hw, sta, dma_cb_fn_ampdu);
+>   }
+> diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+> index 2fed0eb..926b01a 100644
+> --- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+> +++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+> @@ -2520,7 +2520,7 @@ uint wlc_down(struct wlc_info *wlc)
+>
+>   	/* flush tx queues */
+>   	for (qi = wlc->tx_queues; qi != NULL; qi = qi->next) {
+> -		bcm_pktq_flush(&qi->q, true, NULL, 0);
+> +		bcm_pktq_flush(&qi->q, true, NULL, NULL);
+>   	}
+>
+>   	callbacks += wlc_bmac_down_finish(wlc->hw);
+> @@ -8135,7 +8135,7 @@ void wlc_wait_for_tx_completion(struct wlc_info *wlc, bool drop)
+>   {
+>   	/* flush packet queue when requested */
+>   	if (drop)
+> -		bcm_pktq_flush(&wlc->pkt_queue->q, false, NULL, 0);
+> +		bcm_pktq_flush(&wlc->pkt_queue->q, false, NULL, NULL);
+>
+>   	/* wait for queue and DMA fifos to run dry */
+>   	while (!pktq_empty(&wlc->pkt_queue->q) ||
+> diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+> index aa00e83..1d57934 100644
+> --- a/drivers/staging/brcm80211/include/bcmutils.h
+> +++ b/drivers/staging/brcm80211/include/bcmutils.h
+> @@ -74,7 +74,7 @@
+>   #define PKTQ_PREC_ITER(pq, prec)        for (prec = (pq)->num_prec - 1; prec>= 0; prec--)
+>
+>   /* fn(pkt, arg).  return true if pkt belongs to if */
+> -	typedef bool(*ifpkt_cb_t) (void *, int);
+> +	typedef bool(*ifpkt_cb_t) (void *, void *);
+>
+>   /* operations on a specific precedence in packet queue */
+>
+> @@ -100,7 +100,7 @@ extern void bcm_pkt_buf_free_skb(struct sk_buff *skb);
+>
+>   /* Empty the queue at particular precedence level */
+>   extern void bcm_pktq_pflush(struct pktq *pq, int prec,
+> -	bool dir, ifpkt_cb_t fn, int arg);
+> +	bool dir, ifpkt_cb_t fn, void *arg);
+>
+>   /* operations on a set of precedences in packet queue */
+>
+> @@ -127,7 +127,7 @@ extern void bcm_pktq_init(struct pktq *pq, int num_prec, int max_len);
+>   /* prec_out may be NULL if caller is not interested in return value */
+>   extern struct sk_buff *bcm_pktq_peek_tail(struct pktq *pq, int *prec_out);
+>   extern void bcm_pktq_flush(struct pktq *pq, bool dir,
+> -	ifpkt_cb_t fn, int arg);
+> +	ifpkt_cb_t fn, void *arg);
+>
+>   /* externs */
+>   /* packet */
+> diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+> index e185e28..43e5bb3 100644
+> --- a/drivers/staging/brcm80211/util/bcmutils.c
+> +++ b/drivers/staging/brcm80211/util/bcmutils.c
+> @@ -231,7 +231,7 @@ EXPORT_SYMBOL(bcm_pktq_pdeq_tail);
+>
+>   void
+>   bcm_pktq_pflush(struct pktq *pq, int prec, bool dir,
+> -	    ifpkt_cb_t fn, int arg)
+> +	    ifpkt_cb_t fn, void *arg)
+>   {
+>   	struct pktq_prec *q;
+>   	struct sk_buff *p, *prev = NULL;
+> @@ -263,7 +263,7 @@ bcm_pktq_pflush(struct pktq *pq, int prec, bool dir,
+>   EXPORT_SYMBOL(bcm_pktq_pflush);
+>
+>   void bcm_pktq_flush(struct pktq *pq, bool dir,
+> -		ifpkt_cb_t fn, int arg)
+> +		ifpkt_cb_t fn, void *arg)
+>   {
+>   	int prec;
+>   	for (prec = 0; prec<  pq->num_prec; prec++)
 
 
-FWIW: I am talking about Intel's wireless device although I don't
-think this fact matters
-
-Thanks
-
-Emmanuel Grumbach
-egrumbach@gmail.com
