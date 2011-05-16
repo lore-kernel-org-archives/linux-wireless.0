@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3223 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571Ab1ECMd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 08:33:59 -0400
-Message-ID: <4DBFF628.6040502@broadcom.com> (sfid-20110503_143404_231935_92F90273)
-Date: Tue, 3 May 2011 14:33:44 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53920 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755303Ab1EPNsG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 09:48:06 -0400
+Received: by bwz15 with SMTP id 15so3743605bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 06:48:05 -0700 (PDT)
 MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
- <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
- <20110503121522.GB22674@suse.de>
-In-Reply-To: <20110503121522.GB22674@suse.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <4DD0518D.1090300@lwfinger.net>
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+	<4DCB3DFF.1030809@lockie.ca>
+	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+	<4DCE9DB8.7080404@lwfinger.net>
+	<BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
+	<BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
+	<4DD0518D.1090300@lwfinger.net>
+Date: Mon, 16 May 2011 08:48:04 -0500
+Message-ID: <BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com> (sfid-20110516_154811_366069_184538D5)
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+From: Flaminigo <sunnyiez@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 02:15 PM, Greg KH wrote:
-> On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
->>   #if defined(CONFIG_PM_SLEEP)
+I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
+right? I browse the www.kernel.org but I cannot find the source code
+for RC1.
+What should I  do ? Find the RC1 code. Apply your patch. Recompile the
+kernel and install it? I appreciate your help.
+
+Regards
+Sunny
+
+On Sun, May 15, 2011 at 5:19 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/15/2011 04:32 PM, Flaminigo wrote:
 >>
->> +extern volatile bool dhd_mmc_suspend;
-> This does not do what you think it does.
-
-Hi Greg,
-
-I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2] 
-brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two patches 
-I saw on the linuxdriver list are:
-
-staging: brcm80211: brcmfmac: Add and use dhd_dbg [joe@perches.com] => 
-he rejected it himself.
-STAGING: brcm80211 SDIO/MMC cleanups [grundler@chromium.org] => does not 
-apply.
-
-So I discarded those two as well.
-
-Gr. AvS
-
+>> Hi,
+>>    I have another question. Is it possible to turn of the N network
+>> ratio on this NIC? My notebook works well in a 802.11 b/g network. If
+>> I can turn the N network radio off, at least, I can use it now in my
+>> office building.
+>
+> If you just connect to a b/g network, it will work. If the office building
+> only has what I suspect is an HT40 network, then it will fail.
+>
+> Did you look at the kernel bugzilla number that I sent to you the other day.
+> It has a patch for using the device with an HT40 network. For me, everything
+> else (B/G and HT20) worked before.
+>
+> Larry
+>
+>
