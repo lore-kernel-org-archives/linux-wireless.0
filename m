@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53180 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab1ECNaP (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:57589 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755303Ab1EPNgr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:30:15 -0400
-Received: by bwz15 with SMTP id 15so109423bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 06:30:13 -0700 (PDT)
+	Mon, 16 May 2011 09:36:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <19903.49991.848934.183819@gargle.gargle.HOWL>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-Date: Tue, 3 May 2011 09:30:13 -0400
-Message-ID: <BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com> (sfid-20110503_153018_844349_79847189)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <BANLkTi=xJbL-26Hzg0Pp5zKPUi35bV6VmA@mail.gmail.com>
+References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
+	<BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com>
+	<BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com>
+	<BANLkTi=xJbL-26Hzg0Pp5zKPUi35bV6VmA@mail.gmail.com>
+Date: Mon, 16 May 2011 16:36:45 +0300
+Message-ID: <BANLkTin_stn+7Ja3hbuaOgtrEVJEoT9Lhw@mail.gmail.com> (sfid-20110516_153659_000417_E19AFA73)
+Subject: Re: several packets in a single buffer in Rx
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Thanks, but unfortunately, the only option is for someone to port all
-> the HW support to htc_7010.fw. And I don't know if and when it would be done.
+2011/5/16 Micha³ Miros³aw <mirqus@gmail.com>:
+> W dniu 16 maja 2011 14:59 u¿ytkownik Emmanuel Grumbach
+> <egrumbach@gmail.com> napisa³:
+>> 2011/5/16 Micha³ Miros³aw <mirqus@gmail.com>:
+>>> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
+>>>> I would like to be able to deliver the same page several times to the
+>>>> stack without having the stack consume it before the last time I
+>>>> deliver it.
+>>>> Of course I would like to avoid cloning it.
+>>>
+>>> Just do get_page() on the page having another packet in it before
+>>> passing skb up.
+>>>
+>>
+>> I can see the path:
+>> __kfree_skb -> skb_release_all -> skb_release_data -> put_page
+>> put_page will free the page iff the _count variable reaches 0. Of course,
+>> _count is incremented by get_page.
+>>
+>> I will give it try.
+>>
+>> I understand that this will work regardless the order given to
+>> alloc_pages right ?
 >
+> Yes. Remember that if you put a lot of packets in a big-order page
+> then the memory will be freed only after all packets are freed.
 
-Your last e-mail sounded a little more hopeful, this e-mail makes it
-sound like I should jump ship on this hardware and track down another
-AR7010+AR9280 solution...
+Sure. Thanks for the help.
 
-It seems like the combo in production with UB94 is still not widely
-available.  The Panasonic N5HBZ000005 is the only UB94 that seems is
-semi-available in the US.  Maybe I'll jump back to AR9271+AR7010.
-
-- George
+>
+> Best Regards,
+> Micha³ Miros³aw
+>
