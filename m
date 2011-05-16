@@ -1,136 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45988 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755554Ab1ELMbv (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:61848 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049Ab1EPUQM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 08:31:51 -0400
-Subject: [PATCH] mac80211: make key locking clearer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 14:31:49 +0200
-Message-ID: <1305203509.3461.25.camel@jlt3.sipsolutions.net> (sfid-20110512_143154_411900_453612B7)
-Mime-Version: 1.0
+	Mon, 16 May 2011 16:16:12 -0400
+Received: by qyk7 with SMTP id 7so1707341qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 13:16:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com>
+References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
+ <4DCB3DFF.1030809@lockie.ca> <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
+ <4DCE9DB8.7080404@lwfinger.net> <BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
+ <BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com> <4DD0518D.1090300@lwfinger.net>
+ <BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com> <4DD13AA2.1000206@lwfinger.net>
+ <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 16 May 2011 22:15:51 +0200
+Message-ID: <BANLkTimb24zCF9AoN7iaXwn5J46RMsmhVg@mail.gmail.com> (sfid-20110516_221615_576409_BE1B12CB)
+Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
+To: Flaminigo <sunnyiez@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, May 16, 2011 at 5:20 PM, Flaminigo <sunnyiez@gmail.com> wrote:
+> Hi,
+>    I appreciate your help greatly. I am not very familiar with kernel
+> programming. Actually, I am a graphics guy. I try to apply your patch
+> but I failed. That was my process. FYI
+>
+> 1. Download RC7 code from
+> http://www.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.39-rc7.tar.bz2
+> 2. Download the patch from
+> http://www.kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.39-rc7.bz2
+> 3. apply the patch.
+> sunny@samunder:~/Downloads/kernel/linux-2.6.39-rc7$ bzip2 -dc
+> patch-2.6.39-rc7.bz2  | patch -p1
 
-The code in ieee80211_del_key() doesn't acquire the
-key_mtx properly when it dereferences the keys. It
-turns out that isn't actually necessary since the
-key_mtx itself seems to be redundant since all key
-manipulations are done under the RTNL, but as long
-as we have the key_mtx we should use it the right
-way too.
+You do not need this patch at all - it is already integrated into
+linux-2.6.39-rc7.tar.bz2. The patch is for those who already
+downloaded the linux-2.6.38 sources, and do not want to redownload a
+kernel source tree (also, historically there was no
+linux-whatever-rcX.tar.bz2, pre-releases were only distributed as
+patches to the previous stable kernel).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   38 +++++++++++++++-----------------------
- net/mac80211/key.c |    8 ++++----
- net/mac80211/key.h |    1 +
- 3 files changed, 20 insertions(+), 27 deletions(-)
-
---- a/net/mac80211/cfg.c	2011-05-12 14:07:12.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-05-12 14:22:01.000000000 +0200
-@@ -157,13 +157,14 @@ static int ieee80211_add_key(struct wiph
- static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-+	struct ieee80211_key *key = NULL;
- 	int ret;
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	mutex_lock(&sdata->local->sta_mtx);
-+	mutex_lock(&local->sta_mtx);
-+	mutex_lock(&local->key_mtx);
- 
- 	if (mac_addr) {
- 		ret = -ENOENT;
-@@ -172,33 +173,24 @@ static int ieee80211_del_key(struct wiph
- 		if (!sta)
- 			goto out_unlock;
- 
--		if (pairwise) {
--			if (sta->ptk) {
--				ieee80211_key_free(sdata->local, sta->ptk);
--				ret = 0;
--			}
--		} else {
--			if (sta->gtk[key_idx]) {
--				ieee80211_key_free(sdata->local,
--						   sta->gtk[key_idx]);
--				ret = 0;
--			}
--		}
--
--		goto out_unlock;
--	}
-+		if (pairwise)
-+			key = sta->ptk;
-+		else
-+			key = sta->gtk[key_idx];
-+	} else
-+		key = sdata->keys[key_idx];
- 
--	if (!sdata->keys[key_idx]) {
-+	if (!key) {
- 		ret = -ENOENT;
- 		goto out_unlock;
- 	}
- 
--	ieee80211_key_free(sdata->local, sdata->keys[key_idx]);
--	WARN_ON(sdata->keys[key_idx]);
-+	__ieee80211_key_free(key);
- 
- 	ret = 0;
-  out_unlock:
--	mutex_unlock(&sdata->local->sta_mtx);
-+	mutex_unlock(&local->key_mtx);
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
- }
---- a/net/mac80211/key.c	2011-05-12 14:07:12.000000000 +0200
-+++ b/net/mac80211/key.c	2011-05-12 14:22:01.000000000 +0200
-@@ -471,8 +471,11 @@ int ieee80211_key_link(struct ieee80211_
- 	return ret;
- }
- 
--static void __ieee80211_key_free(struct ieee80211_key *key)
-+void __ieee80211_key_free(struct ieee80211_key *key)
- {
-+	if (!key)
-+		return;
-+
- 	/*
- 	 * Replace key with nothingness if it was ever used.
- 	 */
-@@ -486,9 +489,6 @@ static void __ieee80211_key_free(struct
- void ieee80211_key_free(struct ieee80211_local *local,
- 			struct ieee80211_key *key)
- {
--	if (!key)
--		return;
--
- 	mutex_lock(&local->key_mtx);
- 	__ieee80211_key_free(key);
- 	mutex_unlock(&local->key_mtx);
---- a/net/mac80211/key.h	2011-05-12 14:07:12.000000000 +0200
-+++ b/net/mac80211/key.h	2011-05-12 14:07:15.000000000 +0200
-@@ -135,6 +135,7 @@ struct ieee80211_key *ieee80211_key_allo
- int __must_check ieee80211_key_link(struct ieee80211_key *key,
- 				    struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
-+void __ieee80211_key_free(struct ieee80211_key *key);
- void ieee80211_key_free(struct ieee80211_local *local,
- 			struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+> 4. copy and paste your patch
+> https://bugzilla.kernel.org/attachment.cgi?id=57802 and place it in
+> file `pa`
+> 5. apply your patch by patch -p1 < pa.
+>
+> I failed :(
+>
+>
+>
+> On Mon, May 16, 2011 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 05/16/2011 08:48 AM, Flaminigo wrote:
+>>>
+>>> I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
+>>> right? I browse the www.kernel.org but I cannot find the source code
+>>> for RC1.
+>>> What should I  do ? Find the RC1 code. Apply your patch. Recompile the
+>>> kernel and install it? I appreciate your help.
+>>
+>> At the moment, you should get 2.6.39-rc7 sources, apply the patch, and build
+>> that kernel. The patch should apply for any of the ...39-rcX kernels, but I
+>> did in fact test it with rc7.
+>>
+>> Larry
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
