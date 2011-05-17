@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:39654 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756263Ab1EZIqW (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:61556 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754228Ab1EQNO3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 04:46:22 -0400
-Received: by wwk4 with SMTP id 4so4214567wwk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 01:46:21 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: clear local->ps_data on disassoc
-Date: Thu, 26 May 2011 11:46:37 +0300
-Message-Id: <1306399597-15012-1-git-send-email-eliad@wizery.com> (sfid-20110526_104626_451502_760D3388)
+	Tue, 17 May 2011 09:14:29 -0400
+Received: by qyk7 with SMTP id 7so2062378qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 06:14:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinP083x+cWD1qk1LQYYn=QL18uN9g@mail.gmail.com>
+References: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com>
+	<1305631218.4250.0.camel@maggie>
+	<BANLkTinP083x+cWD1qk1LQYYn=QL18uN9g@mail.gmail.com>
+Date: Tue, 17 May 2011 15:14:28 +0200
+Message-ID: <BANLkTik1NMnj6ddjfBbrs65Jqw-C11EN9Q@mail.gmail.com> (sfid-20110517_151438_080336_5F6779CA)
+Subject: Re: ssb: how did we get special reject bit for SSB rev 2.3?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-local->ps_data wasn't cleared on disassociation, which
-(in some corner cases) caused reconnections to enter
-psm before association completed.
+W dniu 17 maja 2011 13:50 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> W dniu 17 maja 2011 13:20 użytkownik Michael Büsch <m@bues.ch> napisał:
+>> On Tue, 2011-05-17 at 12:40 +0200, Rafał Miłecki wrote:
+>>> Does anyone know where did we get this from?
+>>
+>> Should be in the git history.
+>
+> It's here since:
+> [SSB]: add Sonics Silicon Backplane bus support
+>
+> Maybe bcm43xx does contain sth...
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/mlme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This check was not present in bcm43xx. So I guess specs were updated
+and ssb was written basing on updated specs.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4f6b267..d595265 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1089,6 +1089,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 		config_changed |= IEEE80211_CONF_CHANGE_PS;
- 	}
-+	local->ps_sdata = NULL;
- 
- 	ieee80211_hw_config(local, config_changed);
- 
 -- 
-1.7.0.4
-
+Rafał
