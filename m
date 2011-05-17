@@ -1,35 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49823 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab1EEOnn (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:41486 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535Ab1EQK2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 10:43:43 -0400
-Message-ID: <4DC2B78E.3000205@candelatech.com> (sfid-20110505_164346_564380_AD763896)
-Date: Thu, 05 May 2011 07:43:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 17 May 2011 06:28:30 -0400
+Received: by vxi39 with SMTP id 39so211663vxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 03:28:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for scheduled
- scans
-References: <1304600420-24227-1-git-send-email-coelho@ti.com> <1304600420-24227-4-git-send-email-coelho@ti.com>
-In-Reply-To: <1304600420-24227-4-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Tue, 17 May 2011 12:28:29 +0200
+Message-ID: <BANLkTim9NtWtXzM0Q2t-JiGY8VfzsdCZZA@mail.gmail.com> (sfid-20110517_122843_702007_29C2D4B3)
+Subject: Obtain station_info from kernel space
+From: Daniele Furlan <daniele.furlan@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2011 06:00 AM, Luciano Coelho wrote:
-> Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
-> NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
-> intervals the scheduled scan cycles should be executed.
+Hi all,
+is there a way to obtain station_info from kernel space accessing to
+cfg80211_ops?
+>From user space nl80211 can be used and offer a wide compatibility,
+but from kernel space I'm not able to find a way that works for all
+cfg80211 drivers.
 
-Please default to something useful instead of requiring
-this so that things are backwards compatible.
-
-Thanks,
-Ben
+Thanks in advance.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Daniele Furlan
