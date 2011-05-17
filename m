@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53515 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801Ab1EMTip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 15:38:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/13] iwlagn: always send RXON with disassociate flag before associate
-Date: Fri, 13 May 2011 12:13:27 -0700
-Message-Id: <1305314010-18073-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213913_567080_8CBFF64E)
-In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from dakia2.marvell.com ([65.219.4.35]:51496 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752214Ab1EQCNO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 22:13:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 5/5] mwifiex: adjust high/low water marks for tx_pending queue
+Date: Mon, 16 May 2011 19:17:53 -0700
+Message-Id: <1305598673-26606-6-git-send-email-bzhao@marvell.com> (sfid-20110517_041320_799665_1ED20F87)
+In-Reply-To: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
+References: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before send the RXON command with associated flag set, always do disassociate
-first to make sure uCode is in the correct state.
+From: Marc Yang <yangyang@marvell.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This is to fix an issue that the throughput of the higher priority
+stream gets dropped when a lower priority stream is present.
+
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    8 +++-----
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    5 +++++
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/main.h |    3 ++-
+ drivers/net/wireless/mwifiex/txrx.c |    4 +++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 0238743..7d40e2d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -389,11 +389,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 * AP station must be done after the BSSID is set to correctly
- 	 * set up filters in the device.
- 	 */
--	if ((old_assoc && new_assoc) || !new_assoc) {
--		ret = iwlagn_rxon_disconn(priv, ctx);
--		if (ret)
--			return ret;
--	}
-+	ret = iwlagn_rxon_disconn(priv, ctx);
-+	if (ret)
-+		return ret;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 3154b0a..8316b3c 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -69,7 +69,8 @@ struct mwifiex_drv_mode {
+ #define MWIFIEX_TIMER_10S			10000
+ #define MWIFIEX_TIMER_1S			1000
  
- 	if (new_assoc)
- 		return iwlagn_rxon_connect(priv, ctx);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 2f6b38c..54a935f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -582,6 +582,11 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	int trace_idx;
- #endif
+-#define MAX_TX_PENDING      60
++#define MAX_TX_PENDING      100
++#define LOW_TX_PENDING      80
  
-+	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
-+		IWL_WARN(priv, "fw recovery, no hcmd send\n");
-+		return -EIO;
-+	}
+ #define MWIFIEX_UPLD_SIZE               (2312)
+ 
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 2101208..aaa50c0 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -140,7 +140,9 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 	} else {
+ 		priv->stats.tx_errors++;
+ 	}
+-	atomic_dec(&adapter->tx_pending);
 +
- 	copy_size = sizeof(out_cmd->hdr);
- 	cmd_size = sizeof(out_cmd->hdr);
++	if (atomic_dec_return(&adapter->tx_pending) >= LOW_TX_PENDING)
++		goto done;
+ 
+ 	for (i = 0; i < adapter->priv_num; i++) {
  
 -- 
-1.7.0.4
+1.7.0.2
 
