@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56905 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab1ECO2x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 10:28:53 -0400
-Subject: RE: WARNING: at net/mac80211/wep.c:101
- ieee80211_wep_add_iv+0x52/0x150 [mac80211]()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Powar <yogeshp@marvell.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"rossi.f@inwind.it" <rossi.f@inwind.it>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <7DDF37406E10F0438561DBB78326DF3902F35339F2@SC-VEXCH1.marvell.com>
-References: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
-	 ,<BANLkTim3-ve4BD6wghA=F-asEqJmcDip6Q@mail.gmail.com>
-	 <7DDF37406E10F0438561DBB78326DF3902F35339F2@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 03 May 2011 16:28:49 +0200
-Message-ID: <1304432929.3720.4.camel@jlt3.sipsolutions.net> (sfid-20110503_162856_132233_C901A0CA)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1866 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974Ab1EQCce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 22:32:34 -0400
+Message-ID: <4DD1DE34.90403@broadcom.com> (sfid-20110517_043238_515504_12175BD5)
+Date: Mon, 16 May 2011 19:32:20 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+MIME-Version: 1.0
+To: Steve <steve.obrien@hdesd.org>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	driverdevel <devel@driverdev.osuosl.org>
+Subject: Re: Broadcom 4331 wireless device
+References: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com>
+ <AANLkTikHx2J-zzCob+xVy04=RYX+K9T2HJ_14zyrto2J@mail.gmail.com>
+ <loom.20110425T203659-857@post.gmane.org>
+In-Reply-To: <loom.20110425T203659-857@post.gmane.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-03 at 07:25 -0700, Yogesh Powar wrote:
-> >so may will this help? I don't know whether its a correct and with a
-> >quick test the warning gets fixed.
-> That should solve our problem with following explanation. 
-> 
-> The devices that require IV generation in software need tailroom reservation
-> for ICVs used in TKIP or WEP encryptions.
-> 
-> Currently, decision to skip the tailroom reservation in the tx
-> path was taken only on whether driver wants MMIC to be generated
-> in software or not. Following patch appends IV generation check for such
-> decisions.
-> 
-> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-> index ca3c626..f3c4deb 100644
-> --- a/net/mac80211/key.c
-> +++ b/net/mac80211/key.c
-> @@ -102,7 +102,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
->  	if (!ret) {
->  		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
->  
-> -		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
-> +		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
-> +				(key->conf.flags &
-> +					IEEE80211_KEY_FLAG_GENERATE_IV)))
->  			key->local->crypto_tx_tailroom_needed_cnt--;
+On 04/25/2011 11:38 AM, Steve wrote:
+>>
+>> So yes, it looks like new BCM4331 chipset. AFAIK there is no support
+>> for it in wl. Plus no support in b43 or brcm80211.
+>>
+>
+> Any news? I also looking for a linux driver for the 4331 and have had no luck
+> with wl.
+> Steve
 
-Can we have a bit nicer code style? :)
+We have plans to support the BCM4331, and other new chips, with the 
+brcmsmac driver.  I don't have an ETA, but new chip support is the first 
+thing on the priority list after getting the brcmsmac driver out of staging.
 
-Also, need to submit a proper patch with S-o-b etc, and reported-by
-rossi.
-
-johannes
+---
+Henry Ptasinski
+henryp@broadcom.com
 
