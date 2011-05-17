@@ -1,30 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:44922 "EHLO bues.ch"
+Received: from nbd.name ([46.4.11.11]:46014 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753826Ab1EFJBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 05:01:44 -0400
-Subject: Re: [PATCH] ssb: move ssb_commit_settings and export it
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <1304635505-9824-1-git-send-email-zajec5@gmail.com>
-References: <1304635505-9824-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 May 2011 11:01:37 +0200
-Message-ID: <1304672497.22936.4.camel@maggie> (sfid-20110506_110150_905342_593D5FF3)
-Mime-Version: 1.0
+	id S1756435Ab1EQTKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 15:10:06 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	rmanoharan@atheros.com
+Subject: [PATCH v2] ath9k: implement .tx_last_beacon()
+Date: Tue, 17 May 2011 21:09:54 +0200
+Message-Id: <1305659394-61466-1-git-send-email-nbd@openwrt.org> (sfid-20110517_211010_528470_EA12B456)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-06 at 00:45 +0200, Rafał Miłecki wrote: 
-> +EXPORT_SYMBOL(ssb_commit_settings);
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    3 ++
+ drivers/net/wireless/ath/ath9k/beacon.c |   12 +++++++++
+ drivers/net/wireless/ath/ath9k/main.c   |   40 +++++++++++++++++++++++++++++++
+ 3 files changed, 55 insertions(+), 0 deletions(-)
 
-Don't add EXPORT_SYMBOLs, unless you also add an actual
-user within the same patch series.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 03b37d7..d6e7825 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -397,6 +397,9 @@ struct ath_beacon {
+ 	struct ath_descdma bdma;
+ 	struct ath_txq *cabq;
+ 	struct list_head bbuf;
++
++	bool tx_processed;
++	bool tx_last;
+ };
+ 
+ void ath_beacon_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 0199af0..e8756c5 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -18,6 +18,12 @@
+ 
+ #define FUDGE 2
+ 
++static void ath9k_reset_beacon_status(struct ath_softc *sc)
++{
++	sc->beacon.tx_processed = false;
++	sc->beacon.tx_last = false;
++}
++
+ /*
+  *  This function will modify certain transmit queue properties depending on
+  *  the operating mode of the station (AP or AdHoc).  Parameters are AIFS
+@@ -72,6 +78,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	struct ieee80211_supported_band *sband;
+ 	u8 rate = 0;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	ds = bf->bf_desc;
+ 	flags = ATH9K_TXDESC_NOACK;
+ 
+@@ -134,6 +142,8 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info;
+ 	int cabq_depth;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	avp = (void *)vif->drv_priv;
+ 	cabq = sc->beacon.cabq;
+ 
+@@ -644,6 +654,8 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 tsf, delta, intval, nexttbtt;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	tsf = ath9k_hw_gettsf32(ah) + TU_TO_USEC(FUDGE);
+ 	intval = TU_TO_USEC(conf->beacon_interval & ATH9K_BEACON_PERIOD);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 17ebdf1..473aff5 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2332,6 +2332,45 @@ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
+ 	return false;
+ }
+ 
++int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ieee80211_vif *vif;
++	struct ath_vif *avp;
++	struct ath_buf *bf;
++	struct ath_tx_status ts;
++	int status;
++
++	vif = sc->beacon.bslot[0];
++	if (!vif)
++		return 0;
++
++	avp = (void *)vif->drv_priv;
++	if (!avp->is_bslot_active)
++		return 0;
++
++	if (!sc->beacon.tx_processed) {
++		tasklet_disable(&sc->bcon_tasklet);
++
++		bf = avp->av_bcbuf;
++		if (!bf || !bf->bf_mpdu)
++			goto skip;
++
++		status = ath9k_hw_txprocdesc(ah, bf->bf_desc, &ts);
++		if (status == -EINPROGRESS)
++			goto skip;
++
++		sc->beacon.tx_processed = true;
++		sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
++
++skip:
++		tasklet_enable(&sc->bcon_tasklet);
++	}
++
++	return sc->beacon.tx_last;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2356,4 +2395,5 @@ struct ieee80211_ops ath9k_ops = {
+ 	.set_coverage_class = ath9k_set_coverage_class,
+ 	.flush		    = ath9k_flush,
+ 	.tx_frames_pending  = ath9k_tx_frames_pending,
++	.tx_last_beacon = ath9k_tx_last_beacon,
+ };
 -- 
-Greetings Michael.
+1.7.3.2
 
