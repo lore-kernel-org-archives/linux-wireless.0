@@ -1,83 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43179 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754698Ab1EPVWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 17:22:09 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com,
-	rmanoharan@atheros.com
-Subject: [PATCH] ath9k: fix ad-hoc mode beacon selection
-Date: Mon, 16 May 2011 23:22:00 +0200
-Message-Id: <1305580920-2021-1-git-send-email-nbd@openwrt.org> (sfid-20110516_232213_515001_EE9BE60C)
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:41372 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773Ab1EQPjC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 11:39:02 -0400
+Received: by pwi15 with SMTP id 15so328072pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 08:39:01 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <19922.38456.333268.853074@gargle.gargle.HOWL> (sfid-20110517_173913_670205_BED6EC97)
+Date: Tue, 17 May 2011 21:07:28 +0530
+To: Keith Berkoben <berkoben@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis.Rodriguez@atheros.com
+Subject: Re: [ath9k-devel] [PATCH 0/8] ath9k_htc patches
+In-Reply-To: <BANLkTi=RvaQcTuvi+sXxNpOv6qYU_FvoEQ@mail.gmail.com>
+References: <19922.8044.978298.696663@gargle.gargle.HOWL>
+	<BANLkTi=RvaQcTuvi+sXxNpOv6qYU_FvoEQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In ad-hoc mode, beacon timers are configured differently compared to AP
-mode, and (depending on the scenario) can vary enough to make the beacon
-tasklet not detect slot 0 based on the TSF.
-Since staggered beacons are not (and cannot be) used in ad-hoc mode, it
-makes more sense to just hardcode slot 0 here, avoiding unnecessary
-TSF reads and calculations.
+Keith Berkoben wrote:
+> Hi all,
+> 
+> I'm an Openwrt who has been monitoring this list for a while and I frequently see patches like this below come through (My particular interest is in HT for adhoc),
+> but I have no idea how to tell when and if these patches get integrated into the main driver source (compat-wireless <date>).  For openwrt, I'm used to looking at the
+> revision logs of components I care about in the svn browser, but I can't find a similar tool for the compat-wireless builds.  Could someone enlighten me as to how
+> these patches make their way into the main builds and where I could go to check (preferably in a user-friendly way) if the thing I want is integrated into a
+> particular build?
+> 
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   32 +++++++++++++++++++-----------
- 1 files changed, 20 insertions(+), 12 deletions(-)
+http://wireless.kernel.org/en/developers/process
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 637dbc5..c7f4679 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -351,9 +351,7 @@ void ath_beacon_tasklet(unsigned long data)
- 	struct ath_buf *bf = NULL;
- 	struct ieee80211_vif *vif;
- 	int slot;
--	u32 bfaddr, bc = 0, tsftu;
--	u64 tsf;
--	u16 intval;
-+	u32 bfaddr, bc = 0;
- 
- 	/*
- 	 * Check if the previous beacon has gone out.  If
-@@ -388,17 +386,27 @@ void ath_beacon_tasklet(unsigned long data)
- 	 * on the tsf to safeguard against missing an swba.
- 	 */
- 
--	intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
- 
--	tsf = ath9k_hw_gettsf64(ah);
--	tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
--	tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
--	slot = (tsftu % (intval * ATH_BCBUF)) / intval;
--	vif = sc->beacon.bslot[slot];
-+	if (ah->opmode == NL80211_IFTYPE_AP) {
-+		u16 intval;
-+		u32 tsftu;
-+		u64 tsf;
-+
-+		intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
-+		tsf = ath9k_hw_gettsf64(ah);
-+		tsf += TU_TO_USEC(ah->config.sw_beacon_response_time);
-+		tsftu = TSF_TO_TU((tsf * ATH_BCBUF) >>32, tsf * ATH_BCBUF);
-+		slot = (tsftu % (intval * ATH_BCBUF)) / intval;
-+		vif = sc->beacon.bslot[slot];
-+
-+		ath_dbg(common, ATH_DBG_BEACON,
-+			"slot %d [tsf %llu tsftu %u intval %u] vif %p\n",
-+			slot, tsf, tsftu / ATH_BCBUF, intval, vif);
-+	} else {
-+		slot = 0;
-+		vif = sc->beacon.bslot[slot];
-+	}
- 
--	ath_dbg(common, ATH_DBG_BEACON,
--		"slot %d [tsf %llu tsftu %u intval %u] vif %p\n",
--		slot, tsf, tsftu / ATH_BCBUF, intval, vif);
- 
- 	bfaddr = 0;
- 	if (vif) {
--- 
-1.7.3.2
+It has colorful diagrams and everything. :)
 
+Sujith
