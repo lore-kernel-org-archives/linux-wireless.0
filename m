@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56790 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752963Ab1EXJmj (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44315 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755945Ab1EQROf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 05:42:39 -0400
-Date: Tue, 24 May 2011 10:44:04 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tue, 17 May 2011 13:14:35 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110517165720.GB9258@thinkpad-t410>
+References: <20110504153819.GA4551@thinkpad-t410>
+	<20110504172716.GC18541@tuxdriver.com>
+	<20110504192639.GB4551@thinkpad-t410>
+	<BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
+	<20110505135207.GA13727@thinkpad-t410>
+	<BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
+	<20110509070230.GA20458@thinkpad-t410>
+	<20110517165720.GB9258@thinkpad-t410>
+Date: Tue, 17 May 2011 20:14:34 +0300
+Message-ID: <BANLkTi=8ZRUVWn3FLAMtPh=4yY1F0k6i9w@mail.gmail.com> (sfid-20110517_191501_622980_49D4FFAF)
+Subject: Re: ath5k regression associating with APs in 2.6.38
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Carpenter" <error27@gmail.com>
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8
- algorithm
-Message-ID: <20110524104404.336c765f@lxorguk.ukuu.org.uk> (sfid-20110524_114255_215999_2806DC9A)
-In-Reply-To: <4DDB622B.1050005@broadcom.com>
-References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
-	<20110522122325.108b1c86@lxorguk.ukuu.org.uk>
-	<4DD905CC.8040407@broadcom.com>
-	<20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
-	<4DDB622B.1050005@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 May 2011 09:45:47 +0200
-"Arend van Spriel" <arend@broadcom.com> wrote:
+2011/5/17 Seth Forshee <seth.forshee@canonical.com>:
+> On Mon, May 09, 2011 at 09:02:30AM +0200, Seth Forshee wrote:
+>> On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
+>> > Hmm I don't see any errors from reset/phy code, can you disable
+>> > Network Manager/wpa-supplicant and test connection on an open network
+>> > using iw ? It 'll give us a better picture...
+>> >
+>> > If iw doesn't return any scan results we are probably hitting a PHY/RF
+>> > error specific to your device (not all vendors follow the reference
+>> > design). Maybe we should follow a blacklist/whitelist approach for
+>> > this feature.
+>>
+>> I got the results back from my tester. He was able to get scan results,
+>> but it took multiple tries and the direct probe failures appear in the
+>> log. He didn't enable ATH5K_DEBUG_RESET this time; let me know if you
+>> need that and I'll request he retest with the extra debug logs enabled.
+>
+> I got some more feedback. Most of the time iw does not get scan results,
+> but even when it does connecting to the AP isn't always successful. The
+> tester did note that he doesn't seem to have any trouble if his machine
+> is within a few feet of his AP. Let me know if you'd like something else
+> tested.
+>
+> I noticed that bugzilla #31922 (ath5k: Decreased throughput in IBSS or
+> 802.11n mode) is also fixed by reverting 8aec7af9. It seems like the
+> synth-only channel changes are resulting in poor connection quality.
+> Maybe that patch needs to be reverted?
+>
+> Thanks,
+> Seth
+>
+>
 
-> On 05/22/2011 04:19 PM, Alan Cox wrote:
-> > Is it just used for wireless in this form ?
-> >
-> > See the n_gsm and bluetooth code for what I think is the same crc
-> > algorithm but in reverse bit order .
-> 
-> Hi Alan,
-> 
-> Look into the code in n_gsm and bluetooth code. The algorithm is the 
-> same, but except for the bit order it also is using a different 
-> polynomial. My current implementation has a fixed table. I could do the 
-> table generation runtime with the polynomial and the bit order as 
-> parameters. That would make it more general purpose.
+http://www.kernel.org/pub/linux/kernel/people/mickflemm/01-fast-chan-switch-modparm
 
-Probably not worth it - its so tiny a piece of code anyway (< 500 bytes
-or so) that it's going to be bigger not smaller if you do that !
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
