@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:32784 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754718Ab1EXN3l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 09:29:41 -0400
-Received: by bwz15 with SMTP id 15so5626681bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 06:29:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DDABAA2.7030706@lwfinger.net>
-References: <4DDA6712.9090309@ring3k.org>
-	<4DDABAA2.7030706@lwfinger.net>
-Date: Tue, 24 May 2011 22:29:39 +0900
-Message-ID: <BANLkTinfHf3jpb15ddi18HJ3xPz6YEk3zg@mail.gmail.com> (sfid-20110524_152944_556662_13A25BA3)
-Subject: Re: [PATCH 5/8] rtlwifi: Don't block interrupts in spinlocks
-From: Mike McCormack <mikem@ring3k.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:51198 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154Ab1EQIeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 04:34:21 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	rmanoharan@atheros.com
+Subject: [PATCH] ath9k: fix ad-hoc nexttbtt calculation
+Date: Tue, 17 May 2011 10:34:12 +0200
+Message-Id: <1305621252-21853-1-git-send-email-nbd@openwrt.org> (sfid-20110517_103429_503938_539BE291)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 May 2011 04:50, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/23/2011 08:54 AM, Mike McCormack wrote:
->>
->> Now power state transitions are not called from an
->> interrupt context, there's no need to block interrupts.
->>
->> This code appears to block interrupts for too long,
->> causing my trackpad to lose sync occasionally.
+rounding up the delta between last-beacon-tsf and tsf to intval is wrong
+and can lead to misconfigured timers which breaks beacon transmission.
+Fix this by adding intval and subtracting the offset of the tsf within the
+current slot.
 
-> Does this patch and the previous one fix the loss of synch with the
-> trackpad?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Yes, it appears to. (3 days with no losses of sync or crashes).  I was getting
-problems with SATA too, and those have gone away.
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index c7f4679..0199af0 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -654,7 +654,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 			delta = (tsf - sc->beacon.bc_tstamp);
+ 		else
+ 			delta = (tsf + 1 + (~0U - sc->beacon.bc_tstamp));
+-		nexttbtt = tsf + roundup(delta, intval);
++		nexttbtt = tsf + intval - (delta % intval);
+ 	}
+ 
+ 	ath_dbg(common, ATH_DBG_BEACON,
+-- 
+1.7.3.2
 
-I saw a similar problem with rtl8192e (from staging) and applied the
-same solution.
-
-thanks,
-
-Mike
