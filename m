@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:59699 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028Ab1EEPsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 11:48:23 -0400
-Received: from [195.4.92.27] (helo=17.mx.freenet.de)
-	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.72 #5)
-	id 1QI0mr-0002cK-3W
-	for linux-wireless@vger.kernel.org; Thu, 05 May 2011 17:48:21 +0200
-Received: from p54a1867a.dip0.t-ipconnect.de ([84.161.134.122]:59801 helo=mail.maya.org)
-	by 17.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #3)
-	id 1QI0mq-00076o-SD
-	for linux-wireless@vger.kernel.org; Thu, 05 May 2011 17:48:21 +0200
-Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
-	by mail.maya.org (8.14.4/8.13.8) with ESMTP id p45FmHxS002872
-	for <linux-wireless@vger.kernel.org>; Thu, 5 May 2011 17:48:18 +0200
-Message-ID: <4DC2C743.9060004@01019freenet.de> (sfid-20110505_174826_627427_BAF6AEBE)
-Date: Thu, 05 May 2011 17:50:27 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44341 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753710Ab1EQMST convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 08:18:19 -0400
+Received: by qwk3 with SMTP id 3so206128qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 05:18:18 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: =?windows-1252?Q?compile-error_agg-tx=2Ec=3A_error=3A_impl?=
- =?windows-1252?Q?icit_declaration_of_function_=91kfree=5Frcu=92?=
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <BANLkTik59ohV42QYR3JqssbJjEzxnEGyOw@mail.gmail.com>
+References: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com>
+ <BANLkTimoju5LSrKcRe67c41mCkPU0PUOjg@mail.gmail.com> <BANLkTik59ohV42QYR3JqssbJjEzxnEGyOw@mail.gmail.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Tue, 17 May 2011 14:17:58 +0200
+Message-ID: <BANLkTi=Ais3sYvyAPcDFaRmudG_FQJgEag@mail.gmail.com> (sfid-20110517_141825_034188_C69CB638)
+Subject: Re: ssb: how did we get special reject bit for SSB rev 2.3?
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+2011/5/17 Rafał Miłecki <zajec5@gmail.com>:
+> W dniu 17 maja 2011 13:32 użytkownik Jonas Gorski
+> <jonas.gorski@gmail.com> napisał:
+>> 2011/5/17 Rafał Miłecki <zajec5@gmail.com>:
+>>> Currently we are using different REJECT bit for SSB rev 2.3:
+>>> #define  SSB_TMSLOW_REJECT      0x00000002 /* Reject (Standard Backplane) */
+>>> #define  SSB_TMSLOW_REJECT_23   0x00000004 /* Reject (Backplane rev 2.3) */
+>>>
+>>> Does anyone know where did we get this from?
+>>
+>> Broadcom public sources define it as follows:
+>> #define SBTML_REJ_MASK          0x0006          /* reject field */
+>> #define SBTML_REJ               0x0002          /* reject */
+>> #define SBTML_TMPREJ            0x0004          /* temporary reject,
+>> for error recovery */
+>>
+>>>
+>>> wl does never use this bit:
+>>
+>> It seems neither do the public ssb sources:
+>> # grep -r 'SBTML_TMPREJ' shared/ | wc -l
+>> 0
+>> #
+>
+> Where did you check this? AFAIK wl has only linux_osl.c public
+> available and brcmsmac does not support SSB at all. Do you find any
+> references to SBTML_REJ in this "shared/*"?
 
-since May, there is a compile error in compat-wireless (against kernel
-2.6.34):
+This is from a bcm47xx router GPL tarball (the asus rt-n10 to be
+specific), but it's also in the brcm80211 drivers:
+<http://lxr.linux.no/#linux+v2.6.38/drivers/staging/brcm80211/include/sbconfig.h#L150>
 
+and SBTML_REJ usage:
+<http://lxr.linux.no/#linux+v2.6.38/drivers/staging/brcm80211/util/sbutils.c#L459>
 
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
-�___ieee80211_stop_tx_ba_session�:
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: implicit
-declaration of function �kfree_rcu�
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error:
-�rcu_head� undeclared (first use in this function)
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: (Each
-undeclared identifier is reported only once
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:158: error: for each
-function it appears in.)
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
-�ieee80211_tx_ba_session_handle_start�:
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:317: error:
-�rcu_head� undeclared (first use in this function)
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c: In function
-�ieee80211_stop_tx_ba_cb�:
-compat-wireless-2011-05-04-p/net/mac80211/agg-tx.c:696: error:
-�rcu_head� undeclared (first use in this function)
-
-
-See https://patchwork.kernel.org/patch/745352/
-
-
-Regards,
-Andreas
+Jonas
