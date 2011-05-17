@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:61403 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158Ab1EDQQg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 12:16:36 -0400
-Received: by gyd10 with SMTP id 10so448023gyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 09:16:36 -0700 (PDT)
+Received: from defaultvalue.org ([70.85.129.156]:49392 "EHLO defaultvalue.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932507Ab1EQXER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 19:04:17 -0400
+From: Rob Browning <rlb@defaultvalue.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
+References: <87pqnl5i81.fsf@raven.defaultvalue.org>
+	<4DD074E3.3090502@lwfinger.net>
+	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
+	<4DD09C78.2010304@lwfinger.net>
+	<8762pbkytq.fsf@trouble.defaultvalue.org>
+	<4DD13EF0.2070803@lwfinger.net>
+	<87iptaj8nf.fsf@trouble.defaultvalue.org>
+	<87fwoehtd7.fsf@trouble.defaultvalue.org>
+	<4DD2A3A9.90003@lwfinger.net>
+Date: Tue, 17 May 2011 18:04:16 -0500
+In-Reply-To: <4DD2A3A9.90003@lwfinger.net> (Larry Finger's message of "Tue, 17
+	May 2011 11:34:49 -0500")
+Message-ID: <87pqnhj5e7.fsf@raven.defaultvalue.org> (sfid-20110518_010427_606602_B4A858A2)
 MIME-Version: 1.0
-In-Reply-To: <4DC042A5.9050806@candelatech.com>
-References: <4DBF1967.9010604@candelatech.com>
-	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-	<4DC042A5.9050806@candelatech.com>
-Date: Thu, 5 May 2011 00:16:35 +0800
-Message-ID: <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com> (sfid-20110504_181640_163497_D57E678F)
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 May 2011 02:00, Ben Greear <greearb@candelatech.com> wrote:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> Here's the lspci for the SR71-A that doesn't work with ath9k:
->
-> 03:00.0 Ethernet controller: Atheros Communications Inc. AR5008 Wireless
-> Network Adapter (rev 01)
->        Subsystem: Atheros Communications Inc. Device ee1c
+> I can duplicate your result. To me, it appears to be a problem with
+> bufferbloat. If that is correct, then there is little I can do with
+> rtl8192cu to fix the problem. I see exactly the same slow rate with
+> rt2800usb using an Ralink RT3070 device. In addition, I see that rate
+> when connected to my router with a wired 100 Mbps connection.
 
-... ee1c? Err, that isn't right. Not by a very, very long shot.
+I suppose that's possible, but I get much higher rates (300K/s+) when
+connecting to the same AP using the built-in wireless chipset (BCM4322)
+from another, very similar laptop, and 6.0Mbps when testing from a third
+client.
 
-What board are you putting this into?
+I also get 800K/s+ when running the wget command you suggested over a
+wired connection to my primary router.
 
->From FreeBSD on a RSPRO (ar71xx mips):
+Unfortunately, can't double-check the second laptop's wireless rate
+right now, but it got 300K/s+ for a long time, and I just tested the
+6Mbps client.  It was only when I migrated to the newer laptop and the
+rtl8192cu usb adapter that I saw the much slower ~60K/s rate.
 
-ath0@pci0:0:17:0:       class=0x028000 card=0x40820777 chip=0x0027168c
-rev=0x01 hdr=0x00
-    vendor     = 'Atheros Communications Inc.'
-    class      = network
-
-That definitely, positively is the same AC1A revision that you have.
-It even does 11n(ag) too. Honest. I've seen it. :-)
-
-This and the previous AR93xx "0xabcd" device id post is starting to
-sound a lot like something's not waking up the PCI bus and/or chip
-"right" in order to get the PCI vendor id init'ed from the EEPROM..
-
-
-
-Adrian
+Thanks again
+-- 
+Rob Browning
+rlb @defaultvalue.org and @debian.org
+GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
