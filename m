@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:56861 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750865Ab1EOUvH (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:35180 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756492Ab1EQTcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2011 16:51:07 -0400
-From: Clemens Noss <cnoss@gmx.de>
-To: linux-wireless@vger.kernel.org, gregkh@suse.de
-Cc: arend@broadcom.com, rvossen@broadcom.com, henryp@broadcom.com,
-	brudley@broadcom.com, devel@linuxdriverproject.org
-Subject: [PATCH] staging: brcm80211: use correct pointer types in bcm_pktq_flush
-Date: Sun, 15 May 2011 22:50:46 +0200
-Message-Id: <1305492646-20122-1-git-send-email-cnoss@gmx.de> (sfid-20110515_225117_574001_36CEA7EA)
-In-Reply-To: <4DD02F72.3070905@broadcom.com>
-References: <4DD02F72.3070905@broadcom.com>
+	Tue, 17 May 2011 15:32:11 -0400
+Date: Tue, 17 May 2011 12:31:53 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Alexey Dobriyan <adobriyan@gmail.com>,
+	akpm <akpm@linux-foundation.org>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -next] proc_fs: add stub for proc_mkdir_mode
+Message-Id: <20110517123153.6fed984d.randy.dunlap@oracle.com> (sfid-20110517_213232_852685_21A7BAE5)
+In-Reply-To: <20110517142749.8927b65b.sfr@canb.auug.org.au>
+References: <20110517142749.8927b65b.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to clarify the intention:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-On Sun, May 15, 2011 at 09:54:26PM +0200, Arend van Spriel wrote:
-> On 05/15/2011 08:10 PM, Hauke Mehrtens wrote:
-[...]
->> Why don't you use the correct pointer type here instead of casting then
->> around and the parameter names are meaningless too.
->>
->> static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, struct
->> cb_del_ampdu_pars *ampdu_pars)
-[...]
-> Actually this is a generic callback mechanism in which an additional
-> parameter can be passed, which can be of *any* type hence a void pointer
-> seems justified here and a meaningless name is used. I do agree that the
-> txi parameter will always be a struct sk_buff and should be indicated as
-> such.
+Provide a stub for proc_mkdir_mode() when CONFIG_PROC_FS is not
+enabled, just like the stub for proc_mkdir().
 
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Clemens Noss <cnoss@gmx.de>
+Fixes this build error:
+drivers/net/wireless/airo.c:4504: error: implicit declaration of function 'proc_mkdir_mode'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |    3 +--
- drivers/staging/brcm80211/include/bcmutils.h   |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ include/linux/proc_fs.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-index 0d93bd6..b1bc1a6 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-@@ -1225,9 +1225,8 @@ void wlc_ampdu_shm_upd(struct ampdu_info *ampdu)
- /*
-  * callback function that helps flushing ampdu packets from a priority queue
-  */
--static bool cb_del_ampdu_pkt(void *p, void *arg_a)
-+static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, void *arg_a)
- {
--	struct sk_buff *mpdu = (struct sk_buff *)p;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(mpdu);
- 	struct cb_del_ampdu_pars *ampdu_pars =
- 				 (struct cb_del_ampdu_pars *)arg_a;
-diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
-index 1d57934..4dc190b 100644
---- a/drivers/staging/brcm80211/include/bcmutils.h
-+++ b/drivers/staging/brcm80211/include/bcmutils.h
-@@ -74,7 +74,7 @@
- #define PKTQ_PREC_ITER(pq, prec)        for (prec = (pq)->num_prec - 1; prec >= 0; prec--)
+--- linux-next-20110517.orig/include/linux/proc_fs.h
++++ linux-next-20110517/include/linux/proc_fs.h
+@@ -210,6 +210,8 @@ static inline struct proc_dir_entry *pro
+ 		struct proc_dir_entry *parent,const char *dest) {return NULL;}
+ static inline struct proc_dir_entry *proc_mkdir(const char *name,
+ 	struct proc_dir_entry *parent) {return NULL;}
++static inline struct proc_dir_entry *proc_mkdir_mode(const char *name,
++	mode_t mode, struct proc_dir_entry *parent) { return NULL; }
  
- /* fn(pkt, arg).  return true if pkt belongs to if */
--	typedef bool(*ifpkt_cb_t) (void *, void *);
-+typedef bool(*ifpkt_cb_t) (struct sk_buff *, void *);
- 
- /* operations on a specific precedence in packet queue */
- 
--- 
-1.7.4.5
-
+ static inline struct proc_dir_entry *create_proc_read_entry(const char *name,
+ 	mode_t mode, struct proc_dir_entry *base, 
