@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48424 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756414Ab1EXTFD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 15:05:03 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id E048F540366
-	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 15:11:12 -0400 (EDT)
-Subject: Compat-wireless release for 2011-05-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110524190502.001C040EC3@repository3.orbit-lab.org> (sfid-20110524_210509_545409_840B73DA)
-Date: Tue, 24 May 2011 15:05:01 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms3.broadcom.com ([216.31.210.19]:4931 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753149Ab1EQKxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 06:53:51 -0400
+Message-ID: <4DD253B0.8050802@broadcom.com> (sfid-20110517_125355_002257_FB1F79C7)
+Date: Tue, 17 May 2011 12:53:36 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "Greg KH" <greg@kroah.com>
+cc: "Clemens Noss" <cnoss@gmx.de>, "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] staging: brcm80211: fix cast to pointer from
+ integer
+References: <1305492330-19575-1-git-send-email-cnoss@gmx.de>
+ <4DD105FE.9040500@broadcom.com> <20110516203333.GB17698@kroah.com>
+In-Reply-To: <20110516203333.GB17698@kroah.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   2c376ff..66ad3a3  linux-2.6.39.y -> origin/linux-2.6.39.y
-   6f4e670..2176d3b  master     -> origin/master
- * [new tag]         compat-wireless-2011-05-23 -> compat-wireless-2011-05-23
- * [new tag]         compat-wireless-v2.6.39-1 -> compat-wireless-v2.6.39-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   23f6b43..d08656f  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
- * [new tag]         compat-2011-05-23 -> compat-2011-05-23
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + c01731f...ddd430d akpm-end   -> origin/akpm-end  (forced update)
-   71a8638..ea2b50e  akpm-start -> origin/akpm-start
-   cac040d..5b545f3  history    -> origin/history
- + 9c32bb6...f567ff2 master     -> origin/master  (forced update)
-   71a8638..ea2b50e  stable     -> origin/stable
- * [new tag]         next-20110524 -> next-20110524
+>> Greg, please also merge this to the staging-linus branch since it
+>> might resolve an instability issue.
+>
+> It "might"?
 
-compat-wireless code metrics
+Correction: I tested it now. Indeed it resolves a problem (segmentation 
+fault) upon dissociation on amd64.
 
-    822899 - Total upstream lines of code being pulled
-      2394 - backport code changes
-      2086 - backport code additions
-       308 - backport code deletions
-      8070 - backport from compat module
-     10464 - total backport code
-    1.2716 - % of code consists of backport work
+> Is this a regression?  Do people see the problem on the .38 kernel as
+> well?
+
+People on the .38 kernel see the problem even worse: they experience a 
+crash on dissociation on both i386 and amd64.
+
+> It's way too late for anything but severe regressions to be sent to
+> Linus at this point in time...
+
+Understood. Since behavior has not regressed, I think this fix does not 
+qualify to be sent to Linus. Perhaps we can get it into a 
+compat-wireless package.
+
+Thanks, Roland.
+
