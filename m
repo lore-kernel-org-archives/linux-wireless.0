@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51853 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758896Ab1ELXuQ (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:50543 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756Ab1EQRsU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 19:50:16 -0400
-From: Stephen Boyd <sboyd@codeaurora.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/9] iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-Date: Thu, 12 May 2011 16:50:04 -0700
-Message-Id: <1305244212-19183-2-git-send-email-sboyd@codeaurora.org> (sfid-20110513_015259_606158_3403FD97)
-In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+	Tue, 17 May 2011 13:48:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <4DD2B178.3050907@broadcom.com>
+References: <1304960206-8832-1-git-send-email-zajec5@gmail.com>
+	<4DD2B178.3050907@broadcom.com>
+Date: Tue, 17 May 2011 19:48:18 +0200
+Message-ID: <BANLkTin7woaT5Uaxvh4x2jp-J10jnzSdmA@mail.gmail.com> (sfid-20110517_194836_160454_4CA07693)
+Subject: Re: [PATCH V7] bcma: add Broadcom specific AMBA bus driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	Greg KH <greg@kroah.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George Kashperko <george@znau.edu.ua>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andy Botting <andy@andybotting.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
-warning:
+2011/5/17 Arend van Spriel <arend@broadcom.com>:
+> On 05/09/2011 06:56 PM, Rafał Miłecki wrote:
+>>
+>> Broadcom has released cards based on a new AMBA-based bus type. From a
+>> programming point of view, this new bus type differs from AMBA and does
+>> not use AMBA common registers. It also differs enough from SSB. We
+>> decided that a new bus driver is needed to keep the code clean.
+>>
+>> In its current form, the driver detects devices present on the bus and
+>> registers them in the system. It allows registering BCMA drivers for
+>> specified bus devices and provides them basic operations. The bus driver
+>> itself includes two important bus managing drivers: ChipCommon core
+>> driver and PCI(c) core driver. They are early used to allow correct
+>> initialization.
+>>
+>> Currently code is limited to supporting buses on PCI(e) devices, however
+>> the driver is designed to be used also on other hosts. The host
+>> abstraction layer is implemented and already used for PCI(e).
+>>
+>> Support for PCI(e) hosts is working and seems to be stable (access to
+>> 80211 core was tested successfully on a few devices). We can still
+>> optimize it by using some fixed windows, but this can be done later
+>> without affecting any external code. Windows are just ranges in MMIO
+>> used for accessing cores on the bus.
+>
+> Hi Rafał,
+>
+> Just some minor feedback on coding style. I wanted to make a change in
+> host_pci.c to avoid changing the PCI BAR window and noticed following:
 
-In file included from arch/x86/include/asm/uaccess.h:573,
-                 from include/net/checksum.h:25,
-                 from include/linux/skbuff.h:28,
-                 from drivers/net/wireless/iwlegacy/iwl-4965-rs.c:28:
-In function 'copy_from_user',
-    inlined from 'iwl4965_rs_sta_dbgfs_scale_table_write' at
-    drivers/net/wireless/iwlegacy/iwl-4965-rs.c:2616:
-arch/x86/include/asm/uaccess_64.h:65:
-warning: call to 'copy_from_user_overflow' declared with
-attribute warning: copy_from_user() buffer size is not provably
-correct
+Sorry?
 
-presumably due to buf_size being signed causing GCC to fail to
-see that buf_size can't become negative.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
----
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> 1. indentation is all spaces.
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 31ac672..cc4751c 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -2604,7 +2604,7 @@ static ssize_t iwl4965_rs_sta_dbgfs_scale_table_write(struct file *file,
- 	struct iwl_lq_sta *lq_sta = file->private_data;
- 	struct iwl_priv *priv;
- 	char buf[64];
--	int buf_size;
-+	size_t buf_size;
- 	u32 parsed_rate;
- 	struct iwl_station_priv *sta_priv =
- 		container_of(lq_sta, struct iwl_station_priv, lq_sta);
+You can find spaces only for aligning text in newline after breaking
+more-than-80-chars lines.
+
+
+> 2. initial indent is 7 spaces, and subsequent indents are 8 spaces.
+
+$ grep "        " ./*c | wc -l
+0
+
+
+> 3. pointer assignment: ptr =&var;
+
+$ grep "=&" ./*c | wc -l
+0
+
+
+> 4. output parameter: foo(bar,&yabar);
+
+$ grep ",&" ./*c | wc -l
+0
+
 -- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
-
+Rafał
