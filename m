@@ -1,57 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:38822 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753015Ab1EKPpb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 11:45:31 -0400
-Received: by wwa36 with SMTP id 36so755279wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:45:30 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
-Date: Wed, 11 May 2011 11:54:26 +0300
-Message-Id: <1305104068-32240-6-git-send-email-eliad@wizery.com> (sfid-20110511_174548_110928_3968AFD3)
-In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
+Received: from nbd.name ([46.4.11.11]:32946 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753083Ab1EQLL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 07:11:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH] ath9k: implement .tx_last_beacon()
+Date: Tue, 17 May 2011 13:11:51 +0200
+Message-Id: <1305630711-99631-1-git-send-email-nbd@openwrt.org> (sfid-20110517_131202_463690_76D58A71)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since wowlan requires the ability to stay awake while the host
-is suspended, declare support for NL80211_WOW_TRIGGER_ANYTHING
-if the MMC_PM_KEEP_POWER capability is being supported.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/sdio.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    3 ++
+ drivers/net/wireless/ath/ath9k/beacon.c |   12 +++++++++
+ drivers/net/wireless/ath/ath9k/main.c   |   38 +++++++++++++++++++++++++++++++
+ 3 files changed, 53 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index bf2a6ad..dacd00c 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -234,6 +234,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	const struct wl12xx_platform_data *wlan_data;
- 	struct wl1271 *wl;
- 	unsigned long irqflags;
-+	mmc_pm_flag_t mmcflags;
- 	int ret;
- 
- 	/* We are only able to handle the wlan function */
-@@ -285,6 +286,13 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 
- 	disable_irq(wl->irq);
- 
-+	/* if sdio can keep power while host is suspended, enable wow */
-+	mmcflags = sdio_get_host_pm_caps(func);
-+	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 03b37d7..d6e7825 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -397,6 +397,9 @@ struct ath_beacon {
+ 	struct ath_descdma bdma;
+ 	struct ath_txq *cabq;
+ 	struct list_head bbuf;
 +
-+	if (mmcflags & MMC_PM_KEEP_POWER)
-+		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
++	bool tx_processed;
++	bool tx_last;
+ };
+ 
+ void ath_beacon_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 0199af0..e8756c5 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -18,6 +18,12 @@
+ 
+ #define FUDGE 2
+ 
++static void ath9k_reset_beacon_status(struct ath_softc *sc)
++{
++	sc->beacon.tx_processed = false;
++	sc->beacon.tx_last = false;
++}
 +
- 	ret = wl1271_init_ieee80211(wl);
- 	if (ret)
- 		goto out_irq;
+ /*
+  *  This function will modify certain transmit queue properties depending on
+  *  the operating mode of the station (AP or AdHoc).  Parameters are AIFS
+@@ -72,6 +78,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	struct ieee80211_supported_band *sband;
+ 	u8 rate = 0;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	ds = bf->bf_desc;
+ 	flags = ATH9K_TXDESC_NOACK;
+ 
+@@ -134,6 +142,8 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info;
+ 	int cabq_depth;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	avp = (void *)vif->drv_priv;
+ 	cabq = sc->beacon.cabq;
+ 
+@@ -644,6 +654,8 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 tsf, delta, intval, nexttbtt;
+ 
++	ath9k_reset_beacon_status(sc);
++
+ 	tsf = ath9k_hw_gettsf32(ah) + TU_TO_USEC(FUDGE);
+ 	intval = TU_TO_USEC(conf->beacon_interval & ATH9K_BEACON_PERIOD);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 17ebdf1..576b87d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2332,6 +2332,43 @@ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
+ 	return false;
+ }
+ 
++int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ieee80211_vif *vif;
++	struct ath_vif *avp;
++	struct ath_buf *bf;
++	struct ath_tx_status ts;
++	int status;
++
++	if (ah->opmode != NL80211_IFTYPE_ADHOC)
++		return 0;
++
++	vif = sc->beacon.bslot[0];
++	if (!vif)
++		return 0;
++
++	avp = (void *)vif->drv_priv;
++	if (!avp->is_bslot_active)
++		return 0;
++
++	if (!sc->beacon.tx_processed) {
++		bf = avp->av_bcbuf;
++		if (!bf || !bf->bf_mpdu)
++			return 0;
++
++		status = ath9k_hw_txprocdesc(ah, bf->bf_desc, &ts);
++		if (status == -EINPROGRESS)
++			return 0;
++
++		sc->beacon.tx_processed = true;
++		sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_FILT);
++	}
++
++	return sc->beacon.tx_last;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2356,4 +2393,5 @@ struct ieee80211_ops ath9k_ops = {
+ 	.set_coverage_class = ath9k_set_coverage_class,
+ 	.flush		    = ath9k_flush,
+ 	.tx_frames_pending  = ath9k_tx_frames_pending,
++	.tx_last_beacon = ath9k_tx_last_beacon,
+ };
 -- 
-1.7.0.4
+1.7.3.2
 
