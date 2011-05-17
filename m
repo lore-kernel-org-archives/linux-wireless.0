@@ -1,115 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:59573 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab1ECJjl (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:38235 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932562Ab1EQXFu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:39:41 -0400
-Message-ID: <4DBFCD59.3030505@create-net.org> (sfid-20110503_113944_694748_7130FBA4)
-Date: Tue, 03 May 2011 11:39:37 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
+	Tue, 17 May 2011 19:05:50 -0400
+Received: by vws1 with SMTP id 1so721868vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 16:05:49 -0700 (PDT)
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com> <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-In-Reply-To: <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1305364803.3437.10.camel@jlt3.sipsolutions.net>
+References: <1305363652.3437.8.camel@jlt3.sipsolutions.net> <1305364803.3437.10.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 17 May 2011 16:05:29 -0700
+Message-ID: <BANLkTikyymbnXHANmB3N0ecJWdkY9xCG=Q@mail.gmail.com> (sfid-20110518_010553_355694_92498F87)
+Subject: Re: [PATCH] mac80211: fix and simplify mesh locking
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-well i'm also having troubles in injecting traffic at 11n rates over a 
-raw interface,
-instead everything is working fine if I try to inject traffic at 11bga 
-rates. I'm using
-the patch recently posted by matteo croce in order to specify 11n mcs codes.
+On Sat, May 14, 2011 at 2:20 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2011-05-14 at 11:00 +0200, Johannes Berg wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> The locking in mesh_{mpath,mpp}_table_grow not only
+>> has an rcu_read_unlock() missing, it's also racy
+>> (though really only technically since it's invoked
+>> from a single function only) since it obtains the
+>> new size of the table without any locking, so two
+>> invocations of the function could attempt the same
+>> resize.
+>
+> Actually, it _can_ happen, if you have multiple mesh interfaces.
 
-the card that i;m using is exactly an sr71a. I hear that packet 
-injection is working
-fine for people using the ubiquiti rocket M devices.
+I'm seeing this after trying your patch, probably because the
+allocations mesh_table_alloc() can block.  In the past I had tried to
+allocate the table before entering the critical section.  If that is
+not possible for the race condition you mention,  then I guess we'll
+have to make those allocations GFP_ATOMIC?
 
-R.
+  363.767523] BUG: scheduling while atomic: kworker/u:2/621/0x10000200
+[  363.768239] 3 locks held by kworker/u:2/621:
+[  363.768516]  #0:  (name){.+.+.+}, at: [<c10429e7>]
+process_one_work+0x17c/0x31d
+[  363.769605]  #1:  ((&sdata->work)){+.+.+.}, at: [<c10429e7>]
+process_one_work+0x17c/0x31d
+[  363.770149]  #2:  (pathtbl_resize_lock){++.-+.}, at: [<c8fb01ce>]
+mesh_mpath_table_grow+0xf/0x5c [mac80211]
+[  363.771122] Modules linked in: mac80211_hwsim mac80211
+[  363.771824] Pid: 621, comm: kworker/u:2 Not tainted 2.6.39-rc7-wl+ #399
+[  363.772304] Call Trace:
+[  363.772611]  [<c8faf69f>] ? mesh_table_alloc+0x25/0xc2 [mac80211]
+[  363.772969]  [<c102c049>] __schedule_bug+0x5e/0x65
+[  363.773350]  [<c14672af>] schedule+0x68/0x699
+[  363.773608]  [<c1058328>] ? __lock_acquire+0xab3/0xb59
+[  363.773900]  [<c105694e>] ? valid_state+0x1a/0x13d
+[  363.774244]  [<c1056c10>] ? mark_lock+0x19f/0x1d9
+[  363.774527]  [<c105720b>] ? check_usage_forwards+0x68/0x68
+[  363.774873]  [<c1056c8d>] ? mark_held_locks+0x43/0x5b
+[  363.775303]  [<c8faf69f>] ? mesh_table_alloc+0x25/0xc2 [mac80211]
+[  363.775654]  [<c102e544>] __cond_resched+0x16/0x26
+[  363.775918]  [<c1467a92>] _cond_resched+0x1d/0x28
 
-Il 03/05/2011 08:13, Adrian Chadd ha scritto:
-> The AR9160/SR71-A should be supported by ath9k. They're just 2x2
-> stream devices using 3 radios.
->
-> What do you mean by "not even supported" ?
->
-> If the SR71-A isn't working for you then please email the ath9k list
-> and I'll take a look. I have a bunch of SR71-A hardware here to tinker
-> with.
->
->
->
->
-> Adrian
->
-> On 3 May 2011 04:51, Ben Greear<greearb@candelatech.com>  wrote:
->> Hello!
->>
->> We are trying to find some Atheros NICs that support 3x3
->> MIMO, but we are having a hard time.
->>
->> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
->> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
->> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
->> hard to order that specific version.
->>
->> Sparklan seems to make one based on AR9380, but they are not
->> in stock any place we could find.
->>
->> Anyone know of any others that are available to the public
->> in small quantities?
->>
->> Thanks,
->> Ben
->>
->> --
->> Ben Greear<greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Javier
 
 
 -- 
---------------------------------------------------------
-Roberto Riggio, Ph.D.
-CREATE-NET
-Network&  Security Solutions for Pervasive Computing Systems (iNSPIRE)
-Senior Researcher
-Via alla Cascata 56/D - 38123 Povo Trento (Italy)
-e-mail: roberto.riggio@create-net.org
-Tel: (+39) 0461 408400 - interno/extension 708
-Fax: (+39) 0461 421157
-www.create-net.org/~rriggio
---------------------------------------------------------
-
-The information transmitted is intended only for the person or entity to
-which it is addressed and may contain confidential and/or privileged
-material. Any review, retransmission, dissemination or other use of, or
-taking of any action in reliance upon, this information by persons or
-entities other than the intended recipient is prohibited according to
-the Italian Law 196/2003 of the Legislature. If you received this in
-error, please contact the sender and delete the material from any
-computer.
-
-Le informazioni contenute in questo messaggio di posta elettronica e nei
-file allegati sono da considerarsi strettamente riservate. Il loro
-utilizzo e' consentito esclusivamente al destinatario del messaggio, per
-le finalita' indicate nel messaggio stesso. Qualora riceveste questo
-messaggio senza esserne il destinatario, Vi preghiamo cortesemente di
-darcene notizia via e-mail e di procedere alla cancellazione del
-messaggio stesso dal Vostro sistema. Trattenere il messaggio stesso,
-divulgarlo anche in parte, distribuirlo ad altri soggetti, copiarlo,
-od utilizzarlo per finalita' diverse, costituisce comportamento
-contrario ai principi dettati dal D. Lgs. 196/2003.
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
