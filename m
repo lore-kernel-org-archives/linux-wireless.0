@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45966 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756273Ab1E2UFg (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:34390 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755665Ab1EQQTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:05:36 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 2ABF218CE94
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:35 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id 1878E158A65
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:33 +0300 (EEST)
-Subject: [RFC PATCH 12/27] mac80211: rename ieee80211_rx_flags to
-	mac80211_i_rx_flags
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 29 May 2011 23:05:33 +0300
-Message-ID: <20110529200533.16479.51520.stgit@localhost6.localdomain6> (sfid-20110529_220546_023886_FD68A379)
-In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+	Tue, 17 May 2011 12:19:44 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so187375ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 09:19:43 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: separate ssb core reset
+Date: Tue, 17 May 2011 18:57:28 +0200
+Message-Id: <1305651448-23947-2-git-send-email-zajec5@gmail.com> (sfid-20110517_181947_258551_C09917C4)
+In-Reply-To: <1305651448-23947-1-git-send-email-zajec5@gmail.com>
+References: <1305651448-23947-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add _i_ because, strangely enough,  mac80211_i.h already has another
-definition of mac80211_rx_flags.
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/mac80211_i.h |    6 +++---
- net/mac80211/rx.c         |    4 ++--
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/b43/main.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index 4ef1594..5f7b684 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -183,15 +183,15 @@ enum mac80211_packet_rx_flags {
- };
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 57fd7dd..9380842 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1144,10 +1144,9 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
+ 	}
+ }
  
- /**
-- * enum ieee80211_rx_flags - RX data flags
-+ * enum mac80211_i_rx_flags - RX data flags
-  *
-  * @MAC80211_RX_CMNTR: received on cooked monitor already
-  *
-  * These flags are used across handling multiple interfaces
-  * for a single frame.
-  */
--enum ieee80211_rx_flags {
--	IEEE80211_RX_CMNTR		= BIT(0),
-+enum mac80211_i_rx_flags {
-+	MAC80211_RX_CMNTR		= BIT(0),
- };
+-void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
++static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ {
+ 	u32 tmslow;
+-	u32 macctl;
  
- struct ieee80211_rx_data {
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 12086b4..8245813 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2394,9 +2394,9 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 	 * If cooked monitor has been processed already, then
- 	 * don't do it again. If not, set the flag.
- 	 */
--	if (rx->flags & IEEE80211_RX_CMNTR)
-+	if (rx->flags & MAC80211_RX_CMNTR)
- 		goto out_free_skb;
--	rx->flags |= IEEE80211_RX_CMNTR;
-+	rx->flags |= MAC80211_RX_CMNTR;
+ 	flags |= B43_TMSLOW_PHYCLKEN;
+ 	flags |= B43_TMSLOW_PHYRESET;
+@@ -1167,6 +1166,13 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ 	ssb_write32(dev->sdev, SSB_TMSLOW, tmslow);
+ 	ssb_read32(dev->sdev, SSB_TMSLOW);	/* flush */
+ 	msleep(1);
++}
++
++void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
++{
++	u32 macctl;
++
++	b43_ssb_wireless_core_reset(dev, flags);
  
- 	if (skb_headroom(skb) < sizeof(*rthdr) &&
- 	    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC))
+ 	/* Turn Analog ON, but only if we already know the PHY-type.
+ 	 * This protects against very early setup where we don't know the
+-- 
+1.7.3.4
 
