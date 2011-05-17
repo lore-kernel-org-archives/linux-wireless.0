@@ -1,86 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15132773.pureserver.info ([217.160.209.225]:39808 "EHLO
-	smtp.chost.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932095Ab1EMNXW (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:39604 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab1EQLpd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:23:22 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	devel <devel@lists.laptop.org>,
-	John@xo15-sascha.sascha.silbe.org,
-	W.Linville@xo15-sascha.sascha.silbe.org, <linville@tuxdriver.com>,
-	libertas-dev <libertas-dev@lists.infradead.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Add libertas_disablemesh module parameter to disable mesh interface
-To: Dan Williams <dcbw@redhat.com>
-In-reply-to: <1305169898.8054.19.camel@dcbw.foobar.com>
-References: <1305118354-17337-1-git-send-email-silbe@activitycentral.com> <1305169898.8054.19.camel@dcbw.foobar.com>
-Date: Fri, 13 May 2011 15:16:31 +0200
-Message-Id: <1305290935-sup-4547@xo15-sascha.sascha.silbe.org> (sfid-20110513_152325_978885_15050883)
+	Tue, 17 May 2011 07:45:33 -0400
+Received: by qyg14 with SMTP id 14so216362qyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 04:45:32 -0700 (PDT)
 MIME-Version: 1.0
-From: Sascha Silbe <sascha-ml-reply-to-2011-2@silbe.org>
-Content-Type: multipart/signed; boundary="=-1305292595-276160-1562-7367-4-="; protocol="application/pgp-signature"
+In-Reply-To: <BANLkTimoju5LSrKcRe67c41mCkPU0PUOjg@mail.gmail.com>
+References: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com>
+	<BANLkTimoju5LSrKcRe67c41mCkPU0PUOjg@mail.gmail.com>
+Date: Tue, 17 May 2011 13:45:31 +0200
+Message-ID: <BANLkTik59ohV42QYR3JqssbJjEzxnEGyOw@mail.gmail.com> (sfid-20110517_134537_382448_7E0E78E4)
+Subject: Re: ssb: how did we get special reject bit for SSB rev 2.3?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Jonas Gorski <jonas.gorski@gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 17 maja 2011 13:32 użytkownik Jonas Gorski
+<jonas.gorski@gmail.com> napisał:
+> 2011/5/17 Rafał Miłecki <zajec5@gmail.com>:
+>> Currently we are using different REJECT bit for SSB rev 2.3:
+>> #define  SSB_TMSLOW_REJECT      0x00000002 /* Reject (Standard Backplane) */
+>> #define  SSB_TMSLOW_REJECT_23   0x00000004 /* Reject (Backplane rev 2.3) */
+>>
+>> Does anyone know where did we get this from?
+>
+> Broadcom public sources define it as follows:
+> #define SBTML_REJ_MASK          0x0006          /* reject field */
+> #define SBTML_REJ               0x0002          /* reject */
+> #define SBTML_TMPREJ            0x0004          /* temporary reject,
+> for error recovery */
+>
+>>
+>> wl does never use this bit:
+>
+> It seems neither do the public ssb sources:
+> # grep -r 'SBTML_TMPREJ' shared/ | wc -l
+> 0
+> #
 
---=-1305292595-276160-1562-7367-4-=
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Where did you check this? AFAIK wl has only linux_osl.c public
+available and brcmsmac does not support SSB at all. Do you find any
+references to SBTML_REJ in this "shared/*"?
 
-Excerpts from Dan Williams's message of Thu May 12 05:11:36 +0200 2011:
-> On Wed, 2011-05-11 at 14:52 +0200, Sascha Silbe wrote:
-> > This allows individual users and deployments to disable mesh support =
-at
-> > runtime, i.e. without having to build and maintain a custom kernel.
-
-> Does the mesh interface somehow cause problems, even when nothing is
-> using it?
-
-Some people suspect it does, but there's no hard data showing that. But
-then the problems are often hard to reproduce in the first place, so
-proving a correlation with mesh is even harder.
-
-The hardware based mesh support is based on an outdated draft of
-802.11s and not interoperable with any other device AFAIK. For most
-users Ad-hoc networks are the better option. Disabling mesh support as
-low-level as possible makes it less likely that any remains are causing
-trouble. With at least four layers (firmware, kernel, NM, Sugar)
-involved in managing connectivity and one of the (firmware) being closed
-source, I prefer to simplify things by eliminating three layers for
-functionality we don't intend to use. It makes debugging (and
-blaming ;) ) a lot easier.
-
-In the field, mesh support is currently disabled using
-/sys/class/net/eth0/lbs_mesh. However, it comes back after resume
-(possibly only if powercycled) and needs to be disabled again by
-post-resume hacks. Race conditions with NM are possible.
-
-A user space option would be to teach NM to disable mesh support (at
-runtime - we don't want to ship a custom NM package). I'd expect the
-patch to be much more invasive than the one posted for libertas.
-
-Sascha
-
--- =
-
-http://sascha.silbe.org/
-http://www.infra-silbe.de/
-
---=-1305292595-276160-1562-7367-4-=
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.1.0beta1 (GNU/Linux)
-
-iQEcBAEBCgAGBQJNzS8vAAoJELpz82VMF3Da94UH/Rluny57CQsZHDC+3ykgWRnc
-+1LkVmBqZBDElLmRCsoPU2qPje2V6Hs+f17/GSHiYS3xVRCG7jgkFv5d27ix2b+L
-s6sSk4up44PZD39uLsquDZjgXlOKLHbISRsClbzh0C8d65o5LweJTot67q1lY3Qu
-Q3jheEgkoFzLwePxiGRqKW0i5o0pGCPlPcS7fzn2kyhPxOD/f6FPncGSv9o9iPdB
-UAoSr+QvbQWtCAuOjOzdJsOPWInNr566jhpchi0i9UUChdTs4MjH9SKSVh15qaOg
-XCYhXngwJqfMXbpr5++SF2SMd32Vk62uLNId9XxTf1GKuTOoebf2a5DzGZ89sqs=
-=C+AO
------END PGP SIGNATURE-----
-
---=-1305292595-276160-1562-7367-4-=--
+-- 
+Rafał
