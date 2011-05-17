@@ -1,52 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:37204 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab1EJUha convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:64857 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866Ab1EQLVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 16:37:30 -0400
-Received: by fxm17 with SMTP id 17so4573438fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 13:37:29 -0700 (PDT)
+	Tue, 17 May 2011 07:21:40 -0400
+Received: by eyx24 with SMTP id 24so103163eyx.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 04:21:38 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] b43: add helpers for block R/W ops
+Date: Tue, 17 May 2011 13:59:26 +0200
+Message-Id: <1305633568-4537-1-git-send-email-zajec5@gmail.com> (sfid-20110517_132142_519728_579158FD)
 MIME-Version: 1.0
-In-Reply-To: <20110510190502.73A0C40EC3@repository3.orbit-lab.org>
-References: <20110510190502.73A0C40EC3@repository3.orbit-lab.org>
-Date: Tue, 10 May 2011 22:37:29 +0200
-Message-ID: <BANLkTinRaNhEzhG0iUY95F5fTnu1brduSg@mail.gmail.com> (sfid-20110510_223734_274891_85EE9C45)
-Subject: Re: Compat-wireless release for 2011-05-10 is baked
-From: linux-wireless@yknott.cjb.net
-To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-script updating at
 
-http://wireless.kernel.org/download/compat-wireless-2.6/
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/b43.h |   12 ++++++++++++
+ drivers/net/wireless/b43/pio.c |   20 ++++++++++----------
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
-no longer appears to be happy
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 1be9420..caba5c5 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -897,6 +897,18 @@ static inline void b43_write32(struct b43_wldev *dev, u16 offset, u32 value)
+ 	ssb_write32(dev->sdev, offset, value);
+ }
+ 
++static inline void b43_block_read(struct b43_wldev *dev, void *buffer,
++				 size_t count, u16 offset, u8 reg_width)
++{
++	ssb_block_read(dev->sdev, buffer, count, offset, reg_width);
++}
++
++static inline void b43_block_write(struct b43_wldev *dev, const void *buffer,
++				   size_t count, u16 offset, u8 reg_width)
++{
++	ssb_block_write(dev->sdev, buffer, count, offset, reg_width);
++}
++
+ static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
+ {
+ 	return dev->__using_pio_transfers;
+diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+index af0596d..72ab94d 100644
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -339,7 +339,7 @@ static u16 tx_write_2byte_queue(struct b43_pio_txqueue *q,
+ 	ctl |= B43_PIO_TXCTL_WRITELO | B43_PIO_TXCTL_WRITEHI;
+ 	b43_piotx_write16(q, B43_PIO_TXCTL, ctl);
+ 
+-	ssb_block_write(dev->sdev, data, (data_len & ~1),
++	b43_block_write(dev, data, (data_len & ~1),
+ 			q->mmio_base + B43_PIO_TXDATA,
+ 			sizeof(u16));
+ 	if (data_len & 1) {
+@@ -351,7 +351,7 @@ static u16 tx_write_2byte_queue(struct b43_pio_txqueue *q,
+ 		b43_piotx_write16(q, B43_PIO_TXCTL, ctl);
+ 		tail[0] = data[data_len - 1];
+ 		tail[1] = 0;
+-		ssb_block_write(dev->sdev, tail, 2,
++		b43_block_write(dev, tail, 2,
+ 				q->mmio_base + B43_PIO_TXDATA,
+ 				sizeof(u16));
+ 	}
+@@ -393,7 +393,7 @@ static u32 tx_write_4byte_queue(struct b43_pio_txqueue *q,
+ 	       B43_PIO8_TXCTL_16_23 | B43_PIO8_TXCTL_24_31;
+ 	b43_piotx_write32(q, B43_PIO8_TXCTL, ctl);
+ 
+-	ssb_block_write(dev->sdev, data, (data_len & ~3),
++	b43_block_write(dev, data, (data_len & ~3),
+ 			q->mmio_base + B43_PIO8_TXDATA,
+ 			sizeof(u32));
+ 	if (data_len & 3) {
+@@ -421,7 +421,7 @@ static u32 tx_write_4byte_queue(struct b43_pio_txqueue *q,
+ 			break;
+ 		}
+ 		b43_piotx_write32(q, B43_PIO8_TXCTL, ctl);
+-		ssb_block_write(dev->sdev, tail, 4,
++		b43_block_write(dev, tail, 4,
+ 				q->mmio_base + B43_PIO8_TXDATA,
+ 				sizeof(u32));
+ 	}
+@@ -657,11 +657,11 @@ data_ready:
+ 
+ 	/* Get the preamble (RX header) */
+ 	if (q->rev >= 8) {
+-		ssb_block_read(dev->sdev, rxhdr, sizeof(*rxhdr),
++		b43_block_read(dev, rxhdr, sizeof(*rxhdr),
+ 			       q->mmio_base + B43_PIO8_RXDATA,
+ 			       sizeof(u32));
+ 	} else {
+-		ssb_block_read(dev->sdev, rxhdr, sizeof(*rxhdr),
++		b43_block_read(dev, rxhdr, sizeof(*rxhdr),
+ 			       q->mmio_base + B43_PIO_RXDATA,
+ 			       sizeof(u16));
+ 	}
+@@ -697,7 +697,7 @@ data_ready:
+ 	skb_reserve(skb, 2);
+ 	skb_put(skb, len + padding);
+ 	if (q->rev >= 8) {
+-		ssb_block_read(dev->sdev, skb->data + padding, (len & ~3),
++		b43_block_read(dev, skb->data + padding, (len & ~3),
+ 			       q->mmio_base + B43_PIO8_RXDATA,
+ 			       sizeof(u32));
+ 		if (len & 3) {
+@@ -705,7 +705,7 @@ data_ready:
+ 			BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 4);
+ 
+ 			/* Read the last few bytes. */
+-			ssb_block_read(dev->sdev, tail, 4,
++			b43_block_read(dev, tail, 4,
+ 				       q->mmio_base + B43_PIO8_RXDATA,
+ 				       sizeof(u32));
+ 			switch (len & 3) {
+@@ -724,7 +724,7 @@ data_ready:
+ 			}
+ 		}
+ 	} else {
+-		ssb_block_read(dev->sdev, skb->data + padding, (len & ~1),
++		b43_block_read(dev, skb->data + padding, (len & ~1),
+ 			       q->mmio_base + B43_PIO_RXDATA,
+ 			       sizeof(u16));
+ 		if (len & 1) {
+@@ -732,7 +732,7 @@ data_ready:
+ 			BUILD_BUG_ON(sizeof(wl->pio_tailspace) < 2);
+ 
+ 			/* Read the last byte. */
+-			ssb_block_read(dev->sdev, tail, 2,
++			b43_block_read(dev, tail, 2,
+ 				       q->mmio_base + B43_PIO_RXDATA,
+ 				       sizeof(u16));
+ 			skb->data[len + padding - 1] = tail[0];
+-- 
+1.7.3.4
 
-
-compat-wireless-2011-05-05-p.tar.bz2	2011-May-10
-21:05:02	4.1M	application/octet-stream
-compat-wireless-2011-05-05.tar.bz2	2011-May-10
-21:05:02	4.1M	application/octet-stream
-
-
-
-On Tue, May 10, 2011 at 9:05 PM, Compat-wireless cronjob account
-<compat@orbit-lab.org> wrote:
-> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->  + f2dafb0...d2718a9 akpm-end   -> origin/akpm-end  (forced update)
->   8b06161..26822ee  akpm-start -> origin/akpm-start
->   d48ba9f..14baca8  history    -> origin/history
->  + 8e704e4...1139a3e master     -> origin/master  (forced update)
->   8b06161..26822ee  stable     -> origin/stable
->  * [new tag]         next-20110510 -> next-20110510
->
-> compat-wireless code metrics
->
->    812036 - Total upstream lines of code being pulled
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
