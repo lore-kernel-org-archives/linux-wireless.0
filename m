@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35098 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758029Ab1EMIgJ (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:51482 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887Ab1EQCNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 04:36:09 -0400
-Subject: [PATCH] compat-wireless: make WEXT patch apply over sched_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 10:36:05 +0200
-Message-ID: <1305275765.3487.6.camel@jlt3.sipsolutions.net> (sfid-20110513_103613_531466_A4A0717C)
-Mime-Version: 1.0
+	Mon, 16 May 2011 22:13:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/5] mwifiex: check mwifiex_wmm_lists_empty() before dequeue
+Date: Mon, 16 May 2011 19:17:51 -0700
+Message-Id: <1305598673-26606-4-git-send-email-bzhao@marvell.com> (sfid-20110517_041318_318958_78F3BE60)
+In-Reply-To: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
+References: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Marc Yang <yangyang@marvell.com>
 
-The sched_scan patches changed context for a patch.
+add checks to mwifiex_wmm_process_tx() loop so it doesn't re-enter
+mwifiex_dequeue_tx_packet() to find it can't send.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- patches/10-add-wext-handlers-to-netdev.patch |    2 +-
+ drivers/net/wireless/mwifiex/wmm.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/patches/10-add-wext-handlers-to-netdev.patch b/patches/10-add-wext-handlers-to-netdev.patch
-index 3600c6f..cd35cf6 100644
---- a/patches/10-add-wext-handlers-to-netdev.patch
-+++ b/patches/10-add-wext-handlers-to-netdev.patch
-@@ -21,7 +21,7 @@ CONFIG_WIRELESS_EXT in compat-wireless.
- @@ -373,10 +373,6 @@ struct wiphy *wiphy_new(const struct cfg
-  	INIT_LIST_HEAD(&rdev->bss_list);
-  	INIT_WORK(&rdev->scan_done_wk, __cfg80211_scan_done);
-- 
-+ 	INIT_WORK(&rdev->sched_scan_results_wk, __cfg80211_sched_scan_results);
- -#ifdef CONFIG_CFG80211_WEXT
- -	rdev->wiphy.wext = &cfg80211_wext_handler;
- -#endif
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index f3d5f23..784ad4c 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1254,5 +1254,5 @@ mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter)
+ 
+ 		if (mwifiex_dequeue_tx_packet(adapter))
+ 			break;
+-	} while (true);
++	} while (!mwifiex_wmm_lists_empty(adapter));
+ }
 -- 
-1.7.5.1
-
-
+1.7.0.2
 
