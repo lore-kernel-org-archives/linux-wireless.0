@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8927 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751746Ab1EILGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 07:06:32 -0400
-Date: Mon, 9 May 2011 13:06:22 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [RESEND] iwl4965: drop a lone pr_err()
-Message-ID: <20110509110621.GA2294@redhat.com> (sfid-20110509_130649_799170_6155D4F9)
-References: <1304771519.2227.6.camel@x61.thuisdomein>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43031 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754228Ab1EQNCH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 09:02:07 -0400
+Received: by iwn34 with SMTP id 34so387259iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 06:02:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1304771519.2227.6.camel@x61.thuisdomein>
+In-Reply-To: <BANLkTi=S1X1RRaeNmqAoqugoB-dByDsaSQ@mail.gmail.com>
+References: <1304413928-17673-1-git-send-email-arik@wizery.com>
+ <1304527857.3563.24.camel@jlt3.sipsolutions.net> <BANLkTinB7cAmCahuK-qqejVWzO7T3Xq4Gg@mail.gmail.com>
+ <BANLkTi=S1X1RRaeNmqAoqugoB-dByDsaSQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 17 May 2011 16:01:52 +0300
+Message-ID: <BANLkTinB3fNDxQr+O4DaUpAiV4f2RXM4Tg@mail.gmail.com> (sfid-20110517_150211_787827_A37340EE)
+Subject: Re: [RFC] mac80211: reestablish mis-configured existing Rx BA sessions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 07, 2011 at 02:31:59PM +0200, Paul Bolle wrote:
-> iwl4965_rate_control_register() prints a message at KERN_ERR level. It
-> looks like it's just a debugging message, so pr_err() seems to be
-> overdone. But none of the similar functions in drivers/net/wireless
-> print a message, so let's just drop it entirely.
-> 
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
-> Previously sent for (I guess) v2.6.39-rc2. Still present in v2.6.39-rc6.
+On Thu, May 5, 2011 at 02:17, Arik Nemtsov <arik@wizery.com> wrote:
+> On Thu, May 5, 2011 at 02:15, Arik Nemtsov <arik@wizery.com> wrote:
+>>
+>>
+>> On Wed, May 4, 2011 at 19:50, Johannes Berg <johannes@sipsolutions.net>
+>> wrote:
+>>>
+>>> On Tue, 2011-05-03 at 12:12 +0300, Arik Nemtsov wrote:
+>>> > When forming a Rx BA session, sometimes the ADDBA response gets lost.
+>>> > This leads to a situation where the session is configured locally, but
+>>> > doesn't exist on the remote side. Subsequent ADDBA requests are declined
+>>> > by mac80211.
+>>> >
+>>> > Fix this by assuming the session state of the initiator is the correct
+>>> > one. When receiving an unexpected ADDBA request on a TID with an active
+>>> > Rx BA session, delete the existing one and establish a new session.
+>>>
+>>> I thought about this for a while but I don't really have an opinion I
+>>> think. Maybe the behaviour could be avoided by checking the ack status,
+>>> but that wouldn't be good enough for devices that don't have that...
+>>
+>> It helped me with at least two APs (when I put them far enough from the
+>> station). I guess it won't hurt anything.
+>> Checking the ack won't do any actual good - if the AP doesn't send another
+>> ADDBA request we won't have a session up anyway. It just saves a little
+>> memory on the reorder buffer.
+>> Arik
+>
+> [replying again with a plain text email]
+>
 
-This patch is already applied in wireless-next ...
-
-commit a22e93f5d819f11d2a2d6332e20ff5b462e5c208
-Author: Paul Bolle <pebolle@tiscali.nl>
-Date:   Thu Apr 7 20:40:32 2011 +0200
-
-    iwl4965: drop a lone pr_err()
-    
-    iwl4965_rate_control_register() prints a message at KERN_ERR level.
-It
-    looks like it's just a debugging message, so pr_err() seems to be
-    overdone. But none of the similar functions in drivers/net/wireless
-    print a message, so let's just drop it.
-    
-    Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
+ping?
