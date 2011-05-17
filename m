@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:13567 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758657Ab1ELVXs (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:55995 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab1EQDJr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 17:23:48 -0400
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-From: Rhyland Klein <rklein@nvidia.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1305226969.3461.38.camel@jlt3.sipsolutions.net>
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
-	 <1305224592.10961.10.camel@rklein-linux2>
-	 <1305225648.3461.37.camel@jlt3.sipsolutions.net>
-	 <1305226377.10961.12.camel@rklein-linux2>
-	 <1305226969.3461.38.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 14:23:06 -0700
-Message-ID: <1305235386.10961.13.camel@rklein-linux2> (sfid-20110512_232405_332850_7A735A4C)
+	Mon, 16 May 2011 23:09:47 -0400
+Date: Mon, 16 May 2011 23:08:35 -0400 (EDT)
+Message-Id: <20110516.230835.989629139579226478.davem@davemloft.net> (sfid-20110517_051003_844067_2E9390C3)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-05-16-v2
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110517000809.GA2119@tuxdriver.com>
+References: <20110516211305.GG6551@tuxdriver.com>
+	<20110517000809.GA2119@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
-> On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
-> 
-> > > If, on the other hand, rfkill decides that at the time of loading the
-> > > driver wifi should be on, then the first change would be +1 and it'll
-> > > flip between 0 and +1.
-> > > 
-> > > This seems like it'll cause issues at some point, so I think you should
-> > > either allow the driver to set the initial state or hardcode one of
-> > > these possibilities (so at least it's predictable)
-> 
-> > I won't go negative, if you look, it only will disable clock if it knows
-> > it has already enabled it. 
-> 
-> Ah, you're right, I misread the macros.
-> 
-> johannes
-> 
-So the patch is good as is?
-
-rhyland
-
-
+RnJvbTogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTog
+TW9uLCAxNiBNYXkgMjAxMSAyMDowODowOSAtMDQwMA0KDQo+IEknbSBzb3JyeSwgRGF2ZSEgIElu
+IG15IGRlZmVuc2UsIEkgYW0gb24gdGhlIHZlcmdlIG9mIHNpY2tuZXNzIGFuZCBnb3QNCj4gdmVy
+eSBsaXR0bGUgc2xlZXAgbGFzdCBuaWdodC4uLiA6LSgNCj4gDQo+IEkgaGF2ZSBjb3JyZWN0ZWQg
+dGhlIHByb2JsZW0gYW5kIHdhcyBzdXJlIHRvIHBlcmZvcm0gdGhlIGNvcnJlY3QgYnVpbGQNCj4g
+dGVzdCB0aGlzIHRpbWUhIDotKQ0KDQpTbyB0aGVzZSBodW5rcyBtYWRlIHRvIG5ldC9ibHVldG9v
+dGgvbDJjYXBfY29yZS5jOg0KDQpAQCAtMzc0NSwxMSArMzc1OCwxNCBAQCBkb25lOg0KIHN0YXRp
+YyBpbmxpbmUgaW50IGwyY2FwX2Nvbmxlc3NfY2hhbm5lbChzdHJ1Y3QgbDJjYXBfY29ubiAqY29u
+biwgX19sZTE2IHBzbSwgc3RydWN0IHNrX2J1ZmYgKnNrYikNCiB7DQogCXN0cnVjdCBzb2NrICpz
+azsNCisJc3RydWN0IGwyY2FwX2NoYW4gKmNoYW47DQogDQotCXNrID0gbDJjYXBfZ2V0X3NvY2tf
+YnlfcHNtKDAsIHBzbSwgY29ubi0+c3JjKTsNCi0JaWYgKCFzaykNCisJY2hhbiA9IGwyY2FwX2ds
+b2JhbF9jaGFuX2J5X3BzbSgwLCBwc20sIGNvbm4tPnNyYyk7DQorCWlmICghY2hhbikNCiAJCWdv
+dG8gZHJvcDsNCiANCisJc2sgPSBjaGFuLT5zazsNCisNCiAJYmhfbG9ja19zb2NrKHNrKTsNCiAN
+CiAJQlRfREJHKCJzayAlcCwgbGVuICVkIiwgc2ssIHNrYi0+bGVuKTsNCkBAIC0zNzQ1LDExICsz
+NzU4LDE0IEBAIGRvbmU6DQogc3RhdGljIGlubGluZSBpbnQgbDJjYXBfY29ubGVzc19jaGFubmVs
+KHN0cnVjdCBsMmNhcF9jb25uICpjb25uLCBfX2xlMTYgcHNtLCBzdHJ1Y3Qgc2tfYnVmZiAqc2ti
+KQ0KIHsNCiAJc3RydWN0IHNvY2sgKnNrOw0KKwlzdHJ1Y3QgbDJjYXBfY2hhbiAqY2hhbjsNCiAN
+Ci0Jc2sgPSBsMmNhcF9nZXRfc29ja19ieV9wc20oMCwgcHNtLCBjb25uLT5zcmMpOw0KLQlpZiAo
+IXNrKQ0KKwljaGFuID0gbDJjYXBfZ2xvYmFsX2NoYW5fYnlfcHNtKDAsIHBzbSwgY29ubi0+c3Jj
+KTsNCisJaWYgKCFjaGFuKQ0KIAkJZ290byBkcm9wOw0KIA0KKwlzayA9IGNoYW4tPnNrOw0KKw0K
+IAliaF9sb2NrX3NvY2soc2spOw0KIA0KIAlCVF9EQkcoInNrICVwLCBsZW4gJWQiLCBzaywgc2ti
+LT5sZW4pOw0KDQpEb2Vzbid0IGdlbmVyYXRlIHRoZSBmb2xsb3dpbmcgd2FybmluZ3Mgb24geW91
+ciBjb21waWxlcj8NCg0KbmV0L2JsdWV0b290aC9sMmNhcF9jb3JlLmM6IEluIGZ1bmN0aW9uIKFs
+MmNhcF9yZWN2X2ZyYW1lojoNCm5ldC9ibHVldG9vdGgvbDJjYXBfY29yZS5jOjM3NTg6MTU6IHdh
+cm5pbmc6IKFza6IgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBpbiB0aGlzIGZ1bmN0aW9uDQpu
+ZXQvYmx1ZXRvb3RoL2wyY2FwX2NvcmUuYzozNzU4OjE1OiBub3RlOiChc2uiIHdhcyBkZWNsYXJl
+ZCBoZXJlDQpuZXQvYmx1ZXRvb3RoL2wyY2FwX2NvcmUuYzozNzkxOjE1OiB3YXJuaW5nOiChc2ui
+IG1heSBiZSB1c2VkIHVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KbmV0L2JsdWV0b290
+aC9sMmNhcF9jb3JlLmM6Mzc5MToxNTogbm90ZTogoXNroiB3YXMgZGVjbGFyZWQgaGVyZQ0KDQpJ
+J2xsIGZpeCB0aGVzZSB1cCB3aXRoIHRoZSBvYnZpb3VzIGZpeGVzLCBidXQgcGxlYXNlIGJlIG1v
+cmUgY2FyZWZ1bA0KaW4gdGhlIGZ1dHVyZS4NCg0KVGhhbmtzLg0K
