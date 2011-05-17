@@ -1,78 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3386 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756772Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/32] staging: brcm80211: make function definitions and
- prototype consistent
-Date: Fri, 13 May 2011 11:59:28 +0200
-Message-ID: <1305280792-9475-8-git-send-email-arend@broadcom.com> (sfid-20110513_120125_312235_BCC0F827)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:51479 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976Ab1EQCNO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2011 22:13:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/5] mwifiex: reduce CPU usage by tracking highest_queued_prio
+Date: Mon, 16 May 2011 19:17:50 -0700
+Message-Id: <1305598673-26606-3-git-send-email-bzhao@marvell.com> (sfid-20110517_041320_199810_75FE1B58)
+In-Reply-To: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
+References: <1305598673-26606-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Couple of functions that are only used within wlc_channel.c have been
-prototyped with static keyword. For the function definition itself this
-has been added when missing.
+From: Marc Yang <yangyang@marvell.com>
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This patch adds highest_queued_prio to track priority of packets as
+they are enqueued so that mwifiex_wmm_get_highest_priolist_ptr()
+starts checking at the first level where we have packets, instead of
+the highest. The function also lowers priority value to the level
+where first packet is found.
+
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_channel.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/main.h |    2 ++
+ drivers/net/wireless/mwifiex/wmm.c  |   29 ++++++++++++++++++++++++++---
+ 2 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
-index d6b1dcd..e31e392 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
-@@ -107,7 +107,7 @@ static void wlc_channel_min_txpower_limits_with_local_constraint(wlc_cm_info_t *
- 								 *txpwr,
- 								 u8
- 								 local_constraint_qdbm);
--void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels);
-+static void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels);
- static const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx);
- static const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx);
- 
-@@ -397,7 +397,7 @@ static const chanvec_t *g_table_locale_base[] = {
- 	&locale_5g_HIGH4
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 537b40d..ea3184d 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -215,6 +215,8 @@ struct mwifiex_wmm_desc {
+ 	u32 user_pri_pkt_tx_ctrl[WMM_HIGHEST_PRIORITY + 1];	/* UP: 0 to 7 */
+ 	/* Number of transmit packets queued */
+ 	atomic_t tx_pkts_queued;
++	/* Tracks highest priority with a packet queued */
++	atomic_t highest_queued_prio;
  };
  
--void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels)
-+static void wlc_locale_add_channels(chanvec_t *target, const chanvec_t *channels)
+ struct mwifiex_802_11_security {
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 52d2185..f3d5f23 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -177,14 +177,20 @@ static void mwifiex_wmm_default_queue_priorities(struct mwifiex_private *priv)
+  * This function map ACs to TIDs.
+  */
+ static void
+-mwifiex_wmm_queue_priorities_tid(u8 queue_priority[])
++mwifiex_wmm_queue_priorities_tid(struct mwifiex_wmm_desc *wmm)
  {
- 	u8 i;
- 	for (i = 0; i < sizeof(chanvec_t); i++) {
-@@ -608,7 +608,7 @@ static const locale_info_t *wlc_get_locale_5g(u8 locale_idx)
- 	return g_locale_5g_table[locale_idx];
++	u8 *queue_priority = wmm->queue_priority;
+ 	int i;
+ 
+ 	for (i = 0; i < 4; ++i) {
+ 		tos_to_tid[7 - (i * 2)] = ac_to_tid[queue_priority[i]][1];
+ 		tos_to_tid[6 - (i * 2)] = ac_to_tid[queue_priority[i]][0];
+ 	}
++
++	for (i = 0; i < MAX_NUM_TID; ++i)
++		tos_to_tid_inv[tos_to_tid[i]] = (u8)i;
++
++	atomic_set(&wmm->highest_queued_prio, HIGH_PRIO_TID);
  }
  
--const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
-+static const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
- {
- 	if (locale_idx >= ARRAY_SIZE(g_mimo_2g_table)) {
- 		return NULL;
-@@ -616,7 +616,7 @@ const locale_mimo_info_t *wlc_get_mimo_2g(u8 locale_idx)
- 	return g_mimo_2g_table[locale_idx];
+ /*
+@@ -246,7 +252,7 @@ mwifiex_wmm_setup_queue_priorities(struct mwifiex_private *priv,
+ 		}
+ 	}
+ 
+-	mwifiex_wmm_queue_priorities_tid(priv->wmm.queue_priority);
++	mwifiex_wmm_queue_priorities_tid(&priv->wmm);
  }
  
--const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx)
-+static const locale_mimo_info_t *wlc_get_mimo_5g(u8 locale_idx)
- {
- 	if (locale_idx >= ARRAY_SIZE(g_mimo_5g_table)) {
- 		return NULL;
+ /*
+@@ -401,6 +407,7 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 		priv->add_ba_param.rx_win_size = MWIFIEX_AMPDU_DEF_RXWINSIZE;
+ 
+ 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
++		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
+ 	}
+ }
+ 
+@@ -468,6 +475,7 @@ static void mwifiex_wmm_cleanup_queues(struct mwifiex_private *priv)
+ 						     ra_list);
+ 
+ 	atomic_set(&priv->wmm.tx_pkts_queued, 0);
++	atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
+ }
+ 
+ /*
+@@ -640,6 +648,11 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_adapter *adapter,
+ 
+ 	atomic_inc(&priv->wmm.tx_pkts_queued);
+ 
++	if (atomic_read(&priv->wmm.highest_queued_prio) <
++						tos_to_tid_inv[tid_down])
++		atomic_set(&priv->wmm.highest_queued_prio,
++						tos_to_tid_inv[tid_down]);
++
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
+ }
+ 
+@@ -865,9 +878,14 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 		}
+ 
+ 		do {
++			atomic_t *hqp;
++			spinlock_t *lock;
++
+ 			priv_tmp = bssprio_node->priv;
++			hqp = &priv_tmp->wmm.highest_queued_prio;
++			lock = &priv_tmp->wmm.ra_list_spinlock;
+ 
+-			for (i = HIGH_PRIO_TID; i >= LOW_PRIO_TID; --i) {
++			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
+ 
+ 				tid_ptr = &(priv_tmp)->wmm.
+ 					tid_tbl_ptr[tos_to_tid[i]];
+@@ -905,6 +923,11 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 					is_list_empty =
+ 						skb_queue_empty(&ptr->skb_head);
+ 					if (!is_list_empty) {
++						spin_lock_irqsave(lock, flags);
++						if (atomic_read(hqp) > i)
++							atomic_set(hqp, i);
++						spin_unlock_irqrestore(lock,
++									flags);
+ 						*priv = priv_tmp;
+ 						*tid = tos_to_tid[i];
+ 						return ptr;
 -- 
-1.7.4.1
-
+1.7.0.2
 
