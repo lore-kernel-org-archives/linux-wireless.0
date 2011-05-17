@@ -1,171 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53493 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755664Ab1EaTru (ORCPT
+Received: from gunnarstahl.de ([83.169.3.122]:46976 "EHLO
+	lvps83-169-3-122.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932086Ab1EQTqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:50 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 06/32] ath9k: initialize mode registers for AR9330
-Date: Tue, 31 May 2011 21:36:57 +0200
-Message-Id: <1306870643-7935-7-git-send-email-juhosg@openwrt.org> (sfid-20110531_214850_320192_35E4087C)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Tue, 17 May 2011 15:46:10 -0400
+Message-ID: <4DD2C8AE.3090600@gunnarstahl.org> (sfid-20110517_214614_145093_09587079)
+Date: Tue, 17 May 2011 21:12:46 +0200
+From: Gunnar Stahl <gunnar.stahl@gunnarstahl.org>
+MIME-Version: 1.0
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: =?UTF-8?B?UmljaGFyZCBTY2jDvHR6?= <r.schtz@t-online.de>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	622753@bugs.debian.org, Adrian Chadd <adrian@freebsd.org>
+References: <20110414123925.31837.14741.reportbug@noomadix>	 <1302785635.5282.690.camel@localhost> <4DA6EEF8.9090701@t-online.de>	 <1302840012.5282.745.camel@localhost>	 <BANLkTikr6LBGPf8roLyf9n9yL=7qk4y72g@mail.gmail.com> <1305603920.19966.119.camel@localhost>
+In-Reply-To: <1305603920.19966.119.camel@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: ath9k: Connection over wlan slows down and dies
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c  |  110 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    3 +
- 2 files changed, 112 insertions(+), 1 deletions(-)
+Hi Ben,
+since sunday I am running kernel 2.6.38-2-amd64 (uname -a) (dselect version 2.6.38-5). The wlan module works now almost 
+perfect. The "almost" is due to the fact that connection the machine to the android hotspot somehow fails. But all other 
+hotspots I used until now work as expected.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 392bf0f..dc0ad4a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -19,6 +19,8 @@
- #include "ar9003_2p2_initvals.h"
- #include "ar9485_initvals.h"
- #include "ar9340_initvals.h"
-+#include "ar9330_1p1_initvals.h"
-+#include "ar9330_1p2_initvals.h"
- 
- /* General hardware code for the AR9003 hadware family */
- 
-@@ -29,7 +31,113 @@
-  */
- static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- {
--	if (AR_SREV_9340(ah)) {
-+	if (AR_SREV_9330_11(ah)) {
-+		/* mac */
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-+				ar9331_1p1_mac_core,
-+				ARRAY_SIZE(ar9331_1p1_mac_core), 2);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+				ar9331_1p1_mac_postamble,
-+				ARRAY_SIZE(ar9331_1p1_mac_postamble), 5);
-+
-+		/* bb */
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+				ar9331_1p1_baseband_core,
-+				ARRAY_SIZE(ar9331_1p1_baseband_core), 2);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+				ar9331_1p1_baseband_postamble,
-+				ARRAY_SIZE(ar9331_1p1_baseband_postamble), 5);
-+
-+		/* radio */
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+				ar9331_1p1_radio_core,
-+				ARRAY_SIZE(ar9331_1p1_radio_core), 2);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST], NULL, 0, 0);
-+
-+		/* soc */
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+				ar9331_1p1_soc_preamble,
-+				ARRAY_SIZE(ar9331_1p1_soc_preamble), 2);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+				ar9331_1p1_soc_postamble,
-+				ARRAY_SIZE(ar9331_1p1_soc_postamble), 2);
-+
-+		/* rx/tx gain */
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_rx_gain_1p1,
-+				ARRAY_SIZE(ar9331_common_rx_gain_1p1), 2);
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_lowest_ob_db_tx_gain_1p1,
-+			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p1),
-+			5);
-+
-+		/* additional clock settings */
-+		if (ah->is_clk_25mhz)
-+			INIT_INI_ARRAY(&ah->iniModesAdditional,
-+					ar9331_1p1_xtal_25M,
-+					ARRAY_SIZE(ar9331_1p1_xtal_25M), 2);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesAdditional,
-+					ar9331_1p1_xtal_40M,
-+					ARRAY_SIZE(ar9331_1p1_xtal_40M), 2);
-+	} else if (AR_SREV_9330_12(ah)) {
-+		/* mac */
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-+				ar9331_1p2_mac_core,
-+				ARRAY_SIZE(ar9331_1p2_mac_core), 2);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+				ar9331_1p2_mac_postamble,
-+				ARRAY_SIZE(ar9331_1p2_mac_postamble), 5);
-+
-+		/* bb */
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+				ar9331_1p2_baseband_core,
-+				ARRAY_SIZE(ar9331_1p2_baseband_core), 2);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+				ar9331_1p2_baseband_postamble,
-+				ARRAY_SIZE(ar9331_1p2_baseband_postamble), 5);
-+
-+		/* radio */
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+				ar9331_1p2_radio_core,
-+				ARRAY_SIZE(ar9331_1p2_radio_core), 2);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST], NULL, 0, 0);
-+
-+		/* soc */
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+				ar9331_1p2_soc_preamble,
-+				ARRAY_SIZE(ar9331_1p2_soc_preamble), 2);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+				ar9331_1p2_soc_postamble,
-+				ARRAY_SIZE(ar9331_1p2_soc_postamble), 2);
-+
-+		/* rx/tx gain */
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				ar9331_common_rx_gain_1p2,
-+				ARRAY_SIZE(ar9331_common_rx_gain_1p2), 2);
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			ar9331_modes_lowest_ob_db_tx_gain_1p2,
-+			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p2),
-+			5);
-+
-+		/* additional clock settings */
-+		if (ah->is_clk_25mhz)
-+			INIT_INI_ARRAY(&ah->iniModesAdditional,
-+					ar9331_1p2_xtal_25M,
-+					ARRAY_SIZE(ar9331_1p2_xtal_25M), 2);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesAdditional,
-+					ar9331_1p2_xtal_40M,
-+					ARRAY_SIZE(ar9331_1p2_xtal_40M), 2);
-+	} else if (AR_SREV_9340(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 892c48b..48893f1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -659,6 +659,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 		REG_WRITE_ARRAY(&ah->iniModesAdditional,
- 				modesIndex, regWrites);
- 
-+	if (AR_SREV_9300(ah))
-+		REG_WRITE_ARRAY(&ah->iniModesAdditional, 1, regWrites);
-+
- 	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
- 		REG_WRITE_ARRAY(&ah->iniModesAdditional_40M, 1, regWrites);
- 
--- 
-1.7.2.1
+Huge thank-you from me!
+
+Yt,
+
+Gunnar
+
+Am 17.05.2011 05:45, schrieb Ben Hutchings:
+> On Fri, 2011-04-15 at 15:52 +0800, Adrian Chadd wrote:
+>> On 15 April 2011 12:00, Ben Hutchings<ben@decadent.org.uk>  wrote:
+>>          [...]
+>>          >  https://bugzilla.kernel.org/show_bug.cgi?id=31452
+>>
+>>
+>>          Thanks, I've set our bug tracker to follow that bug.
+>>
+>> Has it been established that it's the same bug though?
+>>
+>> I had a brief read of that and I'm not so sure. There's so many things
+>> that could impact TX throughput.
+>>
+>> I don't have this problem on FreeBSD on my AR9285 NICs and I've ported
+>> almost all of the (non-power saving) related code from ath9k. They
+>> happily sit at the expected TX/RX speeds in 11g and 11n modes.
+>>
+>> Is someone who is experiencing the problem able to do some kernel
+>> version bisecting between the known good and known bad kernel?
+> The bug fix from the report on Bugzilla has been included in stable
+> release 2.6.38.5 and Debian's version 2.6.38-5.
+>
+> Does this version fix the problem for you?
+>
+> Ben.
+>
 
