@@ -1,69 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:58129 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750756Ab1ENENd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 00:13:33 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 21:13:03 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] mac80211: abort scan_work immediately when the device goes down
-Date: Sat, 14 May 2011 09:43:28 +0530
-Message-ID: <1305346408-3933-1-git-send-email-rmanoharan@atheros.com> (sfid-20110514_061337_534040_0445450F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:51850 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756216Ab1EQTEy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 15:04:54 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 98A6954003A
+	for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 15:10:49 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110517190453.673F040EC3@repository3.orbit-lab.org> (sfid-20110517_210458_237634_8457CB9F)
+Date: Tue, 17 May 2011 15:04:53 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As long as no delay is required b/w channel change, scan work
-is proceeding without scheduling a new work. In such case, we
-can not abort scan work when the card was unplugged. This patch
-completes the scanning immediately whenever the device goes down.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 550be8e...65f200d akpm-end   -> origin/akpm-end  (forced update)
+   eed631e..df8d06a  akpm-start -> origin/akpm-start
+   777941e..9e8a885  history    -> origin/history
+ + e0f4eba...9e41cd5 master     -> origin/master  (forced update)
+   eed631e..df8d06a  stable     -> origin/stable
+ * [new tag]         next-20110517 -> next-20110517
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- net/mac80211/iface.c |    4 ++--
- net/mac80211/scan.c  |    5 +++++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 4054399..9d18c43 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -384,11 +384,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	int i;
- 	enum nl80211_channel_type orig_ct;
- 
-+	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
-+
- 	if (local->scan_sdata == sdata)
- 		ieee80211_scan_cancel(local);
- 
--	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
--
- 	/*
- 	 * Stop TX on this interface first.
- 	 */
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ea44a8e..102300c 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -719,6 +719,11 @@ void ieee80211_scan_work(struct work_struct *work)
- 	 * without scheduling a new work
- 	 */
- 	do {
-+		if (!ieee80211_sdata_running(sdata)) {
-+			aborted = true;
-+			goto out_complete;
-+		}
-+
- 		switch (local->next_scan_state) {
- 		case SCAN_DECISION:
- 			/* if no more bands/channels left, complete scan */
--- 
-1.7.5.1
-
+    823239 - Total upstream lines of code being pulled
