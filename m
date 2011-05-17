@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:33255 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932709Ab1ERS0f (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36008 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751221Ab1EQDpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 14:26:35 -0400
-Received: by ewy4 with SMTP id 4so526998ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 11:26:34 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/7] rt2x00: Enable PA_PE bits in TX_PIN_CFG according to active band.
-Date: Wed, 18 May 2011 20:25:05 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Message-Id: <201105182025.05979.IvDoorn@gmail.com> (sfid-20110518_202638_870830_9D728C37)
-Content-Type: Text/Plain;
-  charset="us-ascii"
+	Mon, 16 May 2011 23:45:32 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Gunnar Stahl <gunnar.stahl@gunnarstahl.org>
+Cc: Richard =?ISO-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	622753@bugs.debian.org, Adrian Chadd <adrian@freebsd.org>
+In-Reply-To: <BANLkTikr6LBGPf8roLyf9n9yL=7qk4y72g@mail.gmail.com>
+References: <20110414123925.31837.14741.reportbug@noomadix>
+	 <1302785635.5282.690.camel@localhost> <4DA6EEF8.9090701@t-online.de>
+	 <1302840012.5282.745.camel@localhost>
+	 <BANLkTikr6LBGPf8roLyf9n9yL=7qk4y72g@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-pPbzLrrE7ryXF6HInD44"
+Date: Tue, 17 May 2011 04:45:20 +0100
+Message-ID: <1305603920.19966.119.camel@localhost> (sfid-20110517_054536_005308_A05C0288)
+Mime-Version: 1.0
+Subject: Re: ath9k: Connection over wlan slows down and dies
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-(split off from the earlier RT35xx patch submitted by Shiang)
+--=-pPbzLrrE7ryXF6HInD44
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-There's no point in enabling the PA_PE bits for the bands that we are
-not active on.
+On Fri, 2011-04-15 at 15:52 +0800, Adrian Chadd wrote:
+> On 15 April 2011 12:00, Ben Hutchings <ben@decadent.org.uk> wrote:
+>         [...]
+>         > https://bugzilla.kernel.org/show_bug.cgi?id=3D31452
+>        =20
+>        =20
+>         Thanks, I've set our bug tracker to follow that bug.
+> =20
+> Has it been established that it's the same bug though?
+>=20
+> I had a brief read of that and I'm not so sure. There's so many things
+> that could impact TX throughput.
+>=20
+> I don't have this problem on FreeBSD on my AR9285 NICs and I've ported
+> almost all of the (non-power saving) related code from ath9k. They
+> happily sit at the expected TX/RX speeds in 11g and 11n modes.
+>=20
+> Is someone who is experiencing the problem able to do some kernel
+> version bisecting between the known good and known bad kernel?=20
 
-Signed-off-by: Shiang Tu <shiang_tu@ralinktech.com>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+The bug fix from the report on Bugzilla has been included in stable
+release 2.6.38.5 and Debian's version 2.6.38-5.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 93fb674..1cad89e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1795,8 +1795,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 
- 	/* Turn on unused PA or LNA when not using 1T or 1R */
- 	if (rt2x00dev->default_ant.tx_chain_num == 2) {
--		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
--		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN, 1);
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
-+				   rf->channel > 14);
-+		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
-+				   rf->channel <= 14);
- 	}
- 
- 	/* Turn on unused PA or LNA when not using 1T or 1R */
--- 
-1.7.2.3
+Does this version fix the problem for you?
 
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-pPbzLrrE7ryXF6HInD44
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATdHvT+e/yOyVhhEJAQqz5BAAqpZNudtfzhpA7H7kkkybplsyP2y37syi
+5S7uuMgz3305QWapohI2/X+ASNsWE9OT3Pnb04Ka/z/PWpGjbAL+znQq6kQkgxWQ
+c46hEuUllLXyLlKWRBRNEh80U+nhG61+ts0Xz8s4T4CtGlU1sgnPDABKxbMssK27
+ngOTRNZjMS67VjXbNR/77MmpeB+/8uPSouuA/GOFzvgebYgfX2MCIUAemN1ad04U
+gJR66AfV1G3nmg0x5zxwxXVtlxW5L3lykc+tdDOWQ1pUTNCSVGX7Zgu6A6wa+X7N
+WrFNob1v0FduE8OWzTQ7EnbqpfUw7ccNgdaKpc/H4lEp+kpn3NY8gjIuM0paK/Pq
+uBOyXKngAUReklBltq38Ui+BjHbdY2nPqpIuWOKp5K06e0y3Ur7srPV/DaNuVwpf
+iPhP+9j35yFabkup7Ek1c2kvKtVRB53+OzigYvYILGnuqFdQE6mZDgyjuhTNvgvN
+06YVlxmamRrVwFZRGIg1rc52LHo+Yb8u5pPSTV0anbm7jKAVSispYeuGL3XsBuGW
+u2+Azmw6pUrFEMWIbQ/3VU7ae/EputckDeOCZwQlAvic8saJfmDJGx8ziVigbEDL
+s4adBL8CNUyspcA8wNsZ/2EUa9dWNMxShUfuVqLjkuln72uqT3NSQcYl6tjgNEbM
+HQex+CjATfc=
+=2rTT
+-----END PGP SIGNATURE-----
+
+--=-pPbzLrrE7ryXF6HInD44--
