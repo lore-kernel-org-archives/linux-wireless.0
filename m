@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57994 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751249Ab1EOSKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2011 14:10:23 -0400
-Message-ID: <4DD01708.3000603@hauke-m.de> (sfid-20110515_201027_591006_DB0A90CE)
-Date: Sun, 15 May 2011 20:10:16 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:52310 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753710Ab1EQLWR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 07:22:17 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so103261eyx.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 04:22:16 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] b43: dma: cache translation (routing bits)
+Date: Tue, 17 May 2011 14:00:02 +0200
+Message-Id: <1305633602-4590-3-git-send-email-zajec5@gmail.com> (sfid-20110517_132219_503129_CD54F750)
+In-Reply-To: <1305633602-4590-1-git-send-email-zajec5@gmail.com>
+References: <1305633602-4590-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Clemens Noss <cnoss@gmx.de>
-CC: linux-wireless@vger.kernel.org, arend@broadcom.com,
-	rvossen@broadcom.com, henryp@broadcom.com, brudley@broadcom.com
-Subject: Re: [PATCH] staging: brcm80211: fix cast to pointer from integer
-References: <1305479060-22755-1-git-send-email-cnoss@gmx.de>
-In-Reply-To: <1305479060-22755-1-git-send-email-cnoss@gmx.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2011 07:04 PM, Clemens Noss wrote:
-> bcm_pktq_flush and related functions only ever get 0 or a pointer for
-> arg, so make it a pointer.
-> 
-> This might fix a crash on 64bit.
-> 
-> Signed-off-by: Clemens Noss <cnoss@gmx.de>
-> ---
->  drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |    2 +-
->  drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |    4 ++--
->  drivers/staging/brcm80211/brcmsmac/wlc_main.c  |    4 ++--
->  drivers/staging/brcm80211/include/bcmutils.h   |    6 +++---
->  drivers/staging/brcm80211/util/bcmutils.c      |    4 ++--
->  5 files changed, 10 insertions(+), 10 deletions(-)
 
-> ....
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/b43.h |    2 ++
+ drivers/net/wireless/b43/dma.c |    7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-> diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-> index 5b041a6..0d93bd6 100644
-> --- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-> +++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-> @@ -1225,7 +1225,7 @@ void wlc_ampdu_shm_upd(struct ampdu_info *ampdu)
->  /*
->   * callback function that helps flushing ampdu packets from a priority queue
->   */
-> -static bool cb_del_ampdu_pkt(void *p, int arg_a)
-> +static bool cb_del_ampdu_pkt(void *p, void *arg_a)
->  {
->  	struct sk_buff *mpdu = (struct sk_buff *)p;
->  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(mpdu);
-Why don't you use the correct pointer type here instead of casting then
-around and the parameter names are meaningless too.
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index caba5c5..ee4d06f 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -567,6 +567,8 @@ struct b43_dma {
+ 	struct b43_dmaring *tx_ring_mcast; /* Multicast */
+ 
+ 	struct b43_dmaring *rx_ring;
++
++	u32 translation; /* Routing bits */
+ };
+ 
+ struct b43_pio_txqueue;
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 10cfba3..47d44bc 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -80,7 +80,7 @@ static void op32_fill_descriptor(struct b43_dmaring *ring,
+ 	addr = (u32) (dmaaddr & ~SSB_DMA_TRANSLATION_MASK);
+ 	addrext = (u32) (dmaaddr & SSB_DMA_TRANSLATION_MASK)
+ 	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addr |= ssb_dma_translation(ring->dev->sdev);
++	addr |= ring->dev->dma.translation;
+ 	ctl = bufsize & B43_DMA32_DCTL_BYTECNT;
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl |= B43_DMA32_DCTL_DTABLEEND;
+@@ -174,7 +174,7 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
+ 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+ 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+ 	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addrhi |= (ssb_dma_translation(ring->dev->sdev) << 1);
++	addrhi |= (ring->dev->dma.translation << 1);
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+ 	if (start)
+@@ -658,7 +658,7 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 	int err = 0;
+ 	u32 value;
+ 	u32 addrext;
+-	u32 trans = ssb_dma_translation(ring->dev->sdev);
++	u32 trans = ring->dev->dma.translation;
+ 
+ 	if (ring->tx) {
+ 		if (ring->type == B43_DMA_64BIT) {
+@@ -1055,6 +1055,7 @@ int b43_dma_init(struct b43_wldev *dev)
+ 	err = b43_dma_set_mask(dev, dmamask);
+ 	if (err)
+ 		return err;
++	dma->translation = ssb_dma_translation(dev->sdev);
+ 
+ 	err = -ENOMEM;
+ 	/* setup TX DMA channels. */
+-- 
+1.7.3.4
 
-static bool cb_del_ampdu_pkt(struct sk_buff *mpdu, struct
-cb_del_ampdu_pars *ampdu_pars)
-
-The signature of dma_cb_fn_ampdu(void *txi, void *arg_a) should be
-changed too.
-
-> ...
-
-Hauke
