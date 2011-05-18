@@ -1,662 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53949 "EHLO nbd.name"
+Received: from dell.nexicom.net ([216.168.96.13]:49130 "EHLO smtp.nexicom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932993Ab1ERL7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 07:59:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/2] ath9k: unify edma and non-edma tx code, improve tx fifo handling
-Date: Wed, 18 May 2011 13:59:23 +0200
-Message-Id: <1305719964-44292-1-git-send-email-nbd@openwrt.org> (sfid-20110518_135942_714136_8D44CFF5)
+	id S1753635Ab1ERX6B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 19:58:01 -0400
+Message-ID: <4DD45D2D.7060300@lockie.ca> (sfid-20110519_015820_007377_FF0B3CFC)
+Date: Wed, 18 May 2011 19:58:37 -0400
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>,
+	Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: help to bisect
+References: <4DD31264.4070704@lockie.ca> <20110518072245.GB17608@liondog.tnic> <4DD42F10.90602@lockie.ca> <20110518211723.GA4313@liondog.tnic>
+In-Reply-To: <20110518211723.GA4313@liondog.tnic>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-EDMA based chips (AR9380+) have 8 Tx FIFO slots, which are used to fix the
-tx queue start/stop race conditions which have to be worked around for
-earlier chips by keeping the last descriptor in the queue. The current code
-stores all frames that do not fit onto the 8 FIFO slots in a separate
-list. Whenever a FIFO slot is freed up, the next frame (or A-MPDU) from the
-pending queue gets moved to that slot.
+On 05/18/11 17:17, Borislav Petkov wrote:
+> First of all, please hit "reply-to-all" next time so that all recipients
+> can receive your mail and not find it by chance when looking thru the
+> new lkml messages.
+>
+> On Wed, May 18, 2011 at 04:41:52PM -0400, James wrote:
+>> Here is what I did:
+>>
+>> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+>> $ cd linux-2.6.37.y
+>> $ git checkout v2.6.36
+>> build and boot kernel
+> what does that mean? Is .36 ok?
+Yes, no problems.
+>> $ cd linux-2.6.37.y
+>> $ git bisect start
+>> $ git bisect good v2.6.36
+>> $ git bisect bad v2.6.37.6
+> Also, is .37.6 bad?
+Yes, it is bad.
+>> build and boot kernel
+>> git bisect good|bad
+>> repeat
+>>
+>> 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+> Which is a merge commit and it means that you most likely made a mistake
+> during bisection.
+Am I doing it right?
+boot kernel, cd to git source, git bisect good or bad, compile new
+kernel and copy it to /boot, repeat
+> What is actually the problem you're experiencing with .37.6?
+>
+> ..
+>
+>> How do I find out what change causes the problem?
+>> The problem causes my wireless card not to work.
+> Ah, here it is.
+>
+>> Other people have similar cards that do work so the problem seems
+>> isolated to my hardware but kernel-2.6.36 works so I don't think my
+>> hardware is faulty.
+> Which card is that? (adding linux-wireless)
+D-Link dwa552
+ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+mem=0xffffc90000140
+000, irq=16
+Other people have this card working so it is probably my system
+configuration that is causing an obscure bug.
 
-This process is not only inefficient, but also unnecessary. The code can
-be improved visibly by keeping the pending queue fully linked, and moving
-the contents of the entire queue to a FIFO slot as it becomes available.
+> Please, describe in a very detailed way how your problem incarnates
+> itself: dmesg, error messages, what exactly do you do to trigger it?
+It seems to be 100% that if "ath: Failed to stop TX DMA in 100 msec
+after killing last frame
+ath: Failed to stop TX DMA!" shows up in dmesg that scans don't return
+any APs or 1-3 (iwlist wlan0 scan | grep SSID).
+If there is a different way to scan, I'll try that.
 
-This patch makes the necessary changes for that and also merges some code
-that was duplicated for EDMA vs non-EDMA. It changes txq->axq_link to point
-to the last descriptor instead of the link pointer, so that
-ath9k_hw_set_desc_link can be used, which works on all chips.
 
-With this patch, a small performance increase for non-aggregated traffic
-was observed on AR9380 based embedded hardware.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/debug.c |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |    2 -
- drivers/net/wireless/ath/ath9k/xmit.c  |  349 +++++++++++++-------------------
- 4 files changed, 144 insertions(+), 211 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d6e7825..5b9cb1f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -179,7 +179,7 @@ enum ATH_AGGR_STATUS {
- struct ath_txq {
- 	int mac80211_qnum; /* mac80211 queue number, -1 means not mac80211 Q */
- 	u32 axq_qnum; /* ath9k hardware queue number */
--	u32 *axq_link;
-+	void *axq_link;
- 	struct list_head axq_q;
- 	spinlock_t axq_lock;
- 	u32 axq_depth;
-@@ -188,7 +188,6 @@ struct ath_txq {
- 	bool axq_tx_inprogress;
- 	struct list_head axq_acq;
- 	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
--	struct list_head txq_fifo_pending;
- 	u8 txq_headidx;
- 	u8 txq_tailidx;
- 	int pending_frames;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index bad1a87..3f537b6 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -585,7 +585,6 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 
- 	PRQLE("axq_q empty:       ", axq_q);
- 	PRQLE("axq_acq empty:     ", axq_acq);
--	PRQLE("txq_fifo_pending:  ", txq_fifo_pending);
- 	for (i = 0; i < ATH_TXFIFO_DEPTH; i++) {
- 		snprintf(tmp, sizeof(tmp) - 1, "txq_fifo[%i] empty: ", i);
- 		PRQLE(tmp, txq_fifo[i]);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 473aff5..74faf9c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -62,8 +62,6 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
- 
- 	if (txq->axq_depth || !list_empty(&txq->axq_acq))
- 		pending = true;
--	else if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
--		pending = !list_empty(&txq->txq_fifo_pending);
- 
- 	spin_unlock_bh(&txq->axq_lock);
- 	return pending;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 97dd1fa..2bfa843 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -53,7 +53,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 				struct ath_txq *txq, struct list_head *bf_q,
- 				struct ath_tx_status *ts, int txok, int sendbar);
- static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
--			     struct list_head *head);
-+			     struct list_head *head, bool internal);
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
- static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
- 			     struct ath_tx_status *ts, int nframes, int nbad,
-@@ -377,8 +377,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			bf_next = bf->bf_next;
- 
- 			bf->bf_state.bf_type |= BUF_XRETRY;
--			if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) ||
--			    !bf->bf_stale || bf_next != NULL)
-+			if (!bf->bf_stale || bf_next != NULL)
- 				list_move_tail(&bf->list, &bf_head);
- 
- 			ath_tx_rc_status(sc, bf, ts, 1, 1, 0, false);
-@@ -463,20 +462,14 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			}
- 		}
- 
--		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
--		    bf_next == NULL) {
--			/*
--			 * Make sure the last desc is reclaimed if it
--			 * not a holding desc.
--			 */
--			if (!bf_last->bf_stale)
--				list_move_tail(&bf->list, &bf_head);
--			else
--				INIT_LIST_HEAD(&bf_head);
--		} else {
--			BUG_ON(list_empty(bf_q));
-+		/*
-+		 * Make sure the last desc is reclaimed if it
-+		 * not a holding desc.
-+		 */
-+		if (!bf_last->bf_stale || bf_next != NULL)
- 			list_move_tail(&bf->list, &bf_head);
--		}
-+		else
-+			INIT_LIST_HEAD(&bf_head);
- 
- 		if (!txpending || (tid->state & AGGR_CLEANUP)) {
- 			/*
-@@ -837,7 +830,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			bf->bf_state.bf_type &= ~BUF_AGGR;
- 			ath9k_hw_clr11n_aggr(sc->sc_ah, bf->bf_desc);
- 			ath_buf_set_rate(sc, bf, fi->framelen);
--			ath_tx_txqaddbuf(sc, txq, &bf_q);
-+			ath_tx_txqaddbuf(sc, txq, &bf_q, false);
- 			continue;
- 		}
- 
-@@ -849,7 +842,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		/* anchor last desc of aggregate */
- 		ath9k_hw_set11n_aggr_last(sc->sc_ah, bf->bf_lastbf->bf_desc);
- 
--		ath_tx_txqaddbuf(sc, txq, &bf_q);
-+		ath_tx_txqaddbuf(sc, txq, &bf_q, false);
- 		TX_STAT_INC(txq->axq_qnum, a_aggr);
- 
- 	} while (txq->axq_ampdu_depth < ATH_AGGR_MIN_QDEPTH &&
-@@ -1085,7 +1078,6 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 		txq->txq_headidx = txq->txq_tailidx = 0;
- 		for (i = 0; i < ATH_TXFIFO_DEPTH; i++)
- 			INIT_LIST_HEAD(&txq->txq_fifo[i]);
--		INIT_LIST_HEAD(&txq->txq_fifo_pending);
- 	}
- 	return &sc->tx.txq[axq_qnum];
- }
-@@ -1155,13 +1147,8 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
-     return bf_isampdu(bf) && !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
- }
- 
--/*
-- * Drain a given TX queue (could be Beacon or Data)
-- *
-- * This assumes output has been stopped and
-- * we do not need to block ath_tx_tasklet.
-- */
--void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
-+static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
-+			       struct list_head *list, bool retry_tx)
- {
- 	struct ath_buf *bf, *lastbf;
- 	struct list_head bf_head;
-@@ -1170,93 +1157,63 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 	memset(&ts, 0, sizeof(ts));
- 	INIT_LIST_HEAD(&bf_head);
- 
--	for (;;) {
--		spin_lock_bh(&txq->axq_lock);
-+	while (!list_empty(list)) {
-+		bf = list_first_entry(list, struct ath_buf, list);
- 
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
--			if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
--				txq->txq_headidx = txq->txq_tailidx = 0;
--				spin_unlock_bh(&txq->axq_lock);
--				break;
--			} else {
--				bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
--						      struct ath_buf, list);
--			}
--		} else {
--			if (list_empty(&txq->axq_q)) {
--				txq->axq_link = NULL;
--				spin_unlock_bh(&txq->axq_lock);
--				break;
--			}
--			bf = list_first_entry(&txq->axq_q, struct ath_buf,
--					      list);
--
--			if (bf->bf_stale) {
--				list_del(&bf->list);
--				spin_unlock_bh(&txq->axq_lock);
-+		if (bf->bf_stale) {
-+			list_del(&bf->list);
- 
--				ath_tx_return_buffer(sc, bf);
--				continue;
--			}
-+			ath_tx_return_buffer(sc, bf);
-+			continue;
- 		}
- 
- 		lastbf = bf->bf_lastbf;
--
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
--			list_cut_position(&bf_head,
--					  &txq->txq_fifo[txq->txq_tailidx],
--					  &lastbf->list);
--			INCR(txq->txq_tailidx, ATH_TXFIFO_DEPTH);
--		} else {
--			/* remove ath_buf's of the same mpdu from txq */
--			list_cut_position(&bf_head, &txq->axq_q, &lastbf->list);
--		}
-+		list_cut_position(&bf_head, list, &lastbf->list);
- 
- 		txq->axq_depth--;
- 		if (bf_is_ampdu_not_probing(bf))
- 			txq->axq_ampdu_depth--;
--		spin_unlock_bh(&txq->axq_lock);
- 
-+		spin_unlock_bh(&txq->axq_lock);
- 		if (bf_isampdu(bf))
- 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, 0,
- 					     retry_tx);
- 		else
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
-+		spin_lock_bh(&txq->axq_lock);
- 	}
-+}
- 
-+/*
-+ * Drain a given TX queue (could be Beacon or Data)
-+ *
-+ * This assumes output has been stopped and
-+ * we do not need to block ath_tx_tasklet.
-+ */
-+void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
-+{
- 	spin_lock_bh(&txq->axq_lock);
--	txq->axq_tx_inprogress = false;
--	spin_unlock_bh(&txq->axq_lock);
--
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
--		spin_lock_bh(&txq->axq_lock);
--		while (!list_empty(&txq->txq_fifo_pending)) {
--			bf = list_first_entry(&txq->txq_fifo_pending,
--					      struct ath_buf, list);
--			list_cut_position(&bf_head,
--					  &txq->txq_fifo_pending,
--					  &bf->bf_lastbf->list);
--			spin_unlock_bh(&txq->axq_lock);
-+		int idx = txq->txq_tailidx;
- 
--			if (bf_isampdu(bf))
--				ath_tx_complete_aggr(sc, txq, bf, &bf_head,
--						     &ts, 0, retry_tx);
--			else
--				ath_tx_complete_buf(sc, bf, txq, &bf_head,
--						    &ts, 0, 0);
--			spin_lock_bh(&txq->axq_lock);
-+		while (!list_empty(&txq->txq_fifo[idx])) {
-+			ath_drain_txq_list(sc, txq, &txq->txq_fifo[idx],
-+					   retry_tx);
-+
-+			INCR(idx, ATH_TXFIFO_DEPTH);
- 		}
--		spin_unlock_bh(&txq->axq_lock);
-+		txq->txq_tailidx = idx;
- 	}
- 
-+	txq->axq_link = NULL;
-+	txq->axq_tx_inprogress = false;
-+	ath_drain_txq_list(sc, txq, &txq->axq_q, retry_tx);
-+
- 	/* flush any pending frames if aggregation is enabled */
--	if (sc->sc_flags & SC_OP_TXAGGR) {
--		if (!retry_tx) {
--			spin_lock_bh(&txq->axq_lock);
--			ath_txq_drain_pending_buffers(sc, txq);
--			spin_unlock_bh(&txq->axq_lock);
--		}
--	}
-+	if ((sc->sc_flags & SC_OP_TXAGGR) && !retry_tx)
-+		ath_txq_drain_pending_buffers(sc, txq);
-+
-+	spin_unlock_bh(&txq->axq_lock);
- }
- 
- bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
-@@ -1370,11 +1327,13 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
-  * assume the descriptors are already chained together by caller.
-  */
- static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
--			     struct list_head *head)
-+			     struct list_head *head, bool internal)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath_buf *bf;
-+	struct ath_buf *bf, *bf_last;
-+	bool puttxbuf = false;
-+	bool edma;
- 
- 	/*
- 	 * Insert the frame on the outbound list and
-@@ -1384,51 +1343,49 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 	if (list_empty(head))
- 		return;
- 
-+	edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
- 	bf = list_first_entry(head, struct ath_buf, list);
-+	bf_last = list_entry(head->prev, struct ath_buf, list);
- 
- 	ath_dbg(common, ATH_DBG_QUEUE,
- 		"qnum: %d, txq depth: %d\n", txq->axq_qnum, txq->axq_depth);
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
--		if (txq->axq_depth >= ATH_TXFIFO_DEPTH) {
--			list_splice_tail_init(head, &txq->txq_fifo_pending);
--			return;
--		}
--		if (!list_empty(&txq->txq_fifo[txq->txq_headidx]))
--			ath_dbg(common, ATH_DBG_XMIT,
--				"Initializing tx fifo %d which is non-empty\n",
--				txq->txq_headidx);
--		INIT_LIST_HEAD(&txq->txq_fifo[txq->txq_headidx]);
--		list_splice_init(head, &txq->txq_fifo[txq->txq_headidx]);
-+	if (edma && list_empty(&txq->txq_fifo[txq->txq_headidx])) {
-+		list_splice_tail_init(head, &txq->txq_fifo[txq->txq_headidx]);
- 		INCR(txq->txq_headidx, ATH_TXFIFO_DEPTH);
--		TX_STAT_INC(txq->axq_qnum, puttxbuf);
--		ath9k_hw_puttxbuf(ah, txq->axq_qnum, bf->bf_daddr);
--		ath_dbg(common, ATH_DBG_XMIT, "TXDP[%u] = %llx (%p)\n",
--			txq->axq_qnum, ito64(bf->bf_daddr), bf->bf_desc);
-+		puttxbuf = true;
- 	} else {
- 		list_splice_tail_init(head, &txq->axq_q);
- 
--		if (txq->axq_link == NULL) {
--			TX_STAT_INC(txq->axq_qnum, puttxbuf);
--			ath9k_hw_puttxbuf(ah, txq->axq_qnum, bf->bf_daddr);
--			ath_dbg(common, ATH_DBG_XMIT, "TXDP[%u] = %llx (%p)\n",
--				txq->axq_qnum, ito64(bf->bf_daddr),
--				bf->bf_desc);
--		} else {
--			*txq->axq_link = bf->bf_daddr;
-+		if (txq->axq_link) {
-+			ath9k_hw_set_desc_link(ah, txq->axq_link, bf->bf_daddr);
- 			ath_dbg(common, ATH_DBG_XMIT,
- 				"link[%u] (%p)=%llx (%p)\n",
- 				txq->axq_qnum, txq->axq_link,
- 				ito64(bf->bf_daddr), bf->bf_desc);
--		}
--		ath9k_hw_get_desc_link(ah, bf->bf_lastbf->bf_desc,
--				       &txq->axq_link);
-+		} else if (!edma)
-+			puttxbuf = true;
-+
-+		txq->axq_link = bf_last->bf_desc;
-+	}
-+
-+	if (puttxbuf) {
-+		TX_STAT_INC(txq->axq_qnum, puttxbuf);
-+		ath9k_hw_puttxbuf(ah, txq->axq_qnum, bf->bf_daddr);
-+		ath_dbg(common, ATH_DBG_XMIT, "TXDP[%u] = %llx (%p)\n",
-+			txq->axq_qnum, ito64(bf->bf_daddr), bf->bf_desc);
-+	}
-+
-+	if (!edma) {
- 		TX_STAT_INC(txq->axq_qnum, txstart);
- 		ath9k_hw_txstart(ah, txq->axq_qnum);
- 	}
--	txq->axq_depth++;
--	if (bf_is_ampdu_not_probing(bf))
--		txq->axq_ampdu_depth++;
-+
-+	if (!internal) {
-+		txq->axq_depth++;
-+		if (bf_is_ampdu_not_probing(bf))
-+			txq->axq_ampdu_depth++;
-+	}
- }
- 
- static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
-@@ -1470,7 +1427,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	TX_STAT_INC(txctl->txq->axq_qnum, a_queued_hw);
- 	bf->bf_lastbf = bf;
- 	ath_buf_set_rate(sc, bf, fi->framelen);
--	ath_tx_txqaddbuf(sc, txctl->txq, &bf_head);
-+	ath_tx_txqaddbuf(sc, txctl->txq, &bf_head, false);
- }
- 
- static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
-@@ -1490,7 +1447,7 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
- 	bf->bf_lastbf = bf;
- 	fi = get_frame_info(bf->bf_mpdu);
- 	ath_buf_set_rate(sc, bf, fi->framelen);
--	ath_tx_txqaddbuf(sc, txq, bf_head);
-+	ath_tx_txqaddbuf(sc, txq, bf_head, false);
- 	TX_STAT_INC(txq->axq_qnum, queued);
- }
- 
-@@ -2077,6 +2034,38 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
- 	tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
- }
- 
-+static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
-+				  struct ath_tx_status *ts, struct ath_buf *bf,
-+				  struct list_head *bf_head)
-+{
-+	int txok;
-+
-+	txq->axq_depth--;
-+	txok = !(ts->ts_status & ATH9K_TXERR_MASK);
-+	txq->axq_tx_inprogress = false;
-+	if (bf_is_ampdu_not_probing(bf))
-+		txq->axq_ampdu_depth--;
-+
-+	spin_unlock_bh(&txq->axq_lock);
-+
-+	if (!bf_isampdu(bf)) {
-+		/*
-+		 * This frame is sent out as a single frame.
-+		 * Use hardware retry status for this frame.
-+		 */
-+		if (ts->ts_status & ATH9K_TXERR_XRETRY)
-+			bf->bf_state.bf_type |= BUF_XRETRY;
-+		ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok, true);
-+		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok, 0);
-+	} else
-+		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok, true);
-+
-+	spin_lock_bh(&txq->axq_lock);
-+
-+	if (sc->sc_flags & SC_OP_TXAGGR)
-+		ath_txq_schedule(sc, txq);
-+}
-+
- static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -2085,20 +2074,18 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 	struct list_head bf_head;
- 	struct ath_desc *ds;
- 	struct ath_tx_status ts;
--	int txok;
- 	int status;
- 
- 	ath_dbg(common, ATH_DBG_QUEUE, "tx queue %d (%x), link %p\n",
- 		txq->axq_qnum, ath9k_hw_gettxbuf(sc->sc_ah, txq->axq_qnum),
- 		txq->axq_link);
- 
-+	spin_lock_bh(&txq->axq_lock);
- 	for (;;) {
--		spin_lock_bh(&txq->axq_lock);
- 		if (list_empty(&txq->axq_q)) {
- 			txq->axq_link = NULL;
- 			if (sc->sc_flags & SC_OP_TXAGGR)
- 				ath_txq_schedule(sc, txq);
--			spin_unlock_bh(&txq->axq_lock);
- 			break;
- 		}
- 		bf = list_first_entry(&txq->axq_q, struct ath_buf, list);
-@@ -2114,13 +2101,11 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		bf_held = NULL;
- 		if (bf->bf_stale) {
- 			bf_held = bf;
--			if (list_is_last(&bf_held->list, &txq->axq_q)) {
--				spin_unlock_bh(&txq->axq_lock);
-+			if (list_is_last(&bf_held->list, &txq->axq_q))
- 				break;
--			} else {
--				bf = list_entry(bf_held->list.next,
--						struct ath_buf, list);
--			}
-+
-+			bf = list_entry(bf_held->list.next, struct ath_buf,
-+					list);
- 		}
- 
- 		lastbf = bf->bf_lastbf;
-@@ -2128,10 +2113,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 
- 		memset(&ts, 0, sizeof(ts));
- 		status = ath9k_hw_txprocdesc(ah, ds, &ts);
--		if (status == -EINPROGRESS) {
--			spin_unlock_bh(&txq->axq_lock);
-+		if (status == -EINPROGRESS)
- 			break;
--		}
-+
- 		TX_STAT_INC(txq->axq_qnum, txprocdesc);
- 
- 		/*
-@@ -2145,42 +2129,14 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			list_cut_position(&bf_head,
- 				&txq->axq_q, lastbf->list.prev);
- 
--		txq->axq_depth--;
--		txok = !(ts.ts_status & ATH9K_TXERR_MASK);
--		txq->axq_tx_inprogress = false;
--		if (bf_held)
-+		if (bf_held) {
- 			list_del(&bf_held->list);
--
--		if (bf_is_ampdu_not_probing(bf))
--			txq->axq_ampdu_depth--;
--
--		spin_unlock_bh(&txq->axq_lock);
--
--		if (bf_held)
- 			ath_tx_return_buffer(sc, bf_held);
--
--		if (!bf_isampdu(bf)) {
--			/*
--			 * This frame is sent out as a single frame.
--			 * Use hardware retry status for this frame.
--			 */
--			if (ts.ts_status & ATH9K_TXERR_XRETRY)
--				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(sc, bf, &ts, 1, txok ? 0 : 1, txok, true);
- 		}
- 
--		if (bf_isampdu(bf))
--			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, txok,
--					     true);
--		else
--			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, txok, 0);
--
--		spin_lock_bh(&txq->axq_lock);
--
--		if (sc->sc_flags & SC_OP_TXAGGR)
--			ath_txq_schedule(sc, txq);
--		spin_unlock_bh(&txq->axq_lock);
-+		ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
- 	}
-+	spin_unlock_bh(&txq->axq_lock);
- }
- 
- static void ath_tx_complete_poll_work(struct work_struct *work)
-@@ -2237,17 +2193,17 @@ void ath_tx_tasklet(struct ath_softc *sc)
- 
- void ath_tx_edma_tasklet(struct ath_softc *sc)
- {
--	struct ath_tx_status txs;
-+	struct ath_tx_status ts;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_txq *txq;
- 	struct ath_buf *bf, *lastbf;
- 	struct list_head bf_head;
- 	int status;
--	int txok;
- 
-+	spin_lock_bh(&txq->axq_lock);
- 	for (;;) {
--		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&txs);
-+		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&ts);
- 		if (status == -EINPROGRESS)
- 			break;
- 		if (status == -EIO) {
-@@ -2257,16 +2213,16 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		}
- 
- 		/* Skip beacon completions */
--		if (txs.qid == sc->beacon.beaconq)
-+		if (ts.qid == sc->beacon.beaconq)
- 			continue;
- 
--		txq = &sc->tx.txq[txs.qid];
-+		ath_dbg(common, ATH_DBG_XMIT,
-+			"Tx status, descid=%04x\n", ts.desc_id);
- 
--		spin_lock_bh(&txq->axq_lock);
--		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
--			spin_unlock_bh(&txq->axq_lock);
--			return;
--		}
-+		txq = &sc->tx.txq[ts.qid];
-+
-+		if (list_empty(&txq->txq_fifo[txq->txq_tailidx]))
-+			break;
- 
- 		bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
- 				      struct ath_buf, list);
-@@ -2275,43 +2231,24 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		INIT_LIST_HEAD(&bf_head);
- 		list_cut_position(&bf_head, &txq->txq_fifo[txq->txq_tailidx],
- 				  &lastbf->list);
--		INCR(txq->txq_tailidx, ATH_TXFIFO_DEPTH);
--		txq->axq_depth--;
--		txq->axq_tx_inprogress = false;
--		if (bf_is_ampdu_not_probing(bf))
--			txq->axq_ampdu_depth--;
--		spin_unlock_bh(&txq->axq_lock);
- 
--		txok = !(txs.ts_status & ATH9K_TXERR_MASK);
-+		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
-+			INCR(txq->txq_tailidx, ATH_TXFIFO_DEPTH);
- 
--		if (!bf_isampdu(bf)) {
--			if (txs.ts_status & ATH9K_TXERR_XRETRY)
--				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(sc, bf, &txs, 1, txok ? 0 : 1, txok, true);
--		}
-+			if (!list_empty(&txq->axq_q)) {
-+				struct list_head bf_q;
- 
--		if (bf_isampdu(bf))
--			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &txs,
--					     txok, true);
--		else
--			ath_tx_complete_buf(sc, bf, txq, &bf_head,
--					    &txs, txok, 0);
--
--		spin_lock_bh(&txq->axq_lock);
-+				INIT_LIST_HEAD(&bf_q);
-+				txq->axq_link = NULL;
-+				list_splice_tail_init(&txq->axq_q, &bf_q);
-+				ath_tx_txqaddbuf(sc, txq, &bf_q, true);
-+			}
-+		}
- 
--		if (!list_empty(&txq->txq_fifo_pending)) {
--			INIT_LIST_HEAD(&bf_head);
--			bf = list_first_entry(&txq->txq_fifo_pending,
--					      struct ath_buf, list);
--			list_cut_position(&bf_head,
--					  &txq->txq_fifo_pending,
--					  &bf->bf_lastbf->list);
--			ath_tx_txqaddbuf(sc, txq, &bf_head);
--		} else if (sc->sc_flags & SC_OP_TXAGGR)
--			ath_txq_schedule(sc, txq);
-+		ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
- 
--		spin_unlock_bh(&txq->axq_lock);
- 	}
-+	spin_unlock_bh(&txq->axq_lock);
- }
- 
- /*****************/
--- 
-1.7.3.2
+> Also, can you test whether 38.6 works for ya - it could've been fixed in
+> the meantime. You can also test .39 which will be released any minute
+> now.
+38.6 does NOT work and compat-wireless-2011-05-11 works on kernel-2.6.36
+which is why I think it is the kernel and not the wireless code.
+> I think that should be enough for now.
+>
 
