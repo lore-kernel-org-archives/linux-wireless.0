@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968Ab1E0QH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 12:07:57 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:49415 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755307Ab1ERVnv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 17:43:51 -0400
+Received: by mail-ew0-f45.google.com with SMTP id 24so711397ewy.4
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 14:43:50 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/10] update for 2.6.41
-Date: Fri, 27 May 2011 08:40:23 -0700
-Message-Id: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180800_856912_BC71D8DC)
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	stable@kernel.org
+Subject: [PATCH] nl80211: fix check for valid SSID size in scan operations
+Date: Thu, 19 May 2011 00:43:38 +0300
+Message-Id: <1305755018-11297-1-git-send-email-coelho@ti.com> (sfid-20110518_234355_148403_358331D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add support to advertise the limits on concurrency of virtual interfaces
-We also change the log level to better represent the aggregation status
-Again, more driver cleanup works for driver split
+In both trigger_scan and sched_scan operations, we were checking for
+the SSID length before assigning the value correctly.  Since the
+memory was just kzalloc'ed, the check was always failing and SSID with
+over 32 characters were allowed to go through.
 
-Daniel Halperin (1):
-  iwlwifi: disambiguate invalid DMA index warnings
+This was causing a buffer overflow when copying the actual SSID to the
+proper place.
 
-Emmanuel Grumbach (2):
-  iwlagn: solve sparse warning
-  iwlagn: free the ICT ISR when the request_irq failed
+This bug has been there since 2.6.29-rc4.
 
-Johannes Berg (2):
-  iwlagn: fix dual-mode RXON
-  iwlagn: advertise interface combinations
+Cc: stable@kernel.org
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ net/wireless/nl80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Wey-Yi Guy (5):
-  iwlagn: send tx power command if defer cause by RXON not match
-  iwlagn: remove un-necessary tx power ops
-  iwlagn: change the logging level for aggregation enable check
-  iwlagn: change log to better represent the state of aggregation
-    process
-  iwlagn: don't advertise interface combinations on device not support
-    dualmode
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 -
- drivers/net/wireless/iwlwifi/iwl-2000.c     |    1 -
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 -
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    2 -
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   57 ++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |   10 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   98 +++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    5 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    6 +-
- 12 files changed, 149 insertions(+), 42 deletions(-)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d24f5c1..1c57036 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3412,12 +3412,12 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	i = 0;
+ 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
++			request->ssids[i].ssid_len = nla_len(attr);
+ 			if (request->ssids[i].ssid_len > IEEE80211_MAX_SSID_LEN) {
+ 				err = -EINVAL;
+ 				goto out_free;
+ 			}
+ 			memcpy(request->ssids[i].ssid, nla_data(attr), nla_len(attr));
+-			request->ssids[i].ssid_len = nla_len(attr);
+ 			i++;
+ 		}
+ 	}
+@@ -3578,6 +3578,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS],
+ 				    tmp) {
++			request->ssids[i].ssid_len = nla_len(attr);
+ 			if (request->ssids[i].ssid_len >
+ 			    IEEE80211_MAX_SSID_LEN) {
+ 				err = -EINVAL;
+@@ -3585,7 +3586,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 			}
+ 			memcpy(request->ssids[i].ssid, nla_data(attr),
+ 			       nla_len(attr));
+-			request->ssids[i].ssid_len = nla_len(attr);
+ 			i++;
+ 		}
+ 	}
+-- 
+1.7.1
 
