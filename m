@@ -1,61 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53226 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504Ab1ESLam (ORCPT
+Received: from nm28-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.149]:22171 "HELO
+	nm28-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754316Ab1ERITA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 07:30:42 -0400
-Received: by eyx24 with SMTP id 24so727778eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 04:30:41 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: pci: implement interrupts control
-Date: Thu, 19 May 2011 14:08:22 +0200
-Message-Id: <1305806902-3926-1-git-send-email-zajec5@gmail.com> (sfid-20110519_133045_783956_44B72137)
+	Wed, 18 May 2011 04:19:00 -0400
+Message-ID: <444460.90936.qm@web161614.mail.bf1.yahoo.com> (sfid-20110518_101905_700523_6EDD2436)
+Date: Wed, 18 May 2011 01:18:59 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: rt2x00: rt2800usb causing kernel panic /compat-wireless/
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, gwingerde@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A very peculiar bug.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/driver_pci.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+With compat-wireless from 16.05 a nasty bug started to manifest itself. Right around association time, the rt2800usb causes kernel panic. The system freezes and the Caps Lock and Num Lock leds on the keyboard begin to flash.
 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index e757e4e..789d68b 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -161,3 +161,26 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
- {
- 	bcma_pcicore_serdes_workaround(pc);
- }
-+
-+int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc, struct bcma_device *core,
-+			  bool enable)
-+{
-+	struct pci_dev *pdev = pc->core->bus->host_pci;
-+	u32 coremask, tmp;
-+	int err;
-+
-+	err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK, &tmp);
-+	if (err)
-+		goto out;
-+
-+	coremask = BIT(core->core_index) << 8;
-+	if (enable)
-+		tmp |= coremask;
-+	else
-+		tmp &= ~coremask;
-+
-+	err = pci_write_config_dword(pdev, BCMA_PCI_IRQMASK, tmp);
-+
-+out:
-+	return err;
-+}
--- 
-1.7.3.4
+Unfortunately there are no recoverable traces after the system failure to aid this bug report or to indicate its origin.
 
+I believe it may somehow be related to Ubuntu's network-manager. If I turn off the network-manager service, I can go into monitor mode for example, but if network-manager is running and I plug my USB dongle, it starts to associate, a second or two later the system is in complete meltdown.
+
+Nothing concrete, but a hunch is telling me this has something to do with the association mechanism of the rt2800usb. Compat-wireless from few days back exhibits no such foul play.
+
+Walter
