@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46576 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab1EBR4R (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34001 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755348Ab1ERXCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 13:56:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix missing tsf_val TLV
-Date: Mon,  2 May 2011 11:00:45 -0700
-Message-Id: <1304359245-27453-1-git-send-email-bzhao@marvell.com> (sfid-20110502_195621_013745_3BC41118)
+	Wed, 18 May 2011 19:02:24 -0400
+Subject: Re: [PATCH 1/1] nl80211: check return code for genlmsg_end
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1305555848-17609-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110516_162725_013623_B6AF7B8A)
+References: <1305555848-17609-1-git-send-email-wey-yi.w.guy@intel.com>
+	 (sfid-20110516_162725_013623_B6AF7B8A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 May 2011 16:04:58 -0700
+Message-ID: <1305759898.8827.7.camel@jlt3.sipsolutions.net> (sfid-20110519_010227_111316_826925B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mwifiex_cmd_append_tsf_tlv(), two tsf_val TLVs should be
-filled in the buffer and then sent to firmware.
+On Mon, 2011-05-16 at 07:24 -0700, Wey-Yi Guy wrote:
+> Check the return value for genlmsg_end and handle it.
 
-The missing first TLV for tsf_val is added back in this patch.
+It can never return < 0:
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/join.c |    7 ++++++-
- drivers/net/wireless/mwifiex/main.h |    2 +-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+/**
+ * nlmsg_end - Finalize a netlink message
+ * @skb: socket buffer the message is stored in
+ * @nlh: netlink message header
+ *
+ * Corrects the netlink message header to include the appeneded
+ * attributes. Only necessary if attributes have been added to
+ * the message.
+ *
+ * Returns the total data length of the skb.
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 042eb77..85fca5e 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -100,7 +100,7 @@ mwifiex_cmd_append_tsf_tlv(struct mwifiex_private *priv, u8 **buffer,
- 			   struct mwifiex_bssdescriptor *bss_desc)
- {
- 	struct mwifiex_ie_types_tsf_timestamp tsf_tlv;
--	long long tsf_val;
-+	__le64 tsf_val;
- 
- 	/* Null Checks */
- 	if (buffer == NULL)
-@@ -116,6 +116,11 @@ mwifiex_cmd_append_tsf_tlv(struct mwifiex_private *priv, u8 **buffer,
- 	memcpy(*buffer, &tsf_tlv, sizeof(tsf_tlv.header));
- 	*buffer += sizeof(tsf_tlv.header);
- 
-+	/* TSF at the time when beacon/probe_response was received */
-+	tsf_val = cpu_to_le64(bss_desc->network_tsf);
-+	memcpy(*buffer, &tsf_val, sizeof(tsf_val));
-+	*buffer += sizeof(tsf_val);
-+
- 	memcpy(&tsf_val, bss_desc->time_stamp, sizeof(tsf_val));
- 
- 	dev_dbg(priv->adapter->dev, "info: %s: TSF offset calc: %016llx - "
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 1b50303..5043fcd 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -280,7 +280,7 @@ struct mwifiex_bssdescriptor {
- 	 * BAND_A(0X04): 'a' band
- 	 */
- 	u16 bss_band;
--	long long network_tsf;
-+	u64 network_tsf;
- 	u8 time_stamp[8];
- 	union ieee_types_phy_param_set phy_param_set;
- 	union ieee_types_ss_param_set ss_param_set;
--- 
-1.7.0.2
+
+johannes
 
