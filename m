@@ -1,54 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37810 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932428Ab1EFS2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 14:28:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/7] iwlagn: remove unused variable
-Date: Fri,  6 May 2011 11:04:37 -0700
-Message-Id: <1304705080-29349-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110506_202855_819598_6E8ADF12)
-In-Reply-To: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1304705080-29349-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38657 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757142Ab1EROqn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 10:46:43 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so1800768wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 07:46:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DD3DA7F.7020809@lwfinger.net>
+References: <BANLkTi=3i6LEYFivGYB0OZDKmjXxeo+yrQ@mail.gmail.com>
+	<294183.47547.qm@web161601.mail.bf1.yahoo.com>
+	<BANLkTimwBB35HhOBjOq=OyhrVWq9MOZ3tA@mail.gmail.com>
+	<4DD3C0B9.5070400@gmail.com>
+	<BANLkTinj6CyWPipu0BuZtrug6ajvqedC7Q@mail.gmail.com>
+	<4DD3DA7F.7020809@lwfinger.net>
+Date: Wed, 18 May 2011 20:16:42 +0530
+Message-ID: <BANLkTik23CDQ531gb3LN9YR1Vh_NPf2ruQ@mail.gmail.com> (sfid-20110518_164647_469138_4E1A991A)
+Subject: Re: rt2x00: rt2800usb causing kernel panic /compat-wireless/
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Walter Goldens <goldenstranger@yahoo.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Mark Huijgen <mark@huijgen.tk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, May 18, 2011 at 8:11 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/18/2011 08:04 AM, Mohammed Shafi wrote:
+>>
+>> On Wed, May 18, 2011 at 6:21 PM, Gertjan van Wingerde
+>> <gwingerde@gmail.com>  wrote:
+>>>
+>>> On 05/18/11 14:41, Mohammed Shafi wrote:
+>>>>
+>>>> On Wed, May 18, 2011 at 5:26 PM, Walter Goldens
+>>>> <goldenstranger@yahoo.com>  wrote:
+>>>>>>>
+>>>>>>> A very peculiar bug.
+>>>>>>>
+>>>>>>> With compat-wireless from 16.05 a nasty bug started to
+>>>>>>
+>>>>>> manifest itself. Right around association time, the
+>>>>>> rt2800usb causes kernel panic. The system freezes and the
+>>>>>> Caps Lock and Num Lock leds on the keyboard begin to flash.
+>>>>>>
+>>>>>> also ath9k, iwlagn.
+>>>>>>
+>>>>>>>
+>>>>>>> Unfortunately there are no recoverable traces after
+>>>>>>
+>>>>>> the system failure to aid this bug report or to indicate its
+>>>>>> origin.
+>>>>>>>
+>>>>>>> I believe it may somehow be related to Ubuntu's
+>>>>>>
+>>>>>> network-manager. If I turn off the network-manager service,
+>>>>>> I can go into monitor mode for example, but if
+>>>>>> network-manager is running and I plug my USB dongle, it
+>>>>>> starts to associate, a second or two later the system is in
+>>>>>> complete meltdown.
+>>>>>>
+>>>>>> same thing, monitor mode worked perfectly fine.
+>>>>>>
+>>>>>>>
+>>>>>>> Nothing concrete, but a hunch is telling me this has
+>>>>>>
+>>>>>> something to do with the association mechanism of the
+>>>>>> rt2800usb. Compat-wireless from few days back exhibits no
+>>>>>> such foul play.
+>>>>>>
+>>>>>> yes just right at the association complete freeze.
+>>>>>>
+>>>>>
+>>>>> That's strange. I wonder what's the connection with this bug and
+>>>>> network-manager. Because when I manually tried to associate, dmesg reported
+>>>>> the association attempt timed out.
+>>>>
+>>>> no even when we use iw dev connect command we can see the panic.
+>>>
+>>> Yeah, I've seen this freeze as well using one of the later
+>>> compat-wireless packages using just iw and wpa_supplicant to bring up the
+>>> card. This is on all sorts of rt2x00 supported devices.
+>>>
+>>> However, I don't believe this to be an rt2x00-specific bug, as exactly
+>>> the same rt2x00 sources inside a compat-wireless-2.6.39rc7 package do not
+>>> produce the freeze.
+>>>
+>>>> some expert suspected that there is a chance of kfree_rcu in
+>>>> compat-wireless may have caused the problem
+>>>>
+>>>
+>>> That's where my suspicion is as well, but I didn't have the time to
+>>> further investigate. Since my focus was on rt2x00 I used the
+>>> compat-wireless-2.6.39rc7 package to test my patches. I only did a quick
+>>> check, and the kfree_rcu compatibility fix that was done in compat-wireless
+>>> did seem to match the kfree_rcu code is present in linux-next, but maybe
+>>> there is an odd side-effect.
+>>
+>> I could not exactly remember this panic came just after kfree_rcu
+>> backported..
+>
+> This problem also occurs with rtl8192se from compat-wireless. When it was
+> reported to me, a photo of the console log was included (attached). The
+> crash is a NULL pointer in rcu_do_batch.clone.19 (I think - the photo
+> quality is minimal.).
 
-The variable 'len' here is set but never used.
+thanks!, same type of call trace which I had also obtained, hopefully there in
+ http://pastebin.com/CZrSZrme
+ http://pastebin.com/gwZJGDG4
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 608d7a1..517d104 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -442,7 +442,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	struct iwl_cmd_meta *out_meta;
- 	dma_addr_t phys_addr;
- 	unsigned long flags;
--	int len;
- 	u32 idx;
- 	u16 fix_size;
- 	bool is_ct_kill = false;
-@@ -518,9 +517,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 			INDEX_TO_SEQ(q->write_ptr));
- 	if (cmd->flags & CMD_SIZE_HUGE)
- 		out_cmd->hdr.sequence |= SEQ_HUGE_FRAME;
--	len = sizeof(struct iwl_device_cmd);
--	if (idx == TFD_CMD_SLOTS)
--		len = IWL_MAX_CMD_SIZE;
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	switch (out_cmd->hdr.cmd) {
+
+>
+> Larry
+>
+>
+>
+>
+
+
+
 -- 
-1.7.0.4
-
+shafi
