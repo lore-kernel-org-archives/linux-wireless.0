@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47243 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756994Ab1EaQR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 12:17:27 -0400
-Received: from public by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <public@plane.gmane.org>)
-	id 1QRRdE-0004Zq-Nk
-	for linux-wireless@vger.kernel.org; Tue, 31 May 2011 18:17:24 +0200
-Message-ID: <4DE51487.1000808@lwfinger.net> (sfid-20110531_181731_156802_E2276B9C)
-Date: Tue, 31 May 2011 11:17:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Andreas Schwab <schwab@linux-m68k.org>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?=
-	<public-zajec5-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>,
-	=?UTF-8?B?TWljaGE=?= =?UTF-8?B?ZWwgQsO8c2No?=
-	<public-mb-fseUSCV1ubazQB+pC5nmwQ@plane.gmane.org>,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org,
-	"John W. Linville"
-	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@plane.gmane.org>,
-	public-b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@plane.gmane.org,
-	linuxppc-dev@ozlabs.org
-Subject: Re: [PATCH] ssb: pci: implement serdes workaround
-References: <1301657212-12126-1-git-send-email-zajec5@gmail.com>	<m2vcwr9pn8.fsf@linux-m68k.org> <4DE505C6.8020601@lwfinger.net> <m3wrh6hnmn.fsf@linux-m68k.org>
-In-Reply-To: <m3wrh6hnmn.fsf@linux-m68k.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail4.comsite.net ([205.238.176.238]:20656 "EHLO
+	mail4.comsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756584Ab1ERPzB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 11:55:01 -0400
+To: Stevie Trujillo <stevie.trujillo@gmail.com>
+In-Reply-To: <201105181637.46164.stevie.trujillo@gmail.com>
+References: <201105181637.46164.stevie.trujillo@gmail.com>
+From: Milton Miller <miltonm@bga.com>
+Subject: Re: How to get backtrace? modprobe -r iwlagn; modprobe iwlagn kills kernel
+Cc: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>
+Date: Wed, 18 May 2011 10:55:01 -0500
+Message-ID: <1305734101_6569@mail4.comsite.net> (sfid-20110518_175530_903425_2DA472CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed May 18 2011 about 10:37:54 EST, Stevie Trujillo wrote:
+> I'm having some problem getting a backtrace. When I do "modprobe -r
+> iwlagn; modprobe iwlagn" (2.6.38.6 with Intel-1030N) the kernel crashes
+> (sometimes I need to try 2 or 3 times, and sometimes the modprobe -r
+> is the one that crashes).
+> 
+> This spams my monitor with several oops/panics before it finally
+> dies. I can only see bottom of the last one, which probably isn't
+> very meaningful.  I tried loading netconsole, but I only get one or
+> two lines before it stops sending/printing.
+> 
+> I then tried kexec+crashkernel, but I only managed to get a backtrace
+> for the last panic (which I think is just a result of memory corruption
+> or something).  Finally I tried compiling ramoops into my kernel,
+> but it didn't want to load because of "No such device".
 
+For the kexec+crashkernel, try to retrieve the kernel log buffer:
 
-On 05/31/2011 10:54 AM, Andreas Schwab wrote:
-> Larry Finger<Larry.Finger@lwfinger.net>  writes:
->
->>  From the traceback, it must be the serdes_pll_device read that failed.
->
-> Why not ssb_pcicore_polarity_workaround (note r4 == 0x134)?
+There are some macros available, but basically log_buf is a pointer
+to a buffer of length log_buf_len initialized to __log_buf (but can
+be expanded via the command line or sysctl, in). log_end is the
+end of the buffer.  If you haven't wrapped then just print log_end
+characters.
 
-Mainly because the last two steps in the traceback are
+Also consider setting /proc/sys/kernel/panic_on_oops to 1 to
+concentrate on the first one.  It won't help getting the oops to your
+syslog but maybe it will keep it on the screen.
 
-[c2ca5c40] [f2146244] ssb_pcie_read+0x4c/0x54 [ssb]
-[c2ca5c50] [f2146440] ssb_pcicore_serdes_workaround+0x1c/0x170 [ssb]
-
-Larry
-
-
-
-
+Hope this helps,
+milton
