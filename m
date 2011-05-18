@@ -1,31 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:55920 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932453Ab1EXPyL (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44920 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933500Ab1ERTFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 11:54:11 -0400
-Subject: Re: [iwl4965] Microcode SW error detected
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110524070941.GA2189@redhat.com>
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-	 <20110524070941.GA2189@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 May 2011 17:54:05 +0200
-Message-ID: <1306252445.12267.5.camel@x61.thuisdomein> (sfid-20110524_175414_916718_FD37A43C)
-Mime-Version: 1.0
+	Wed, 18 May 2011 15:05:01 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4AC73540054
+	for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 15:10:58 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110518190500.0573640EC3@repository3.orbit-lab.org> (sfid-20110518_210505_368327_B806C1DD)
+Date: Wed, 18 May 2011 15:04:59 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-24 at 09:09 +0200, Stanislaw Gruszka wrote:
-> Does it also happen on 2.6.39-rc1 ?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 65f200d...6896821 akpm-end   -> origin/akpm-end  (forced update)
+   df8d06a..c1d10d1  akpm-start -> origin/akpm-start
+   9e8a885..55b972e  history    -> origin/history
+ + 9e41cd5...bff5277 master     -> origin/master  (forced update)
+   df8d06a..c1d10d1  stable     -> origin/stable
+ * [new tag]         next-20110518 -> next-20110518
 
-My logs do not go back anymore to the (short) period I was actually
-running 2.6.39-rc1. Is this important enough for you that I should
-reinstall 2.6.39-rc1 and try to see whether I can reproduce this error
-with that release candidate?
+compat-wireless code metrics
 
-
-Paul Bolle
-
+    821979 - Total upstream lines of code being pulled
