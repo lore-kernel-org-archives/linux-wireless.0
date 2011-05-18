@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:56473 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522Ab1E3Xs3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33298 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab1ERVAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 19:48:29 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 15so1804023pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 16:48:28 -0700 (PDT)
-Message-ID: <4DE42CC7.9000905@ring3k.org> (sfid-20110531_014831_519327_CA86E9A9)
-Date: Tue, 31 May 2011 08:48:23 +0900
-From: Mike McCormack <mikem@ring3k.org>
-MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/8] rtlwifi: Synchronize IRQ after disabling it
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 May 2011 17:00:34 -0400
+Subject: Re: [PATCH v4] mac80211_hwsim driver support userspace frame tx/rx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org, j@w1.fi,
+	Javier Lopez <jlopex@gmail.com>
+In-Reply-To: <BANLkTi=r4pVifQ_6X7pARvkUWVGAfMgmHg@mail.gmail.com> (sfid-20110518_020929_899832_A1C56A45)
+References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
+	 <1305149577-2636-1-git-send-email-jlopex@gmail.com>
+	 <BANLkTi=r4pVifQ_6X7pARvkUWVGAfMgmHg@mail.gmail.com>
+	 (sfid-20110518_020929_899832_A1C56A45)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 May 2011 22:58:26 +0200
+Message-ID: <1305752306.8090.0.camel@jlt3.sipsolutions.net> (sfid-20110518_230038_060197_055782E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This make sure any IRQ handlers running on other CPUs complete.
+On Tue, 2011-05-17 at 17:09 -0700, Javier Cardona wrote:
+> John,
+> 
+> We've confirmed that this works as documented and makes hwsim very
+> useful for testing the wireless stack over lossy channels.  If no one
+> has major objections, can you consider it for inclusion?
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I am just reading through the patch now but I don't think I'll get to it
+today, would you mind waiting a few days? I haven't been able to look
+earlier as I was travelling (and am in Portland, OR now)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 4a56138..87b8a79 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1196,6 +1196,7 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
- 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
- 	rtlpci->irq_enabled = false;
-+	synchronize_irq(rtlpci->pdev->irq);
- }
- 
- static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
--- 
-1.7.4.1
+johannes
 
 
