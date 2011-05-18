@@ -1,66 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:34711 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758266Ab1ENPqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 11:46:32 -0400
-Date: Sat, 14 May 2011 08:46:36 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 02/32] staging: brcm80211: new Kconfig item to enable IO
- reordering fix
-Message-ID: <20110514154636.GA25783@kroah.com> (sfid-20110514_174645_409913_84FB0F7A)
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
- <1305280792-9475-2-git-send-email-arend@broadcom.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:33255 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933455Ab1ERS0t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 14:26:49 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so526998ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 11:26:49 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 6/7] rt2x00: Queue index locks don't have to disable IRQs.
+Date: Wed, 18 May 2011 20:25:56 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201105182022.20341.IvDoorn@gmail.com> <201105182023.25912.IvDoorn@gmail.com> <201105182023.47984.IvDoorn@gmail.com>
+In-Reply-To: <201105182023.47984.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1305280792-9475-2-git-send-email-arend@broadcom.com>
+Message-Id: <201105182025.56724.IvDoorn@gmail.com> (sfid-20110518_202653_764899_DDC04BA4)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 11:59:22AM +0200, Arend van Spriel wrote:
-> From: Roland Vossen <rvossen@broadcom.com>
-> 
-> bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
-> transactions. As a fix, a read after write is performed on certain places
-> in the code. Older chips and the newer 5357 family don't require this fix.
-> 
-> Cc: devel@linuxdriverproject.org
-> Cc: linux-wireless@vger.kernel.org
-> Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-> Reviewed-by: Brett Rudley <brudley@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  drivers/staging/brcm80211/Kconfig                  |    8 ++++++++
->  .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 ++--
->  drivers/staging/brcm80211/include/bcmutils.h       |   11 +++++++++++
->  3 files changed, 21 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
-> index f4cf9b2..a11ffc7 100644
-> --- a/drivers/staging/brcm80211/Kconfig
-> +++ b/drivers/staging/brcm80211/Kconfig
-> @@ -36,3 +36,11 @@ config BRCMDBG
->  	depends on BRCMSMAC || BRCMFMAC
->  	---help---
->  	  Selecting this enables additional code for debug purposes.
-> +
-> +config BRCM_FIX_IO_ORDER
-> +	bool "Broadcom I/O order fix"
-> +	default n
-> +	depends on BRCMSMAC
-> +	---help---
-> +	  Select this for for platforms running on bcm4706, 4716, 4717 or 4718.
-> +	  It resolves an I/O issue with the PCIe core used in these chips.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-No, don't make a new kconfig option for something that everyone has to
-enable as they don't know what they have on their system (think
-universal kernels built by distros.)
+The queue index locks are no longer used in interrupt context due to the
+introduction of tasklets and workqueues. Therefore we can use a lighter
+variant of the spinlocks.
 
-Do this check dynamically, depending on the chip the driver is running
-on, don't rely on a user to know what to do here.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |    5 ++---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   20 ++++++++------------
+ 2 files changed, 10 insertions(+), 15 deletions(-)
 
-So I'm not going to accept this patch, sorry.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 78787fc..8e417de 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -327,7 +327,6 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
+ {
+ 	struct rt2x00debug_intf *intf = file->private_data;
+ 	struct data_queue *queue;
+-	unsigned long irqflags;
+ 	unsigned int lines = 1 + intf->rt2x00dev->data_queues;
+ 	size_t size;
+ 	char *data;
+@@ -344,7 +343,7 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
+ 	    sprintf(data, "qid\tflags\t\tcount\tlimit\tlength\tindex\tdma done\tdone\n");
+ 
+ 	queue_for_each(intf->rt2x00dev, queue) {
+-		spin_lock_irqsave(&queue->index_lock, irqflags);
++		spin_lock_bh(&queue->index_lock);
+ 
+ 		temp += sprintf(temp, "%d\t0x%.8x\t%d\t%d\t%d\t%d\t%d\t\t%d\n",
+ 				queue->qid, (unsigned int)queue->flags,
+@@ -353,7 +352,7 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
+ 				queue->index[Q_INDEX_DMA_DONE],
+ 				queue->index[Q_INDEX_DONE]);
+ 
+-		spin_unlock_irqrestore(&queue->index_lock, irqflags);
++		spin_unlock_bh(&queue->index_lock);
+ 	}
+ 
+ 	size = strlen(data);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index f1e1381..e2e1bf6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -735,7 +735,6 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 				bool (*fn)(struct queue_entry *entry,
+ 					   void *data))
+ {
+-	unsigned long irqflags;
+ 	unsigned int index_start;
+ 	unsigned int index_end;
+ 	unsigned int i;
+@@ -753,10 +752,10 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
+ 	 * it should not be kicked during this run, since it
+ 	 * is part of another TX operation.
+ 	 */
+-	spin_lock_irqsave(&queue->index_lock, irqflags);
++	spin_lock_bh(&queue->index_lock);
+ 	index_start = queue->index[start];
+ 	index_end = queue->index[end];
+-	spin_unlock_irqrestore(&queue->index_lock, irqflags);
++	spin_unlock_bh(&queue->index_lock);
+ 
+ 	/*
+ 	 * Start from the TX done pointer, this guarentees that we will
+@@ -787,7 +786,6 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+ 					  enum queue_index index)
+ {
+ 	struct queue_entry *entry;
+-	unsigned long irqflags;
+ 
+ 	if (unlikely(index >= Q_INDEX_MAX)) {
+ 		ERROR(queue->rt2x00dev,
+@@ -795,11 +793,11 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+ 		return NULL;
+ 	}
+ 
+-	spin_lock_irqsave(&queue->index_lock, irqflags);
++	spin_lock_bh(&queue->index_lock);
+ 
+ 	entry = &queue->entries[queue->index[index]];
+ 
+-	spin_unlock_irqrestore(&queue->index_lock, irqflags);
++	spin_unlock_bh(&queue->index_lock);
+ 
+ 	return entry;
+ }
+@@ -808,7 +806,6 @@ EXPORT_SYMBOL_GPL(rt2x00queue_get_entry);
+ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+ {
+ 	struct data_queue *queue = entry->queue;
+-	unsigned long irqflags;
+ 
+ 	if (unlikely(index >= Q_INDEX_MAX)) {
+ 		ERROR(queue->rt2x00dev,
+@@ -816,7 +813,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+ 		return;
+ 	}
+ 
+-	spin_lock_irqsave(&queue->index_lock, irqflags);
++	spin_lock_bh(&queue->index_lock);
+ 
+ 	queue->index[index]++;
+ 	if (queue->index[index] >= queue->limit)
+@@ -831,7 +828,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
+ 		queue->count++;
+ 	}
+ 
+-	spin_unlock_irqrestore(&queue->index_lock, irqflags);
++	spin_unlock_bh(&queue->index_lock);
+ }
+ 
+ void rt2x00queue_pause_queue(struct data_queue *queue)
+@@ -1031,10 +1028,9 @@ EXPORT_SYMBOL_GPL(rt2x00queue_flush_queues);
+ 
+ static void rt2x00queue_reset(struct data_queue *queue)
+ {
+-	unsigned long irqflags;
+ 	unsigned int i;
+ 
+-	spin_lock_irqsave(&queue->index_lock, irqflags);
++	spin_lock_bh(&queue->index_lock);
+ 
+ 	queue->count = 0;
+ 	queue->length = 0;
+@@ -1042,7 +1038,7 @@ static void rt2x00queue_reset(struct data_queue *queue)
+ 	for (i = 0; i < Q_INDEX_MAX; i++)
+ 		queue->index[i] = 0;
+ 
+-	spin_unlock_irqrestore(&queue->index_lock, irqflags);
++	spin_unlock_bh(&queue->index_lock);
+ }
+ 
+ void rt2x00queue_init_queues(struct rt2x00_dev *rt2x00dev)
+-- 
+1.7.2.3
 
-greg k-h
