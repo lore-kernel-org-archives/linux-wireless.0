@@ -1,73 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vostochny.stro.at ([78.47.22.85]:58107 "EHLO vostochny.stro.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756661Ab1EKQAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:00:37 -0400
-Date: Wed, 11 May 2011 14:23:30 +0000
-From: maximilian attems <max@stro.at>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Geoff Simmons <gsimmons@gsimmons.org>, 596626@bugs.debian.org
-Subject: [gsimmons@gsimmons.org: Bug#596626: Please support Linksys
- WUSB600N v2 WiFi USB stick]
-Message-ID: <20110511142330.GF4387@vostochny.stro.at> (sfid-20110511_180110_471773_F9E8FD42)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41097 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010Ab1ERWa6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 18:30:58 -0400
+Received: by qwk3 with SMTP id 3so1069546qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 15:30:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DD3AE1D.8000109@broadcom.com>
+References: <1305716294-5753-1-git-send-email-zajec5@gmail.com>
+	<4DD3A1CD.3040304@broadcom.com>
+	<BANLkTinW=kfg2ONuA5NzmNbSAHUbUVOiRg@mail.gmail.com>
+	<4DD3AE1D.8000109@broadcom.com>
+Date: Thu, 19 May 2011 00:30:57 +0200
+Message-ID: <BANLkTimyddd9G3bSbQNbENg+Mea43C3TTQ@mail.gmail.com> (sfid-20110519_003101_503439_63419ECC)
+Subject: Re: [PATCH] bcma: pci: implement enabling interrupts
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-please have a look at http://bugs.debian.org/596626
-
-thanks.
-
--- 
-maks
-
------ Forwarded message from Geoff Simmons <gsimmons@gsimmons.org> -----
-
-Date: Wed, 11 May 2011 20:51:49 +1000
-From: Geoff Simmons <gsimmons@gsimmons.org>
-To: maximilian attems <max@stro.at>, 596626@bugs.debian.org
-Subject: Bug#596626: Please support Linksys WUSB600N v2 WiFi USB stick
-X-Original-To: maks@stro.at
-X-Original-To: lists-debian-kernel@liszt.debian.org
-
-On Wed, May 11, 2011 at 10:12:55AM +0000, maximilian attems wrote:
-> On Tue, May 10, 2011 at 11:24:34PM +1000, Geoff Simmons wrote:
-> > Recognition of this device (USB ID 1737:0079) by the rt2800usb driver
-> > currently requires RT2800USB_UNKNOWN to be enabled.
+W dniu 18 maja 2011 13:31 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 05/18/2011 01:26 PM, Rafał Miłecki wrote:
+>>
+>> W dniu 18 maja 2011 12:39 użytkownik Arend van Spriel
+>> <arend@broadcom.com>  napisał:
+>>>
+>>> On 05/18/2011 12:58 PM, Rafał Miłecki wrote:
+>>>>
+>>>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+>>>> ---
+>>>>  drivers/bcma/driver_pci.c |   18 ++++++++++++++++++
+>>>>  1 files changed, 18 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+>>>> index e757e4e..879fe1d 100644
+>>>> --- a/drivers/bcma/driver_pci.c
+>>>> +++ b/drivers/bcma/driver_pci.c
+>>>> @@ -161,3 +161,21 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
+>>>>  {
+>>>>        bcma_pcicore_serdes_workaround(pc);
+>>>>  }
+>>>> +
+>>>> +int bcma_core_pci_irq_enable(struct bcma_drv_pci *pc, struct
+>>>> bcma_device
+>>>> *core)
+>>>> +{
+>>>> +       struct pci_dev *pdev = pc->core->bus->host_pci;
+>>>> +       u32 coremask, tmp;
+>>>> +       int err;
+>>>> +
+>>>> +       coremask = BIT(core->core_index);
+>>>> +
+>>>> +       err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK,&tmp);
+>>>> +       if (err)
+>>>> +               goto out;
+>>>> +       tmp |= coremask<<    8;
+>>>> +       err = pci_write_config_dword(pdev, BCMA_PCI_IRQMASK, tmp);
+>>>> +
+>>>> +out:
+>>>> +       return err;
+>>>> +}
+>>>
+>>> Hi Rafał,
+>>>
+>>> Do you intend to have a disable as well?
+>>
+>> Sure. I just didn't test disabling function yet, that's why I didn't
+>> publish it.
 >
-> strange it is listed in the dev table
-> { USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
-> and even since long it seems:
->  git name-rev 5e312589
-> 5e312589 tags/v2.6.33-rc3~44^2^2~15
+> Thanks,
+>
+> I was just wondering whether there would be a yang for this yin ;-)
 
-It is listed, but only incorporated in rt2800usb_device_table[] if
-RT2800USB_UNKNOWN is set:
+Actually, we could use the same function to enable and disable
+interrupts. Only one additional argument and one condition is needed.
 
-#ifdef CONFIG_RT2800USB_UNKNOWN
-	/*
-	 * Unclear what kind of devices these are (they aren't supported by the
-	 * vendor linux driver).
-	 */
-[...]
-	/* Linksys */
-[...]
-	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
-
-As mentioned by Jan, the device contains a RT3572 chipset.  Its entry
-could moved into the section for known RT35XX devices (i.e. "#ifdef
-CONFIG_RT2800USB_RT35XX") as an alternative.
-
-Geoff
-
-
+John: can you drop this patch? In case one function will not be an
+option, I'll just resend it.
 
 -- 
-To UNSUBSCRIBE, email to debian-kernel-REQUEST@lists.debian.org
-with a subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.org
-Archive: http://lists.debian.org/20110511105149.GC2664@chmmr.gsimmons.org
-
-
------ End forwarded message -----
+Rafał
