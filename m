@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44639 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897Ab1EDTmt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 15:42:49 -0400
-Received: by eyx24 with SMTP id 24so461591eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 12:42:48 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/2] rt2x00: Fix transfer speed regression for USB hardware
-Date: Wed, 4 May 2011 21:42:05 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201105042141.37135.IvDoorn@gmail.com>
-In-Reply-To: <201105042141.37135.IvDoorn@gmail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:43305 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752149Ab1ERVR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 17:17:27 -0400
+Date: Wed, 18 May 2011 23:17:23 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: James <bjlockie@lockie.ca>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: help to bisect
+Message-ID: <20110518211723.GA4313@liondog.tnic> (sfid-20110518_231752_586462_08269A9F)
+References: <4DD31264.4070704@lockie.ca>
+ <20110518072245.GB17608@liondog.tnic>
+ <4DD42F10.90602@lockie.ca>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201105042142.06091.IvDoorn@gmail.com> (sfid-20110504_214252_090290_695C7847)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4DD42F10.90602@lockie.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+First of all, please hit "reply-to-all" next time so that all recipients
+can receive your mail and not find it by chance when looking thru the
+new lkml messages.
 
-Patch:
-  rt2x00: Make rt2x00_queue_entry_for_each more flexible
-  commit: 10e11568ca8b8a15f7478f6a4ceebabcbdba1018
+On Wed, May 18, 2011 at 04:41:52PM -0400, James wrote:
+> Here is what I did:
+> 
+> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+> $ cd linux-2.6.37.y
+> $ git checkout v2.6.36
+> build and boot kernel
 
-introduced a severe regression on the throughput
-for USB hardware. It turns out that the exiting of
-the rt2x00queue_for_each_entry() was done too early.
+what does that mean? Is .36 ok?
 
-The exact cause for this regression is unknown,
-but by disabling the premature exiting of the loop
-seems to resolve the issue.
+> $ cd linux-2.6.37.y
+> $ git bisect start
+> $ git bisect good v2.6.36
+> $ git bisect bad v2.6.37.6
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Reported-by: Yasushi SHOJI <yashi@atmark-techno.com>
-Reported-by: Balint Viragh <bviragh@dension.com>
-Tested-by: Balint Viragh <bviragh@dension.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Also, is .37.6 bad?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index e027ebd..dc6b662 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -298,7 +298,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void* data)
- 
- 	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags) ||
- 	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
--		return true;
-+		return false;
- 
- 	/*
- 	 * USB devices cannot blindly pass the skb->len as the
-@@ -392,7 +392,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void* data)
- 
- 	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
- 	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
--		return true;
-+		return false;
- 
- 	rt2x00lib_dmastart(entry);
- 
-@@ -447,7 +447,7 @@ static bool rt2x00usb_flush_entry(struct queue_entry *entry, void* data)
- 	struct queue_entry_priv_usb_bcn *bcn_priv = entry->priv_data;
- 
- 	if (!test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
--		return true;
-+		return false;
- 
- 	usb_kill_urb(entry_priv->urb);
- 
+> 
+> build and boot kernel
+> git bisect good|bad
+> repeat
+> 
+> 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+
+Which is a merge commit and it means that you most likely made a mistake
+during bisection.
+
+What is actually the problem you're experiencing with .37.6?
+
+..
+
+> How do I find out what change causes the problem?
+> The problem causes my wireless card not to work.
+
+Ah, here it is.
+
+> Other people have similar cards that do work so the problem seems
+> isolated to my hardware but kernel-2.6.36 works so I don't think my
+> hardware is faulty.
+
+Which card is that? (adding linux-wireless)
+
+Please, describe in a very detailed way how your problem incarnates
+itself: dmesg, error messages, what exactly do you do to trigger it?
+
+Also, can you test whether 38.6 works for ya - it could've been fixed in
+the meantime. You can also test .39 which will be released any minute
+now.
+
+I think that should be enough for now.
+
 -- 
-1.7.2.3
-
+Regards/Gruss,
+    Boris.
