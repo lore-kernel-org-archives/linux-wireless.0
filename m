@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44618 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756275Ab1EKP5v (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55136 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933012Ab1ERMls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 11:57:51 -0400
-Received: by fxm17 with SMTP id 17so472179fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 08:57:50 -0700 (PDT)
-Message-ID: <4DCA672E.2080906@googlemail.com> (sfid-20110511_180438_053645_F0E9AAAD)
-Date: Wed, 11 May 2011 12:38:38 +0200
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
+	Wed, 18 May 2011 08:41:48 -0400
+Received: by wwa36 with SMTP id 36so1667531wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 05:41:47 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [ath5k] kernel panic while using compat-wireless-2.6.38.2-2
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <294183.47547.qm@web161601.mail.bf1.yahoo.com>
+References: <BANLkTi=3i6LEYFivGYB0OZDKmjXxeo+yrQ@mail.gmail.com>
+	<294183.47547.qm@web161601.mail.bf1.yahoo.com>
+Date: Wed, 18 May 2011 18:11:46 +0530
+Message-ID: <BANLkTimwBB35HhOBjOq=OyhrVWq9MOZ3tA@mail.gmail.com> (sfid-20110518_144151_361138_9FDD6133)
+Subject: Re: rt2x00: rt2800usb causing kernel panic /compat-wireless/
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	gwingerde@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello linux-wireless list!
+On Wed, May 18, 2011 at 5:26 PM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+>> > A very peculiar bug.
+>> >
+>> > With compat-wireless from 16.05 a nasty bug started to
+>> manifest itself. Right around association time, the
+>> rt2800usb causes kernel panic. The system freezes and the
+>> Caps Lock and Num Lock leds on the keyboard begin to flash.
+>>
+>> also ath9k, iwlagn.
+>>
+>> >
+>> > Unfortunately there are no recoverable traces after
+>> the system failure to aid this bug report or to indicate its
+>> origin.
+>> >
+>> > I believe it may somehow be related to Ubuntu's
+>> network-manager. If I turn off the network-manager service,
+>> I can go into monitor mode for example, but if
+>> network-manager is running and I plug my USB dongle, it
+>> starts to associate, a second or two later the system is in
+>> complete meltdown.
+>>
+>> same thing, monitor mode worked perfectly fine.
+>>
+>> >
+>> > Nothing concrete, but a hunch is telling me this has
+>> something to do with the association mechanism of the
+>> rt2800usb. Compat-wireless from few days back exhibits no
+>> such foul play.
+>>
+>> yes just right at the association complete freeze.
+>>
+>
+> That's strange. I wonder what's the connection with this bug and network-manager. Because when I manually tried to associate, dmesg reported the association attempt timed out.
 
-I am using a Sparklan WPEA-166G/W with Chipset AR5BXB63 Rev. 11 (it's a 
-MiniPCI-card) in an embedded X86-System (Pipal 2140U, Intel ATOM 
-processor). It's running voyage-0.6.5, which essentially is a Debian 
-Lenny System.
+no even when we use iw dev connect command we can see the panic. some
+expert suspected that there is a chance of kfree_rcu in
+compat-wireless may have caused the problem
 
-I am running kernel 2.6.33.9-rt31:
-
-demo00000001:~# uname -a
-Linux SSB_wlan-demo00000001 2.6.33.9-rt31-atom-ssb #1 PREEMPT RT Mon May 
-9 18:25:28 CEST 2011 i686 GNU/Linux
-
-I installed the compat-wireless drivers version 2.6.38.2-2 ( 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38.2-2.tar.bz2 
-) and installed everything I need according to this webpage: 
-http://acx100.erley.org/stable.html
-
-Once issueing modprobe ath5k, putting the interface up and waiting for 
-~30sec, I get a kernel panic. Could this be a bug or am I doing 
-something wrong?
-
-The error only occurrs after putting the interface up. If I don't do so, 
-the error won't be there.
-
-Here is some output from the machine:
-
-demo00000001:~# modprobe ath5k && ifconfig wlan0 up
-[   48.363894] Compat-wireless backport release: compat-wireless-2.6.38.2-2
-[   48.372351] Backport based on linux-2.6-allstable.git v2.6.38.2
-[   48.411748] cfg80211: Calling CRDA to update world regulatory domain
-[   48.517969] ath5k 0000:09:00.0: using bridge 0000:00:1c.2 INT A to 
-get IRQ 17
-[   48.526919] ath5k 0000:09:00.0: PCI->APIC IRQ transform: INT A -> IRQ 17
-[   48.534315] ath5k 0000:09:00.0: registered as 'phy0'
-[   49.162919] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-demo00000001:~# [   77.953752] ------------[ cut here ]------------
-[   77.958711] WARNING: at 
-/home/dborgmann/downloads/compat-wireless-2.6.38.2-2/net/mac80211/rx.c:2827 
-ieee80211_rx+0x38/0x6fe [mac80211]()
-[   77.971856] Hardware name: Luna Pier CRB
-[   77.976049] Modules linked in: [last unloaded: scsi_wait_scan]
-[   77.982354] Pid: 9, comm: sirq-tasklet/0 Not tainted 
-2.6.33.9-rt31-atom-ssb #1
-[   77.990090] Call Trace:
-[   77.992732]  [<c011852f>] warn_slowpath_common+0x65/0x7c
-[   77.998419]  [<e0024ad1>] ? ieee80211_rx+0x38/0x6fe [mac80211]
-[   78.004672]  [<c0118553>] warn_slowpath_null+0xd/0x10
-[   78.010119]  [<e0024ad1>] ieee80211_rx+0x38/0x6fe [mac80211]
-[   78.016157]  [<c022d6e8>] ? __alloc_skb+0x4c/0x110
-[   78.021296]  [<c0106297>] ? nommu_map_page+0x3c/0x51
-[   78.026648]  [<e00992c9>] ? ath5k_rx_skb_alloc+0x99/0x10a [ath5k]
-[   78.033190]  [<e009b989>] ath5k_tasklet_rx+0x59f/0x60b [ath5k]
-[   78.039454]  [<c011c486>] __tasklet_action.clone.8+0x76/0xd1
-[   78.045502]  [<c011c529>] tasklet_action+0x23/0x25
-[   78.050640]  [<c011c285>] run_ksoftirqd+0xf0/0x19b
-[   78.055788]  [<c011c195>] ? run_ksoftirqd+0x0/0x19b
-[   78.061032]  [<c0127829>] kthread+0x5e/0x63
-[   78.065538]  [<c01277cb>] ? kthread+0x0/0x63
-[   78.070107]  [<c0102bb6>] kernel_thread_helper+0x6/0x10
-[   78.075695] ---[ end trace 6b864a3c0aa1a8eb ]---
+>
+> Walter
+>
 
 
-Best regards,
-Dennis
+
+-- 
+shafi
