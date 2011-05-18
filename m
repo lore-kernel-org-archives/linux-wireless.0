@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52523 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756064Ab1EWQf0 (ORCPT
+Received: from nm16-vm1.bullet.mail.bf1.yahoo.com ([98.139.213.131]:21793 "HELO
+	nm16-vm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932763Ab1ERL4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 12:35:26 -0400
-Message-ID: <4DDA8CCA.3050703@candelatech.com> (sfid-20110523_183532_871417_C45E4993)
-Date: Mon, 23 May 2011 09:35:22 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 18 May 2011 07:56:16 -0400
+Message-ID: <294183.47547.qm@web161601.mail.bf1.yahoo.com> (sfid-20110518_135630_355959_56549472)
+Date: Wed, 18 May 2011 04:56:15 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: rt2x00: rt2800usb causing kernel panic /compat-wireless/
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	gwingerde@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+In-Reply-To: <BANLkTi=3i6LEYFivGYB0OZDKmjXxeo+yrQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Dennis Borgmann <dennis.borgmann@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [ath5k] kernel panic while using compat-wireless-2.6.38.2-2
-References: <4DCA672E.2080906@googlemail.com> <4DDA89A4.5040101@googlemail.com>
-In-Reply-To: <4DDA89A4.5040101@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2011 09:21 AM, Dennis Borgmann wrote:
-> Hello linux-wireless list!
->
-> Is there really no one with an idea? Is there no one among the
-> developers, who is interested in this bug, if it is a bug?
->
-> I'm starting to lose my hope...
+> > A very peculiar bug.
+> >
+> > With compat-wireless from 16.05 a nasty bug started to
+> manifest itself. Right around association time, the
+> rt2800usb causes kernel panic. The system freezes and the
+> Caps Lock and Num Lock leds on the keyboard begin to flash.
+> 
+> also ath9k, iwlagn.
+> 
+> >
+> > Unfortunately there are no recoverable traces after
+> the system failure to aid this bug report or to indicate its
+> origin.
+> >
+> > I believe it may somehow be related to Ubuntu's
+> network-manager. If I turn off the network-manager service,
+> I can go into monitor mode for example, but if
+> network-manager is running and I plug my USB dongle, it
+> starts to associate, a second or two later the system is in
+> complete meltdown.
+> 
+> same thing, monitor mode worked perfectly fine.
+> 
+> >
+> > Nothing concrete, but a hunch is telling me this has
+> something to do with the association mechanism of the
+> rt2800usb. Compat-wireless from few days back exhibits no
+> such foul play.
+> 
+> yes just right at the association complete freeze.
+> 
 
-Can you reproduce this in the wireless-testing tree?
+That's strange. I wonder what's the connection with this bug and network-manager. Because when I manually tried to associate, dmesg reported the association attempt timed out.
 
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Walter
