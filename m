@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2178 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752140Ab1ECHBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 03:01:10 -0400
-From: sukeshs@broadcom.com
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] brcm80211: FIX for TKIP GTK bug
-Date: Tue, 3 May 2011 00:00:56 -0700
-Message-ID: <1304406057-8722-2-git-send-email-sukeshs@broadcom.com> (sfid-20110503_090116_984283_B0EFA4E1)
-In-Reply-To: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38572 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932824Ab1ERL0Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 07:26:24 -0400
+Received: by qwk3 with SMTP id 3so736478qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 04:26:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4DD3A1CD.3040304@broadcom.com>
+References: <1305716294-5753-1-git-send-email-zajec5@gmail.com>
+	<4DD3A1CD.3040304@broadcom.com>
+Date: Wed, 18 May 2011 13:26:23 +0200
+Message-ID: <BANLkTinW=kfg2ONuA5NzmNbSAHUbUVOiRg@mail.gmail.com> (sfid-20110518_132628_382088_924431A5)
+Subject: Re: [PATCH] bcma: pci: implement enabling interrupts
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@xl-sj1-20.sj.broadcom.com>
+W dniu 18 maja 2011 12:39 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 05/18/2011 12:58 PM, Rafał Miłecki wrote:
+>>
+>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+>> ---
+>>  drivers/bcma/driver_pci.c |   18 ++++++++++++++++++
+>>  1 files changed, 18 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+>> index e757e4e..879fe1d 100644
+>> --- a/drivers/bcma/driver_pci.c
+>> +++ b/drivers/bcma/driver_pci.c
+>> @@ -161,3 +161,21 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
+>>  {
+>>        bcma_pcicore_serdes_workaround(pc);
+>>  }
+>> +
+>> +int bcma_core_pci_irq_enable(struct bcma_drv_pci *pc, struct bcma_device
+>> *core)
+>> +{
+>> +       struct pci_dev *pdev = pc->core->bus->host_pci;
+>> +       u32 coremask, tmp;
+>> +       int err;
+>> +
+>> +       coremask = BIT(core->core_index);
+>> +
+>> +       err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK,&tmp);
+>> +       if (err)
+>> +               goto out;
+>> +       tmp |= coremask<<  8;
+>> +       err = pci_write_config_dword(pdev, BCMA_PCI_IRQMASK, tmp);
+>> +
+>> +out:
+>> +       return err;
+>> +}
+>
+> Hi Rafał,
+>
+> Do you intend to have a disable as well?
 
-The last 16 bytes of the key sent by cfg80211 needs to be swapped before installing it to FW for TKIP encryption.
-This is not done for the group key in current code, which is corrected with this fix.
+Sure. I just didn't test disabling function yet, that's why I didn't publish it.
 
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Signed-off-by: Sukesh Srikakula <sukeshs@xl-sj1-20.sj.broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index b44daf9..c60fc7c 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1616,6 +1616,7 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 	s32 val;
- 	s32 wsec;
- 	s32 err = 0;
-+	u8 keybuf[8];
- 
- 	WL_DBG("key index (%d)\n", key_idx);
- 	CHECK_SYS_UP();
-@@ -1644,6 +1645,9 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 		WL_DBG("WLAN_CIPHER_SUITE_WEP104\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
-+		memcpy(keybuf, &key.data[24], sizeof(keybuf));
-+		memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
-+		memcpy(&key.data[16], keybuf, sizeof(keybuf));
- 		key.algo = CRYPTO_ALGO_TKIP;
- 		WL_DBG("WLAN_CIPHER_SUITE_TKIP\n");
- 		break;
 -- 
-1.7.3.2
-
-
+Rafał
