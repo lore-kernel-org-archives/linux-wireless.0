@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:50390 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758368Ab1EMV1R (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:33255 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932709Ab1ERS0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 17:27:17 -0400
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
-Subject: [RFC/PATCH 06/13] net: wl12xx: remove unnecessary prints
-Date: Sat, 14 May 2011 00:26:23 +0300
-Message-Id: <1305321990-22041-7-git-send-email-balbi@ti.com> (sfid-20110513_233014_460866_279536CA)
-In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	Wed, 18 May 2011 14:26:38 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so526998ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 11:26:37 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/7] rt2x00: Don't disable G0 PA_PE bit in case of BT coexistence.
+Date: Wed, 18 May 2011 20:25:18 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201105182022.20341.IvDoorn@gmail.com>
+In-Reply-To: <201105182022.20341.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <201105182025.19264.IvDoorn@gmail.com> (sfid-20110518_202641_461358_AA14F76D)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Those have little value. Remove those to
-make the driver less noisy.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Felipe Balbi <balbi@ti.com>
+(split off from the earlier RT35xx patch submitted by Shiang)
+
+Signed-off-by: Shiang Tu <shiang_tu@ralinktech.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/wl12xx/spi.c |   15 +--------------
- 1 files changed, 1 insertions(+), 14 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index ffc745b..382b79d 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -426,8 +426,6 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	if (ret)
- 		goto out_irq;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1cad89e..ce736e9 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1811,7 +1811,11 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G0_EN, 1);
+ 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_RFTR_EN, 1);
+ 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_TRSW_EN, 1);
+-	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, rf->channel <= 14);
++	if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags))
++		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
++	else
++		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN,
++				   rf->channel <= 14);
+ 	rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, rf->channel > 14);
  
--	wl1271_notice("initialized");
--
- 	return 0;
- 
-  out_irq:
-@@ -464,23 +462,12 @@ static struct spi_driver wl1271_spi_driver = {
- 
- static int __init wl1271_init(void)
- {
--	int ret;
--
--	ret = spi_register_driver(&wl1271_spi_driver);
--	if (ret < 0) {
--		wl1271_error("failed to register spi driver: %d", ret);
--		goto out;
--	}
--
--out:
--	return ret;
-+	return spi_register_driver(&wl1271_spi_driver);
- }
- 
- static void __exit wl1271_exit(void)
- {
- 	spi_unregister_driver(&wl1271_spi_driver);
--
--	wl1271_notice("unloaded");
- }
- 
- module_init(wl1271_init);
+ 	rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
 -- 
-1.7.4.1.343.ga91df
+1.7.2.3
 
