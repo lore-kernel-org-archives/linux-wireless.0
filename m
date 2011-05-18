@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48709 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664Ab1EIQmW (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48314 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755849Ab1ERXYg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:42:22 -0400
-Received: by bwz15 with SMTP id 15so4126198bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 09:42:20 -0700 (PDT)
+	Wed, 18 May 2011 19:24:36 -0400
+Received: by iwn34 with SMTP id 34so1714226iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 16:24:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
-	<19908.11423.898062.510184@gargle.gargle.HOWL>
-	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
-	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
-Date: Mon, 9 May 2011 12:42:20 -0400
-Message-ID: <BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com> (sfid-20110509_184224_193540_A33C2D70)
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-From: George Nychis <gnychis@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
+In-Reply-To: <201105182025.05979.IvDoorn@gmail.com>
+References: <201105182025.05979.IvDoorn@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 19 May 2011 09:24:15 +1000
+Message-ID: <BANLkTim7MSG7NYJ8Kk7Nm=1V=bx=55z60Q@mail.gmail.com> (sfid-20110519_012439_609548_3911751F)
+Subject: Re: [PATCH 1/7] rt2x00: Enable PA_PE bits in TX_PIN_CFG according to
+ active band.
+To: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there anything more I can do to help here? I've tried older versions of
-compat wireless with older firmware and I am having 0 luck.
+Gertjan, Ivo,
 
-On Fri, May 6, 2011 at 2:22 PM, George Nychis <gnychis@gmail.com> wrote:
-> BTW- same error with fw1.0, fw1.1, and fw1.2
+Minor nit
+
+On Thu, May 19, 2011 at 04:25, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 93fb674..1cad89e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1795,8 +1795,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
 >
+>        /* Turn on unused PA or LNA when not using 1T or 1R */
+>        if (rt2x00dev->default_ant.tx_chain_num == 2) {
+> -               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
+> -               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN, 1);
+> +               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
+> +                                  rf->channel > 14);
+> +               rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
+> +                                  rf->channel <= 14);
+
+Aren't there better ways to determine the band from the channel?
+
+I recall that there were some patches floating around relating to
+supporting Japanese channels (802.11j ?) which (IIRC) use channel 14
+in both bands - I'm not sure if this is applicable here, but would it
+not be better to get the actual band from mac/cfg80211 and switch
+based on that instead of on the channel number?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
