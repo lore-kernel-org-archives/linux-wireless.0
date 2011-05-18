@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:39599 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751054Ab1EZEvO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 00:51:14 -0400
-Received: by mail-ey0-f170.google.com with SMTP id 5so165852eyf.29
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 21:51:12 -0700 (PDT)
-Subject: Re: [PATCH 2.6.40] wl12xx: fix oops in sched_scan when forcing a
- passive scan
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTim4Gf8GVTqj7wcZrdGG6MM0mpTEvw@mail.gmail.com>
-References: <1306340205-30758-1-git-send-email-coelho@ti.com>
-	 <BANLkTim4Gf8GVTqj7wcZrdGG6MM0mpTEvw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 26 May 2011 07:51:09 +0300
-Message-ID: <1306385469.12586.2403.camel@cumari> (sfid-20110526_065118_206466_023834DC)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:4659 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754920Ab1ERWqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 18:46:18 -0400
+Message-ID: <4DD44C21.1080502@broadcom.com> (sfid-20110519_004632_573273_5579B145)
+Date: Wed, 18 May 2011 15:45:53 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+MIME-Version: 1.0
+To: "Joe Perches" <joe@perches.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
+References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+In-Reply-To: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-26 at 02:08 +0300, Eliad Peller wrote:
-> hi Luca,
-> 
-> On Wed, May 25, 2011 at 7:16 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > Fix kernel oops when trying to use passive scheduled scans.  The
-> > reason was that in passive scans there are no SSIDs, so there was a
-> > NULL pointer dereference.
-> >
-> > To solve the problem, we now check the number of SSIDs provided in the
-> > sched_scan request and only access the list if there's one or more
-> > (ie. passive scan is not forced).  We also move the channels from
-> > active to passive if passive scanning is forced.  For this to work,
-> > it's necessary to set both active and passive dwell times for all
-> > channels.
-> >
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> [...]
-> 
-> why does sched scan without ssids means passive scan? can't we just do
-> active sched scan without ssids?
-
-This is how normal scans also work.  If you want a broadcast scan, you
-pass a wildcard SSID (ie. one with zero length), if you want to force
-the scan to be passive, you don't pass any SSIDs in the request.
-Basically it means that if there is not SSID, we cannot send probe_req
-(even broadcast probe_reqs need an SSID, an empty one).
-
-
-> > +       if (force_passive) {
-> > +               /* move active channels to passive lists */
-> > +               cfg->passive[0] += cfg->active[0] - 1;
-> > +               cfg->active[0] = 1;
-> looks like a potential integer underflow.
-> 
-> if you're forcing a passive scan, why do you need to set an active channel?
-
-Argh! This was from a test I was doing and is totally wrong.  The idea
-is to transfer all the active channels to the passive list.  Thanks for
-noticing this, I'll fix it.
-
-
-> anyway, this seems a bit wrong.
+On 05/18/2011 11:23 AM, Joe Perches wrote:
+> All uses of DHD_<TYPE>  macros are for debugging only.
 >
-> i don't think you can just do "arbitrary transfers" of the channel
-> counts, as their order seem to matter (i.e. the order of elements in
-> the channel array is passive[0],passive[1],..,active[0],active[1]...,
-> so you actually need to shift all the elements)
+> Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
+> for a more consistent style.
 
-Hmmm... Good point.  I don't know why the order would actually matter,
-but in this case the way the channels are scanned will be hard to
-predict.  We're doing something that is not specified or requested
-anywhere.
+I generally like this approach, but in brcmsmac we've been switching to 
+wiphy_err() and related instead.  Any strong argument for one over the 
+other?
 
-This seemed to be the simplest way to do it, but indeed it's not very
-good.  I'll have to do something so that it already sets all the
-channels as passive when it generates the list, so no reordering or
-hacking the channel numbers will be necessary.
+> -       DHD_TRACE(("%s: Enter\n", __func__));
+> +       dhd_dbg(TRACE, "%s: Enter\n", __func__);
 
-Thanks for the review!
 
--- 
-Cheers,
-Luca.
+I'd propose moving __func__ into the macro definition itself, which 
+would help ensure consistency (and shorten all the debug lines a bit).
+
+Also, perhaps rename to "brcm_dbg()", "bcm_dbg()" or something like that 
+and move it into include/bcmutils.h, so brcmsmac can use it as well.
+
+- Henry
 
