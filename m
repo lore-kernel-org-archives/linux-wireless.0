@@ -1,74 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:46825 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911Ab1EIJjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 05:39:17 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 02:38:48 -0700
-Date: Mon, 9 May 2011 15:09:05 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC] ath9k: make npending frames check as bool
-Message-ID: <20110509093905.GD17465@vasanth-laptop> (sfid-20110509_113919_289712_A2002C37)
-References: <1304697291-6850-1-git-send-email-mshajakhan@atheros.com> <20110506161541.GB6002@vasanth-laptop> <4DC76DD9.5010000@atheros.com> <20110509092854.GC17465@vasanth-laptop>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:57019 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140Ab1EQX3C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2011 19:29:02 -0400
+Received: by eyx24 with SMTP id 24so286932eyx.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 16:29:01 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/9] b43: rename ssb_device variable in ssb specific functions
+Date: Wed, 18 May 2011 02:06:35 +0200
+Message-Id: <1305677203-16660-1-git-send-email-zajec5@gmail.com> (sfid-20110518_012907_655368_0943490B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110509092854.GC17465@vasanth-laptop>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 09, 2011 at 02:58:54PM +0530, Vasanth Thiagarajan wrote:
-> On Mon, May 09, 2011 at 10:00:17AM +0530, Mohammed Shajakhan wrote:
-> > On Friday 06 May 2011 09:45 PM, Vasanth Thiagarajan wrote:
-> > > On Fri, May 06, 2011 at 09:24:51PM +0530, Mohammed Shafi Shajakhan wrote:
-> > >> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> > >>
-> > >> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> > >> ---
-> > >>   drivers/net/wireless/ath/ath9k/main.c |    7 +++++--
-> > >>   1 files changed, 5 insertions(+), 2 deletions(-)
-> > >>
-> > >> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> > >> index 3de115d..2b78ea2 100644
-> > >> --- a/drivers/net/wireless/ath/ath9k/main.c
-> > >> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> > >> @@ -2267,7 +2267,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
-> > >>   		timeout = 1;
-> > >>
-> > >>   	for (j = 0; j<  timeout; j++) {
-> > >> -		int npend = 0;
-> > >> +		bool npend = false;
-> > >>
-> > >>   		if (j)
-> > >>   			usleep_range(1000, 2000);
-> > >> @@ -2276,7 +2276,10 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
-> > >>   			if (!ATH_TXQ_SETUP(sc, i))
-> > >>   				continue;
-> > >>
-> > >> -			npend += ath9k_has_pending_frames(sc,&sc->tx.txq[i]);
-> > >> +			npend = ath9k_has_pending_frames(sc,&sc->tx.txq[i]);
-> > >> +
-> > >> +			if (npend)
-> > >> +				break;
-> > >
-> > > We need not bail out as soon as there is a pending frame in a queue.
-> > > There is a possibility that it could be transmitted successfully by
-> > > the time the given timeout expires.
-> > 
-> > Hi Vasanth,
-> > 	the timeout is before we enter into the loop for checking pending 
-> > frames, so I thought it won't be affecting it. am I missing something? 
-> > please tell me.
-> 
-> I meant the total timeout (200ms). Even though there are frames in
-> tx queues after the given timeout for that particular queue, it is
-> quite possible that those frames can be completed successfully by
-> the time we are done with the waiting on the last queue.
 
-Never mind, I misread your change.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |   29 +++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 14 deletions(-)
 
-Vasanth
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index eb41596..1e81a0d 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4982,26 +4982,27 @@ static struct b43_wl *b43_wireless_init(struct ssb_device *dev)
+ 	return wl;
+ }
+ 
+-static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
++static
++int b43_ssb_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
+ {
+ 	struct b43_wl *wl;
+ 	int err;
+ 	int first = 0;
+ 
+-	wl = ssb_get_devtypedata(dev);
++	wl = ssb_get_devtypedata(sdev);
+ 	if (!wl) {
+ 		/* Probing the first core. Must setup common struct b43_wl */
+ 		first = 1;
+-		b43_sprom_fixup(dev->bus);
+-		wl = b43_wireless_init(dev);
++		b43_sprom_fixup(sdev->bus);
++		wl = b43_wireless_init(sdev);
+ 		if (IS_ERR(wl)) {
+ 			err = PTR_ERR(wl);
+ 			goto out;
+ 		}
+-		ssb_set_devtypedata(dev, wl);
+-		B43_WARN_ON(ssb_get_devtypedata(dev) != wl);
++		ssb_set_devtypedata(sdev, wl);
++		B43_WARN_ON(ssb_get_devtypedata(sdev) != wl);
+ 	}
+-	err = b43_one_core_attach(dev, wl);
++	err = b43_one_core_attach(sdev, wl);
+ 	if (err)
+ 		goto err_wireless_exit;
+ 
+@@ -5016,17 +5017,17 @@ static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
+ 	return err;
+ 
+       err_one_core_detach:
+-	b43_one_core_detach(dev);
++	b43_one_core_detach(sdev);
+       err_wireless_exit:
+ 	if (first)
+-		b43_wireless_exit(dev, wl);
++		b43_wireless_exit(sdev, wl);
+ 	return err;
+ }
+ 
+-static void b43_ssb_remove(struct ssb_device *dev)
++static void b43_ssb_remove(struct ssb_device *sdev)
+ {
+-	struct b43_wl *wl = ssb_get_devtypedata(dev);
+-	struct b43_wldev *wldev = ssb_get_drvdata(dev);
++	struct b43_wl *wl = ssb_get_devtypedata(sdev);
++	struct b43_wldev *wldev = ssb_get_drvdata(sdev);
+ 
+ 	/* We must cancel any work here before unregistering from ieee80211,
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+@@ -5042,14 +5043,14 @@ static void b43_ssb_remove(struct ssb_device *dev)
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+ 
+-	b43_one_core_detach(dev);
++	b43_one_core_detach(sdev);
+ 
+ 	if (list_empty(&wl->devlist)) {
+ 		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+ 		 * We can destroy common struct b43_wl.
+ 		 */
+-		b43_wireless_exit(dev, wl);
++		b43_wireless_exit(sdev, wl);
+ 	}
+ }
+ 
+-- 
+1.7.3.4
+
