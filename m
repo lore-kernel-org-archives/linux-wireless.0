@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:46064 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057Ab1EJTph convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 15:45:37 -0400
+Received: from mail.atheros.com ([12.19.149.2]:29926 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933012Ab1ERM00 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 08:26:26 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 05:25:55 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<Rajkumar.Manoharan@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: use PS wakeup before REG_READ
+Date: Wed, 18 May 2011 17:56:00 +0530
+Message-ID: <1305721560-5806-1-git-send-email-mshajakhan@atheros.com> (sfid-20110518_142629_562528_FA4A3725)
 MIME-Version: 1.0
-In-Reply-To: <1305054401.2939.52.camel@work-vm>
-References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-	<BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com>
-	<1305054401.2939.52.camel@work-vm>
-Date: Tue, 10 May 2011 21:45:36 +0200
-Message-ID: <BANLkTinnVwQbz+K32pyzLVCdz-fXUVUQ3g@mail.gmail.com> (sfid-20110510_214553_044424_28BF2DC0)
-Subject: Re: [hrtimers] Re: Regression affecting b43 LP-PHY card
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: John Stultz <john.stultz@linaro.org>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Juan Carlos Romero <juancarlos.romero@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Greear <greearb@candelatech.com>,
-	Jamie Lokier <jamie@shareable.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Alexander Shishkin <virtuoso@slind.org>,
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/10 John Stultz <john.stultz@linaro.org>:
-> On Tue, 2011-05-10 at 20:57 +0200, Rafał Miłecki wrote:
->> W dniu 10 maja 2011 00:52 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
->> > In this situation we decided to bisect. I was a little afraid of last
->> > merges so we took older 2.6.38 as GOOD (we tested this twice) and
->> > wireless-testing commit before my ssb changes as BAD. Today Juan
->> > finished bisecting kernel:
->> > http://pastebin.com/HSKbRzpB
->> >
->> > According to his bisection the first bad commit is
->> > e06383db9ec591696a06654257474b85bac1f8cb [0]:
->> > hrtimers: extend hrtimer base code to handle more then 2 clockids
->> >
->> > Does it make any sense to you? Could this be some timing issue?
->> >
->> > It was too late to test this today, we (Juan) will work on this
->> > tomorrow. It's impossible to revert this commit from HEAD of
->> > wireless-testing, so my idea is to checkout commit, test, revert,
->> > test.
->> >
->> > Did anyone else experience any similar problems with latest wireless-testing?
->> >
->> >
->> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
->>
->> Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
->> and tested it. He was disconnected really soon.
->>
->> Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
->> again. Connection was stable, he downloaded 2GB file over network.
->>
->>
->> John S.: your commit does not touch Broadcom card directly, but it
->> seems it somehow affects it. I suspect there can be some timing issue.
->> Do you have any idea what could it be, how can we debug this?
->
-> Sorry for the trouble!
->
-> My commit exposed a few spots where hrtimers were being initialized
-> before hrtimer_init is called, which caused problems. Thomas provided a
-> solution that makes such behavior still function ok:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ce31332d3c77532d6ea97ddcb475a2b02dd358b4
->
-> Let me know if the issue is still reproducible with Linus' latest git
-> tree.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-We were using wireless-testing git tree, commit:
-1e664a777e5eb4b23e65e76fbeadd2376fe8d8d8
+otherwise we will get deadbeef when the station is in idle state
 
-I can not see ce31332d3c77532d6ea97ddcb475a2b02dd358b4 it git log.
-I'll apply and test, thanks!
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 7afe332..0021738 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -435,6 +435,7 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			conf->channel_type,
+ 			channel_type_str(conf->channel_type));
+ 
++	ath9k_ps_wakeup(sc);
+ 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+ 	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+@@ -443,7 +444,6 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"addrmask: %pM\n", addr);
+-	ath9k_ps_wakeup(sc);
+ 	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
+ 	ath9k_ps_restore(sc);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
 -- 
-Rafał
+1.7.0.4
+
