@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55434 "EHLO nbd.name"
+Received: from mail.perches.com ([173.55.12.10]:1769 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752807Ab1EaTVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:21:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k: show excessive-retry MPDUs in debugfs
-Date: Tue, 31 May 2011 21:21:41 +0200
-Message-Id: <1306869701-86181-1-git-send-email-nbd@openwrt.org> (sfid-20110531_212151_165926_C209A8E0)
+	id S1754976Ab1ESBMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 21:12:31 -0400
+Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
+From: Joe Perches <joe@perches.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+In-Reply-To: <4DD46865.9010708@broadcom.com>
+References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+	 <4DD44C21.1080502@broadcom.com> <1305765163.1745.4.camel@Joe-Laptop>
+	 <4DD46865.9010708@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 May 2011 18:09:41 -0700
+Message-ID: <1305767381.1745.8.camel@Joe-Laptop> (sfid-20110519_031246_514295_BB955EC7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/debug.c |    6 +++++-
- drivers/net/wireless/ath/ath9k/debug.h |    1 +
- 2 files changed, 6 insertions(+), 1 deletions(-)
+On Wed, 2011-05-18 at 17:46 -0700, Henry Ptasinski wrote:
+> On 05/18/2011 05:32 PM, Joe Perches wrote:
+> > On Wed, 2011-05-18 at 15:45 -0700, Henry Ptasinski wrote:
+> >> On 05/18/2011 11:23 AM, Joe Perches wrote:
+> >>> All uses of DHD_<TYPE>   macros are for debugging only.
+> >>> Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
+> >>> for a more consistent style.
+> >> I generally like this approach, but in brcmsmac we've been switching to
+> >> wiphy_err() and related instead.  Any strong argument for one over the
+> >> other?
+> > These aren't described as errors but are debugging messages.
+> Yes, so wiphy_debug(), wiphy_info(), wiphy_notice(), etc could be used. 
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 202399d..5c00e7a 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -550,6 +550,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 
- 	PR("MPDUs Queued:    ", queued);
- 	PR("MPDUs Completed: ", completed);
-+	PR("MPDUs XRetried:  ", xretries);
- 	PR("Aggregates:      ", a_aggr);
- 	PR("AMPDUs Queued HW:", a_queued_hw);
- 	PR("AMPDUs Queued SW:", a_queued_sw);
-@@ -806,7 +807,10 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
- 		else
- 			TX_STAT_INC(qnum, a_completed);
- 	} else {
--		TX_STAT_INC(qnum, completed);
-+		if (bf_isxretried(bf))
-+			TX_STAT_INC(qnum, xretries);
-+		else
-+			TX_STAT_INC(qnum, completed);
- 	}
- 
- 	if (ts->ts_status & ATH9K_TXERR_FIFO)
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 8ce6ad8..4a04510 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -116,6 +116,7 @@ struct ath_tx_stats {
- 	u32 tx_bytes_all;
- 	u32 queued;
- 	u32 completed;
-+	u32 xretries;
- 	u32 a_aggr;
- 	u32 a_queued_hw;
- 	u32 a_queued_sw;
--- 
-1.7.3.2
+True.  I think debugging messages should not have message levels
+promoted without cause.
+
+> > Not all uses use __func__.
+> That's just sloppiness on our part.  They should all be consistent.
+> > I think __func__ unnecessary and it should be avoided.
+> If it's moved into the macro, then there's only one place to change if 
+> you want to delete "__func__"/add it back/include it conditionally.
+[]
+> "brcm_dbg()" seems fine to me.
+
+I'll fix these and resubmit.
 
