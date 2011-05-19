@@ -1,83 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:61848 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049Ab1EPUQM convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41725 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932336Ab1ESP5z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 16:16:12 -0400
-Received: by qyk7 with SMTP id 7so1707341qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 13:16:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
- <4DCB3DFF.1030809@lockie.ca> <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
- <4DCE9DB8.7080404@lwfinger.net> <BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
- <BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com> <4DD0518D.1090300@lwfinger.net>
- <BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com> <4DD13AA2.1000206@lwfinger.net>
- <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 16 May 2011 22:15:51 +0200
-Message-ID: <BANLkTimb24zCF9AoN7iaXwn5J46RMsmhVg@mail.gmail.com> (sfid-20110516_221615_576409_BE1B12CB)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-To: Flaminigo <sunnyiez@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 19 May 2011 11:57:55 -0400
+Subject: Re: [PATCH v4] mac80211_hwsim driver support userspace frame tx/rx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Lopez <jlopex@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com, j@w1.fi,
+	javier@cozybit.com
+In-Reply-To: <1305149577-2636-1-git-send-email-jlopex@gmail.com> (sfid-20110511_233323_840596_E9B7F988)
+References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
+	 <1305149577-2636-1-git-send-email-jlopex@gmail.com>
+	 (sfid-20110511_233323_840596_E9B7F988)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 19 May 2011 09:00:28 -0700
+Message-ID: <1305820828.8237.10.camel@jlt3.sipsolutions.net> (sfid-20110519_175758_804771_C8869B65)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 16, 2011 at 5:20 PM, Flaminigo <sunnyiez@gmail.com> wrote:
-> Hi,
->    I appreciate your help greatly. I am not very familiar with kernel
-> programming. Actually, I am a graphics guy. I try to apply your patch
-> but I failed. That was my process. FYI
->
-> 1. Download RC7 code from
-> http://www.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.39-rc7.tar.bz2
-> 2. Download the patch from
-> http://www.kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.39-rc7.bz2
-> 3. apply the patch.
-> sunny@samunder:~/Downloads/kernel/linux-2.6.39-rc7$ bzip2 -dc
-> patch-2.6.39-rc7.bz2  | patch -p1
+Hi,
 
-You do not need this patch at all - it is already integrated into
-linux-2.6.39-rc7.tar.bz2. The patch is for those who already
-downloaded the linux-2.6.38 sources, and do not want to redownload a
-kernel source tree (also, historically there was no
-linux-whatever-rcX.tar.bz2, pre-releases were only distributed as
-patches to the previous stable kernel).
+Sorry for the late reply, I was travelling and had so much other stuff
+to do as well. I like what you did with the pending, but have some
+further comments:
 
-> 4. copy and paste your patch
-> https://bugzilla.kernel.org/attachment.cgi?id=57802 and place it in
-> file `pa`
-> 5. apply your patch by patch -p1 < pa.
->
-> I failed :(
->
->
->
-> On Mon, May 16, 2011 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 05/16/2011 08:48 AM, Flaminigo wrote:
->>>
->>> I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
->>> right? I browse the www.kernel.org but I cannot find the source code
->>> for RC1.
->>> What should I  do ? Find the RC1 code. Apply your patch. Recompile the
->>> kernel and install it? I appreciate your help.
->>
->> At the moment, you should get 2.6.39-rc7 sources, apply the patch, and build
->> that kernel. The patch should apply for any of the ...39-rcX kernels, but I
->> did in fact test it with rc7.
->>
->> Larry
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> +	/* We get the flags for this transmission, wmediumd maybe
+> +	   changes its behaviour depending on the flags */
+> +	NLA_PUT_U32(skb, HWSIM_ATTR_FLAGS, info->flags);
+
+I'm not sure that we want to tie wmediumd to a precise version of
+mac80211? This would make the mac80211 internals ABI for wmediumd rather
+than API for the drivers, which I'd like to avoid. What flags does it
+actually need? I think you should translate those flags into hwsim
+netlink flags.
+
+> +	/* We get the tx control (rate and retries) info*/
+> +	NLA_PUT(skb, HWSIM_ATTR_TX_INFO,
+> +		     sizeof(struct ieee80211_tx_rate)*IEEE80211_TX_MAX_RATES,
+> +		     info->control.rates);
+
+The same applies here, Felix is indeed planning to change this. I know
+it's a lot of code and not very efficient, but I think you should wrap
+this stuff in a real netlink attribute so it has a chance of not
+breaking when mac80211 APIs change.
+
+> +	/* We create a cookie to identify this skb */
+> +	NLA_PUT_U32(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb);
+
+This needs to be a U64 so that 64-bit systems work.
+
+> +static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+> +				    struct sk_buff *skb)
+> +{
+> +	if (atomic_read(&wmediumd_pid)) {
+
+This reminds me -- why is that thing atomic? It doesn't seem necessary
+since there will be locking (rtnl) on the callbacks setting it anyway?
+
+> @@ -571,6 +671,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
+>  		txi->flags |= IEEE80211_TX_STAT_ACK;
+>  	ieee80211_tx_status_irqsafe(hw, skb);
+> +
+>  }
+
+spurious whitespace change
+
+> @@ -650,7 +751,6 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+>  
+>  	mac80211_hwsim_monitor_rx(hw, skb);
+>  	mac80211_hwsim_tx_frame(hw, skb);
+> -	dev_kfree_skb(skb);
+>  }
+
+Where are frames freed in the no-wmediumd case?
+ 
+> @@ -966,12 +1066,9 @@ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
+>  
+>  static void mac80211_hwsim_flush(struct ieee80211_hw *hw, bool drop)
+>  {
+> -	/*
+> -	 * In this special case, there's nothing we need to
+> -	 * do because hwsim does transmission synchronously.
+> -	 * In the future, when it does transmissions via
+> -	 * userspace, we may need to do something.
+> -	 */
+> +	/* Let's purge the pending queue */
+> +	struct mac80211_hwsim_data *data = hw->priv;
+> +	skb_queue_purge(&data->pending);
+>  }
+
+This doesn't seem right, but unless you do buffering in wmediumd you
+don't really have to worry much. I guess a real implementation would
+send a notification to wmediumd to flush and then wait for the queue to
+become empty (with some timeout I guess).
 
 
+> +	if (!_found) {
+> +		printk(KERN_DEBUG "mac80211_hwsim: invalid radio ID\n");
+> +		return NULL;
+> +	}
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+I think you're generally erring a bit on the side of too much debug
+printing, but since it's a debug driver I don't really care :)
+
+> +	return data;
+> +}
+> +
+> +static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+> +					   struct genl_info *info)
+> +{
+> +
+> +	struct ieee80211_hdr *hdr;
+> +	struct mac80211_hwsim_data *data2;
+> +	struct ieee80211_tx_info *txi;
+> +	struct ieee80211_tx_rate *tx_attempts;
+> +	struct sk_buff __user *ret_skb;
+> +	struct sk_buff *skb = NULL, *tmp;
+> +
+> +	int i;
+> +	bool found = false;
+> +
+> +	struct mac_address *dst = (struct mac_address *)nla_data(
+> +				   info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
+> +	int flags = nla_get_u32(info->attrs[HWSIM_ATTR_FLAGS]);
+
+Maybe I'm missing it, but I don't see where you verified that the
+attributes actually exist? This might otherwise crash. Same for other
+attributes too.
+
+> +	ret_skb = (struct sk_buff __user *)
+> +		  (unsigned long) nla_get_u32(info->attrs[HWSIM_ATTR_COOKIE]);
+
+Like this one, also u64.
+
+> +	tx_attempts = (struct ieee80211_tx_rate *)nla_data(
+> +		       info->attrs[HWSIM_ATTR_TX_INFO]);
+
+Again, translation between structs and netlink would be good so we don't
+tie this to internal mac80211 APIs.
+
+> +	if (tx_attempts == NULL)
+> +		goto out;
+
+That can never happen ... either nla_data() already crashed because the
+attribute didn't exist, or tx_attempts is non-NULL. However, you need to
+check nla_len().
+
+johannes
+
