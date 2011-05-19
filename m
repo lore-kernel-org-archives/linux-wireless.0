@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:47021 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755161Ab1EKQG1 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:48991 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933678Ab1ESXNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 12:06:27 -0400
-Received: by mail-ey0-f172.google.com with SMTP id 13so298804eye.17
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2011 09:06:26 -0700 (PDT)
-Subject: Re: [PATCH 0/7] wl12xx: add initial wowlan support
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-References: <1305104068-32240-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 May 2011 11:57:48 +0300
-Message-ID: <1305104269.12586.746.camel@cumari> (sfid-20110511_180659_408038_F4AD9DF2)
-Mime-Version: 1.0
+	Thu, 19 May 2011 19:13:47 -0400
+Received: by qyg14 with SMTP id 14so1822330qyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 16:13:47 -0700 (PDT)
+MIME-Version: 1.0
+From: Matteo Croce <matteo@openwrt.org>
+Date: Fri, 20 May 2011 01:13:07 +0200
+Message-ID: <BANLkTikcBcobbXzjGv4UtD952kHtrSsvNw@mail.gmail.com> (sfid-20110520_011406_423246_1F00C156)
+Subject: [PATCH 2/2]: mac80211: report correct MCS information in tx status info
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eliad,
+Report correct MCS information in tx status info
 
-On Wed, 2011-05-11 at 11:54 +0300, Eliad Peller wrote:
-> Note that this patchset needs some additional omap/mmc patches in 
-> order to support the MMC_PM_KEEP_POWER flag and wake-irq correctly
-> (however, if the MMC_PM_KEEP_POWER flag is not being supported we 
-> don't advertise support for wowlan triggers, so this patchset alone
-> shouldn't harm). 
+Signed-off-by: Matteo Croce <matteo@openwrt.org>
 
-Do you know if these patches are queued in linux-omap for 2.6.40?
+--- a/net/mac80211/status.c	2011-05-20 00:22:56.220640264 +0200
++++ b/net/mac80211/status.c	2011-05-20 00:24:14.010640270 +0200
+@@ -405,6 +405,20 @@
+ 	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+ 		rthdr->rate = sband->bitrates[
+ 				info->status.rates[0].idx].bitrate / 5;
++	/* HT rates */
++	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
++		rthdr->hdr.it_present |=
++				cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
++		rthdr->rate = 0;
++		rthdr->ht_known =	IEEE80211_RADIOTAP_MCS_HAVE_BW |
++					IEEE80211_RADIOTAP_MCS_HAVE_MCS |
++					IEEE80211_RADIOTAP_MCS_HAVE_GI;
++		rthdr->ht_mcs = info->status.rates[0].idx;
++		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_BW_40;
++		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
++			rthdr->ht_flag |= IEEE80211_RADIOTAP_MCS_SGI;
++	}
 
--- 
-Cheers,
-Luca.
-
+ 	/* for now report the total retry_count */
+ 	rthdr->data_retries = retry_count;
