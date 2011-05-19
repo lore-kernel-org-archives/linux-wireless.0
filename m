@@ -1,66 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51743 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755717Ab1EPPUY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 11:20:24 -0400
-Received: by bwz15 with SMTP id 15so3824217bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2011 08:20:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DD13AA2.1000206@lwfinger.net>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
-	<4DCB3DFF.1030809@lockie.ca>
-	<BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com>
-	<4DCE9DB8.7080404@lwfinger.net>
-	<BANLkTikHk=yVQ64OJKBcC9QtYP6OOGrmPw@mail.gmail.com>
-	<BANLkTi=07Ovr6UcuT6ctG_3NZ7kxFY+txA@mail.gmail.com>
-	<4DD0518D.1090300@lwfinger.net>
-	<BANLkTikRG61T==_K1sYF4bH=8xC8NwYwhA@mail.gmail.com>
-	<4DD13AA2.1000206@lwfinger.net>
-Date: Mon, 16 May 2011 10:20:22 -0500
-Message-ID: <BANLkTinWLd18arAye-4KVpicoJAqThWoJw@mail.gmail.com> (sfid-20110516_172028_901046_1956FA4E)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-From: Flaminigo <sunnyiez@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: James <bjlockie@lockie.ca>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:57340 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572Ab1ESKUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 06:20:35 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v2 2/2] ath9k_hw: remove ath9k_hw_get_desc_link
+Date: Thu, 19 May 2011 12:20:26 +0200
+Message-Id: <1305800426-19260-2-git-send-email-nbd@openwrt.org> (sfid-20110519_122038_428824_6EB86D54)
+In-Reply-To: <1305800426-19260-1-git-send-email-nbd@openwrt.org>
+References: <1305800426-19260-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-    I appreciate your help greatly. I am not very familiar with kernel
-programming. Actually, I am a graphics guy. I try to apply your patch
-but I failed. That was my process. FYI
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |    6 ------
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    8 --------
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 -
+ 4 files changed, 0 insertions(+), 20 deletions(-)
 
-1. Download RC7 code from
-http://www.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.39-rc7.tar.bz2
-2. Download the patch from
-http://www.kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.39-rc7.bz2
-3. apply the patch.
-sunny@samunder:~/Downloads/kernel/linux-2.6.39-rc7$ bzip2 -dc
-patch-2.6.39-rc7.bz2  | patch -p1
-4. copy and paste your patch
-https://bugzilla.kernel.org/attachment.cgi?id=57802 and place it in
-file `pa`
-5. apply your patch by patch -p1 < pa.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 7a332f1..ee1193c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -28,11 +28,6 @@ static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
+ 	((struct ath_desc*) ds)->ds_link = ds_link;
+ }
+ 
+-static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
+-{
+-	*ds_link = &((struct ath_desc *)ds)->ds_link;
+-}
+-
+ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
+ 	u32 isr = 0;
+@@ -437,7 +432,6 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+ 
+ 	ops->rx_enable = ar9002_hw_rx_enable;
+ 	ops->set_desc_link = ar9002_hw_set_desc_link;
+-	ops->get_desc_link = ar9002_hw_get_desc_link;
+ 	ops->get_isr = ar9002_hw_get_isr;
+ 	ops->fill_txdesc = ar9002_hw_fill_txdesc;
+ 	ops->proc_txdesc = ar9002_hw_proc_txdesc;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index be6adec..9176035 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -43,13 +43,6 @@ static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
+ 	ads->ctl10 |= ar9003_calc_ptr_chksum(ads);
+ }
+ 
+-static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
+-{
+-	struct ar9003_txc *ads = ds;
+-
+-	*ds_link = &ads->link;
+-}
+-
+ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
+ 	u32 isr = 0;
+@@ -498,7 +491,6 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
+ 
+ 	ops->rx_enable = ar9003_hw_rx_enable;
+ 	ops->set_desc_link = ar9003_hw_set_desc_link;
+-	ops->get_desc_link = ar9003_hw_get_desc_link;
+ 	ops->get_isr = ar9003_hw_get_isr;
+ 	ops->fill_txdesc = ar9003_hw_fill_txdesc;
+ 	ops->proc_txdesc = ar9003_hw_proc_txdesc;
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 8b8f044..c550d27 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -39,11 +39,6 @@ static inline void ath9k_hw_set_desc_link(struct ath_hw *ah, void *ds,
+ 	ath9k_hw_ops(ah)->set_desc_link(ds, link);
+ }
+ 
+-static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
+-					  u32 **link)
+-{
+-	ath9k_hw_ops(ah)->get_desc_link(ds, link);
+-}
+ static inline bool ath9k_hw_calibrate(struct ath_hw *ah,
+ 				      struct ath9k_channel *chan,
+ 				      u8 rxchainmask,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 7af2773..4ba0b06 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -603,7 +603,6 @@ struct ath_hw_ops {
+ 				     int power_off);
+ 	void (*rx_enable)(struct ath_hw *ah);
+ 	void (*set_desc_link)(void *ds, u32 link);
+-	void (*get_desc_link)(void *ds, u32 **link);
+ 	bool (*calibrate)(struct ath_hw *ah,
+ 			  struct ath9k_channel *chan,
+ 			  u8 rxchainmask,
+-- 
+1.7.3.2
 
-I failed :(
-
-
-
-On Mon, May 16, 2011 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/16/2011 08:48 AM, Flaminigo wrote:
->>
->> I looked the patch you sent me. The patch is applied on 2.6.39-rc1,
->> right? I browse the www.kernel.org but I cannot find the source code
->> for RC1.
->> What should I  do ? Find the RC1 code. Apply your patch. Recompile the
->> kernel and install it? I appreciate your help.
->
-> At the moment, you should get 2.6.39-rc7 sources, apply the patch, and build
-> that kernel. The patch should apply for any of the ...39-rcX kernels, but I
-> did in fact test it with rc7.
->
-> Larry
->
->
