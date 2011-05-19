@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:52840 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab1EBUBG (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46336 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932916Ab1ESVXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 16:01:06 -0400
+	Thu, 19 May 2011 17:23:06 -0400
+Received: by iwn34 with SMTP id 34so2530983iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:23:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=FT4v=Jvv5bQpUX15R87kPudKq=Q@mail.gmail.com>
-References: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
-	<1304303082.2833.159.camel@localhost>
-	<BANLkTi=FT4v=Jvv5bQpUX15R87kPudKq=Q@mail.gmail.com>
-Date: Mon, 2 May 2011 21:01:04 +0100
-Message-ID: <BANLkTikHRAYYPj3y9JWLjpatdOCiRXD5Nw@mail.gmail.com> (sfid-20110502_220109_565383_4BADC101)
-Subject: Re: Frequent spurious tx_timeouts for libertas
-From: Daniel Drake <dsd@laptop.org>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1305396027-5864-3-git-send-email-hauke@hauke-m.de>
+References: <1305396027-5864-1-git-send-email-hauke@hauke-m.de> <1305396027-5864-3-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 19 May 2011 14:22:45 -0700
+Message-ID: <BANLkTi=D6sd=9TteCkqpLfaJAObyndGgzQ@mail.gmail.com> (sfid-20110519_232309_986561_6C3E71B8)
+Subject: Re: [PATCH 3/3] compat-wireless: fix building of brcm80211
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 May 2011 20:59, Daniel Drake <dsd@laptop.org> wrote:
-> dev->trans_start is unconditionally initialized by dev_activate() in
-> sch_generic.c:
+On Sat, May 14, 2011 at 11:00 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> The Broadcom brcm80211 driver now needs brcmutil.ko. Furthermore the
+> config options are now set to m to, most parts are build as module when
+> the options are set to m and y. Some options for this driver where at
+> the wrong position in config.mk.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Also, many drivers (including libertas) set it in their tx_timeout handlers:
-   dev->trans_start = jiffies; /* prevent tx timeout */
-I don't understand why (the TX timeout has already occurred, it can't
-be prevented at that stage).
+Applied, thanks!
 
-Daniel
+  Luis
