@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63530 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab1EGNit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:48694 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752963Ab1ESBky convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 09:38:49 -0400
-Subject: Re: How to disable TCP checksum calculation?
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Alexander Clouter <alex@digriz.org.uk>,
-	"Wu, Xia" <xia.wu@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <ut8f98-hoj.ln1@chipmunk.wormnet.eu>
-References: <A24AE1FFE7AEC5489F83450EE98351BF35079BA24F@shsmsx502.ccr.corp.intel.com>
-	 <ut8f98-hoj.ln1@chipmunk.wormnet.eu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 May 2011 15:38:36 +0200
-Message-ID: <1304775516.2821.1253.camel@edumazet-laptop> (sfid-20110507_153907_142079_6BE32FF5)
-Mime-Version: 1.0
+	Wed, 18 May 2011 21:40:54 -0400
+Received: by vxi39 with SMTP id 39so1577426vxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 18:40:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1305758752.8827.1.camel@jlt3.sipsolutions.net>
+References: <1305363652.3437.8.camel@jlt3.sipsolutions.net>
+ <1305364803.3437.10.camel@jlt3.sipsolutions.net> <BANLkTikyymbnXHANmB3N0ecJWdkY9xCG=Q@mail.gmail.com>
+ <1305758752.8827.1.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 18 May 2011 18:40:33 -0700
+Message-ID: <BANLkTi=0RMrBKVFFC7UUnVPyZpZvfGvK6g@mail.gmail.com> (sfid-20110519_034103_628354_43B3EAB2)
+Subject: Re: [PATCH] mac80211: fix and simplify mesh locking
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le samedi 07 mai 2011 Ã  08:28 +0100, Alexander Clouter a Ã©crit :
+On Wed, May 18, 2011 at 3:45 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2011-05-17 at 16:05 -0700, Javier Cardona wrote:
+>
+>> I'm seeing this after trying your patch, probably because the
+>> allocations mesh_table_alloc() can block.  In the past I had tried to
+>> allocate the table before entering the critical section.  If that is
+>> not possible for the race condition you mention,  then I guess we'll
+>> have to make those allocations GFP_ATOMIC?
+>
+> Err, now I'm confused, how could the code have done non-atomic
+> allocations while under rcu_read_lock()? I guess there was just no
+> verification there?
 
+I'm not sure.  I can tell you that the bug message is only triggered
+after your patch was applied, same .config.
+Maybe i have an rcu configuration that does not check that.
 
-> Wu, Xia <xia.wu@intel.com> wrote:
-> >
-> > I'm studying TCP transporting efficiency. Now I want to disable TCP 
-> > checksum calculation, but I cannot find the right way to disable it. 
-> > Who can give me a help on how to disable TCP checksum on Linux?
-> > 
-> Look at using TCP checksum offloading to see the effects:
-> 
-> http://en.wikipedia.org/wiki/TCP_Offload_Engine
-> 
-> ----
-> berk:/home/alex# ethtool -k eth0
-> Offload parameters for eth0:
-...
+Is making the allocations atomic an acceptable solution?
 
-
-Not sure what We meant here. TCP standard requires checksums to be set,
-you cannot 'disable it'. Only possible thing in linux stack is to
-offload tcp checksum computation to network card, if hardware permits
-it.
-
-By the way, the loopback interface (lo) pretends to support this
-feature, so we dont compute tcp checksums for loopback.
-
-
-
+Javier
