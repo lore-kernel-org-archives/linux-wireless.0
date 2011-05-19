@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46156 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740Ab1ECNMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:12:19 -0400
-Date: Tue, 3 May 2011 06:11:57 -0700
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Sukesh Srikakula <sukeshs@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
-Message-ID: <20110503131157.GA29915@suse.de> (sfid-20110503_151221_976597_E799BF1F)
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
- <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
- <20110503121522.GB22674@suse.de>
- <4DBFF628.6040502@broadcom.com>
- <20110503130049.GA29438@suse.de>
- <4DBFFE80.3030305@broadcom.com>
+Received: from adelie.canonical.com ([91.189.90.139]:56755 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932349Ab1ESV2a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 17:28:30 -0400
+Date: Thu, 19 May 2011 16:28:14 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: ath5k regression associating with APs in 2.6.38
+Message-ID: <20110519212814.GA16139@thinkpad-t410> (sfid-20110519_232850_066634_D584FBA8)
+References: <20110504153819.GA4551@thinkpad-t410>
+ <20110504172716.GC18541@tuxdriver.com>
+ <20110504192639.GB4551@thinkpad-t410>
+ <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
+ <20110505135207.GA13727@thinkpad-t410>
+ <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
+ <20110509070230.GA20458@thinkpad-t410>
+ <20110517165720.GB9258@thinkpad-t410>
+ <BANLkTi=8ZRUVWn3FLAMtPh=4yY1F0k6i9w@mail.gmail.com>
+ <20110517185032.GC9258@thinkpad-t410>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DBFFE80.3030305@broadcom.com>
+In-Reply-To: <20110517185032.GC9258@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 03, 2011 at 03:09:20PM +0200, Arend van Spriel wrote:
-> On 05/03/2011 03:00 PM, Greg KH wrote:
-> >On Tue, May 03, 2011 at 02:33:44PM +0200, Arend van Spriel wrote:
-> >>On 05/03/2011 02:15 PM, Greg KH wrote:
-> >>>On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
-> >>>>  #if defined(CONFIG_PM_SLEEP)
-> >>>>
-> >>>>+extern volatile bool dhd_mmc_suspend;
-> >>>This does not do what you think it does.
-> >>Hi Greg,
-> >>
-> >>I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2]
-> >>brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two
-> >>patches I saw on the linuxdriver list are:
-> >You rebased on a 1/2 patch in a series with an invalid 0/2 email?
-> >
-> >{sigh}
-> Sorry.
-> >I dropped that patch as the whole series needed to be resent, do you
-> >want me to apply that one patch before yours?
-> I can resend my series if that is more convenient for you.
+On Tue, May 17, 2011 at 01:50:32PM -0500, Seth Forshee wrote:
+> On Tue, May 17, 2011 at 08:14:34PM +0300, Nick Kossifidis wrote:
+> > 2011/5/17 Seth Forshee <seth.forshee@canonical.com>:
+> > > On Mon, May 09, 2011 at 09:02:30AM +0200, Seth Forshee wrote:
+> > >> On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
+> > >> > Hmm I don't see any errors from reset/phy code, can you disable
+> > >> > Network Manager/wpa-supplicant and test connection on an open network
+> > >> > using iw ? It 'll give us a better picture...
+> > >> >
+> > >> > If iw doesn't return any scan results we are probably hitting a PHY/RF
+> > >> > error specific to your device (not all vendors follow the reference
+> > >> > design). Maybe we should follow a blacklist/whitelist approach for
+> > >> > this feature.
+> > >>
+> > >> I got the results back from my tester. He was able to get scan results,
+> > >> but it took multiple tries and the direct probe failures appear in the
+> > >> log. He didn't enable ATH5K_DEBUG_RESET this time; let me know if you
+> > >> need that and I'll request he retest with the extra debug logs enabled.
+> > >
+> > > I got some more feedback. Most of the time iw does not get scan results,
+> > > but even when it does connecting to the AP isn't always successful. The
+> > > tester did note that he doesn't seem to have any trouble if his machine
+> > > is within a few feet of his AP. Let me know if you'd like something else
+> > > tested.
+> > >
+> > > I noticed that bugzilla #31922 (ath5k: Decreased throughput in IBSS or
+> > > 802.11n mode) is also fixed by reverting 8aec7af9. It seems like the
+> > > synth-only channel changes are resulting in poor connection quality.
+> > > Maybe that patch needs to be reverted?
+> > >
+> > > Thanks,
+> > > Seth
+> > >
+> > >
+> > 
+> > http://www.kernel.org/pub/linux/kernel/people/mickflemm/01-fast-chan-switch-modparm
+> 
+> That looks like it should do the trick. I'll request some testing with
+> it and let you know how it goes. Thanks!
 
-Please, but just send it to me, I doubt everyone wants to see 60+
-patches again on the list.
+I've received feedback from a number of testers that the patch fixes the
+wireless problems they've been seeing since upgrading to 2.6.38, so this
+fix looks good from my perspective.
 
-thanks,
+Thanks,
+Seth
 
-greg k-h
