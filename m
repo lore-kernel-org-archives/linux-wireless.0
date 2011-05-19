@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:42644 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab1EYO2O (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41628 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933194Ab1ESVrW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 10:28:14 -0400
-Received: by gxk21 with SMTP id 21so3111832gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 07:28:14 -0700 (PDT)
-Message-ID: <4DDD11FB.6020208@lwfinger.net> (sfid-20110525_162818_134290_A749F400)
-Date: Wed, 25 May 2011 09:28:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 19 May 2011 17:47:22 -0400
+Received: by qwk3 with SMTP id 3so1584012qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:47:21 -0700 (PDT)
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Consulting opportunity
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110519140421.GB2575@tuxdriver.com>
+References: <20110519140421.GB2575@tuxdriver.com>
+Date: Thu, 19 May 2011 23:47:21 +0200
+Message-ID: <BANLkTi=Qve-02HPB_c6WZMaE1f0qWCBTwA@mail.gmail.com> (sfid-20110519_234726_223492_015D0EA1)
+Subject: Re: wireless-next-2.6 freezing for merge window --
+ [sfr@canb.auug.org.au: linux-next: merge window reminder]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I recently completed a project that involved backporting the PID rate-control 
-algorithm to a 2.6.21 (pre-mac80211) kernel. My contact there has approached me 
-with a project for which I do not qualify.
+2011/5/19 John W. Linville <linville@tuxdriver.com>:
+> Please take note -- I will not be merging any additional patches
+> in wireless-next-2.6 until the end of the merge window.  In fact,
+> I will probably be backing-out a few that are already there.
+>
+> Fixes are, of course, still welcome for wireless-2.6.
 
-In this case, he needs someone with a strong background in Wifi and radio 
-technology. In particular, knowledge of TDMA, frequency shifting, and varying 
-bandwidths for N networks will be needed.
+I've tried asking on IRC and finding answer on
+http://wireless.kernel.org/en/developers/process but without a
+success.
 
-If you are interested in this project, please contact me and I will pass your 
-information to the project coordinator.
+Can I expect recent/current patches to land in any tree before merge
+window closes?
 
-Thanks,
-
-Larry
-
-
+-- 
+Rafał
