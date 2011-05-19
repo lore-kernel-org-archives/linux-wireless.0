@@ -1,109 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:60938 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754086Ab1EWBt6 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:58716 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932622Ab1ESMdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:49:58 -0400
-Date: Sun, 22 May 2011 20:49:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <4dd9bd44.YyhcOiRDWIh17u/y%Larry.Finger@lwfinger.net> (sfid-20110523_035001_670180_779791C3)
+	Thu, 19 May 2011 08:33:46 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so743998eyx.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 05:33:45 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/4] b43: use new pointers path to access ssb_device in SSB specific places
+Date: Thu, 19 May 2011 15:11:26 +0200
+Message-Id: <1305810687-4567-3-git-send-email-zajec5@gmail.com> (sfid-20110519_143350_465297_22586CE2)
+In-Reply-To: <1305810687-4567-1-git-send-email-zajec5@gmail.com>
+References: <1305810687-4567-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for rtl8192ce:
 
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/hw.o
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c: In function ‘_rtl92ce_hw_configure’:
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:766:6: warning: variable ‘reg_ratr’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c: In function ‘rtl92ce_gpio_radio_on_off_checking’:
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:1972:41: warning: variable ‘cur_rfstate’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/phy.o
-drivers/net/wireless/rtlwifi/rtl8192ce/phy.c: In function ‘rtl92c_phy_config_rf_with_headerfile’:
-drivers/net/wireless/rtlwifi/rtl8192ce/phy.c:284:7: warning: variable ‘rtstatus’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/trx.o
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘_rtl92ce_translate_rx_signal_stuff’:
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:595:6: warning: variable ‘psaddr’ set but not used [-Wunused-but-set-variable]
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+ drivers/net/wireless/b43/main.c |   28 +++++++++++++++++-----------
+ 1 files changed, 17 insertions(+), 11 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -763,11 +763,9 @@ static void _rtl92ce_hw_configure(struct
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
- 	u8 reg_bw_opmode;
--	u32 reg_ratr, reg_prsr;
-+	u32 reg_prsr;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index bb82ddf..99411da 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1146,6 +1146,7 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
  
- 	reg_bw_opmode = BW_OPMODE_20MHZ;
--	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
--	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
- 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
- 
- 	rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, 0x8);
-@@ -1969,7 +1967,7 @@ bool rtl92ce_gpio_radio_on_off_checking(
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
-+	enum rf_pwrstate e_rfpowerstate_toset;
- 	u8 u1tmp;
- 	bool actuallyset = false;
- 	unsigned long flag;
-@@ -1989,8 +1987,6 @@ bool rtl92ce_gpio_radio_on_off_checking(
- 		spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
- 	}
- 
--	cur_rfstate = ppsc->rfpwr_state;
--
- 	rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, rtl_read_byte(rtlpriv,
- 		       REG_MAC_PINMUX_CFG)&~(BIT(3)));
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -281,7 +281,6 @@ bool rtl92c_phy_config_rf_with_headerfil
+ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, u32 flags)
  {
++	struct ssb_device *sdev = dev->dev->sdev;
+ 	u32 tmslow;
  
- 	int i;
--	bool rtstatus = true;
- 	u32 *radioa_array_table;
- 	u32 *radiob_array_table;
- 	u16 radioa_arraylen, radiob_arraylen;
-@@ -308,7 +307,6 @@ bool rtl92c_phy_config_rf_with_headerfil
- 			 ("Radio_B:RTL8192CE_RADIOB_1TARRAY\n"));
+ 	flags |= B43_TMSLOW_PHYCLKEN;
+@@ -1156,15 +1157,15 @@ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ 	msleep(2);		/* Wait for the PLL to turn on. */
+ 
+ 	/* Now take the PHY out of Reset again */
+-	tmslow = ssb_read32(dev->sdev, SSB_TMSLOW);
++	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+ 	tmslow |= SSB_TMSLOW_FGC;
+ 	tmslow &= ~B43_TMSLOW_PHYRESET;
+-	ssb_write32(dev->sdev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->sdev, SSB_TMSLOW);	/* flush */
++	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_read32(sdev, SSB_TMSLOW);	/* flush */
+ 	msleep(1);
+ 	tmslow &= ~SSB_TMSLOW_FGC;
+-	ssb_write32(dev->sdev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->sdev, SSB_TMSLOW);	/* flush */
++	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_read32(sdev, SSB_TMSLOW);	/* flush */
+ 	msleep(1);
+ }
+ 
+@@ -2157,7 +2158,7 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 	switch (dev->phy.type) {
+ 	case B43_PHYTYPE_A:
+ 		if ((rev >= 5) && (rev <= 10)) {
+-			tmshigh = ssb_read32(dev->sdev, SSB_TMSHIGH);
++			tmshigh = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
+ 			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
+ 				filename = "a0g1initvals5";
+ 			else
+@@ -2202,7 +2203,7 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 	switch (dev->phy.type) {
+ 	case B43_PHYTYPE_A:
+ 		if ((rev >= 5) && (rev <= 10)) {
+-			tmshigh = ssb_read32(dev->sdev, SSB_TMSHIGH);
++			tmshigh = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
+ 			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
+ 				filename = "a0g1bsinitvals5";
+ 			else
+@@ -2566,7 +2567,7 @@ out:
+  */
+ static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
+ {
+-	struct ssb_bus *bus = dev->sdev->bus;
++	struct ssb_bus *bus = dev->dev->sdev->bus;
+ 
+ #ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	return (bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev);
+@@ -4231,16 +4232,21 @@ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+ 
+ static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
+ {
+-	struct ssb_bus *bus = dev->sdev->bus;
++	struct ssb_bus *bus;
+ 	u32 tmp;
+ 
++	if (dev->dev->bus_type != B43_BUS_SSB)
++		return;
++
++	bus = dev->dev->sdev->bus;
++
+ 	if ((bus->chip_id == 0x4311 && bus->chip_rev == 2) ||
+ 	    (bus->chip_id == 0x4312)) {
+-		tmp = ssb_read32(dev->sdev, SSB_IMCFGLO);
++		tmp = ssb_read32(dev->dev->sdev, SSB_IMCFGLO);
+ 		tmp &= ~SSB_IMCFGLO_REQTO;
+ 		tmp &= ~SSB_IMCFGLO_SERTO;
+ 		tmp |= 0x3;
+-		ssb_write32(dev->sdev, SSB_IMCFGLO, tmp);
++		ssb_write32(dev->dev->sdev, SSB_IMCFGLO, tmp);
+ 		ssb_commit_settings(bus);
  	}
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, ("Radio No %x\n", rfpath));
--	rtstatus = true;
- 	switch (rfpath) {
- 	case RF90_PATH_A:
- 		for (i = 0; i < radioa_arraylen; i = i + 2) {
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -592,7 +592,6 @@ static void _rtl92ce_translate_rx_signal
- 	struct ieee80211_hdr *hdr;
- 	u8 *tmp_buf;
- 	u8 *praddr;
--	u8 *psaddr;
- 	__le16 fc;
- 	u16 type, c_fc;
- 	bool packet_matchbssid, packet_toself, packet_beacon;
-@@ -604,7 +603,6 @@ static void _rtl92ce_translate_rx_signal
- 	c_fc = le16_to_cpu(fc);
- 	type = WLAN_FC_GET_TYPE(fc);
- 	praddr = hdr->addr1;
--	psaddr = hdr->addr2;
- 
- 	packet_matchbssid =
- 	    ((IEEE80211_FTYPE_CTL != type) &&
+ }
+-- 
+1.7.3.4
+
