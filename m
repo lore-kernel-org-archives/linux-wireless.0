@@ -1,96 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53218 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756013Ab1EGTVr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 15:21:47 -0400
+Received: from mail.atheros.com ([12.19.149.2]:16981 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755687Ab1ESMLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 08:11:13 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 05:10:43 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: make ath9k_setpower function as static
+Date: Thu, 19 May 2011 17:40:46 +0530
+Message-ID: <1305807046-9763-1-git-send-email-mshajakhan@atheros.com> (sfid-20110519_141136_432315_CD955230)
 MIME-Version: 1.0
-In-Reply-To: <1304794931.13983.44.camel@dev.znau.edu.ua>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	<201105061605.31625.arnd@arndb.de>
-	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
-	<1304790665.13983.10.camel@dev.znau.edu.ua>
-	<BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
-	<1304792795.13983.28.camel@dev.znau.edu.ua>
-	<BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-	<1304794931.13983.44.camel@dev.znau.edu.ua>
-Date: Sat, 7 May 2011 21:21:46 +0200
-Message-ID: <BANLkTik9FWgzpNWuMXXRjOj-rDvPNY_nCA@mail.gmail.com> (sfid-20110507_212205_846417_9C45C31F)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/7 George Kashperko <george@znau.edu.ua>:
->> >>
->> >> The purpose is ridiculously trivial. Print user-friendly names on
->> >> scanning. Why not do that?
->> > Output like
->> > Core 0: ChipCommon (id 0x800, rev 18, vendor 0x14e4)
->> > and
->> > Core 0: id 0x800, rev 18, vendor 0x14e4
->> > both give to 99% of linux systems' end-users exactly the same consistent
->> > information. Its more than enough for diagnostic purposes (I guess
->> > scanning code does outputs this for diagnostic purposes by those less
->> > than 1% of people who are aware wth is actually that ChipCommon is, not
->> > to be just user friendly?).
->>
->> Really, what's wrong with that? Does it kill anyone's pet we print
->> this? We also do:
->> pr_err("Scanning failed because of wrong CID\n");
->> return -1;
->> While we could drop pr_err. Why to do this? Advanced used can always
->> check what -1 means.
->>
->> I just like this. I find situations when it's useful, while I don't
->> see real negatives. I want to keep this. Can we leave this that way?
->> Unless someone finds some really bad effects of this?
-> Nothing wrong except it makes kernel larger while gives _absolutely_ no
-> benefit to end users. Regardless bus code prints core name or not it
-> (core name) have absolutely no impact on driver matching.
->
-> Imagine yourself an end-user who haven't got his 80211 core matched with
-> driver and therefore he haven't got WiFi working.
-> If bus driver code outputs
-> Core X: id 0x812, rev. 8, vendor 0x4BF
-> you (as end user) will look where is 0x4BF/0x812 driver supporting
-> rev.8.
-> But if bus driver code outputs
-> Core X: MAC 802.11 (core id 0x812, rev. 8, vendor 0x4BF)
-> you (as end user) empowered with MAC 802.11 name knowledge will still
-> look where is 0x4BF/0x812 driver supporting rev.8.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-I'll ask linux-wireless instead of linux-usb or linux-arm.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |    2 +-
+ 2 files changed, 1 insertions(+), 2 deletions(-)
 
-I didn't expect longer discussion so I got this trivial example of
-pr_err. But it appears to be good example/question.
-
-How do you see relation between bcma_device_name and:
-int zd_ioread32v_locked(...) {
-	if (r) {
-		dev_dbg_f(zd_chip_dev(chip),
-			  "error: zd_ioread16v_locked. Error number %d\n", r);
-		return r;
-	}
-}
-
-I believe according to your theory we should drop thi error message,
-right? It eats memory to keep this string while error code can always
-be checked in source.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f75068b..3500e9c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -674,7 +674,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 
+ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+-bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode);
+ bool ath9k_uses_beacons(int type);
+ 
+ #ifdef CONFIG_ATH9K_PCI
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a198ee3..4cdc886 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -69,7 +69,7 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
+ 	return pending;
+ }
+ 
+-bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode)
++static bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode)
+ {
+ 	unsigned long flags;
+ 	bool ret;
 -- 
-Rafał
+1.7.0.4
+
