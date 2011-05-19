@@ -1,62 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30536 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:33292 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755277Ab1E3JxV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 05:53:21 -0400
-Date: Mon, 30 May 2011 11:52:59 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-2.6] rt2x00: fix rmmod crash
-Message-ID: <20110530095259.GB2417@redhat.com> (sfid-20110530_115329_201302_91562E3C)
-References: <20110529104529.GA2769@localhost.localdomain>
- <4DE278CD.3030708@gmail.com>
- <20110529204200.GA2472@localhost.localdomain>
- <4DE3380C.2@gmail.com>
+	id S1755777Ab1ESHrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 03:47:25 -0400
+Date: Thu, 19 May 2011 09:47:22 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: James <bjlockie@lockie.ca>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: help to bisect
+Message-ID: <20110519074722.GD14049@liondog.tnic> (sfid-20110519_094752_391035_4465BA71)
+References: <4DD31264.4070704@lockie.ca>
+ <20110518072245.GB17608@liondog.tnic>
+ <4DD42F10.90602@lockie.ca>
+ <20110518211723.GA4313@liondog.tnic>
+ <4DD45D2D.7060300@lockie.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DE3380C.2@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4DD45D2D.7060300@lockie.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 30, 2011 at 08:24:12AM +0200, Gertjan van Wingerde wrote:
-> On 05/29/11 22:42, Stanislaw Gruszka wrote:
-> > On Sun, May 29, 2011 at 06:48:13PM +0200, Gertjan van Wingerde wrote:
-> >> On 05/29/11 12:45, Stanislaw Gruszka wrote:
-> >>> Do not destroy workqueue, which still can be used by autowakeup_work,
-> >>> before ieee80211_unregister_hw() is called.
-> >>>
-> >>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On Wed, May 18, 2011 at 07:58:37PM -0400, James wrote:
+> On 05/18/11 17:17, Borislav Petkov wrote:
+> > First of all, please hit "reply-to-all" next time so that all recipients
+> > can receive your mail and not find it by chance when looking thru the
+> > new lkml messages.
+> >
+> > On Wed, May 18, 2011 at 04:41:52PM -0400, James wrote:
+> >> Here is what I did:
 > >>
-> >> Could you add some details of the crash here, e.g. the stack trace of when this occurs, so that
-> >> we can understand what is exactly happening that is causing the crash, for our education.
-> > 
-> > Crash is in workqueue code in interrupt context, there is no indication about rt2x00 blame in
-> > the calltrace, but crash happen directly after rmmod rt73usb, here is a photo:
-> > https://bugzilla.kernel.org/attachment.cgi?id=59992 
+> >> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+> >> $ cd linux-2.6.37.y
+> >> $ git checkout v2.6.36
+> >> build and boot kernel
+> > what does that mean? Is .36 ok?
+> Yes, no problems.
+> >> $ cd linux-2.6.37.y
+> >> $ git bisect start
+> >> $ git bisect good v2.6.36
+> >> $ git bisect bad v2.6.37.6
+> > Also, is .37.6 bad?
+> Yes, it is bad.
+> >> build and boot kernel
+> >> git bisect good|bad
+> >> repeat
+> >>
+> >> 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+> > Which is a merge commit and it means that you most likely made a mistake
+> > during bisection.
+> Am I doing it right?
+> boot kernel, cd to git source, git bisect good or bad, compile new
+> kernel and copy it to /boot,
+
+Dumb question: do you boot into that new kernel and test it each time
+before tagging it as good or bad?
+
+> repeat
+> > What is actually the problem you're experiencing with .37.6?
+> >
+> > ..
+> >
+> >> How do I find out what change causes the problem?
+> >> The problem causes my wireless card not to work.
+> > Ah, here it is.
+> >
+> >> Other people have similar cards that do work so the problem seems
+> >> isolated to my hardware but kernel-2.6.36 works so I don't think my
+> >> hardware is faulty.
+> > Which card is that? (adding linux-wireless)
+> D-Link dwa552
+> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+> mem=0xffffc90000140
+> 000, irq=16
+> Other people have this card working so it is probably my system
+> configuration that is causing an obscure bug.
 > 
-> OK. Thanks for the info.
+> > Please, describe in a very detailed way how your problem incarnates
+> > itself: dmesg, error messages, what exactly do you do to trigger it?
+> It seems to be 100% that if "ath: Failed to stop TX DMA in 100 msec
+> after killing last frame
+> ath: Failed to stop TX DMA!" shows up in dmesg that scans don't return
+> any APs or 1-3 (iwlist wlan0 scan | grep SSID).
+> If there is a different way to scan, I'll try that.
 > 
-> Could you create a v2 of the patch that:
-> 1. Includes a reference to the bugzilla entry that the patch is resolving.
+> 
+> 
+> > Also, can you test whether 38.6 works for ya - it could've been fixed in
+> > the meantime. You can also test .39 which will be released any minute
+> > now.
+> 38.6 does NOT work and compat-wireless-2011-05-11 works on kernel-2.6.36
+> which is why I think it is the kernel and not the wireless code.
+> > I think that should be enough for now.
 
-It does not solve the bugzilla,
-https://bugzilla.kernel.org/show_bug.cgi?id=32132
-I put image there, because of temporally lack of opportunity to put
-it in some better place. Sorry.
+Aha, here's the deal. You're using compat-wireless which is a bunch of
+patches ontop of the kernel so you want to add them to the repository
+you're bisecting in so that they can be considered too. Anyway, I've
+added Luis to Cc for comment.
 
-> 2. Cc's the stable team.
+@Luis: bug descrption is above.
 
-It's not stable fix, this bug was introduced currently by
+Btw, there's a newer version against 2.6.39-rc6 which you might want to
+test too: http://marc.info/?l=linux-wireless&m=130455450126421&w=2
 
-commit 1c0bcf89d85cc97a0d9ce4cd909351a81fa4fdde
-Author: Ivo van Doorn <ivdoorn@gmail.com>
-Date:   Sat Apr 30 17:18:18 2011 +0200
+HTH.
 
-    rt2x00: Add autowake support for USB hardware
-
-Thanks
-Stanislaw
+-- 
+Regards/Gruss,
+    Boris.
