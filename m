@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59836 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:17438 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932176Ab1ETNNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 09:13:46 -0400
+	id S1754801Ab1ESMjW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 08:39:22 -0400
 Received: from mail.atheros.com ([10.234.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 06:13:15 -0700
-Message-ID: <4DD668F4.6090308@atheros.com> (sfid-20110520_151349_772612_D9BF9393)
-Date: Fri, 20 May 2011 16:13:24 +0300
-From: Kalle Valo <kalle.valo@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 05:38:51 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: mark few functions as static
+Date: Thu, 19 May 2011 18:08:57 +0530
+Message-ID: <1305808737-11021-1-git-send-email-mshajakhan@atheros.com> (sfid-20110519_143925_326987_0B0247C0)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: gregkh@suse.de, linville@tuxdriver.com,
-	devel@linuxdriverproject.org
-Subject: Plan for ath6kl cleanup
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have been thinking about how to get ath6kl out from staging and get
-it to a first class citizen under drivers/net/wireless. There's quite a
-lot of work to do get ath6kl cleaned up and the prospect of doing all
-that through the staging-next tree wasn't that exciting. We would be
-sending hundreds of patches and it would take a long time to cleanup the
-driver. And the disconnection from the wireless core development also
-sounded very daunting (cfg80211 API changes etc.).
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-So we started to find a faster way to clean up ath6kl and ended up with
-a setup where we would have a separate tree in kernel.org just for
-ath6kl clean up. Once we think that the driver is ready, we will take
-the driver from the cleanup tree and submit as a single patch for
-review. As we will submit the driver as a single commit, history doesn't
-matter and this makes it possible to use not so perfect patches in our
-tree and save a lot of time.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 ---
+ drivers/net/wireless/ath/ath9k/main.c  |    6 +++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-During the transition period we will still fix the important bugs in the
-staging driver, and naturally port them to the cleaned up driver. But
-once the cleaned up driver is accepted we plan to remove the staging driver.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f75068b..2c02505 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -669,10 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 		    const struct ath_bus_ops *bus_ops);
+ void ath9k_deinit_device(struct ath_softc *sc);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
+-int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+-		    struct ath9k_channel *hchan);
+ 
+-void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode);
+ bool ath9k_uses_beacons(int type);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a198ee3..b205b7c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -219,7 +219,7 @@ static int ath_update_survey_stats(struct ath_softc *sc)
+  * by reseting the chip.  To accomplish this we must first cleanup any pending
+  * DMA, then restart stuff.
+ */
+-int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
++static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		    struct ath9k_channel *hchan)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -866,7 +866,7 @@ chip_reset:
+ #undef SCHED_INTR
+ }
+ 
+-void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
++static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -2332,7 +2332,7 @@ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
+ 	return false;
+ }
+ 
+-int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
++static int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+-- 
+1.7.0.4
 
-We already started the cleanup and created ath6kl-clean git tree here:
-
-http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary
-
-The tree is based on wireless-testing and I have cherry picked missing
-ath6kl patches from staging-next tree. Also the driver is already moved
-to drivers/net/wireless/ath/ath6kl directory to make it easy to submit
-the driver for review once it's ready.
-
-Everyone is free to send patches and participate in the ath6kl cleanup.
-As we don't want to clutter linux-wireless mailing list with hundreds of
-useless "staging" patches, please send the patches to kvalo@adurom.com
-(have to use my private email due to buggy email servers) and I will
-apply them.
-
-We have irc channel #ath6kl on freenode where some of the ath6kl devs
-hang out. Feel free to make any questions also there, just give enough
-time for people to answer. But naturally linux-wireless mailing list is
-the best place to ask questions.
-
-Also the wiki page contains some information and we will start adding more:
-
-http://wireless.kernel.org/en/users/Drivers/ath6kl
-
-Thoughts?
-
-Kalle
