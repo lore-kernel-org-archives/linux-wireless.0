@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4317 "EHLO MMS3.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:63609 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752649Ab1ECNmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:42:01 -0400
-Message-ID: <4DC0061E.8020504@broadcom.com> (sfid-20110503_154205_380806_C36622B7)
-Date: Tue, 3 May 2011 15:41:50 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S934621Ab1ESUez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 16:34:55 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 13:34:24 -0700
+Date: Thu, 19 May 2011 13:34:33 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Sarah Nadi <snadi@uwaterloo.ca>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: PROBLEM: No config definition for ATHEROS_AR71XX
+Message-ID: <20110519203433.GB4884@tux> (sfid-20110519_223458_425925_01633139)
+References: <4DD5315A.4050005@uwaterloo.ca>
 MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcm80211: Fix for suspend/resume bug
-References: <1304406057-8722-1-git-send-email-sukeshs@broadcom.com>
- <1304406057-8722-3-git-send-email-sukeshs@broadcom.com>
- <20110503121522.GB22674@suse.de> <4DBFF628.6040502@broadcom.com>
- <20110503130049.GA29438@suse.de> <4DBFFE80.3030305@broadcom.com>
- <20110503131157.GA29915@suse.de> <4DC00050.5000009@broadcom.com>
-In-Reply-To: <4DC00050.5000009@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4DD5315A.4050005@uwaterloo.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2011 03:17 PM, Arend van Spriel wrote:
-> On 05/03/2011 03:11 PM, Greg KH wrote:
->> On Tue, May 03, 2011 at 03:09:20PM +0200, Arend van Spriel wrote:
->>> On 05/03/2011 03:00 PM, Greg KH wrote:
->>>> On Tue, May 03, 2011 at 02:33:44PM +0200, Arend van Spriel wrote:
->>>>> On 05/03/2011 02:15 PM, Greg KH wrote:
->>>>>> On Tue, May 03, 2011 at 12:00:57AM -0700, sukeshs@broadcom.com wrote:
->>>>>>>    #if defined(CONFIG_PM_SLEEP)
->>>>>>>
->>>>>>> +extern volatile bool dhd_mmc_suspend;
->>>>>> This does not do what you think it does.
->>>>> Hi Greg,
->>>>>
->>>>> I posted the 'catchup' patch set and I rebased it on '[PATCH 1/2]
->>>>> brcm80211: FIX for TKIP GTK bug' from Sukesh. The only other two
->>>>> patches I saw on the linuxdriver list are:
->>>> You rebased on a 1/2 patch in a series with an invalid 0/2 email?
->>>>
->>>> {sigh}
->>> Sorry.
->>>> I dropped that patch as the whole series needed to be resent, do you
->>>> want me to apply that one patch before yours?
->>> I can resend my series if that is more convenient for you.
->> Please, but just send it to me, I doubt everyone wants to see 60+
->> patches again on the list.
-> Ok. Just for this time I will agree to break the rules ;-)
+On Thu, May 19, 2011 at 08:03:54AM -0700, Sarah Nadi wrote:
+> #ifdef CONFIG_ATHEROS_AR71XX
+> int ath_ahb_init(void);
+> void ath_ahb_exit(void);
+> #else
+> static inline int ath_ahb_init(void) { return 0; };
+> static inline void ath_ahb_exit(void) {};
+> #endif
 
-Hi Greg,
+This was present in openwrt tree, Gabor has started moving
+this stuff upstream, and recently removed the ifdef stuff
+anyway IIRC.
 
-I rebase and regenerated the patch files. Did a diff before resending 
-them with the previous set and there are no relevant differences so the 
-patches I sent this morning are ok.
-
-Gr. AvS
-
-
+  Luis
