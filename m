@@ -1,62 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23274 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755392Ab1EXKAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 06:00:19 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 02:59:48 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH v3] ath9k: wake up chip before initializing PAPRD table
-Date: Tue, 24 May 2011 15:29:52 +0530
-Message-ID: <1306231192-20638-1-git-send-email-mshajakhan@atheros.com> (sfid-20110524_120023_848673_3F6AD293)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:60368 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933806Ab1ESTFp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 15:05:45 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 316BE540157
+	for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 15:11:44 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-19 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110519190543.C211E40EC3@repository3.orbit-lab.org> (sfid-20110519_210548_786774_E6C0FB3C)
+Date: Thu, 19 May 2011 15:05:43 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 6896821...aaa2b6d akpm-end   -> origin/akpm-end  (forced update)
+   c1d10d1..fce5195  akpm-start -> origin/akpm-start
+   55b972e..8a21487  history    -> origin/history
+ + bff5277...7761e62 master     -> origin/master  (forced update)
+   c1d10d1..fce5195  stable     -> origin/stable
+ * [new tag]         next-20110519 -> next-20110519
 
-In PAPRD table initialization path we do some register read, so
-make sure the chip is awake during that. Currently PAPRD is disabled.
+compat-wireless code metrics
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a198ee3..bbdc1e8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -394,12 +394,14 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	if (!caldata)
- 		return;
- 
-+	ath9k_ps_wakeup(sc);
-+
- 	if (ar9003_paprd_init_table(ah) < 0)
--		return;
-+		goto fail_paprd;
- 
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
--		return;
-+		goto fail_paprd;
- 
- 	skb_put(skb, len);
- 	memset(skb->data, 0, len);
-@@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
--	ath9k_ps_wakeup(sc);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
- 		if (!(common->tx_chainmask & BIT(chain)))
- 			continue;
--- 
-1.7.0.4
-
+    822795 - Total upstream lines of code being pulled
