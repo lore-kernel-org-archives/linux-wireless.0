@@ -1,107 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:43220 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751608Ab1EWFdC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 01:33:02 -0400
-Received: by ewy6 with SMTP id 6so2272515ewy.24
-        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 22:32:59 -0700 (PDT)
-Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Felipe Balbi <balbi@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTimf8+hLym2RHGeG1r=7EOj91c3Uzg@mail.gmail.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
-	 <1305321990-22041-4-git-send-email-balbi@ti.com>
-	 <BANLkTinPipSVdsH5cTb24HKex_h7pOwpAg@mail.gmail.com>
-	 <BANLkTi=LKE_wWKxcN0+Unkcqv-tLOKqDXw@mail.gmail.com>
-	 <1306085440.12586.1696.camel@cumari>
-	 <BANLkTimf8+hLym2RHGeG1r=7EOj91c3Uzg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 May 2011 08:32:53 +0300
-Message-ID: <1306128773.12586.1704.camel@cumari> (sfid-20110523_073312_878032_CC8E9EA9)
-Mime-Version: 1.0
+Received: from dell.nexicom.net ([216.168.96.13]:50809 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932268Ab1ESP5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 11:57:19 -0400
+Message-ID: <4DD53E01.7060509@lockie.ca> (sfid-20110519_175736_584921_A5E5DF23)
+Date: Thu, 19 May 2011 11:57:53 -0400
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: Borislav Petkov <bp@alien8.de>,
+	Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: help to bisect
+References: <4DD31264.4070704@lockie.ca> <20110518072245.GB17608@liondog.tnic> <4DD42F10.90602@lockie.ca> <20110518211723.GA4313@liondog.tnic> <4DD45D2D.7060300@lockie.ca> <20110519074722.GD14049@liondog.tnic>
+In-Reply-To: <20110519074722.GD14049@liondog.tnic>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-23 at 00:57 +0300, Eliad Peller wrote:
-> On Sun, May 22, 2011 at 8:30 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Sun, 2011-05-22 at 15:37 +0300, Eliad Peller wrote:
-> >> On Sun, May 22, 2011 at 3:34 PM, Eliad Peller <eliad@wizery.com> wrote:
-> >> > On Sat, May 14, 2011 at 12:26 AM, Felipe Balbi <balbi@ti.com> wrote:
-> >> >> Those have little value. Remove those to make
-> >> >> the driver less noisy.
-> >> >>
-> >> >> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> >> >> ---
-> >> > [...]
-> >> >> @@ -287,8 +287,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
-> >> >>        /* Tell PM core that we don't need the card to be powered now */
-> >> >>        pm_runtime_put_noidle(&func->dev);
-> >> >>
-> >> >> -       wl1271_notice("initialized");
-> >> >> -
-> >> >>        return 0;
-> >> >>
-> >> >
-> >> >>  static void __exit wl1271_exit(void)
-> >> >>  {
-> >> >>        sdio_unregister_driver(&wl1271_sdio_driver);
-> >> >> -
-> >> >> -       wl1271_notice("unloaded");
-> >> >>  }
-> >> >>
-> >> >
-> >> > in fact, i find these prints pretty useful.
-> >> > does changing wl1271_notice to wl1271_debug(DEBUG_MAC80211) will solve
-> >> > the "nosiness"?
-> >> > (i use DEBUG_MAC80211 rather than DEBUG_SDIO, as DEBUG_SDIO is really
-> >> > *very* noisy)
-> >> >
-> >> > (i'll send it as a new patch as the original patch was already applied)
-> >> >
-> >> > Eliad.
-> >> >
-> >>
-> >> err... s/nosiness/noisiness/
-> >
-> > I think these are pretty useless.  You can see whether the driver is
-> > loaded or not by lsmod'ing.  You can also use ftrace to get the same
-> > stuff, if you want to know whether the driver is loaded or not offline.
-> > Or what is the scenario where you think this is useful?
-> >
-> i was thinking about a simple offline log analysis, where it's pretty
-> useful to know when the wl12xx_sdio was insmod'ed/rmmod'ed.
+On 05/19/11 03:47, Borislav Petkov wrote:
+> On Wed, May 18, 2011 at 07:58:37PM -0400, James wrote:
+>> On 05/18/11 17:17, Borislav Petkov wrote:
+>>> First of all, please hit "reply-to-all" next time so that all recipients
+>>> can receive your mail and not find it by chance when looking thru the
+>>> new lkml messages.
+>>>
+>>> On Wed, May 18, 2011 at 04:41:52PM -0400, James wrote:
+>>>> Here is what I did:
+>>>>
+>>>> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+>>>> $ cd linux-2.6.37.y
+>>>> $ git checkout v2.6.36
+>>>> build and boot kernel
+>>> what does that mean? Is .36 ok?
+>> Yes, no problems.
+>>>> $ cd linux-2.6.37.y
+>>>> $ git bisect start
+>>>> $ git bisect good v2.6.36
+>>>> $ git bisect bad v2.6.37.6
+>>> Also, is .37.6 bad?
+>> Yes, it is bad.
+>>>> build and boot kernel
+>>>> git bisect good|bad
+>>>> repeat
+>>>>
+>>>> 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
+>>> Which is a merge commit and it means that you most likely made a mistake
+>>> during bisection.
+>> Am I doing it right?
+>> boot kernel, cd to git source, git bisect good or bad, compile new
+>> kernel and copy it to /boot,
+> Dumb question: do you boot into that new kernel and test it each time
+> before tagging it as good or bad?
+Yes, I boot the new kernel.
+I also did 'make clean' and 'make oldconfig' before I built each kernel.
+>> repeat
+>>> What is actually the problem you're experiencing with .37.6?
+>>>
+>>> ..
+>>>
+>>>> How do I find out what change causes the problem?
+>>>> The problem causes my wireless card not to work.
+>>> Ah, here it is.
+>>>
+>>>> Other people have similar cards that do work so the problem seems
+>>>> isolated to my hardware but kernel-2.6.36 works so I don't think my
+>>>> hardware is faulty.
+>>> Which card is that? (adding linux-wireless)
+>> D-Link dwa552
+>> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+>> mem=0xffffc90000140
+>> 000, irq=16
+>> Other people have this card working so it is probably my system
+>> configuration that is causing an obscure bug.
+>>
+>>> Please, describe in a very detailed way how your problem incarnates
+>>> itself: dmesg, error messages, what exactly do you do to trigger it?
+>> It seems to be 100% that if "ath: Failed to stop TX DMA in 100 msec
+>> after killing last frame
+>> ath: Failed to stop TX DMA!" shows up in dmesg that scans don't return
+>> any APs or 1-3 (iwlist wlan0 scan | grep SSID).
+>> If there is a different way to scan, I'll try that.
+>>
+>>
+>>
+>>> Also, can you test whether 38.6 works for ya - it could've been fixed in
+>>> the meantime. You can also test .39 which will be released any minute
+>>> now.
+>> 38.6 does NOT work and compat-wireless-2011-05-11 works on kernel-2.6.36
+>> which is why I think it is the kernel and not the wireless code.
+>>> I think that should be enough for now.
+> Aha, here's the deal. You're using compat-wireless which is a bunch of
+> patches ontop of the kernel so you want to add them to the repository
+> you're bisecting in so that they can be considered too. Anyway, I've
+> added Luis to Cc for comment.
+I made a typo, I tried compatwireless to kernel-2.6.36.4 to make sure.
+None of the kernels I bisected had compatwireless.
+> @Luis: bug descrption is above.
+>
+> Btw, there's a newer version against 2.6.39-rc6 which you might want to
+> test too: http://marc.info/?l=linux-wireless&m=130455450126421&w=2
+>
+> HTH.
+I built http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.39.tar.bz2
 
-Have you really had to know when the modules are insmodded or rmmoded?
+I tried to compile
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/compat-wireless-2.6.39-rc6-1-sp.tar.bz2
+./scripts/gen-compat-autoconf.sh config.mk >
+include/linux/compat_autoconf.h   
+make -C /lib/modules/2.6.38.6/build
+M=/usr/src/compat-wireless-2.6.39-rc6-1-sp
+modules                                                                         
 
+make[1]: Entering directory
+`/usr/src/linux-2.6.38.6'                          
+  CC [M] 
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/main.o               
+  CC [M] 
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.o      
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.c: In
+function
+'tty_set_termios':                                                                
 
-> i haven't tried ftrace yet. i'll give it a look.
-> anyway, the whole wl12xx driver is full of similar logs that get
-> called multiple times, so i don't see the real advantage of removing 2
-> prints that get called only once.
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.c:93:
+error: 'TASK_INTERRUPTIBLE' undeclared (first use in this
+function)                        
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.c:93:
+error: (Each undeclared identifier is reported only
+once                                   
+/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.c:93:
+error: for each function it appears
+in.)                                                   
+make[3]: ***
+[/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat/compat-2.6.39.o] Error
+1                                                                         
+make[2]: *** [/usr/src/compat-wireless-2.6.39-rc6-1-sp/compat] Error
+2         
+make[1]: *** [_module_/usr/src/compat-wireless-2.6.39-rc6-1-sp] Error
+2        
+make[1]: Leaving directory
+`/usr/src/linux-2.6.38.6'                           
+make: *** [modules] Error
+2                                                    
 
-Yeah, the driver is full of useless logs.  That's why I'm going to
-rework it.  My idea is to use more standard tracing (nobody needs to
-learn wl12xx debug bitmask and how to set it), using ftrace and friends.
+I wonder if it could be simply something is missing in my .config
+I put it on http://lockie.ca/test/config.bz2
 
-These two were removed now because Felipe has reworked the SDIO/SPI
-modules and, at the same time, cleaned it up a little.  I think it's
-good to clean up things little by little, especially on the parts that
-are being touched anyway.
+This is the first kernel that doesn't work that displays the dmesg
+errors after I try a scan.
+Usually the messages show up immediately.
 
+I can't reproduce this but this was in dmesg the first time I booted:
 
-> > I'm reworking the whole way our traces are handled, so I don't think
-> > reintroducing them is a good thing.
-> 
-> ok. so i'll just wait for your rework :)
+ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+DMADBG_7=0x000062c0
+ath: Could not stop RX, we could be confusing the DMA engine when we
+start RX up
+------------[ cut here ]------------
+WARNING: at drivers/net/wireless/ath/ath9k/recv.c:507
+ath_stoprecv+0xcf/0xf1 [ath9k]()
+Hardware name: To Be Filled By O.E.M.
+Modules linked in: ath9k mac80211 ath9k_common ath9k_hw ath cfg80211
+Pid: 699, comm: kworker/u:4 Not tainted 2.6.39 #1
+Call Trace:
+ [<ffffffff81029eb8>] ? warn_slowpath_common+0x78/0x8c
+ [<ffffffffa00bfd90>] ? ath_stoprecv+0xcf/0xf1 [ath9k]
+ [<ffffffffa00bd6fb>] ? ath_set_channel+0xce/0x273 [ath9k]
+ [<ffffffffa002485f>] ? ath_hw_cycle_counters_update+0xdf/0x123 [ath]
+ [<ffffffffa00bdbc0>] ? ath9k_config+0x320/0x435 [ath9k]
+ [<ffffffffa008b796>] ? ieee80211_scan_work+0x2e7/0x456 [mac80211]
+ [<ffffffffa008b4af>] ? ieee80211_scan_completed+0x29/0x29 [mac80211]
+ [<ffffffff8103b7fa>] ? process_one_work+0x20e/0x34e
+ [<ffffffff8103bd39>] ? worker_thread+0x1c9/0x340
+ [<ffffffff81020af5>] ? __wake_up_common+0x41/0x78
+ [<ffffffff8103bb70>] ? rescuer_thread+0x236/0x236
+ [<ffffffff8103bb70>] ? rescuer_thread+0x236/0x236
+ [<ffffffff8103eb4a>] ? kthread+0x7a/0x82
+ [<ffffffff8133a9d4>] ? kernel_thread_helper+0x4/0x10
+ [<ffffffff8103ead0>] ? kthread_worker_fn+0x107/0x107
+ [<ffffffff8133a9d0>] ? gs_change+0xb/0xb
+---[ end trace 7d1c5ea6cf770ada ]---
 
-It may still take a bit of time, because it's not my highest priority
-right now and the changes are quite intrusive (in the sense that they
-will touch every file), but when it's ready, I think it's going to be
-cool, you'll be able to use trace-cmd, kernelshark etc.
-
--- 
-Cheers,
-Luca.
-
+I put the full dmesg output on I put it on
+http://lockie.ca/test/dmesg.txt.bz2
