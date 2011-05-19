@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60173 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756630Ab1E3Qqh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 12:46:37 -0400
-Subject: Re: [RFC 1/2] mac80211: add ieee80211_get_operstate() function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1306418007-27573-1-git-send-email-eliad@wizery.com> (sfid-20110526_155333_039329_FF0E4F28)
-References: <1306418007-27573-1-git-send-email-eliad@wizery.com>
-	 (sfid-20110526_155333_039329_FF0E4F28)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 May 2011 18:46:34 +0200
-Message-ID: <1306773994.3448.9.camel@jlt3.sipsolutions.net> (sfid-20110530_184640_624634_BD9F866C)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:49615 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932424Ab1ESJAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 05:00:10 -0400
+Message-ID: <4DD4DC13.5020006@openwrt.org> (sfid-20110519_110014_691478_956E5276)
+Date: Thu, 19 May 2011 11:00:03 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath9k: unify edma and non-edma tx code, improve tx
+ fifo handling
+References: <1305719964-44292-1-git-send-email-nbd@openwrt.org> <20110518190733.GA2543@tuxdriver.com>
+In-Reply-To: <20110518190733.GA2543@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-26 at 16:53 +0300, Eliad Peller wrote:
-> Add ieee80211_get_operstate() function to get the operstate
-> of the netdevice.
-> 
-> This is needed for drivers that need to know when the interface
-> is IF_OPER_UP (e.g. wl12xx), and block notifiers can't be used
-> (e.g. because the interface is already IF_OPER_UP, like after
-> resuming from suspend)
+On 2011-05-18 9:07 PM, John W. Linville wrote:
+>    CC [M]  drivers/net/wireless/ath/ath9k/xmit.o
+> drivers/net/wireless/ath/ath9k/xmit.c: In function ‘ath_tx_edma_tasklet’:
+> drivers/net/wireless/ath/ath9k/xmit.c:2199:18: warning: ‘txq’ may be used uninitialized in this function
+>
+> Please don't add warnings, especially not valid ones... :-)
+Odd, I wonder why my compiler didn't show me this warning when I worked 
+on the patch, need to check my CFLAGS :)
 
-I don't see how this is necessary since the operstate can't change
-during suspend?
-
-johannes
-
+- Felix
