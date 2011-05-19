@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56957 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977Ab1EPRnj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 13:43:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: lrodriguez@atheros.com
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36054 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932349Ab1ESVUE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2011 17:20:04 -0400
+Received: by iyb14 with SMTP id 14so2432867iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:20:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1305395252-21873-1-git-send-email-hauke@hauke-m.de>
+References: <1305395252-21873-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 19 May 2011 14:19:44 -0700
+Message-ID: <BANLkTin=FddRF8xMUNJCwg1efpDZGRad0Q@mail.gmail.com> (sfid-20110519_232009_159476_F8E80B52)
+Subject: Re: [PATCH] compat: add header linux/printk.h
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] compat: backport PCI_EEPROM_WIDTH_93C86
-Date: Mon, 16 May 2011 19:43:34 +0200
-Message-Id: <1305567815-73528-2-git-send-email-nbd@openwrt.org> (sfid-20110516_194351_096440_01B31197)
-In-Reply-To: <1305567815-73528-1-git-send-email-nbd@openwrt.org>
-References: <1305567815-73528-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/linux/compat-2.6.36.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Sat, May 14, 2011 at 10:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Some drivers are including linux/printk.h and this is not available for
+> kernel < 2.6.37, but the needed declared methods are all in
+> linux/kernel.h.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 7a82522..2d756d1 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -123,6 +123,8 @@ static inline void tty_unlock(void) __releases(kernel_lock)
- 
- #define __rcu
- 
-+#define PCI_EEPROM_WIDTH_93C86	8
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
--- 
-1.7.3.2
+Applied, thanks!
 
+  Luis
