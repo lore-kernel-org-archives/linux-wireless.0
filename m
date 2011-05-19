@@ -1,41 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muse.oxfordinspire.co.uk ([93.93.128.48]:60046 "EHLO
-	muse.oxfordinspire.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532Ab1ECNh0 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59219 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934988Ab1ESVzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 09:37:26 -0400
-Message-ID: <4DBFFE64.6000306@exotica.org.uk> (sfid-20110503_153744_642635_8F0F6A61)
-Date: Tue, 03 May 2011 14:08:52 +0100
-From: Jools Wills <buzz@exotica.org.uk>
+	Thu, 19 May 2011 17:55:05 -0400
+Received: by iyb14 with SMTP id 14so2452306iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:55:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
-References: <484421.61252.qm@web161619.mail.bf1.yahoo.com>
-In-Reply-To: <484421.61252.qm@web161619.mail.bf1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 19 May 2011 14:54:45 -0700
+Message-ID: <BANLkTincR3j6i76g7DzyQfPCqDZL7C6iKg@mail.gmail.com> (sfid-20110519_235515_543539_BB5F056C)
+Subject: compat-wireless and compat updated
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in case it is useful:
+I applied all patches which were pending or that I could find, also
+fixed compat-wireless to apply after some newer updates. If there is
+anything missing please resend but I think I got everything. Should
+take a few minutes for kernel.org to synch with the updates. I'll kick
+a tarball in a while.
 
-I am currently using the vendor driver on a device I have (O2 Joggler).
-The rt2800usb driver didn't work well and the staging rt2870sta driver
-didn't seem to work with wireless N and users reported to me that it
-drops the connection and is unreliable. The vendor driver does seem to
-work best.
-
-I made a debian package (using dkms) of the vendor driver on my joggler
-ppa. tested working wiht 2.6.37/2.6.38
-
-https://launchpad.net/~jools/+archive/joggler
-
-note it doesn't automatically install the newer firmware so that will
-need to be done manually.
-
-Best Regards
-
-Jools
+  Luis
