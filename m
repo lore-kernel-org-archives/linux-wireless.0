@@ -1,147 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:38481 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753530Ab1E2M45 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42234 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934830Ab1ESVfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 08:56:57 -0400
-Received: by wwa36 with SMTP id 36so3143732wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:56:55 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] wl12xx: don't check wow param on suspend/resume
-Date: Sun, 29 May 2011 15:56:49 +0300
-Message-Id: <1306673812-27978-1-git-send-email-eliad@wizery.com> (sfid-20110529_145700_219699_59993BC4)
+	Thu, 19 May 2011 17:35:55 -0400
+Date: Thu, 19 May 2011 16:35:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: zajec5@gmail.com, John W Linville <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix bogus compilation warning for phy_n
+Message-ID: <4dd58d39.ev8WALmbdvCfJmAJ%Larry.Finger@lwfinger.net> (sfid-20110519_233658_391766_B99DDA1C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since mac80211 calls suspend/resume only when wowlan triggers
-exist, there is no need to check for triggers existance in the
-callbacks as well.
-Add a WARN_ON() to verify it.
+When cross-compiling the 2.6.39 wireless-testing source using GCC version
+(SUSE Linux) 4.3.2 [gcc-4_3-branch revision 141291] on an x86_64 system,
+the following warning is issued:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+  CC [M]  drivers/net/wireless/b43/phy_n.o
+drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_cal_tx_iq_lo’:
+drivers/net/wireless/b43/phy_n.c:3096: warning: ‘last’ may be used
+        uninitialized in this function
+
+A quick look at the code shows that the warning is bogus and a gcc bug,
+but to ensure clean compilation for all users, mark the offending variable
+as uninitialized.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/wl12xx/main.c |   87 ++++++++++++++++++------------------
- 1 files changed, 43 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fb0f764..8eb52b7 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1544,69 +1544,68 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 			    struct cfg80211_wowlan *wow)
- {
- 	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
--	wl->wow_enabled = !!wow;
--	if (wl->wow_enabled) {
--		int ret;
--		ret = wl1271_configure_suspend(wl);
--		if (ret < 0) {
--			wl1271_warning("couldn't prepare device to suspend");
--			return ret;
--		}
--		/* flush any remaining work */
--		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
--		flush_delayed_work(&wl->scan_complete_work);
-+	WARN_ON(!wow || !wow->any);
+Index: wireless-testing-new/drivers/net/wireless/b43/phy_n.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/b43/phy_n.c
++++ wireless-testing-new/drivers/net/wireless/b43/phy_n.c
+@@ -3093,7 +3093,7 @@ static int b43_nphy_cal_tx_iq_lo(struct
+ 	int freq;
+ 	bool avoid = false;
+ 	u8 length;
+-	u16 tmp, core, type, count, max, numb, last, cmd;
++	u16 tmp, core, type, count, max, numb, uninitialized_var(last), cmd;
+ 	const u16 *table;
+ 	bool phy6or5x;
  
--		/*
--		 * disable and re-enable interrupts in order to flush
--		 * the threaded_irq
--		 */
--		wl1271_disable_interrupts(wl);
-+	wl->wow_enabled = true;
-+	ret = wl1271_configure_suspend(wl);
-+	if (ret < 0) {
-+		wl1271_warning("couldn't prepare device to suspend");
-+		return ret;
-+	}
-+	/* flush any remaining work */
-+	wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-+	flush_delayed_work(&wl->scan_complete_work);
- 
--		/*
--		 * set suspended flag to avoid triggering a new threaded_irq
--		 * work. no need for spinlock as interrupts are disabled.
--		 */
--		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+	/*
-+	 * disable and re-enable interrupts in order to flush
-+	 * the threaded_irq
-+	 */
-+	wl1271_disable_interrupts(wl);
-+
-+	/*
-+	 * set suspended flag to avoid triggering a new threaded_irq
-+	 * work. no need for spinlock as interrupts are disabled.
-+	 */
-+	set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+
-+	wl1271_enable_interrupts(wl);
-+	flush_work(&wl->tx_work);
-+	flush_delayed_work(&wl->pspoll_work);
-+	flush_delayed_work(&wl->elp_work);
- 
--		wl1271_enable_interrupts(wl);
--		flush_work(&wl->tx_work);
--		flush_delayed_work(&wl->pspoll_work);
--		flush_delayed_work(&wl->elp_work);
--	}
- 	return 0;
- }
- 
- static int wl1271_op_resume(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
-+	unsigned long flags;
-+	bool run_irq_work = false;
-+
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
- 		     wl->wow_enabled);
-+	WARN_ON(!wl->wow_enabled);
- 
- 	/*
- 	 * re-enable irq_work enqueuing, and call irq_work directly if
- 	 * there is a pending work.
- 	 */
--	if (wl->wow_enabled) {
--		struct wl1271 *wl = hw->priv;
--		unsigned long flags;
--		bool run_irq_work = false;
--
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
--		if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
--			run_irq_work = true;
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
--
--		if (run_irq_work) {
--			wl1271_debug(DEBUG_MAC80211,
--				     "run postponed irq_work directly");
--			wl1271_irq(0, wl);
--			wl1271_enable_interrupts(wl);
--		}
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
-+		run_irq_work = true;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
--		wl1271_configure_resume(wl);
-+	if (run_irq_work) {
-+		wl1271_debug(DEBUG_MAC80211,
-+			     "run postponed irq_work directly");
-+		wl1271_irq(0, wl);
-+		wl1271_enable_interrupts(wl);
- 	}
-+	wl1271_configure_resume(wl);
- 
- 	return 0;
- }
--- 
-1.7.0.4
-
