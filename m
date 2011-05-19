@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:47370 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753018Ab1EGCbM convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39301 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933194Ab1ESVnI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 22:31:12 -0400
-Received: by vxi39 with SMTP id 39so4006195vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 19:31:11 -0700 (PDT)
+	Thu, 19 May 2011 17:43:08 -0400
+Received: by qwk3 with SMTP id 3so1582056qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 14:43:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4DC47C04.1080604@candelatech.com>
-References: <4DBF1967.9010604@candelatech.com>
-	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>
-	<4DC042A5.9050806@candelatech.com>
-	<BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
-	<4DC17DAE.9020808@candelatech.com>
-	<4DC47C04.1080604@candelatech.com>
-Date: Sat, 7 May 2011 10:31:09 +0800
-Message-ID: <BANLkTiknUzyadwRLHbEZ4zLkVCmC5A7zKA@mail.gmail.com> (sfid-20110507_043115_760880_645B29B1)
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4dd58d39.ev8WALmbdvCfJmAJ%Larry.Finger@lwfinger.net>
+References: <4dd58d39.ev8WALmbdvCfJmAJ%Larry.Finger@lwfinger.net>
+Date: Thu, 19 May 2011 23:43:06 +0200
+Message-ID: <BANLkTinDciqW2yJLpwKemnSM=8_1Jy3Fxw@mail.gmail.com> (sfid-20110519_234312_596527_8D73AEB6)
+Subject: Re: [PATCH] b43: Fix bogus compilation warning for phy_n
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2011 06:53, Ben Greear <greearb@candelatech.com> wrote:
+2011/5/19 Larry Finger <Larry.Finger@lwfinger.net>:
+> When cross-compiling the 2.6.39 wireless-testing source using GCC version
+> (SUSE Linux) 4.3.2 [gcc-4_3-branch revision 141291] on an x86_64 system,
+> the following warning is issued:
+>
+> ¬†CC [M] ¬†drivers/net/wireless/b43/phy_n.o
+> drivers/net/wireless/b43/phy_n.c: In function ‚Äòb43_nphy_cal_tx_iq_lo‚Äô:
+> drivers/net/wireless/b43/phy_n.c:3096: warning: ‚Äòlast‚Äô may be used
+> ¬† ¬† ¬† ¬†uninitialized in this function
+>
+> A quick look at the code shows that the warning is bogus and a gcc bug,
+> but to ensure clean compilation for all users, mark the offending variable
+> as uninitialized.
 
-[top post]
+Did you check for both "last" usages on this function? From my quick
+review it seems "last" is set in case of
+1) mphase_cal_phase_id > 2
+xor
+2) b43_nphy_tx_tone returning success
 
-Ok, there's likely some PCI init bugs going on here; would someone
-with more background in this please take a look?
+I'm not so sure if this patch is correct.
 
-
-
-Adrian
-
->>> This and the previous AR93xx "0xabcd" device id post is starting to
->>> sound a lot like something's not waking up the PCI bus and/or chip
->>> "right" in order to get the PCI vendor id init'ed from the EEPROM..
->>
->> Well, I put in one NIC, it works fine, I put in the other, and it doesn't.
->>
->> Same system, reproducible on other systems from same manufacturer
->> (Lanner, LEC 2010E).
->>
->> Haven't tried it on a totally different motherboard. I'll send you this
->> broken NIC if you want...I'm too tight on time to hack on it now...
->
-> So, you were right. †I put this NIC in another system (VIA C3) and it comes
-> up
-> as AR9160 and loads ath9k driver just fine.
->
-> 00:0c.0 Network controller: Atheros Communications Inc. AR9160 802.11abgn
-> Wireless PCI Adapter (rev 01)
-> † † † †Subsystem: Device 0777:4082
-> † † † †Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
-> † † † †Memory at f6000000 (32-bit, non-prefetchable) [size=64K]
-> † † † †Capabilities: [44] Power Management version 2
-> † † † †Kernel driver in use: ath9k
-> † † † †Kernel modules: ath9k
->
-> Thanks,
-> Ben
->
->>
->> Ben
->>
->>
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc †http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at †http://vger.kernel.org/majordomo-info.html
->
+-- 
+Rafa≈Ç
