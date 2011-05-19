@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64045 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232Ab1ELF31 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 01:29:27 -0400
-Date: Thu, 12 May 2011 02:29:58 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-next-2.6 2011-05-12
-Message-ID: <20110512052958.GA2223@joana> (sfid-20110512_072934_178926_05F0CCF2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.perches.com ([173.55.12.10]:1765 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752871Ab1ESAcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2011 20:32:45 -0400
+Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
+From: Joe Perches <joe@perches.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+In-Reply-To: <4DD44C21.1080502@broadcom.com>
+References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+	 <4DD44C21.1080502@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 May 2011 17:32:43 -0700
+Message-ID: <1305765163.1745.4.camel@Joe-Laptop> (sfid-20110519_023301_469904_C4CE4425)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wed, 2011-05-18 at 15:45 -0700, Henry Ptasinski wrote:
+> On 05/18/2011 11:23 AM, Joe Perches wrote:
+> > All uses of DHD_<TYPE>  macros are for debugging only.
+> > Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
+> > for a more consistent style.
+> I generally like this approach, but in brcmsmac we've been switching to 
+> wiphy_err() and related instead.  Any strong argument for one over the 
+> other?
 
-I hope I'm in time for the merge window, I have a few patches I want push in.
-Device ID for a new device in ath3k firmware loader by Andy Ross, more L2CAP
-rewrite patches by me, Two fixes to enable LE usage by Vinicius Costa Gomes and
-a patch from Waldemar Rymarkiewicz that was left behind in the last pull
-request.
+These aren't described as errors but are debugging messages.
+ 
+> > -       DHD_TRACE(("%s: Enter\n", __func__));
+> > +       dhd_dbg(TRACE, "%s: Enter\n", __func__);
+> I'd propose moving __func__ into the macro definition itself, which 
+> would help ensure consistency (and shorten all the debug lines a bit).
 
-Please pull, thanks.
+I think TRACE is unnecessary and can be eliminated
+and replaced by the function tracer.
 
-The following changes since commit bbe6ad6dcb1eb26bd12ec85320f402721c3383ae:
+Not all uses use __func__.
+I think __func__ unnecessary and it should be avoided.
 
-  cfg80211/nl80211: add interval attribute for scheduled scans (2011-05-11 15:12:27 -0400)
+Other than that, I've no objections.
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
+> Also, perhaps rename to "brcm_dbg()", "bcm_dbg()" or something like that 
+> and move it into include/bcmutils.h, so brcmsmac can use it as well.
 
-Andy Ross (1):
-      Bluetooth: Device ids for ath3k on Pegatron Lucid tablets
+Your choice.
 
-Gustavo F. Padovan (4):
-      Bluetooth: Add l2cap_add_psm() and l2cap_add_scid()
-      Bluetooth: Handle psm == 0 case inside l2cap_add_psm()
-      Bluetooth: Remove l2cap_sk_list
-      Bluetooth: Remove leftover debug messages
-
-Vinicius Costa Gomes (2):
-      Bluetooth: Add support for sending connection events for LE links
-      Bluetooth: Add support for disconnecting LE links via mgmt
-
-Waldemar Rymarkiewicz (1):
-      Bluetooth: Double check sec req for pre 2.1 device
-
- drivers/bluetooth/ath3k.c        |    1 +
- drivers/bluetooth/btusb.c        |    1 +
- include/net/bluetooth/hci_core.h |    1 +
- include/net/bluetooth/l2cap.h    |    9 +-
- net/bluetooth/hci_conn.c         |   17 ++++
- net/bluetooth/hci_event.c        |    5 +-
- net/bluetooth/l2cap_core.c       |  193 ++++++++++++++++++++++++++------------
- net/bluetooth/l2cap_sock.c       |   72 +++------------
- net/bluetooth/mgmt.c             |    3 +
- net/bluetooth/rfcomm/core.c      |    2 +-
- 10 files changed, 180 insertions(+), 124 deletions(-)
-
--- 
-Gustavo F. Padovan
-http://profusion.mobi
