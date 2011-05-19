@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:44266 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab1EPV2c (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:49508 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932238Ab1ESXEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 17:28:32 -0400
-Date: Mon, 16 May 2011 17:27:26 -0400 (EDT)
-Message-Id: <20110516.172726.649208957302608650.davem@davemloft.net> (sfid-20110516_232841_164051_7A66D7AC)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-05-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110516211305.GG6551@tuxdriver.com>
-References: <20110516211305.GG6551@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 19 May 2011 19:04:45 -0400
+Received: by ewy4 with SMTP id 4so1014626ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 16:04:43 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: initialize last var in calibration function
+Date: Fri, 20 May 2011 01:04:46 +0200
+Message-Id: <1305846286-1505-1-git-send-email-zajec5@gmail.com> (sfid-20110520_010448_702305_F21138D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 16 May 2011 17:13:06 -0400
+Reported-by: Larry Finger <larry.finger@lwfinger.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Still another big batch of wireless LAN stuff intended for 2.6.40 -- the
-> wireless folks have really been eating their Wheaties this cycle!
-> 
-> Highlights of this batch include a new driver in the rtlwifi family,
-> some new AMBA-like bus infrastructure that is specific to Broadcom
-> devices, a Bluetooth pull from Gustavo and friends, a wl12xx pull from
-> Luca and friends, some mesh updates from the Cozybit folks, some more
-> fixups from the mwifiex team, a collection of mac80211 improvements from
-> Johannes, the usual flutter of patches around iwlwifi and ath9k, and a
-> spread of other updates.
-> 
-> Please let me know if there are problems!
-
-Wonderful, another strange bus layer :-)
-
-Pulled, thanks John!
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 9ed6515..05960dd 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3093,7 +3093,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+ 	int freq;
+ 	bool avoid = false;
+ 	u8 length;
+-	u16 tmp, core, type, count, max, numb, last, cmd;
++	u16 tmp, core, type, count, max, numb, last = 0, cmd;
+ 	const u16 *table;
+ 	bool phy6or5x;
+ 
+-- 
+1.7.1
 
