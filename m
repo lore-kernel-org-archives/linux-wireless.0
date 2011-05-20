@@ -1,256 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:37841 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756505Ab1E2UFQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 16:05:16 -0400
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id E79088BDC8
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:14 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh04.mail.saunalahti.fi (Postfix) with ESMTP id BEEE841BE3
-	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:13 +0300 (EEST)
-Subject: [RFC PATCH 09/27] mac80211: rename ieee80211_bss to mac80211_bss
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 29 May 2011 23:05:13 +0300
-Message-ID: <20110529200513.16479.66059.stgit@localhost6.localdomain6> (sfid-20110529_220553_019194_16D7C9BD)
-In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
-References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+Received: from mail.atheros.com ([12.19.149.2]:59052 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935737Ab1ETMWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 08:22:43 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 05:22:13 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 3/6] ath9k: Handle IBSS status changes in BSS_CHANGED_IBSS
+Date: Fri, 20 May 2011 17:52:12 +0530
+Message-ID: <1305894135-14036-3-git-send-email-rmanoharan@atheros.com> (sfid-20110520_142246_780624_15980B93)
+In-Reply-To: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/ibss.c       |    6 +++---
- net/mac80211/mac80211_i.h |   16 ++++++++--------
- net/mac80211/main.c       |    2 +-
- net/mac80211/mlme.c       |   10 +++++-----
- net/mac80211/scan.c       |   12 ++++++------
- 5 files changed, 23 insertions(+), 23 deletions(-)
+Configure ibss node's bss_changes under BSS_CHANGED_IBSS.
+And also start/stop ani timer only if the station join/leave
+the group.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 2533947..40f14f2 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -211,7 +211,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   85 +++++++++++++++++----------------
+ 1 files changed, 44 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2ca351f..81708ed 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1412,7 +1412,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 
+ 	/* Set up ANI */
+-	if ((iter_data.naps + iter_data.nadhocs) > 0) {
++	if (iter_data.naps > 0) {
+ 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 		sc->sc_flags |= SC_OP_ANI_RUN;
+ 		ath_start_ani(common);
+@@ -1952,50 +1952,35 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+-	switch (sc->sc_ah->opmode) {
+-	case NL80211_IFTYPE_ADHOC:
+-		/* There can be only one vif available */
++	/*
++	 * Skip iteration if primary station vif's bss info
++	 * was not changed
++	 */
++	if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
++		return;
++
++	if (bss_conf->assoc) {
++		sc->sc_flags |= SC_OP_PRIM_STA_VIF;
++		avp->primary_sta_vif = true;
+ 		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 		common->curaid = bss_conf->aid;
+ 		ath9k_hw_write_associd(sc->sc_ah);
+-		/* configure beacon */
+-		if (bss_conf->enable_beacon)
+-			ath_beacon_config(sc, vif);
+-		break;
+-	case NL80211_IFTYPE_STATION:
+-		/*
+-		 * Skip iteration if primary station vif's bss info
+-		 * was not changed
+-		 */
+-		if (sc->sc_flags & SC_OP_PRIM_STA_VIF)
+-			break;
+-
+-		if (bss_conf->assoc) {
+-			sc->sc_flags |= SC_OP_PRIM_STA_VIF;
+-			avp->primary_sta_vif = true;
+-			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+-			common->curaid = bss_conf->aid;
+-			ath9k_hw_write_associd(sc->sc_ah);
+-			ath_dbg(common, ATH_DBG_CONFIG,
++		ath_dbg(common, ATH_DBG_CONFIG,
+ 				"Bss Info ASSOC %d, bssid: %pM\n",
+ 				bss_conf->aid, common->curbssid);
+-			ath_beacon_config(sc, vif);
+-			/*
+-			 * Request a re-configuration of Beacon related timers
+-			 * on the receipt of the first Beacon frame (i.e.,
+-			 * after time sync with the AP).
+-			 */
+-			sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
+-			/* Reset rssi stats */
+-			sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+-			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
++		ath_beacon_config(sc, vif);
++		/*
++		 * Request a re-configuration of Beacon related timers
++		 * on the receipt of the first Beacon frame (i.e.,
++		 * after time sync with the AP).
++		 */
++		sc->ps_flags |= PS_BEACON_SYNC | PS_WAIT_FOR_BEACON;
++		/* Reset rssi stats */
++		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
++		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+ 
+-			sc->sc_flags |= SC_OP_ANI_RUN;
+-			ath_start_ani(common);
+-		}
+-		break;
+-	default:
+-		break;
++		sc->sc_flags |= SC_OP_ANI_RUN;
++		ath_start_ani(common);
+ 	}
  }
  
- static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
--				    struct ieee80211_bss *bss)
-+				    struct mac80211_bss *bss)
- {
- 	struct cfg80211_bss *cbss =
- 		container_of((void *)bss, struct cfg80211_bss, priv);
-@@ -260,7 +260,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	struct mac80211_local *local = sdata->local;
- 	int freq;
- 	struct cfg80211_bss *cbss;
--	struct ieee80211_bss *bss;
-+	struct mac80211_bss *bss;
- 	struct sta_info *sta;
- 	struct ieee80211_channel *channel;
- 	u64 beacon_timestamp, rx_timestamp;
-@@ -600,7 +600,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 				capability);
+@@ -2005,6 +1990,9 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
  
- 	if (cbss) {
--		struct ieee80211_bss *bss;
-+		struct mac80211_bss *bss;
++	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
++		return;
++
+ 	/* Reconfigure bss info */
+ 	if (avp->primary_sta_vif && !bss_conf->assoc) {
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+@@ -2023,8 +2011,7 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	 * None of station vifs are associated.
+ 	 * Clear bssid & aid
+ 	 */
+-	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+-	    !(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
++	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF)) {
+ 		ath9k_hw_write_associd(sc->sc_ah);
+ 		/* Stop ANI */
+ 		sc->sc_flags &= ~SC_OP_ANI_RUN;
+@@ -2054,6 +2041,22 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 			common->curbssid, common->curaid);
+ 	}
  
- 		bss = (void *)cbss->priv;
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index ddaf7de..fffafa8 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -74,7 +74,7 @@ struct mac80211_fragment_entry {
- };
- 
- 
--struct ieee80211_bss {
-+struct mac80211_bss {
- 	/* don't want to look up all the time */
- 	size_t ssid_len;
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-@@ -106,7 +106,7 @@ struct ieee80211_bss {
- 	u8 erp_value;
- };
- 
--static inline u8 *bss_mesh_cfg(struct ieee80211_bss *bss)
-+static inline u8 *bss_mesh_cfg(struct mac80211_bss *bss)
- {
- #ifdef CONFIG_MAC80211_MESH
- 	return bss->mesh_cfg;
-@@ -114,7 +114,7 @@ static inline u8 *bss_mesh_cfg(struct ieee80211_bss *bss)
- 	return NULL;
- }
- 
--static inline u8 *bss_mesh_id(struct ieee80211_bss *bss)
-+static inline u8 *bss_mesh_id(struct mac80211_bss *bss)
- {
- #ifdef CONFIG_MAC80211_MESH
- 	return bss->mesh_id;
-@@ -122,7 +122,7 @@ static inline u8 *bss_mesh_id(struct ieee80211_bss *bss)
- 	return NULL;
- }
- 
--static inline u8 bss_mesh_id_len(struct ieee80211_bss *bss)
-+static inline u8 bss_mesh_id_len(struct mac80211_bss *bss)
- {
- #ifdef CONFIG_MAC80211_MESH
- 	return bss->mesh_id_len;
-@@ -1104,7 +1104,7 @@ int ieee80211_max_network_latency(struct notifier_block *nb,
- int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				      struct ieee80211_channel_sw_ie *sw_elem,
--				      struct ieee80211_bss *bss,
-+				      struct mac80211_bss *bss,
- 				      u64 timestamp);
- void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
-@@ -1146,7 +1146,7 @@ ieee80211_rx_result
- ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- 
- void ieee80211_mlme_notify_scan_completed(struct mac80211_local *local);
--struct ieee80211_bss *
-+struct mac80211_bss *
- ieee80211_bss_info_update(struct mac80211_local *local,
- 			  struct ieee80211_rx_status *rx_status,
- 			  struct ieee80211_mgmt *mgmt,
-@@ -1154,11 +1154,11 @@ ieee80211_bss_info_update(struct mac80211_local *local,
- 			  struct ieee802_11_elems *elems,
- 			  struct ieee80211_channel *channel,
- 			  bool beacon);
--struct ieee80211_bss *
-+struct mac80211_bss *
- ieee80211_rx_bss_get(struct mac80211_local *local, u8 *bssid, int freq,
- 		     u8 *ssid, u8 ssid_len);
- void ieee80211_rx_bss_put(struct mac80211_local *local,
--			  struct ieee80211_bss *bss);
-+			  struct mac80211_bss *bss);
- 
- /* scheduled scan handling */
- int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 87416c3..244f588 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -586,7 +586,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	if (!ops->set_key)
- 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
--	wiphy->bss_priv_size = sizeof(struct ieee80211_bss);
-+	wiphy->bss_priv_size = sizeof(struct mac80211_bss);
- 
- 	local = wiphy_priv(wiphy);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 451a9fd..4e24610 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -451,7 +451,7 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 
- void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				      struct ieee80211_channel_sw_ie *sw_elem,
--				      struct ieee80211_bss *bss,
-+				      struct mac80211_bss *bss,
- 				      u64 timestamp)
- {
- 	struct cfg80211_bss *cbss =
-@@ -708,7 +708,7 @@ void ieee80211_recalc_ps(struct mac80211_local *local, s32 latency)
- 		if (beaconint_us > latency) {
- 			local->ps_sdata = NULL;
- 		} else {
--			struct ieee80211_bss *bss;
-+			struct mac80211_bss *bss;
- 			int maxslp = 1;
- 			u8 dtimper;
- 
-@@ -963,7 +963,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 				     struct cfg80211_bss *cbss,
- 				     u32 bss_info_changed)
- {
--	struct ieee80211_bss *bss = (void *)cbss->priv;
-+	struct mac80211_bss *bss = (void *)cbss->priv;
- 	struct mac80211_local *local = sdata->local;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 
-@@ -1608,7 +1608,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- {
- 	struct mac80211_local *local = sdata->local;
- 	int freq;
--	struct ieee80211_bss *bss;
-+	struct mac80211_bss *bss;
- 	struct ieee80211_channel *channel;
- 	bool need_ps = false;
- 
-@@ -2413,7 +2413,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_assoc_request *req)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	struct ieee80211_bss *bss = (void *)req->bss->priv;
-+	struct mac80211_bss *bss = (void *)req->bss->priv;
- 	struct ieee80211_work *wk;
- 	const u8 *ssid;
- 	int i;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index e7b8be2..7c3d17b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -27,7 +27,7 @@
- #define IEEE80211_CHANNEL_TIME (HZ / 33)
- #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
- 
--struct ieee80211_bss *
-+struct mac80211_bss *
- ieee80211_rx_bss_get(struct mac80211_local *local, u8 *bssid, int freq,
- 		     u8 *ssid, u8 ssid_len)
- {
-@@ -43,14 +43,14 @@ ieee80211_rx_bss_get(struct mac80211_local *local, u8 *bssid, int freq,
- 
- static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
- {
--	struct ieee80211_bss *bss = (void *)cbss->priv;
-+	struct mac80211_bss *bss = (void *)cbss->priv;
- 
- 	kfree(bss_mesh_id(bss));
- 	kfree(bss_mesh_cfg(bss));
- }
- 
- void ieee80211_rx_bss_put(struct mac80211_local *local,
--			  struct ieee80211_bss *bss)
-+			  struct mac80211_bss *bss)
- {
- 	if (!bss)
- 		return;
-@@ -74,7 +74,7 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
- 	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
- }
- 
--struct ieee80211_bss *
-+struct mac80211_bss *
- ieee80211_bss_info_update(struct mac80211_local *local,
- 			  struct ieee80211_rx_status *rx_status,
- 			  struct ieee80211_mgmt *mgmt,
-@@ -84,7 +84,7 @@ ieee80211_bss_info_update(struct mac80211_local *local,
- 			  bool beacon)
- {
- 	struct cfg80211_bss *cbss;
--	struct ieee80211_bss *bss;
-+	struct mac80211_bss *bss;
- 	int clen, srlen;
- 	s32 signal = 0;
- 
-@@ -151,7 +151,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- {
- 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_mgmt *mgmt;
--	struct ieee80211_bss *bss;
-+	struct mac80211_bss *bss;
- 	u8 *elements;
- 	struct ieee80211_channel *channel;
- 	size_t baselen;
++	if (changed & BSS_CHANGED_IBSS) {
++		/* There can be only one vif available */
++		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
++		common->curaid = bss_conf->aid;
++		ath9k_hw_write_associd(sc->sc_ah);
++
++		if (bss_conf->ibss_joined) {
++			sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
++			sc->sc_flags |= SC_OP_ANI_RUN;
++			ath_start_ani(common);
++		} else {
++			sc->sc_flags &= ~SC_OP_ANI_RUN;
++			del_timer_sync(&common->ani.timer);
++		}
++	}
++
+ 	/* Enable transmission of beacons (AP, IBSS, MESH) */
+ 	if ((changed & BSS_CHANGED_BEACON) ||
+ 	    ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon)) {
+-- 
+1.7.5.1
 
