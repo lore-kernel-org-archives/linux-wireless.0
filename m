@@ -1,28 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm28-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.149]:22171 "HELO
-	nm28-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754316Ab1ERITA (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:56100 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935420Ab1ETMDW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 04:19:00 -0400
-Message-ID: <444460.90936.qm@web161614.mail.bf1.yahoo.com> (sfid-20110518_101905_700523_6EDD2436)
-Date: Wed, 18 May 2011 01:18:59 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: rt2x00: rt2800usb causing kernel panic /compat-wireless/
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, gwingerde@gmail.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 20 May 2011 08:03:22 -0400
+Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
+From: Luciano Coelho <coelho@ti.com>
+To: Felipe Balbi <balbi@ti.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1305321990-22041-4-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	 <1305321990-22041-4-git-send-email-balbi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 May 2011 15:03:18 +0300
+Message-ID: <1305892998.12586.1664.camel@cumari> (sfid-20110520_140341_247264_D293B3A5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A very peculiar bug.
+On Sat, 2011-05-14 at 00:26 +0300, Felipe Balbi wrote:
+> Those have little value. Remove those to make
+> the driver less noisy.
+> 
+> Signed-off-by: Felipe Balbi <balbi@ti.com>
+> ---
 
-With compat-wireless from 16.05 a nasty bug started to manifest itself. Right around association time, the rt2800usb causes kernel panic. The system freezes and the Caps Lock and Num Lock leds on the keyboard begin to flash.
+Applied also this one.  Thanks!
 
-Unfortunately there are no recoverable traces after the system failure to aid this bug report or to indicate its origin.
+-- 
+Cheers,
+Luca.
 
-I believe it may somehow be related to Ubuntu's network-manager. If I turn off the network-manager service, I can go into monitor mode for example, but if network-manager is running and I plug my USB dongle, it starts to associate, a second or two later the system is in complete meltdown.
-
-Nothing concrete, but a hunch is telling me this has something to do with the association mechanism of the rt2800usb. Compat-wireless from few days back exhibits no such foul play.
-
-Walter
