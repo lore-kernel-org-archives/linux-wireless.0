@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45414 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752Ab1E3XI0 convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:54401 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934559Ab1ETIZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 19:08:26 -0400
-Received: by iyb14 with SMTP id 14so3255094iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 16:08:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <umt4d3izhp45.fsf@gmail.com>
-References: <345324.53571.qm@web161601.mail.bf1.yahoo.com> <umt4d3izhp45.fsf@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 31 May 2011 09:08:06 +1000
-Message-ID: <BANLkTinHupLVp4JDGHZN72k4TqR7apPU7Q@mail.gmail.com> (sfid-20110531_010834_661139_9213EA41)
-Subject: Re: AP mode - usb wlan interface: Sagem XG-76NA 802.11bg
-To: mafeuser@gmail.com
-Cc: Walter Goldens <goldenstranger@yahoo.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 May 2011 04:25:34 -0400
+Received: by mail-ey0-f178.google.com with SMTP id 25so1297736eya.37
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 01:25:32 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH] wl12xx: change TX BA window size to 8
+Date: Fri, 20 May 2011 11:25:25 +0300
+Message-Id: <1305879925-10322-1-git-send-email-coelho@ti.com> (sfid-20110520_102539_447549_8C93353C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 31, 2011 at 07:09,  <mafeuser@gmail.com> wrote:
-> Hallo Walter.
->
-> Thank YOu for the answer.
->
-> I didn't know about compat-wireless package, thus that's why I upgraded
-> by ubuntu 10.04 to ubuntu 11.04, then gotten newest kernel 2.6.39 week
-> ago.
->
-> then I did:
-> $ iw list
-> Wiphy phy0
-> ....
-> ....
->        Supported interface modes:
->                 * IBSS
->                 * managed
->                 * AP           !!!! YES, YES
->                 * AP/VLAN
->                 * monitor
->                 * mesh point
->
-> BUT:(((((:
->
-> $ sudo iwconfig wlan0 mode master
-> Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wlan0 ; Invalid argument.
->
-> I was a little bit disappointed, that's why I decided to ask You.
->
-> What am I doing wrong?
+The wl12xx firmware only supports window size of 8 frames in TX BA
+sessions.  Currently we are configuring it to 64, which is not
+supported and causes problems (ie. firmware crashes).
 
-You can't set master mode with iwconfig. Access point mode needs a
-program to run in userspace to handle some of the heavy lifting. You
-need to read this FAQ entry:
+Fix this by changing the tx_ba_win_size configuration to 8.
 
-http://wireless.kernel.org/en/users/Documentation/FAQ#Q:_iwconfig_wlan0_mode_master_does_not_work
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Then look up hostapd
-
-http://wireless.kernel.org/en/users/Documentation/hostapd
-
-Thanks,
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 610be03..b854b5f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -326,7 +326,7 @@ static struct conf_drv_settings default_conf = {
+ 		},
+ 	},
+ 	.ht = {
+-		.tx_ba_win_size = 64,
++		.tx_ba_win_size = 8,
+ 		.inactivity_timeout = 10000,
+ 	},
+ 	.mem_wl127x = {
 -- 
-Julian Calaby
+1.7.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
