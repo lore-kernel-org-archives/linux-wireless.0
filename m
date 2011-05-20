@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1296 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756860Ab1ERKj3 convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:53817 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S935635Ab1ETTFV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 06:39:29 -0400
-Message-ID: <4DD3A1CD.3040304@broadcom.com> (sfid-20110518_123932_187136_B86A5C38)
-Date: Wed, 18 May 2011 12:39:09 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: pci: implement enabling interrupts
-References: <1305716294-5753-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1305716294-5753-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Fri, 20 May 2011 15:05:21 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 64A47540054
+	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 15:11:22 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-20 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110520190519.E13A040EC3@repository3.orbit-lab.org> (sfid-20110520_210525_513093_6FD81B2C)
+Date: Fri, 20 May 2011 15:05:19 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2011 12:58 PM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
->   drivers/bcma/driver_pci.c |   18 ++++++++++++++++++
->   1 files changed, 18 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-> index e757e4e..879fe1d 100644
-> --- a/drivers/bcma/driver_pci.c
-> +++ b/drivers/bcma/driver_pci.c
-> @@ -161,3 +161,21 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
->   {
->   	bcma_pcicore_serdes_workaround(pc);
->   }
-> +
-> +int bcma_core_pci_irq_enable(struct bcma_drv_pci *pc, struct bcma_device *core)
-> +{
-> +	struct pci_dev *pdev = pc->core->bus->host_pci;
-> +	u32 coremask, tmp;
-> +	int err;
-> +
-> +	coremask = BIT(core->core_index);
-> +
-> +	err = pci_read_config_dword(pdev, BCMA_PCI_IRQMASK,&tmp);
-> +	if (err)
-> +		goto out;
-> +	tmp |= coremask<<  8;
-> +	err = pci_write_config_dword(pdev, BCMA_PCI_IRQMASK, tmp);
-> +
-> +out:
-> +	return err;
-> +}
-Hi Rafał,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   501c91f..6f4e670  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-2011-05-19 -> compat-wireless-2011-05-19
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   3e6f997..23f6b43  master     -> origin/master
+ * [new tag]         compat-2011-05-19 -> compat-2011-05-19
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + aaa2b6d...e498af5 akpm-end   -> origin/akpm-end  (forced update)
+   fce5195..51509a2  akpm-start -> origin/akpm-start
+   8a21487..798ee3a  history    -> origin/history
+ + 7761e62...36ca1d9 master     -> origin/master  (forced update)
+   fce5195..51509a2  stable     -> origin/stable
+ * [new tag]         next-20110520 -> next-20110520
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.39    -> v2.6.39
 
-Do you intend to have a disable as well?
+compat-wireless code metrics
 
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
-
+    822901 - Total upstream lines of code being pulled
