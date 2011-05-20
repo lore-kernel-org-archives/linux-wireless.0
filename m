@@ -1,158 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:51734 "EHLO ogre.sisk.pl"
+Received: from mga11.intel.com ([192.55.52.93]:1556 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754937Ab1ENW12 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 18:27:28 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.39-rc7-git7: Reported regressions from 2.6.38
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <So1vU2GC7XM.A.5wB.44vzNB@chimera> (sfid-20110515_002753_361589_4AAD8E9F)
-Date: Sun, 15 May 2011 00:18:48 +0200 (CEST)
+	id S935694Ab1ETTWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 15:22:34 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, randy.dunlap@oracle.com,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6.40] iwlagn: dbg_fixed_rate only used when CONFIG_MAC80211_DEBUGFS enabled
+Date: Fri, 20 May 2011 11:56:18 -0700
+Message-Id: <1305917778-15303-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110520_212238_650002_56E953A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.38,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Fix compiling error when CONFIG_MAC80211_DEBUGFS is not enabled
+drivers/net/wireless/iwlwifi/iwl-agn-rs.c:351: error: 'struct iwl_lq_sta' has no member named 'dbg_fixed_rate'
+drivers/net/wireless/iwlwifi/iwl-agn-rs.c:1076: error: 'struct iwl_lq_sta' has no member named 'dbg_fixed_rate'
 
-If you know of any other unresolved regressions from 2.6.38, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-05-15       50       12          11
-  2011-04-30       38       17          16
-  2011-04-17       17       11          10
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35062
-Subject		: Suspend to ram stopped working after commit of " intel-iommu: Unlink domain from iommu "
-Submitter	:  <optiluca@gmail.com>
-Date		: 2011-05-14 11:08 (1 days old)
-First-Bad-Commit: http://git.kernel.org/linus/a97590e56d0d58e1dd262353f7cbd84e81d8e600
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34952
-Subject		: 2.6.39-rc6: SATA hangs for a few seconds during boot
-Submitter	: Tino Keitel <tino.keitel@tikei.de>
-Date		: 2011-05-09 20:48 (6 days old)
-Message-ID	: <20110509204801.GA2258@x61.home>
-References	: http://marc.info/?l=linux-kernel&m=130497409509438&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34942
-Subject		: [Bug] Kdump does not work when panic triggered due to MCE
-Submitter	: K.Prasad <prasad@linux.vnet.ibm.com>
-Date		: 2011-05-06 16:54 (9 days old)
-Message-ID	: <20110506165412.GB2719@in.ibm.com>
-References	: http://marc.info/?l=linux-kernel&m=130470087226270&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34662
-Subject		: Warning at block/genhd.c:1556 disk_clear_events
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2011-05-02 9:59 (13 days old)
-Message-ID	: <alpine.SOC.1.00.1105021255400.6200@math.ut.ee>
-References	: http://marc.info/?l=linux-kernel&m=130433037002610&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34492
-Subject		: [2.6.39-rc4, x86_32] Stall at default_idle()
-Submitter	: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Date		: 2011-04-27 4:49 (18 days old)
-Message-ID	: <201104270449.p3R4n54n023453@www262.sakura.ne.jp>
-References	: http://marc.info/?l=linux-kernel&m=130387977425687&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34202
-Subject		: MCEUSB remotes don't work with USB 3.0 ports
-Submitter	: Aaron Barany <akb825@gmail.com>
-Date		: 2011-05-01 23:48 (14 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34002
-Subject		: [REGRESSION] [2.6.39-rc3] Wrong resolution in framebuffer and X Window
-Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-Date		: 2011-04-17 16:04 (28 days old)
-Message-ID	: <201104171804.04664.maciej.rutecki@gmail.com>
-References	: http://marc.info/?l=linux-fbdev&m=130305625114863&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33842
-Subject		: NULL pointer dereference in ip_fragment
-Submitter	: Tomas Carnecky <tom@dbservice.com>
-Date		: 2011-04-23 07:51 (22 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33792
-Subject		: lockdep trace when unplugging usb audio (.39rc4)
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2011-04-19 18:07 (26 days old)
-Message-ID	: <20110419180745.GA438@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=130323648920431&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33272
-Subject		: drm related hard-hang
-Submitter	: Peter Teoh <htmldeveloper@gmail.com>
-Date		: 2011-04-14 01:29 (31 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33242
-Subject		: Lockdep splat in autofs with 2.6.39-rc2
-Submitter	: Nick Bowler <nbowler@elliptictech.com>
-Date		: 2011-04-07 19:44 (38 days old)
-Message-ID	: <20110407194403.GA29404@elliptictech.com>
-References	: http://marc.info/?l=linux-kernel&m=130220545614682&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33802
-Subject		: list_del corruption in sd driver since 2.6.39-rc4
-Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-Date		: 2011-04-21 21:10 (24 days old)
-Handled-By	: James Bottomley <James.Bottomley@suse.de>
-Patch		: http://marc.info/?l=linux-kernel&m=130271409412095
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.38,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=32012
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index f95c0a4..2f661df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -334,7 +334,7 @@ static u8 rs_tl_add_packet(struct iwl_lq_sta *lq_data,
+ 	return tid;
+ }
+ 
+-#if defined(CONFIG_MAC80211_DEBUGFS) || defined(CONFIG_IWLWIFI_DEVICE_SVTOOL)
++#ifdef CONFIG_MAC80211_DEBUGFS
+ static void rs_program_fix_rate(struct iwl_priv *priv,
+ 				struct iwl_lq_sta *lq_sta)
+ {
+@@ -1071,7 +1071,7 @@ done:
+ 	/* See if there's a better rate or modulation mode to try. */
+ 	if (sta && sta->supp_rates[sband->band])
+ 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_MAC80211_DEBUGFS
+ 	if (priv->dbg_fixed_rate != lq_sta->dbg_fixed_rate)
+ 		rs_program_fix_rate(priv, lq_sta);
+ #endif
+-- 
+1.7.0.4
 
