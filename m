@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34822 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947Ab1EEVPM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47719 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934538Ab1ETSzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 17:15:12 -0400
-Message-ID: <4DC3135C.4040601@candelatech.com> (sfid-20110505_231515_992896_565E1EA7)
-Date: Thu, 05 May 2011 14:15:08 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
- AP mode broke STA association.
-References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org>
-In-Reply-To: <4DC3109F.6080601@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 20 May 2011 14:55:10 -0400
+Subject: netlink reverts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 May 2011 11:57:49 -0700
+Message-ID: <1305917869.4640.15.camel@jlt3.sipsolutions.net> (sfid-20110520_205514_667520_F3430A59)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2011 02:03 PM, Felix Fietkau wrote:
-> On 2011-05-05 10:44 PM, Ben Greear wrote:
->> I bisected the problem I was having with ath9k STA configured for WPA
->> not being able to authenticate.  I'm using nohwcrypt=1, which may
->> be why no one else sees it.
+John,
 
->> I'll be happy to test patches, it seems very easy to reproduce on
->> my setup.
-> How about this?
->
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1270,6 +1270,9 @@ ieee80211_tx_prepare(struct ieee80211_su
->   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->   	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
->   		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
-> +	else if (sdata->vif.type != NL80211_IFTYPE_AP&&
-> +	         sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-> +		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
->
->   	hdrlen = ieee80211_hdrlen(hdr->frame_control);
->   	if (skb->len>  hdrlen + sizeof(rfc1042_header) + 2) {
+Please revert
+9c3990aaec0ad9f686ef6480f6861f2df89b2a7a
+ASAP; you'll have to revert
+8958da779b92da60e90d9761549b88677a6a3eef
+first. (alternatively, if you're feeling less pissed off than I am you
+can fix it I guess)
 
-Yes, that seems to fix the problem.
+Javier fucked up the netlink attribute types again by inserting
+something in the middle, and I'm really mad about it too.
 
-Thanks for the quick fix!
-
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
