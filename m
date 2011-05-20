@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:46860 "EHLO purkki.adurom.net"
+Received: from mail.atheros.com ([12.19.149.2]:59836 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752765Ab1EJWcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 18:32:25 -0400
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "gregkh\@suse.de" <gregkh@suse.de>,
-	"devel\@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Naveen Singh <Naveen.Singh@Atheros.com>
-Subject: Re: [PATCH 1/2] ath6kl: iw dev wlan0 link implementation
-References: <20110510044023.29589.38450.stgit@localhost6.localdomain6>
-	<20110510120243.GA2017@senthil-lnx.users.atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 11 May 2011 01:32:20 +0300
-In-Reply-To: <20110510120243.GA2017@senthil-lnx.users.atheros.com> (Senthil Balasubramanian's message of "Tue\, 10 May 2011 17\:32\:43 +0530")
-Message-ID: <87liyefaq3.fsf@purkki.adurom.net> (sfid-20110511_003231_075473_5C26941A)
+	id S932176Ab1ETNNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 09:13:46 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 06:13:15 -0700
+Message-ID: <4DD668F4.6090308@atheros.com> (sfid-20110520_151349_772612_D9BF9393)
+Date: Fri, 20 May 2011 16:13:24 +0300
+From: Kalle Valo <kalle.valo@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+CC: gregkh@suse.de, linville@tuxdriver.com,
+	devel@linuxdriverproject.org
+Subject: Plan for ath6kl cleanup
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Senthil Balasubramanian <senthilkumar@atheros.com> writes:
+We have been thinking about how to get ath6kl out from staging and get
+it to a first class citizen under drivers/net/wireless. There's quite a
+lot of work to do get ath6kl cleaned up and the prospect of doing all
+that through the staging-next tree wasn't that exciting. We would be
+sending hundreds of patches and it would take a long time to cleanup the
+driver. And the disconnection from the wireless core development also
+sounded very daunting (cfg80211 API changes etc.).
 
-> On Tue, May 10, 2011 at 10:10:23AM +0530, Kalle Valo wrote:
->> From: Naveen Singh <nsingh@atheros.com>
->> 
->> implementing the cfg ops that gets called when iw dev wlan0
->> link is issued by user. The ops that needs to be implemented
->> is get_station.
->> 
->> kvalo: check the mac address and fix style issues
+So we started to find a faster way to clean up ath6kl and ended up with
+a setup where we would have a separate tree in kernel.org just for
+ath6kl clean up. Once we think that the driver is ready, we will take
+the driver from the cleanup tree and submit as a single patch for
+review. As we will submit the driver as a single commit, history doesn't
+matter and this makes it possible to use not so perfect patches in our
+tree and save a lot of time.
 
-[...]
+During the transition period we will still fix the important bugs in the
+staging driver, and naturally port them to the cleaned up driver. But
+once the cleaned up driver is accepted we plan to remove the staging driver.
 
->> +int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
->> +		     u8 *mac, struct station_info *sinfo)
->> +{
->> +	struct ar6_softc *ar = ar6k_priv(dev);
->> +	u8 mcs, ret, timeout = false;
->> +
->> +	if (compare_ether_addr(mac, ar->arBssid))
->
-> this may result in unaligned memeory access on some platforms as mac
-> may not be 2 byte aligned. This is the case with the caller as per
-> cfg80211_wext_giwrate() and cfg80211_wireless_stats().
+We already started the cleanup and created ath6kl-clean git tree here:
 
-I didn't think of this. I'll change it to use memcmp() instead.
+http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary
 
->> +	wait_event_interruptible_timeout(arEvent,
->> +					 ar->statsUpdatePending == false,
->> +					 wmitimeout * HZ);
->> +
->> +	if (signal_pending(current)) {
->
-> wait_event_interruptible_tiemout() itself checks for signal_pending
-> and so this is not necessary. You can check for the return status of
-> wait_event_interruptible_timeout() to know whether the task was
-> interrupted by a signal.
+The tree is based on wireless-testing and I have cherry picked missing
+ath6kl patches from staging-next tree. Also the driver is already moved
+to drivers/net/wireless/ath/ath6kl directory to make it easy to submit
+the driver for review once it's ready.
 
-Will fix.
+Everyone is free to send patches and participate in the ath6kl cleanup.
+As we don't want to clutter linux-wireless mailing list with hundreds of
+useless "staging" patches, please send the patches to kvalo@adurom.com
+(have to use my private email due to buggy email servers) and I will
+apply them.
 
->> +		timeout = true;
->> +		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
->> +				("ar6000 : WMI get stats timeout\n"));
->> +	}
->> +
->> +	up(&ar->arSem);
->
-> I believe we can release the semaphore early on. I don't see any reason..
+We have irc channel #ath6kl on freenode where some of the ath6kl devs
+hang out. Feel free to make any questions also there, just give enough
+time for people to answer. But naturally linux-wireless mailing list is
+the best place to ask questions.
 
-What do you mean? I'm not the author of the patch, but I assume that
-the idea is to protect the access to ar->statsUpdatePending.
+Also the wiki page contains some information and we will start adding more:
 
-Thanks for the review, I'll submit v2.
+http://wireless.kernel.org/en/users/Drivers/ath6kl
 
--- 
-Kalle Valo
+Thoughts?
+
+Kalle
