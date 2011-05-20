@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:55403 "EHLO bues.ch"
+Received: from mail.perches.com ([173.55.12.10]:1782 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753921Ab1EHRQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 13:16:20 -0400
-Subject: Re: [PATCH 0/3] ssb/b43(legacy): clean dangling cores workarounds
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <BANLkTimNHB0mzAnndDeT9CsLKMTSYvLNGw@mail.gmail.com>
-References: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
-	 <4DC6CD8C.6080104@lwfinger.net>
-	 <BANLkTimNHB0mzAnndDeT9CsLKMTSYvLNGw@mail.gmail.com>
+	id S932272Ab1ETQvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 12:51:23 -0400
+Subject: Re: Plan for ath6kl cleanup
+From: Joe Perches <joe@perches.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Greg KH <gregkh@suse.de>, linux-wireless@vger.kernel.org,
+	Kalle Valo <kalle.valo@atheros.com>, linville@tuxdriver.com,
+	devel@linuxdriverproject.org
+In-Reply-To: <20110520142934.GA20250@infradead.org>
+References: <4DD668F4.6090308@atheros.com> <20110520133600.GA10521@suse.de>
+	 <20110520142934.GA20250@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 08 May 2011 19:16:09 +0200
-Message-ID: <1304874969.23124.22.camel@maggie> (sfid-20110508_191623_460968_A6FE94B7)
+Date: Fri, 20 May 2011 09:51:21 -0700
+Message-ID: <1305910281.4209.36.camel@Joe-Laptop> (sfid-20110520_185127_228870_31AF858A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-05-08 at 19:11 +0200, Rafał Miłecki wrote: 
-> Oh, do you have some device with 2 active cores? Nice :)
+On Fri, 2011-05-20 at 10:29 -0400, Christoph Hellwig wrote:
+> On Fri, May 20, 2011 at 06:36:00AM -0700, Greg KH wrote:
+> > On Fri, May 20, 2011 at 04:13:24PM +0300, Kalle Valo wrote:
+> > > We have been thinking about how to get ath6kl out from staging and get
+> > > it to a first class citizen under drivers/net/wireless. There's quite a
+> > > lot of work to do get ath6kl cleaned up and the prospect of doing all
+> > > that through the staging-next tree wasn't that exciting. We would be
+> > > sending hundreds of patches and it would take a long time to cleanup the
+> > > driver. And the disconnection from the wireless core development also
+> > > sounded very daunting (cfg80211 API changes etc.).
+> > 
+> > This sounds like, "We don't like the kernel development model, it
+> > requires us to break everything up into small patches and show our work
+> > to everyone."
+> 
+> It's not the kernel development mode, it's something that you try to
+> impose on staging users.  Creating a more less new driver from a pig
+> pile of junk doesn't make sense minimized patches with micro-review.
 
-I don't think there are any supported multicore devices anyway. Those
-are the very early A-PHY, only. AFAIK.
+I tried it once on ath6kl.
+Ended up with ~300 patches and a very clean tree.
 
--- 
-Greetings Michael.
+http://repo.or.cz/w/linux-2.6/trivial-mods.git/shortlog/refs/heads/20110108_ath6kl
+
+The coordination with atheros and greg was balky.
+
 
