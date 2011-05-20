@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33407 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754474Ab1EIU0B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 16:26:01 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	greearb@candelatech.com
-Subject: [PATCH 2.6.39] ath9k: fix a regression in PS frame filter handling
-Date: Mon,  9 May 2011 22:25:47 +0200
-Message-Id: <1304972747-11775-1-git-send-email-nbd@openwrt.org> (sfid-20110509_222606_163012_9D368AC5)
+Received: from he.sipsolutions.net ([78.46.109.217]:33886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933183Ab1ETPKm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 11:10:42 -0400
+Subject: Re: [PATCH 1/2]: mac80211: set tx rate and retries when injecting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTin6ettB1nhnrAjDncX1MrahfS4Z6g@mail.gmail.com> (sfid-20110520_011405_835059_85A96447)
+References: <BANLkTin6ettB1nhnrAjDncX1MrahfS4Z6g@mail.gmail.com>
+	 (sfid-20110520_011405_835059_85A96447)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 May 2011 08:11:46 -0700
+Message-ID: <1305904306.4640.0.camel@jlt3.sipsolutions.net> (sfid-20110520_171045_263111_D0C4EE51)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only leave filtering enabled for AP or VLAN interfaces, clear the
-destination mask for all other interfaces.
+> +++ b/net/mac80211/ieee80211_i.h	2011-05-20 00:24:14.010640270 +0200
+> @@ -1217,6 +1217,10 @@
+>  	u8 padding_for_rate;
+>  	__le16 tx_flags;
+>  	u8 data_retries;
+> +	/*HT info*/
+> +	u8 ht_known;
+> +	u8 ht_flag;
+> +	u8 ht_mcs;
+>  } __packed;
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++++
- drivers/net/wireless/ath/ath9k/xmit.c |    6 +++++-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+> --- a/include/net/mac80211.h	2011-05-20 00:22:56.210640264 +0200
+> +++ b/include/net/mac80211.h	2011-05-20 00:24:14.020640270 +0200
+> @@ -2278,7 +2278,7 @@
+>   * The TX headroom reserved by mac80211 for its own tx_status functions.
+>   * This is enough for the radiotap header.
+>   */
+> -#define IEEE80211_TX_STATUS_HEADROOM	13
+> +#define IEEE80211_TX_STATUS_HEADROOM	16
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3de115d..3d999b7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1778,6 +1778,11 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 	struct ieee80211_key_conf ps_key = { };
- 
- 	ath_node_attach(sc, sta);
-+
-+	if (vif->type != NL80211_IFTYPE_AP &&
-+	    vif->type != NL80211_IFTYPE_AP_VLAN)
-+		return 0;
-+
- 	an->ps_key = ath_key_config(common, vif, sta, &ps_key);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 744779d..ee71d38 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1795,6 +1795,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	struct sk_buff *skb = bf->bf_mpdu;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_vif *vif = tx_info->control.vif;
- 	struct list_head bf_head;
- 	struct ath_atx_tid *tid = NULL;
- 	u8 tidno;
-@@ -1829,7 +1830,10 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 		if (txctl->paprd)
- 			bf->bf_state.bfs_paprd_timestamp = jiffies;
- 
--		if (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
-+		if ((vif && vif->type != NL80211_IFTYPE_AP &&
-+		            vif->type != NL80211_IFTYPE_AP_VLAN) ||
-+		    !ieee80211_is_data(hdr->frame_control) ||
-+		    (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT))
- 			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
- 
- 		ath_tx_send_normal(sc, txctl->txq, tid, &bf_head);
--- 
-1.7.3.2
+This both belongs to the other patch.
+
+johannes
 
