@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42943 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199Ab1EPSQD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933183Ab1ETPKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 14:16:03 -0400
-Date: Mon, 16 May 2011 14:13:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: wireless-next-2.6 rebased -- Re: [PATCH v2] net: rfkill: add generic
- gpio rfkill driver
-Message-ID: <20110516181348.GD6551@tuxdriver.com> (sfid-20110516_201637_758439_4B52E642)
-References: <1305189092.3461.10.camel@jlt3.sipsolutions.net>
- <1305224592.10961.10.camel@rklein-linux2>
- <1305225648.3461.37.camel@jlt3.sipsolutions.net>
- <1305226377.10961.12.camel@rklein-linux2>
- <1305226969.3461.38.camel@jlt3.sipsolutions.net>
- <1305235386.10961.13.camel@rklein-linux2>
- <1305270943.3487.5.camel@jlt3.sipsolutions.net>
- <1305313374.10961.23.camel@rklein-linux2>
- <20110513192019.GC10555@tuxdriver.com>
- <20110513201130.GA10403@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110513201130.GA10403@tuxdriver.com>
+	Fri, 20 May 2011 11:10:51 -0400
+Subject: Re: [PATCH 2/2]: mac80211: report correct MCS information in tx
+ status info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTikcBcobbXzjGv4UtD952kHtrSsvNw@mail.gmail.com> (sfid-20110520_011406_423246_1F00C156)
+References: <BANLkTikcBcobbXzjGv4UtD952kHtrSsvNw@mail.gmail.com>
+	 (sfid-20110520_011406_423246_1F00C156)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 May 2011 08:13:03 -0700
+Message-ID: <1305904383.4640.2.camel@jlt3.sipsolutions.net> (sfid-20110520_171053_487142_3AC99696)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI, I'm rebasing wireless-next to avoid pushing this bad commit to
-net-next-2.6.  If you pulled wireless-next-2.6.git over the weekend,
-you may experience some rebase-related problems.
+On Fri, 2011-05-20 at 01:13 +0200, Matteo Croce wrote:
+> Report correct MCS information in tx status info
+> 
+> Signed-off-by: Matteo Croce <matteo@openwrt.org>
+> 
+> --- a/net/mac80211/status.c	2011-05-20 00:22:56.220640264 +0200
+> +++ b/net/mac80211/status.c	2011-05-20 00:24:14.010640270 +0200
+> @@ -405,6 +405,20 @@
+>  	    !(info->status.rates[0].flags & IEEE80211_TX_RC_MCS))
+>  		rthdr->rate = sband->bitrates[
+>  				info->status.rates[0].idx].bitrate / 5;
+> +	/* HT rates */
+> +	if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
+> +		rthdr->hdr.it_present |=
+> +				cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
 
-John
+This means the part that I just commented on from the other patch is
+wrong. Think about this again, about how radiotap works etc. You're
+creating an invalid radiotap header that's too long if MCS rates aren't
+used.
 
-On Fri, May 13, 2011 at 04:11:31PM -0400, John W. Linville wrote:
-> On Fri, May 13, 2011 at 03:20:20PM -0400, John W. Linville wrote:
-> > On Fri, May 13, 2011 at 12:02:54PM -0700, Rhyland Klein wrote:
-> > > On Fri, 2011-05-13 at 00:15 -0700, Johannes Berg wrote:
-> > > > On Thu, 2011-05-12 at 14:23 -0700, Rhyland Klein wrote:
-> > > > > On Thu, 2011-05-12 at 12:02 -0700, Johannes Berg wrote:
-> > > > > > On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
-> > > > > > 
-> > > > > > > > If, on the other hand, rfkill decides that at the time of loading the
-> > > > > > > > driver wifi should be on, then the first change would be +1 and it'll
-> > > > > > > > flip between 0 and +1.
-> > > > > > > > 
-> > > > > > > > This seems like it'll cause issues at some point, so I think you should
-> > > > > > > > either allow the driver to set the initial state or hardcode one of
-> > > > > > > > these possibilities (so at least it's predictable)
-> > > > > > 
-> > > > > > > I won't go negative, if you look, it only will disable clock if it knows
-> > > > > > > it has already enabled it. 
-> > > > > > 
-> > > > > > Ah, you're right, I misread the macros.
-> > > > 
-> > > > > So the patch is good as is?
-> > > > 
-> > > > I think so, yes.
-> > > > 
-> > > > johannes
-> > > > 
-> > > 
-> > > John, Johannes suggested you are able to pull in this patch?
-> > 
-> > I've got it, thanks.
-> 
->   Building modules, stage 2.
->   MODPOST 2346 modules
-> ERROR: "clk_get" [net/rfkill/rfkill-gpio.ko] undefined!
-> ERROR: "clk_enable" [net/rfkill/rfkill-gpio.ko] undefined!
-> ERROR: "clk_put" [net/rfkill/rfkill-gpio.ko] undefined!
-> ERROR: "clk_disable" [net/rfkill/rfkill-gpio.ko] undefined!
-> WARNING: modpost: Found 5 section mismatch(es).
-> To see full details build your kernel with:
-> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-> make[1]: *** [__modpost] Error 1
-> make: *** [modules] Error 2
-> 
-> Is there something we should add to Kconfig to prevent this?
-> 
-> John
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+johannes
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
