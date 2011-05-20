@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:65243 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755477Ab1EWNz2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43430 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932614Ab1ETCos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 09:55:28 -0400
-Received: by pxi16 with SMTP id 16so3817724pxi.4
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 06:55:28 -0700 (PDT)
-Message-ID: <4DDA673B.6070600@ring3k.org> (sfid-20110523_155536_087651_7BAC1779)
-Date: Mon, 23 May 2011 22:55:07 +0900
-From: Mike McCormack <mikem@ring3k.org>
+	Thu, 19 May 2011 22:44:48 -0400
+Date: Thu, 19 May 2011 22:37:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless-next-2.6 freezing for merge window --
+ [sfr@canb.auug.org.au: linux-next: merge window reminder]
+Message-ID: <20110520023734.GA15919@tuxdriver.com> (sfid-20110520_044452_700796_0A57C08D)
+References: <20110519140421.GB2575@tuxdriver.com>
+ <BANLkTi=Qve-02HPB_c6WZMaE1f0qWCBTwA@mail.gmail.com>
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 8/8] rtlwifi: Fix logic in rx_interrupt
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTi=Qve-02HPB_c6WZMaE1f0qWCBTwA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Should pass along packet if there's no CRC and no hardware error.
+On Thu, May 19, 2011 at 11:47:21PM +0200, Rafał Miłecki wrote:
+> 2011/5/19 John W. Linville <linville@tuxdriver.com>:
+> > Please take note -- I will not be merging any additional patches
+> > in wireless-next-2.6 until the end of the merge window.  In fact,
+> > I will probably be backing-out a few that are already there.
+> >
+> > Fixes are, of course, still welcome for wireless-2.6.
+> 
+> I've tried asking on IRC and finding answer on
+> http://wireless.kernel.org/en/developers/process but without a
+> success.
+> 
+> Can I expect recent/current patches to land in any tree before merge
+> window closes?
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
----
- drivers/net/wireless/rtlwifi/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+If they are not fixes and are not already in wireless-next-2.6 then
+probably not.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 4fe405a..215abfa 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -691,7 +691,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 			hdr = rtl_get_hdr(skb);
- 			fc = rtl_get_fc(skb);
- 
--			if (!stats.crc || !stats.hwerror) {
-+			if (!stats.crc && !stats.hwerror) {
- 				memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
- 				       sizeof(rx_status));
- 
+John
 -- 
-1.7.4.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
