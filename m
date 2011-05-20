@@ -1,30 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:41849 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750799Ab1EJS0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 14:26:44 -0400
-Date: Tue, 10 May 2011 11:12:08 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/10] staging: brcm80211: cleanup unnecessary functions
- from wlc_ampdu.c
-Message-ID: <20110510181208.GA3396@kroah.com> (sfid-20110510_202647_882014_593BC4A0)
-References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:60122 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935666Ab1ETMGV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2011 08:06:21 -0400
+Received: by mail-ew0-f43.google.com with SMTP id 20so1594406ewy.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 05:06:19 -0700 (PDT)
+Subject: Re: [PATCH v2 1/3] wl12xx: add support for rx streaming
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1305447030-10704-1-git-send-email-eliad@wizery.com>
+References: <1305447030-10704-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 May 2011 15:06:16 +0300
+Message-ID: <1305893176.12586.1670.camel@cumari> (sfid-20110520_140623_918833_8B41D4F7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 09, 2011 at 04:33:20PM +0200, Arend van Spriel wrote:
-> Couple of functions are not used or empty and have been removed.
+On Sun, 2011-05-15 at 11:10 +0300, Eliad Peller wrote:
+> wl12xx supports the "rx streaming" feature:
+> 
+> When in ps mode, and @timeout msecs have been passed since
+> the last rx/tx, it issues trigger packets (QoS-null/PS-Poll packets,
+> according to the ac type) in const intervals (in order to reduce
+> the rx time).
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-This patch doesn't apply on top of all of the other brcm80211 patches
-sent me.  Care to redo this series and resend after syncing up with the
-next linux-next tree?
+Applied this series, thanks!
 
-thanks,
+-- 
+Cheers,
+Luca.
 
-greg k-h
