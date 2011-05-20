@@ -1,70 +1,120 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61591 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355Ab1EEKIQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 06:08:16 -0400
-Received: by eyx24 with SMTP id 24so617784eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2011 03:08:15 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: drop invalid IMCFGLO workaround
-Date: Thu,  5 May 2011 12:45:52 +0200
-Message-Id: <1304592352-5042-1-git-send-email-zajec5@gmail.com> (sfid-20110505_120820_630124_09FE1EC4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-wireless-owner@vger.kernel.org
+Return-path: <zefir.kurtisi@neratec.com>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: jdiq123@googlemail.com,
+	nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] minstrel_ht: fixed rate mode through debugfs
+Date: Fri, 20 May 2011 20:29:17 +0200
+Message-Id: <1305916157-15280-1-git-send-email-zefir.kurtisi@neratec.com>
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were performing it on wrong core, it was outdated and is already
-implemented in ssb.
+Found several threads about fixed rate mode in minstrel_ht for test
+environments, but no patches for it.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+This patch provides such a mode through debugfs.
+
 ---
- drivers/net/wireless/b43/main.c |   28 +---------------------------
- 1 files changed, 1 insertions(+), 27 deletions(-)
+support fixed rate processing per RC instance
+  - write static index to debugfs:ieee80211/phyX/rc/fixed_rate_idx
+  - write -1 to enable RC processing again
+  - setting will be applied on next update
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 5af40d9..f907df0 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4213,33 +4213,7 @@ static void b43_bluetooth_coext_disable(struct b43_wldev *dev)
+The current MCS index mapping (with MINSTREL_MAX_STREAMS = 3) is
+given by the minstrel_mcs_groups table as:
+
+mode       streams    indices
+HT20/LGI
+              1        00-07
+              2        08-15
+              3        16-23
+HT20/SGI
+              1        24-31
+              2        32-39
+              3        40-47
+HT40/LGI
+              1        48-55
+              2        56-63
+              3        64-71
+HT40/SGI
+              1        72-79
+              2        80-87
+              3        88-95
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ net/mac80211/rc80211_minstrel.c    |    9 +++++++++
+ net/mac80211/rc80211_minstrel.h    |   12 ++++++++++++
+ net/mac80211/rc80211_minstrel_ht.c |    7 +++++++
+ 3 files changed, 28 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 8adac67..58a8955 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -532,12 +532,21 @@ minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
+ 	mp->hw = hw;
+ 	mp->update_interval = 100;
  
- static void b43_imcfglo_timeouts_workaround(struct b43_wldev *dev)
- {
--#ifdef CONFIG_SSB_DRIVER_PCICORE
--	struct ssb_bus *bus = dev->dev->bus;
--	u32 tmp;
--
--	if (bus->pcicore.dev &&
--	    bus->pcicore.dev->id.coreid == SSB_DEV_PCI &&
--	    bus->pcicore.dev->id.revision <= 5) {
--		/* IMCFGLO timeouts workaround. */
--		tmp = ssb_read32(dev->dev, SSB_IMCFGLO);
--		switch (bus->bustype) {
--		case SSB_BUSTYPE_PCI:
--		case SSB_BUSTYPE_PCMCIA:
--			tmp &= ~SSB_IMCFGLO_REQTO;
--			tmp &= ~SSB_IMCFGLO_SERTO;
--			tmp |= 0x32;
--			break;
--		case SSB_BUSTYPE_SSB:
--			tmp &= ~SSB_IMCFGLO_REQTO;
--			tmp &= ~SSB_IMCFGLO_SERTO;
--			tmp |= 0x53;
--			break;
--		default:
--			break;
--		}
--		ssb_write32(dev->dev, SSB_IMCFGLO, tmp);
--	}
--#endif /* CONFIG_SSB_DRIVER_PCICORE */
-+	/* TODO: implement 80211 core workaround here */
++#ifdef CONFIG_MAC80211_DEBUGFS
++	mp->fixed_rate_idx = (u32) -1;
++	mp->dbg_fixed_rate = debugfs_create_u32("fixed_rate_idx",
++			S_IRUGO | S_IWUGO, debugfsdir, &mp->fixed_rate_idx);
++#endif
++
+ 	return mp;
  }
  
- static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
+ static void
+ minstrel_free(void *priv)
+ {
++#ifdef CONFIG_MAC80211_DEBUGFS
++	debugfs_remove(((struct minstrel_priv *)priv)->dbg_fixed_rate);
++#endif
+ 	kfree(priv);
+ }
+ 
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 0f5a833..5d278ec 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -78,6 +78,18 @@ struct minstrel_priv {
+ 	unsigned int update_interval;
+ 	unsigned int lookaround_rate;
+ 	unsigned int lookaround_rate_mrr;
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	/*
++	 * enable fixed rate processing per RC
++	 *   - write static index to debugfs:ieee80211/phyX/rc/fixed_rate_idx
++	 *   - write -1 to enable RC processing again
++	 *   - setting will be applied on next update
++	 */
++	u32 fixed_rate_idx;
++	struct dentry *dbg_fixed_rate;
++#endif
++
+ };
+ 
+ struct minstrel_debugfs_info {
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 333b511..66a1eeb 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -609,6 +609,13 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 
+ 	info->flags |= mi->tx_flags;
+ 	sample_idx = minstrel_get_sample_rate(mp, mi);
++
++#ifdef CONFIG_MAC80211_DEBUGFS
++	/* use fixed index if set */
++	if (mp->fixed_rate_idx != -1)
++		sample_idx = mp->fixed_rate_idx;
++#endif
++
+ 	if (sample_idx >= 0) {
+ 		sample = true;
+ 		minstrel_ht_set_rate(mp, mi, &ar[0], sample_idx,
 -- 
-1.7.3.4
-
+1.7.1
