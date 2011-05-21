@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53486 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757814Ab1EaTrt (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34862 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756183Ab1EUPlA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 18/32] ath9k: use correct EEPROM base for AR9330
-Date: Tue, 31 May 2011 21:37:09 +0200
-Message-Id: <1306870643-7935-19-git-send-email-juhosg@openwrt.org> (sfid-20110531_214925_347977_9F0466EC)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Sat, 21 May 2011 11:41:00 -0400
+Received: by vws1 with SMTP id 1so3264674vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 21 May 2011 08:40:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <2eafee5b7a180c891df4a9ca53e90d7d@secure.sipsolutions.net>
+References: <1305917869.4640.15.camel@jlt3.sipsolutions.net>
+ <1305917949.4640.16.camel@jlt3.sipsolutions.net> <BANLkTikjDhdYMssyivgRxAyB5-_FctQbSg@mail.gmail.com>
+ <2eafee5b7a180c891df4a9ca53e90d7d@secure.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Sat, 21 May 2011 08:40:32 -0700
+Message-ID: <BANLkTim+boto9xStdaAyWeTR1+Fw=ADjwA@mail.gmail.com> (sfid-20110521_174104_139637_549C4C24)
+Subject: Re: netlink reverts
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Sat, May 21, 2011 at 1:42 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 20 May 2011 17:05:12 -0700, Javier Cardona wrote:
+>>
+>> Don't shoot me, please, it really _was_ a merge issue.  My patch did
+>> not insert anything in the middle:
+>> https://patchwork.kernel.org/patch/752292  and it was sent a day
+>> before you sent the patch adding WoWLAN support:
+>> https://patchwork.kernel.org/patch/753772/
+>
+> Yeah, my mistake, sorry :( I spent half an hour trying to figure out why
+> wowlan was just not doing anything and got really confused...
+>
+> I wonder what we can do to fix it. Reverting it doesn't really help anyone
+> either. I have WoWLAN committed in iw and it suddenly fails working in
+> mysterious ways because of the added attribute. I suppose you have the same
+> problem somewhere with the mesh tools though? Maybe we can just move the
+> plink attribute? iw's master branch already has the wowlan code ... But I
+> could just as well update nl80211.h in iw I suppose since it's all not
+> released anyway, thoughts?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index dd09cae..d7741d2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3324,6 +3324,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	read = ar9300_read_eeprom;
- 	if (AR_SREV_9485(ah))
- 		cptr = AR9300_BASE_ADDR_4K;
-+	else if (AR_SREV_9330(ah))
-+		cptr = AR9300_BASE_ADDR_512;
- 	else
- 		cptr = AR9300_BASE_ADDR;
- 	ath_dbg(common, ATH_DBG_EEPROM,
+It's ok to move the plink_state attribute.  There are only a handful
+of users of the secured mesh at this point.
+
+Javier
+
 -- 
-1.7.2.1
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
