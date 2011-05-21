@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1288 "EHLO mail.perches.com"
+Received: from mga02.intel.com ([134.134.136.20]:49382 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755115Ab1EFQKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 12:10:23 -0400
-Subject: Re: [PATCH 0/2] wireless: Make and use const struct
- ieee80211_channel
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <20110506131922.GA2252@tuxdriver.com>
-References: <cover.1304054543.git.joe@perches.com>
-	 <20110505184934.GB3005@tuxdriver.com>
-	 <1304634107.1788.171.camel@Joe-Laptop>
-	 <20110506131922.GA2252@tuxdriver.com>
+	id S1751600Ab1EUQyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 May 2011 12:54:35 -0400
+Subject: Re: iwlagn log spam
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4DD6DCCC.2080106@erley.org>
+References: <4DD6D573.2060800@erley.org>
+	 <1305925719.1444.11.camel@wwguy-ubuntu>  <4DD6DCCC.2080106@erley.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 May 2011 09:10:21 -0700
-Message-ID: <1304698221.11874.6.camel@Joe-Laptop> (sfid-20110506_181047_518696_850A0E33)
+Date: Sat, 21 May 2011 09:51:17 -0700
+Message-ID: <1305996677.27147.1.camel@wwguy-ubuntu> (sfid-20110521_185443_588406_140AD494)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-06 at 09:19 -0400, John W. Linville wrote:
-> On Thu, May 05, 2011 at 03:21:47PM -0700, Joe Perches wrote:
-> > On Thu, 2011-05-05 at 14:49 -0400, John W. Linville wrote:
-> > > These patches generated a lot of warnings in net/mac80211.  Did you
-> > > actually build them?
-> > Yes.
-> > Did you apply patch 1/2 first?
-> > It's a dependent patch.
-> That's the one that cause most of the warnings...
+Hi Pat,
 
-Consider the 2 patches as a single patch.
-Do you have new build warnings after applying both
-patches 1 and 2?
+On Fri, 2011-05-20 at 14:27 -0700, Pat Erley wrote:
+> On 05/20/2011 05:08 PM, wwguy wrote:
+> > Hi Pat,
+> > 
+> > 
+> > Just want to be clear, which message flooding your system?
+> > is 
+> > iwlagn 0000:03:00.0: Aggregation not enabled for tid
+> >> 0 because load = 9
+> 
+> This I only see occasionally.
+> 
+> > or
+> > iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra = 00:0c:42:64:bb:1d
+> >> tid = 0
+> 
+> This message is the one that I've gotten over 1600 of in 16 hours.
+> 
+> >>
+> > the second message should only show once when the aggregation being establish. if you are seeing it every 35 seconds, that is bad. 
+> > but the first message is checking the traffic load is high enough to establish the aggregation queue, which is ok.
+> > and we should not log this type of message as "ERROR", I will submit a patch to change that.
+> > 
+> 
+> Feel free to include me in on the CC for that patch.  Will test.
+> 
+It is not the normal behavior you are seeing over 1600 aggregation
+attempt in 16 hours.
+Could you please help me to debug this with following debug flag
+
+$sudo modprobe iwlagn debug=0x4100002
+
+Thanks
+Wey
+
+
+
 
