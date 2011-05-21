@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1765 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752871Ab1ESAcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 20:32:45 -0400
-Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
-From: Joe Perches <joe@perches.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-In-Reply-To: <4DD44C21.1080502@broadcom.com>
-References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
-	 <4DD44C21.1080502@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 May 2011 17:32:43 -0700
-Message-ID: <1305765163.1745.4.camel@Joe-Laptop> (sfid-20110519_023301_469904_C4CE4425)
-Mime-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:44774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748Ab1EUImP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 May 2011 04:42:15 -0400
+To: Javier Cardona <javier@cozybit.com>
+Subject: Re: netlink reverts
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Date: Sat, 21 May 2011 10:42:11 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTikjDhdYMssyivgRxAyB5-_FctQbSg@mail.gmail.com>
+ (sfid-20110521_020555_443340_BC05C9C9)
+References: <1305917869.4640.15.camel@jlt3.sipsolutions.net>
+ <1305917949.4640.16.camel@jlt3.sipsolutions.net>
+ <BANLkTikjDhdYMssyivgRxAyB5-_FctQbSg@mail.gmail.com>
+ (sfid-20110521_020555_443340_BC05C9C9)
+Message-ID: <2eafee5b7a180c891df4a9ca53e90d7d@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-18 at 15:45 -0700, Henry Ptasinski wrote:
-> On 05/18/2011 11:23 AM, Joe Perches wrote:
-> > All uses of DHD_<TYPE>  macros are for debugging only.
-> > Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
-> > for a more consistent style.
-> I generally like this approach, but in brcmsmac we've been switching to 
-> wiphy_err() and related instead.  Any strong argument for one over the 
-> other?
+On Fri, 20 May 2011 17:05:12 -0700, Javier Cardona wrote:
+> Don't shoot me, please, it really _was_ a merge issue.  My patch did
+> not insert anything in the middle:
+> https://patchwork.kernel.org/patch/752292  and it was sent a day
+> before you sent the patch adding WoWLAN support:
+> https://patchwork.kernel.org/patch/753772/
 
-These aren't described as errors but are debugging messages.
- 
-> > -       DHD_TRACE(("%s: Enter\n", __func__));
-> > +       dhd_dbg(TRACE, "%s: Enter\n", __func__);
-> I'd propose moving __func__ into the macro definition itself, which 
-> would help ensure consistency (and shorten all the debug lines a bit).
+Yeah, my mistake, sorry :( I spent half an hour trying to figure out 
+why wowlan was just not doing anything and got really confused...
 
-I think TRACE is unnecessary and can be eliminated
-and replaced by the function tracer.
+I wonder what we can do to fix it. Reverting it doesn't really help 
+anyone either. I have WoWLAN committed in iw and it suddenly fails 
+working in mysterious ways because of the added attribute. I suppose you 
+have the same problem somewhere with the mesh tools though? Maybe we can 
+just move the plink attribute? iw's master branch already has the wowlan 
+code ... But I could just as well update nl80211.h in iw I suppose since 
+it's all not released anyway, thoughts?
 
-Not all uses use __func__.
-I think __func__ unnecessary and it should be avoided.
-
-Other than that, I've no objections.
-
-> Also, perhaps rename to "brcm_dbg()", "bcm_dbg()" or something like that 
-> and move it into include/bcmutils.h, so brcmsmac can use it as well.
-
-Your choice.
-
+johannes
