@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:41446 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676Ab1EAG4e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 May 2011 02:56:34 -0400
-Received: by wwk4 with SMTP id 4so1538955wwk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 23:56:33 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: simplify wl1271_ssid_set()
-Date: Sun,  1 May 2011 09:56:45 +0300
-Message-Id: <1304233005-20249-1-git-send-email-eliad@wizery.com> (sfid-20110501_085650_423341_C2DBC09E)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58848 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754171Ab1EVKsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 May 2011 06:48:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: adapt rename of dev to sdev in b43
+Date: Sun, 22 May 2011 12:47:06 +0200
+Message-Id: <1306061227-4159-2-git-send-email-hauke@hauke-m.de> (sfid-20110522_124807_850988_A1490D58)
+In-Reply-To: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
+References: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify wl1271_ssid_set by re-using cfg80211_find_ie instead of
-reimplementing it.
+Adapt changes from "b43: rename b43_wldev's field with ssb_device to sdev"
 
-Additionally, add a length check to prevent a potential buffer overflow.
+This was missing in commit "compat-wireless: fix applying of 09-threaded-irq.patch"
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/wl12xx/main.c |   26 +++++++++++++++-----------
- 1 files changed, 15 insertions(+), 11 deletions(-)
+ patches/09-threaded-irq.patch |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dad81f6..745380a 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2347,20 +2347,24 @@ out:
- static int wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
- 			    int offset)
- {
--	u8 *ptr = skb->data + offset;
-+	u8 ssid_len;
-+	const u8 *ptr = cfg80211_find_ie(WLAN_EID_SSID, skb->data + offset,
-+					 skb->len - offset);
- 
--	/* find the location of the ssid in the beacon */
--	while (ptr < skb->data + skb->len) {
--		if (ptr[0] == WLAN_EID_SSID) {
--			wl->ssid_len = ptr[1];
--			memcpy(wl->ssid, ptr+2, wl->ssid_len);
--			return 0;
--		}
--		ptr += (ptr[1] + 2);
-+	if (!ptr) {
-+		wl1271_error("No SSID in IEs!");
-+		return -ENOENT;
- 	}
- 
--	wl1271_error("No SSID in IEs!\n");
--	return -ENOENT;
-+	ssid_len = ptr[1];
-+	if (ssid_len > IEEE80211_MAX_SSID_LEN) {
-+		wl1271_error("SSID is too long!");
-+		return -EINVAL;
-+	}
-+
-+	wl->ssid_len = ssid_len;
-+	memcpy(wl->ssid, ptr+2, ssid_len);
-+	return 0;
- }
- 
- static int wl1271_bss_erp_info_changed(struct wl1271 *wl,
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index d0f1d65..acfe043 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -26,7 +26,7 @@ thread in process context as well.
+  	} else {
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +		err = compat_request_threaded_irq(&dev->irq_compat,
+-+						  dev->dev->irq,
+++						  dev->sdev->irq,
+ +						  b43_interrupt_handler,
+ +						  b43_interrupt_thread_handler,
+ +						  IRQF_SHARED, KBUILD_MODNAME, dev);
+@@ -43,7 +43,7 @@ thread in process context as well.
+  static void b43_wireless_core_detach(struct b43_wldev *dev)
+  {
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	if (dev->dev->bus->bustype != SSB_BUSTYPE_SDIO)
+++	if (dev->sdev->bus->bustype != SSB_BUSTYPE_SDIO)
+ +		compat_destroy_threaded_irq(&dev->irq_compat);
+ +#endif
+  	/* We release firmware that late to not be required to re-request
 -- 
-1.7.0.4
+1.7.4.1
 
