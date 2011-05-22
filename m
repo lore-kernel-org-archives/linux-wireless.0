@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45605 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034Ab1EFWIZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:08:25 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p46M8OaY011683
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 6 May 2011 15:08:24 -0700
-Message-ID: <4DC47158.1000401@candelatech.com> (sfid-20110507_000836_959983_082C60A6)
-Date: Fri, 06 May 2011 15:08:24 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1082 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754780Ab1EVMr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 May 2011 08:47:26 -0400
+Message-ID: <4DD905CC.8040407@broadcom.com> (sfid-20110522_144731_971529_09D82935)
+Date: Sun, 22 May 2011 14:47:08 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath5k lockdep warning in 39-rc6+
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+ <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+In-Reply-To: <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The main problem with this is that it disables lockdep
-after this...
+On 05/22/2011 01:23 PM, Alan Cox wrote:
+> On Sat, 21 May 2011 22:49:33 +0200
+> "Arend van Spriel"<arend@broadcom.com>  wrote:
+>
+>> The brcm80211 driver in staging tree uses a crc8 function. Based on
+>> feedback from John Linville to move this to lib directory, the linux
+>> source has been searched. Although there is currently only one other
+>> kernel driver using this algorithm (ie. drivers/ssb) we are providing
+>> this as a library function for others to use.
+> Can we find a better name for it - there seem to be lots of CRC8 variants
+> that are different - eg bit direction and it's going to be confusing to
+> just call it 'crc8'
 
-lanforge-D0-20 login: INFO: trying to register non-static key.
-the code is fine but needs lockdep annotation.
-turning off the locking correctness validator.
-Pid: 1934, comm: net.hotplug Not tainted 2.6.39-rc6-wlc3+ #6
-Call Trace:
-  [<c0448994>] register_lock_class+0x102/0x277
-  [<c044a4d0>] __lock_acquire+0x8e/0xb78
-  [<c0625bf3>] ? __ata_qc_complete+0xca/0xcf
-  [<c062767a>] ? ata_qc_complete+0x15d/0x163
-  [<c06353c8>] ? ata_hsm_qc_complete+0x9c/0xb5
-  [<c0635954>] ? ata_sff_hsm_move+0x573/0x592
-  [<c044b016>] lock_acquire+0x5c/0x70
-  [<f9c2fe71>] ? ath5k_set_current_imask+0x21/0x62 [ath5k]
-  [<c075d798>] _raw_spin_lock_irqsave+0x46/0x56
-  [<f9c2fe71>] ? ath5k_set_current_imask+0x21/0x62 [ath5k]
-  [<f9c2fe71>] ath5k_set_current_imask+0x21/0x62 [ath5k]
-  [<f9c30158>] ath5k_intr+0x2a6/0x3e5 [ath5k]
-  [<c0468b0f>] handle_irq_event_percpu+0x24/0x123
-  [<c0468c3a>] handle_irq_event+0x2c/0x43
-  [<c046a37f>] ? handle_edge_irq+0xaa/0xaa
-  [<c046a3e9>] handle_fasteoi_irq+0x6a/0x88
-  <IRQ>  [<c040315f>] ? do_IRQ+0x34/0x95
-  [<c0449990>] ? trace_hardirqs_on_caller+0xfe/0x11f
-  [<c076202e>] ? common_interrupt+0x2e/0x40
+No problem. I just had a look at the lib directory and noticed the crc7 
+function and module is called crc7. I can imagine there are enough 
+variants of that as well. Another variation is probably the polynomial 
+used. Not sure how to factor in bit direction and polynomial into the name.
 
+suggestions from my thumb:
+- rnw_crc8: refers to Ross N. Williams who wrote the paper used for 
+implementing this function.
+- painless_crc8: refers to title of the paper "A Painless Guide to CRC 
+Error Detection Algorithms".
+- brcm_crc8: indicates where the function came from.
+
+Other suggestions are welcome.
+
+Gr. AvS
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
