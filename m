@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30840 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759230Ab1EMO54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 10:57:56 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 07:57:27 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
-	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH 0/9] ath9k: Add Antenna diversity support for AR9485
-Date: Fri, 13 May 2011 20:27:38 +0530
-Message-ID: <1305298667-3212-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_165801_144372_39768AF8)
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:54483 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754761Ab1EVMee convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 May 2011 08:34:34 -0400
+Received: by gxk21 with SMTP id 21so1860180gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 05:34:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1305321990-22041-4-git-send-email-balbi@ti.com>
+References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	<1305321990-22041-4-git-send-email-balbi@ti.com>
+Date: Sun, 22 May 2011 15:34:33 +0300
+Message-ID: <BANLkTinPipSVdsH5cTb24HKex_h7pOwpAg@mail.gmail.com> (sfid-20110522_143438_367354_E6956B1D)
+Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
+From: Eliad Peller <eliad@wizery.com>
+To: Felipe Balbi <balbi@ti.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Sat, May 14, 2011 at 12:26 AM, Felipe Balbi <balbi@ti.com> wrote:
+> Those have little value. Remove those to make
+> the driver less noisy.
+>
+> Signed-off-by: Felipe Balbi <balbi@ti.com>
+> ---
+[...]
+> @@ -287,8 +287,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+>        /* Tell PM core that we don't need the card to be powered now */
+>        pm_runtime_put_noidle(&func->dev);
+>
+> -       wl1271_notice("initialized");
+> -
+>        return 0;
+>
 
-*This patch set adds Antenna diversity support for AR9485, previously
- antenna diversity is only supported in AR9285
-*The basic antenna diversity algorithm remains the same
-*slight change in the diversity field in eeprom
-*introduction of main/alt gain table and lna1_lna2 delta fields
-*initially set LNA1 for main antenna
-*introduction of diversity group
-*based on diversity group, fast diversity bias parmaters and
-lna1_lna2_delta varies
-*implement an API to take the decision of swapping main/ALT LNA's
-for AR9485
-*configure fast diversity bias based on diversity group
+>  static void __exit wl1271_exit(void)
+>  {
+>        sdio_unregister_driver(&wl1271_sdio_driver);
+> -
+> -       wl1271_notice("unloaded");
+>  }
+>
 
-Mohammed Shafi Shajakhan (9):
-  ath9k_hw: make antenna diversity modules chip specific
-  ath9k_hw: enable Antenna diversity for AR9485
-  ath9k_hw: define registers/macros to support Antenna diversity
-  ath9k_hw: config diversity based on eeprom contents
-  ath9k_hw: define modules to get/set Antenna diversity paramaters
-  ath9k_hw: define antenna diversity group
-  ath9k: Implement an API to swap main/ALT LNA's
-  ath9k: configure fast_div_bias based on diversity group
-  ath9k: make sure main_rssi is positive
+in fact, i find these prints pretty useful.
+does changing wl1271_notice to wl1271_debug(DEBUG_MAC80211) will solve
+the "nosiness"?
+(i use DEBUG_MAC80211 rather than DEBUG_SDIO, as DEBUG_SDIO is really
+*very* noisy)
 
- drivers/net/wireless/ath/ath9k/ar9002_phy.c    |   44 +++---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   50 +++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |   46 +++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |   22 +++
- drivers/net/wireless/ath/ath9k/ath9k.h         |    1 -
- drivers/net/wireless/ath/ath9k/hw-ops.h        |   12 ++
- drivers/net/wireless/ath/ath9k/hw.c            |   16 ++
- drivers/net/wireless/ath/ath9k/hw.h            |   13 +-
- drivers/net/wireless/ath/ath9k/recv.c          |  211 ++++++++++++++++++------
- 9 files changed, 337 insertions(+), 78 deletions(-)
+(i'll send it as a new patch as the original patch was already applied)
 
+Eliad.
