@@ -1,41 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:58875 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029Ab1EBDa5 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52124 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752574Ab1EVTC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 May 2011 23:30:57 -0400
-Date: Sun, 01 May 2011 22:30:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix typo in pci.c
-Message-ID: <4dbe256e.v9oxZywm8s+PAoUb%Larry.Finger@lwfinger.net> (sfid-20110502_053100_880902_3247D8E6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 22 May 2011 15:02:27 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 2C6F054004A
+	for <linux-wireless@vger.kernel.org>; Sun, 22 May 2011 15:08:33 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110522190226.7AD4540EC3@repository3.orbit-lab.org> (sfid-20110522_210231_034614_30903EC4)
+Date: Sun, 22 May 2011 15:02:26 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
 
-John,
+compat-wireless code metrics
 
-This fixes a typo in commit c7cfe38ee0f946415b0b, which will be in 2.6.40.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-@@ -1069,7 +1069,7 @@ static int _rtl_pci_init_tx_ring(struct
- 
- 	for (i = 0; i < entries; i++) {
- 		nextdescaddress = (u32) dma +
--					      ((i + 11) % entries) *
-+					      ((i + 1) % entries) *
- 					      sizeof(*ring);
- 
- 		rtlpriv->cfg->ops->set_desc((u8 *)&(ring[i]),
-
+    822901 - Total upstream lines of code being pulled
