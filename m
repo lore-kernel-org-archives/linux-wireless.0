@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42061 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757835Ab1EXBiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 21:38:55 -0400
-Date: Mon, 23 May 2011 20:38:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192se: Synchronize IRQ after disabling it
-Message-ID: <4ddb0c2c.lUvN52nSGTJ6F/K5%Larry.Finger@lwfinger.net> (sfid-20110524_033857_214955_E7AAADE7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.bytecamp.net ([212.204.60.9]:50081 "EHLO mail.bytecamp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755187Ab1EVNSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 May 2011 09:18:17 -0400
+From: Jo-Philipp Wich <jow@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Jo-Philipp Wich <jow@openwrt.org>
+Subject: [PATCH] iw: Fix calculation of fractional multicast rates
+Date: Sun, 22 May 2011 15:09:51 +0200
+Message-Id: <1306069791-21079-1-git-send-email-jow@openwrt.org> (sfid-20110522_151821_674879_8740E2FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As suggested by Mike McCormack <mikem@ring3k.org> for rtl8192ce, make sure any IRQ
-handlers running on other CPUs complete.
+Due to missing brackets around the "(int) rate * 10" expression
+the float value of "rate" is converted to an integer first and
+then multiplied which results for example in "50" instead of the
+expected "55" for a give rate of 5.5 Mbps, resulting in an invalid
+argument error from iw.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This patch simply puts the multiplication expression in brackets,
+so that the type cast is performed on the result and not the
+first operand.
+
+Signed-off-by: Jo-Philipp Wich <jow@openwrt.org>
 ---
+ ibss.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -1226,6 +1226,7 @@ void rtl92se_disable_interrupt(struct ie
- 	rtl_write_dword(rtlpriv, INTA_MASK + 4, 0);
+diff --git a/ibss.c b/ibss.c
+index ca8a4ec..b70dee3 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -104,7 +104,7 @@ static int join_ibss(struct nl80211_state *state,
+ 		if (*end != '\0')
+ 			return 1;
  
- 	rtlpci->irq_enabled = false;
-+	synchronize_irq(rtlpci->pdev->irq);
- }
- 
- 
+-		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int) rate * 10);
++		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int)(rate * 10));
+ 		argv++;
+ 		argc--;
+ 	}
+-- 
+1.7.0.4
+
