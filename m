@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab1EaGfZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50158 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757641Ab1EWVic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 02:35:25 -0400
-Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1305894135-14036-6-git-send-email-rmanoharan@atheros.com> (sfid-20110520_142300_320315_15BD860C)
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
-	 <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
-	 (sfid-20110520_142300_320315_15BD860C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 31 May 2011 08:35:17 +0200
-Message-ID: <1306823717.9366.3.camel@jlt3.sipsolutions.net> (sfid-20110531_083530_915981_6933326C)
-Mime-Version: 1.0
+	Mon, 23 May 2011 17:38:32 -0400
+Message-ID: <4DDAD3D5.1070001@candelatech.com> (sfid-20110523_233840_037644_4A8B6D7F)
+Date: Mon, 23 May 2011 14:38:29 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com> <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com> <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com> <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com> <4DDACF56.9070403@candelatech.com> <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com>
+In-Reply-To: <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-20 at 17:52 +0530, Rajkumar Manoharan wrote:
-> Stop tx queues before updating rate control to ensure
-> proper rate selection. Otherwise packets can be transmitted
-> in 40 Mhz whereas hw is configured in HT20.
+On 05/23/2011 02:28 PM, Luis R. Rodriguez wrote:
+> On Mon, May 23, 2011 at 2:19 PM, Ben Greear<greearb@candelatech.com>  wrote:
 
-Looks like I completely missed this since you hid it in an ath9k
-patchset. DON'T DO THAT.
+>> Since it *is* possible to start an AP on a channel with existing AP,
+>> I assume that the NIC must be able to handle this properly..or is
+>> that ability to start on a scanned channel just a bug?  (Please
+>> don't fix it, if it is :P)
+>
+> It a feature, AP functionality is allowed on that channel on a world
+> roaming card given that no CTL is present so the lower regulatory
+> value, from CRDA, is used instead of the CTL value.
 
-Anyway, John, please revert. This is completely useless. Not only is
-abusing the CSA stop reason a show-stopper, the whole patch is also just
-not right, it seems like a workaround around a rate control algorithm
-that isn't able to do an atomic HT change by itself. Also, it won't even
-do what you want, there may be packets being processed concurrently
-while stopping the queue -- calling stop_queues() is no guarantee that
-no packet will be processed afterwards.
+So as long as you have a functional CRDA and do not mis-represent
+your country with 'iw reg set', is there any way to
+actually get the system out of spec if you use "eeprom" reg-domain of 0x0?
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
