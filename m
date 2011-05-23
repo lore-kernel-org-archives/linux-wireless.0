@@ -1,166 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2948 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758841Ab1EMKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 27/32] staging: brcm80211: Fixed scan notification
- functionality in brcmfmac driver
-Date: Fri, 13 May 2011 11:59:47 +0200
-Message-ID: <1305280792-9475-27-git-send-email-arend@broadcom.com> (sfid-20110513_120041_920345_04CDA5DB)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:54879 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223Ab1EWTso (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 15:48:44 -0400
+Received: by vxi39 with SMTP id 39so4372783vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:48:43 -0700 (PDT)
+Message-ID: <4DDABA17.3090307@lwfinger.net> (sfid-20110523_214848_696809_37FF3DC3)
+Date: Mon, 23 May 2011 14:48:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Mike McCormack <mikem@ring3k.org>
+CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/8] rtlwifi: Run IPS leave work in a tasklet
+References: <4DDA6705.5030606@ring3k.org>
+In-Reply-To: <4DDA6705.5030606@ring3k.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On 05/23/2011 08:54 AM, Mike McCormack wrote:
+> This removes the need to use IRQ safe spinlocks in many places.
+>
+> Signed-off-by: Mike McCormack<mikem@ring3k.org>
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c  |   14 ++++++++++++--
+>   drivers/net/wireless/rtlwifi/ps.c   |    1 +
+>   drivers/net/wireless/rtlwifi/wifi.h |    1 +
+>   3 files changed, 14 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 5eedb91..fd74396 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -622,7 +622,7 @@ tx_status_ok:
+>   	if (((rtlpriv->link_info.num_rx_inperiod +
+>   		rtlpriv->link_info.num_tx_inperiod)>  8) ||
+>   		(rtlpriv->link_info.num_rx_inperiod>  2)) {
+> -		rtl_lps_leave(hw);
+> +		tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
+>   	}
+>   }
+>
+> @@ -756,7 +756,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>   			if (((rtlpriv->link_info.num_rx_inperiod +
+>   				rtlpriv->link_info.num_tx_inperiod)>  8) ||
+>   				(rtlpriv->link_info.num_rx_inperiod>  2)) {
+> -				rtl_lps_leave(hw);
+> +				tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
+>   			}
+>
+>   			new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+> @@ -934,6 +934,11 @@ static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
+>   	_rtl_pci_tx_chk_waitq(hw);
+>   }
+>
+> +static void _rtl_pci_ips_leave_tasklet(struct ieee80211_hw *hw)
+> +{
+> +	rtl_lps_leave(hw);
+> +}
+> +
+>   static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> @@ -1032,6 +1037,9 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+>   	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
+>   		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
+>   		     (unsigned long)hw);
+> +	tasklet_init(&rtlpriv->works.ips_leave_tasklet,
+> +		     (void (*)(unsigned long))_rtl_pci_ips_leave_tasklet,
+> +		     (unsigned long)hw);
+>   }
+>
+>   static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
+> @@ -1494,6 +1502,7 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
+>
+>   	synchronize_irq(rtlpci->pdev->irq);
+>   	tasklet_kill(&rtlpriv->works.irq_tasklet);
+> +	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
+>
+>   	flush_workqueue(rtlpriv->works.rtl_wq);
+>   	destroy_workqueue(rtlpriv->works.rtl_wq);
+> @@ -1568,6 +1577,7 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
+>   	set_hal_stop(rtlhal);
+>
+>   	rtlpriv->cfg->ops->disable_interrupt(hw);
+> +	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
+>
+>   	spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flags);
+>   	while (ppsc->rfchange_inprogress) {
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index 39b0297..5552b8c 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -68,6 +68,7 @@ bool rtl_ps_disable_nic(struct ieee80211_hw *hw)
+>
+>   	/*<2>  Disable Interrupt */
+>   	rtlpriv->cfg->ops->disable_interrupt(hw);
+> +	tasklet_kill(&rtlpriv->works.irq_tasklet);
+>
+>   	/*<3>  Disable Adapter */
+>   	rtlpriv->cfg->ops->hw_disable(hw);
+> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+> index 0321328..9d003e0 100644
+> --- a/drivers/net/wireless/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/rtlwifi/wifi.h
+> @@ -1535,6 +1535,7 @@ struct rtl_works {
+>   	/* For SW LPS */
+>   	struct delayed_work ps_work;
+>   	struct delayed_work ps_rfon_wq;
+> +	struct tasklet_struct ips_leave_tasklet;
+>   };
+>
+>   struct rtl_debug {
 
-Earlier brcmfmac driver used to report success even for an aborted scan. This
-functionality is now fixed with this patch.
+This is a good idea.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   56 ++++++++++++---------
- 1 files changed, 32 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 450e072..abdf857 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -768,26 +768,25 @@ __wl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 		       (int)wl->status);
- 		return -EAGAIN;
- 	}
-+	if (test_bit(WL_STATUS_CONNECTING, &wl->status)) {
-+		WL_ERR("Connecting : status (%d)\n",
-+		       (int)wl->status);
-+		return -EAGAIN;
-+	}
- 
- 	iscan_req = false;
- 	spec_scan = false;
--	if (request) {		/* scan bss */
-+	if (request) {
-+		/* scan bss */
- 		ssids = request->ssids;
--		if (wl->iscan_on && (!ssids || !ssids->ssid_len)) {	/* for
--							 * specific scan,
--							 * ssids->ssid_len has
--							 * non-zero(ssid string)
--							 * length.
--							 * Otherwise this is 0.
--							 * we do not iscan for
--							 * specific scan request
--							 */
-+		if (wl->iscan_on && (!ssids || !ssids->ssid_len))
- 			iscan_req = true;
--		}
--	} else {		/* scan in ibss */
-+	} else {
-+		/* scan in ibss */
- 		/* we don't do iscan in ibss */
- 		ssids = this_ssid;
- 	}
-+
- 	wl->scan_request = request;
- 	set_bit(WL_STATUS_SCANNING, &wl->status);
- 	if (iscan_req) {
-@@ -2883,21 +2882,23 @@ wl_notify_scan_status(struct wl_priv *wl, struct net_device *ndev,
- 	struct wl_scan_results *bss_list;
- 	u32 len = WL_SCAN_BUF_MAX;
- 	s32 err = 0;
-+	bool scan_abort = false;
- 
- 	if (wl->iscan_on && wl->iscan_kickstart)
- 		return wl_wakeup_iscan(wl_to_iscan(wl));
- 
- 	if (unlikely(!test_and_clear_bit(WL_STATUS_SCANNING, &wl->status))) {
- 		WL_ERR("Scan complete while device not scanning\n");
--		return -EINVAL;
--	}
--	if (unlikely(!wl->scan_request)) {
-+		scan_abort = true;
-+		err = -EINVAL;
-+		goto scan_done_out;
- 	}
--	rtnl_lock();
-+
- 	err = wl_dev_ioctl(ndev, WLC_GET_CHANNEL, &channel_inform,
- 			sizeof(channel_inform));
- 	if (unlikely(err)) {
- 		WL_ERR("scan busy (%d)\n", err);
-+		scan_abort = true;
- 		goto scan_done_out;
- 	}
- 	channel_inform.scan_channel = le32_to_cpu(channel_inform.scan_channel);
-@@ -2910,10 +2911,12 @@ wl_notify_scan_status(struct wl_priv *wl, struct net_device *ndev,
- 	bss_list = wl->bss_list;
- 	memset(bss_list, 0, len);
- 	bss_list->buflen = cpu_to_le32(len);
-+
- 	err = wl_dev_ioctl(ndev, WLC_SCAN_RESULTS, bss_list, len);
- 	if (unlikely(err)) {
- 		WL_ERR("%s Scan_results error (%d)\n", ndev->name, err);
- 		err = -EINVAL;
-+		scan_abort = true;
- 		goto scan_done_out;
- 	}
- 	bss_list->buflen = le32_to_cpu(bss_list->buflen);
-@@ -2921,16 +2924,18 @@ wl_notify_scan_status(struct wl_priv *wl, struct net_device *ndev,
- 	bss_list->count = le32_to_cpu(bss_list->count);
- 
- 	err = wl_inform_bss(wl);
--	if (err)
-+	if (err) {
-+		scan_abort = true;
- 		goto scan_done_out;
-+	}
- 
- scan_done_out:
- 	if (wl->scan_request) {
--		cfg80211_scan_done(wl->scan_request, false);
-+		WL_DBG("calling cfg80211_scan_done\n");
-+		cfg80211_scan_done(wl->scan_request, scan_abort);
- 		wl_set_mpc(ndev, 1);
- 		wl->scan_request = NULL;
- 	}
--	rtnl_unlock();
- 	return err;
- }
- 
-@@ -4336,13 +4341,16 @@ s8 *wl_cfg80211_get_nvramname(void)
- static void wl_set_mpc(struct net_device *ndev, int mpc)
- {
- 	s32 err = 0;
-+	struct wl_priv *wl = ndev_to_wl(ndev);
- 
--	err = wl_dev_intvar_set(ndev, "mpc", mpc);
--	if (unlikely(err)) {
--		WL_ERR("fail to set mpc\n");
--		return;
-+	if (test_bit(WL_STATUS_READY, &wl->status)) {
-+		err = wl_dev_intvar_set(ndev, "mpc", mpc);
-+		if (unlikely(err)) {
-+			WL_ERR("fail to set mpc\n");
-+			return;
-+		}
-+		WL_INFO("MPC : %d\n", mpc);
- 	}
--	WL_DBG("MPC : %d\n", mpc);
- }
- 
- static int wl_debugfs_add_netdev_params(struct wl_priv *wl)
--- 
-1.7.4.1
-
+Larry
 
