@@ -1,322 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:35213 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758417Ab1EMV1U (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42698 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258Ab1EWByi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 17:27:20 -0400
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
-Subject: [RFC/PATCH 07/13] net: wl12xx: spi: add a context structure
-Date: Sat, 14 May 2011 00:26:24 +0300
-Message-Id: <1305321990-22041-8-git-send-email-balbi@ti.com> (sfid-20110513_232956_991835_4B2063CF)
-In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	Sun, 22 May 2011 21:54:38 -0400
+Date: Sun, 22 May 2011 20:54:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7 V2] rtl8192ce: Fix warnings from gcc 4.6.0
+Message-ID: <4dd9be5d.kCHV0Lj8JdhZWJPN%Larry.Finger@lwfinger.net> (sfid-20110523_035443_232604_303FA260)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this will help re-structuring the driver so
-that we avoid all duplications which are
-currently on this driver.
+gcc 4.6.0 warnings for rtl8192ce:
 
-Signed-off-by: Felipe Balbi <balbi@ti.com>
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/hw.o
+drivers/net/wireless/rtlwifi/rtl8192ce/hw.c: In function ‘_rtl92ce_hw_configure’:
+drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:766:6: warning: variable ‘reg_ratr’ set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/rtlwifi/rtl8192ce/hw.c: In function ‘rtl92ce_gpio_radio_on_off_checking’:
+drivers/net/wireless/rtlwifi/rtl8192ce/hw.c:1972:41: warning: variable ‘cur_rfstate’ set but not used [-Wunused-but-set-variable]
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/phy.o
+drivers/net/wireless/rtlwifi/rtl8192ce/phy.c: In function ‘rtl92c_phy_config_rf_with_headerfile’:
+drivers/net/wireless/rtlwifi/rtl8192ce/phy.c:284:7: warning: variable ‘rtstatus’ set but not used [-Wunused-but-set-variable]
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192ce/trx.o
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘_rtl92ce_translate_rx_signal_stuff’:
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:595:6: warning: variable ‘psaddr’ set but not used [-Wunused-but-set-variable]
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/wl12xx/spi.c |  128 +++++++++++++++++++++++-------------
- 1 files changed, 82 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 382b79d..5dbd5b3 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -68,14 +68,19 @@
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -763,11 +763,9 @@ static void _rtl92ce_hw_configure(struct
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
+ 	u8 reg_bw_opmode;
+-	u32 reg_ratr, reg_prsr;
++	u32 reg_prsr;
  
- #define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
+ 	reg_bw_opmode = BW_OPMODE_20MHZ;
+-	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
+-	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
+ 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
  
--static inline struct spi_device *wl_to_spi(struct wl1271 *wl)
-+struct wl12xx_spi_glue {
-+	struct device	*dev;
-+	struct wl1271	*wl;
-+};
-+
-+static inline struct wl12xx_spi_glue *wl_to_glue(struct wl1271 *wl)
- {
- 	return wl->if_priv;
- }
- 
- static struct device *wl1271_spi_wl_to_dev(struct wl1271 *wl)
- {
--	return &(wl_to_spi(wl)->dev);
-+	return wl_to_glue(wl)->dev;
- }
- 
- static void wl1271_spi_disable_interrupts(struct wl1271 *wl)
-@@ -90,9 +95,10 @@ static void wl1271_spi_enable_interrupts(struct wl1271 *wl)
- 
- static void wl1271_spi_reset(struct wl1271 *wl)
- {
--	u8 *cmd;
--	struct spi_transfer t;
--	struct spi_message m;
-+	struct wl12xx_spi_glue	*glue = wl_to_glue(wl);
-+	struct spi_transfer	t;
-+	struct spi_message	m;
-+	u8			*cmd;
- 
- 	cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
- 	if (!cmd) {
-@@ -109,7 +115,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- 
- 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- 	kfree(cmd);
-@@ -117,9 +123,12 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 
- static void wl1271_spi_init(struct wl1271 *wl)
- {
--	u8 crc[WSPI_INIT_CMD_CRC_LEN], *cmd;
--	struct spi_transfer t;
--	struct spi_message m;
-+	struct wl12xx_spi_glue	*glue = wl_to_glue(wl);
-+	struct spi_transfer	t;
-+	struct spi_message	m;
-+
-+	u8			crc[WSPI_INIT_CMD_CRC_LEN];
-+	u8			*cmd;
- 
- 	cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
- 	if (!cmd) {
-@@ -164,7 +173,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- 	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- 	kfree(cmd);
- }
-@@ -173,10 +182,12 @@ static void wl1271_spi_init(struct wl1271 *wl)
- 
- static int wl1271_spi_read_busy(struct wl1271 *wl)
- {
--	struct spi_transfer t[1];
--	struct spi_message m;
--	u32 *busy_buf;
--	int num_busy_bytes = 0;
-+	struct wl12xx_spi_glue	*glue = wl_to_glue(wl);
-+	struct spi_transfer	t[1];
-+	struct spi_message	m;
-+
-+	int			num_busy_bytes = 0;
-+	u32			*busy_buf;
- 
- 	/*
- 	 * Read further busy words from SPI until a non-busy word is
-@@ -193,7 +204,7 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
- 		t[0].len = sizeof(u32);
- 		t[0].cs_change = true;
- 		spi_message_add_tail(&t[0], &m);
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		if (*busy_buf & 0x1)
- 			return 0;
-@@ -207,11 +218,13 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
- static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 				size_t len, bool fixed)
- {
--	struct spi_transfer t[2];
--	struct spi_message m;
--	u32 *busy_buf;
--	u32 *cmd;
--	u32 chunk_len;
-+	struct wl12xx_spi_glue	*glue = wl_to_glue(wl);
-+	struct spi_transfer	t[2];
-+	struct spi_message	m;
-+
-+	u32			*busy_buf;
-+	u32			*cmd;
-+	u32			chunk_len;
- 
- 	while (len > 0) {
- 		chunk_len = min((size_t)WSPI_MAX_CHUNK_SIZE, len);
-@@ -242,7 +255,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		t[1].cs_change = true;
- 		spi_message_add_tail(&t[1], &m);
- 
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1) &&
- 		    wl1271_spi_read_busy(wl)) {
-@@ -258,7 +271,7 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		t[0].cs_change = true;
- 		spi_message_add_tail(&t[0], &m);
- 
--		spi_sync(wl_to_spi(wl), &m);
-+		spi_sync(to_spi_device(glue->dev), &m);
- 
- 		wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
- 		wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, chunk_len);
-@@ -273,12 +286,15 @@ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 			  size_t len, bool fixed)
- {
--	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
--	struct spi_message m;
--	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
--	u32 *cmd;
--	u32 chunk_len;
--	int i;
-+	struct wl12xx_spi_glue	*glue = wl_to_glue(wl);
-+	struct spi_transfer	t[2 * WSPI_MAX_NUM_OF_CHUNKS];
-+	struct spi_message	m;
-+
-+	u32			commands[WSPI_MAX_NUM_OF_CHUNKS];
-+	u32			chunk_len;
-+	u32			*cmd;
-+
-+	int			i;
- 
- 	WARN_ON(len > WL1271_AGGR_BUFFER_SIZE);
- 
-@@ -317,7 +333,7 @@ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		cmd++;
+ 	rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, 0x8);
+@@ -1969,7 +1967,7 @@ bool rtl92ce_gpio_radio_on_off_checking(
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
++	enum rf_pwrstate e_rfpowerstate_toset;
+ 	u8 u1tmp;
+ 	bool actuallyset = false;
+ 	unsigned long flag;
+@@ -1989,8 +1987,6 @@ bool rtl92ce_gpio_radio_on_off_checking(
+ 		spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flag);
  	}
  
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(to_spi_device(glue->dev), &m);
- }
+-	cur_rfstate = ppsc->rfpwr_state;
+-
+ 	rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, rtl_read_byte(rtlpriv,
+ 		       REG_MAC_PINMUX_CFG)&~(BIT(3)));
  
- static irqreturn_t wl1271_hardirq(int irq, void *cookie)
-@@ -360,10 +376,13 @@ static struct wl1271_if_operations spi_ops = {
- 
- static int __devinit wl1271_probe(struct spi_device *spi)
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -281,7 +281,6 @@ bool rtl92c_phy_config_rf_with_headerfil
  {
--	struct wl12xx_platform_data *pdata;
--	struct ieee80211_hw *hw;
--	struct wl1271 *wl;
--	int ret;
-+	struct wl12xx_platform_data	*pdata;
-+
-+	struct wl12xx_spi_glue		*glue;
-+	struct ieee80211_hw		*hw;
-+	struct wl1271			*wl;
-+
-+	int				ret = -ENOMEM;
  
- 	pdata = spi->dev.platform_data;
- 	if (!pdata) {
-@@ -371,14 +390,25 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 		return -ENODEV;
+ 	int i;
+-	bool rtstatus = true;
+ 	u32 *radioa_array_table;
+ 	u32 *radiob_array_table;
+ 	u16 radioa_arraylen, radiob_arraylen;
+@@ -308,7 +307,6 @@ bool rtl92c_phy_config_rf_with_headerfil
+ 			 ("Radio_B:RTL8192CE_RADIOB_1TARRAY\n"));
  	}
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, ("Radio No %x\n", rfpath));
+-	rtstatus = true;
+ 	switch (rfpath) {
+ 	case RF90_PATH_A:
+ 		for (i = 0; i < radioa_arraylen; i = i + 2) {
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -592,7 +592,6 @@ static void _rtl92ce_translate_rx_signal
+ 	struct ieee80211_hdr *hdr;
+ 	u8 *tmp_buf;
+ 	u8 *praddr;
+-	u8 *psaddr;
+ 	__le16 fc;
+ 	u16 type, c_fc;
+ 	bool packet_matchbssid, packet_toself, packet_beacon;
+@@ -604,7 +603,6 @@ static void _rtl92ce_translate_rx_signal
+ 	c_fc = le16_to_cpu(fc);
+ 	type = WLAN_FC_GET_TYPE(fc);
+ 	praddr = hdr->addr1;
+-	psaddr = hdr->addr2;
  
-+	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
-+	if (!glue) {
-+		dev_err(&spi->dev, "not enought memory\n");
-+		goto err0;
-+	}
-+
- 	hw = wl1271_alloc_hw();
--	if (IS_ERR(hw))
--		return PTR_ERR(hw);
-+	if (IS_ERR(hw)) {
-+		ret = PTR_ERR(hw);
-+		goto err1;
-+	}
- 
- 	wl = hw->priv;
- 
--	dev_set_drvdata(&spi->dev, wl);
--	wl->if_priv = spi;
-+	glue->dev = &spi->dev;
-+	glue->wl = wl;
-+
-+	spi_set_drvdata(spi, glue);
-+	wl->if_priv = glue;
- 
- 	wl->if_ops = &spi_ops;
- 
-@@ -389,14 +419,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	ret = spi_setup(spi);
- 	if (ret < 0) {
- 		wl1271_error("spi_setup failed");
--		goto out_free;
-+		goto err2;
- 	}
- 
- 	wl->set_power = pdata->set_power;
- 	if (!wl->set_power) {
- 		wl1271_error("set power function missing in platform data");
- 		ret = -ENODEV;
--		goto out_free;
-+		goto err2;
- 	}
- 
- 	wl->ref_clock = pdata->board_ref_clock;
-@@ -405,7 +435,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	if (wl->irq < 0) {
- 		wl1271_error("irq missing in platform data");
- 		ret = -ENODEV;
--		goto out_free;
-+		goto err2;
- 	}
- 
- 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
-@@ -413,37 +443,43 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 				   DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
--		goto out_free;
-+		goto err2;
- 	}
- 
- 	disable_irq(wl->irq);
- 
- 	ret = wl1271_init_ieee80211(wl);
- 	if (ret)
--		goto out_irq;
-+		goto err3;
- 
- 	ret = wl1271_register_hw(wl);
- 	if (ret)
--		goto out_irq;
-+		goto err3;
- 
- 	return 0;
- 
-- out_irq:
-+err3:
- 	free_irq(wl->irq, wl);
- 
-- out_free:
-+err2:
- 	wl1271_free_hw(wl);
- 
-+err1:
-+	kfree(glue);
-+
-+err0:
- 	return ret;
- }
- 
- static int __devexit wl1271_remove(struct spi_device *spi)
- {
--	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
-+	struct wl12xx_spi_glue	*glue = spi_get_drvdata(spi);
-+	struct wl1271		*wl = glue->wl;
- 
- 	wl1271_unregister_hw(wl);
- 	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
-+	kfree(glue);
- 
- 	return 0;
- }
--- 
-1.7.4.1.343.ga91df
-
+ 	packet_matchbssid =
+ 	    ((IEEE80211_FTYPE_CTL != type) &&
