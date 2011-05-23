@@ -1,115 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:32866 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937Ab1EIJFv (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63988 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932667Ab1EWT0e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 05:05:51 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 24so1473428eyx.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 02:05:51 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC ONLY 3/5] b43: bus: abstract R/W operations
-Date: Mon,  9 May 2011 11:43:19 +0200
-Message-Id: <1304934201-10626-3-git-send-email-zajec5@gmail.com> (sfid-20110509_110555_052180_CF82132F)
-In-Reply-To: <1304934201-10626-1-git-send-email-zajec5@gmail.com>
-References: <1304934201-10626-1-git-send-email-zajec5@gmail.com>
+	Mon, 23 May 2011 15:26:34 -0400
+Received: by iwn34 with SMTP id 34so5063586iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 12:26:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DDAACF3.3050705@candelatech.com>
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
+ <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 12:26:14 -0700
+Message-ID: <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com> (sfid-20110523_212653_703697_79FDD703)
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/b43/b43.h |    8 ++++----
- drivers/net/wireless/b43/bus.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/b43/bus.h |    5 +++++
- 3 files changed, 31 insertions(+), 4 deletions(-)
+On Mon, May 23, 2011 at 11:52 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 05/23/2011 11:39 AM, Ben Greear wrote:
+>>
+>> On 05/23/2011 09:54 AM, Ben Greear wrote:
+>>>
+>>> On 05/23/2011 04:28 AM, Mohammed Shafi wrote:
+>>>>
+>>>> On Sat, May 21, 2011 at 3:52 AM, Ben Greear<greearb@candelatech.com>
+>>>> wrote:
+>>>>>
+>>>>> This is on 2.6.39-wl+
+>>>>>
+>>>>> All the 5Ghz channels are showing as passive scanning, which
+>>>>> makes them unusable for APs if nothing else.
+>>>>
+>>>> for me channels 36,40,44,48 are ok in 5ghz. used the latest
+>>>> wireless-testing just brought the card up as station mode.
+>>>
+>>> Most of my systems show the same, at least most of the time.
+>>>
+>>>
+>>>>> Any idea why this is happening?
+>>>>
+>>>> don't know, may be regulatory.
+>>>
+>>> After a reboot and an idle weekend, mine also look normal.
+>>> So, it's something transient it appears.
+>>
+>> Err, I mis-spoke..the 9380 system still shows passive
+>> scanning everywhere...
+>
+> Busted one:
+>
+> ath: EEPROM regdomain: 0x6a
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: 00
+> ath: Regpair used: 0x6a
+>
+> cfg80211: Calling CRDA for country: US
+> cfg80211: Regulatory domain changed to country: US
+> cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
+> max_eirp)
+> cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+> cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+> cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+>
+>
+> Bleh, seems my Sparklan 127 NIC is set to world-roam :(
+>
+> What a total pain in the arse!
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 8c8ae1e..11bf4d9 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -881,22 +881,22 @@ static inline enum ieee80211_band b43_current_band(struct b43_wl *wl)
- 
- static inline u16 b43_read16(struct b43_wldev *dev, u16 offset)
- {
--	return ssb_read16(dev->sdev, offset);
-+	return dev->dev->read16(dev->dev, offset);
- }
- 
- static inline void b43_write16(struct b43_wldev *dev, u16 offset, u16 value)
- {
--	ssb_write16(dev->sdev, offset, value);
-+	dev->dev->write16(dev->dev, offset, value);
- }
- 
- static inline u32 b43_read32(struct b43_wldev *dev, u16 offset)
- {
--	return ssb_read32(dev->sdev, offset);
-+	return dev->dev->read32(dev->dev, offset);
- }
- 
- static inline void b43_write32(struct b43_wldev *dev, u16 offset, u32 value)
- {
--	ssb_write32(dev->sdev, offset, value);
-+	dev->dev->write32(dev->dev, offset, value);
- }
- 
- static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43/bus.c b/drivers/net/wireless/b43/bus.c
-index f8ccd2c..8f9c133 100644
---- a/drivers/net/wireless/b43/bus.c
-+++ b/drivers/net/wireless/b43/bus.c
-@@ -25,6 +25,23 @@
- 
- 
- /* SSB */
-+static inline u16 b43_bus_ssb_read16(struct b43_bus_dev *dev, u16 offset)
-+{
-+	return ssb_read16(dev->sdev, offset);
-+}
-+static inline u32 b43_bus_ssb_read32(struct b43_bus_dev *dev, u16 offset)
-+{
-+	return ssb_read32(dev->sdev, offset);
-+}
-+static inline void b43_bus_ssb_write16(struct b43_bus_dev *dev, u16 offset, u16 value)
-+{
-+	ssb_write16(dev->sdev, offset, value);
-+}
-+static inline void b43_bus_ssb_write32(struct b43_bus_dev *dev, u16 offset, u32 value)
-+{
-+	ssb_write32(dev->sdev, offset, value);
-+}
-+
- struct b43_bus_dev *b43_bus_dev_ssb_init(struct ssb_device *sdev)
- {
- 	struct b43_bus_dev *dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-@@ -32,5 +49,10 @@ struct b43_bus_dev *b43_bus_dev_ssb_init(struct ssb_device *sdev)
- 	dev->bus_type = B43_BUS_SSB;
- 	dev->sdev = sdev;
- 
-+	dev->read16 = b43_bus_ssb_read16;
-+	dev->read32 = b43_bus_ssb_read32;
-+	dev->write16 = b43_bus_ssb_write16;
-+	dev->write32 = b43_bus_ssb_write32;
-+
- 	return dev;
- }
-diff --git a/drivers/net/wireless/b43/bus.h b/drivers/net/wireless/b43/bus.h
-index 68bc00a..7d60f4f 100644
---- a/drivers/net/wireless/b43/bus.h
-+++ b/drivers/net/wireless/b43/bus.h
-@@ -10,6 +10,11 @@ struct b43_bus_dev {
- 	union {
- 		struct ssb_device *sdev;
- 	};
-+
-+	u16 (*read16)(struct b43_bus_dev *dev, u16 offset);
-+	u32 (*read32)(struct b43_bus_dev *dev, u16 offset);
-+	void (*write16)(struct b43_bus_dev *dev, u16 offset, u16 value);
-+	void (*write32)(struct b43_bus_dev *dev, u16 offset, u32 value);
- };
- 
- struct b43_bus_dev *b43_bus_dev_ssb_init(struct ssb_device *sdev);
--- 
-1.7.3.4
+Its what the card was designed and programmed for. The only thing you
+can do with world roaming cards then is just scan, and if you find a
+beacon on a channel which is a non-DFS channel beaconing will be
+enabled then.
 
+  Luis
