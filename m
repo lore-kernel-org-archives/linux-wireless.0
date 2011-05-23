@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48309 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066Ab1EFWYj (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:57128 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779Ab1EWAYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:24:39 -0400
-From: greearb@candelatech.com
+	Sun, 22 May 2011 20:24:21 -0400
+Date: Sun, 22 May 2011 17:22:45 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath5k:  Fix lockup due to un-init spinlock.
-Date: Fri,  6 May 2011 15:24:34 -0700
-Message-Id: <1304720674-27031-1-git-send-email-greearb@candelatech.com> (sfid-20110507_002502_080836_A8A0509D)
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	torvalds <torvalds@linux-foundation.org>
+Subject: [PATCH] wireless: fix fatal kernel-doc error + warning in
+ mac80211.h
+Message-Id: <20110522172245.8e53875d.randy.dunlap@oracle.com> (sfid-20110523_022425_584075_024F0505)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-This was introduced in 2.6.39-rc1 it seems.
+Fix new kernel-doc Error and Warning in <net/mac80211.h>:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Error(linux-2.6.39-git5/include/net/mac80211.h:550): cannot understand prototype: 'struct ieee80211_sched_scan_ies '
+Warning(linux-2.6.39-git5/include/net/mac80211.h:2289): No description found for parameter 'sta'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
-:100644 100644 203243b... 2204762... M	drivers/net/wireless/ath/ath5k/base.c
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 203243b..2204762 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2394,7 +2394,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
- 	spin_lock_init(&sc->rxbuflock);
- 	spin_lock_init(&sc->txbuflock);
- 	spin_lock_init(&sc->block);
--
-+	spin_lock_init(&sc->irqlock);
+--- linux-2.6.39-git5.orig/include/net/mac80211.h
++++ linux-2.6.39-git5/include/net/mac80211.h
+@@ -538,7 +538,7 @@ struct ieee80211_tx_info {
+ };
  
- 	/* Setup interrupt handler */
- 	ret = request_irq(sc->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
--- 
-1.7.3.4
-
+ /**
+- * ieee80211_sched_scan_ies - scheduled scan IEs
++ * struct ieee80211_sched_scan_ies - scheduled scan IEs
+  *
+  * This structure is used to pass the appropriate IEs to be used in scheduled
+  * scans for all bands.  It contains both the IEs passed from the userspace
+@@ -2278,6 +2278,7 @@ static inline int ieee80211_sta_ps_trans
+ 
+ /**
+  * ieee80211_sta_set_tim - set the TIM bit for a sleeping station
++ * @sta: &struct ieee80211_sta pointer for the sleeping station
+  *
+  * If a driver buffers frames for a powersave station instead of passing
+  * them back to mac80211 for retransmission, the station needs to be told
