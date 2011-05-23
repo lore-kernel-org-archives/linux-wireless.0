@@ -1,140 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2399 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104Ab1ECJgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 28/61] staging: brcm80211: implement flush driver
- callback for mac80211
-Date: Tue, 3 May 2011 11:35:28 +0200
-Message-ID: <1304415361-7813-29-git-send-email-arend@broadcom.com> (sfid-20110503_113835_176172_6F23A256)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58168 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753476Ab1EWVnN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 17:43:13 -0400
+Received: by iwn34 with SMTP id 34so5178865iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 14:43:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4DDAD3D5.1070001@candelatech.com>
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
+ <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com>
+ <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
+ <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com>
+ <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
+ <4DDACF56.9070403@candelatech.com> <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com>
+ <4DDAD3D5.1070001@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 14:42:53 -0700
+Message-ID: <BANLkTinrM1oBfKUoCzs9_DOw+EmpW=ikig@mail.gmail.com> (sfid-20110523_234320_006853_A00D03B3)
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211 interface has a flush callback which is used by mac80211
-to assure all pending transmit packets have been transmitted. This
-is used before scanning off-channel.
+On Mon, May 23, 2011 at 2:38 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 05/23/2011 02:28 PM, Luis R. Rodriguez wrote:
+>>
+>> On Mon, May 23, 2011 at 2:19 PM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>
+>>> Since it *is* possible to start an AP on a channel with existing AP,
+>>> I assume that the NIC must be able to handle this properly..or is
+>>> that ability to start on a scanned channel just a bug?  (Please
+>>> don't fix it, if it is :P)
+>>
+>> It a feature, AP functionality is allowed on that channel on a world
+>> roaming card given that no CTL is present so the lower regulatory
+>> value, from CRDA, is used instead of the CTL value.
+>
+> So as long as you have a functional CRDA and do not mis-represent
+> your country with 'iw reg set',
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/wl_export.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   24 ++++++++++++++++++++++
- drivers/staging/brcm80211/brcmsmac/wlc_main.c    |   13 +++++++++++
- drivers/staging/brcm80211/brcmsmac/wlc_pub.h     |    1 +
- 4 files changed, 39 insertions(+), 0 deletions(-)
+Atheros cards have an EEPROM value for a regulatory domain which is
+always used, regardless of what you tell cfg80211 with 'iw reg set',
+'iw reg set' will just help compliance further.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_export.h b/drivers/staging/brcm80211/brcmsmac/wl_export.h
-index 9ff760f..0fe0b24 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_export.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_export.h
-@@ -42,5 +42,6 @@ extern void wl_free_timer(struct wl_info *wl, struct wl_timer *timer);
- extern void wl_add_timer(struct wl_info *wl, struct wl_timer *timer, uint ms,
- 			 int periodic);
- extern bool wl_del_timer(struct wl_info *wl, struct wl_timer *timer);
-+extern void wl_msleep(struct wl_info *wl, uint ms);
- 
- #endif				/* _wl_export_h_ */
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index dd46d2e..0a11e80 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -149,6 +149,7 @@ static int wl_ops_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
- 			       u8 buf_size);
- static void wl_ops_rfkill_poll(struct ieee80211_hw *hw);
-+static void wl_ops_flush(struct ieee80211_hw *hw, bool drop);
- 
- static void wl_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
-@@ -667,6 +668,18 @@ static void wl_ops_rfkill_poll(struct ieee80211_hw *hw)
- 	wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, blocked);
- }
- 
-+static void wl_ops_flush(struct ieee80211_hw *hw, bool drop)
-+{
-+	struct wl_info *wl = HW_TO_WL(hw);
-+
-+	no_printk("%s: drop = %s\n", __func__, drop ? "true" : "false");
-+
-+	/* wait for packet queue and dma fifos to run empty */
-+	WL_LOCK(wl);
-+	wlc_wait_for_tx_completion(wl->wlc, drop);
-+	WL_UNLOCK(wl);
-+}
-+
- static const struct ieee80211_ops wl_ops = {
- 	.tx = wl_ops_tx,
- 	.start = wl_ops_start,
-@@ -688,6 +701,7 @@ static const struct ieee80211_ops wl_ops = {
- 	.sta_remove = wl_ops_sta_remove,
- 	.ampdu_action = wl_ops_ampdu_action,
- 	.rfkill_poll = wl_ops_rfkill_poll,
-+	.flush = wl_ops_flush,
- };
- 
- /*
-@@ -1947,3 +1961,13 @@ bool wl_rfkill_set_hw_state(struct wl_info *wl)
- 	WL_LOCK(wl);
- 	return blocked;
- }
-+
-+/*
-+ * precondition: perimeter lock has been acquired
-+ */
-+void wl_msleep(struct wl_info *wl, uint ms)
-+{
-+	WL_UNLOCK(wl);
-+	msleep(ms);
-+	WL_LOCK(wl);
-+}
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index ea7d897..c4e7178 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -8104,3 +8104,16 @@ int wlc_get_curband(struct wlc_info *wlc)
- {
- 	return wlc->band->bandunit;
- }
-+
-+void wlc_wait_for_tx_completion(struct wlc_info *wlc, bool drop)
-+{
-+	/* flush packet queue when requested */
-+	if (drop)
-+		pktq_flush(&wlc->active_queue->q, false, NULL, 0);
-+
-+	/* wait for queue and DMA fifos to run dry */
-+	while (!pktq_empty(&wlc->active_queue->q) ||
-+	       TXPKTPENDTOT(wlc) > 0) {
-+		wl_msleep(wlc->wl, 1);
-+	}
-+}
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-index 08e5fb5..3dc5b1d 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-@@ -569,6 +569,7 @@ extern void wlc_associate_upd(struct wlc_info *wlc, bool state);
- extern void wlc_scan_start(struct wlc_info *wlc);
- extern void wlc_scan_stop(struct wlc_info *wlc);
- extern int wlc_get_curband(struct wlc_info *wlc);
-+extern void wlc_wait_for_tx_completion(struct wlc_info *wlc, bool drop);
- 
- static inline int wlc_iovar_getuint(struct wlc_info *wlc, const char *name,
- 				    uint *arg)
--- 
-1.7.4.1
+> is there any way to
+> actually get the system out of spec if you use "eeprom" reg-domain of 0x0?
 
+No. You can only do this by trying to take the card out of compliance
+purposely or unknowingly in software.
 
+ Luis
