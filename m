@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41818 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753748Ab1EGNeW convert rfc822-to-8bit (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:57080 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753632Ab1EWAYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 09:34:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	<201105061605.31625.arnd@arndb.de>
-	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-Date: Sat, 7 May 2011 15:34:20 +0200
-Message-ID: <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com> (sfid-20110507_153443_887964_442E2D73)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George Kashperko <george@znau.edu.ua>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <rmk@arm.linux.org.uk>,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 22 May 2011 20:24:08 -0400
+Date: Sun, 22 May 2011 17:16:20 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net
+Subject: [PATCH] wireless: fix cfg80211.h new kernel-doc warnings
+Message-Id: <20110522171620.51458555.randy.dunlap@oracle.com> (sfid-20110523_022416_429934_78E3CABF)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/6 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/5/6 Arnd Bergmann <arnd@arndb.de>:
->>> +const char *bcma_device_name(u16 coreid)
->>> +{
->>> +     switch (coreid) {
->>> +     case BCMA_CORE_OOB_ROUTER:
->>> +             return "OOB Router";
->>> +     case BCMA_CORE_INVALID:
->>> +             return "Invalid";
->>> +     case BCMA_CORE_CHIPCOMMON:
->>> +             return "ChipCommon";
->>> +     case BCMA_CORE_ILINE20:
->>> +             return "ILine 20";
->>
->> It's better to make that a data structure than a switch() statement,
->> both from readability and efficiency aspects.
->
-> Well, maybe. We call it only once, at init time. In any case we're
-> still waiting for Broadcom to clarify which cores are really used for
-> BCMA.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Arnd: did you have a look at defines at all?
+Fix new kernel-doc warnings in <net/cfg80211.h>:
 
-Most of the defines have values in range 0x800 → 0x837. Converting
-this to array means loosing 0x800 u16 entries. We can not use 0x800
-offset, because there are also some defined between 0x000 and 0x800:
-#define BCMA_CORE_OOB_ROUTER           0x367   /* Out of band */
-#define BCMA_CORE_INVALID              0x700
+Warning(linux-2.6.39-git5/include/net/cfg80211.h:560): No description found for parameter 'bss_param'
+Warning(linux-2.6.39-git5/include/net/cfg80211.h:1555): Enum value 'WIPHY_FLAG_SUPPORTS_SCHED_SCAN' not described in enum 'wiphy_flags'
 
-Oh and there is still:
-#define BCMA_CORE_DEFAULT              0xFFF
-we could want to include. Then we would loose additional (0xFFF -
-0x837) u16 entries in array.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ include/net/cfg80211.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I'll just leave this huge "case". As I said, it's called only once on
-initialization time. For standard PCI cards there are usually 3-5
-cores, for embedded systems this number can be bigger, but still is
-limited with 16 for 1 bus:
-#define BCMA_MAX_NR_CORES              16
-
--- 
-Rafał
+--- linux-2.6.39-git5.orig/include/net/cfg80211.h
++++ linux-2.6.39-git5/include/net/cfg80211.h
+@@ -531,6 +531,7 @@ struct sta_bss_parameters {
+  * @tx_retries: cumulative retry counts
+  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
+  * @rx_dropped_misc:  Dropped for un-specified reason.
++ * @bss_param: current BSS parameters
+  * @generation: generation number for nl80211 dumps.
+  *	This number should increase every time the list of stations
+  *	changes, i.e. when a station is added or removed, so that
+@@ -1537,7 +1538,7 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
+  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
+  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+- * @WIPHY_FLAG_SCHED_SCAN: The device supports scheduled scans.
++ * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
