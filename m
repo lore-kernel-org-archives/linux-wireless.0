@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42803 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478Ab1EECGD (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:34269 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395Ab1EWP73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 22:06:03 -0400
-Received: by bwz15 with SMTP id 15so1471426bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 19:06:01 -0700 (PDT)
+	Mon, 23 May 2011 11:59:29 -0400
+Subject: [PATCH] ath6kl: export firmware version to user space
+To: gregkh@suse.de
+From: Kalle Valo <kalle.valo@atheros.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Mon, 23 May 2011 18:52:37 +0300
+Message-ID: <20110523155237.12512.49752.stgit@localhost6.localdomain6> (sfid-20110523_175932_822597_0D18DDD7)
 MIME-Version: 1.0
-In-Reply-To: <19906.621.413439.414030@gargle.gargle.HOWL>
-References: <BANLkTinJK3B_dcX4Qmuo=hC5j654YLLmCA@mail.gmail.com>
- <19906.158.278401.536454@gargle.gargle.HOWL> <19906.621.413439.414030@gargle.gargle.HOWL>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Wed, 4 May 2011 19:05:41 -0700
-Message-ID: <BANLkTimp=tZbBoFBGo9xyLfe1Jx=A+b=0g@mail.gmail.com> (sfid-20110505_040607_143036_03AC7D30)
-Subject: Re: bug: 2 second wireless stall on ath9k link
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 4, 2011 at 6:50 PM, Sujith <m.sujith@gmail.com> wrote:
-> Sujith wrote:
->> Daniel Halperin wrote:
->> > Hi,
->> >
->> > I have two identical Dell Inspiron 530n desktops running latest w-t
->> > (07e789c5094735747b3df8a7840f61467575ba9e, master 2011-05-04) on
->> > Ubuntu 10.04.2 LTS. I have uninstalled network-manager from both
->> > devices and, as far as I can tell, no software processes or daemons
->> > interfere with my wireless configurations.
->> >
->> > The AP machine has an AR9280-based device and an IWL5300 based device.
->> > I blacklist ath9k and iwlagn modules from loading on boot. It is
->> > running latest hostap.git, though I've seen the same issue with older
->> > versions.
->> >
->> > The client machine has one AR9380-based NIC, one IWL5300-based NIC,
->> > and one RT2800pci NIC. I blacklist ath9k, iwlagn, and rt2800pci from
->> > loading on boot.
->> >
->> > When I set up the client to connect (using iwconfig essid) to the AP
->> > (no encryption, channel 48 with HT40-) and run iperf, I sometimes see
->> > 2-second drops of the connection. I run iperf to generate elastic TCP
->> > flows that see ~150 Mbps, and in parallel I run ping <AP> -i 0.2.
->> > Here's the ping log:
->>
->> Your timing couldn't be better. :)
->> https://patchwork.kernel.org/patch/753862/
+cfg80211 exports wiphy->fw_version to user space via ethtool interface.
 
-Thanks! I'll give it a whirl.
+The obligatory screenshot:
 
->
-> Hm, is ath9k in AP mode ?
-> That fix is meant primarily for station mode.
->
-> Disabling ANI would be useful to narrow down the issue.
-> (Since long calibration is every 30 seconds).
+$ sudo ethtool -i wlan0
+driver: ath6kl_hifdev
+version: 2.6.39-rc4+
+firmware-version: 3:1:1:149
+bus-info: mmc0:0001:1
+$
 
-Yes, one side is AP and the other side is client.
+Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-What is ANI and how do I disable it? (Is there a website I should be
-looking at? A quick search didn't pull anything up).
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index 48dd9e3..30ae63b 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -4114,6 +4114,13 @@ ar6000_ready_event(void *devt, u8 *datap, u8 phyCap, u32 sw_ver, u32 abi_ver)
+     ar->arVersion.wlan_ver = sw_ver;
+     ar->arVersion.abi_ver = abi_ver;
+ 
++    snprintf(ar->wdev->wiphy->fw_version, sizeof(ar->wdev->wiphy->fw_version),
++	     "%u:%u:%u:%u",
++	     (ar->arVersion.wlan_ver & 0xf0000000) >> 28,
++	     (ar->arVersion.wlan_ver & 0x0f000000) >> 24,
++	     (ar->arVersion.wlan_ver & 0x00ff0000) >> 16,
++	     (ar->arVersion.wlan_ver & 0x0000ffff));
++
+     /* Indicate to the waiting thread that the ready event was received */
+     ar->arWmiReady = true;
+     wake_up(&arEvent);
 
-Thanks!
-Dan
