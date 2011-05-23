@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38576 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803Ab1EHKhQ convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40594 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857Ab1EWBtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 06:37:16 -0400
+	Sun, 22 May 2011 21:49:46 -0400
+Date: Sun, 22 May 2011 20:49:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/7] Fix warnings from gcc 4.6.0
+Message-ID: <4dd9bd38.ElJ/FoAnGfnT1QOT%Larry.Finger@lwfinger.net> (sfid-20110523_034949_587748_CF5E8FF0)
 MIME-Version: 1.0
-In-Reply-To: <20110508101609.GF27807@n2100.arm.linux.org.uk>
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
-	<201105061605.31625.arnd@arndb.de>
-	<BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
-	<BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
-	<1304790665.13983.10.camel@dev.znau.edu.ua>
-	<BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
-	<1304792795.13983.28.camel@dev.znau.edu.ua>
-	<BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-	<20110508101609.GF27807@n2100.arm.linux.org.uk>
-Date: Sun, 8 May 2011 12:37:15 +0200
-Message-ID: <BANLkTikMruTibp64GjE9qP9r80JiHgAFXw@mail.gmail.com> (sfid-20110508_123758_589367_0493A752)
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: George Kashperko <george@znau.edu.ua>,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Greg KH <greg@kroah.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Andy Botting <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/8 Russell King - ARM Linux <linux@arm.linux.org.uk>:
-> On Sat, May 07, 2011 at 08:48:10PM +0200, Rafał Miłecki wrote:
->> Really, what's wrong with that? Does it kill anyone's pet we print
->> this? We also do:
->> pr_err("Scanning failed because of wrong CID\n");
->> return -1;
->> While we could drop pr_err. Why to do this? Advanced used can always
->> check what -1 means.
->
-> And why return -1 when we have a system of error codes?  I _really_ wish
-> people would stop returning -1 for "some random error occurred".
+With the introduction of gcc 4.6.0, a number of warnings for variables
+that are set but not used are printed. With earlier versions, the
+following construct was OK, but not any more:
 
-You commented on imagined code, but we actually do sth similar in code.
+declare foobar;
+.
+.
+foobar = some_expression;
 
-I did this because:
-1) I had no idea what err code would be valid for invalid EPROM layout
-(content). Nothing from include/asm-generic/errno-base.h sounds
-reasonable.
-2) I wanted to use different error codes for different EPROM layout
-issues. Sometimes we don't get CIA block. Sometimes we don't get CIB
-block. Sometimes there is problem with master port (not found in EPROM
-when expected). They all would probably use the same errno.
+As some upstream maintainers have gotten cranky over warnings issued by
+their compiler version, even when our compiles are clean, these warnings
+need to be fixed.
 
-Could you help me with this?
+Patches are submitted for the following wireless drivers:
 
--- 
-Rafał
+1/7: b43
+2/7: b43legacy
+3/7: rtlwifi
+4/7: rtl8192c-common
+5/7: rtl8192ce
+6/7: rtl8192cu
+7/7: rtl8192se
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
