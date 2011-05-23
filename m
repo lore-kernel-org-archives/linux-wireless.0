@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1082 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754780Ab1EVMr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 08:47:26 -0400
-Message-ID: <4DD905CC.8040407@broadcom.com> (sfid-20110522_144731_971529_09D82935)
-Date: Sun, 22 May 2011 14:47:08 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:43249 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab1EWUJR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 16:09:17 -0400
+Message-ID: <4DDABEE9.9090608@candelatech.com> (sfid-20110523_220921_098609_06E661E6)
+Date: Mon, 23 May 2011 13:09:13 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
-cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Carpenter" <error27@gmail.com>
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8
- algorithm
-References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
- <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
-In-Reply-To: <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com> <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
+In-Reply-To: <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2011 01:23 PM, Alan Cox wrote:
-> On Sat, 21 May 2011 22:49:33 +0200
-> "Arend van Spriel"<arend@broadcom.com>  wrote:
+On 05/23/2011 12:26 PM, Luis R. Rodriguez wrote:
+> On Mon, May 23, 2011 at 11:52 AM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 05/23/2011 11:39 AM, Ben Greear wrote:
+>>>
+>>> On 05/23/2011 09:54 AM, Ben Greear wrote:
+>>>>
+>>>> On 05/23/2011 04:28 AM, Mohammed Shafi wrote:
+>>>>>
+>>>>> On Sat, May 21, 2011 at 3:52 AM, Ben Greear<greearb@candelatech.com>
+>>>>> wrote:
+>>>>>>
+>>>>>> This is on 2.6.39-wl+
+>>>>>>
+>>>>>> All the 5Ghz channels are showing as passive scanning, which
+>>>>>> makes them unusable for APs if nothing else.
+>>>>>
+>>>>> for me channels 36,40,44,48 are ok in 5ghz. used the latest
+>>>>> wireless-testing just brought the card up as station mode.
+>>>>
+>>>> Most of my systems show the same, at least most of the time.
+>>>>
+>>>>
+>>>>>> Any idea why this is happening?
+>>>>>
+>>>>> don't know, may be regulatory.
+>>>>
+>>>> After a reboot and an idle weekend, mine also look normal.
+>>>> So, it's something transient it appears.
+>>>
+>>> Err, I mis-spoke..the 9380 system still shows passive
+>>> scanning everywhere...
+>>
+>> Busted one:
+>>
+>> ath: EEPROM regdomain: 0x6a
+>> ath: EEPROM indicates we should expect a direct regpair map
+>> ath: Country alpha2 being used: 00
+>> ath: Regpair used: 0x6a
+>>
+>> cfg80211: Calling CRDA for country: US
+>> cfg80211: Regulatory domain changed to country: US
+>> cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
+>> max_eirp)
+>> cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+>> cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+>> cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+>>
+>>
+>> Bleh, seems my Sparklan 127 NIC is set to world-roam :(
+>>
+>> What a total pain in the arse!
 >
->> The brcm80211 driver in staging tree uses a crc8 function. Based on
->> feedback from John Linville to move this to lib directory, the linux
->> source has been searched. Although there is currently only one other
->> kernel driver using this algorithm (ie. drivers/ssb) we are providing
->> this as a library function for others to use.
-> Can we find a better name for it - there seem to be lots of CRC8 variants
-> that are different - eg bit direction and it's going to be confusing to
-> just call it 'crc8'
+> Its what the card was designed and programmed for. The only thing you
+> can do with world roaming cards then is just scan, and if you find a
+> beacon on a channel which is a non-DFS channel beaconing will be
+> enabled then.
 
-No problem. I just had a look at the lib directory and noticed the crc7 
-function and module is called crc7. I can imagine there are enough 
-variants of that as well. Another variation is probably the polynomial 
-used. Not sure how to factor in bit direction and polynomial into the name.
+Makes it basically useless as a 5Ghz AP though, eh?
 
-suggestions from my thumb:
-- rnw_crc8: refers to Ross N. Williams who wrote the paper used for 
-implementing this function.
-- painless_crc8: refers to title of the paper "A Painless Guide to CRC 
-Error Detection Algorithms".
-- brcm_crc8: indicates where the function came from.
+Guess it's time to go find a hack to over-ride eeprom
+settings :(
 
-Other suggestions are welcome.
+Ben
 
-Gr. AvS
+>
+>    Luis
+
 
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
