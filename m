@@ -1,59 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:58968 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751837Ab1EIQOF (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:47604 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177Ab1EWByj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:14:05 -0400
-Received: by mail-ew0-f45.google.com with SMTP id 24so1923303ewy.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 09:13:59 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: don't drop frames where skb->len < 24 in
- ieee80211_scan_rx()
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1304952399.12202.3.camel@jlt3.sipsolutions.net>
-References: <1304950753-2952-1-git-send-email-coelho@ti.com>
-	 <1304952399.12202.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 19:13:55 +0300
-Message-ID: <1304957635.12586.605.camel@cumari> (sfid-20110509_181409_832169_70D1C3F9)
-Mime-Version: 1.0
+	Sun, 22 May 2011 21:54:39 -0400
+Date: Sun, 22 May 2011 20:54:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	chaoming_li@realsil.com.cn
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/7 V2] rtl8192c-common: Fix warnings from gcc 4.6.0
+Message-ID: <4dd9be5a.aIc6IFis+GfEPEGH%Larry.Finger@lwfinger.net> (sfid-20110523_035443_754654_87A3672F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 16:46 +0200, Johannes Berg wrote:
-> On Mon, 2011-05-09 at 17:19 +0300, Luciano Coelho wrote:
-> > This seems to be a leftover from the old days, when we didn't support
-> > any frames that didn't contain the full ieee802.11 header.  This is
-> > not the case anymore.  It does not cause problems now, because they
-> > are only dropped during scan.  But when scheduled scans get merged,
-> > this would become a problem because we would drop all small frames
-> > while scheduled scan is running.
-> > 
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> >  net/mac80211/scan.c |    3 ---
-> >  1 files changed, 0 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> > index 489b6ad..b7a39c4 100644
-> > --- a/net/mac80211/scan.c
-> > +++ b/net/mac80211/scan.c
-> > @@ -169,9 +169,6 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
-> >  	if (ieee80211_is_ctl(fc))
-> >  		return RX_CONTINUE;
-> >  
-> > -	if (skb->len < 24)
-> > -		return RX_DROP_MONITOR;
-> > -
-> 
-> You can't just delete it, we use mgmt->da at least in this code path.
-> You should just change RX_DROP_MONITOR to RX_CONTINUe here I think.
+gcc 4.6.0 warnings for rtl8192c-common:
 
-Oops! I did this in a hurry and didn't think.  I'm sending v2 in a sec.
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/fw_common.o
+drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: In function ‘_rtl92c_cmd_send_packet’:
+drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c:549:5: warning: variable ‘own’ set but not used [-Wunused-but-set-variable]
+  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/phy_common.o
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘_rtl92c_phy_iq_calibrate’:
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1256:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘rtl92c_phy_iq_calibrate’:
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1766:6: warning: variable ‘reg_ecc’ set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1765:34: warning: variable ‘reg_eac’ set but not used [-Wunused-but-set-variable]
 
--- 
-Cheers,
-Luca.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -546,7 +546,6 @@ static bool _rtl92c_cmd_send_packet(stru
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl8192_tx_ring *ring;
+ 	struct rtl_tx_desc *pdesc;
+-	u8 own;
+ 	unsigned long flags;
+ 	struct sk_buff *pskb = NULL;
+ 
+@@ -559,7 +558,6 @@ static bool _rtl92c_cmd_send_packet(stru
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+ 
+ 	pdesc = &ring->desc[0];
+-	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
+ 
+ 	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
+ 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+@@ -1253,10 +1253,9 @@ static void _rtl92c_phy_iq_calibrate(str
+ 
+ 	const u32 retrycount = 2;
+ 
+-	u32 bbvalue;
+-
+ 	if (t == 0) {
+-		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
++		/* dummy read */
++		rtl_get_bbreg(hw, 0x800, MASKDWORD);
+ 
+ 		_rtl92c_phy_save_adda_registers(hw, adda_reg,
+ 						rtlphy->adda_backup, 16);
+@@ -1762,8 +1761,7 @@ void rtl92c_phy_iq_calibrate(struct ieee
+ 	long result[4][8];
+ 	u8 i, final_candidate;
+ 	bool patha_ok, pathb_ok;
+-	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
+-	    reg_ecc, reg_tmp = 0;
++	long reg_e94, reg_e9c, reg_ea4, reg_eb4, reg_ebc, reg_ec4, reg_tmp = 0;
+ 	bool is12simular, is13simular, is23simular;
+ 	bool start_conttx = false, singletone = false;
+ 	u32 iqk_bb_reg[10] = {
+@@ -1841,21 +1839,17 @@ void rtl92c_phy_iq_calibrate(struct ieee
+ 		reg_e94 = result[i][0];
+ 		reg_e9c = result[i][1];
+ 		reg_ea4 = result[i][2];
+-		reg_eac = result[i][3];
+ 		reg_eb4 = result[i][4];
+ 		reg_ebc = result[i][5];
+ 		reg_ec4 = result[i][6];
+-		reg_ecc = result[i][7];
+ 	}
+ 	if (final_candidate != 0xff) {
+ 		rtlphy->reg_e94 = reg_e94 = result[final_candidate][0];
+ 		rtlphy->reg_e9c = reg_e9c = result[final_candidate][1];
+ 		reg_ea4 = result[final_candidate][2];
+-		reg_eac = result[final_candidate][3];
+ 		rtlphy->reg_eb4 = reg_eb4 = result[final_candidate][4];
+ 		rtlphy->reg_ebc = reg_ebc = result[final_candidate][5];
+ 		reg_ec4 = result[final_candidate][6];
+-		reg_ecc = result[final_candidate][7];
+ 		patha_ok = pathb_ok = true;
+ 	} else {
+ 		rtlphy->reg_e94 = rtlphy->reg_eb4 = 0x100;
