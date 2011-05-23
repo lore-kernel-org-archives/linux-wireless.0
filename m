@@ -1,45 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58867 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754245Ab1EVKsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 06:48:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat: backport RCU_INIT_POINTER
-Date: Sun, 22 May 2011 12:47:33 +0200
-Message-Id: <1306061254-4197-2-git-send-email-hauke@hauke-m.de> (sfid-20110522_124814_747851_AFCF7B2D)
-In-Reply-To: <1306061254-4197-1-git-send-email-hauke@hauke-m.de>
-References: <1306061254-4197-1-git-send-email-hauke@hauke-m.de>
+Received: from aurora.create-net.org ([193.206.22.116]:33150 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751594Ab1EWG71 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 02:59:27 -0400
+Message-ID: <4DDA05C9.7090306@create-net.org> (sfid-20110523_085930_225480_F1C3FD01)
+Date: Mon, 23 May 2011 08:59:21 +0200
+From: Roberto Riggio <roberto.riggio@create-net.org>
+MIME-Version: 1.0
+To: Matteo Croce <matteo@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2]: mac80211: set tx rate and retries when injecting
+References: <BANLkTin6ettB1nhnrAjDncX1MrahfS4Z6g@mail.gmail.com> <4DD63D65.5060308@create-net.org> <BANLkTimJqQpimg3xZwORV89kukZcBVuhrQ@mail.gmail.com>
+In-Reply-To: <BANLkTimJqQpimg3xZwORV89kukZcBVuhrQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.37.h |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index a83c9c7..e0dd6b4 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -115,6 +115,15 @@ extern void *vzalloc(unsigned long size);
- #define rtnl_dereference(p)                                     \
-         rcu_dereference_protected(p, lockdep_rtnl_is_held())
- 
-+/**
-+ * RCU_INIT_POINTER() - initialize an RCU protected pointer
-+ *
-+ * Initialize an RCU-protected pointer in such a way to avoid RCU-lockdep
-+ * splats.
-+ */
-+#define RCU_INIT_POINTER(p, v) \
-+		p = (typeof(*v) __force __rcu *)(v)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
--- 
-1.7.4.1
-
+Il 23/05/2011 02:30, Matteo Croce ha scritto:
+>
+> I'm not sure that the rate control is used in monitor mode
+well, without that piece of code the frame is not injected. I'm talking
+about 11a/g rates since for 11n rates I still did not manage
+to have it working.
