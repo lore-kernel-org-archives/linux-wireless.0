@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47888 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753406Ab1EYTUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 15:20:53 -0400
-Message-ID: <4DDD5691.2040205@openwrt.org> (sfid-20110525_212057_415327_EF3B21CB)
-Date: Wed, 25 May 2011 21:20:49 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42833 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707Ab1EWORB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 10:17:01 -0400
+Received: by wya21 with SMTP id 21so4231353wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 07:17:00 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
-Subject: Re: Initial automatic channel selection implementation
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com> <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com> <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
-In-Reply-To: <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat: add an empty implementation for pm_wakeup_event()
+Date: Mon, 23 May 2011 17:17:05 +0300
+Message-Id: <1306160225-18317-1-git-send-email-eliad@wizery.com> (sfid-20110523_161706_292349_282A7B7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-25 5:01 PM, Luis R. Rodriguez wrote:
-> On Wed, May 25, 2011 at 7:45 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com>  wrote:
->>  On Wed, May 25, 2011 at 4:37 PM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
->>>  On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
->>>  <helmut.schaa@googlemail.com>  wrote:
->>>>  On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
->>>>>  Yes, thanks this is a lot of work already done. Now we just need a
->>>>>  basic algorithm to parse this, quantify how ideal this channel is and
->>>>>  then spit out a desired optimal channel.
->>>>
->>>>  That's what I've hacked some time ago (in form of the attached _ugly_ shell
->>>>  script that does auto channel selection with rt2x00, not sure if it works
->>>>  correct with other drivers as the survey dump differs somehow between
->>>>  rt2x00, ath5k and ath9k, and it only does channel 1-11):
->>>>
->>>>  - Iterate over all channels and stay on each channel for some time
->>>
->>>  Nice, yeah I was thinking of using the offchannel operation if we want
->>>  to spend more time there for inspection and if associated. For first
->>>  iteration it should be possible to just move around. In fact for AP
->>>  purposes I suppose one will want to just start AP mode ASAP and then
->>>  later do offchannel operations to do the inspection on the ideal
->>>  channel. Otherwise we sit there idle until we complete the Automatic
->>>  Channel Selection thingy.
->>
->>  Correct, especially if we also consider 5Ghz channels. Offchannel operations
->>  would be nice but how can we ensure AP mode while being offchannel?
->
-> Notification of absence.
->
->>>>  - Store busy time stats for each channel
->>>>  - Choose the channel with the lowest busy time (and on 2.4Ghz also
->>>>    check the busy times on adjacent channels)
->>>
->>>  So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
->>>  we should skip that time from the busy time, otherwise the "busy" time
->>>  includes time we induced on TX'ing or RX'ing ourselves. So I was
->>>  thinking of using the:
->>>
->>>    (active time - rx time - tx time)  / busy time
->>
->>  Looks good ;) just one problem from a rt2x00 POV: We can't report rx/tx busy
->>  time separately, we can only advice the hw to include or exclude rx/tx time
->>  from the busy time statistics.
->
-> Doh, I see.. well in order for the above math to be useful we'd have
-> to be consistent across drivers. What is being done by rt2x00 right
-> now? If the later then the math would still work, otherwise then we'd
-> need to adjust.
-Excluding rx time isn't even a good idea, since it makes no distinction 
-between local BSS or other activity in the area.
+Needed for wl12xx compilation
 
-- Felix
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/linux/compat-2.6.36.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 7a82522..7bb2bb8 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -123,6 +123,8 @@ static inline void tty_unlock(void) __releases(kernel_lock)
+ 
+ #define __rcu
+ 
++static inline void pm_wakeup_event(struct device *dev, unsigned int msec) {}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
+ 
+ #endif /* LINUX_26_36_COMPAT_H */
+-- 
+1.7.0.4
+
