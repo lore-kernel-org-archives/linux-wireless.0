@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:65258 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755310Ab1EPDRi (ORCPT
+Received: from mail-px0-f173.google.com ([209.85.212.173]:65243 "EHLO
+	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755477Ab1EWNz2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2011 23:17:38 -0400
-Received: by pvg12 with SMTP id 12so1916270pvg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2011 20:17:37 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 23 May 2011 09:55:28 -0400
+Received: by pxi16 with SMTP id 16so3817724pxi.4
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 06:55:28 -0700 (PDT)
+Message-ID: <4DDA673B.6070600@ring3k.org> (sfid-20110523_155536_087651_7BAC1779)
+Date: Mon, 23 May 2011 22:55:07 +0900
+From: Mike McCormack <mikem@ring3k.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19920.38645.426229.269971@gargle.gargle.HOWL> (sfid-20110516_051746_361195_8022E595)
-Date: Mon, 16 May 2011 08:46:05 +0530
-To: George Nychis <gnychis@gmail.com>
-Cc: Mark Davis <marked86@gmail.com>, linux-wireless@vger.kernel.org,
-	Steven <srumney@sbcglobal.net>
-Subject: Re: error initializing AR7010+AR9280 Xbox 802.11n adapter
-In-Reply-To: <BANLkTinHoZXNMJMGwUW5M4Yge5=nNZMSeA@mail.gmail.com>
-References: <BANLkTinoAmna3mtMWY2Ai82wbGu-T9FzMQ@mail.gmail.com>
-	<BANLkTi=Z=i9_WoXX=YbQtF-8imKizRPM+w@mail.gmail.com>
-	<BANLkTim_uY0Di13RDHZxOpVQZaDfG3hc8A@mail.gmail.com>
-	<19903.49991.848934.183819@gargle.gargle.HOWL>
-	<BANLkTi=1E-Ma=N0D-gP_baSjMOvmfM-2KQ@mail.gmail.com>
-	<BANLkTi=wXtCNY7TUUpfYpHux8piL09+RuQ@mail.gmail.com>
-	<BANLkTiknq4jDQY2-z53QXoyHUb4b4=Oojw@mail.gmail.com>
-	<BANLkTi=tZDXs=ja+YKXFVyP3FeuxmWLtuA@mail.gmail.com>
-	<19908.11423.898062.510184@gargle.gargle.HOWL>
-	<BANLkTin6qOChJQSmjoByS9C2_toFzHNq=A@mail.gmail.com>
-	<BANLkTi=X+_cQP7RJh9Y4fPQhbJbgfNK6pQ@mail.gmail.com>
-	<BANLkTinvVGrVdmku3G6hEmbv+9+nOwnZPA@mail.gmail.com>
-	<19912.44045.774181.844464@gargle.gargle.HOWL>
-	<19912.55320.817869.173186@gargle.gargle.HOWL>
-	<19912.55857.505921.694732@gargle.gargle.HOWL>
-	<BANLkTi=d7BfOBH93bDZMUDV2vhbrVtCgGA@mail.gmail.com>
-	<19912.57383.634547.405469@gargle.gargle.HOWL>
-	<BANLkTi=BrJPhjA5StJcktkKE7zs3Ob=iOg@mail.gmail.com>
-	<19913.25619.615324.60744@gargle.gargle.HOWL>
-	<BANLkTinv0XrfhDZWYpmdzSdVXZCovzhy_g@mail.gmail.com>
-	<19914.42954.285439.226672@gargle.gargle.HOWL>
-	<BANLkTi=uW+fVNyFJBS0fHMRAQxMKTDgaLw@mail.gmail.com>
-	<BANLkTimTH6ffeqTFSvaiNdQB9+wHs5EODA@mail.gmail.com>
-	<BANLkTika=AbksZhiykxBbS3VOFVEQY+EtQ@mail.gmail.com>
-	<BANLkTinHoZXNMJMGwUW5M4Yge5=nNZMSeA@mail.gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 8/8] rtlwifi: Fix logic in rx_interrupt
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-George Nychis wrote:
-> I finally have this working with compat-wireless-2011-05-13 on a third
-> machine, with v1.2 of the hardware.  A little bit of weirdness in the
-> device name though:
-> 
-> wlan%d    IEEE 802.11abgn  ESSID:off/any
->           Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Power Management:off
-> 
-> "wlan%d" ... seems like a bug trying to insert the number in to the string.
-> 
-> Thank goodness this works... the difference between the machines?  I'm
-> not sure yet.  This is good news though.
-> 
-> Although the xbox 360 adapter is not UB94, I will still try it on this
-> machine tomorrow to see if it initializes or anything.
+Should pass along packet if there's no CRC and no hardware error.
 
-Nice. :)
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-What machine/distro did you use in which the card worked ?
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 4fe405a..215abfa 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -691,7 +691,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 			hdr = rtl_get_hdr(skb);
+ 			fc = rtl_get_fc(skb);
+ 
+-			if (!stats.crc || !stats.hwerror) {
++			if (!stats.crc && !stats.hwerror) {
+ 				memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
+ 				       sizeof(rx_status));
+ 
+-- 
+1.7.4.1
 
-Sujith
