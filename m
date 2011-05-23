@@ -1,25 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53557 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755971Ab1EYQNl (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41636 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755561Ab1EWW6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 12:13:41 -0400
-Received: by wwa36 with SMTP id 36so8657409wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 09:13:40 -0700 (PDT)
-From: Stevie Trujillo <stevie.trujillo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware limit?
-Date: Wed, 25 May 2011 18:13:36 +0200
+	Mon, 23 May 2011 18:58:04 -0400
+Received: by iwn34 with SMTP id 34so5241048iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 15:58:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201105251813.36804.stevie.trujillo@gmail.com> (sfid-20110525_181345_124663_62067216)
+In-Reply-To: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
+References: <1306061227-4159-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 15:57:44 -0700
+Message-ID: <BANLkTimKAm9n+2Z0DeDzmJMXi5FPm1S1+A@mail.gmail.com> (sfid-20110524_005809_803547_EB8757EB)
+Subject: Re: [PATCH 1/3] Revert "compat-wireless: fix rfkill patches from applying"
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, May 22, 2011 at 3:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> The commit was removed from linux-next, so this backport patch should also be removed.
+>
+> This reverts commit b8e46e19937710d2ae14731871cf8c45a0fc9d74.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15 and I 
-was wondering if the card could do more than that.
+Applied these and also the compat.git ones, and pushed, thanks!
 
-Thank you
+  Luis
