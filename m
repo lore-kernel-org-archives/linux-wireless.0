@@ -1,141 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:47794 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818Ab1E2MxZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45437 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757379Ab1EWVTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 08:53:25 -0400
-Received: by wya21 with SMTP id 21so2119360wya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:53:23 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: don't drop p2p probe responses
-Date: Sun, 29 May 2011 15:53:20 +0300
-Message-Id: <1306673600-27838-1-git-send-email-eliad@wizery.com> (sfid-20110529_145328_359529_B0527065)
+	Mon, 23 May 2011 17:19:22 -0400
+Message-ID: <4DDACF56.9070403@candelatech.com> (sfid-20110523_231925_517176_BD896830)
+Date: Mon, 23 May 2011 14:19:18 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com> <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com> <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com> <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com> <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
+In-Reply-To: <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 0a35d36 ("cfg80211: Use capability info to detect mesh beacons")
-assumed that probe response with both ESS and IBSS bits cleared
-means that the frame was sent by a mesh sta.
+On 05/23/2011 01:59 PM, Luis R. Rodriguez wrote:
+> On Mon, May 23, 2011 at 1:51 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 05/23/2011 01:25 PM, Luis R. Rodriguez wrote:
+>>>
+>>> On Mon, May 23, 2011 at 1:09 PM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>
+>>>> Makes it basically useless as a 5Ghz AP though, eh?
+>>>
+>>> Um yup. The card is a world roaming card... not an AP card. For AP
+>>> mode of functionality vendors have to go through a regulatory test
+>>> specific to 3 regions, and depending on which region they get
+>>> certification for they will have then programmed in the values
+>>> required for regulatory on the CTLs. The EEPROM would be configured
+>>> for the region the card was being tested for.
+>>
+>> Well, if you have an AP on a 5Ghz channel, and associate a station
+>> interface, that one channel becomes
+>> usable, and then you can start hostapd, as far as I can tell.
+>> You just can't use an un-used channel, which is of course
+>> a pain if you want to do some 5Ghz AP testing on a clean
+>> channel!
+>
+> You don't even need to associate, you just need to scan, that's it. It
+> is a pain to test AP functionality but that is not how vendors test AP
+> functionality -- remember you are using a world roaming card, the fact
+> that you can even get away with beaconing modes of operation on some
+> channels is actually a feature.
+>
+> The issue here comes from the fact that people think using AP mode of
+> functionality is a freedom they are entitled to with any 802.11 card
+> on any channel. Its obviously more complicated than that and figuring
+> out a proper way to do this is part of our own effort to enable APs
+> with Linux properly and in a regulatory compliant manner.
 
-However, these capabilities are also being used in the p2p_find phase,
-and the mesh-validation broke it.
+Do you know of any 3x3 AR9380 NICs that can be used
+as 5Ghz APs w/out regdomain hacks?  Sparklan was the only NIC I found, and
+I didn't notice any way to order a specific regdomain
+on the NIC.
 
-Rename the WLAN_CAPABILITY_IS_MBSS macro, and verify that mesh ies
-exist before assuming this frame was sent by a mesh sta.
+>>> The real solution to these issues is for regulatory agencies to start
+>>> warming up to the idea about dynamic regulatory selection but for this
+>>> you will also then need to ensure each card gets properly tested for
+>>> each regulatory region -- or we'd have to restrict the card to work in
+>>
+>> What kinds of things could fail in one region and not
+>> another?
+>
+> Atheros cards are optimized to output as much power in the middle area
+> of a spectrum, towards the ends of the spectrum regulatory agencies
+> sometimes require a bit tighter power constraints and cards are
+> required to meet certain power curve constraints. This is one of the
+> reasons for the EEPROM CTLs on the Atheros cards. This is one example
+> of such considerations.
+>
+>>   Are there any known regions of the world where
+>> the AR9380 actually fails to function in any mode?
+>
+> Huh? AR9380 will work in any region so long as its tested for that
+> region and the CTLs get programmed as such.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-i don't have a mesh env, so it was only compile-tested.
-note that i had to remove some mesh ie verification
-from cfg80211_bss_update(), so please re-add it properly
-if it's still needed there.
+Testing doesn't make something work, it just makes sure that it
+does work.  Now, programming the CTLs sounds like something important.
+Is there any way to tell if a NIC is properly programmed for a particular
+region, or is each brand/revision programmed independently?
 
- include/linux/ieee80211.h |    8 ++++++--
- net/wireless/scan.c       |   43 ++++++++++++++++++++++++-------------------
- 2 files changed, 30 insertions(+), 21 deletions(-)
+Since it *is* possible to start an AP on a channel with existing AP,
+I assume that the NIC must be able to handle this properly..or is
+that ability to start on a scanned channel just a bug?  (Please
+don't fix it, if it is :P)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b2eee58..bf56b6f 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1003,8 +1003,12 @@ struct ieee80211_ht_info {
- #define WLAN_CAPABILITY_ESS		(1<<0)
- #define WLAN_CAPABILITY_IBSS		(1<<1)
- 
--/* A mesh STA sets the ESS and IBSS capability bits to zero */
--#define WLAN_CAPABILITY_IS_MBSS(cap)	\
-+/*
-+ * A mesh STA sets the ESS and IBSS capability bits to zero.
-+ * however, this holds true for p2p probe responses (in the p2p_find
-+ * phase) as well.
-+ */
-+#define WLAN_CAPABILITY_IS_STA_BSS(cap)	\
- 	(!((cap) & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)))
- 
- #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 73a441d..7a6c676 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -267,13 +267,35 @@ static bool is_bss(struct cfg80211_bss *a,
- 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
- }
- 
-+static bool is_mesh_bss(struct cfg80211_bss *a)
-+{
-+	const u8 *ie;
-+
-+	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
-+		return false;
-+
-+	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
-+			      a->information_elements,
-+			      a->len_information_elements);
-+	if (!ie)
-+		return false;
-+
-+	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
-+			      a->information_elements,
-+			      a->len_information_elements);
-+	if (!ie)
-+		return false;
-+
-+	return true;
-+}
-+
- static bool is_mesh(struct cfg80211_bss *a,
- 		    const u8 *meshid, size_t meshidlen,
- 		    const u8 *meshcfg)
- {
- 	const u8 *ie;
- 
--	if (!WLAN_CAPABILITY_IS_MBSS(a->capability))
-+	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
- 		return false;
- 
- 	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
-@@ -311,7 +333,7 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	if (a->channel != b->channel)
- 		return b->channel->center_freq - a->channel->center_freq;
- 
--	if (WLAN_CAPABILITY_IS_MBSS(a->capability | b->capability)) {
-+	if (is_mesh_bss(a) && is_mesh_bss(b)) {
- 		r = cmp_ies(WLAN_EID_MESH_ID,
- 			    a->information_elements,
- 			    a->len_information_elements,
-@@ -457,7 +479,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		    struct cfg80211_internal_bss *res)
- {
- 	struct cfg80211_internal_bss *found = NULL;
--	const u8 *meshid, *meshcfg;
- 
- 	/*
- 	 * The reference to "res" is donated to this function.
-@@ -470,22 +491,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 
- 	res->ts = jiffies;
- 
--	if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
--		/* must be mesh, verify */
--		meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
--					  res->pub.information_elements,
--					  res->pub.len_information_elements);
--		meshcfg = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
--					   res->pub.information_elements,
--					   res->pub.len_information_elements);
--		if (!meshid || !meshcfg ||
--		    meshcfg[1] != sizeof(struct ieee80211_meshconf_ie)) {
--			/* bogus mesh */
--			kref_put(&res->ref, bss_release);
--			return NULL;
--		}
--	}
--
- 	spin_lock_bh(&dev->bss_lock);
- 
- 	found = rb_find_bss(dev, res);
+Thanks,
+Ben
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
