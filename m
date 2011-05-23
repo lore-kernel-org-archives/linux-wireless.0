@@ -1,91 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:52310 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753710Ab1EQLWO (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:50278 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030208Ab1EWV2w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 07:22:14 -0400
-Received: by eyx24 with SMTP id 24so103261eyx.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 04:22:13 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: make b43_wireless_init less bus specific
-Date: Tue, 17 May 2011 14:00:01 +0200
-Message-Id: <1305633602-4590-2-git-send-email-zajec5@gmail.com> (sfid-20110517_132217_094450_21390D46)
-In-Reply-To: <1305633602-4590-1-git-send-email-zajec5@gmail.com>
-References: <1305633602-4590-1-git-send-email-zajec5@gmail.com>
+	Mon, 23 May 2011 17:28:52 -0400
+Received: by ywe9 with SMTP id 9so2133980ywe.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 14:28:51 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4DDACF56.9070403@candelatech.com>
+References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
+ <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com>
+ <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
+ <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com>
+ <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
+ <4DDACF56.9070403@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 14:28:31 -0700
+Message-ID: <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com> (sfid-20110523_232856_307822_DE45E6E2)
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 23, 2011 at 2:19 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 05/23/2011 01:59 PM, Luis R. Rodriguez wrote:
+>>
+>> On Mon, May 23, 2011 at 1:51 PM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>>>
+>>> On 05/23/2011 01:25 PM, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Mon, May 23, 2011 at 1:09 PM, Ben Greear<greearb@candelatech.com>
+>>>>  wrote:
+>>>>>
+>>>>> Makes it basically useless as a 5Ghz AP though, eh?
+>>>>
+>>>> Um yup. The card is a world roaming card... not an AP card. For AP
+>>>> mode of functionality vendors have to go through a regulatory test
+>>>> specific to 3 regions, and depending on which region they get
+>>>> certification for they will have then programmed in the values
+>>>> required for regulatory on the CTLs. The EEPROM would be configured
+>>>> for the region the card was being tested for.
+>>>
+>>> Well, if you have an AP on a 5Ghz channel, and associate a station
+>>> interface, that one channel becomes
+>>> usable, and then you can start hostapd, as far as I can tell.
+>>> You just can't use an un-used channel, which is of course
+>>> a pain if you want to do some 5Ghz AP testing on a clean
+>>> channel!
+>>
+>> You don't even need to associate, you just need to scan, that's it. It
+>> is a pain to test AP functionality but that is not how vendors test AP
+>> functionality -- remember you are using a world roaming card, the fact
+>> that you can even get away with beaconing modes of operation on some
+>> channels is actually a feature.
+>>
+>> The issue here comes from the fact that people think using AP mode of
+>> functionality is a freedom they are entitled to with any 802.11 card
+>> on any channel. Its obviously more complicated than that and figuring
+>> out a proper way to do this is part of our own effort to enable APs
+>> with Linux properly and in a regulatory compliant manner.
+>
+> Do you know of any 3x3 AR9380 NICs that can be used
+> as 5Ghz APs w/out regdomain hacks?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   23 ++++++++++-------------
- 1 files changed, 10 insertions(+), 13 deletions(-)
+802.11 cards that can be used as APs would be cards programmed for
+certain regions, there is no way around it. You can use world roaming
+cards but again, that will not get you immediate beaconing mode of
+operation on certain channels unless you scan and find a beacon from
+an AP.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 38b6578..f45db3f 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4926,19 +4926,16 @@ static void b43_wireless_exit(struct ssb_device *dev, struct b43_wl *wl)
- 	ieee80211_free_hw(hw);
- }
- 
--static int b43_wireless_init(struct ssb_device *dev)
-+static struct b43_wl *b43_wireless_init(struct ssb_device *dev)
- {
- 	struct ssb_sprom *sprom = &dev->bus->sprom;
- 	struct ieee80211_hw *hw;
- 	struct b43_wl *wl;
--	int err = -ENOMEM;
--
--	b43_sprom_fixup(dev->bus);
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &b43_hw_ops);
- 	if (!hw) {
- 		b43err(NULL, "Could not allocate ieee80211 device\n");
--		goto out;
-+		return ERR_PTR(-ENOMEM);
- 	}
- 	wl = hw_to_b43_wl(hw);
- 
-@@ -4972,12 +4969,9 @@ static int b43_wireless_init(struct ssb_device *dev)
- 	INIT_WORK(&wl->tx_work, b43_tx_work);
- 	skb_queue_head_init(&wl->tx_queue);
- 
--	ssb_set_devtypedata(dev, wl);
- 	b43info(wl, "Broadcom %04X WLAN found (core revision %u)\n",
- 		dev->bus->chip_id, dev->id.revision);
--	err = 0;
--out:
--	return err;
-+	return wl;
- }
- 
- static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
-@@ -4990,11 +4984,14 @@ static int b43_ssb_probe(struct ssb_device *dev, const struct ssb_device_id *id)
- 	if (!wl) {
- 		/* Probing the first core. Must setup common struct b43_wl */
- 		first = 1;
--		err = b43_wireless_init(dev);
--		if (err)
-+		b43_sprom_fixup(dev->bus);
-+		wl = b43_wireless_init(dev);
-+		if (IS_ERR(wl)) {
-+			err = PTR_ERR(wl);
- 			goto out;
--		wl = ssb_get_devtypedata(dev);
--		B43_WARN_ON(!wl);
-+		}
-+		ssb_set_devtypedata(dev, wl);
-+		B43_WARN_ON(ssb_get_devtypedata(dev) != wl);
- 	}
- 	err = b43_one_core_attach(dev, wl);
- 	if (err)
--- 
-1.7.3.4
+> Sparklan was the only NIC I found, and
+> I didn't notice any way to order a specific regdomain
+> on the NIC.
 
+Try calling and see if they can do the regulatory testing for you and
+programming of the card's CTLs for you. Not sure what else to
+recommend.
+
+>>>> The real solution to these issues is for regulatory agencies to start
+>>>> warming up to the idea about dynamic regulatory selection but for this
+>>>> you will also then need to ensure each card gets properly tested for
+>>>> each regulatory region -- or we'd have to restrict the card to work in
+>>>
+>>> What kinds of things could fail in one region and not
+>>> another?
+>>
+>> Atheros cards are optimized to output as much power in the middle area
+>> of a spectrum, towards the ends of the spectrum regulatory agencies
+>> sometimes require a bit tighter power constraints and cards are
+>> required to meet certain power curve constraints. This is one of the
+>> reasons for the EEPROM CTLs on the Atheros cards. This is one example
+>> of such considerations.
+>>
+>>>  Are there any known regions of the world where
+>>> the AR9380 actually fails to function in any mode?
+>>
+>> Huh? AR9380 will work in any region so long as its tested for that
+>> region and the CTLs get programmed as such.
+>
+> Testing doesn't make something work, it just makes sure that it
+> does work.  Now, programming the CTLs sounds like something important.
+> Is there any way to tell if a NIC is properly programmed for a particular
+> region, or is each brand/revision programmed independently?
+
+The card's EEPROM tells us the CTLs that can be used. So a card with a
+regulatory domain for the US will be usable for APs in any other
+country that also uses the CTLs for that CTL region. Some cards may be
+programmed in the EEPROM with more than one CTL and the only way to
+find that out is to to some inspection of the EEPROM, otherwise the
+values will be high, yes high, not low. So reprogramming the EEPROM
+with a new country will not simply comply, you'd have then test the
+region as well and write the CTLs for that region.
+
+> Since it *is* possible to start an AP on a channel with existing AP,
+> I assume that the NIC must be able to handle this properly..or is
+> that ability to start on a scanned channel just a bug?  (Please
+> don't fix it, if it is :P)
+
+It a feature, AP functionality is allowed on that channel on a world
+roaming card given that no CTL is present so the lower regulatory
+value, from CRDA, is used instead of the CTL value.
+
+ Luis
