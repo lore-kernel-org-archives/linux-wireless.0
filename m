@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881Ab1EIOqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:46:44 -0400
-Subject: Re: [PATCH] mac80211: don't drop frames where skb->len < 24 in
- ieee80211_scan_rx()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1304950753-2952-1-git-send-email-coelho@ti.com>
-References: <1304950753-2952-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 16:46:39 +0200
-Message-ID: <1304952399.12202.3.camel@jlt3.sipsolutions.net> (sfid-20110509_164647_544803_A1CBDB6B)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:22649 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755861Ab1EXJlV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 05:41:21 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 02:40:50 -0700
+Message-ID: <4DDB7D2A.2030602@atheros.com> (sfid-20110524_114131_894196_DA5AE3DB)
+Date: Tue, 24 May 2011 15:10:58 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH v2] ath9k: wake up chip before initializing PAPRD table
+References: <1306229170-18368-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1306229170-18368-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 17:19 +0300, Luciano Coelho wrote:
-> This seems to be a leftover from the old days, when we didn't support
-> any frames that didn't contain the full ieee802.11 header.  This is
-> not the case anymore.  It does not cause problems now, because they
-> are only dropped during scan.  But when scheduled scans get merged,
-> this would become a problem because we would drop all small frames
-> while scheduled scan is running.
-> 
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+On Tuesday 24 May 2011 02:56 PM, Mohammed Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>
+> In PAPRD table initialization path we do some register read, so
+> make sure the chip is awake during that. Currently PAPRD is disabled.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
 > ---
->  net/mac80211/scan.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 489b6ad..b7a39c4 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -169,9 +169,6 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
->  	if (ieee80211_is_ctl(fc))
->  		return RX_CONTINUE;
->  
-> -	if (skb->len < 24)
-> -		return RX_DROP_MONITOR;
-> -
+>   drivers/net/wireless/ath/ath9k/main.c |    5 +++--
+>   1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index a198ee3..4a71f4e 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -394,8 +394,10 @@ void ath_paprd_calibrate(struct work_struct *work)
+>   	if (!caldata)
+>   		return;
+>
+> +	ath9k_ps_wakeup(sc);
+> +
+>   	if (ar9003_paprd_init_table(ah)<  0)
+> -		return;
+> +		goto fail_paprd;
+>
+>   	skb = alloc_skb(len, GFP_KERNEL);
+>   	if (!skb)
 
-You can't just delete it, we use mgmt->da at least in this code path.
-You should just change RX_DROP_MONITOR to RX_CONTINUe here I think.
+need to handle this case of skb_allocation failure :(, will send a v3. 
+thanks to Vivek.
 
-johannes
+> @@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+>   	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+>   	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+>
+> -	ath9k_ps_wakeup(sc);
+>   	for (chain = 0; chain<  AR9300_MAX_CHAINS; chain++) {
+>   		if (!(common->tx_chainmask&  BIT(chain)))
+>   			continue;
 
+-- 
+thanks,
+shafi
