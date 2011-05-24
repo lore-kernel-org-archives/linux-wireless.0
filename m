@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46117 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171Ab1EFQ3Q (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42061 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757835Ab1EXBiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 12:29:16 -0400
-Message-ID: <4DC421D8.3050403@candelatech.com> (sfid-20110506_182919_778631_E61F875B)
-Date: Fri, 06 May 2011 09:29:12 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 23 May 2011 21:38:55 -0400
+Date: Mon, 23 May 2011 20:38:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192se: Synchronize IRQ after disabling it
+Message-ID: <4ddb0c2c.lUvN52nSGTJ6F/K5%Larry.Finger@lwfinger.net> (sfid-20110524_033857_214955_E7AAADE7)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bisected:  ath9k: fix powersave frame filtering/buffering in
- AP mode broke STA association.
-References: <4DC30C42.6070402@candelatech.com> <4DC3109F.6080601@openwrt.org> <4DC3135C.4040601@candelatech.com> <4DC31A0B.4040409@candelatech.com> <4DC31C91.1030303@openwrt.org> <4DC33DE2.1070508@candelatech.com> <4DC34465.6090108@openwrt.org>
-In-Reply-To: <4DC34465.6090108@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2011 05:44 PM, Felix Fietkau wrote:
+As suggested by Mike McCormack <mikem@ring3k.org> for rtl8192ce, make sure any IRQ
+handlers running on other CPUs complete.
 
-> This should fix the second issue:
->
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1722,6 +1722,10 @@ static int ath9k_sta_add(struct ieee8021
->   	struct ath_node *an = (struct ath_node *) sta->drv_priv;
->   	struct ieee80211_key_conf ps_key = { };
->
-> +	if (vif->opmode != NL80211_IFTYPE_AP&&
-> +	    vif->opmode != NL80211_IFTYPE_AP_VLAN)
-> +		return 0;
-> +
->   	ath_node_attach(sc, sta);
->   	an->ps_key = ath_key_config(common, vif, sta,&ps_key);
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-This doesn't compile..appears there is no vif->opmode member?
-
-Also, if you are trying to compare the hardware opmode, I'm not
-sure that would be correct since you can be in AP mode and still
-have stations.  Maybe I'm just confused though...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -1226,6 +1226,7 @@ void rtl92se_disable_interrupt(struct ie
+ 	rtl_write_dword(rtlpriv, INTA_MASK + 4, 0);
+ 
+ 	rtlpci->irq_enabled = false;
++	synchronize_irq(rtlpci->pdev->irq);
+ }
+ 
+ 
