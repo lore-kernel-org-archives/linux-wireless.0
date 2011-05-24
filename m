@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:15463 "EHLO mail.atheros.com"
+Received: from terminus.zytor.com ([198.137.202.10]:37517 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751034Ab1EFWJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:09:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <akpm@linux-foundation.org>, <mingo@redhat.com>,
-	<tglx@linutronix.de>, <hpa@zytor.com>
-CC: <x86@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <allen.kao@atheros.com>,
-	<roman.gezikov@atheros.com>, <joonas.viskari@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 0/2] x86: Add support for Atheros AR1520 GPS devices
-Date: Fri, 6 May 2011 15:09:38 -0700
-Message-ID: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com> (sfid-20110507_001046_311132_1BFCD671)
+	id S1757222Ab1EXXdu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 19:33:50 -0400
+Message-ID: <4DDC404D.8030505@zytor.com> (sfid-20110525_013411_868724_81259095)
+Date: Tue, 24 May 2011 16:33:33 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Stephen Boyd <sboyd@codeaurora.org>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-scsi@vger.kernel.org, x86@kernel.org,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH 0/9] strict user copy checks on x86_64
+References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org> <4DDC232F.7080005@codeaurora.org>
+In-Reply-To: <4DDC232F.7080005@codeaurora.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two patches adds support for the Atheros AR1520 GPS device,
-currently only pegged onto an mrst platform. This creates a character
-device called ar1520 and lets userspace talk to it through it. My only
-concern against this approach is that it this requires a custom userspace
-application for reseting the device, waking it up and for blocking reads
-through ioctl. The character device can be used to read/write data to it
-as well.
+On 05/24/2011 02:29 PM, Stephen Boyd wrote:
+> 
+> It looks like 1, 2, 4, 6, and 7 got picked up. Should I resend the left
+> over patches with appropriate acked-bys and tags? Would it be
+> appropriate to push this through your tree?
+> 
 
-I'll try to get more information and details on the userspace application
-and document stuff here:
+I was first going to think I'd pick up 8 and 9 in tip, but since 9 is
+cross-architecture, Andrew's tree might be better.
 
-http://wireless.kernel.org/en/users/Drivers/ar5120
+Acked-by: H. Peter Anvin <hpa@zytor.com>
 
-In the meantime some review and testing would be appreciated as I modified
-the original code a bit.
-
-Allen Kao (2):
-  misc: add Atheros ar1520 GPS support
-  x86: add Atheros ar1520 platform support for mrst
-
- arch/x86/platform/mrst/mrst.c |   18 ++
- drivers/misc/Kconfig          |   10 +
- drivers/misc/Makefile         |    1 +
- drivers/misc/ar1520.c         |  406 +++++++++++++++++++++++++++++++++++++++++
- include/linux/ar1520.h        |   49 +++++
- 5 files changed, 484 insertions(+), 0 deletions(-)
- create mode 100644 drivers/misc/ar1520.c
- create mode 100644 include/linux/ar1520.h
-
--- 
-1.7.4.15.g7811d
-
+	-hpa
