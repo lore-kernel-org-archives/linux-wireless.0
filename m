@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3662 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752424Ab1ESAqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 20:46:53 -0400
-Message-ID: <4DD46865.9010708@broadcom.com> (sfid-20110519_024712_812529_78BF5DF9)
-Date: Wed, 18 May 2011 17:46:29 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60193 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755767Ab1EXM4M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 08:56:12 -0400
+Date: Tue, 24 May 2011 13:57:05 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Dowan Kim" <dowan@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
-References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
- <4DD44C21.1080502@broadcom.com> <1305765163.1745.4.camel@Joe-Laptop>
-In-Reply-To: <1305765163.1745.4.camel@Joe-Laptop>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+Message-ID: <20110524135705.00f7fb12@lxorguk.ukuu.org.uk> (sfid-20110524_145631_477834_53BB57A5)
+In-Reply-To: <4DDB8AB5.7080808@broadcom.com>
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+	<20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+	<4DD905CC.8040407@broadcom.com>
+	<20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+	<4DDB622B.1050005@broadcom.com>
+	<20110524104404.336c765f@lxorguk.ukuu.org.uk>
+	<4DDB81FD.2020903@broadcom.com>
+	<20110524112732.67d92b2f@lxorguk.ukuu.org.uk>
+	<4DDB8AB5.7080808@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2011 05:32 PM, Joe Perches wrote:
-> On Wed, 2011-05-18 at 15:45 -0700, Henry Ptasinski wrote:
->> On 05/18/2011 11:23 AM, Joe Perches wrote:
->>> All uses of DHD_<TYPE>   macros are for debugging only.
->>> Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
->>> for a more consistent style.
->> I generally like this approach, but in brcmsmac we've been switching to
->> wiphy_err() and related instead.  Any strong argument for one over the
->> other?
->
-> These aren't described as errors but are debugging messages.
+On Tue, 24 May 2011 12:38:45 +0200
+"Arend van Spriel" <arend@broadcom.com> wrote:
 
-Yes, so wiphy_debug(), wiphy_info(), wiphy_notice(), etc could be used. 
-  It's not as fine grained as the current logging mechanism, so that 
-would be one argument against using wiphy_*.  I don't have a strong 
-opinion either way, just looking to see which is the generally preferred 
-approach in the kernel (if there is any preference).
+> On 05/24/2011 12:27 PM, Alan Cox wrote:
+> >> Not sure whether you mean the source code or the object code. I build
+> >> kernel with debug symbols so the sizes are bit higher.
+> > nm will tell you the actual sizes. I think the n_gsm code is about 500
+> > bytes or so and chunks of it inline.
+> 
+> Not counting the crc table I assume.
 
-
->>> -       DHD_TRACE(("%s: Enter\n", __func__));
->>> +       dhd_dbg(TRACE, "%s: Enter\n", __func__);
->> I'd propose moving __func__ into the macro definition itself, which
->> would help ensure consistency (and shorten all the debug lines a bit).
->
-> I think TRACE is unnecessary and can be eliminated
-> and replaced by the function tracer.
->
-> Not all uses use __func__.
-
-That's just sloppiness on our part.  They should all be consistent.
-
-> I think __func__ unnecessary and it should be avoided.
-
-If it's moved into the macro, then there's only one place to change if 
-you want to delete "__func__"/add it back/include it conditionally.
-
-
-> Other than that, I've no objections.
->
->> Also, perhaps rename to "brcm_dbg()", "bcm_dbg()" or something like that
->> and move it into include/bcmutils.h, so brcmsmac can use it as well.
->
-> Your choice.
-
-"brcm_dbg()" seems fine to me.
-
-- Henry
-
+I forget but I think including - its a tiny tiny bit of code once inlined.
