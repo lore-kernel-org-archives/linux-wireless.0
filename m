@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34796 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666Ab1ECGN4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 02:13:56 -0400
-Received: by yxs7 with SMTP id 7so1981305yxs.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2011 23:13:56 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:23274 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755392Ab1EXKAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 06:00:19 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 02:59:48 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH v3] ath9k: wake up chip before initializing PAPRD table
+Date: Tue, 24 May 2011 15:29:52 +0530
+Message-ID: <1306231192-20638-1-git-send-email-mshajakhan@atheros.com> (sfid-20110524_120023_848673_3F6AD293)
 MIME-Version: 1.0
-In-Reply-To: <4DBF1967.9010604@candelatech.com>
-References: <4DBF1967.9010604@candelatech.com>
-Date: Tue, 3 May 2011 14:13:50 +0800
-Message-ID: <BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com> (sfid-20110503_081400_003846_9FAFD08E)
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9160/SR71-A should be supported by ath9k. They're just 2x2
-stream devices using 3 radios.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-What do you mean by "not even supported" ?
+In PAPRD table initialization path we do some register read, so
+make sure the chip is awake during that. Currently PAPRD is disabled.
 
-If the SR71-A isn't working for you then please email the ath9k list
-and I'll take a look. I have a bunch of SR71-A hardware here to tinker
-with.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a198ee3..bbdc1e8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -394,12 +394,14 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	if (!caldata)
+ 		return;
+ 
++	ath9k_ps_wakeup(sc);
++
+ 	if (ar9003_paprd_init_table(ah) < 0)
+-		return;
++		goto fail_paprd;
+ 
+ 	skb = alloc_skb(len, GFP_KERNEL);
+ 	if (!skb)
+-		return;
++		goto fail_paprd;
+ 
+ 	skb_put(skb, len);
+ 	memset(skb->data, 0, len);
+@@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+ 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+ 
+-	ath9k_ps_wakeup(sc);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if (!(common->tx_chainmask & BIT(chain)))
+ 			continue;
+-- 
+1.7.0.4
 
-
-
-Adrian
-
-On 3 May 2011 04:51, Ben Greear <greearb@candelatech.com> wrote:
-> Hello!
->
-> We are trying to find some Atheros NICs that support 3x3
-> MIMO, but we are having a hard time.
->
-> We mistakenly ordered some Ubiquity SR71-A NICs, but those aren't
-> even supported by ath9k it seems (visible chipset is AR9160-AC1E).
-> There are some other SR71 NICs that *do* work (AR9160-BC1A), but
-> hard to order that specific version.
->
-> Sparklan seems to make one based on AR9380, but they are not
-> in stock any place we could find.
->
-> Anyone know of any others that are available to the public
-> in small quantities?
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
