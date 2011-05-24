@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3401 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758252Ab1EMKAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Grant Grundler" <grundler@chromium.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 18/32] staging: brcm80211: Fix for WPA GTK install issue
- in brcmfmac driver
-Date: Fri, 13 May 2011 11:59:38 +0200
-Message-ID: <1305280792-9475-18-git-send-email-arend@broadcom.com> (sfid-20110513_120122_983245_0A840043)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46682 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752282Ab1EXAL4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 20:11:56 -0400
+Received: by iwn34 with SMTP id 34so5292516iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 17:11:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4dce9c85.8lZEqlxFlQS542Cf%Larry.Finger@lwfinger.net>
+References: <4dce9c85.8lZEqlxFlQS542Cf%Larry.Finger@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 17:11:36 -0700
+Message-ID: <BANLkTikWQki-_Ec3cjd8U8BNzbeBoh_jAw@mail.gmail.com> (sfid-20110524_021159_805535_5BE11A3D)
+Subject: Re: [PATCH] rtlwifi: rtl8192c-common: rtl8192ce: Fix for HT40 regression
+To: Larry Finger <Larry.Finger@lwfinger.net>, Greg KH <greg@kroah.com>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On Sat, May 14, 2011 at 8:15 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The changes that were made to rtl8192ce when rtl8192cu was added broke
+> HT40. The errors included a typo in rtlwifi, a missing routine in
+> rtl8192ce and a missing callback of that routine in rtl8192c-common.
+>
+> This patch fixes the regression reported in Bug #35082.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> John,
+>
+> I know this is very late, but was just discovered. If it does not make
+> 2.6.39, then it needs to be Cc'd to stable for .39.
+>
+> Thanks,
+>
+> Larry
 
-Last 16 bytes of the key sent by cfg80211 needs to be swapped before
-installing it to FW for TKIP encryption. This is not done for group
-key in current code, which is corrected with this fix.
+But in order to be applicable to 2.6.39 it required some slight
+modifications, namely only the first two hunks are applicable and the
+second hunk required a change. You can get my own version of the
+backport here, when it comes time to merge into 2.6.39.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Grant Grundler <grundler@chromium.org>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=commitdiff;h=3fdb69033149ca19791eb16c23be976f00f8daaa
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index b44daf9..c60fc7c 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1616,6 +1616,7 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 	s32 val;
- 	s32 wsec;
- 	s32 err = 0;
-+	u8 keybuf[8];
- 
- 	WL_DBG("key index (%d)\n", key_idx);
- 	CHECK_SYS_UP();
-@@ -1644,6 +1645,9 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 		WL_DBG("WLAN_CIPHER_SUITE_WEP104\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
-+		memcpy(keybuf, &key.data[24], sizeof(keybuf));
-+		memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
-+		memcpy(&key.data[16], keybuf, sizeof(keybuf));
- 		key.algo = CRYPTO_ALGO_TKIP;
- 		WL_DBG("WLAN_CIPHER_SUITE_TKIP\n");
- 		break;
--- 
-1.7.4.1
-
-
+  Luis
