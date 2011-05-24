@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1279 "EHLO mail.perches.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2143 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751564Ab1EEWVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 18:21:49 -0400
-Subject: Re: [PATCH 0/2] wireless: Make and use const struct
- ieee80211_channel
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <20110505184934.GB3005@tuxdriver.com>
-References: <cover.1304054543.git.joe@perches.com>
-	 <20110505184934.GB3005@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 May 2011 15:21:47 -0700
-Message-ID: <1304634107.1788.171.camel@Joe-Laptop> (sfid-20110506_002236_799072_87C34DBC)
-Mime-Version: 1.0
+	id S1754468Ab1EXIae (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 04:30:34 -0400
+Message-ID: <4DDB6C98.1080609@broadcom.com> (sfid-20110524_103101_242506_D6B8DB46)
+Date: Tue, 24 May 2011 10:30:16 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+ <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+ <4DD905CC.8040407@broadcom.com>
+ <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+ <4DDB622B.1050005@broadcom.com>
+In-Reply-To: <4DDB622B.1050005@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-05 at 14:49 -0400, John W. Linville wrote:
-> These patches generated a lot of warnings in net/mac80211.  Did you
-> actually build them?
+On 05/24/2011 09:45 AM, Arend van Spriel wrote:
+> On 05/22/2011 04:19 PM, Alan Cox wrote:
+>> Is it just used for wireless in this form ?
+>>
+>> See the n_gsm and bluetooth code for what I think is the same crc
+>> algorithm but in reverse bit order .
+> Hi Alan,
+>
+> Look into the code in n_gsm and bluetooth code. The algorithm is the
+Meant to say 'I looked into the code...'
 
-Yes.
+Gr. AvS
 
-Did you apply patch 1/2 first?
-It's a dependent patch.
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
 
