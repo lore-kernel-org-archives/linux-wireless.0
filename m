@@ -1,55 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:38492 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932625Ab1EZP2t (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:37707 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756174Ab1EXNSZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 11:28:49 -0400
-Date: Thu, 26 May 2011 08:28:34 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	"Dan Carpenter" <error27@gmail.com>
-Subject: Re: [RFC V1] lib: cordic: add library module for cordic angle
- calculation
-Message-Id: <20110526082834.6ac25796.rdunlap@xenotime.net> (sfid-20110526_172917_475896_1F0DA2BA)
-In-Reply-To: <4DDE0AB4.5020102@broadcom.com>
-References: <1306352426-1899-1-git-send-email-arend@broadcom.com>
-	<20110525130438.c05605c7.rdunlap@xenotime.net>
-	<4DDE0AB4.5020102@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 May 2011 09:18:25 -0400
+Received: by pvg12 with SMTP id 12so2972221pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 06:18:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinXHgXW4q=_ck7d3vwe+JcjPut8VA@mail.gmail.com>
+References: <4DD6E9B5.3020905@candelatech.com>
+	<BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
+	<4DDA913B.1060002@candelatech.com>
+	<4DDAA9ED.1050606@candelatech.com>
+	<4DDAACF3.3050705@candelatech.com>
+	<BANLkTikvwq+0GYDxgEXNfhkcntjmpOdpPQ@mail.gmail.com>
+	<BANLkTinXHgXW4q=_ck7d3vwe+JcjPut8VA@mail.gmail.com>
+Date: Tue, 24 May 2011 09:18:24 -0400
+Message-ID: <BANLkTinB8faddQL-k=S1=g_sW6Zy8TzPbA@mail.gmail.com> (sfid-20110524_151828_527530_448B59CA)
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 26 May 2011 10:09:24 +0200 Arend van Spriel wrote:
+On Tue, May 24, 2011 at 9:11 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, May 24, 2011 at 6:00 AM, Brian Prodoehl <bprodoehl@gmail.com> wrote:
+>> On Mon, May 23, 2011 at 2:52 PM, Ben Greear <greearb@candelatech.com> wrote:
+>>> On 05/23/2011 11:39 AM, Ben Greear wrote:
+>>>>
+>>>> On 05/23/2011 09:54 AM, Ben Greear wrote:
+>>>>>
+>>>>> On 05/23/2011 04:28 AM, Mohammed Shafi wrote:
+>>>>>>
+>>>>>> On Sat, May 21, 2011 at 3:52 AM, Ben Greear<greearb@candelatech.com>
+>>>>>> wrote:
+>>>>>>>
+>>>>>>> This is on 2.6.39-wl+
+>>>>>>>
+>>>>>>> All the 5Ghz channels are showing as passive scanning, which
+>>>>>>> makes them unusable for APs if nothing else.
+>>>>>>
+>>>>>> for me channels 36,40,44,48 are ok in 5ghz. used the latest
+>>>>>> wireless-testing just brought the card up as station mode.
+>>>>>
+>>>>> Most of my systems show the same, at least most of the time.
+>>>>>
+>>>>>
+>>>>>>> Any idea why this is happening?
+>>>>>>
+>>>>>> don't know, may be regulatory.
+>>>>>
+>>>>> After a reboot and an idle weekend, mine also look normal.
+>>>>> So, it's something transient it appears.
+>>>>
+>>>> Err, I mis-spoke..the 9380 system still shows passive
+>>>> scanning everywhere...
+>>>
+>>> Busted one:
+>>>
+>>> ath: EEPROM regdomain: 0x6a
+>>> ath: EEPROM indicates we should expect a direct regpair map
+>>> ath: Country alpha2 being used: 00
+>>> ath: Regpair used: 0x6a
+>>>
+>>> cfg80211: Calling CRDA for country: US
+>>> cfg80211: Regulatory domain changed to country: US
+>>> cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
+>>> max_eirp)
+>>> cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+>>> cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+>>> cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>>> cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>>> cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>>> cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+>>>
+>>>
+>>> Bleh, seems my Sparklan 127 NIC is set to world-roam :(
+>>>
+>>> What a total pain in the arse!
+>>> Ben
+>>>
+>>> --
+>>> Ben Greear <greearb@candelatech.com>
+>>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>>
+>> Strange.  This is what I get out of my WPEA-127N:
+>>
+>> ath: EEPROM regdomain: 0x0
+>> ath: EEPROM indicates default country code should be used
+>> ath: doing EEPROM country->regdmn map search
+>> ath: country maps to regdmn code: 0x3a
+>> ath: Country alpha2 being used: US
+>> ath: Regpair used: 0x3a
+>>
+>> Here's how my 5GHz channels look:
+>>                Frequencies:
+>>                        * 5180 MHz [36] (17.0 dBm)
+>>                        * 5200 MHz [40] (17.0 dBm)
+>>                        * 5220 MHz [44] (17.0 dBm)
+>>                        * 5240 MHz [48] (17.0 dBm)
+>>                        * 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5500 MHz [100] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5520 MHz [104] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5540 MHz [108] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5560 MHz [112] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5580 MHz [116] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5600 MHz [120] (disabled)
+>>                        * 5620 MHz [124] (disabled)
+>>                        * 5640 MHz [128] (disabled)
+>>                        * 5660 MHz [132] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5680 MHz [136] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5700 MHz [140] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5745 MHz [149] (30.0 dBm)
+>>                        * 5765 MHz [153] (30.0 dBm)
+>>                        * 5785 MHz [157] (30.0 dBm)
+>>                        * 5805 MHz [161] (30.0 dBm)
+>>                        * 5825 MHz [165] (30.0 dBm)
+>>
+>> This is running 2.6.37 with compat-wireless from sometime in March,
+>> probably.  I'll try with 2.6.39 and latest compat-wireless when I get
+>> a chance.
+>
+> What's the problem? You ahve DFS requirements on the channels listed
+> with DFS. You can initiate radiation on the others. We lack master
+> support for DFS yet so you cannot initiate radiation on those
+> channels.
+>
+>  Luis
 
-> On 05/25/2011 10:04 PM, Randy Dunlap wrote:
-> > On Wed, 25 May 2011 21:40:26 +0200 Arend van Spriel wrote:
-> >> +/**
-> >> + * struct - i/q coordinate.
-> >   * struct cordic_iq - i/q coordinate
-> 
-> The kernel-doc processing is pretty smart here. In the current form I 
-> get the html as attached. From that perspective your proposed change is 
-> not needed, but if your point is that it would be more clear to the mere 
-> mortal reading through the source code I can change it.
+What I'm seeing is exactly what I would expect.  What Ben is seeing,
+with the same model card, is different (he has passive scanning set on
+all 5GHz channels).  It looks like SparkLan changed the EEPROM
+regdomain on the WPEA-127N from 0 to 0x6a (I bought my cards a month
+or so before he did).
 
-Hm, I see.  scripts/kernel-doc gets the struct name from the source code
-in this case.  too smart ;)
-
-AFAIK, everywhere else we use
-
-/**
- * struct structname - description
-
-and that's what Documentation/kernel-doc-nano-HOWTO.txt calls for, and
-yes, it would be more readable to us mortals also, so please change it.
-
-thanks,
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+-Brian
