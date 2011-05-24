@@ -1,116 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:49088 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754505Ab1EWNye (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 09:54:34 -0400
-Received: by pvg12 with SMTP id 12so2567701pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 06:54:34 -0700 (PDT)
-Message-ID: <4DDA6705.5030606@ring3k.org> (sfid-20110523_155452_276592_8084E945)
-Date: Mon, 23 May 2011 22:54:13 +0900
-From: Mike McCormack <mikem@ring3k.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2371 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755111Ab1EXKBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 06:01:43 -0400
+Message-ID: <4DDB81FD.2020903@broadcom.com> (sfid-20110524_120200_395506_4F6063FD)
+Date: Tue, 24 May 2011 12:01:33 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 4/8] rtlwifi: Run IPS leave work in a tasklet
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+ <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+ <4DD905CC.8040407@broadcom.com>
+ <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+ <4DDB622B.1050005@broadcom.com>
+ <20110524104404.336c765f@lxorguk.ukuu.org.uk>
+In-Reply-To: <20110524104404.336c765f@lxorguk.ukuu.org.uk>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the need to use IRQ safe spinlocks in many places.
+On 05/24/2011 11:44 AM, Alan Cox wrote:
+> On Tue, 24 May 2011 09:45:47 +0200
+> "Arend van Spriel"<arend@broadcom.com>  wrote:
+>
+>> On 05/22/2011 04:19 PM, Alan Cox wrote:
+>>> Is it just used for wireless in this form ?
+>>>
+>>> See the n_gsm and bluetooth code for what I think is the same crc
+>>> algorithm but in reverse bit order .
+>> Hi Alan,
+>>
+>> Look into the code in n_gsm and bluetooth code. The algorithm is the
+>> same, but except for the bit order it also is using a different
+>> polynomial. My current implementation has a fixed table. I could do the
+>> table generation runtime with the polynomial and the bit order as
+>> parameters. That would make it more general purpose.
+> Probably not worth it - its so tiny a piece of code anyway (<  500 bytes
+> or so) that it's going to be bigger not smaller if you do that !
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
----
- drivers/net/wireless/rtlwifi/pci.c  |   14 ++++++++++++--
- drivers/net/wireless/rtlwifi/ps.c   |    1 +
- drivers/net/wireless/rtlwifi/wifi.h |    1 +
- 3 files changed, 14 insertions(+), 2 deletions(-)
+Hi Alan,
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 5eedb91..fd74396 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -622,7 +622,7 @@ tx_status_ok:
- 	if (((rtlpriv->link_info.num_rx_inperiod +
- 		rtlpriv->link_info.num_tx_inperiod) > 8) ||
- 		(rtlpriv->link_info.num_rx_inperiod > 2)) {
--		rtl_lps_leave(hw);
-+		tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
- 	}
- }
- 
-@@ -756,7 +756,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 			if (((rtlpriv->link_info.num_rx_inperiod +
- 				rtlpriv->link_info.num_tx_inperiod) > 8) ||
- 				(rtlpriv->link_info.num_rx_inperiod > 2)) {
--				rtl_lps_leave(hw);
-+				tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
- 			}
- 
- 			new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
-@@ -934,6 +934,11 @@ static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
- 	_rtl_pci_tx_chk_waitq(hw);
- }
- 
-+static void _rtl_pci_ips_leave_tasklet(struct ieee80211_hw *hw)
-+{
-+	rtl_lps_leave(hw);
-+}
-+
- static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -1032,6 +1037,9 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
- 	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
- 		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
- 		     (unsigned long)hw);
-+	tasklet_init(&rtlpriv->works.ips_leave_tasklet,
-+		     (void (*)(unsigned long))_rtl_pci_ips_leave_tasklet,
-+		     (unsigned long)hw);
- }
- 
- static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
-@@ -1494,6 +1502,7 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
- 
- 	synchronize_irq(rtlpci->pdev->irq);
- 	tasklet_kill(&rtlpriv->works.irq_tasklet);
-+	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
- 
- 	flush_workqueue(rtlpriv->works.rtl_wq);
- 	destroy_workqueue(rtlpriv->works.rtl_wq);
-@@ -1568,6 +1577,7 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
- 	set_hal_stop(rtlhal);
- 
- 	rtlpriv->cfg->ops->disable_interrupt(hw);
-+	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
- 
- 	spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flags);
- 	while (ppsc->rfchange_inprogress) {
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index 39b0297..5552b8c 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -68,6 +68,7 @@ bool rtl_ps_disable_nic(struct ieee80211_hw *hw)
- 
- 	/*<2> Disable Interrupt */
- 	rtlpriv->cfg->ops->disable_interrupt(hw);
-+	tasklet_kill(&rtlpriv->works.irq_tasklet);
- 
- 	/*<3> Disable Adapter */
- 	rtlpriv->cfg->ops->hw_disable(hw);
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 0321328..9d003e0 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1535,6 +1535,7 @@ struct rtl_works {
- 	/* For SW LPS */
- 	struct delayed_work ps_work;
- 	struct delayed_work ps_rfon_wq;
-+	struct tasklet_struct ips_leave_tasklet;
- };
- 
- struct rtl_debug {
+Not sure whether you mean the source code or the object code. I build 
+kernel with debug symbols so the sizes are bit higher.
+
+fixed table:        -rw-r--r-- 1 arend arend 1859 2011-05-24 11:53 crc8.o
+custom table:    -rw-r--r-- 1 arend arend 2215 2011-05-24 11:58 crc8.o
+
+The size increase is not that big.
+
+Gr. AvS
+
 -- 
-1.7.4.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
 
