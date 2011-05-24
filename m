@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41579 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932303Ab1EMI5P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 04:57:15 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 36so2644123wwa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 01:57:15 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/6] wl12xx: declare suspend/resume callbacks (for wowlan)
-Date: Fri, 13 May 2011 11:57:09 +0300
-Message-Id: <1305277033-6662-3-git-send-email-eliad@wizery.com> (sfid-20110513_105718_674098_50D6DE80)
-In-Reply-To: <1305277033-6662-1-git-send-email-eliad@wizery.com>
-References: <1305277033-6662-1-git-send-email-eliad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:19124 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751935Ab1EXFBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 01:01:30 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 22:00:59 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: wake up chip before initializing PAPRD table
+Date: Tue, 24 May 2011 10:31:03 +0530
+Message-ID: <1306213263-4028-1-git-send-email-mshajakhan@atheros.com> (sfid-20110524_070133_196011_AF61EF49)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Additionally, add wow_enabled field to wl, to indicate
-whether wowlan was configured.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+in PAPRD table initialization path we have register read. so make sure
+that the chip is awake. currently PAPRD is disabled.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   19 +++++++++++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    6 ++++++
- 2 files changed, 25 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f82e736..9ca71ce 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1332,6 +1332,23 @@ static struct notifier_block wl1271_dev_notifier = {
- 	.notifier_call = wl1271_dev_notify,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a198ee3..af8aa9e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -394,6 +394,8 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	if (!caldata)
+ 		return;
  
-+static int wl1271_op_suspend(struct ieee80211_hw *hw,
-+			    struct cfg80211_wowlan *wow)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
-+	wl->wow_enabled = !!wow;
-+	return 0;
-+}
++	ath9k_ps_wakeup(sc);
 +
-+static int wl1271_op_resume(struct ieee80211_hw *hw)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
-+		     wl->wow_enabled);
-+	return 0;
-+}
-+
- static int wl1271_op_start(struct ieee80211_hw *hw)
- {
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 start");
-@@ -3426,6 +3443,8 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.stop = wl1271_op_stop,
- 	.add_interface = wl1271_op_add_interface,
- 	.remove_interface = wl1271_op_remove_interface,
-+	.suspend = wl1271_op_suspend,
-+	.resume = wl1271_op_resume,
- 	.config = wl1271_op_config,
- 	.prepare_multicast = wl1271_op_prepare_multicast,
- 	.configure_filter = wl1271_op_configure_filter,
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index b760143..f9d0a14 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -564,6 +564,12 @@ struct wl1271 {
- 	int tcxo_clock;
+ 	if (ar9003_paprd_init_table(ah) < 0)
+ 		return;
  
- 	/*
-+	 * wowlan trigger was configured during suspend.
-+	 * (currently, only "ANY" trigger is supported)
-+	 */
-+	bool wow_enabled;
-+
-+	/*
- 	 * AP-mode - links indexed by HLID. The global and broadcast links
- 	 * are always active.
- 	 */
+@@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+ 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+ 
+-	ath9k_ps_wakeup(sc);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if (!(common->tx_chainmask & BIT(chain)))
+ 			continue;
 -- 
 1.7.0.4
 
