@@ -1,251 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42289 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932709Ab1ERS0q (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49641 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962Ab1EXPt7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 14:26:46 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 24so530032eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 11:26:45 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/7] rt2x00: Move rt2800_txdone and rt2800_txdone_entry_check to rt2800usb.
-Date: Wed, 18 May 2011 20:25:49 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201105182022.20341.IvDoorn@gmail.com> <201105182023.04837.IvDoorn@gmail.com> <201105182023.25912.IvDoorn@gmail.com>
-In-Reply-To: <201105182023.25912.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <201105182025.50070.IvDoorn@gmail.com> (sfid-20110518_202649_842340_474FF7F1)
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Tue, 24 May 2011 11:49:59 -0400
+Subject: Re: netlink reverts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTim+boto9xStdaAyWeTR1+Fw=ADjwA@mail.gmail.com> (sfid-20110521_174122_827310_AE5DEA52)
+References: <1305917869.4640.15.camel@jlt3.sipsolutions.net>
+	 <1305917949.4640.16.camel@jlt3.sipsolutions.net>
+	 <BANLkTikjDhdYMssyivgRxAyB5-_FctQbSg@mail.gmail.com>
+	 <2eafee5b7a180c891df4a9ca53e90d7d@secure.sipsolutions.net>
+	 <BANLkTim+boto9xStdaAyWeTR1+Fw=ADjwA@mail.gmail.com>
+	 (sfid-20110521_174122_827310_AE5DEA52)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 May 2011 08:49:52 -0700
+Message-ID: <1306252192.3839.1.camel@jlt3.sipsolutions.net> (sfid-20110524_175002_738785_B24A0D68)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Sat, 2011-05-21 at 08:40 -0700, Javier Cardona wrote:
 
-These two functions are only used by rt2800usb so they don't have to be
-in rt2800lib.
+> It's ok to move the plink_state attribute.  There are only a handful
+> of users of the secured mesh at this point.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   82 ------------------------------
- drivers/net/wireless/rt2x00/rt2800lib.h |    1 -
- drivers/net/wireless/rt2x00/rt2800usb.c |   83 ++++++++++++++++++++++++++++++-
- 3 files changed, 82 insertions(+), 84 deletions(-)
+Let's stick to what we have and all copy a new nl80211.h from the
+current tree, I had this in iw but nobody could really be using it since
+no driver has wowlan.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 445d681..562dc1d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -601,49 +601,6 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
- 
--static bool rt2800_txdone_entry_check(struct queue_entry *entry, u32 reg)
--{
--	__le32 *txwi;
--	u32 word;
--	int wcid, ack, pid;
--	int tx_wcid, tx_ack, tx_pid;
--
--	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
--	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
--	pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
--
--	/*
--	 * This frames has returned with an IO error,
--	 * so the status report is not intended for this
--	 * frame.
--	 */
--	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags)) {
--		rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
--		return false;
--	}
--
--	/*
--	 * Validate if this TX status report is intended for
--	 * this entry by comparing the WCID/ACK/PID fields.
--	 */
--	txwi = rt2800_drv_get_txwi(entry);
--
--	rt2x00_desc_read(txwi, 1, &word);
--	tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
--	tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
--	tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
--
--	if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid)) {
--		WARNING(entry->queue->rt2x00dev,
--			"TX status report missed for queue %d entry %d\n",
--		entry->queue->qid, entry->entry_idx);
--		rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
--		return false;
--	}
--
--	return true;
--}
--
- void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-@@ -726,45 +683,6 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
- }
- EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
- 
--void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
--{
--	struct data_queue *queue;
--	struct queue_entry *entry;
--	u32 reg;
--	u8 qid;
--
--	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
--
--		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
--		 * qid is guaranteed to be one of the TX QIDs
--		 */
--		qid = rt2x00_get_field32(reg, TX_STA_FIFO_PID_QUEUE);
--		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
--		if (unlikely(!queue)) {
--			WARNING(rt2x00dev, "Got TX status for an unavailable "
--					   "queue %u, dropping\n", qid);
--			continue;
--		}
--
--		/*
--		 * Inside each queue, we process each entry in a chronological
--		 * order. We first check that the queue is not empty.
--		 */
--		entry = NULL;
--		while (!rt2x00queue_empty(queue)) {
--			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--			if (rt2800_txdone_entry_check(entry, reg))
--				break;
--		}
--
--		if (!entry || rt2x00queue_empty(queue))
--			break;
--
--		rt2800_txdone_entry(entry, reg);
--	}
--}
--EXPORT_SYMBOL_GPL(rt2800_txdone);
--
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index f2d1594..69deb31 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -152,7 +152,6 @@ void rt2800_write_tx_data(struct queue_entry *entry,
- 			  struct txentry_desc *txdesc);
- void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
- 
--void rt2800_txdone(struct rt2x00_dev *rt2x00dev);
- void rt2800_txdone_entry(struct queue_entry *entry, u32 status);
- 
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index ba82c97..6e92298 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -457,6 +457,87 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
- /*
-  * TX control handlers
-  */
-+static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
-+{
-+	__le32 *txwi;
-+	u32 word;
-+	int wcid, ack, pid;
-+	int tx_wcid, tx_ack, tx_pid;
-+
-+	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
-+	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
-+	pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
-+
-+	/*
-+	 * This frames has returned with an IO error,
-+	 * so the status report is not intended for this
-+	 * frame.
-+	 */
-+	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags)) {
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
-+		return false;
-+	}
-+
-+	/*
-+	 * Validate if this TX status report is intended for
-+	 * this entry by comparing the WCID/ACK/PID fields.
-+	 */
-+	txwi = rt2800usb_get_txwi(entry);
-+
-+	rt2x00_desc_read(txwi, 1, &word);
-+	tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
-+	tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
-+	tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
-+
-+	if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid)) {
-+		WARNING(entry->queue->rt2x00dev,
-+			"TX status report missed for queue %d entry %d\n",
-+		entry->queue->qid, entry->entry_idx);
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct data_queue *queue;
-+	struct queue_entry *entry;
-+	u32 reg;
-+	u8 qid;
-+
-+	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
-+
-+		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
-+		 * qid is guaranteed to be one of the TX QIDs
-+		 */
-+		qid = rt2x00_get_field32(reg, TX_STA_FIFO_PID_QUEUE);
-+		queue = rt2x00queue_get_tx_queue(rt2x00dev, qid);
-+		if (unlikely(!queue)) {
-+			WARNING(rt2x00dev, "Got TX status for an unavailable "
-+					   "queue %u, dropping\n", qid);
-+			continue;
-+		}
-+
-+		/*
-+		 * Inside each queue, we process each entry in a chronological
-+		 * order. We first check that the queue is not empty.
-+		 */
-+		entry = NULL;
-+		while (!rt2x00queue_empty(queue)) {
-+			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
-+			if (rt2800usb_txdone_entry_check(entry, reg))
-+				break;
-+		}
-+
-+		if (!entry || rt2x00queue_empty(queue))
-+			break;
-+
-+		rt2800_txdone_entry(entry, reg);
-+	}
-+}
-+
- static void rt2800usb_work_txdone(struct work_struct *work)
- {
- 	struct rt2x00_dev *rt2x00dev =
-@@ -464,7 +545,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
- 	struct data_queue *queue;
- 	struct queue_entry *entry;
- 
--	rt2800_txdone(rt2x00dev);
-+	rt2800usb_txdone(rt2x00dev);
- 
- 	/*
- 	 * Process any trailing TX status reports for IO failures,
--- 
-1.7.2.3
+johannes
 
