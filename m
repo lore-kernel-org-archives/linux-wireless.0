@@ -1,53 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46271 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755545Ab1EROdP (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:50419 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756138Ab1EXNAa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 10:33:15 -0400
-Received: by vxi39 with SMTP id 39so1131768vxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 07:33:14 -0700 (PDT)
-Message-ID: <4DD3D8A7.7040605@lwfinger.net> (sfid-20110518_163319_351595_51E3D3F4)
-Date: Wed, 18 May 2011 09:33:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 24 May 2011 09:00:30 -0400
+Received: by pwi15 with SMTP id 15so3009300pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 06:00:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Mark Huijgen <mark.sf.net@huijgen.tk>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtlwifi rtl8192se kernel crash on link ready
-References: <4DD37DF2.7060204@huijgen.tk>
-In-Reply-To: <4DD37DF2.7060204@huijgen.tk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4DDAACF3.3050705@candelatech.com>
+References: <4DD6E9B5.3020905@candelatech.com>
+	<BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
+	<4DDA913B.1060002@candelatech.com>
+	<4DDAA9ED.1050606@candelatech.com>
+	<4DDAACF3.3050705@candelatech.com>
+Date: Tue, 24 May 2011 09:00:28 -0400
+Message-ID: <BANLkTikvwq+0GYDxgEXNfhkcntjmpOdpPQ@mail.gmail.com> (sfid-20110524_150041_101331_CBCFB741)
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2011 03:06 AM, Mark Huijgen wrote:
-> Hi Larry,
+On Mon, May 23, 2011 at 2:52 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 05/23/2011 11:39 AM, Ben Greear wrote:
+>>
+>> On 05/23/2011 09:54 AM, Ben Greear wrote:
+>>>
+>>> On 05/23/2011 04:28 AM, Mohammed Shafi wrote:
+>>>>
+>>>> On Sat, May 21, 2011 at 3:52 AM, Ben Greear<greearb@candelatech.com>
+>>>> wrote:
+>>>>>
+>>>>> This is on 2.6.39-wl+
+>>>>>
+>>>>> All the 5Ghz channels are showing as passive scanning, which
+>>>>> makes them unusable for APs if nothing else.
+>>>>
+>>>> for me channels 36,40,44,48 are ok in 5ghz. used the latest
+>>>> wireless-testing just brought the card up as station mode.
+>>>
+>>> Most of my systems show the same, at least most of the time.
+>>>
+>>>
+>>>>> Any idea why this is happening?
+>>>>
+>>>> don't know, may be regulatory.
+>>>
+>>> After a reboot and an idle weekend, mine also look normal.
+>>> So, it's something transient it appears.
+>>
+>> Err, I mis-spoke..the 9380 system still shows passive
+>> scanning everywhere...
 >
-> I tried the new rtlwifi/rtl8192se driver you recently added to wireless testing
-> via compat-wireless-2011-05-16 on ubuntu 11.04.
+> Busted one:
 >
-> It loads fine and scanning works also. However as soon as I connect to an AP the
-> kernel locks up and the system reboots.
-> I tried ubuntu's linux crashdump tool to obtain the vmcore, but it seems to be
-> broken (https://bugs.launchpad.net/ubuntu/+source/linux-meta/+bug/710733).
+> ath: EEPROM regdomain: 0x6a
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: 00
+> ath: Regpair used: 0x6a
 >
-> I was able to capture the crash output with my mobile phone's camera, quality is
-> not great, but its readable.
+> cfg80211: Calling CRDA for country: US
+> cfg80211: Regulatory domain changed to country: US
+> cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
+> max_eirp)
+> cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+> cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+> cfg80211:     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
 >
-> Its a kernel NULL pointer dereference in by the looks of it an IRQ handler.
 >
-> Kernel used is stock ubuntu 2.6.38-8-generic-pae, but I get a similar crash on
-> older maverick kernel too (2.6.35-22-generic-pae).
+> Bleh, seems my Sparklan 127 NIC is set to world-roam :(
 >
-> I hope this info is usefull enough to find the cause. If there is anything I can
-> do to obtain more info let me know. Also happy to test any patches etc.
+> What a total pain in the arse!
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
 
-Mark,
 
-This problem has to do with backporting of some rcu-handling code to 
-compat-wireless, and is affecting a number of drivers. See the thread at 
-http://marc.info/?l=linux-wireless&m=130570674417145&w=2 for some details. I 
-added the linux-wireless mailing list to the Cc.
+Strange.  This is what I get out of my WPEA-127N:
 
-I'll let you know when a fix is available.
+ath: EEPROM regdomain: 0x0
+ath: EEPROM indicates default country code should be used
+ath: doing EEPROM country->regdmn map search
+ath: country maps to regdmn code: 0x3a
+ath: Country alpha2 being used: US
+ath: Regpair used: 0x3a
 
-Larry
+Here's how my 5GHz channels look:
+		Frequencies:
+			* 5180 MHz [36] (17.0 dBm)
+			* 5200 MHz [40] (17.0 dBm)
+			* 5220 MHz [44] (17.0 dBm)
+			* 5240 MHz [48] (17.0 dBm)
+			* 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5500 MHz [100] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5520 MHz [104] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5540 MHz [108] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5560 MHz [112] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5580 MHz [116] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5600 MHz [120] (disabled)
+			* 5620 MHz [124] (disabled)
+			* 5640 MHz [128] (disabled)
+			* 5660 MHz [132] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5680 MHz [136] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5700 MHz [140] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5745 MHz [149] (30.0 dBm)
+			* 5765 MHz [153] (30.0 dBm)
+			* 5785 MHz [157] (30.0 dBm)
+			* 5805 MHz [161] (30.0 dBm)
+			* 5825 MHz [165] (30.0 dBm)
+
+This is running 2.6.37 with compat-wireless from sometime in March,
+probably.  I'll try with 2.6.39 and latest compat-wireless when I get
+a chance.
+
+-Brian
