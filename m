@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2162 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753845Ab1E0QH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 12:07:57 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/10] iwlagn: send tx power command if defer cause by RXON not match
-Date: Fri, 27 May 2011 08:40:24 -0700
-Message-Id: <1306510833-32049-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180802_261309_A8D44E90)
-In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755001Ab1EXLfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 07:35:32 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	frankyl@broadcom.com
+Subject: [PATCH] staging: brcm80211: fix for 'multiple definition of
+ wl_msg_level' build err
+Date: Tue, 24 May 2011 13:35:21 +0200
+Message-ID: <1306236921-30522-1-git-send-email-rvossen@broadcom.com> (sfid-20110524_133535_941166_69FBCB65)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During channge channel, tx power will not send to uCode, the tx power command
-should send after scan complete. but should also can send after RXON command.
+As reported by Linus.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index a95ad84..58c095c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -362,6 +362,11 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		}
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index 929ceaf..15e1b05 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -64,8 +64,6 @@ wl_iw_extra_params_t g_wl_iw_params;
+ extern bool wl_iw_conn_status_str(u32 event_type, u32 status,
+ 				  u32 reason, char *stringBuf, uint buflen);
  
- 		memcpy(active, &ctx->staging, sizeof(*active));
-+		/*
-+		 * We do not commit tx power settings while channel changing,
-+		 * do it now if after settings changed.
-+		 */
-+		iwl_set_tx_power(priv, priv->tx_power_next, false);
- 		return 0;
- 	}
+-uint wl_msg_level = WL_ERROR_VAL;
+-
+ #define MAX_WLIW_IOCTL_LEN 1024
  
+ #ifdef CONFIG_WIRELESS_EXT
 -- 
-1.7.0.4
+1.7.4.1
+
 
