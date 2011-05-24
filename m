@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:38481 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537Ab1E2M46 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 08:56:58 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 36so3143732wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:56:57 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] wl12xx: clear wl->wow_enabled on resume
-Date: Sun, 29 May 2011 15:56:50 +0300
-Message-Id: <1306673812-27978-2-git-send-email-eliad@wizery.com> (sfid-20110529_145702_081742_9D23E395)
-In-Reply-To: <1306673812-27978-1-git-send-email-eliad@wizery.com>
-References: <1306673812-27978-1-git-send-email-eliad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:22285 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755299Ab1EXJ0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 05:26:35 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 02:26:04 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>,
+	<Senthilkumar.Balasubramanian@Atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH v2] ath9k: wake up chip before initializing PAPRD table
+Date: Tue, 24 May 2011 14:56:10 +0530
+Message-ID: <1306229170-18368-1-git-send-email-mshajakhan@atheros.com> (sfid-20110524_112638_513081_3E89DDA3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We set wl->wow_enabled on every suspend(), so we need to clear it
-on every resume().
-(we can't rely on setting wl->wow_enabled=false in suspend(),
-as it being called only when wowlan triggers are configured)
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+In PAPRD table initialization path we do some register read, so
+make sure the chip is awake during that. Currently PAPRD is disabled.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8eb52b7..4f20711 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1606,6 +1606,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 		wl1271_enable_interrupts(wl);
- 	}
- 	wl1271_configure_resume(wl);
-+	wl->wow_enabled = false;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a198ee3..4a71f4e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -394,8 +394,10 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	if (!caldata)
+ 		return;
  
- 	return 0;
- }
++	ath9k_ps_wakeup(sc);
++
+ 	if (ar9003_paprd_init_table(ah) < 0)
+-		return;
++		goto fail_paprd;
+ 
+ 	skb = alloc_skb(len, GFP_KERNEL);
+ 	if (!skb)
+@@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+ 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+ 
+-	ath9k_ps_wakeup(sc);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if (!(common->tx_chainmask & BIT(chain)))
+ 			continue;
 -- 
 1.7.0.4
 
