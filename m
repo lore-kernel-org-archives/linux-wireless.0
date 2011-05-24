@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:39925 "EHLO mx4.wp.pl"
+Received: from mms3.broadcom.com ([216.31.210.19]:1631 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751433Ab1E2Koe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2011 06:44:34 -0400
-Date: Sun, 29 May 2011 12:45:29 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-2.6] rt2x00: fix rmmod crash
-Message-ID: <20110529104529.GA2769@localhost.localdomain> (sfid-20110529_124442_115082_C9468D02)
+	id S1753120Ab1EXRA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 13:00:58 -0400
+Message-ID: <4DDBE432.3040207@broadcom.com> (sfid-20110524_190117_347834_0E7C8A1E)
+Date: Tue, 24 May 2011 19:00:34 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+ <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+ <4DD905CC.8040407@broadcom.com>
+ <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+ <4DDB622B.1050005@broadcom.com>
+ <20110524104404.336c765f@lxorguk.ukuu.org.uk>
+ <4DDB81FD.2020903@broadcom.com>
+ <20110524112732.67d92b2f@lxorguk.ukuu.org.uk>
+ <4DDB8AB5.7080808@broadcom.com>
+ <20110524135705.00f7fb12@lxorguk.ukuu.org.uk>
+In-Reply-To: <20110524135705.00f7fb12@lxorguk.ukuu.org.uk>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not destroy workqueue, which still can be used by autowakeup_work,
-before ieee80211_unregister_hw() is called.
+On 05/24/2011 02:57 PM, Alan Cox wrote:
+> On Tue, 24 May 2011 12:38:45 +0200
+> "Arend van Spriel"<arend@broadcom.com>  wrote:
+>
+>> On 05/24/2011 12:27 PM, Alan Cox wrote:
+>>>> Not sure whether you mean the source code or the object code. I build
+>>>> kernel with debug symbols so the sizes are bit higher.
+>>> nm will tell you the actual sizes. I think the n_gsm code is about 500
+>>> bytes or so and chunks of it inline.
+>> Not counting the crc table I assume.
+> I forget but I think including - its a tiny tiny bit of code once inlined.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+I used nm on both flavours.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index c018d67..2f2627b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1165,7 +1165,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 		cancel_work_sync(&rt2x00dev->rxdone_work);
- 		cancel_work_sync(&rt2x00dev->txdone_work);
- 	}
--	destroy_workqueue(rt2x00dev->workqueue);
- 
- 	/*
- 	 * Free the tx status fifo.
-@@ -1198,6 +1197,11 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	rt2x00lib_remove_hw(rt2x00dev);
- 
- 	/*
-+	 * Now nobody use workqueue anymore.
-+	 */
-+	destroy_workqueue(rt2x00dev->workqueue);
-+
-+	/*
- 	 * Free firmware image.
- 	 */
- 	rt2x00lib_free_firmware(rt2x00dev);
+dynamic crc table based on polynomial and bit order
+---------------------------------------------------
+00000000 00000026 T crc8
+00000030 000000dc T crc8_create
+
+fixed crc table with table selection based on bit order
+-------------------------------------------------------
+00000000 00000026 T crc8
+00000030 0000002b T crc8_create
+00000100 00000100 r crc8_table_lsb
+00000000 00000100 r crc8_table_msb
+
+The first requires the user to provide buffer to hold the table. The 
+difference is in the crc_create() function (maybe better named 
+crc_populate_table() in first, and crc_select_table() in second). It is 
+177 bytes larger. The crc calculating function is 38 bytes. Still pretty 
+small I would think.
+
+Gr. AvS
+
 -- 
-1.7.4
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
