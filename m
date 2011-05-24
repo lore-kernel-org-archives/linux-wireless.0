@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42547 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420Ab1EMOdk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 10:33:40 -0400
-Subject: Re: concurrency advertising -- driver maintainers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18993 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450Ab1EXHJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 03:09:51 -0400
+Date: Tue, 24 May 2011 09:09:42 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Paul Bolle <pebolle@tiscali.nl>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <19917.16659.841512.824060@gargle.gargle.HOWL> (sfid-20110513_163055_280327_3B94A6EF)
-References: <1305290657.3487.32.camel@jlt3.sipsolutions.net>
-	 <1305294053.3487.37.camel@jlt3.sipsolutions.net>
-	 <19917.16659.841512.824060@gargle.gargle.HOWL>
-	 (sfid-20110513_163055_280327_3B94A6EF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 13 May 2011 16:33:37 +0200
-Message-ID: <1305297217.3468.1.camel@jlt3.sipsolutions.net> (sfid-20110513_163344_216103_A052DB1D)
-Mime-Version: 1.0
+Subject: Re: [iwl4965] Microcode SW error detected
+Message-ID: <20110524070941.GA2189@redhat.com> (sfid-20110524_090955_552679_A62C0211)
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1306151106.2066.60.camel@x61.thuisdomein>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 20:02 +0530, Sujith wrote:
-> Johannes Berg wrote:
-> > On Fri, 2011-05-13 at 14:44 +0200, Johannes Berg wrote:
-> > 
-> > > The affected drivers, as far as I can tell, are:
-> > 
-> > I forgot ath9k_htc, which needs to advertise something afaict (two
-> > interfaces seem to be supported)
-> 
-> The limitation of two is artificial, more can actually be supported.
-> The firmware has to be updated, though.
+On Mon, May 23, 2011 at 01:45:06PM +0200, Paul Bolle wrote:
+> 0) Since I started running (release candidates of) kernel v2.6.39 errors
+> like these show up in my log, every now and then:
+>
+> iwl4965 0000:03:00.0: Microcode SW error detected.  Restarting 0x82000000.
+[snip]
+> 1) Is there anything I'm supposed to do to (help) make these errors go
+> away?
 
-Ok, but no matter what the limitation is or whether it can be changed it
-should be advertised with the new advertising feature I submitted,
-that's what I wanted you to do :)
+Does it also happen on 2.6.39-rc1 ? What is your configuration (mode,
+encryption, do you use wpa_supplicant or NetworkManager, which version,
+etc ...)? I will try to reproduce locally. If I'll be not able to reproduce,
+I'll ask you for debug logs on broken, and working (i.e. 2.6.38) version
+for compare. 
 
-johannes
-
+Thanks
+Stanislaw
