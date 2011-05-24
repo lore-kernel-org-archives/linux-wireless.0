@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59451 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331Ab1ETXQv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 19:16:51 -0400
+Received: from mail.atheros.com ([12.19.149.2]:21448 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753781Ab1EXHGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 03:06:37 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 00:06:06 -0700
+Message-ID: <4DDB58E7.8090403@atheros.com> (sfid-20110524_090641_957132_EF264D51)
+Date: Tue, 24 May 2011 12:36:15 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 20 May 2011 16:16:28 -0700
-Message-ID: <BANLkTikTOQbyz-sTAS09Hh5Go++3qgOJDg@mail.gmail.com> (sfid-20110521_011657_349782_9B3F8A0E)
-Subject: Linux wireless support education video on YouTube
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org, David Quan <David.Quan@atheros.com>,
-	Kathy Giori <Kathy.Giori@atheros.com>,
-	Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=UTF-8
+To: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: wake up chip before initializing PAPRD table
+References: <1306213263-4028-1-git-send-email-mshajakhan@atheros.com> <20110524061955.GA5175@ath9k-test>
+In-Reply-To: <20110524061955.GA5175@ath9k-test>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you have engineers who need to support the 802.11 Linux subsystem
-you at times see yourself needing to educate each group through some
-sessions. In hopes of reusing educational sessions I've decided to
-record my own series and post it on YouTube. I've broken down each
-logical component of the series into as small atomic pieces so we can
-add / remove / update the series into a new baked improved playlist.
-If you wish to contribute to this please feel free to send me your own
-videos so I can extend the series.
+On Tuesday 24 May 2011 11:50 AM, Senthilkumar Balasubramanian wrote:
+> On Tue, May 24, 2011 at 10:31:03AM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> in PAPRD table initialization path we have register read. so make sure
+>> that the chip is awake. currently PAPRD is disabled.
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/main.c |    3 ++-
+>>   1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index a198ee3..af8aa9e 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -394,6 +394,8 @@ void ath_paprd_calibrate(struct work_struct *work)
+>>   	if (!caldata)
+>>   		return;
+>>
+>> +	ath9k_ps_wakeup(sc);
+>> +
+>>   	if (ar9003_paprd_init_table(ah)<  0)
+>>   		return;
+> Have you tested power save with this patch? ps_restore is missing here...
 
-The hope is to education engineers as quickly as possible and then
-refer them to our wireless.kernel.org wiki for more information. The
-playlist of the 4 videos is available via:
+Sorry Senthil and thanks for pointing it out, it would have introduced a 
+serious regression in Power Save when the device is in idle state(when 
+PAPRD enabled) and when it just returns from as we are never doing power 
+save restore
 
-http://bit.ly/kYdfpg
+   if (ar9003_paprd_init_table(ah) < 0)
+                 return;
 
-There will be Q&A Session on May 25, 2011 at 8am PST, you can poke us
-with questions on IRC:
+I will fix it properly by using goto fail_paprd as you had suggested.
 
-IRC server: irc.freenode.net
-Channel: #linux-wireless
+>>
+>> @@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+>>   	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+>>   	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+>>
+>> -	ath9k_ps_wakeup(sc);
+>>   	for (chain = 0; chain<  AR9300_MAX_CHAINS; chain++) {
+>>   		if (!(common->tx_chainmask&  BIT(chain)))
+>>   			continue;
+>> --
+>> 1.7.0.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> .
+>
 
-The breakdown of the series covers:
-
-  * Review of the 802.11 subsystem
-  * Development process review
-  * Daily snapshots / stable release of compat-wireless
-  * Debugging 802.11 drivers
-  * 802.11s review
-
-PS. Thanks to Javier for providing his own session on 802.11s support
-on mac80211
-
-  Luis
+-- 
+thanks,
+shafi
