@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:28113 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab1EFRvU (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35539 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753782Ab1EXK0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 13:51:20 -0400
-Date: Fri, 6 May 2011 10:50:42 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
+	Tue, 24 May 2011 06:26:05 -0400
+Date: Tue, 24 May 2011 11:27:32 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Linux-Next <linux-next@vger.kernel.org>
-Subject: Re: [next] net/mac80211/main.c:700: error: 'const struct
- ieee80211_ops' has no member named 'suspend'
-Message-Id: <20110506105042.b873a08e.randy.dunlap@oracle.com> (sfid-20110506_195124_834665_FDB295F8)
-In-Reply-To: <BANLkTimMwXVHQtHtgukFvYKcWOuo=tv9ig@mail.gmail.com>
-References: <BANLkTimMwXVHQtHtgukFvYKcWOuo=tv9ig@mail.gmail.com>
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+Message-ID: <20110524112732.67d92b2f@lxorguk.ukuu.org.uk> (sfid-20110524_122624_639824_C574A701)
+In-Reply-To: <4DDB81FD.2020903@broadcom.com>
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+	<20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+	<4DD905CC.8040407@broadcom.com>
+	<20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+	<4DDB622B.1050005@broadcom.com>
+	<20110524104404.336c765f@lxorguk.ukuu.org.uk>
+	<4DDB81FD.2020903@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 May 2011 19:39:24 +0200 Geert Uytterhoeven wrote:
+> Not sure whether you mean the source code or the object code. I build 
+> kernel with debug symbols so the sizes are bit higher.
 
-> http://kisskb.ellerman.id.au/kisskb/buildresult/4143029/
-> 
-> net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no
-> member named 'suspend'
-> net/mac80211/main.c:700: error: 'const struct ieee80211_ops' has no
-> member named 'resume'
-> 
-> The existence of these two members depends on CONFIG_PM.
-> 
-> Funny, as both the members and these users were added in the same
-> commit eecc48000afe2ca6da22122d553b7cad294e42fc ("mac80211: add basic
-> support
-> for WoWLAN").
-
-Patch is here:
-http://marc.info/?l=linux-wireless&m=130463933324134&w=2
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+nm will tell you the actual sizes. I think the n_gsm code is about 500
+bytes or so and chunks of it inline.
