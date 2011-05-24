@@ -1,140 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2396 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309Ab1ECJg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:29 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: [PATCH 60/61] staging: brcm80211: got rid of WL_FFPLD message
- log macro
-Date: Tue, 3 May 2011 11:36:00 +0200
-Message-ID: <1304415361-7813-61-git-send-email-arend@broadcom.com> (sfid-20110503_113657_313963_9C1BD6F3)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:55529 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753777Ab1EXRbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 13:31:18 -0400
+Date: Tue, 24 May 2011 10:31:15 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: arne.fitzenreiter@gmx.de
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH] compat: fix kfifo taint's kernel (missing license info)
+Message-Id: <20110524103115.0f1763f9.rdunlap@xenotime.net> (sfid-20110524_193121_532037_71452CC7)
+In-Reply-To: <20110524173031.24980@gmx.net>
+References: <20110524173031.24980@gmx.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Tue, 24 May 2011 19:30:31 +0200 arne.fitzenreiter@gmx.de wrote:
 
-Code cleanup. Partially removed, remaining replaced with BCMMSG.
+patch file is missing...
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wl_dbg.h    |    8 --------
- drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c |   13 ++++++-------
- drivers/staging/brcm80211/include/wlioctl.h    |    2 --
- 3 files changed, 6 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
-index 8beeefe..5582de3 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_dbg.h
-@@ -22,12 +22,6 @@
- /* wl_msg_level is a bit vector with defs in wlioctl.h */
- extern u32 wl_msg_level;
- 
--#define WL_PRINT(level, fmt, args...)		\
--do {						\
--	if (wl_msg_level & level)		\
--		printk(fmt, ##args);		\
--} while (0)
--
- #define BCMMSG(dev, fmt, args...)		\
- do {						\
- 	if (wl_msg_level & WL_TRACE_VAL)	\
-@@ -36,7 +30,6 @@ do {						\
- 
- #ifdef BCMDBG
- 
--#define WL_FFPLD(fmt, args...)	WL_PRINT(WL_FFPLD_VAL, fmt, ##args)
- 
- /* Extra message control for AMPDU debugging */
- #define   WL_AMPDU_UPDN_VAL	0x00000001	/* Config up/down related  */
-@@ -79,7 +72,6 @@ do {						\
- 
- #else				/* BCMDBG */
- 
--#define WL_FFPLD(fmt, args...)		no_printk(fmt, ##args)
- 
- #define WL_AMPDU_UPDN(fmt, args...)	no_printk(fmt, ##args)
- #define WL_AMPDU_RX(fmt, args...)	no_printk(fmt, ##args)
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-index dbdbe85..876e523 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
-@@ -314,7 +314,7 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
- 			 M_UCODE_MACSTAT + offsetof(macstat_t, txfunfl[fid]));
- 	new_txunfl = (u16) (cur_txunfl - fifo->prev_txfunfl);
- 	if (new_txunfl == 0) {
--		WL_FFPLD("check_txunfl : TX status FRAG set but no tx underflows\n");
-+		BCMMSG(wlc->wiphy, "TX status FRAG set but no tx underflows\n");
- 		return -1;
- 	}
- 	fifo->prev_txfunfl = cur_txunfl;
-@@ -324,7 +324,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
- 
- 	/* check if fifo is big enough */
- 	if (wlc_xmtfifo_sz_get(wlc, fid, &xmtfifo_sz)) {
--		WL_FFPLD("check_txunfl : get xmtfifo_sz failed\n");
- 		return -1;
- 	}
- 
-@@ -338,8 +337,8 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
- 	if (fifo->accum_txfunfl < 10)
- 		return 0;
- 
--	WL_FFPLD("ampdu_count %d  tx_underflows %d\n",
--		 current_ampdu_cnt, fifo->accum_txfunfl);
-+	BCMMSG(wlc->wiphy, "ampdu_count %d  tx_underflows %d\n",
-+		current_ampdu_cnt, fifo->accum_txfunfl);
- 
- 	/*
- 	   compute the current ratio of tx unfl per ampdu.
-@@ -366,7 +365,6 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
- 	 */
- 
- 	if (fifo->ampdu_pld_size >= max_mpdu * FFPLD_MPDU_SIZE) {
--		WL_FFPLD(("tx fifo pld : max ampdu fits in fifo\n)"));
- 		fifo->accum_txfunfl = 0;
- 		return 0;
- 	}
-@@ -392,8 +390,9 @@ static int wlc_ffpld_check_txfunfl(struct wlc_info *wlc, int fid)
- 		      (max_mpdu * FFPLD_MPDU_SIZE - fifo->ampdu_pld_size))
- 		     / (max_mpdu * FFPLD_MPDU_SIZE)) * 100;
- 
--		WL_FFPLD("DMA estimated transfer rate %d; pre-load size %d\n",
--			 fifo->dmaxferrate, fifo->ampdu_pld_size);
-+		BCMMSG(wlc->wiphy, "DMA estimated transfer rate %d; "
-+			"pre-load size %d\n",
-+			fifo->dmaxferrate, fifo->ampdu_pld_size);
- 	} else {
- 
- 		/* decrease ampdu size */
-diff --git a/drivers/staging/brcm80211/include/wlioctl.h b/drivers/staging/brcm80211/include/wlioctl.h
-index 5e2b11b..1e11c42 100644
---- a/drivers/staging/brcm80211/include/wlioctl.h
-+++ b/drivers/staging/brcm80211/include/wlioctl.h
-@@ -1247,8 +1247,6 @@ typedef struct tx_inst_power {
- /* Message levels */
- #define WL_ERROR_VAL		0x00000001
- #define WL_TRACE_VAL		0x00000002
--#define WL_AMPDU_VAL		0x20000000
--#define WL_FFPLD_VAL		0x40000000
- 
- /* maximum channels returned by the get valid channels iovar */
- #define WL_NUMCHANNELS		64
--- 
-1.7.4.1
-
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
