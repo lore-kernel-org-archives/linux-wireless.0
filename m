@@ -1,107 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30975 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759070Ab1EMPAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 11:00:51 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:00:22 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Jouni.Malinen@Atheros.com>, <Vasanth.Thiagarajan@Atheros.com>,
-	<Kent.Chuang@Atheros.com>, <Ming-Yi.Lin@Atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	Gabriel Tseng <Gabriel.Tseng@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: [PATCH 5/9] ath9k_hw: define modules to get/set Antenna diversity paramaters
-Date: Fri, 13 May 2011 20:30:41 +0530
-Message-ID: <1305298841-3465-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_170055_299569_B90F036B)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38844 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285Ab1EXACC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 20:02:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 May 2011 17:01:41 -0700
+Message-ID: <BANLkTikkGq8cnyKA453YZLc6mqYa=+bxvA@mail.gmail.com> (sfid-20110524_020230_170804_688F29D6)
+Subject: compat-wireless 2.6.39 final release
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Before the world ended Linus decided to release v2.6.39 and now that
+the show is not over we get to enjoy it. So we get the respective
+backport of the 802.11 / BT / Ethernet drivers and subsystems
+available to users on older kernels. The short and sweet details:
 
-these are the two important modules that will be called by the antenna
-diversity algorithm module in the rx. this will continuosly configure
-the hardware based on the current diversity status obtained
-from the algorithm
+Vanilla release:
 
-Cc: Gabriel Tseng <Gabriel.Tseng@Atheros.com>
-Cc: Senthilkumar Balasubramanian <Senthilkumar.Balasubramanian@Atheros.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   44 +++++++++++++++++++++++++++
- 1 files changed, 44 insertions(+), 0 deletions(-)
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/compat-wireless-2.6.39-1.tar.bz2
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c83be2d..d2a5d27 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1184,9 +1184,50 @@ static void ar9003_hw_set_radar_conf(struct ath_hw *ah)
- 	conf->radar_inband = 8;
- }
- 
-+static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf)
-+{
-+	u32 regval;
-+
-+	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+	antconf->main_lna_conf = (regval & AR_PHY_9485_ANT_DIV_MAIN_LNACONF) >>
-+				  AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S;
-+	antconf->alt_lna_conf = (regval & AR_PHY_9485_ANT_DIV_ALT_LNACONF) >>
-+				 AR_PHY_9485_ANT_DIV_ALT_LNACONF_S;
-+	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
-+				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
-+}
-+
-+static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf)
-+{
-+	u32 regval;
-+
-+	regval = REG_READ(ah, AR_PHY_MC_GAIN_CTRL);
-+	regval &= ~(AR_PHY_9485_ANT_DIV_MAIN_LNACONF |
-+		    AR_PHY_9485_ANT_DIV_ALT_LNACONF |
-+		    AR_PHY_9485_ANT_FAST_DIV_BIAS |
-+		    AR_PHY_9485_ANT_DIV_MAIN_GAINTB |
-+		    AR_PHY_9485_ANT_DIV_ALT_GAINTB);
-+	regval |= ((antconf->main_lna_conf <<
-+					AR_PHY_9485_ANT_DIV_MAIN_LNACONF_S)
-+		   & AR_PHY_9485_ANT_DIV_MAIN_LNACONF);
-+	regval |= ((antconf->alt_lna_conf << AR_PHY_9485_ANT_DIV_ALT_LNACONF_S)
-+		   & AR_PHY_9485_ANT_DIV_ALT_LNACONF);
-+	regval |= ((antconf->fast_div_bias << AR_PHY_9485_ANT_FAST_DIV_BIAS_S)
-+		   & AR_PHY_9485_ANT_FAST_DIV_BIAS);
-+	regval |= ((antconf->main_gaintb << AR_PHY_9485_ANT_DIV_MAIN_GAINTB_S)
-+		   & AR_PHY_9485_ANT_DIV_MAIN_GAINTB);
-+	regval |= ((antconf->alt_gaintb << AR_PHY_9485_ANT_DIV_ALT_GAINTB_S)
-+		   & AR_PHY_9485_ANT_DIV_ALT_GAINTB);
-+
-+	REG_WRITE(ah, AR_PHY_MC_GAIN_CTRL, regval);
-+}
-+
- void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 	static const u32 ar9300_cca_regs[6] = {
- 		AR_PHY_CCA_0,
- 		AR_PHY_CCA_1,
-@@ -1213,6 +1254,9 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
- 	priv_ops->set_radar_params = ar9003_hw_set_radar_params;
- 
-+	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
-+	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
-+
- 	ar9003_hw_set_nf_limits(ah);
- 	ar9003_hw_set_radar_conf(ah);
- 	memcpy(ah->nf_regs, ar9300_cca_regs, sizeof(ah->nf_regs));
--- 
-1.7.0.4
+The "-sn" release (pending-stable and linux-next-cherry-picks patches applied):
 
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/compat-wireless-2.6.39-1-sn.tar.bz2
+
+The all the details:
+
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.39/ChangeLog-2.6.39-wireless
+
+Below just the compat.git and compat-wireless.git updates, to see the
+respective kernel updates check the ChangeLog above. I've tested this
+release with iwlagn on 2.6.38. Please report any issues.
+
+===============================================
+ChangeLog for compat-wireless for linux-2.6.39
+===============================================
+
+This is the ChangeLog for the Linux kernel project compat-wireless.
+It provides a backport of a few Linux kernel subsystems down to
+older kernels:
+
+  * 802.11
+  * Bluetooth
+  * Ethernet
+
+For more details refer to the home page:
+
+http://wireless.kernel.org/en/users/Download/stable/
+
+The compat-wireless project consists of code from three projects:
+
+  * The Linux kernel: linux-2.6-allstable.git
+  * Compat-wirelesS: compat-wireless.git
+  * Compat: compat.git
+
+The compat-wireless stable releases incorporates code from from
+each of these git trees for the respective upstream Linux kernel
+stable release. A branch called linux-2.6.3x.y exists for each
+stable release. Below we provide the ChangeLog of changes from
+the previous branched release to the new branched release.
+
+Release: linux-2.6.39
+
+
+Updates from the compat.git project:
+====================================
+
+git shortlog linux-2.6.38.y..linux-2.6.39.y
+
+Hauke Mehrtens (10):
+      compat: backport alloc_ordered_workqueue
+      compat: add support for kernel 2.6.38
+      compat: backport usb_pipe_endpoint()
+      compat: backport tty_{lock,unlock,locked}
+      compat: backport tty_set_termios
+      compat: add tty_set_termios only for kernel >= 2.6.27
+      compat: backport netdev_refcnt_read.
+      compat: add support for kernel 2.6.39
+      compat: fix build for kernel < 2.6.29
+      compat: semaphore.h mpoved from asm/ to linux/
+
+Luis R. Rodriguez (1):
+      compat: backport IRQ namespace cleanup
+
+Vasanthakumar Thiagarajan (1):
+      compat: Define usleep_range(min, max) as msleep(max/1000) for <2.6.36
+
+Updates from the compat-wireless.git project:
+=============================================
+
+git shortlog linux-2.6.38.y..linux-2.6.39.y
+
+David Ward (1):
+      compat-wireless: fix driver-select for iwl3945/iwlagn
+
+Greg Whiteley (1):
+      compat-wireless: rt2800pci (and rt2x00pci) don't unload on 'make unload'
+
+Hauke Mehrtens (22):
+      compat-wireless: adapt chamhes in brcm80211
+      compat-wireless: remove max_brightness
+      compat-wireless: remove compat for threaded_irq in rt2x00
+      compat-wireless: backport of alloc_ordered_workqueue into compat.git
+      compat-wireless: make patches apply again
+      compat-wireless: brcm80211 adapt changes in mac80211
+      compat-wireless: build zd1211rw only for kernel >= 2.6.29
+      compat-wireless: activate BRCMFMAC
+      compat-wireless: rename some config options
+      compat-wireless: backport pm ops for atlx
+      compat-wireless: some updates to bluetooth patch
+      compat-wireless: brcm80211 fix is in upstream now
+      compat-wireless: Add drivers/net/wireless/rtlwifi/rtl8192c
+      compat-wireless: generate CONFIG_COMPAT_KERNEL_39
+      compat-wireless: build ath9k common when no pci is available
+      compat-wireless: updates needed for iwlwifi split
+      compat-wireless: add rtl8192cu
+      compat-wireless: some minor updates for config.mk
+      compat-wireless: change number of patch:
+      compat-wireless: do not set blink_set for kernel <= 2.6.24
+      compat-wireless: backport threaded irq for wl12xx_spi
+      compat-wireless: fix compile warning for wl12xx
+
+Johannes Berg (1):
+      fix Intel driver-select, make it iwlagn only for now
+
+Luis R. Rodriguez (28):
+      compat-wireless: refresh patches
+      compat-wireless: fix stable pending tag mismatch output
+      compat-wireless: skip directory if patches directory is empty
+      compat-wireless: fix disable_bt
+      compat-wireless: fix intel drivers on driver-select
+      compat-wireless: fix gen-stable-release.sh for git tree updates
+      compat-wireless: refresh patches
+      compat-wireless: remove
+crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
+      compat-wireless: fix packet log patch to apply
+      compat-wireless: refresh crap patches
+      compat-wireless: remove ath3k bt workaround
+      compat-wireless: refresh patches for 2.6.39-rc1
+      compat-wireless: refresh patches for v2.6.39-rc1
+      compat-wireless: suck out pending-stable patches from linux-next
+      compat-wireless: fix compilation warning for wl12xx
+      compat-wireless: fix usb makefile
+      compat-wireless: refresh patches for 2.6.39-rc6
+      compat-wireless: remove some already applied pending-stable patches
+      compat-wireless: update pending stable fixes
+      compat-wireless: add long range pending fix when using RTS / CTS
+with ath9k
+      compat-wireless: refresh patches for 2.6.39 final
+      compat-wireless: backport pending-stable
+ath9k-Fix-drain-txq-failure-in-flush.patch
+      compat-wireless: backport
+ath9k-avoid-enabling-interrupts-while-processing-rx.patch
+      compat-wireless: backport
+rtlwifi-rtl8192c-common-rtl8192ce-Fix-for-HT40-regre.patch
+      compat-wireless: remove a linux-next-pending ath9k patc
+      compat-wireless: add cherry picked:
+ath9k-use-PS-wakeup-before-REG_READ.patch
+      compat-wireless: clarify reason for cherry picked file
+      compat-wireless: fix the cherry pick from applying
