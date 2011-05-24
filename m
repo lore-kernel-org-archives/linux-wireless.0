@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:56100 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935420Ab1ETMDW (ORCPT
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:48861 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753331Ab1EXPMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 08:03:22 -0400
-Subject: Re: [RFC/PATCH 03/13] net: wl12xx: remove some unnecessary prints
-From: Luciano Coelho <coelho@ti.com>
-To: Felipe Balbi <balbi@ti.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1305321990-22041-4-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
-	 <1305321990-22041-4-git-send-email-balbi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 May 2011 15:03:18 +0300
-Message-ID: <1305892998.12586.1664.camel@cumari> (sfid-20110520_140341_247264_D293B3A5)
-Mime-Version: 1.0
+	Tue, 24 May 2011 11:12:18 -0400
+From: Tao Ma <tm@tao.ma>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: Default to 'n' for 2 new added devices in Kconfig.
+Date: Tue, 24 May 2011 23:11:56 +0800
+Message-Id: <1306249916-6638-1-git-send-email-tm@tao.ma> (sfid-20110524_171245_254728_54F9DE6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-05-14 at 00:26 +0300, Felipe Balbi wrote:
-> Those have little value. Remove those to make
-> the driver less noisy.
-> 
-> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> ---
+From: Tao Ma <boyu.mt@taobao.com>
 
-Applied also this one.  Thanks!
+We make oldconfig every time when a new kernel arrives, but
+if we don't have such a device(I guess this is the most common
+case for a new device), the default value should be 'n' so
+that the kernel size we build doesn't grow up too much quickly.
+For anyone who has the device, it is OK for them to turn it on
+by themselves.
 
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig |    1 +
+ drivers/net/wireless/rt2x00/Kconfig    |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index d9ff841..2548f47 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -25,6 +25,7 @@ config ATH9K
+ 
+ config ATH9K_PCI
+ 	bool "Atheros ath9k PCI/PCIe bus support"
++	default n
+ 	depends on ATH9K && PCI
+ 	default PCI
+ 	---help---
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 9def1e5..677abc9 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -166,7 +166,7 @@ config RT2800USB_RT35XX
+ config RT2800USB_RT53XX
+        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
+        depends on EXPERIMENTAL
+-       default y
++       default n
+        ---help---
+          This adds support for rt53xx wireless chipset family to the
+          rt2800pci driver.
 -- 
-Cheers,
-Luca.
+1.7.4
 
