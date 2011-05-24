@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:39679 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab1EGUBP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57808 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072Ab1EXPFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 16:01:15 -0400
-Received: by gwaa18 with SMTP id a18so1490103gwa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 May 2011 13:01:14 -0700 (PDT)
-Date: Sat, 7 May 2011 16:01:11 -0400
-From: Tom Horsley <horsley1953@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: r8192cu AP mode?
-Message-ID: <20110507160111.0e4b289a@zooty> (sfid-20110507_220130_840921_BCA2CA70)
-In-Reply-To: <20110506140152.60c9da93@tomh>
-References: <20110506081356.08ac93a8@tomh>
-	<4DC40CEB.5010107@lwfinger.net>
-	<20110506131612.7a6d40cb@tomh>
-	<4DC4306F.20104@lwfinger.net>
-	<20110506140152.60c9da93@tomh>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 May 2011 11:05:51 -0400
+Message-ID: <4DDBC947.4020801@candelatech.com> (sfid-20110524_170555_109398_C4DB9A06)
+Date: Tue, 24 May 2011 08:05:43 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Brian Prodoehl <bprodoehl@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
+References: <4DD6E9B5.3020905@candelatech.com>	<BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>	<4DDA913B.1060002@candelatech.com>	<4DDAA9ED.1050606@candelatech.com>	<4DDAACF3.3050705@candelatech.com>	<BANLkTikvwq+0GYDxgEXNfhkcntjmpOdpPQ@mail.gmail.com> <BANLkTinWnLryxtqTF3b0rr0f8VO=Y2Jkmw@mail.gmail.com>
+In-Reply-To: <BANLkTinWnLryxtqTF3b0rr0f8VO=Y2Jkmw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 May 2011 14:01:52 -0400
-Tom Horsley wrote:
+On 05/24/2011 07:08 AM, Mohammed Shafi wrote:
+> On Tue, May 24, 2011 at 6:30 PM, Brian Prodoehl<bprodoehl@gmail.com>  wrote:
 
-> So I haven't gotten far enough to worry about DHCP or
-> NAT or anything yet - I only stay connected for a second. Perhaps
-> I should first try something less complicated than WPA2
-> authentication, but I won't get a chance to fool with this
-> more till tomorrow probably. It's looking a lot better now
-> that it did earlier though.
+>> This is running 2.6.37 with compat-wireless from sometime in March,
+>> probably.  I'll try with 2.6.39 and latest compat-wireless when I get
+>> a chance.
+>>
+>
+> I got the similar result with latest wireless testing
 
-Well, I did try it with no encryption and it works better.
-Instead of being disconnected every couple of seconds,
-I last around ten or twenty seconds now and am able to
-use the web browser and wot-not during the time I am
-connected, so it is kind of working.
+I'm running wireless-testing as well.  I think the code is probably correct,
+just that the NIC I bought happened to be programmed for a different regdomain
+than 0x0.
 
-I've updated my web page with all my current experiences:
+Thanks,
+Ben
 
-http://home.comcast.net/~tomhorsley/hardware/rtl8192cu/rtl8192cu.html
-
-search for "Day three" to get down to the latest update.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
