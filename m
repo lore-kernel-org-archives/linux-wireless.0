@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754725Ab1E0QIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 12:08:01 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/10] iwlagn: solve sparse warning
-Date: Fri, 27 May 2011 08:40:27 -0700
-Message-Id: <1306510833-32049-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180806_472782_4457CFF9)
-In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45830 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754975Ab1EXQLJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 12:11:09 -0400
+Received: by fxm17 with SMTP id 17so4767293fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 09:11:08 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Marius Ladegaard Meyer <marius.l.meyer@gmail.com>
+Subject: Re: carl9170 fw 1.9.3 on the binary archive page
+Date: Tue, 24 May 2011 18:11:04 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTinenbgnE0c8ZQh2wfBOjWNc=T++Dw@mail.gmail.com>
+In-Reply-To: <BANLkTinenbgnE0c8ZQh2wfBOjWNc=T++Dw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201105241811.05128.chunkeey@googlemail.com> (sfid-20110524_181113_198702_4099DBE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hello,
 
-Remove local variable that was shadowing another one
-sta_priv hasn't changed since the beginning of the function, so don't define
-another pointer with the same name to the same variable
+On Tuesday 24 May 2011 14:39:16 Marius Ladegaard Meyer wrote:
+> I am currently maintaining packages in the AUR of Arch Linux for the
+> carl9170 driver and firmware. For the firmware package I use the binary
+> firmware files available at
+> http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/fw/ I see in the
+> git repo of carl9170fw that version 1.9.3 was tagged two months ago, and I
+> would like to provide the newest version to Arch users. Would it be possible
+> for you to upload a binary to the aforementioned page please?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+making new releases is not the issue. But "testing" everything in
+every possible combination in different environments, with
+different configurations and different devices is a huge task...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e027f99..58ed9a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2711,12 +2711,9 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			ret = 0;
- 		if (priv->cfg->ht_params &&
- 		    priv->cfg->ht_params->use_rts_for_aggregation) {
--			struct iwl_station_priv *sta_priv =
--				(void *) sta->drv_priv;
- 			/*
- 			 * switch off RTS/CTS if it was previously enabled
- 			 */
--
- 			sta_priv->lq_sta.lq.general_params.flags &=
- 				~LINK_QUAL_FLAGS_SET_STA_TLC_RTS_MSK;
- 			iwl_send_lq_cmd(priv, iwl_rxon_ctx_from_vif(vif),
--- 
-1.7.0.4
+But I'm always baffled by distributions.
+Why do they insist on having a binary firmware image, when
+they can build one from scratch as well... After all, they do
+so for every other application/packet, right?
 
+Regards,
+	Chr
