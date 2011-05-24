@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:41036 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755375Ab1EMPt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 11:49:57 -0400
-Received: from zenon.in.qult.net ([192.168.128.3])
-	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <i@lri.fr>)
-	id 1QKuch-0004AL-Rk
-	for linux-wireless@vger.kernel.org; Fri, 13 May 2011 17:49:51 +0200
-Received: from ig by zenon.in.qult.net with local (Exim 4.74)
-	(envelope-from <i@lri.fr>)
-	id 1QKucg-0003gd-SG
-	for linux-wireless@vger.kernel.org; Fri, 13 May 2011 17:49:50 +0200
-Date: Fri, 13 May 2011 17:49:50 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Compat-wireless release for 2011-05-12 is baked
-Message-ID: <20110513154950.GA14012@zenon.in.qult.net> (sfid-20110513_175001_066913_5C1516DC)
-References: <20110512190452.BDC8D40EC3@repository3.orbit-lab.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110512190452.BDC8D40EC3@repository3.orbit-lab.org>
+Received: from science.horizon.com ([71.41.210.146]:65455 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932730Ab1EXWw0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 18:52:26 -0400
+Date: 24 May 2011 18:52:24 -0400
+Message-ID: <20110524225224.32163.qmail@science.horizon.com> (sfid-20110525_005243_847188_B1CEB153)
+From: "George Spelvin" <linux@horizon.com>
+To: akpm@linux-foundation.org, arend@broadcom.com
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8 algorithm
+Cc: error27@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux@horizon.com,
+	linville@tuxdriver.com
+In-Reply-To: <1306268601-10729-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 12, 2011 at 03:04:52PM -0400, thus spake Compat-wireless cronjob account:
-> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->  + a7f3dae...9bb2a3f akpm-end   -> origin/akpm-end  (forced update)
->    54b3335..9f381a6  akpm-start -> origin/akpm-start
->    33f3237..4e31af7  history    -> origin/history
->  + 9835c81...b9aec9c master     -> origin/master  (forced update)
->    54b3335..9f381a6  stable     -> origin/stable
->  * [new tag]         next-20110512 -> next-20110512
-> 
-> compat-wireless code metrics
-> 
->     821916 - Total upstream lines of code being pulled
+> V3:
+> - added function crc8_create().
+> - crc8_create() takes polynomial and bit direction as parameters.
 
-Obviously, the corresponding tarball is not (yet?) in the compat-wireless download
-directory. :/
+May I suggest that crc8_create is A Stupid Idea.  Since the bit order
+(and polynomial) will always be compile-time constants, just let the
+call sites call crc8_create_[lm]sb_first() directly.
 
--- 
-To err is human, to moo bovine.
+That way there's no need for the enum, and specifying something
+other than lsb_first and msb_first is a compile-time error rather than
+a run-time one.
+
+It might be nice to add some const declarations, and use size_t
+for the buffer length:
+u8 crc8(u8 const *table, u8 const *pdata, size_t nbytes, u8 crc)
+or
+u8 crc8(u8 const table[256], u8 const *pdata, size_t nbytes, u8 crc)
+
+
+Style points you might consider, but I do not consider essential:
+
+Personally, when a function parameter is a pointer to
+a fixed-size array, I prefer to declare it as
+	void crc8_create_lsb_first(u8 table[256], u8 poly)
+for better documentation, but that's your choice.
+
+The CRC8_GOOD_VALUE could be explained if you like.  "If a CRC is inverted
+before transmission, the CRC computed over the while (message+crc)
+is _table[x], when x is the bit pattern of the modification (almost
+always 0xff)."
+
+Thanks!
