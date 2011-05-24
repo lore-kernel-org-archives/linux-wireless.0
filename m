@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46162 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755023Ab1EDTFD (ORCPT
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:60224 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662Ab1EXQuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 15:05:03 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 44E5A540157
-	for <linux-wireless@vger.kernel.org>; Wed,  4 May 2011 15:10:31 -0400 (EDT)
-Subject: Compat-wireless release for 2011-05-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110504190502.771B840EC5@repository3.orbit-lab.org> (sfid-20110504_210514_360503_28A9D8E1)
-Date: Wed,  4 May 2011 15:05:02 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 24 May 2011 12:50:54 -0400
+Subject: Re: [iwl4965] Microcode SW error detected
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110524070941.GA2189@redhat.com>
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+	 <20110524070941.GA2189@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 May 2011 18:50:53 +0200
+Message-ID: <1306255853.12267.14.camel@x61.thuisdomein> (sfid-20110524_185058_157074_9942A94B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 4333b4b...b7e57bf akpm-end   -> origin/akpm-end  (forced update)
-   adadfe4..609cfda  akpm-start -> origin/akpm-start
-   8748375..d30f125  history    -> origin/history
- + 295f62d...5c3d629 master     -> origin/master  (forced update)
-   adadfe4..609cfda  stable     -> origin/stable
- * [new tag]         next-20110504 -> next-20110504
+On Tue, 2011-05-24 at 09:09 +0200, Stanislaw Gruszka wrote:
+> What is your configuration (mode,
+> encryption, do you use wpa_supplicant or NetworkManager, which version,
+> etc ...)?
 
-compat-wireless code metrics
+0) Mode as is displayed in iwconfig output? That is "Managed".
 
-    814910 - Total upstream lines of code being pulled
-      2355 - backport code changes
-      2048 - backport code additions
-       307 - backport code deletions
-      8033 - backport from compat module
-     10388 - total backport code
-    1.2747 - % of code consists of backport work
+1) Encryption is wep (so, no wpa_supplicant).
+
+2) Currently using NetworkManager-0.8.4-1.fc14.x86_64.
+
+> I will try to reproduce locally. If I'll be not able to reproduce,
+> I'll ask you for debug logs on broken, and working (i.e. 2.6.38) version
+> for compare.
+
+3) Sure, no problem. But isn't 2.6.38 from before the iwlegacy split?
+
+
+Paul Bolle
+
