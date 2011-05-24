@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59054 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935738Ab1ETMWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2011 08:22:51 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 May 2011 05:22:20 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH 5/6] ath9k: set 40 Mhz rate only if hw is configured in ht40
-Date: Fri, 20 May 2011 17:52:14 +0530
-Message-ID: <1305894135-14036-5-git-send-email-rmanoharan@atheros.com> (sfid-20110520_142255_268500_00AC1EB2)
-In-Reply-To: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:49204 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758043Ab1EXBPK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 May 2011 21:15:10 -0400
+Received: by yia27 with SMTP id 27so2379741yia.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 18:15:09 -0700 (PDT)
+Message-ID: <4DDB069A.9040804@lwfinger.net> (sfid-20110524_031518_798856_642DA512)
+Date: Mon, 23 May 2011 20:15:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Greg KH <greg@kroah.com>, John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192c-common: rtl8192ce: Fix for HT40 regression
+References: <4dce9c85.8lZEqlxFlQS542Cf%Larry.Finger@lwfinger.net> <BANLkTikWQki-_Ec3cjd8U8BNzbeBoh_jAw@mail.gmail.com>
+In-Reply-To: <BANLkTikWQki-_Ec3cjd8U8BNzbeBoh_jAw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever there is a channel width change from 40 Mhz to 20 Mhz,
-the hardware is reconfigured to ht20. Meantime before doing
-the rate control updation, the packets are being transmitted are
-selected rate with IEEE80211_TX_RC_40_MHZ_WIDTH.
+On 05/23/2011 07:11 PM, Luis R. Rodriguez wrote:
+> On Sat, May 14, 2011 at 8:15 AM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>> The changes that were made to rtl8192ce when rtl8192cu was added broke
+>> HT40. The errors included a typo in rtlwifi, a missing routine in
+>> rtl8192ce and a missing callback of that routine in rtl8192c-common.
+>>
+>> This patch fixes the regression reported in Bug #35082.
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> John,
+>>
+>> I know this is very late, but was just discovered. If it does not make
+>> 2.6.39, then it needs to be Cc'd to stable for .39.
+>>
+>> Thanks,
+>>
+>> Larry
+>
+> But in order to be applicable to 2.6.39 it required some slight
+> modifications, namely only the first two hunks are applicable and the
+> second hunk required a change. You can get my own version of the
+> backport here, when it comes time to merge into 2.6.39.
+>
+> http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=commitdiff;h=3fdb69033149ca19791eb16c23be976f00f8daaa
 
-While transmitting ht40 rate packets in ht20 mode is causing
-baseband panic with AR9003 based chips.
+Luis,
 
-==== BB update: BB status=0x02001109 ====
-ath: ** BB state: wd=1 det=1 rdar=0 rOFDM=1 rCCK=1 tOFDM=0 tCCK=0 agc=2
-src=0 **
-ath: ** BB WD cntl: cntl1=0xffff0085 cntl2=0x00000004 **
-ath: ** BB mode: BB_gen_controls=0x000033c0 **
-ath: ** BB busy times: rx_clear=99%, rx_frame=0%, tx_frame=0% **
-ath: ==== BB update: done ====
+Thanks,
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 1754221..ba7f36a 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -689,7 +689,8 @@ static void ath_rc_rate_set_series(const struct ath_rate_table *rate_table,
- 
- 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy)) {
- 		rate->flags |= IEEE80211_TX_RC_MCS;
--		if (WLAN_RC_PHY_40(rate_table->info[rix].phy))
-+		if (WLAN_RC_PHY_40(rate_table->info[rix].phy) &&
-+		    conf_is_ht40(&txrc->hw->conf))
- 			rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 		if (WLAN_RC_PHY_SGI(rate_table->info[rix].phy))
- 			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
--- 
-1.7.5.1
-
+Larry
