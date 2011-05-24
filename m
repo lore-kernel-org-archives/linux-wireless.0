@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45611 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778Ab1EFWJ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:09:57 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p46M9vlc011788
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 6 May 2011 15:09:57 -0700
-Message-ID: <4DC471B5.30609@candelatech.com> (sfid-20110507_001019_596886_83D01497)
-Date: Fri, 06 May 2011 15:09:57 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:21173 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752504Ab1EXGbh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2011 02:31:37 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 23:31:05 -0700
+Message-ID: <4DDB50B1.9050701@atheros.com> (sfid-20110524_083139_855873_E61B6DD0)
+Date: Tue, 24 May 2011 12:01:13 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k lockdep warning in 39-rc6+
-References: <4DC47158.1000401@candelatech.com>
-In-Reply-To: <4DC47158.1000401@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: wake up chip before initializing PAPRD table
+References: <1306213263-4028-1-git-send-email-mshajakhan@atheros.com> <20110524061955.GA5175@ath9k-test>
+In-Reply-To: <20110524061955.GA5175@ath9k-test>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/06/2011 03:08 PM, Ben Greear wrote:
-> The main problem with this is that it disables lockdep
-> after this...
+On Tuesday 24 May 2011 11:50 AM, Senthilkumar Balasubramanian wrote:
+> On Tue, May 24, 2011 at 10:31:03AM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> in PAPRD table initialization path we have register read. so make sure
+>> that the chip is awake. currently PAPRD is disabled.
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/main.c |    3 ++-
+>>   1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index a198ee3..af8aa9e 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -394,6 +394,8 @@ void ath_paprd_calibrate(struct work_struct *work)
+>>   	if (!caldata)
+>>   		return;
+>>
+>> +	ath9k_ps_wakeup(sc);
+>> +
+>>   	if (ar9003_paprd_init_table(ah)<  0)
+>>   		return;
+> Have you tested power save with this patch? ps_restore is missing here...
+
+Senthil, I will look into that.
+
+>>
+>> @@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+>>   	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+>>   	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+>>
+>> -	ath9k_ps_wakeup(sc);
+>>   	for (chain = 0; chain<  AR9300_MAX_CHAINS; chain++) {
+>>   		if (!(common->tx_chainmask&  BIT(chain)))
+>>   			continue;
+>> --
+>> 1.7.0.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> .
 >
-> lanforge-D0-20 login: INFO: trying to register non-static key.
-> the code is fine but needs lockdep annotation.
-> turning off the locking correctness validator.
-> Pid: 1934, comm: net.hotplug Not tainted 2.6.39-rc6-wlc3+ #6
-> Call Trace:
-> [<c0448994>] register_lock_class+0x102/0x277
-> [<c044a4d0>] __lock_acquire+0x8e/0xb78
-> [<c0625bf3>] ? __ata_qc_complete+0xca/0xcf
-> [<c062767a>] ? ata_qc_complete+0x15d/0x163
-> [<c06353c8>] ? ata_hsm_qc_complete+0x9c/0xb5
-> [<c0635954>] ? ata_sff_hsm_move+0x573/0x592
-> [<c044b016>] lock_acquire+0x5c/0x70
-> [<f9c2fe71>] ? ath5k_set_current_imask+0x21/0x62 [ath5k]
-> [<c075d798>] _raw_spin_lock_irqsave+0x46/0x56
-> [<f9c2fe71>] ? ath5k_set_current_imask+0x21/0x62 [ath5k]
-> [<f9c2fe71>] ath5k_set_current_imask+0x21/0x62 [ath5k]
-> [<f9c30158>] ath5k_intr+0x2a6/0x3e5 [ath5k]
-> [<c0468b0f>] handle_irq_event_percpu+0x24/0x123
-> [<c0468c3a>] handle_irq_event+0x2c/0x43
-> [<c046a37f>] ? handle_edge_irq+0xaa/0xaa
-> [<c046a3e9>] handle_fasteoi_irq+0x6a/0x88
-> <IRQ> [<c040315f>] ? do_IRQ+0x34/0x95
-> [<c0449990>] ? trace_hardirqs_on_caller+0xfe/0x11f
-> [<c076202e>] ? common_interrupt+0x2e/0x40
->
->
-
-Hrm, may be worse..maybe this is the cause of the deadlock
-I'm seeing.  This printed out shortly after:
-
-
-BUG: spinlock lockup on CPU#0, net.hotplug/1934, f5acc470
-Pid: 1934, comm: net.hotplug Not tainted 2.6.39-rc6-wlc3+ #6
-Call Trace:
-  [<c057ecf7>] do_raw_spin_lock+0xea/0x108
-  [<c075d79f>] _raw_spin_lock_irqsave+0x4d/0x56
-  [<f9c2fe71>] ? ath5k_set_current_imask+0x21/0x62 [ath5k]
-  [<f9c2fe71>] ath5k_set_current_imask+0x21/0x62 [ath5k]
-  [<f9c30158>] ath5k_intr+0x2a6/0x3e5 [ath5k]
-  [<c0468b0f>] handle_irq_event_percpu+0x24/0x123
-  [<c0468c3a>] handle_irq_event+0x2c/0x43
-  [<c046a37f>] ? handle_edge_irq+0xaa/0xaa
-  [<c046a3e9>] handle_fasteoi_irq+0x6a/0x88
-  <IRQ>  [<c040315f>] ? do_IRQ+0x34/0x95
-  [<c0449990>] ? trace_hardirqs_on_caller+0xfe/0x11f
-  [<c076202e>] ? common_interrupt+0x2e/0x40
-
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+thanks,
+shafi
