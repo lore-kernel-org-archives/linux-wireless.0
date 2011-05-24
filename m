@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59057 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757792Ab1EXBhe (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45223 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756110Ab1EXMs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 21:37:34 -0400
-Date: Mon, 23 May 2011 20:37:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192se: Use write barrier when assigning
- ownership
-Message-ID: <4ddb0bdb.qErEkJae92tliW/d%Larry.Finger@lwfinger.net> (sfid-20110524_033738_104953_1D806E73)
+	Tue, 24 May 2011 08:48:56 -0400
+Received: by iyb14 with SMTP id 14so5214118iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 05:48:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 24 May 2011 05:48:36 -0700
+Message-ID: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> (sfid-20110524_144900_493095_DB10C2AE)
+Subject: Initial automatic channel selection implementation
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com
+Cc: Matt Smith <Matt.Smith@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As noted by Mike McCormack <mikem@ring3k.org> for rtl8192ce, make sure
-all updates to a descriptor are flushed to memory before assigning ownship
-to hardware.
+I'm looking to implement some form of Automatic Channel Selection on
+Linux. What this would do is review all known channels where we can
+initiate radiation on (beaconing modes of operation) and then pick the
+best one based on some heuristics. Below are 3 stages I believe we can
+take to start supporting this.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+I - Simple solution:
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -873,6 +873,7 @@ void rtl92se_tx_fill_cmddesc(struct ieee
- 		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
- 		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, cpu_to_le32(mapping));
- 
-+		wmb();
- 		SET_TX_DESC_OWN(pdesc, 1);
- 	} else { /* H2C Command Desc format (Host TXCMD) */
- 		/* 92SE must set as 1 for firmware download HW DMA error */
-@@ -891,6 +892,7 @@ void rtl92se_tx_fill_cmddesc(struct ieee
- 		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
- 		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, cpu_to_le32(mapping));
- 
-+		wmb();
- 		SET_TX_DESC_OWN(pdesc, 1);
- 
- 	}
-@@ -901,6 +903,7 @@ void rtl92se_set_desc(u8 *pdesc, bool is
- 	if (istx == true) {
- 		switch (desc_name) {
- 		case HW_DESC_OWN:
-+			wmb();
- 			SET_TX_DESC_OWN(pdesc, 1);
- 			break;
- 		case HW_DESC_TX_NEXTDESC_ADDR:
-@@ -914,6 +917,7 @@ void rtl92se_set_desc(u8 *pdesc, bool is
- 	} else {
- 		switch (desc_name) {
- 		case HW_DESC_RXOWN:
-+			wmb();
- 			SET_RX_STATUS_DESC_OWN(pdesc, 1);
- 			break;
- 		case HW_DESC_RXBUFF_ADDR:
+  * Look for the frequency in a band that has the less amount of BSSes
+with the lowest link quality
+
+II - Load check:
+
+  * In addition to the above take into consideration some metric for
+load on the channel: frame count observed
+
+III - Spectral / FFT data scan:
+
+  * Do a spectral scan on each supported frequency and based on the
+FFT of the data choose the channel which has the less amount of
+interference. This requires FFT data to be sent from each driver to
+userspace, userspace to parse it based on the chipset, and to classify
+the data into some generic form.
+
+The first solution should be a quick hack and I can likely implement a
+proof of concept rather quickly with iw based on scan results. Would
+likely be a very poor algorithm though. For load check I'd like to
+hear ideas on what we can use, I was thinking simply using a monitor
+interface to do a frame count over time on each channel and use this
+information in combination with the BSS / link quality information
+from phase I to form a decision. The first two should be usable with
+any 802.11 mac80211 driver.
+
+The Spectral stuff requires both driver enhancements and some nl80211
+changes which enables drivers to export some vendor specific blob
+which userspace can parse and use for analysis. This is the ideal
+solution but requires quite a bit of work and it the hooks will be
+vendor specific both for kernel / processing of the FFT binary data.
+Not all devices will support this.
+
+This is the roadmap I'll follow, let me know if you have any other suggestions.
+
+  Luis
