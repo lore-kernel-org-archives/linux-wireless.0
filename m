@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58927 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483Ab1EJEkk (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:4413 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750982Ab1EXKlF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 00:40:40 -0400
-Subject: [PATCH 2/2] ath6kl: provide hardware version to userspace
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@adurom.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Tue, 10 May 2011 07:40:34 +0300
-Message-ID: <20110510044034.29589.95929.stgit@localhost6.localdomain6> (sfid-20110510_064045_860605_87234314)
-In-Reply-To: <20110510044023.29589.38450.stgit@localhost6.localdomain6>
-References: <20110510044023.29589.38450.stgit@localhost6.localdomain6>
+	Tue, 24 May 2011 06:41:05 -0400
+Message-ID: <4DDB8B32.9050809@broadcom.com> (sfid-20110524_124125_499048_77E8AE85)
+Date: Tue, 24 May 2011 12:40:50 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Alan Cox" <alan@lxorguk.ukuu.org.uk>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Dan Carpenter" <error27@gmail.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306010973-5625-1-git-send-email-arend@broadcom.com>
+ <20110522122325.108b1c86@lxorguk.ukuu.org.uk>
+ <4DD905CC.8040407@broadcom.com>
+ <20110522151959.7fd6e87e@lxorguk.ukuu.org.uk>
+ <4DDB622B.1050005@broadcom.com>
+ <20110524104404.336c765f@lxorguk.ukuu.org.uk>
+ <4DDB81FD.2020903@broadcom.com>
+ <BANLkTinDvRx67vz8TfqPGod2X9QSctH0Zg@mail.gmail.com>
+In-Reply-To: <BANLkTinDvRx67vz8TfqPGod2X9QSctH0Zg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@atheros.com>
+On 05/24/2011 12:25 PM, Rafał Miłecki wrote:
+> I'm out of topic, but you can take a look at drivers/ssb/pci.c
+>
+> We implement crc checksum here as well. The same will be soon needed
+> for bcma (i've already done this locally).
+>
 
-Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Hi Rafał,
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 513f205..48dd9e3 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1732,6 +1732,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
- 
-         ar->arVersion.target_ver = targ_info.target_ver;
-         ar->arTargetType = targ_info.target_type;
-+	wdev->wiphy->hw_version = targ_info.target_ver;
-     }
- 
-     r = ar6000_configure_target(ar);
+Couple of days ago I posted a patch for comments. In the commit message 
+I referred to ssb having the same algorithm (identical crc table) as 
+brcm80211. One of the reason for moving it to lib directory in the 
+kernel tree. brcm80211, ssb, and bcma could use it.
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
