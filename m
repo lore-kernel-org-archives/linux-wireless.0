@@ -1,80 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:56225 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab1EJS53 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:65472 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754346Ab1EYT2B convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 14:57:29 -0400
+	Wed, 25 May 2011 15:28:01 -0400
+Received: by iyb14 with SMTP id 14so26442iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 12:28:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-References: <BANLkTin=cU_kCSFfznna69pkgTsSNVjJgw@mail.gmail.com>
-Date: Tue, 10 May 2011 20:57:28 +0200
-Message-ID: <BANLkTi=Lo4jRWbHhMLkJmOfg09s+ebDjcw@mail.gmail.com> (sfid-20110510_205745_267926_DFDAF9FE)
-Subject: [hrtimers] Re: Regression affecting b43 LP-PHY card
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Juan Carlos Romero <juancarlos.romero@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Greear <greearb@candelatech.com>,
-	John Stultz <john.stultz@linaro.org>,
-	Jamie Lokier <jamie@shareable.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Alexander Shishkin <virtuoso@slind.org>,
-	=?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+ <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+ <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com>
+ <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
+ <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 25 May 2011 12:27:41 -0700
+Message-ID: <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com> (sfid-20110525_212806_880322_99CC5566)
+Subject: Re: Initial automatic channel selection implementation
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 10 maja 2011 00:52 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> Juan owns Lenovo affected by well-known LP-PHY DMA errors. His testing
-> procedure is following:
-> modprobe wl; connect; download sth small; rmmod wl;
-> modprobe b43; download 2GB
+On Wed, May 25, 2011 at 12:24 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, May 25, 2011 at 12:20 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2011-05-25 5:01 PM, Luis R. Rodriguez wrote:
+>>>
+>>> On Wed, May 25, 2011 at 7:45 AM, Helmut Schaa
+>>> <helmut.schaa@googlemail.com>  wrote:
+>>>>
+>>>>  On Wed, May 25, 2011 at 4:37 PM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>>  wrote:
+>>>>>
+>>>>>  On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
+>>>>>  <helmut.schaa@googlemail.com>  wrote:
+>>>>>>
+>>>>>>  On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>>>>  wrote:
+>>>>>>>
+>>>>>>>  Yes, thanks this is a lot of work already done. Now we just need a
+>>>>>>>  basic algorithm to parse this, quantify how ideal this channel is and
+>>>>>>>  then spit out a desired optimal channel.
+>>>>>>
+>>>>>>  That's what I've hacked some time ago (in form of the attached _ugly_
+>>>>>> shell
+>>>>>>  script that does auto channel selection with rt2x00, not sure if it
+>>>>>> works
+>>>>>>  correct with other drivers as the survey dump differs somehow between
+>>>>>>  rt2x00, ath5k and ath9k, and it only does channel 1-11):
+>>>>>>
+>>>>>>  - Iterate over all channels and stay on each channel for some time
+>>>>>
+>>>>>  Nice, yeah I was thinking of using the offchannel operation if we want
+>>>>>  to spend more time there for inspection and if associated. For first
+>>>>>  iteration it should be possible to just move around. In fact for AP
+>>>>>  purposes I suppose one will want to just start AP mode ASAP and then
+>>>>>  later do offchannel operations to do the inspection on the ideal
+>>>>>  channel. Otherwise we sit there idle until we complete the Automatic
+>>>>>  Channel Selection thingy.
+>>>>
+>>>>  Correct, especially if we also consider 5Ghz channels. Offchannel
+>>>> operations
+>>>>  would be nice but how can we ensure AP mode while being offchannel?
+>>>
+>>> Notification of absence.
+>>>
+>>>>>>  - Store busy time stats for each channel
+>>>>>>  - Choose the channel with the lowest busy time (and on 2.4Ghz also
+>>>>>>   check the busy times on adjacent channels)
+>>>>>
+>>>>>  So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
+>>>>>  we should skip that time from the busy time, otherwise the "busy" time
+>>>>>  includes time we induced on TX'ing or RX'ing ourselves. So I was
+>>>>>  thinking of using the:
+>>>>>
+>>>>>   (active time - rx time - tx time)  / busy time
+>>>>
+>>>>  Looks good ;) just one problem from a rt2x00 POV: We can't report rx/tx
+>>>> busy
+>>>>  time separately, we can only advice the hw to include or exclude rx/tx
+>>>> time
+>>>>  from the busy time statistics.
+>>>
+>>> Doh, I see.. well in order for the above math to be useful we'd have
+>>> to be consistent across drivers. What is being done by rt2x00 right
+>>> now? If the later then the math would still work, otherwise then we'd
+>>> need to adjust.
+>>
+>> Excluding rx time isn't even a good idea, since it makes no distinction
+>> between local BSS or other activity in the area.
 >
-> When working on DMA errors we discovered that wireless-testing is not
-> working well for him. Even after performing above procedure his
-> machine disconnects quickly and he is not able to reconnect. We tested
-> 2.6.39-rc6 from tarball and it was working fine. I'd like to highlight
-> here, that we were switching between mainline and wireless-testing few
-> times. It is not a random issue.
->
-> I suspected this regression could be caused by my recent ssb patches.
-> So I reverted all of them but this didn't help.
->
-> In this situation we decided to bisect. I was a little afraid of last
-> merges so we took older 2.6.38 as GOOD (we tested this twice) and
-> wireless-testing commit before my ssb changes as BAD. Today Juan
-> finished bisecting kernel:
-> http://pastebin.com/HSKbRzpB
->
-> According to his bisection the first bad commit is
-> e06383db9ec591696a06654257474b85bac1f8cb [0]:
-> hrtimers: extend hrtimer base code to handle more then 2 clockids
->
-> Does it make any sense to you? Could this be some timing issue?
->
-> It was too late to test this today, we (Juan) will work on this
-> tomorrow. It's impossible to revert this commit from HEAD of
-> wireless-testing, so my idea is to checkout commit, test, revert,
-> test.
->
-> Did anyone else experience any similar problems with latest wireless-testing?
->
->
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e06383db9ec591696a06654257474b85bac1f8cb
+> What if we do an offchannel operation?
 
-Today Juan checkouted commit e06383db9ec591696a06654257474b85bac1f8cb
-and tested it. He was disconnected really soon.
+Once we figure out that...
 
-Then he reverted e06383db9ec591696a06654257474b85bac1f8cb and tested
-again. Connection was stable, he downloaded 2GB file over network.
+The missing piece is how to deal with noise info here. In short the
+lower noise we have the better signal we'll get. The challenge then is
+to take into consideration the noise mathematically in such a that a
+high noise value would nullify any clean idle air time ratio
+conditions from the formula postulated before. Let me review again
+with some modifications.
 
+Active time is the time we spend on the channel, so to get an idea of
+how "busy" that channel is we have to remove the tx and rx time from
+that channel. That gives us the time we spent idle on that channel.
+Then the busy time is a subset of the entire active time but we should
+also exclude the time we spent tx'ing and rx'ing as well. We then
+have:
 
-John S.: your commit does not touch Broadcom card directly, but it
-seems it somehow affects it. I suspect there can be some timing issue.
-Do you have any idea what could it be, how can we debug this?
+ (busy time - rx time - tx time) / (active time - rx time - tx time)
 
--- 
-Rafał
+This is a bounded ratio already, given that if we spent 0 time tx'ing
+0 time rx'ing, but 10 ms on a channel, and all that time we had busy
+time as well we'd have a ratio of 10 / 10 = 1. In the best case we'd
+have  0 / 10 = 0.
+
+What I'd like to do is to affect the ratio to nullify it if the noise
+is very low on the channel. Given that noise is logarithmic we'd have
+to use a logarithmic function as well. Working on that now.
+
+  Luis
