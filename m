@@ -1,198 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4898 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758779Ab1EMKAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:15 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 25/32] staging: brcm80211: Added support to change
- roaming parameters from brcmfmac driver
-Date: Fri, 13 May 2011 11:59:45 +0200
-Message-ID: <1305280792-9475-25-git-send-email-arend@broadcom.com> (sfid-20110513_120023_788083_7A8B866C)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:34013 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab1EYUfS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 16:35:18 -0400
+Message-ID: <4DDD6801.4010100@lwfinger.net> (sfid-20110525_223542_638452_FA1AFB25)
+Date: Wed, 25 May 2011 15:35:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Dan Carpenter <error27@gmail.com>
+Subject: Re: [RFC V1] lib: cordic: add library module for cordic angle calculation
+References: <1306352426-1899-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1306352426-1899-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On 05/25/2011 02:40 PM, Arend van Spriel wrote:
+> The brcm80211 driver in the staging tree has a cordic function to
+> determine cosine and sine for a given angle. Feedback received from
+> John Linville suggested that these kind of functions should be made
+> available to others as a library function in the kernel tree.
+>
+> V1:
+> - code taken from brcm80211 driver and added kernel-doc comments.
+> - code compiled and tested for x86 architecture using brcm80211 driver.
+> - code compiled for x86_64, ARM, and MIPS architectures.
+>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: "John W. Linville"<linville@tuxdriver.com>
+> Cc: Greg Kroah-Hartman<gregkh@suse.de>
+> Cc: Dan Carpenter<error27@gmail.com>
+> Reviewed-by: Roland Vossen<rvossen@broadcom.com>
+> Reviewed-by: Henry Ptasinski<henryp@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin<frankyl@broadcom.com>
+> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+> ---
+>   include/linux/cordic.h |   48 +++++++++++++++++++++++
+>   lib/Kconfig            |    7 +++
+>   lib/Makefile           |    2 +
+>   lib/cordic.c           |   99 ++++++++++++++++++++++++++++++++++++++++++++++++
+>   4 files changed, 156 insertions(+), 0 deletions(-)
+>   create mode 100644 include/linux/cordic.h
+>   create mode 100644 lib/cordic.c
 
-'wl_dongle_roam' function moved out of conditional compilation to allow
-the fullmac driver to change FW roaming parameters
+There is a similar routine in b43, thus this library function will likely have 
+at least 2 users.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   97 ++++++++++++++--------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    4 +
- 2 files changed, 66 insertions(+), 35 deletions(-)
+> diff --git a/include/linux/cordic.h b/include/linux/cordic.h
+> new file mode 100644
+> index 0000000..28443a6
+> --- /dev/null
+> +++ b/include/linux/cordic.h
+> @@ -0,0 +1,48 @@
+> +/*
+> + * Copyright (c) 2011 Broadcom Corporation
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +#ifndef __CORDIC_H_
+> +#define __CORDIC_H_
+> +
+> +#include<linux/types.h>
+> +
+> +/**
+> + * struct - i/q coordinate.
+> + *
+> + * @i: real part of coordinate (in phase).
+> + * @q: imaginary part of coordinate (quadrature).
+> + */
+> +struct cordic_iq {
+> +	s32 i;
+> +	s32 q;
+> +};
+> +
+> +/**
+> + * cordic_calc_iq() - calculates the i/q coordinate for given angle.
+> + *
+> + * @theta: angle in degrees for which i/q coordinate is to be calculated.
+> + * @coord: function output parameter holding the i/q coordinate.
+> + *
+> + * The function calculates the i/q coordinate for a given angle using
+> + * cordic algorithm. The coordinate consists of a real (i) and an
+> + * imaginary (q) part. The real part is essentially the cosine of the
+> + * angle and the imaginary part is the sine of the angle. The returned
+> + * values are scaled by 2^16 for precision. The range for theta is
+> + * for -180 degrees to +180 degrees. Passed values outside this range are
+> + * converted before doing the actual calculation.
+> + */
+> +void cordic_calc_iq(s32 theta, struct cordic_iq *coord);
+> +
+> +#endif /* __CORDIC_H_ */
+> diff --git a/lib/Kconfig b/lib/Kconfig
+> index ff9e5a3..5c70204 100644
+> --- a/lib/Kconfig
+> +++ b/lib/Kconfig
+> @@ -279,4 +279,11 @@ config AVERAGE
+>
+>   	  If unsure, say N.
+>
+> +config CORDIC
+> +	tristate "Cordic function"
+> +	help
+> +	  The option provides arithmetic function using cordic algorithm
+> +	  so its calculations are in fixed point. Modules can select this
+> +	  when they require this function. Module will be called cordic.
+> +
+>   endmenu
+> diff --git a/lib/Makefile b/lib/Makefile
+> index 704959d..9e3c1b0 100644
+> --- a/lib/Makefile
+> +++ b/lib/Makefile
+> @@ -117,6 +117,8 @@ obj-$(CONFIG_AVERAGE) += average.o
+>
+>   obj-$(CONFIG_CPU_RMAP) += cpu_rmap.o
+>
+> +obj-$(CONFIG_CORDIC) += cordic.o
+> +
+>   hostprogs-y	:= gen_crc32table
+>   clean-files	:= crc32table.h
+>
+> diff --git a/lib/cordic.c b/lib/cordic.c
+> new file mode 100644
+> index 0000000..3952258
+> --- /dev/null
+> +++ b/lib/cordic.c
+> @@ -0,0 +1,99 @@
+> +/*
+> + * Copyright (c) 2011 Broadcom Corporation
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +#include<linux/module.h>
+> +#include<linux/cordic.h>
+> +
+> +#define CORDIC_ANGLE_GEN	39797
+> +#define CORDIC_PRECISION_SHIFT	16
+> +#define	CORDIC_NUM_ITER		(CORDIC_PRECISION_SHIFT + 2)
+> +
+> +#define	FIXED(X)	((s32)((X)<<  CORDIC_PRECISION_SHIFT))
+> +#define	FLOAT(X)	(((X)>= 0) \
+> +		? ((((X)>>  (CORDIC_PRECISION_SHIFT - 1)) + 1)>>  1) \
+> +		: -((((-(X))>>  (CORDIC_PRECISION_SHIFT - 1)) + 1)>>  1))
+> +
+> +static const s32 AtanTbl[] = {
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 27baf56..e90015c 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -259,8 +259,6 @@ static s32 wl_dongle_up(struct net_device *ndev, u32 up);
- static s32 wl_dongle_power(struct net_device *ndev, u32 power_mode);
- static s32 wl_dongle_glom(struct net_device *ndev, u32 glom,
- 			    u32 dongle_align);
--static s32 wl_dongle_roam(struct net_device *ndev, u32 roamvar,
--			    u32 bcn_timeout);
- static s32 wl_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
- 				s32 scan_unassoc_time);
- static s32 wl_dongle_offload(struct net_device *ndev, s32 arpoe,
-@@ -272,6 +270,8 @@ static s32 wl_update_wiphybands(struct wl_priv *wl);
- 
- static s32 wl_dongle_eventmsg(struct net_device *ndev);
- static s32 wl_config_dongle(struct wl_priv *wl, bool need_lock);
-+static s32 wl_dongle_roam(struct net_device *ndev, u32 roamvar,
-+			    u32 bcn_timeout);
- 
- /*
- ** iscan handler
-@@ -3633,36 +3633,6 @@ dongle_glom_out:
- }
- 
- static s32
--wl_dongle_roam(struct net_device *ndev, u32 roamvar, u32 bcn_timeout)
--{
--	s8 iovbuf[WL_EVENTING_MASK_LEN + 12];	/*  Room for "event_msgs" +
--						 '\0' + bitvec  */
--	s32 err = 0;
--
--	/* Setup timeout if Beacons are lost and roam is
--		 off to report link down */
--	if (roamvar) {
--		bcm_mkiovar("bcn_timeout", (char *)&bcn_timeout, 4, iovbuf,
--			    sizeof(iovbuf));
--		err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
--		if (unlikely(err)) {
--			WL_ERR("bcn_timeout error (%d)\n", err);
--			goto dongle_rom_out;
--		}
--	}
--	/* Enable/Disable built-in roaming to allow supplicant
--		 to take care of roaming */
--	bcm_mkiovar("roam_off", (char *)&roamvar, 4, iovbuf, sizeof(iovbuf));
--	err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
--	if (unlikely(err)) {
--		WL_ERR("roam_off error (%d)\n", err);
--		goto dongle_rom_out;
--	}
--dongle_rom_out:
--	return err;
--}
--
--static s32
- wl_dongle_scantime(struct net_device *ndev, s32 scan_assoc_time,
- 		   s32 scan_unassoc_time)
- {
-@@ -3890,6 +3860,63 @@ dongle_eventmsg_out:
- 	return err;
- }
- 
-+static s32
-+wl_dongle_roam(struct net_device *ndev, u32 roamvar, u32 bcn_timeout)
-+{
-+	s8 iovbuf[32];
-+	s32 roamtrigger[2];
-+	s32 roam_delta[2];
-+	s32 err = 0;
-+
-+	/*
-+	 * Setup timeout if Beacons are lost and roam is
-+	 * off to report link down
-+	 */
-+	if (roamvar) {
-+		bcm_mkiovar("bcn_timeout", (char *)&bcn_timeout,
-+			sizeof(bcn_timeout), iovbuf, sizeof(iovbuf));
-+		err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
-+		if (unlikely(err)) {
-+			WL_ERR("bcn_timeout error (%d)\n", err);
-+			goto dongle_rom_out;
-+		}
-+	}
-+
-+	/*
-+	 * Enable/Disable built-in roaming to allow supplicant
-+	 * to take care of roaming
-+	 */
-+	WL_INFO("Internal Roaming = %s\n", roamvar ? "Off" : "On");
-+	bcm_mkiovar("roam_off", (char *)&roamvar,
-+				sizeof(roamvar), iovbuf, sizeof(iovbuf));
-+	err = wl_dev_ioctl(ndev, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
-+	if (unlikely(err)) {
-+		WL_ERR("roam_off error (%d)\n", err);
-+		goto dongle_rom_out;
-+	}
-+
-+	roamtrigger[0] = WL_ROAM_TRIGGER_LEVEL;
-+	roamtrigger[1] = WLC_BAND_ALL;
-+	err = wl_dev_ioctl(ndev, WLC_SET_ROAM_TRIGGER,
-+			(void *)roamtrigger, sizeof(roamtrigger));
-+	if (unlikely(err)) {
-+		WL_ERR("WLC_SET_ROAM_TRIGGER error (%d)\n", err);
-+		goto dongle_rom_out;
-+	}
-+
-+	roam_delta[0] = WL_ROAM_DELTA;
-+	roam_delta[1] = WLC_BAND_ALL;
-+	err = wl_dev_ioctl(ndev, WLC_SET_ROAM_DELTA,
-+				(void *)roam_delta, sizeof(roam_delta));
-+	if (unlikely(err)) {
-+		WL_ERR("WLC_SET_ROAM_DELTA error (%d)\n", err);
-+		goto dongle_rom_out;
-+	}
-+
-+dongle_rom_out:
-+	return err;
-+}
-+
- s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
- {
- #ifndef DHD_SDALIGN
-@@ -3920,9 +3947,6 @@ s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
- 	err = wl_dongle_glom(ndev, 0, DHD_SDALIGN);
- 	if (unlikely(err))
- 		goto default_conf_out;
--	err = wl_dongle_roam(ndev, (wl->roam_on ? 0 : 1), 3);
--	if (unlikely(err))
--		goto default_conf_out;
- 	wl_dongle_scantime(ndev, 40, 80);
- 	wl_dongle_offload(ndev, 1, 0xf);
- 	wl_dongle_filter(ndev, 1);
-@@ -3931,6 +3955,9 @@ s32 wl_config_dongle(struct wl_priv *wl, bool need_lock)
- 	err = wl_dongle_eventmsg(ndev);
- 	if (unlikely(err))
- 		goto default_conf_out;
-+	err = wl_dongle_roam(ndev, (wl->roam_on ? 0 : 1), WL_BEACON_TIMEOUT);
-+	if (unlikely(err))
-+		goto default_conf_out;
- 	err = wl_dongle_mode(ndev, wdev->iftype);
- 	if (unlikely(err && err != -EINPROGRESS))
- 		goto default_conf_out;
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index 6b61010..04381a9 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -95,6 +95,10 @@ do {								\
- 				 */
- #define WL_FILE_NAME_MAX		256
- 
-+#define WL_ROAM_TRIGGER_LEVEL		-75
-+#define WL_ROAM_DELTA			20
-+#define WL_BEACON_TIMEOUT		3
-+
- /* dongle status */
- enum wl_status {
- 	WL_STATUS_READY,
--- 
-1.7.4.1
+In Documentation/CodingStyle, variables with mixed-case names are frownid upon.
 
+> +	2949120,
+> +	1740967,
+> +	919879,
+> +	466945,
+> +	234379,
+> +	117304,
+> +	58666,
+> +	29335,
+> +	14668,
+> +	7334,
+> +	3667,
+> +	1833,
+> +	917,
+> +	458,
+> +	229,
+> +	115,
+> +	57,
+> +	29
+> +};
+> +
+> +/*
+> + * cordic_calc_iq() - calculates the i/q coordinate for given angle
+> + *
+> + * theta: angle in degrees for which i/q coordinate is to be calculated
+> + * coord: function output parameter holding the i/q coordinate
+> + */
+> +void cordic_calc_iq(s32 theta, struct cordic_iq *coord)
 
+As "coord" is only for output, why not have this be a function returning a 
+struct cordic_iq?
+
+> +{
+> +	s32 angle, valtmp;
+> +	unsigned iter;
+> +	int signx = 1;
+> +	int signtheta;
+> +
+> +	coord->i = CORDIC_ANGLE_GEN;
+> +	coord->q = 0;
+> +	angle = 0;
+> +
+> +	theta = FIXED(theta);
+> +	signtheta = (theta<  0) ? -1 : 1;
+> +	theta = ((theta + FIXED(180) * signtheta) % FIXED(360)) -
+> +		FIXED(180) * signtheta;
+> +
+> +	if (FLOAT(theta)>  90) {
+> +		theta -= FIXED(180);
+> +		signx = -1;
+> +	} else if (FLOAT(theta)<  -90) {
+> +		theta += FIXED(180);
+> +		signx = -1;
+> +	}
+> +
+> +	for (iter = 0; iter<  CORDIC_NUM_ITER; iter++) {
+> +		if (theta>  angle) {
+> +			valtmp = coord->i - (coord->q>>  iter);
+
+I think the whitespace should be the same on both sides of the >> operator. 
+Either "coord->q>>iter" or "coord->q >> iter" would be OK. I know checkpatch.pl 
+does not complain, but it does for other binary operators.
+
+> +			coord->q += (coord->i>>  iter);
+> +			angle += AtanTbl[iter];
+> +		} else {
+> +			valtmp = coord->i + (coord->q>>  iter);
+> +			coord->q -= (coord->i>>  iter);
+> +			angle -= AtanTbl[iter];
+> +		}
+> +		coord->i = valtmp;
+> +	}
+> +
+> +	coord->i *= signx;
+> +	coord->q *= signx;
+> +}
+> +EXPORT_SYMBOL(cordic_calc_iq);
+> +
+> +MODULE_DESCRIPTION("Cordic functions");
+> +MODULE_AUTHOR("Broadcom Corporation");
+> +MODULE_LICENSE("Dual BSD/GPL");
+
+Larry
