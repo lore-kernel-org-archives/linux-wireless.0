@@ -1,60 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45624 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab1EDQYQ (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:38637 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140Ab1EYAj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 12:24:16 -0400
-Message-ID: <4DC17DAE.9020808@candelatech.com> (sfid-20110504_182420_728896_096C7375)
-Date: Wed, 04 May 2011 09:24:14 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 24 May 2011 20:39:28 -0400
+Received: by pvg12 with SMTP id 12so3196876pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 17:39:28 -0700 (PDT)
+Message-ID: <4DDC4FA8.2070205@ring3k.org> (sfid-20110525_023932_247764_219DF15C)
+Date: Wed, 25 May 2011 09:39:04 +0900
+From: Mike McCormack <mikem@ring3k.org>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for 3x3 Atheros NICs using ath9k driver.
-References: <4DBF1967.9010604@candelatech.com>	<BANLkTimYks_+QRUNURtbRy+S941fL04HRQ@mail.gmail.com>	<4DC042A5.9050806@candelatech.com> <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
-In-Reply-To: <BANLkTikuw4uSOL5zoMa9QzOsajnSyhEsGQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linville@tuxdriver.com
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/8] rtlwifi: Remove set_rfpowerstate_inprogress
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/04/2011 09:16 AM, Adrian Chadd wrote:
-> On 4 May 2011 02:00, Ben Greear<greearb@candelatech.com>  wrote:
->
->> Here's the lspci for the SR71-A that doesn't work with ath9k:
->>
->> 03:00.0 Ethernet controller: Atheros Communications Inc. AR5008 Wireless
->> Network Adapter (rev 01)
->>         Subsystem: Atheros Communications Inc. Device ee1c
->
-> ... ee1c? Err, that isn't right. Not by a very, very long shot.
->
-> What board are you putting this into?
->
->> From FreeBSD on a RSPRO (ar71xx mips):
->
-> ath0@pci0:0:17:0:       class=0x028000 card=0x40820777 chip=0x0027168c
-> rev=0x01 hdr=0x00
->      vendor     = 'Atheros Communications Inc.'
->      class      = network
->
-> That definitely, positively is the same AC1A revision that you have.
-> It even does 11n(ag) too. Honest. I've seen it. :-)
->
-> This and the previous AR93xx "0xabcd" device id post is starting to
-> sound a lot like something's not waking up the PCI bus and/or chip
-> "right" in order to get the PCI vendor id init'ed from the EEPROM..
+set_rfpowerstate_inprogress is only set and never read
+so remove it.
 
-Well, I put in one NIC, it works fine, I put in the other, and it doesn't.
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |    2 --
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c |    2 --
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c |    4 ----
+ drivers/net/wireless/rtlwifi/wifi.h          |    1 -
+ 4 files changed, 0 insertions(+), 9 deletions(-)
 
-Same system, reproducible on other systems from same manufacturer (Lanner, LEC 2010E).
-
-Haven't tried it on a totally different motherboard.  I'll send you this
-broken NIC if you want...I'm too tight on time to hack on it now...
-
-Ben
-
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+index abe0fcc..544e0b7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -521,7 +521,6 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	u8 i, queue_id;
+ 	struct rtl8192_tx_ring *ring = NULL;
+ 
+-	ppsc->set_rfpowerstate_inprogress = true;
+ 	switch (rfpwr_state) {
+ 	case ERFON:{
+ 			if ((ppsc->rfpwr_state == ERFOFF) &&
+@@ -617,7 +616,6 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	}
+ 	if (bresult)
+ 		ppsc->rfpwr_state = rfpwr_state;
+-	ppsc->set_rfpowerstate_inprogress = false;
+ 	return bresult;
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+index 9a3d023..7285290 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+@@ -470,7 +470,6 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	u8 i, queue_id;
+ 	struct rtl8192_tx_ring *ring = NULL;
+ 
+-	ppsc->set_rfpowerstate_inprogress = true;
+ 	switch (rfpwr_state) {
+ 	case ERFON:
+ 		if ((ppsc->rfpwr_state == ERFOFF) &&
+@@ -590,7 +589,6 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	}
+ 	if (bresult)
+ 		ppsc->rfpwr_state = rfpwr_state;
+-	ppsc->set_rfpowerstate_inprogress = false;
+ 	return bresult;
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+index 63b45e6..2ad51b0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+@@ -546,8 +546,6 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	if (rfpwr_state == ppsc->rfpwr_state)
+ 		return false;
+ 
+-	ppsc->set_rfpowerstate_inprogress = true;
+-
+ 	switch (rfpwr_state) {
+ 	case ERFON:{
+ 			if ((ppsc->rfpwr_state == ERFOFF) &&
+@@ -659,8 +657,6 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 	if (bresult)
+ 		ppsc->rfpwr_state = rfpwr_state;
+ 
+-	ppsc->set_rfpowerstate_inprogress = false;
+-
+ 	return bresult;
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 693395e..0321328 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1188,7 +1188,6 @@ struct rtl_efuse {
+ 
+ struct rtl_ps_ctl {
+ 	bool pwrdomain_protect;
+-	bool set_rfpowerstate_inprogress;
+ 	bool in_powersavemode;
+ 	bool rfchange_inprogress;
+ 	bool swrf_processing;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.4.1
+
 
