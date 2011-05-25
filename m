@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:47604 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177Ab1EWByj (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46129 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325Ab1EYOhw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 21:54:39 -0400
-Date: Sun, 22 May 2011 20:54:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/7 V2] rtl8192c-common: Fix warnings from gcc 4.6.0
-Message-ID: <4dd9be5a.aIc6IFis+GfEPEGH%Larry.Finger@lwfinger.net> (sfid-20110523_035443_754654_87A3672F)
+	Wed, 25 May 2011 10:37:52 -0400
+Received: by iwn34 with SMTP id 34so6484767iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 07:37:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com>
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+ <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+ <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 25 May 2011 07:37:31 -0700
+Message-ID: <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com> (sfid-20110525_163755_334200_F1725064)
+Subject: Re: Initial automatic channel selection implementation
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc 4.6.0 warnings for rtl8192c-common:
+On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> Yes, thanks this is a lot of work already done. Now we just need a
+>> basic algorithm to parse this, quantify how ideal this channel is and
+>> then spit out a desired optimal channel.
+>
+> That's what I've hacked some time ago (in form of the attached _ugly_ shell
+> script that does auto channel selection with rt2x00, not sure if it works
+> correct with other drivers as the survey dump differs somehow between
+> rt2x00, ath5k and ath9k, and it only does channel 1-11):
+>
+> - Iterate over all channels and stay on each channel for some time
 
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/fw_common.o
-drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c: In function ‘_rtl92c_cmd_send_packet’:
-drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c:549:5: warning: variable ‘own’ set but not used [-Wunused-but-set-variable]
-  CC [M]  drivers/net/wireless/rtlwifi/rtl8192c/phy_common.o
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘_rtl92c_phy_iq_calibrate’:
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1256:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c: In function ‘rtl92c_phy_iq_calibrate’:
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1766:6: warning: variable ‘reg_ecc’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:1765:34: warning: variable ‘reg_eac’ set but not used [-Wunused-but-set-variable]
+Nice, yeah I was thinking of using the offchannel operation if we want
+to spend more time there for inspection and if associated. For first
+iteration it should be possible to just move around. In fact for AP
+purposes I suppose one will want to just start AP mode ASAP and then
+later do offchannel operations to do the inspection on the ideal
+channel. Otherwise we sit there idle until we complete the Automatic
+Channel Selection thingy.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> - Store busy time stats for each channel
+> - Choose the channel with the lowest busy time (and on 2.4Ghz also
+>  check the busy times on adjacent channels)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -546,7 +546,6 @@ static bool _rtl92c_cmd_send_packet(stru
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl8192_tx_ring *ring;
- 	struct rtl_tx_desc *pdesc;
--	u8 own;
- 	unsigned long flags;
- 	struct sk_buff *pskb = NULL;
- 
-@@ -559,7 +558,6 @@ static bool _rtl92c_cmd_send_packet(stru
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 
- 	pdesc = &ring->desc[0];
--	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
- 
- 	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -1253,10 +1253,9 @@ static void _rtl92c_phy_iq_calibrate(str
- 
- 	const u32 retrycount = 2;
- 
--	u32 bbvalue;
--
- 	if (t == 0) {
--		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
-+		/* dummy read */
-+		rtl_get_bbreg(hw, 0x800, MASKDWORD);
- 
- 		_rtl92c_phy_save_adda_registers(hw, adda_reg,
- 						rtlphy->adda_backup, 16);
-@@ -1762,8 +1761,7 @@ void rtl92c_phy_iq_calibrate(struct ieee
- 	long result[4][8];
- 	u8 i, final_candidate;
- 	bool patha_ok, pathb_ok;
--	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
--	    reg_ecc, reg_tmp = 0;
-+	long reg_e94, reg_e9c, reg_ea4, reg_eb4, reg_ebc, reg_ec4, reg_tmp = 0;
- 	bool is12simular, is13simular, is23simular;
- 	bool start_conttx = false, singletone = false;
- 	u32 iqk_bb_reg[10] = {
-@@ -1841,21 +1839,17 @@ void rtl92c_phy_iq_calibrate(struct ieee
- 		reg_e94 = result[i][0];
- 		reg_e9c = result[i][1];
- 		reg_ea4 = result[i][2];
--		reg_eac = result[i][3];
- 		reg_eb4 = result[i][4];
- 		reg_ebc = result[i][5];
- 		reg_ec4 = result[i][6];
--		reg_ecc = result[i][7];
- 	}
- 	if (final_candidate != 0xff) {
- 		rtlphy->reg_e94 = reg_e94 = result[final_candidate][0];
- 		rtlphy->reg_e9c = reg_e9c = result[final_candidate][1];
- 		reg_ea4 = result[final_candidate][2];
--		reg_eac = result[final_candidate][3];
- 		rtlphy->reg_eb4 = reg_eb4 = result[final_candidate][4];
- 		rtlphy->reg_ebc = reg_ebc = result[final_candidate][5];
- 		reg_ec4 = result[final_candidate][6];
--		reg_ecc = result[final_candidate][7];
- 		patha_ok = pathb_ok = true;
- 	} else {
- 		rtlphy->reg_e94 = rtlphy->reg_eb4 = 0x100;
+So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
+we should skip that time from the busy time, otherwise the "busy" time
+includes time we induced on TX'ing or RX'ing ourselves. So I was
+thinking of using the:
+
+  (active time - rx time - tx time)  / busy time
+
+as a factor for impact on the given frequency. Then somehow we just
+need to add to this the channel noise.
+
+> Btw. is the idea to get the auto channel selection into hostapd/supplicant
+> or in a new userspace tool?
+
+Yup.
+
+  Luis
