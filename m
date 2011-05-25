@@ -1,99 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:34390 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755620Ab1EQQTl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 12:19:41 -0400
-Received: by ewy4 with SMTP id 4so187375ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 09:19:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: add helper for finding GPIO device
-Date: Tue, 17 May 2011 18:57:27 +0200
-Message-Id: <1305651448-23947-1-git-send-email-zajec5@gmail.com> (sfid-20110517_181944_810937_DFE85EEE)
+Received: from mms2.broadcom.com ([216.31.210.18]:4901 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961Ab1EYFVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 01:21:52 -0400
+Message-ID: <4DDC91E1.40104@broadcom.com> (sfid-20110525_072210_099245_9D3FA89A)
+Date: Wed, 25 May 2011 07:21:37 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: "George Spelvin" <linux@horizon.com>
+cc: "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"error27@gmail.com" <error27@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8
+ algorithm
+References: <20110524225224.32163.qmail@science.horizon.com>
+In-Reply-To: <20110524225224.32163.qmail@science.horizon.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/25/2011 12:52 AM, George Spelvin wrote:
+>> V3:
+>> - added function crc8_create().
+>> - crc8_create() takes polynomial and bit direction as parameters.
+> May I suggest that crc8_create is A Stupid Idea.  Since the bit order
+> (and polynomial) will always be compile-time constants, just let the
+> call sites call crc8_create_[lm]sb_first() directly.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   41 ++++++++++++++++++++-------------------
- 1 files changed, 21 insertions(+), 20 deletions(-)
+Thanks for be subtle in your suggestion. The crc8 module can have 
+multiple callers, which have their own bit order and polynomial. From 
+caller perspective they are likely compile-time constants. You are right 
+that the extra layer crc8_create is not adding much and callers should 
+the bit order specific create functions directly.
+> That way there's no need for the enum, and specifying something
+> other than lsb_first and msb_first is a compile-time error rather than
+> a run-time one
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index f45db3f..57fd7dd 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2557,10 +2557,20 @@ out:
- /* Initialize the GPIOs
-  * http://bcm-specs.sipsolutions.net/GPIO
-  */
--static int b43_gpio_init(struct b43_wldev *dev)
-+static struct ssb_device *b43_ssb_gpio_dev(struct b43_wldev *dev)
- {
- 	struct ssb_bus *bus = dev->sdev->bus;
--	struct ssb_device *gpiodev, *pcidev = NULL;
-+
-+#ifdef CONFIG_SSB_DRIVER_PCICORE
-+	return (bus->chipco.dev ? bus->chipco.dev : bus->pcicore.dev);
-+#else
-+	return bus->chipco.dev;
-+#endif
-+}
-+
-+static int b43_gpio_init(struct b43_wldev *dev)
-+{
-+	struct ssb_device *gpiodev;
- 	u32 mask, set;
- 
- 	b43_write32(dev, B43_MMIO_MACCTL, b43_read32(dev, B43_MMIO_MACCTL)
-@@ -2592,15 +2602,11 @@ static int b43_gpio_init(struct b43_wldev *dev)
- 	if (dev->sdev->id.revision >= 2)
- 		mask |= 0x0010;	/* FIXME: This is redundant. */
- 
--#ifdef CONFIG_SSB_DRIVER_PCICORE
--	pcidev = bus->pcicore.dev;
--#endif
--	gpiodev = bus->chipco.dev ? : pcidev;
--	if (!gpiodev)
--		return 0;
--	ssb_write32(gpiodev, B43_GPIO_CONTROL,
--		    (ssb_read32(gpiodev, B43_GPIO_CONTROL)
--		     & mask) | set);
-+	gpiodev = b43_ssb_gpio_dev(dev);
-+	if (gpiodev)
-+		ssb_write32(gpiodev, B43_GPIO_CONTROL,
-+			    (ssb_read32(gpiodev, B43_GPIO_CONTROL)
-+			     & mask) | set);
- 
- 	return 0;
- }
-@@ -2608,16 +2614,11 @@ static int b43_gpio_init(struct b43_wldev *dev)
- /* Turn off all GPIO stuff. Call this on module unload, for example. */
- static void b43_gpio_cleanup(struct b43_wldev *dev)
- {
--	struct ssb_bus *bus = dev->sdev->bus;
--	struct ssb_device *gpiodev, *pcidev = NULL;
-+	struct ssb_device *gpiodev;
- 
--#ifdef CONFIG_SSB_DRIVER_PCICORE
--	pcidev = bus->pcicore.dev;
--#endif
--	gpiodev = bus->chipco.dev ? : pcidev;
--	if (!gpiodev)
--		return;
--	ssb_write32(gpiodev, B43_GPIO_CONTROL, 0);
-+	gpiodev = b43_ssb_gpio_dev(dev);
-+	if (gpiodev)
-+		ssb_write32(gpiodev, B43_GPIO_CONTROL, 0);
- }
- 
- /* http://bcm-specs.sipsolutions.net/EnableMac */
+If callers use the specific function they can not specify a bit order so 
+no compile-time error.
+
+> It might be nice to add some const declarations, and use size_t
+> for the buffer length:
+> u8 crc8(u8 const *table, u8 const *pdata, size_t nbytes, u8 crc)
+> or
+> u8 crc8(u8 const table[256], u8 const *pdata, size_t nbytes, u8 crc)
+>
+>
+> Style points you might consider, but I do not consider essential:
+>
+> Personally, when a function parameter is a pointer to
+> a fixed-size array, I prefer to declare it as
+> 	void crc8_create_lsb_first(u8 table[256], u8 poly)
+> for better documentation, but that's your choice.
+>
+> The CRC8_GOOD_VALUE could be explained if you like.  "If a CRC is inverted
+> before transmission, the CRC computed over the while (message+crc)
+> is _table[x], when x is the bit pattern of the modification (almost
+> always 0xff)."
+
+Great remarks. Will update the code.
+
+> Thanks!
+
+Thanks.
+
+Gr. AvS
+
 -- 
-1.7.3.4
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
