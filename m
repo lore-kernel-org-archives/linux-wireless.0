@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53500 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758237Ab1EaTrv (ORCPT
+Received: from smtp-out0.tiscali.nl ([195.241.79.175]:45663 "EHLO
+	smtp-out0.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380Ab1EYNcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:51 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 22/32] ath9k: use correct max_streams for AR9330
-Date: Tue, 31 May 2011 21:37:13 +0200
-Message-Id: <1306870643-7935-23-git-send-email-juhosg@openwrt.org> (sfid-20110531_214807_261051_C1545ADA)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Wed, 25 May 2011 09:32:00 -0400
+Subject: Re: [iwl4965] Microcode SW error detected
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110525131130.GA3260@redhat.com>
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+	 <20110524070941.GA2189@redhat.com>
+	 <1306255853.12267.14.camel@x61.thuisdomein>
+	 <20110525131130.GA3260@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 25 May 2011 15:31:53 +0200
+Message-ID: <1306330313.2119.4.camel@x61.thuisdomein> (sfid-20110525_153204_310041_D8F4707D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9330 is a single stream chip.
+On Wed, 2011-05-25 at 15:11 +0200, Stanislaw Gruszka wrote:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> What channel do you use?
+11, 2.462 GHz (according to my basestation)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c2defa2..5ffabb9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -245,7 +245,7 @@ static void setup_ht_cap(struct ath_softc *sc,
- 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
- 
--	if (AR_SREV_9485(ah))
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah))
- 		max_streams = 1;
- 	else if (AR_SREV_9300_20_OR_LATER(ah))
- 		max_streams = 3;
--- 
-1.7.2.1
+> Is network 11n or 11g or mixed ?
+Network is mixed 11b and 11g (according to my basestation)
+
+> WEP is 40 bits or other?
+128 bits, 26 hex digits (again, according to my basestation)
+
+
+Paul Bolle
 
