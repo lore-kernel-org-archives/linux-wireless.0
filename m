@@ -1,95 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53504 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758245Ab1EaTrv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:51 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 03/32] ath9k: add MAC revision detection for AR9330
-Date: Tue, 31 May 2011 21:36:54 +0200
-Message-Id: <1306870643-7935-4-git-send-email-juhosg@openwrt.org> (sfid-20110531_214844_822280_05172C59)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.perches.com ([173.55.12.10]:2013 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756063Ab1EYRCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 13:02:45 -0400
+From: Joe Perches <joe@perches.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/4] staging: Remove direct includes of printk.h
+Date: Wed, 25 May 2011 10:02:39 -0700
+Message-Id: <a605f8a8039f83fae3fbf61b58f846bc3c58c379.1306342673.git.joe@perches.com> (sfid-20110525_190514_058419_B7E98435)
+In-Reply-To: <BANLkTimo30L7feKr9_Ec=fMoe1erw8Rnag@mail.gmail.com>
+References: <BANLkTimo30L7feKr9_Ec=fMoe1erw8Rnag@mail.gmail.com>
+In-Reply-To: <cover.1306342673.git.joe@perches.com>
+References: <cover.1306342673.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9330 1.0 and 1.1 are using the same revision,
-thus it is not possible to distinguish the two chips.
-The platform setup code can distinguish the chips based
-on the SoC revision.
+Make the uses kernel.h instead.
 
-Add a callback function to ath9k_platform_data in order
-to allow getting the revision number from the platform code.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   |    9 +++++++++
- drivers/net/wireless/ath/ath9k/hw.h   |    1 +
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- include/linux/ath9k_platform.h        |    1 +
- 4 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    1 -
+ drivers/staging/brcm80211/util/bcmutils.c     |    1 -
+ drivers/staging/usbip/usbip_common.h          |    2 +-
+ 3 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 05c2ba2..ade8655 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -251,6 +251,15 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 	case AR5416_AR9100_DEVID:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 		break;
-+	case AR9300_DEVID_AR9330:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
-+		if (ah->get_mac_revision) {
-+			ah->hw_version.macRev = ah->get_mac_revision();
-+		} else {
-+			val = REG_READ(ah, AR_SREV);
-+			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-+		}
-+		return;
- 	case AR9300_DEVID_AR9340:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
- 		val = REG_READ(ah, AR_SREV);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9f23451..8d9ac49 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -863,6 +863,7 @@ struct ath_hw {
- 	u32 ent_mode;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index a71c6f8..b00029a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -16,7 +16,6 @@
  
- 	bool is_clk_25mhz;
-+	int (*get_mac_revision)(void);
- };
- 
- struct ath_bus_ops {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 45c585a..c2defa2 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -575,6 +575,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 		sc->sc_ah->gpio_val = pdata->gpio_val;
- 		sc->sc_ah->led_pin = pdata->led_pin;
- 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
-+		ah->get_mac_revision = pdata->get_mac_revision;
- 	}
- 
- 	common = ath9k_hw_common(ah);
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index 60a7c49..c207607 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -30,6 +30,7 @@ struct ath9k_platform_data {
- 	u32 gpio_val;
- 
- 	bool is_clk_25mhz;
-+	int (*get_mac_revision)(void);
- };
- 
- #endif /* _LINUX_ATH9K_PLATFORM_H */
+ #include <linux/types.h>
+ #include <linux/kernel.h>
+-#include <linux/printk.h>
+ #include <linux/pci_ids.h>
+ #include <linux/netdevice.h>
+ #include <bcmdefs.h>
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index 43e5bb3..1c8b6c6 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -21,7 +21,6 @@
+ #include <linux/pci.h>
+ #include <linux/netdevice.h>
+ #include <linux/sched.h>
+-#include <linux/printk.h>
+ #include <bcmdefs.h>
+ #include <stdarg.h>
+ #include <bcmutils.h>
+diff --git a/drivers/staging/usbip/usbip_common.h b/drivers/staging/usbip/usbip_common.h
+index 4a641c5..0f9176d 100644
+--- a/drivers/staging/usbip/usbip_common.h
++++ b/drivers/staging/usbip/usbip_common.h
+@@ -24,7 +24,7 @@
+ #include <linux/device.h>
+ #include <linux/interrupt.h>
+ #include <linux/net.h>
+-#include <linux/printk.h>
++#include <linux/kernel.h>
+ #include <linux/spinlock.h>
+ #include <linux/types.h>
+ #include <linux/usb.h>
 -- 
-1.7.2.1
+1.7.4.rc3
 
