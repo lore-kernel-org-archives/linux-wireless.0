@@ -1,28 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out11.libero.it ([212.52.84.111]:50701 "EHLO
-	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074Ab1EKWTa convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:44701 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601Ab1EYRzs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2011 18:19:30 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Subject: compile failure with commit 9c3990aaec0ad9f686ef6480f6861f2df89b2a7a
-Date: Thu, 12 May 2011 00:19:24 +0200
-MIME-Version: 1.0
-Message-Id: <201105120019.24245.rossi.f@inwind.it> (sfid-20110512_001934_270121_C4A05D5C)
-Content-Type: text/plain;
-  charset="utf-8"
+	Wed, 25 May 2011 13:55:48 -0400
+Date: Wed, 25 May 2011 13:54:40 -0400 (EDT)
+Message-Id: <20110525.135440.1075984783218135837.davem@davemloft.net> (sfid-20110525_195610_410298_7A98DB7F)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-05-24
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110524210400.GA8864@tuxdriver.com>
+References: <20110524210400.GA8864@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  net/mac80211/cfg.o
-net/mac80211/cfg.c: In function ‘sta_apply_parameters’:
-net/mac80211/cfg.c:746: error: ‘struct sta_info’ has no member named 
-‘plink_state’
-make[2]: *** [net/mac80211/cfg.o] Error 1
-make[1]: *** [net/mac80211] Error 2
-make: *** [net] Error 2
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 24 May 2011 17:04:01 -0400
 
-I think because a #ifdef CONFIG_MAC80211_MESH is missing
+> Here is the last (belated) batch of new wireless bits intended for
+> 2.6.40.  I had intended to send this over the weekend, but there was
+> a dust-up over some merge confusion that had to get settled first.
+> In the meantime, this got a few more days to cook in -next. :-)
+> 
+> There isn't anything Earth-shattering here -- mostly just some
+> last-minute bits posted a bit before the release.  Some of them are
+> fixes for bugs in other new code.  There is also the addition of a
+> generic GPIO-based rfkill driver.
+> 
+> Please let me know if there are problems!
 
-Fabio
+Pulled, thanks John.
