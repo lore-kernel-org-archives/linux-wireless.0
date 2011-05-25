@@ -1,56 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3188 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754030Ab1EIOdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 7/9] staging: brcm80211: move another file only used by
- brcmsmac into appropriate dir
-Date: Mon, 9 May 2011 16:33:08 +0200
-Message-ID: <1304951590-2411-8-git-send-email-arend@broadcom.com> (sfid-20110509_163608_309029_61C78F5C)
-In-Reply-To: <1304951590-2411-1-git-send-email-arend@broadcom.com>
-References: <1304951590-2411-1-git-send-email-arend@broadcom.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53557 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755971Ab1EYQNl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 12:13:41 -0400
+Received: by wwa36 with SMTP id 36so8657409wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 09:13:40 -0700 (PDT)
+From: Stevie Trujillo <stevie.trujillo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware limit?
+Date: Wed, 25 May 2011 18:13:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201105251813.36804.stevie.trujillo@gmail.com> (sfid-20110525_181345_124663_62067216)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
+Hello,
 
-nvram functions are only needed by brcmsmac.
+I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15 and I 
+was wondering if the card could do more than that.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/Makefile        |    2 +-
- .../{util/nvram/nvram_ro.c => brcmsmac/nvram.c}    |    0
- 2 files changed, 1 insertions(+), 1 deletions(-)
- rename drivers/staging/brcm80211/{util/nvram/nvram_ro.c => brcmsmac/nvram.c} (100%)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
-index 1cd3a1e..ccf1ced 100644
---- a/drivers/staging/brcm80211/brcmsmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmsmac/Makefile
-@@ -53,7 +53,7 @@ BRCMSMAC_OFILES := \
- 	nicpci.o \
- 	../util/bcmutils.o \
- 	../util/bcmwifi.o \
--	../util/nvram/nvram_ro.o
-+	nvram.o
- 
- MODULEPFX := brcmsmac
- 
-diff --git a/drivers/staging/brcm80211/util/nvram/nvram_ro.c b/drivers/staging/brcm80211/brcmsmac/nvram.c
-similarity index 100%
-rename from drivers/staging/brcm80211/util/nvram/nvram_ro.c
-rename to drivers/staging/brcm80211/brcmsmac/nvram.c
--- 
-1.7.4.1
-
-
+Thank you
