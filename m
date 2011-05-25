@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40653 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753371Ab1EaUGE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 16:06:04 -0400
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <4DE54596.8090003@openwrt.org>
-References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>
-	 <1306869394-83047-2-git-send-email-nbd@openwrt.org>
-	 <1306870318.29989.0.camel@jlt3.sipsolutions.net>
-	 <4DE54596.8090003@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 31 May 2011 22:05:57 +0200
-Message-ID: <1306872357.29989.2.camel@jlt3.sipsolutions.net> (sfid-20110531_220609_074722_AB16B6D6)
-Mime-Version: 1.0
+Received: from ra.se.axis.com ([195.60.68.13]:44729 "EHLO ra.se.axis.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932175Ab1EYIIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 04:08:10 -0400
+Date: Wed, 25 May 2011 10:08:07 +0200 (CEST)
+From: Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn@axis.com>
+Reply-To: Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn@axis.com>
+To: hostap@lists.shmoo.com
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Initial automatic channel selection implementation
+In-Reply-To: <201105250624.32360.helmut.schaa@googlemail.com>
+Message-ID: <1105251003410.26419@somehost> (sfid-20110525_100816_456387_AD6ABBD2)
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> <1105241841310.6936@somehost> <4DDBE538.1090902@gnu.org> <201105250624.32360.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-05-31 at 21:46 +0200, Felix Fietkau wrote:
-> On 2011-05-31 9:31 PM, Johannes Berg wrote:
-> > On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
+On Wed, 25 May 2011, Helmut Schaa wrote:
+> Am Dienstag, 24. Mai 2011 schrieb Pavel Roskin:
+> > On 05/24/2011 12:44 PM, Cristian Ionescu-Idbohrn wrote:
+> > > On Tue, 24 May 2011, Pavel Roskin wrote:
+> > >>
+> > >> Speaking of channels, I think only some channels should be eligible for
+> > >> automatic selection (that would be 1, 6 and 11 in the 2.4 GHz range).
+> > >
+> > > May I ask what the rationale behind that may be?
 > >
-> >>  +	rcu_read_lock();
-> >>  +
-> >>  +	sta = sta_info_get(sdata, sdata->u.wds.remote_addr);
-> >>  +
-> >>  +	if (!sta) {
-> >>  +		rcu_read_unlock();
-> >>  +		sta = sta_info_alloc(sdata, sdata->u.wds.remote_addr,
-> >>  +				     GFP_KERNEL);
-> >>  +		if (!sta)
-> >>  +			return;
-> >>  +
-> >>  +		new = true;
-> >>  +	}
+> > That's a safe distance between channels.  That's why channels 1, 6 and
+> > 11 are used more often than others.
 > >
-> > ...
+> > Our algorithm make select, say, channel 3.  That may be the most quiet
+> > channel at the moment.  We may use absolutely the best algorithm to
+> > determine that.  However, it is likely that APs operating on channels 1
+> > and 6 would eventually appear in vicinity, and out AP would interfere
+> > with both of them instead of just one of them.
 > >
-> >>  +	rcu_read_unlock();
+> > Using a car analogy, consider channels 1, 6 and 11 like lanes on a
+> > highway.  Using other channels would be like driving between lanes.  It
+> > may seem safe, but only in absence of other traffic.
 > >
-> > definitely doesn't look right.
-> It's a bit weird because in the case of a new sta being allocated, the 
-> rcu read lock is acquired by sta_info_insert_rcu, and the code inbetween 
-> does not need to be covered by the rcu read lock as the sta entry has 
-> not been added to the list yet.
-> It should be correct though, unless I'm missing something...
+> > It's possible that the list of autoselectable channels could be country
+> > specific.  I would hate to add complexity to CRDA.  Hopefully we could
+> > device a simple algorithm to find the autoselectable channels based on
+> > the CRDA data.
+>
+> Why not use a channel list as input to the algorithm (in whatever form).
+> Hence, it would work for all channels (if the user wishes to do so) but it
+> can be limited to a list of preferred channels (1,6,11).
 
-Oh right, I forgot about that.
+Now, that would be a much smarter way to do it.
 
-johannes
+Remains to decide a similary smart fall back when a preferred channel
+list is not provided.
 
+
+Cheers,
+
+-- 
+Cristian
