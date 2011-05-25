@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1246 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755822Ab1EDVBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 17:01:08 -0400
-Subject: Re: [PATCH 1/2] libertas: Convert lbs_pr_<level> to pr_<level>
-From: Joe Perches <joe@perches.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1304537949.1097.8.camel@dcbw.foobar.com>
-References: <cover.1304379925.git.joe@perches.com>
-	 <353dfb1607172b5a3dbaccddbe52c24312d42af4.1304379925.git.joe@perches.com>
-	 <1304537949.1097.8.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 May 2011 14:01:06 -0700
-Message-ID: <1304542866.1788.102.camel@Joe-Laptop> (sfid-20110504_230136_893729_F000DFB3)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53426 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378Ab1EYTyK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 15:54:10 -0400
+Received: by wwa36 with SMTP id 36so7001wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 12:54:09 -0700 (PDT)
+From: Stevie Trujillo <stevie.trujillo@gmail.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware limit?
+Date: Wed, 25 May 2011 21:54:06 +0200
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <201105251813.36804.stevie.trujillo@gmail.com> <1306352560.20732.0.camel@wwguy-ubuntu>
+In-Reply-To: <1306352560.20732.0.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201105252154.06204.stevie.trujillo@gmail.com> (sfid-20110525_215414_559917_3FCD3009)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-04 at 14:39 -0500, Dan Williams wrote:
-> On Mon, 2011-05-02 at 16:49 -0700, Joe Perches wrote:
-> > Use the standard pr_<level> functions eases grep a bit.
-> > Added a few missing terminating newlines to messages.
-> > Coalesced long formats.
-> Is there any reason to not put the pr_fmt() definition into 'defs.h'
-> instead of C&P at the top of every file?  I don't really care either way
-> but that seems cleaner since almost all the libertas files are going to
-> use logging.
+On Wednesday 25 May 2011 21:42:40 wwguy wrote:
+> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
+> > Hello,
+> > 
+> > I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
+> > and I was wondering if the card could do more than that.
+> 
+> the card should not and will not do more than what required by
+> regulatory
 
-It has to be before any #include <linux/kernel.h>
-or any other #include that uses it.
+I'm allowed to do 20dBm here and was wondering if I could make the card do 
+that.
 
-At some point, all of the uses of
-
-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-
-should be removed as I intend to have that
-or an equivalent become the default.
-
-
+Thanks
+Stevie
