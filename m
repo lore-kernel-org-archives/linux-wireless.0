@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49300 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812Ab1EJRs4 (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:38703 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751885Ab1EYQxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 13:48:56 -0400
-Message-ID: <4DC97A85.40109@candelatech.com> (sfid-20110510_194909_136860_661BEFE4)
-Date: Tue, 10 May 2011 10:48:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k and ath9k bugs still in 2.6.39-rc7
-References: <4DC968FD.1040906@candelatech.com> <4DC97189.1090105@openwrt.org>
-In-Reply-To: <4DC97189.1090105@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 25 May 2011 12:53:49 -0400
+Date: Wed, 25 May 2011 09:53:46 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Dan Carpenter" <error27@gmail.com>,
+	"George Spelvin" <linux@horizon.com>
+Subject: Re: [RFC V4] lib: crc8: add new library module providing crc8
+ algorithm
+Message-Id: <20110525095346.969658ad.rdunlap@xenotime.net> (sfid-20110525_185407_456038_E429660A)
+In-Reply-To: <4DDD3324.3020407@broadcom.com>
+References: <1306320099-17970-1-git-send-email-arend@broadcom.com>
+	<20110525094304.0769a189.rdunlap@xenotime.net>
+	<4DDD3324.3020407@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2011 10:10 AM, Felix Fietkau wrote:
-> On 2011-05-10 6:34 PM, Ben Greear wrote:
->> As far as I can tell, ath5k is critically broken due to un-initilized
->> spinlock (fixed in the patch I posted a few days ago), and ath9k stations
->> won't work due to PS bugs that Felix posted fixes for yesterday.
-> Did you test my patch for that? I couldn't reproduce the issue, so I
-> couldn't test whether my patch fully fixes it.
+On Wed, 25 May 2011 18:49:40 +0200 Arend van Spriel wrote:
 
-Better hold off on that patch..looks like the culprit.  Maybe vif is not NULL but
-still bogus?
+> On 05/25/2011 06:43 PM, Randy Dunlap wrote:
+> >
+> >> diff --git a/lib/crc8.c b/lib/crc8.c
+> >> new file mode 100644
+> >> index 0000000..0ce4238
+> >> --- /dev/null
+> >> +++ b/lib/crc8.c
+> >> @@ -0,0 +1,84 @@
+> >> +/*
+> >> + * Copyright (c) 2011 Broadcom Corporation
+> >> + *
+> >> + * Permission to use, copy, modify, and/or distribute this software for any
+> >> + * purpose with or without fee is hereby granted, provided that the above
+> >> + * copyright notice and this permission notice appear in all copies.
+> >> + *
+> >> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> >> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> >> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+> >> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> >> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+> >> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+> >> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> >> + */
+> > insert blank line here, please.
+> 
+> Will do that.
+> 
+> >> +#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+> >> +#include<linux/module.h>
+> >> +#include<linux/crc8.h>
+> >> +#include<linux/printk.h>
+> >> +
+> >> +/*
+> >> + * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
+> >> + *
+> >> + * table:	table to be filled.
+> >> + * polynomial:	polynomial for which table is to be filled.
+> >> + */
+> > Please convert all of these function comments to kernel-doc, like the header file has.
+> 
+> Can be done easily, but what would be the added value to describe a 
+> function twice. I am not fully aware of the usage of kernel-doc, but if 
+> it were run over the full kernel tree I would expect the same function 
+> to popup twice if I the kernel-doc markup  to the source file as well.
 
+OK, never mind, then.
 
-> (gdb) l *(ath_tx_start+0x640)
-0xa123 is in ath_tx_start (/home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c:1833).
-1828							   bf->bf_state.bfs_paprd);
-1829	
-1830			if (txctl->paprd)
-1831				bf->bf_state.bfs_paprd_timestamp = jiffies;
-1832	
-1833			if ((vif && vif->type != NL80211_IFTYPE_AP &&
-1834			            vif->type != NL80211_IFTYPE_AP_VLAN) ||
-1835			    !ieee80211_is_data(hdr->frame_control) ||
-1836			    (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT))
-1837				ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
+Usually only one of the files is included in a docbook.tmpl file anyway
+(i.e., crc8.h or crc8.c).  Only both would be included if they both contained
+something (new/different) to add to the documentation.
 
-
-> - Felix
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
