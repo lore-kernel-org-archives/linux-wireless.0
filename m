@@ -1,200 +1,300 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1624 "EHLO MMS3.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3531 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820Ab1ECJgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:13 -0400
+	id S1751392Ab1EYKlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 06:41:51 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: [PATCH 05/61] staging: brcm80211: making wiphy object
- accessible from wlc and phy
-Date: Tue, 3 May 2011 11:35:05 +0200
-Message-ID: <1304415361-7813-6-git-send-email-arend@broadcom.com> (sfid-20110503_113624_911384_AFA99AE2)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Dan Carpenter" <error27@gmail.com>,
+	"George Spelvin" <linux@horizon.com>
+Subject: [RFC V4] lib: crc8: add new library module providing crc8
+ algorithm
+Date: Wed, 25 May 2011 12:41:39 +0200
+Message-ID: <1306320099-17970-1-git-send-email-arend@broadcom.com> (sfid-20110525_124212_595068_DA55EF82)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+!!REMARK!!:
+	Which tree maintainer is willing to take this patch when ready?
+	As it is mainly used in (wireless) networking protocols propose
+	either wireless-next or net-next maintainers.
 
-Next commits will replace WL_ERROR and friends with BCMMSG. Because
-this new message log function require a wiphy object, device object pointers
-have been added to three data structures.
+The brcm80211 driver in staging tree uses a crc8 function. Based on
+feedback from John Linville to move this to lib directory, the linux
+source has been searched. Although there is currently only one other
+kernel driver using this algorithm (ie. drivers/ssb) we are providing
+this as a library function for others to use.
 
-Cc: devel@linuxdriverproject.org
+V1:
+- functionality taken from brcm80211 utility function as is.
+- documented the crc8 header file using kernel-doc syntax.
+- compilation verified in-kernel and as module for x86, x86_64, arm, and mips.
+
+V2:
+- ran checkpatch after sending V1 (sorry for that mortal sin) so fixed that.
+
+V3:
+- added function crc8_create().
+- crc8_create() takes polynomial and bit direction as parameters.
+
+V4:
+- exported bit direction specific functions for crc table creation.
+- remove bit direction enumeration as it is no longer needed.
+- change function signatures to reflect expected table size.
+- used size_t for buffer length parameter in crc8() function.
+
+Cc: linux-kernel@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Dan Carpenter <error27@gmail.com>
+Cc: George Spelvin <linux@horizon.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    4 +++-
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h   |    3 ++-
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |    1 +
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    3 ++-
- drivers/staging/brcm80211/brcmsmac/wlc_main.c      |    8 ++++++--
- drivers/staging/brcm80211/brcmsmac/wlc_main.h      |    1 +
- drivers/staging/brcm80211/brcmsmac/wlc_pub.h       |    2 +-
- 9 files changed, 18 insertions(+), 6 deletions(-)
+ include/linux/crc8.h |  101 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/Kconfig          |    7 +++
+ lib/Makefile         |    1 +
+ lib/crc8.c           |   84 +++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 193 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/crc8.h
+ create mode 100644 lib/crc8.c
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-index 873d64c..8fb3e04 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-@@ -581,7 +581,8 @@ void wlc_phy_shared_detach(shared_phy_t *phy_sh)
- 	}
- }
- 
--wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype, char *vars)
-+wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype,
-+			  char *vars, struct wiphy *wiphy)
- {
- 	phy_info_t *pi;
- 	u32 sflags = 0;
-@@ -611,6 +612,7 @@ wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype, char *vars
- 	if (pi == NULL) {
- 		return NULL;
- 	}
-+	pi->wiphy = wiphy;
- 	pi->regs = (d11regs_t *) regs;
- 	pi->sh = sh;
- 	pi->phy_init_por = true;
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
-index bf962d5..12eabc9 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_hal.h
-@@ -21,6 +21,7 @@
- #include <siutils.h>
- #include <d11.h>
- #include <wlc_phy_shim.h>
-+#include <net/mac80211.h>	/* struct wiphy */
- 
- #define	IDCODE_VER_MASK		0x0000000f
- #define	IDCODE_VER_SHIFT	0
-@@ -149,7 +150,7 @@ typedef struct shared_phy_params {
- extern shared_phy_t *wlc_phy_shared_attach(shared_phy_params_t *shp);
- extern void wlc_phy_shared_detach(shared_phy_t *phy_sh);
- extern wlc_phy_t *wlc_phy_attach(shared_phy_t *sh, void *regs, int bandtype,
--				 char *vars);
-+				 char *vars, struct wiphy *wiphy);
- extern void wlc_phy_detach(wlc_phy_t *ppi);
- 
- extern bool wlc_phy_get_phyversion(wlc_phy_t *pih, u16 *phytype,
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-index 6e12a95..3d1cd34 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-@@ -936,6 +936,7 @@ struct phy_info {
- 	u8 phycal_tempdelta;
- 	u32 mcs20_po;
- 	u32 mcs40_po;
-+	struct wiphy *wiphy;
- };
- 
- typedef s32 fixed;
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index 3c9994a..f2e481f 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -722,6 +722,7 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 	hw = pci_get_drvdata(btparam);	/* btparam == pdev */
- 	wl = hw->priv;
- 	ASSERT(wl);
-+	wl->wiphy = hw->wiphy;
- 
- 	atomic_set(&wl->callbacks, 0);
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-index f3198cc..e7e9516 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-@@ -72,6 +72,7 @@ struct wl_info {
- 	/* ping-pong stats counters updated by Linux watchdog */
- 	struct net_device_stats stats_watchdog[2];
- 	struct wl_firmware fw;
-+	struct wiphy *wiphy;
- };
- 
- #define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-index bd8a629..9c4b313 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-@@ -849,7 +849,8 @@ int wlc_bmac_attach(struct wlc_info *wlc, u16 vendor, u16 device, uint unit,
- 
- 		/* Get a phy for this band */
- 		wlc_hw->band->pi = wlc_phy_attach(wlc_hw->phy_sh,
--			(void *)regs, wlc_bmac_bandtype(wlc_hw), vars);
-+			(void *)regs, wlc_bmac_bandtype(wlc_hw), vars,
-+			wlc->wiphy);
- 		if (wlc_hw->band->pi == NULL) {
- 			WL_ERROR("wl%d: wlc_bmac_attach: wlc_phy_attach failed\n",
- 				 unit);
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index 8c9e1fb..b4ca207 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -52,6 +52,8 @@
- #include "wlc_alloc.h"
- #include "wl_dbg.h"
- 
-+#include "wl_mac80211.h"
+diff --git a/include/linux/crc8.h b/include/linux/crc8.h
+new file mode 100644
+index 0000000..13c8dab
+--- /dev/null
++++ b/include/linux/crc8.h
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef __CRC8_H_
++#define __CRC8_H_
 +
- /*
-  *	Disable statistics counting for WME
-  */
-@@ -1674,8 +1676,9 @@ struct wlc_pub *wlc_pub(void *wlc)
- /*
-  * The common driver entry routine. Error codes should be unique
-  */
--void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
--		 void *regsva, uint bustype, void *btparam, uint *perr)
-+void *wlc_attach(struct wl_info *wl, u16 vendor, u16 device, uint unit,
-+		 bool piomode, void *regsva, uint bustype, void *btparam,
-+		 uint *perr)
- {
- 	struct wlc_info *wlc;
- 	uint err = 0;
-@@ -1688,6 +1691,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
- 	wlc = (struct wlc_info *) wlc_attach_malloc(unit, &err, device);
- 	if (wlc == NULL)
- 		goto fail;
-+	wlc->wiphy = wl->wiphy;
- 	pub = wlc->pub;
++#include <linux/types.h>
++
++/* see usage of this value in crc8() description */
++#define CRC8_INIT_VALUE		0xFF
++
++/*
++ * Return value of crc8() indicating valid message+crc. This is true
++ * if a CRC is inverted before transmission. The CRC computed over the
++ * whole received bitstream is _table[x], where x is the bit pattern
++ * of the modification (almost always 0xff).
++ */
++#define CRC8_GOOD_VALUE(_table)	(_table[0xFF])
++
++/* required table size for crc8 algorithm */
++#define CRC8_TABLE_SIZE			256
++
++/* helper macro assuring right table size is used */
++#define DECLARE_CRC8_TABLE(_table) \
++	static u8 _table[CRC8_TABLE_SIZE]
++
++/**
++ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
++ *
++ * @table:	table to be filled.
++ * @polynomial:	polynomial for which table is to be filled.
++ *
++ * This function fills the provided table according the polynomial provided for
++ * regular bit order (lsb first). Polynomials in CRC algorithms are typically
++ * represented as shown below.
++ *
++ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
++ *
++ * For lsb first direction x^7 maps to the lsb. So the polynomial is as below.
++ *
++ * - lsb first: poly = 10101011(1) = 0xAB
++ */
++void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
++
++/**
++ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
++ *
++ * @table:	table to be filled.
++ * @polynomial:	polynomial for which table is to be filled.
++ *
++ * This function fills the provided table according the polynomial provided for
++ * reverse bit order (msb first). Polynomials in CRC algorithms are typically
++ * represented as shown below.
++ *
++ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
++ *
++ * For msb first direction x^7 maps to the msb. So the polynomial is as below.
++ *
++ * - msb first: poly = (1)11010101 = 0xD5
++ */
++void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
++
++/**
++ * crc8() - calculate a crc8 over the given input data.
++ *
++ * @table:	crc table used for calculation.
++ * @pdata:	pointer to data buffer.
++ * @nbytes:	number of bytes in data buffer.
++ * @crc:	previous returned crc8 value.
++ *
++ * The CRC8 is calculated using the polynomial given in crc8_populate_msb()
++ * or crc8_populate_lsb().
++ *
++ * The caller provides the initial value (either %CRC8_INIT_VALUE
++ * or the previous returned value) to allow for processing of
++ * discontiguous blocks of data.  When generating the CRC the
++ * caller is responsible for complementing the final return value
++ * and inserting it into the byte stream.  When validating a byte
++ * stream (including CRC8), a final return value of %CRC8_GOOD_VALUE
++ * indicates the byte stream data can be considered valid.
++ *
++ * Reference:
++ * "A Painless Guide to CRC Error Detection Algorithms", ver 3, Aug 1993
++ * Williams, Ross N., ross<at>ross.net
++ * (see URL http://www.ross.net/crc/download/crc_v3.txt).
++ */
++u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc);
++
++#endif /* __CRC8_H_ */
+diff --git a/lib/Kconfig b/lib/Kconfig
+index 9c10e38..ff9e5a3 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -89,6 +89,13 @@ config LIBCRC32C
+ 	  require M here.  See Castagnoli93.
+ 	  Module will be libcrc32c.
  
- #if defined(BCMDBG)
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-index f11161d..a858356 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-@@ -757,6 +757,7 @@ struct wlc_info {
- 				 */
- 	bool pr80838_war;
- 	uint hwrxoff;
-+	struct wiphy *wiphy;
- };
++config CRC8
++	tristate "CRC8 function"
++	help
++	  This option provides CRC8 function. Drivers may select this
++	  when they need to do cyclic redundancy check according CRC8
++	  algorithm. Module will be called crc8.
++
+ config AUDIT_GENERIC
+ 	bool
+ 	depends on AUDIT && !AUDIT_ARCH
+diff --git a/lib/Makefile b/lib/Makefile
+index 4b49a24..704959d 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -65,6 +65,7 @@ obj-$(CONFIG_CRC_ITU_T)	+= crc-itu-t.o
+ obj-$(CONFIG_CRC32)	+= crc32.o
+ obj-$(CONFIG_CRC7)	+= crc7.o
+ obj-$(CONFIG_LIBCRC32C)	+= libcrc32c.o
++obj-$(CONFIG_CRC8)	+= crc8.o
+ obj-$(CONFIG_GENERIC_ALLOCATOR) += genalloc.o
  
- /* antsel module specific state */
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-index 273c508..2b51440 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-@@ -480,7 +480,7 @@ extern const u8 wme_fifo2ac[];
- #define	WLC_PROT_N_OBSS		16	/* non-HT OBSS present */
- 
- /* common functions for every port */
--extern void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit,
-+extern void *wlc_attach(struct wl_info *wl, u16 vendor, u16 device, uint unit,
- 			bool piomode, void *regsva, uint bustype, void *btparam,
- 			uint *perr);
- extern uint wlc_detach(struct wlc_info *wlc);
+ obj-$(CONFIG_ZLIB_INFLATE) += zlib_inflate/
+diff --git a/lib/crc8.c b/lib/crc8.c
+new file mode 100644
+index 0000000..0ce4238
+--- /dev/null
++++ b/lib/crc8.c
+@@ -0,0 +1,84 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
++#include <linux/module.h>
++#include <linux/crc8.h>
++#include <linux/printk.h>
++
++/*
++ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
++ *
++ * table:	table to be filled.
++ * polynomial:	polynomial for which table is to be filled.
++ */
++void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
++{
++	int i, j;
++	const u8 msbit = 0x80;
++	u8 t = msbit;
++
++	table[0] = 0;
++
++	for (i = 1; i < CRC8_TABLE_SIZE; i *= 2) {
++		t = (t << 1) ^ (t & msbit ? polynomial : 0);
++		for (j = 0; j < i; j++)
++			table[i+j] = table[j] ^ t;
++	}
++}
++EXPORT_SYMBOL(crc8_populate_msb);
++
++/*
++ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
++ *
++ * table:	table to be filled.
++ * polynomial:	polynomial for which table is to be filled.
++ */
++void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
++{
++	int i, j;
++	u8 t = 1;
++
++	table[0] = 0;
++
++	for (i = (CRC8_TABLE_SIZE >> 1); i; i >>= 1) {
++		t = (t >> 1) ^ (t & 1 ? polynomial : 0);
++		for (j = 0; j < CRC8_TABLE_SIZE; j += 2*i)
++			table[i+j] = table[j] ^ t;
++	}
++}
++EXPORT_SYMBOL(crc8_populate_lsb);
++
++/*
++ * crc8 - calculate a crc8 over the given input data.
++ *
++ * table: crc table used for calculation.
++ * pdata: pointer to data buffer.
++ * nbytes: number of bytes in data buffer.
++ * crc:	previous returned crc8 value.
++ */
++u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc)
++{
++	/* loop over the buffer data */
++	while (nbytes-- > 0)
++		crc = table[(crc ^ *pdata++) & 0xff];
++
++	return crc;
++}
++EXPORT_SYMBOL(crc8);
++
++MODULE_DESCRIPTION("CRC8 (by Williams, Ross N.) function");
++MODULE_AUTHOR("Broadcom Corporation");
++MODULE_LICENSE("Dual BSD/GPL");
 -- 
 1.7.4.1
 
