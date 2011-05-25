@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36151 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751041Ab1EJWD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 18:03:56 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH v2 3/3] compat-wireless: enable RT33XX support.
-Date: Wed, 11 May 2011 00:03:35 +0200
-Message-Id: <1305065015-27078-1-git-send-email-hauke@hauke-m.de> (sfid-20110511_000402_390771_89490096)
+Received: from science.horizon.com ([71.41.210.146]:45696 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752711Ab1EYFqg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 May 2011 01:46:36 -0400
+Date: 25 May 2011 01:46:34 -0400
+Message-ID: <20110525054634.5033.qmail@science.horizon.com> (sfid-20110525_074651_314035_33CDDB37)
+From: "George Spelvin" <linux@horizon.com>
+To: arend@broadcom.com, linux@horizon.com
+Subject: Re: [RFC] lib: crc8: add new library module providing crc8 algorithm
+Cc: akpm@linux-foundation.org, error27@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <4DDC91E1.40104@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is based on a patch by Walter Goldens.
+> On 05/25/2011 12:52 AM, George Spelvin wrote:
+>> May I suggest that crc8_create is A Stupid Idea.  Since the bit order
+>> (and polynomial) will always be compile-time constants, just let the
+>> call sites call crc8_create_[lm]sb_first() directly.
 
-RT2800PCI_RT35XX, RT2800PCI_RT53XX, RT2800USB_RT35XX and
-RT2800USB_RT53XX are still experimental and deactivated because of that.
+> Thanks for be subtle in your suggestion.
 
-CC: Walter Goldens <goldenstranger@yahoo.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
-v2: do not activate CONFIG_RT2800USB_RT53XX and CONFIG_RT2800PCI_RT53XX 
-    by default as they are not stable.
+Since you are obviously being ironic in your phrasing, I hope I did not
+give serious offense.  What I wrote is a fairly accurate description of
+my reflex reaction, but I could have phrased it more diplomatically.
 
- config.mk |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> If callers use the specific function they can not specify a bit order so 
+> no compile-time error.
 
-diff --git a/config.mk b/config.mk
-index 3411743..3c034c1 100644
---- a/config.mk
-+++ b/config.mk
-@@ -326,7 +326,7 @@ CONFIG_RT2400PCI=m
- CONFIG_RT2500PCI=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800PCI=m
--# CONFIG_RT2800PCI_RT33XX=y
-+CONFIG_RT2800PCI_RT33XX=y
- # CONFIG_RT2800PCI_RT35XX=y
- # CONFIG_RT2800PCI_RT53XX=y
- endif #CONFIG_CRC_CCITT
-@@ -451,8 +451,9 @@ CONFIG_ATH9K_HTC=m
- CONFIG_RT2500USB=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800USB=m
--# CONFIG_RT2800USB_RT33XX=y
-+CONFIG_RT2800USB_RT33XX=y
- # CONFIG_RT2800USB_RT35XX=y
-+# CONFIG_RT2800USB_RT53XX=y
- CONFIG_RT2800USB_UNKNOWN=y
- endif #CONFIG_CRC_CCITT
- CONFIG_RT2X00_LIB_USB=m
--- 
-1.7.4.1
+What I meant was, the bit order is specified by the function name.
+An invalid bit order translates to an invalid function name, which the
+linker will complain about.
 
+
+If you feel ambitious, you can fold the crc7 code into yours.  Its an
+msbit-first CRC.  The resultant table will be left-justified rather
+than the current right-justified, but if you look at all the call sites,
+you'll notice that they all shift the result left 1 bit!
+
+I have a pending bug report about some of the calling code which I
+noticed when trying to update it myself, but it doesn't actally
+prevent updating the crc7() call sites:
+http://marc.info/?l=linux-wireless&m=130616050311698
