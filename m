@@ -1,172 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1132 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751133Ab1ERUyx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33534 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754623Ab1EYTYn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 16:54:53 -0400
-Message-ID: <4DD4321B.5080800@gmail.com> (sfid-20110518_225456_858780_F4366EF2)
-Date: Wed, 18 May 2011 22:54:51 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 25 May 2011 15:24:43 -0400
+Received: by iwn34 with SMTP id 34so6702136iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 12:24:43 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 6/7] rt2x00: Queue index locks don't have
- to disable IRQs.
-References: <201105182022.20341.IvDoorn@gmail.com> <201105182023.25912.IvDoorn@gmail.com> <201105182023.47984.IvDoorn@gmail.com> <201105182025.56724.IvDoorn@gmail.com>
-In-Reply-To: <201105182025.56724.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4DDD5691.2040205@openwrt.org>
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+ <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+ <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com>
+ <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
+ <4DDD5691.2040205@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 25 May 2011 12:24:23 -0700
+Message-ID: <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com> (sfid-20110525_212446_735835_9EDAF13D)
+Subject: Re: Initial automatic channel selection implementation
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/11 20:25, Ivo van Doorn wrote:
-> From: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> The queue index locks are no longer used in interrupt context due to the
-> introduction of tasklets and workqueues. Therefore we can use a lighter
-> variant of the spinlocks.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Wed, May 25, 2011 at 12:20 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-05-25 5:01 PM, Luis R. Rodriguez wrote:
+>>
+>> On Wed, May 25, 2011 at 7:45 AM, Helmut Schaa
+>> <helmut.schaa@googlemail.com>  wrote:
+>>>
+>>>  On Wed, May 25, 2011 at 4:37 PM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>  wrote:
+>>>>
+>>>>  On Wed, May 25, 2011 at 5:19 AM, Helmut Schaa
+>>>>  <helmut.schaa@googlemail.com>  wrote:
+>>>>>
+>>>>>  On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>>>  wrote:
+>>>>>>
+>>>>>>  Yes, thanks this is a lot of work already done. Now we just need a
+>>>>>>  basic algorithm to parse this, quantify how ideal this channel is and
+>>>>>>  then spit out a desired optimal channel.
+>>>>>
+>>>>>  That's what I've hacked some time ago (in form of the attached _ugly_
+>>>>> shell
+>>>>>  script that does auto channel selection with rt2x00, not sure if it
+>>>>> works
+>>>>>  correct with other drivers as the survey dump differs somehow between
+>>>>>  rt2x00, ath5k and ath9k, and it only does channel 1-11):
+>>>>>
+>>>>>  - Iterate over all channels and stay on each channel for some time
+>>>>
+>>>>  Nice, yeah I was thinking of using the offchannel operation if we want
+>>>>  to spend more time there for inspection and if associated. For first
+>>>>  iteration it should be possible to just move around. In fact for AP
+>>>>  purposes I suppose one will want to just start AP mode ASAP and then
+>>>>  later do offchannel operations to do the inspection on the ideal
+>>>>  channel. Otherwise we sit there idle until we complete the Automatic
+>>>>  Channel Selection thingy.
+>>>
+>>>  Correct, especially if we also consider 5Ghz channels. Offchannel
+>>> operations
+>>>  would be nice but how can we ensure AP mode while being offchannel?
+>>
+>> Notification of absence.
+>>
+>>>>>  - Store busy time stats for each channel
+>>>>>  - Choose the channel with the lowest busy time (and on 2.4Ghz also
+>>>>>   check the busy times on adjacent channels)
+>>>>
+>>>>  So I was reviewing this -- if we are TX'ing or RX'ing it seems to me
+>>>>  we should skip that time from the busy time, otherwise the "busy" time
+>>>>  includes time we induced on TX'ing or RX'ing ourselves. So I was
+>>>>  thinking of using the:
+>>>>
+>>>>   (active time - rx time - tx time)  / busy time
+>>>
+>>>  Looks good ;) just one problem from a rt2x00 POV: We can't report rx/tx
+>>> busy
+>>>  time separately, we can only advice the hw to include or exclude rx/tx
+>>> time
+>>>  from the busy time statistics.
+>>
+>> Doh, I see.. well in order for the above math to be useful we'd have
+>> to be consistent across drivers. What is being done by rt2x00 right
+>> now? If the later then the math would still work, otherwise then we'd
+>> need to adjust.
+>
+> Excluding rx time isn't even a good idea, since it makes no distinction
+> between local BSS or other activity in the area.
 
-John, as noted in another email on the mailing list, this patch seems to introduce
-a problem on USB devices, which escaped my testing for some reason.
+What if we do an offchannel operation?
 
-Hence, please do not apply this patch to wireless-next.
-
-Patch 7 of the series does not depend on this patch, so that one can still be applied.
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00debug.c |    5 ++---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |   20 ++++++++------------
->  2 files changed, 10 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> index 78787fc..8e417de 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-> @@ -327,7 +327,6 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
->  {
->  	struct rt2x00debug_intf *intf = file->private_data;
->  	struct data_queue *queue;
-> -	unsigned long irqflags;
->  	unsigned int lines = 1 + intf->rt2x00dev->data_queues;
->  	size_t size;
->  	char *data;
-> @@ -344,7 +343,7 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
->  	    sprintf(data, "qid\tflags\t\tcount\tlimit\tlength\tindex\tdma done\tdone\n");
->  
->  	queue_for_each(intf->rt2x00dev, queue) {
-> -		spin_lock_irqsave(&queue->index_lock, irqflags);
-> +		spin_lock_bh(&queue->index_lock);
->  
->  		temp += sprintf(temp, "%d\t0x%.8x\t%d\t%d\t%d\t%d\t%d\t\t%d\n",
->  				queue->qid, (unsigned int)queue->flags,
-> @@ -353,7 +352,7 @@ static ssize_t rt2x00debug_read_queue_stats(struct file *file,
->  				queue->index[Q_INDEX_DMA_DONE],
->  				queue->index[Q_INDEX_DONE]);
->  
-> -		spin_unlock_irqrestore(&queue->index_lock, irqflags);
-> +		spin_unlock_bh(&queue->index_lock);
->  	}
->  
->  	size = strlen(data);
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index f1e1381..e2e1bf6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -735,7 +735,6 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
->  				bool (*fn)(struct queue_entry *entry,
->  					   void *data))
->  {
-> -	unsigned long irqflags;
->  	unsigned int index_start;
->  	unsigned int index_end;
->  	unsigned int i;
-> @@ -753,10 +752,10 @@ bool rt2x00queue_for_each_entry(struct data_queue *queue,
->  	 * it should not be kicked during this run, since it
->  	 * is part of another TX operation.
->  	 */
-> -	spin_lock_irqsave(&queue->index_lock, irqflags);
-> +	spin_lock_bh(&queue->index_lock);
->  	index_start = queue->index[start];
->  	index_end = queue->index[end];
-> -	spin_unlock_irqrestore(&queue->index_lock, irqflags);
-> +	spin_unlock_bh(&queue->index_lock);
->  
->  	/*
->  	 * Start from the TX done pointer, this guarentees that we will
-> @@ -787,7 +786,6 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
->  					  enum queue_index index)
->  {
->  	struct queue_entry *entry;
-> -	unsigned long irqflags;
->  
->  	if (unlikely(index >= Q_INDEX_MAX)) {
->  		ERROR(queue->rt2x00dev,
-> @@ -795,11 +793,11 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
->  		return NULL;
->  	}
->  
-> -	spin_lock_irqsave(&queue->index_lock, irqflags);
-> +	spin_lock_bh(&queue->index_lock);
->  
->  	entry = &queue->entries[queue->index[index]];
->  
-> -	spin_unlock_irqrestore(&queue->index_lock, irqflags);
-> +	spin_unlock_bh(&queue->index_lock);
->  
->  	return entry;
->  }
-> @@ -808,7 +806,6 @@ EXPORT_SYMBOL_GPL(rt2x00queue_get_entry);
->  void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
->  {
->  	struct data_queue *queue = entry->queue;
-> -	unsigned long irqflags;
->  
->  	if (unlikely(index >= Q_INDEX_MAX)) {
->  		ERROR(queue->rt2x00dev,
-> @@ -816,7 +813,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
->  		return;
->  	}
->  
-> -	spin_lock_irqsave(&queue->index_lock, irqflags);
-> +	spin_lock_bh(&queue->index_lock);
->  
->  	queue->index[index]++;
->  	if (queue->index[index] >= queue->limit)
-> @@ -831,7 +828,7 @@ void rt2x00queue_index_inc(struct queue_entry *entry, enum queue_index index)
->  		queue->count++;
->  	}
->  
-> -	spin_unlock_irqrestore(&queue->index_lock, irqflags);
-> +	spin_unlock_bh(&queue->index_lock);
->  }
->  
->  void rt2x00queue_pause_queue(struct data_queue *queue)
-> @@ -1031,10 +1028,9 @@ EXPORT_SYMBOL_GPL(rt2x00queue_flush_queues);
->  
->  static void rt2x00queue_reset(struct data_queue *queue)
->  {
-> -	unsigned long irqflags;
->  	unsigned int i;
->  
-> -	spin_lock_irqsave(&queue->index_lock, irqflags);
-> +	spin_lock_bh(&queue->index_lock);
->  
->  	queue->count = 0;
->  	queue->length = 0;
-> @@ -1042,7 +1038,7 @@ static void rt2x00queue_reset(struct data_queue *queue)
->  	for (i = 0; i < Q_INDEX_MAX; i++)
->  		queue->index[i] = 0;
->  
-> -	spin_unlock_irqrestore(&queue->index_lock, irqflags);
-> +	spin_unlock_bh(&queue->index_lock);
->  }
->  
->  void rt2x00queue_init_queues(struct rt2x00_dev *rt2x00dev)
-
-
--- 
----
-Gertjan
+  Luis
