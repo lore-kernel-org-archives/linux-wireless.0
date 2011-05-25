@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:48861 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753331Ab1EXPMS (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:53829 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140Ab1EYAjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 11:12:18 -0400
-From: Tao Ma <tm@tao.ma>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: Default to 'n' for 2 new added devices in Kconfig.
-Date: Tue, 24 May 2011 23:11:56 +0800
-Message-Id: <1306249916-6638-1-git-send-email-tm@tao.ma> (sfid-20110524_171245_254728_54F9DE6B)
+	Tue, 24 May 2011 20:39:08 -0400
+Received: by pwi15 with SMTP id 15so3238039pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 17:39:07 -0700 (PDT)
+Message-ID: <4DDC4F93.6000900@ring3k.org> (sfid-20110525_023912_109641_86956267)
+Date: Wed, 25 May 2011 09:38:43 +0900
+From: Mike McCormack <mikem@ring3k.org>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/8] rtlwifi: Synchronize IRQ after disabling it
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tao Ma <boyu.mt@taobao.com>
+This make sure any IRQ handlers running on other CPUs complete.
 
-We make oldconfig every time when a new kernel arrives, but
-if we don't have such a device(I guess this is the most common
-case for a new device), the default value should be 'n' so
-that the kernel size we build doesn't grow up too much quickly.
-For anyone who has the device, it is OK for them to turn it on
-by themselves.
-
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig |    1 +
- drivers/net/wireless/rt2x00/Kconfig    |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index d9ff841..2548f47 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -25,6 +25,7 @@ config ATH9K
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 4a56138..87b8a79 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1196,6 +1196,7 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+ 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
+ 	rtlpci->irq_enabled = false;
++	synchronize_irq(rtlpci->pdev->irq);
+ }
  
- config ATH9K_PCI
- 	bool "Atheros ath9k PCI/PCIe bus support"
-+	default n
- 	depends on ATH9K && PCI
- 	default PCI
- 	---help---
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 9def1e5..677abc9 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -166,7 +166,7 @@ config RT2800USB_RT35XX
- config RT2800USB_RT53XX
-        bool "rt2800usb - Include support for rt53xx devices (EXPERIMENTAL)"
-        depends on EXPERIMENTAL
--       default y
-+       default n
-        ---help---
-          This adds support for rt53xx wireless chipset family to the
-          rt2800pci driver.
+ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
 -- 
-1.7.4
+1.7.4.1
+
 
