@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53490 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758085Ab1EaTrt (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:43842 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932288Ab1EYAl1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 02/32] ath9k: define device id for AR9330
-Date: Tue, 31 May 2011 21:36:53 +0200
-Message-Id: <1306870643-7935-3-git-send-email-juhosg@openwrt.org> (sfid-20110531_214911_042922_6072E446)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Tue, 24 May 2011 20:41:27 -0400
+Received: by pwi15 with SMTP id 15so3238562pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 17:41:27 -0700 (PDT)
+Message-ID: <4DDC501F.4090809@ring3k.org> (sfid-20110525_024129_713877_EDEAF0C9)
+Date: Wed, 25 May 2011 09:41:03 +0900
+From: Mike McCormack <mikem@ring3k.org>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 8/8] rtlwifi: Fix logic in rx_interrupt
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Should pass along packet if there's no CRC and no hardware error.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 4b157c5..9f23451 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -45,6 +45,7 @@
- #define AR9300_DEVID_PCIE	0x0030
- #define AR9300_DEVID_AR9340	0x0031
- #define AR9300_DEVID_AR9485_PCIE 0x0032
-+#define AR9300_DEVID_AR9330	0x0035
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 4fe405a..215abfa 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -691,7 +691,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 			hdr = rtl_get_hdr(skb);
+ 			fc = rtl_get_fc(skb);
  
- #define AR5416_AR9100_DEVID	0x000b
+-			if (!stats.crc || !stats.hwerror) {
++			if (!stats.crc && !stats.hwerror) {
+ 				memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
+ 				       sizeof(rx_status));
  
 -- 
-1.7.2.1
+1.7.4.1
 
