@@ -1,131 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:46965 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759733Ab1EMV1l (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59054 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756612Ab1EYMTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 17:27:41 -0400
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Felipe Balbi <balbi@ti.com>
-Subject: [RFC/PATCH 12/13] net: wireless: wl12xx: mark some symbols static
-Date: Sat, 14 May 2011 00:26:29 +0300
-Message-Id: <1305321990-22041-13-git-send-email-balbi@ti.com> (sfid-20110513_232822_934056_2B324F64)
-In-Reply-To: <1305321990-22041-1-git-send-email-balbi@ti.com>
-References: <1305321990-22041-1-git-send-email-balbi@ti.com>
+	Wed, 25 May 2011 08:19:07 -0400
+Received: by qyk7 with SMTP id 7so2057760qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 05:19:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+	<201105241627.49201.helmut.schaa@googlemail.com>
+	<BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+Date: Wed, 25 May 2011 14:19:06 +0200
+Message-ID: <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> (sfid-20110525_141912_041847_19590BC6)
+Subject: Re: Initial automatic channel selection implementation
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+Content-Type: multipart/mixed; boundary=00163641728109145204a418b626
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-after re-factoring a bunch of symbols are only
-used inside main.c which allows us to mark
-them as static.
+--00163641728109145204a418b626
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Felipe Balbi <balbi@ti.com>
----
- drivers/net/wireless/wl12xx/io.h   |    7 -------
- drivers/net/wireless/wl12xx/main.c |   18 ++++++------------
- 2 files changed, 6 insertions(+), 19 deletions(-)
+On Wed, May 25, 2011 at 12:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> Yes, thanks this is a lot of work already done. Now we just need a
+> basic algorithm to parse this, quantify how ideal this channel is and
+> then spit out a desired optimal channel.
 
-diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
-index 2bb2295..34ead79 100644
---- a/drivers/net/wireless/wl12xx/io.h
-+++ b/drivers/net/wireless/wl12xx/io.h
-@@ -157,11 +157,4 @@ int wl1271_set_partition(struct wl1271 *wl,
- 
- /* Functions from wl1271_main.c */
- 
--int wl1271_register_hw(struct wl1271 *wl);
--void wl1271_unregister_hw(struct wl1271 *wl);
--int wl1271_init_ieee80211(struct wl1271 *wl);
--struct ieee80211_hw *wl1271_alloc_hw(void);
--int wl1271_free_hw(struct wl1271 *wl);
--irqreturn_t wl1271_irq(int irq, void *data);
--
- #endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 628f7a3..d3c056d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -661,7 +661,7 @@ static void wl1271_netstack_work(struct work_struct *work)
- 
- #define WL1271_IRQ_MAX_LOOPS 256
- 
--irqreturn_t wl1271_irq(int irq, void *cookie)
-+static irqreturn_t wl1271_irq(int irq, void *cookie)
- {
- 	int ret;
- 	u32 intr;
-@@ -776,7 +776,6 @@ out:
- 
- 	return IRQ_HANDLED;
- }
--EXPORT_SYMBOL_GPL(wl1271_irq);
- 
- static int wl1271_fetch_firmware(struct wl1271 *wl)
- {
-@@ -3265,7 +3264,7 @@ static ssize_t wl1271_sysfs_show_hw_pg_ver(struct device *dev,
- static DEVICE_ATTR(hw_pg_ver, S_IRUGO | S_IWUSR,
- 		   wl1271_sysfs_show_hw_pg_ver, NULL);
- 
--int wl1271_register_hw(struct wl1271 *wl)
-+static int wl1271_register_hw(struct wl1271 *wl)
- {
- 	int ret;
- 
-@@ -3302,9 +3301,8 @@ int wl1271_register_hw(struct wl1271 *wl)
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(wl1271_register_hw);
- 
--void wl1271_unregister_hw(struct wl1271 *wl)
-+static void wl1271_unregister_hw(struct wl1271 *wl)
- {
- 	if (wl->state == WL1271_STATE_PLT)
- 		__wl1271_plt_stop(wl);
-@@ -3314,9 +3312,8 @@ void wl1271_unregister_hw(struct wl1271 *wl)
- 	wl->mac80211_registered = false;
- 
- }
--EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
- 
--int wl1271_init_ieee80211(struct wl1271 *wl)
-+static int wl1271_init_ieee80211(struct wl1271 *wl)
- {
- 	static const u32 cipher_suites[] = {
- 		WLAN_CIPHER_SUITE_WEP40,
-@@ -3386,11 +3383,10 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
- 
- #define WL1271_DEFAULT_CHANNEL 0
- 
--struct ieee80211_hw *wl1271_alloc_hw(void)
-+static struct ieee80211_hw *wl1271_alloc_hw(void)
- {
- 	struct ieee80211_hw *hw;
- 	struct platform_device *plat_dev = NULL;
-@@ -3523,9 +3519,8 @@ err_hw_alloc:
- 
- 	return ERR_PTR(ret);
- }
--EXPORT_SYMBOL_GPL(wl1271_alloc_hw);
- 
--int wl1271_free_hw(struct wl1271 *wl)
-+static int wl1271_free_hw(struct wl1271 *wl)
- {
- 	platform_device_unregister(wl->plat_dev);
- 	free_pages((unsigned long)wl->aggr_buf,
-@@ -3546,7 +3541,6 @@ int wl1271_free_hw(struct wl1271 *wl)
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(wl1271_free_hw);
- 
- static irqreturn_t wl12xx_hardirq(int irq, void *_wl)
- {
--- 
-1.7.4.1.343.ga91df
+That's what I've hacked some time ago (in form of the attached _ugly_ shell
+script that does auto channel selection with rt2x00, not sure if it works
+correct with other drivers as the survey dump differs somehow between
+rt2x00, ath5k and ath9k, and it only does channel 1-11):
 
+- Iterate over all channels and stay on each channel for some time
+- Store busy time stats for each channel
+- Choose the channel with the lowest busy time (and on 2.4Ghz also
+  check the busy times on adjacent channels)
+
+Btw. is the idea to get the auto channel selection into hostapd/supplicant
+or in a new userspace tool?
+
+Helmut
+
+--00163641728109145204a418b626
+Content-Type: application/x-sh; name="auto_channel.sh"
+Content-Disposition: attachment; filename="auto_channel.sh"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_go48k8ux0
+
+IyEvYmluL3NoCgppdyBwaHkgcGh5MCBpbnRlcmZhY2UgYWRkIG1vbjAgdHlwZSBtb25pdG9yCmlm
+Y29uZmlnIG1vbjAgdXAKaXcgZGV2IG1vbjAgc3VydmV5IGR1bXAgPiAvZGV2L251bGwKCiMgY29s
+bGVjdCBidXN5IHRpbWUgc3RhdGlzdGljcyBmb3IgZWFjaCAyLDRHaHogY2hhbm5lbApmb3IgaSBp
+biBgc2VxIDEgMTFgCmRvCgkjIGxldCdzIHN0YXkgb24gZWFjaCBjaGFubmVsIGZvciB+MjAwbXMK
+CWl3IGRldiBtb24wIHNldCBjaGFubmVsICRpCglzbGVlcCAwLjIKCgkjIGV4dHJhY3QgYnVzeS9h
+Y3RpdmUgdGltZSByYXRpbwoJZHVtcD1gaXcgZGV2IG1vbjAgc3VydmV5IGR1bXBgCgl0aW1lPWBl
+Y2hvICRkdW1wIHwgZ3JlcCAtbyAtZSAiY2hhbm5lbCBhY3RpdmUgdGltZTogWzAtOV0qIG1zIiB8
+IGdyZXAgLW8gLWUgIlswLTldKiIgfCBoZWFkIC1uMWAKCWJ1c3k9YGVjaG8gJGR1bXAgfCBncmVw
+IC1vIC1lICJjaGFubmVsIGJ1c3kgdGltZTogWzAtOV0qIG1zIiB8IGdyZXAgLW8gLWUgIlswLTld
+KiIgfCBoZWFkIC1uMWAKCgkjIGNhbGN1bGF0ZSBidXN5dGltZSBwZXJjZW50YWdlIHZhbHVlCglw
+ZXJjZW50PWBleHByICRidXN5ICIqIiAxMDAgIi8iICR0aW1lYAoJZXZhbCBwZXJjZW50JGk9JHBl
+cmNlbnQKCgllY2hvICJDaGFubmVsICRpIGJ1c3kgdGltZSAke2J1c3l9LyR7dGltZX1tcywgJHtw
+ZXJjZW50fSUiCmRvbmUKCiMgbm93IGFkZCBvdmVybGFwcGluZyBjaGFubmVsIGJ1c3kgdGltZXMs
+IGhlbmNlIHRoZSBtYXhpbXVtIGJ1c3kgdGltZSBpcyA1MDAKbWluX2J1c3l0aW1lPTUwMApjaGFu
+bmVsPTEKCmZvciBpIGluIGBzZXEgMSAxMWAKZG8KCSMgZWFjaCBjaGFubmVsIGlzIGluZmx1ZW5j
+ZWQgYnkgb3ZlcmxhcHBpbmcgY2hhbm5lbHMgKy0yCglzdGFydF9jaGFubmVsPWBleHByICRpIC0g
+MmAKCXN0b3BfY2hhbm5lbD1gZXhwciAkaSArIDJgCgoJZXhwciAiJHN0YXJ0X2NoYW5uZWwiICI8
+IiAxID4gL2Rldi9udWxsICYmIHN0YXJ0X2NoYW5uZWw9MQoJZXhwciAiJHN0b3BfY2hhbm5lbCIg
+Ij4iIDExID4gL2Rldi9udWxsICYmIHN0b3BfY2hhbm5lbD0xMQoKCSMgYWRkIGJ1c3l0aW1lIHZh
+bHVlcyBvZiBhbGwgb3ZlcmxhcHBpbmcgY2hhbm5lbHMKCWJ1c3l0aW1lPTAKCWZvciBqIGluIGBz
+ZXEgJHN0YXJ0X2NoYW5uZWwgJHN0b3BfY2hhbm5lbGAKCWRvCgkJZXZhbCB0bXA9XCRwZXJjZW50
+JGoKCQlidXN5dGltZT1gZXhwciAkYnVzeXRpbWUgKyAkdG1wYAoJZG9uZQoKCWV4cHIgJGJ1c3l0
+aW1lICI8IiAkbWluX2J1c3l0aW1lID4gL2Rldi9udWxsICYmIG1pbl9idXN5dGltZT0iJGJ1c3l0
+aW1lIiAmJiBjaGFubmVsPSIkaSIKZG9uZQoKZWNobyAiU2VsZWN0IGNoYW5uZWwgJGNoYW5uZWwi
+Cml3IGRldiBtb24wIGRlbAoK
+--00163641728109145204a418b626--
