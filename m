@@ -1,132 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
+Received: from lucidpixels.com ([75.144.35.66]:45788 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753721Ab1E0QH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2011 12:07:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/10] iwlagn: remove un-necessary tx power ops
-Date: Fri, 27 May 2011 08:40:25 -0700
-Message-Id: <1306510833-32049-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180804_228029_2D88B849)
-In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S932480Ab1EZQYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 12:24:07 -0400
+Date: Thu, 26 May 2011 12:24:06 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Jools Wills <buzz@exotica.org.uk>
+cc: Walter Goldens <goldenstranger@yahoo.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Roland Dreier <roland@kernel.org>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>
+Subject: Re: 2.6.38: rt2800usb: driver is crashing the kernel
+In-Reply-To: <4DBFFE64.6000306@exotica.org.uk>
+Message-ID: <alpine.DEB.2.02.1105261221240.8379@p34.internal.lan> (sfid-20110526_182440_474687_6508204D)
+References: <484421.61252.qm@web161619.mail.bf1.yahoo.com> <4DBFFE64.6000306@exotica.org.uk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All agn devices use the same tx power function, remove the ops
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-2000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-core.c |    5 +----
- drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
- 6 files changed, 1 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 61d4a11..9940950 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -174,7 +174,6 @@ static struct iwl_lib_ops iwl1000_lib = {
- 	.rx_handler_setup = iwlagn_rx_handler_setup,
- 	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.apm_ops = {
- 		.init = iwl_apm_init,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 86feec8..a37c41b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -256,7 +256,6 @@ static struct iwl_lib_ops iwl2000_lib = {
- 	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
- 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.set_channel_switch = iwl2030_hw_channel_switch,
- 	.apm_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index a70b8cf..a8dbbd0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -342,7 +342,6 @@ static struct iwl_lib_ops iwl5000_lib = {
- 	.rx_handler_setup = iwlagn_rx_handler_setup,
- 	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.set_channel_switch = iwl5000_hw_channel_switch,
- 	.apm_ops = {
-@@ -373,7 +372,6 @@ static struct iwl_lib_ops iwl5150_lib = {
- 	.rx_handler_setup = iwlagn_rx_handler_setup,
- 	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.set_channel_switch = iwl5000_hw_channel_switch,
- 	.apm_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index f8c710d..eabf3b8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -281,7 +281,6 @@ static struct iwl_lib_ops iwl6000_lib = {
- 	.rx_handler_setup = iwlagn_rx_handler_setup,
- 	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.set_channel_switch = iwl6000_hw_channel_switch,
- 	.apm_ops = {
-@@ -314,7 +313,6 @@ static struct iwl_lib_ops iwl6030_lib = {
- 	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
- 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
--	.send_tx_power = iwlagn_send_tx_power,
- 	.update_chain_flags = iwl_update_chain_flags,
- 	.set_channel_switch = iwl6000_hw_channel_switch,
- 	.apm_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 4653dea..52e9413 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1131,9 +1131,6 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 	if (priv->tx_power_user_lmt == tx_power && !force)
- 		return 0;
- 
--	if (!priv->cfg->ops->lib->send_tx_power)
--		return -EOPNOTSUPP;
--
- 	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
- 		IWL_WARN(priv,
- 			 "Requested user TXPOWER %d below lower limit %d.\n",
-@@ -1167,7 +1164,7 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 	prev_tx_power = priv->tx_power_user_lmt;
- 	priv->tx_power_user_lmt = tx_power;
- 
--	ret = priv->cfg->ops->lib->send_tx_power(priv);
-+	ret = iwlagn_send_tx_power(priv);
- 
- 	/* if fail to set tx_power, restore the orig. tx power */
- 	if (ret) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 3bb76f6..a87b54f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -141,7 +141,6 @@ struct iwl_lib_ops {
- 	struct iwl_apm_ops apm_ops;
- 
- 	/* power */
--	int (*send_tx_power) (struct iwl_priv *priv);
- 	void (*update_chain_flags)(struct iwl_priv *priv);
- 
- 	/* eeprom operations (as defined in iwl-eeprom.h) */
--- 
-1.7.0.4
+On Tue, 3 May 2011, Jools Wills wrote:
+
+> in case it is useful:
+>
+> I am currently using the vendor driver on a device I have (O2 Joggler).
+> The rt2800usb driver didn't work well and the staging rt2870sta driver
+> didn't seem to work with wireless N and users reported to me that it
+> drops the connection and is unreliable. The vendor driver does seem to
+> work best.
+>
+> I made a debian package (using dkms) of the vendor driver on my joggler
+> ppa. tested working wiht 2.6.37/2.6.38
+>
+> https://launchpad.net/~jools/+archive/joggler
+>
+> note it doesn't automatically install the newer firmware so that will
+> need to be done manually.
+>
+> Best Regards
+>
+> Jools
+>
+
+Hi,
+
+Tried 2.6.39, laggy, lots of errors, going to go back to 2.6.38 w/ rt2870sta.
+
+[ 9514.700343] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9524.700306] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9526.700279] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9538.700270] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9539.700227] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9577.700342] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9579.700314] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9585.700238] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9595.700352] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9598.700314] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9598.869690] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 46
+[ 9598.873113] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 47
+[ 9598.877453] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 48
+[ 9598.884587] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 49
+[ 9598.889435] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 50
+[ 9598.896697] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 51
+[ 9598.901949] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 52
+[ 9598.908197] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 53
+[ 9598.911798] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 54
+[ 9598.931461] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 55
+[ 9599.700317] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9600.700287] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
+[ 9601.760057] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 62
+[ 9601.764633] phy0 -> rt2800_txdone_entry_check: Warning - TX status report missed for queue 2 entry 63
+
+$ ping atomw
+PING atomw.internal.lan (1.1.1.1) 56(84) bytes of data.
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=3 ttl=64 time=1540 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=4 ttl=64 time=639 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=5 ttl=64 time=571 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=6 ttl=64 time=492 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=7 ttl=64 time=510 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=8 ttl=64 time=528 ms
+64 bytes from atomw.internal.lan (1.1.1.1): icmp_req=9 ttl=64 time=538 ms
+^C
+--- atomw.internal.lan ping statistics ---
+9 packets transmitted, 7 received, 22% packet loss, time 8004ms
+rtt min/avg/max/mdev = 492.253/688.793/1540.319/350.472 ms, pipe 2
+
+Is there a certain or driver one should use with a MediaLink USB adapter?
+http://www.amazon.com/Medialink-Wireless-Adapter-802-11n-Compatible/dp/B002RM08RE
+
+The rt2870sta works flawlessly with 2.6.38.
+The rt2800usb is very problamtic.
+
+Thanks,
+
+Justin.
 
