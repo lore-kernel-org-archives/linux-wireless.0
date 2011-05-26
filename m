@@ -1,33 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50925 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871Ab1E3U1X (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48622 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757446Ab1EZNxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 16:27:23 -0400
-Date: Mon, 30 May 2011 13:26:16 -0700 (PDT)
-Message-Id: <20110530.132616.262919664.davem@davemloft.net> (sfid-20110530_222744_406143_4EEECCEA)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-05-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110527195008.GA5092@tuxdriver.com>
-References: <20110527195008.GA5092@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 26 May 2011 09:53:12 -0400
+Received: by wwa36 with SMTP id 36so795403wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 06:53:11 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC 1/2] mac80211: add ieee80211_get_operstate() function
+Date: Thu, 26 May 2011 16:53:26 +0300
+Message-Id: <1306418007-27573-1-git-send-email-eliad@wizery.com> (sfid-20110526_155336_172142_4D838857)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 27 May 2011 15:50:08 -0400
+Add ieee80211_get_operstate() function to get the operstate
+of the netdevice.
 
-> This is a quick batch of fixes intended for 2.6.40.  They are all
-> small(-ish), and several of them fix either build breakage or some
-> sort of regression.  At least one fixes an uninitialized variable
-> that could potentially cause a crash.
-> 
-> Please let me know if there are problems!
+This is needed for drivers that need to know when the interface
+is IF_OPER_UP (e.g. wl12xx), and block notifiers can't be used
+(e.g. because the interface is already IF_OPER_UP, like after
+resuming from suspend)
 
-2.6.40, wtf is that? :-)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+i didn't find a better way to get this information, but i might
+have missed something.
 
-Just kidding, pulled, thanks!
+ include/net/mac80211.h |   10 ++++++++++
+ net/mac80211/mlme.c    |    7 +++++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8c7189c..d19e325 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2915,6 +2915,16 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       gfp_t gfp);
+ 
+ /**
++ * ieee80211_get_operstate - get the operstate of the vif
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * The driver might need to know the operstate of the net_device
++ * (specifically, whether the link is IF_OPER_UP after resume)
++ */
++unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_chswitch_done - Complete channel switch process
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @success: make the channel switch successful or not
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4f6b267..c81a99d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2651,3 +2651,10 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
++
++unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	return sdata->dev->operstate;
++}
++EXPORT_SYMBOL(ieee80211_get_operstate);
+-- 
+1.7.0.4
+
