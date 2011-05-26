@@ -1,72 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:57703 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752565Ab1EQHND (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51420 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757446Ab1EZNxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 03:13:03 -0400
-Received: by pwi15 with SMTP id 15so151989pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 00:13:02 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19922.8099.530894.947924@gargle.gargle.HOWL> (sfid-20110517_091306_788857_5114FDEA)
-Date: Tue, 17 May 2011 12:41:31 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/8] ath9k_htc: Fix station flags
+	Thu, 26 May 2011 09:53:14 -0400
+Received: by wya21 with SMTP id 21so521786wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 06:53:13 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC 2/2] wl12xx: check the vif's operstate after join
+Date: Thu, 26 May 2011 16:53:27 +0300
+Message-Id: <1306418007-27573-2-git-send-email-eliad@wizery.com> (sfid-20110526_155336_758943_71272E7E)
+In-Reply-To: <1306418007-27573-1-git-send-email-eliad@wizery.com>
+References: <1306418007-27573-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+When resuming while connected (without wowlan), the interface
+is already IF_OPER_UP, so we won't get the notifier callback,
+and hence never complete the association (from wl12xx perspective)
 
-The FW does absolutely nothing with the station flags,
-so remove them. But keep the field around since it might
-come in handy in the future.
+This situation, among other potential problems, prevents the
+station from entering psm.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    7 +------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ---
- 2 files changed, 1 insertions(+), 9 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   23 ++++++++++++++++++-----
+ 1 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 5ec214c..29dfdf8 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -116,18 +116,13 @@ struct ath9k_htc_target_vif {
- 	u8 pad;
- } __packed;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index fb0f764..546bcc2 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -393,6 +393,22 @@ static struct platform_device wl1271_device = {
+ static DEFINE_MUTEX(wl_list_mutex);
+ static LIST_HEAD(wl_list);
  
--#define ATH_HTC_STA_AUTH  0x0001
--#define ATH_HTC_STA_QOS   0x0002
--#define ATH_HTC_STA_ERP   0x0004
--#define ATH_HTC_STA_HT    0x0008
--
- struct ath9k_htc_target_sta {
- 	u8 macaddr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
- 	u8 sta_index;
- 	u8 vif_index;
- 	u8 is_vif_sta;
--	__be16 flags; /* ATH_HTC_STA_* */
-+	__be16 flags;
- 	__be16 htcap;
- 	__be16 maxampdu;
- 	u8 pad;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6065c2f..b1b8613 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -502,9 +502,6 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
- 		tsta.maxampdu = cpu_to_be16(maxampdu);
++static int wl1271_check_operstate(struct wl1271 *wl, unsigned char operstate)
++{
++	int ret;
++	if (operstate != IF_OPER_UP)
++		return 0;
++
++	if (test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags))
++		return 0;
++
++	ret = wl1271_cmd_set_sta_state(wl);
++	if (ret < 0)
++		return ret;
++
++	wl1271_info("Association completed.");
++	return 0;
++}
+ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 			     void *arg)
+ {
+@@ -442,11 +458,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if ((dev->operstate == IF_OPER_UP) &&
+-	    !test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags)) {
+-		wl1271_cmd_set_sta_state(wl);
+-		wl1271_info("Association completed.");
+-	}
++	wl1271_check_operstate(wl, dev->operstate);
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ 
+@@ -3178,6 +3190,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out;
+ 		}
++		wl1271_check_operstate(wl, ieee80211_get_operstate(vif));
  	}
  
--	if (sta && sta->ht_cap.ht_supported)
--		tsta.flags = cpu_to_be16(ATH_HTC_STA_HT);
--
- 	WMI_CMD_BUF(WMI_NODE_CREATE_CMDID, &tsta);
- 	if (ret) {
- 		if (sta)
+ out:
 -- 
-1.7.5.1
+1.7.0.4
 
