@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:58563 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755283Ab1EMN1r convert rfc822-to-8bit (ORCPT
+Received: from mailout01.t-online.de ([194.25.134.80]:40388 "EHLO
+	mailout01.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755761Ab1EZIum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 09:27:47 -0400
-Received: by qyg14 with SMTP id 14so1459468qyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 06:27:46 -0700 (PDT)
+	Thu, 26 May 2011 04:50:42 -0400
+Message-ID: <4DDE1458.9090004@t-online.de> (sfid-20110526_105046_249539_EF908D52)
+Date: Thu, 26 May 2011 10:50:32 +0200
+From: =?UTF-8?B?UmljaGFyZCBTY2jDvHR6?= <r.schtz@t-online.de>
 MIME-Version: 1.0
-In-Reply-To: <loom.20110513T122134-409@post.gmane.org>
-References: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com>
-	<AANLkTikHx2J-zzCob+xVy04=RYX+K9T2HJ_14zyrto2J@mail.gmail.com>
-	<loom.20110425T203659-857@post.gmane.org>
-	<loom.20110513T122134-409@post.gmane.org>
-Date: Fri, 13 May 2011 15:27:46 +0200
-Message-ID: <BANLkTi=+odWsccvxF1uQ9ruUBDamoSG6hQ@mail.gmail.com> (sfid-20110513_152750_948538_4EDE1DEE)
-Subject: Re: Broadcom 4331 wireless device
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: woto <oganer@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: wwguy <wey-yi.w.guy@intel.com>
+CC: Stevie Trujillo <stevie.trujillo@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware
+ limit?
+References: <201105251813.36804.stevie.trujillo@gmail.com>	 <1306352560.20732.0.camel@wwguy-ubuntu>	 <201105252154.06204.stevie.trujillo@gmail.com> <1306376938.20732.2.camel@wwguy-ubuntu>
+In-Reply-To: <1306376938.20732.2.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/5/13 woto <oganer@gmail.com>:
-> Interesting too... :(
+> On Wed, 2011-05-25 at 12:54 -0700, Stevie Trujillo wrote:
+>> On Wednesday 25 May 2011 21:42:40 wwguy wrote:
+>>> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
+>>>> Hello,
+>>>>
+>>>> I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
+>>>> and I was wondering if the card could do more than that.
+>>>
+>>> the card should not and will not do more than what required by
+>>> regulatory
+>>
+>> I'm allowed to do 20dBm here and was wondering if I could make the card do
+>> that.
+>>
+> the tx power in Intel WiFi device is regulated by uCode to make sure we
+> are within regulatory limits. What country you are in?
+>
+> Thanks
+> Wey
 
-I just managed to add bcma driver (few days ago), now I have to add
-support for bcma in b43. Without this we can not really think about
-implementing BCM4331 support.
-
-Still, even if we will have above part done, we need some reference
-code/driver. AFAIK there is no Linux driver. Did you try using
-ndiswrapper and Windows driver? Does it work?
+I am also having the same issue with my Intel PRO/Wireless 5100 AGN. 
+Here in Germany I'm allowed to use 20 dBm (in the 2.4 GHz band), but the 
+card is limited to 15 dBm. So in some situations other cards are working 
+fine (as they use 20 dBm) and the Intel can't establish a connection.
 
 -- 
-Rafał
+Regards,
+Richard Schütz
