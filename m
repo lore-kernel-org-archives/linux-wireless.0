@@ -1,93 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:58716 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932608Ab1ESMdl (ORCPT
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:39221 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755237Ab1EZUbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 08:33:41 -0400
-Received: by eyx24 with SMTP id 24so743998eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2011 05:33:39 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	Julian Calaby <julian.calaby@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/4] b43: LP-PHY: use new pointers path to access ssb_device
-Date: Thu, 19 May 2011 15:11:24 +0200
-Message-Id: <1305810687-4567-1-git-send-email-zajec5@gmail.com> (sfid-20110519_143344_480163_59B6A401)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 26 May 2011 16:31:13 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: Set command sequence number later to ensure consistency
+Message-Id: <20110526203108.ADEDB9D401C@zog.reactivated.net> (sfid-20110526_223116_203647_BE68C6A7)
+Date: Thu, 26 May 2011 21:31:08 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LP-PHY code is SSB specific, add check for bus type.
+Before this patch, the command sequence number is being set before
+lbs_queue_cmd() adds the command to the queue. However, lbs_queue_cmd()
+sometimes forces commands to queue-jump (e.g. CMD_802_11_WAKEUP_CONFIRM).
+It currently does this without considering that sequence numbers might need
+adjusting to keep things running in order.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Fix this by setting the sequence number at a later stage, just before
+we're actually submitting the command to the hardware. Also fixes a
+possible race where seqnum was being modified outside of the driver
+lock.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/net/wireless/b43/phy_lp.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/net/wireless/libertas/cmd.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 2606c25..daec1d9 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -214,7 +214,7 @@ static void lpphy_table_init(struct b43_wldev *dev)
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 84566db..71c8f3f 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -994,6 +994,8 @@ static void lbs_submit_command(struct lbs_private *priv,
+ 	cmd = cmdnode->cmdbuf;
  
- static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
- {
--	struct ssb_bus *bus = dev->sdev->bus;
-+	struct ssb_bus *bus = dev->dev->sdev->bus;
- 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
- 	u16 tmp, tmp2;
-@@ -519,7 +519,7 @@ struct b2062_freqdata {
- static void lpphy_2062_init(struct b43_wldev *dev)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
--	struct ssb_bus *bus = dev->sdev->bus;
-+	struct ssb_bus *bus = dev->dev->sdev->bus;
- 	u32 crystalfreq, tmp, ref;
- 	unsigned int i;
- 	const struct b2062_freqdata *fd = NULL;
-@@ -1289,7 +1289,7 @@ finish:
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
++	priv->seqnum++;
++	cmd->seqnum = cpu_to_le16(priv->seqnum);
+ 	priv->cur_cmd = cmdnode;
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
  
- static void lpphy_rev2plus_rc_calib(struct b43_wldev *dev)
- {
--	struct ssb_bus *bus = dev->sdev->bus;
-+	struct ssb_bus *bus = dev->dev->sdev->bus;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
- 	u8 tmp = b43_radio_read(dev, B2063_RX_BB_SP8) & 0xFF;
- 	int i;
-@@ -2428,7 +2428,7 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
- 			    unsigned int channel)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
--	struct ssb_bus *bus = dev->sdev->bus;
-+	struct ssb_bus *bus = dev->dev->sdev->bus;
- 	const struct b206x_channel *chandata = NULL;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
- 	u32 tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
-@@ -2518,7 +2518,7 @@ static void lpphy_b2063_vco_calib(struct b43_wldev *dev)
- static int lpphy_b2063_tune(struct b43_wldev *dev,
- 			    unsigned int channel)
- {
--	struct ssb_bus *bus = dev->sdev->bus;
-+	struct ssb_bus *bus = dev->dev->sdev->bus;
+@@ -1621,11 +1623,9 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+ 	/* Copy the incoming command to the buffer */
+ 	memcpy(cmdnode->cmdbuf, in_cmd, in_cmd_size);
  
- 	static const struct b206x_channel *chandata = NULL;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
-@@ -2666,6 +2666,11 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
- {
- 	int err;
+-	/* Set sequence number, clean result, move to buffer */
+-	priv->seqnum++;
++	/* Set command, clean result, move to buffer */
+ 	cmdnode->cmdbuf->command = cpu_to_le16(command);
+ 	cmdnode->cmdbuf->size    = cpu_to_le16(in_cmd_size);
+-	cmdnode->cmdbuf->seqnum  = cpu_to_le16(priv->seqnum);
+ 	cmdnode->cmdbuf->result  = 0;
  
-+	if (dev->dev->bus_type != B43_BUS_SSB) {
-+		b43err(dev->wl, "LP-PHY is supported only on SSB!\n");
-+		return -EOPNOTSUPP;
-+	}
-+
- 	lpphy_read_band_sprom(dev); //FIXME should this be in prepare_structs?
- 	lpphy_baseband_init(dev);
- 	lpphy_radio_init(dev);
+ 	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
 -- 
-1.7.3.4
+1.7.5.1
 
