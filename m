@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:52521 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823Ab1ELW06 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53153 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779Ab1EZVZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 18:26:58 -0400
-Received: by vws1 with SMTP id 1so1468919vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 15:26:57 -0700 (PDT)
+	Thu, 26 May 2011 17:25:44 -0400
+Received: by fxm17 with SMTP id 17so965683fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 14:25:43 -0700 (PDT)
+Message-ID: <4DDEC554.9080702@googlemail.com> (sfid-20110526_232547_484266_6FE12F92)
+Date: Thu, 26 May 2011 23:25:40 +0200
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
-References: <1305203138.3461.24.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 12 May 2011 15:26:36 -0700
-Message-ID: <BANLkTinDyLyVX3HFHU7i4GFUi8SixOdzAQ@mail.gmail.com> (sfid-20110513_002703_148673_EB5CAA5B)
-Subject: Re: mesh RCU issues
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: hostap@lists.shmoo.com
+CC: linux-wireless@vger.kernel.org
+Subject: [hostapd] Multicast packets not encrypted
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Hi!
 
-On Thu, May 12, 2011 at 5:25 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> I was reviewing sparse RCU warnings in mac80211...
->
-> This seems to be some kind of bad joke:
->
-> void mesh_path_timer(unsigned long data)
-> {
->        struct ieee80211_sub_if_data *sdata;
->        struct mesh_path *mpath;
->
->        rcu_read_lock();
->        mpath = (struct mesh_path *) data;
->        mpath = rcu_dereference(mpath);
->        if (!mpath)
->                goto endmpathtimer;
->
-> ????
+I am using an encrypted connection with two dedicated devices using 
+freeradius and hostapd with eap encryption - respectively 
+wpa_supplicant. Everything is working fine, except transmission of 
+multicast packets.
 
-Thanks for cleaning that up.
+I put an independant device into monitor mode and - as to be expected - 
+I can only see encrypted packets. Apart from multicast packets - those I 
+can read in plain.
 
-> And indeed I don't see a del_timer_sync() when the mesh path is freed.
+How can this be?
 
-Isn't the call to del_timer_sync() you are looking for in
-mesh_path_node_reclaim() ?
+On the machines using the wireless encryption this routing table is present:
 
-> But this is _clearly_ totally bogus. Somebody please fix ASAP.
+:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use 
+Iface
+10.0.0.0        0.0.0.0         255.0.0.0       U     0      0        0 
+wlan0
+224.0.0.0       0.0.0.0         240.0.0.0       U     0      0        0 
+wlan0
 
-I'll run sparse and see if I see other rcu warnings that I can fix.
+Once I issue a
 
-Thanks,
+ping 224.0.0.1
 
-j
+I can read the ping packets in plain on the machine with the wireless 
+card in monitor mode. Apart from that, the machine, that should receive 
+the multicast packet, does not "see" the multicast packets (nothing to 
+see in tcpdump of the respective receiver device, that is part of the 
+encrypted connection).
 
+Any suggestions?
 
-> johannes
->
->
-
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Best regards,
+Dennis
