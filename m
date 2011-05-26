@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10037 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933294Ab1ERR7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 13:59:12 -0400
-Subject: Re: iwlagn: 2.6.38.6 memory corruption when unloading module?
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stevie Trujillo <stevie.trujillo@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <201105181821.49508.stevie.trujillo@gmail.com>
-References: <201105181821.49508.stevie.trujillo@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 May 2011 10:33:17 -0700
-Message-ID: <1305739997.14995.285.camel@wwguy-huron> (sfid-20110518_195915_545287_8165A671)
-Mime-Version: 1.0
+Received: from mail-px0-f173.google.com ([209.85.212.173]:33847 "EHLO
+	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539Ab1EZOsb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 10:48:31 -0400
+Received: by pxi16 with SMTP id 16so463150pxi.4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 07:48:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTi=HQe_sVQOcsNN6CUJUEQDpqr2y=g@mail.gmail.com>
+References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
+	<BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com>
+	<BANLkTin=+9jZvm0RjBN0VGG50EXsnqcdvQ@mail.gmail.com>
+	<BANLkTikavLsFOizFG1RieEZNwngBj5Bg0w@mail.gmail.com>
+	<BANLkTi=HQe_sVQOcsNN6CUJUEQDpqr2y=g@mail.gmail.com>
+Date: Thu, 26 May 2011 20:18:30 +0530
+Message-ID: <BANLkTi=VKU_0+unoj3oUEsvhN7ZoPbivzg@mail.gmail.com> (sfid-20110526_164834_181694_CF8B15B5)
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
+From: Mohammed Shafi <shafi.ath9k@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stevie,
-On Wed, 2011-05-18 at 09:21 -0700, Stevie Trujillo wrote:
-> Hello,
-> 
-> I have a Dell-XPS 15 with a Intel(R) Centrino(R) Wireless-N 1030 BGN card.
-> Doing modprobe -r iwlagn; modprobe iwlagn makes my kernel crash (sometimes I 
-> have to repeat it).
-> I managed to get a backtrace (the file "dmesg-kexec.txt" attached) with the 
-> advice of Milton Miller.
-> I also tried to boot with slub_debug=FZ (not exactly sure what that does) - 
-> dmesg attached in "dmesg-slub_debug.txt".
+On Thu, May 26, 2011 at 7:41 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 26 May 2011 21:15, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+>
+>>> What about RX sensitivity/errors?
+>>
+>> should I look recv debug stats?
+>
+> I'm not a chip developer, so I don't really know. :)
+>
+> I hazard a guess that the rx calibration will affect RX sensitivity,
+> maybe CRC errors? Or maximum link distance?
 
-> --
-Thank you for the data, we are look into this issue and try to
-re-produce the problem here. I will update you on our finding.
+Hmmm ok, if you got a chip please test it. I will be very happy if
+this patch improves some performance or  reduces some CRC errors :) I
+will also look into this
 
-Could you create a bug in  http://bugzilla.intellinuxwireless.org/ with
-the information?
-
-Thanks
-Wey
-
-
+>
+>
+> Adrian
+>
