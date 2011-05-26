@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:45181 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755788Ab1EJMD1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 08:03:27 -0400
-Received: by mail-ey0-f180.google.com with SMTP id 24so1886163eyg.25
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 05:03:26 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 5/5] wl12xx: export scheduled scan state in debugfs
-Date: Tue, 10 May 2011 15:03:10 +0300
-Message-Id: <1305028990-14044-6-git-send-email-coelho@ti.com> (sfid-20110510_140331_286705_A79EEEE6)
-In-Reply-To: <1305028990-14044-1-git-send-email-coelho@ti.com>
-References: <1305028990-14044-1-git-send-email-coelho@ti.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3139 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757947Ab1EZSqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 14:46:37 -0400
+Message-ID: <4DDE9FFE.2030407@broadcom.com> (sfid-20110526_204640_803211_907ABF23)
+Date: Thu, 26 May 2011 20:46:22 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Daniel Halperin" <dhalperi@cs.washington.edu>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Subject: Re: %d in wlan log messages
+References: <4DDE63B4.4030309@broadcom.com>
+ <BANLkTina0R-SJamJ_GFbxJsYcvvdyxzZNg@mail.gmail.com>
+ <4DDE9391.6020302@broadcom.com> <20110526175553.GE3595@tuxdriver.com>
+In-Reply-To: <20110526175553.GE3595@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the sched_scanning value to the driver_status debugfs entry.
+On 05/26/2011 07:55 PM, John W. Linville wrote:
+> On Thu, May 26, 2011 at 07:53:21PM +0200, Arend van Spriel wrote:
+>>
+>> Weird. I did not change anything in udev rules (using Ubuntu 10.10
+>> over here). So the only variant in my setup is move to 2.6.39. Can
+>> you explain that netdev apparently has the proper interface id (see
+>> timestamp [563.177019] above?
+> Wasn't a problem like this recently reported w/ compat-wireless?
+> And the fix was to backport some patch to the networking core?
+> I could be hallucinating again...
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Does it happen often then? ;-)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index b2f692b..f1f8df9 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -377,6 +377,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_HEX(platform_quirks);
- 	DRIVER_STATE_PRINT_HEX(chip.id);
- 	DRIVER_STATE_PRINT_STR(chip.fw_ver_str);
-+	DRIVER_STATE_PRINT_INT(sched_scanning);
- 
- #undef DRIVER_STATE_PRINT_INT
- #undef DRIVER_STATE_PRINT_LONG
+> Is it possible that you somehow have a "dirty" build?  Could you try
+> doing a 'make clean' and rebuilding?
+
+Ok. I thought I did a distclean before building, but let me try.
+
+Gr. AvS
+
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
