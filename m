@@ -1,120 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:55759 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132Ab1EEOyq (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:33951 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756405Ab1EZXqB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 10:54:46 -0400
-Date: Thu, 5 May 2011 09:54:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k regression associating with APs in 2.6.38
-Message-ID: <20110505145430.GB13727@thinkpad-t410> (sfid-20110505_165509_691686_82314530)
-References: <20110504153819.GA4551@thinkpad-t410>
- <20110504172716.GC18541@tuxdriver.com>
- <20110504192639.GB4551@thinkpad-t410>
- <BANLkTimEmBRyxbZgffJMrH4TTc4f6peuTg@mail.gmail.com>
- <20110505135207.GA13727@thinkpad-t410>
- <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
+	Thu, 26 May 2011 19:46:01 -0400
+Received: by iyb14 with SMTP id 14so979152iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 16:46:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTinkiTQU2k7vBEc0JPGa01AUVCvp2Q@mail.gmail.com>
+In-Reply-To: <4DDE2F5B.3020804@openwrt.org>
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
+ <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
+ <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com>
+ <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
+ <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
+ <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com> <4DDE2F5B.3020804@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 26 May 2011 16:45:40 -0700
+Message-ID: <BANLkTimuaOoV0uvyzs9PbeK_k6vwOG=+YA@mail.gmail.com> (sfid-20110527_014606_411045_E6F63C46)
+Subject: Re: Initial automatic channel selection implementation
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 05, 2011 at 05:30:42PM +0300, Nick Kossifidis wrote:
-> Hmm I don't see any errors from reset/phy code, can you disable
-> Network Manager/wpa-supplicant and test connection on an open network
-> using iw ? It 'll give us a better picture...
-> 
-> If iw doesn't return any scan results we are probably hitting a PHY/RF
-> error specific to your device (not all vendors follow the reference
-> design). Maybe we should follow a blacklist/whitelist approach for
-> this feature.
+On Thu, May 26, 2011 at 3:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-05-25 9:27 PM, Luis R. Rodriguez wrote:
+>> The missing piece is how to deal with noise info here. In short the
+>> lower noise we have the better signal we'll get. The challenge then is
+>> to take into consideration the noise mathematically in such a that a
+>> high noise value would nullify any clean idle air time ratio
+>> conditions from the formula postulated before. Let me review again
+>> with some modifications.
+>>
+>> Active time is the time we spend on the channel, so to get an idea of
+>> how "busy" that channel is we have to remove the tx and rx time from
+>> that channel. That gives us the time we spent idle on that channel.
+>> Then the busy time is a subset of the entire active time but we should
+>> also exclude the time we spent tx'ing and rx'ing as well. We then
+>> have:
+>>
+>>  (busy time - rx time - tx time) / (active time - rx time - tx time)
+>>
+>> This is a bounded ratio already, given that if we spent 0 time tx'ing
+>> 0 time rx'ing, but 10 ms on a channel, and all that time we had busy
+>> time as well we'd have a ratio of 10 / 10 = 1. In the best case we'd
+>> have  0 / 10 = 0.
+>>
+>> What I'd like to do is to affect the ratio to nullify it if the noise
+>> is very low on the channel. Given that noise is logarithmic we'd have
+>> to use a logarithmic function as well. Working on that now.
+>
+> Please explain why you want to remove the rx time, it makes no sense to me.
+> Without rx time you will usually not get any useful indication of how busy
+> the channel is.
 
-Will do. I just got another log from my tester, which is more typical of
-what he's been getting. I've pasted a portion of it below. The full log
-can be viewed at
+The busy time that happens when do not TX or RX accounts for
+interference on the frequency which is not accounted for. RX time may
+mean receiving beacons or probe responses, this type of data exchange
+doesn't necessarily mean interference. I believe sampling conditions
+each frequency without TX or RX'ing data would yield a more fair
+representation of general interference on the channel, otherwise the
+interference would be taking into consideration explicit forced
+interference on the frequency by our own radio.
 
-https://launchpadlibrarian.net/71137619/20110504_020639rc6%23201105050227_boot4_syslog
-
-Thanks,
-Seth
-
-
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): new 802.11 WiFi device (driver: 'ath5k' ifindex: 3)
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): exported as /org/freedesktop/NetworkManager/Devices/1
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): now managed
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 1 -> 2 (reason 2)
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): bringing up device.
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): preparing device.
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): deactivating device (reason: 2).
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: supplicant_interface_acquire: assertion `mgr_state == NM_SUPPLICANT_MANAGER_STATE_IDLE' failed
-May  5 08:57:16 AcerAspire5100 kernel: [   25.844302] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> modem-manager is now available
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <warn> bluez error getting default adapter: The name org.bluez was not provided by any .service files
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> Trying to start the supplicant...
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant manager state:  down -> idle
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 2 -> 3 (reason 0)
-May  5 08:57:16 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant interface state:  starting -> ready
-...
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) starting connection 'Auto aureola'
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 3 -> 4 (reason 0)
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 4 -> 5 (reason 0)
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0/wireless): access point 'Auto aureola' has security, but secrets are required.
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 5 -> 6 (reason 0)
-May  5 08:57:38 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) scheduled...
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) started...
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 6 -> 4 (reason 0)
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) scheduled...
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 1 of 5 (Device Prepare) complete.
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) starting...
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): device state change: 4 -> 5 (reason 0)
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0/wireless): connection 'Auto aureola' has security, and secrets exist.  No new secrets needed.
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'ssid' value 'aureola'
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'scan_ssid' value '1'
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'key_mgmt' value 'WPA-PSK'
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: added 'psk' value '<omitted>'
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: nm_setting_802_1x_get_pkcs11_engine_path: assertion `NM_IS_SETTING_802_1X (setting)' failed
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: nm_setting_802_1x_get_pkcs11_module_path: assertion `NM_IS_SETTING_802_1X (setting)' failed
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Activation (wlan0) Stage 2 of 5 (Device Configure) complete.
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> Config: set interface ap_scan to 1
-May  5 08:57:39 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  inactive -> scanning
-May  5 08:57:41 AcerAspire5100 wpa_supplicant[734]: Trying to associate with c0:3f:0e:b9:f3:b2 (SSID='aureola' freq=2452 MHz)
-May  5 08:57:41 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  scanning -> associating
-May  5 08:57:41 AcerAspire5100 kernel: [   51.261113] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 1/3)
-May  5 08:57:41 AcerAspire5100 kernel: [   51.460049] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 2/3)
-May  5 08:57:41 AcerAspire5100 kernel: [   51.660091] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 3/3)
-May  5 08:57:42 AcerAspire5100 kernel: [   51.860048] wlan0: direct probe to c0:3f:0e:b9:f3:b2 timed out
-May  5 08:57:51 AcerAspire5100 wpa_supplicant[734]: Authentication with c0:3f:0e:b9:f3:b2 timed out.
-May  5 08:57:51 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  associating -> disconnected
-May  5 08:57:51 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  disconnected -> scanning
-May  5 08:57:51 AcerAspire5100 kernel: [   61.396045] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2452 -> 2412 MHz)
-May  5 08:57:51 AcerAspire5100 kernel: [   61.396051] ath5k phy0: (ath5k_reset:2648): resetting
-May  5 08:57:51 AcerAspire5100 kernel: [   61.397135] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-May  5 08:57:51 AcerAspire5100 kernel: [   61.452053] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2412 -> 2417 MHz)
-May  5 08:57:51 AcerAspire5100 kernel: [   61.452059] ath5k phy0: (ath5k_reset:2648): resetting
-May  5 08:57:51 AcerAspire5100 kernel: [   61.453143] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-May  5 08:57:51 AcerAspire5100 kernel: [   61.508053] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2417 -> 2422 MHz)
-May  5 08:57:51 AcerAspire5100 kernel: [   61.508059] ath5k phy0: (ath5k_reset:2648): resetting
-May  5 08:57:51 AcerAspire5100 kernel: [   61.509143] ath5k phy0: (ath5k_rx_start:1099): cachelsz 32 rx_bufsize 2368
-May  5 08:57:51 AcerAspire5100 kernel: [   61.564045] ath5k phy0: (ath5k_chan_set:434): channel set, resetting (2422 -> 2427 MHz)
-May  5 08:57:52 AcerAspire5100 wpa_supplicant[734]: Trying to associate with c0:3f:0e:b9:f3:b2 (SSID='aureola' freq=2452 MHz)
-May  5 08:57:52 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  scanning -> associating
-May  5 08:57:52 AcerAspire5100 kernel: [   62.364741] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 1/3)
-May  5 08:57:52 AcerAspire5100 kernel: [   62.564061] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 2/3)
-May  5 08:57:53 AcerAspire5100 kernel: [   62.764058] wlan0: direct probe to c0:3f:0e:b9:f3:b2 (try 3/3)
-May  5 08:57:53 AcerAspire5100 kernel: [   62.964061] wlan0: direct probe to c0:3f:0e:b9:f3:b2 timed out
-May  5 08:58:02 AcerAspire5100 wpa_supplicant[734]: Authentication with c0:3f:0e:b9:f3:b2 timed out.
-May  5 08:58:02 AcerAspire5100 NetworkManager[703]: <info> (wlan0): supplicant connection state:  associating -> disconnected
+  Luis
