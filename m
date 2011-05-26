@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:56401 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755307Ab1ERVgV (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:62954 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571Ab1EZGWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 17:36:21 -0400
-Date: Wed, 18 May 2011 14:29:27 -0700
-From: Greg KH <greg@kroah.com>
-To: Joe Perches <joe@perches.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: brcm80211: brcmfmac: Add and use dhd_dbg
-Message-ID: <20110518212927.GB13555@kroah.com> (sfid-20110518_233624_671234_1311C831)
-References: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+	Thu, 26 May 2011 02:22:22 -0400
+Received: by ewy4 with SMTP id 4so149573ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2011 23:22:21 -0700 (PDT)
+From: Stevie Trujillo <stevie.trujillo@gmail.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware limit?
+Date: Thu, 26 May 2011 08:22:18 +0200
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <201105251813.36804.stevie.trujillo@gmail.com> <201105252154.06204.stevie.trujillo@gmail.com> <1306376938.20732.2.camel@wwguy-ubuntu>
+In-Reply-To: <1306376938.20732.2.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <60c19c2ad4f078b6f283b5ff4ecca3653833ea28.1305742868.git.joe@perches.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201105260822.18316.stevie.trujillo@gmail.com> (sfid-20110526_082227_572633_3749A207)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2011 at 11:23:21AM -0700, Joe Perches wrote:
-> All uses of DHD_<TYPE> macros are for debugging only.
+On Thursday 26 May 2011 04:28:58 wwguy wrote:
+> On Wed, 2011-05-25 at 12:54 -0700, Stevie Trujillo wrote:
+> > On Wednesday 25 May 2011 21:42:40 wwguy wrote:
+> > > On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
+> > > > Hello,
+> > > > 
+> > > > I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is
+> > > > 15 and I was wondering if the card could do more than that.
+> > > 
+> > > the card should not and will not do more than what required by
+> > > regulatory
+> > 
+> > I'm allowed to do 20dBm here and was wondering if I could make the card
+> > do that.
 > 
-> Change the multiple uses of DHD_<TYPE>((...)) to dhd_dbg(TYPE, ...)
-> for a more consistent style.
+> the tx power in Intel WiFi device is regulated by uCode to make sure we
+> are within regulatory limits. What country you are in?
 
-I need an ack from one of the broadcom developers before I can take this
-patch...
+Norway
 
-thanks,
-
-greg k-h
+Thanks
+Stevie
