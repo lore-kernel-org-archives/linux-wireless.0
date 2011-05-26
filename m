@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755348Ab1ERXCY (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65008 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277Ab1EZM7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 19:02:24 -0400
-Subject: Re: [PATCH 1/1] nl80211: check return code for genlmsg_end
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1305555848-17609-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110516_162725_013623_B6AF7B8A)
-References: <1305555848-17609-1-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110516_162725_013623_B6AF7B8A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 May 2011 16:04:58 -0700
-Message-ID: <1305759898.8827.7.camel@jlt3.sipsolutions.net> (sfid-20110519_010227_111316_826925B3)
-Mime-Version: 1.0
+	Thu, 26 May 2011 08:59:51 -0400
+Received: by gyd10 with SMTP id 10so259038gyd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 05:59:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com>
+References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
+	<BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com>
+Date: Thu, 26 May 2011 20:59:51 +0800
+Message-ID: <BANLkTin=+9jZvm0RjBN0VGG50EXsnqcdvQ@mail.gmail.com> (sfid-20110526_150015_675322_4C33F9F3)
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mohammed Shafi <shafi.ath9k@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-16 at 07:24 -0700, Wey-Yi Guy wrote:
-> Check the return value for genlmsg_end and handle it.
+On 26 May 2011 20:26, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
 
-It can never return < 0:
+>
+> did a quick preliminary tx throughput test not much difference.
 
-/**
- * nlmsg_end - Finalize a netlink message
- * @skb: socket buffer the message is stored in
- * @nlh: netlink message header
- *
- * Corrects the netlink message header to include the appeneded
- * attributes. Only necessary if attributes have been added to
- * the message.
- *
- * Returns the total data length of the skb.
+What about RX sensitivity/errors?
 
 
-johannes
 
+Adrian
