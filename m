@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:35774 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754013Ab1EMW3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 18:29:09 -0400
-Date: Sat, 14 May 2011 00:29:06 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: WPA in ad-hoc mode with carl9170
-Message-ID: <20110513222906.GB11200@zenon.in.qult.net> (sfid-20110514_003000_711880_E13E53D6)
-References: <20110513160113.GA14293@zenon.in.qult.net>
- <20110513174041.GA4690@zenon.in.qult.net>
- <201105132231.48232.chunkeey@googlemail.com>
- <201105132330.28531.chunkeey@googlemail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:52613 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757774Ab1EZPET convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 11:04:19 -0400
+Received: by pzk9 with SMTP id 9so341430pzk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 08:04:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201105132330.28531.chunkeey@googlemail.com>
+In-Reply-To: <BANLkTinJDgKPEkiBh=kxBddn0ovcJkU26w@mail.gmail.com>
+References: <BANLkTimrSD-zB5q+oM=8HkZ1nsTUNEG81g@mail.gmail.com>
+	<BANLkTinaz4tmMSTRN7RJgYjOvchLY9NKog@mail.gmail.com>
+	<BANLkTin=+9jZvm0RjBN0VGG50EXsnqcdvQ@mail.gmail.com>
+	<BANLkTikavLsFOizFG1RieEZNwngBj5Bg0w@mail.gmail.com>
+	<BANLkTi=HQe_sVQOcsNN6CUJUEQDpqr2y=g@mail.gmail.com>
+	<BANLkTi=VKU_0+unoj3oUEsvhN7ZoPbivzg@mail.gmail.com>
+	<BANLkTinJDgKPEkiBh=kxBddn0ovcJkU26w@mail.gmail.com>
+Date: Thu, 26 May 2011 20:34:19 +0530
+Message-ID: <BANLkTi=ZKYxV_WjbTV9s2_vbZR+UKDrhqQ@mail.gmail.com> (sfid-20110526_170434_413612_45E966CF)
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix Kiwi (AR9287) initial calibration
+From: Mohammed Shafi <shafi.ath9k@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 11:30:28PM +0200, thus spake Christian Lamparter:
-> BTW: I hope your compat-wireless/wireless-testing.git is up to date. 
-> Nicolas Cavallari <Nicolas.Cavallari@lri.fr> has submitted a fix for
-> his ad-hoc setup recently, see: "carl9170: fix allmulticast mode".
+On Thu, May 26, 2011 at 8:26 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 26 May 2011 22:48, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+>
+>>> I hazard a guess that the rx calibration will affect RX sensitivity,
+>>> maybe CRC errors? Or maximum link distance?
+>>
+>> Hmmm ok, if you got a chip please test it. I will be very happy if
+>> this patch improves some performance or  reduces some CRC errors :) I
+>> will also look into this
+>
+> Well I've just brought up AR9287 support on FreeBSD with this RX
+> calibration change and initial tests are promising.
+>
+> I unfortunately don't have anything yet w/ mini-PCIe that dual-boots
+> Linux so I can't easily test ath9k out.
+>
+> Hence why I was asking for someone to please investigate for me :)
 
-I'm using the compat-wireless tarballs as much up-to-date as possible.  Same
-for carl9170 firmware.  As for Nicolas' patch, I got it even before he
-submitted it for your attention. =)
+no problem, sure
 
--- 
-To err is human, to purr feline.
+>
+> Thanks,
+>
+> Adrian
+>
