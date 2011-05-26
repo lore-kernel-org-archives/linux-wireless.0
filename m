@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1799 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1243 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757630Ab1EZRxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 13:53:44 -0400
-Message-ID: <4DDE9391.6020302@broadcom.com> (sfid-20110526_195348_614183_AD2B4A79)
-Date: Thu, 26 May 2011 19:53:21 +0200
+	id S1757985Ab1EZTLX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 15:11:23 -0400
+Message-ID: <4DDEA5C7.70806@broadcom.com> (sfid-20110526_211154_834416_C866F57F)
+Date: Thu, 26 May 2011 21:11:03 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Daniel Halperin" <dhalperi@cs.washington.edu>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Subject: Re: %d in wlan log messages
-References: <4DDE63B4.4030309@broadcom.com>
- <BANLkTina0R-SJamJ_GFbxJsYcvvdyxzZNg@mail.gmail.com>
-In-Reply-To: <BANLkTina0R-SJamJ_GFbxJsYcvvdyxzZNg@mail.gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [RFC V4] lib: crc8: add new library module providing crc8
+ algorithm
+References: <1306320099-17970-1-git-send-email-arend@broadcom.com>
+ <20110525094304.0769a189.rdunlap@xenotime.net>
+In-Reply-To: <20110525094304.0769a189.rdunlap@xenotime.net>
 Content-Type: text/plain;
  charset=iso-8859-1;
  format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2011 05:09 PM, Daniel Halperin wrote:
-> On Thu, May 26, 2011 at 7:29 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->> [  563.120590] wlan%d: authenticate with c0:c1:c0:04:b8:2c (try 1)
->> [  563.128143] wlan%d: authenticated
->> [  563.131517] wlan%d: associate with c0:c1:c0:04:b8:2c (try 1)
->> [  563.140933] wlan%d: RX AssocResp from c0:c1:c0:04:b8:2c (capab=0x411
->> status=0 aid=4)
->> [  563.148714] wlan%d: associated
->> [  563.177019] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
->>
->> On latest staging-next I noticed above mentioned log messages. I assume
->> these message are from cfg80211 or mac80211. Has this been reported?
->>
-> Interface names [including any numbers] are set by userspace, right?
-> On my Ubuntu 10.04.2 LTS system, it's
-> /etc/udev/rules.d/70-persistent.net.rules (or so, this is from
-> memory). Not a kernel bug.
->
-> Dan
+Hi John,
 
-Weird. I did not change anything in udev rules (using Ubuntu 10.10 over 
-here). So the only variant in my setup is move to 2.6.39. Can you 
-explain that netdev apparently has the proper interface id (see 
-timestamp [563.177019] above?
+I have moved couple of math functions into the lib directory in response 
+to feedback you gave to Henry Ptasinski. Both patches had some 
+iterations on the mailing lists covering feedback received from 
+community members. I expect to send final patches for crc8 and cordic 
+(fixed point sine/cosine calculation) soon. Are you willing to take 
+these patches when 2.6.40-rc1 arrives?
 
 Gr. AvS
 
