@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43419 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab1EBT7F convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:39654 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756263Ab1EZIqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2011 15:59:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <1304303082.2833.159.camel@localhost>
-References: <BANLkTintnaEj0DDjwQJjc4wpuz-c_QOGyg@mail.gmail.com>
-	<1304303082.2833.159.camel@localhost>
-Date: Mon, 2 May 2011 20:59:04 +0100
-Message-ID: <BANLkTi=FT4v=Jvv5bQpUX15R87kPudKq=Q@mail.gmail.com> (sfid-20110502_215931_396000_251405CA)
-Subject: Re: Frequent spurious tx_timeouts for libertas
-From: Daniel Drake <dsd@laptop.org>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: netdev@vger.kernel.org, libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 May 2011 04:46:22 -0400
+Received: by wwk4 with SMTP id 4so4214567wwk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2011 01:46:21 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: clear local->ps_data on disassoc
+Date: Thu, 26 May 2011 11:46:37 +0300
+Message-Id: <1306399597-15012-1-git-send-email-eliad@wizery.com> (sfid-20110526_104626_451502_760D3388)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 May 2011 03:24, Ben Hutchings <bhutchings@solarflare.com> wrote:
->> Also, while looking at this code, I spotted a bug in dev_watchdog():
->>                               /*
->>                                * old device drivers set dev->trans_start
->>                                */
->>                               trans_start = txq->trans_start ? : dev->trans_start;
->>
->> i.e. it is trying to figure out whether to read trans_start from txq
->> or dev. In both cases, trans_start is updated based on the value of
->> jiffies, which will occasionally be 0 (as it wraps around). Therefore
->> this line of code will occasionally make the wrong decision.
->
-> No, I don't think so.
->
-> If only dev->trans_start is being updated then the watchdog reads that.
-> If both txq->trans_start and dev->trans_start are being updated then it
-> doesn't matter much which the watchdog reads.
-> If only txq->trans_start is being updated then dev->trans_start is
-> always set to 0, so when txq->trans_start is 0 the watchdog still gets
-> 0.
+local->ps_data wasn't cleared on disassociation, which
+(in some corner cases) caused reconnections to enter
+psm before association completed.
 
-dev->trans_start is unconditionally initialized by dev_activate() in
-sch_generic.c:
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-	if (need_watchdog) {
-		dev->trans_start = jiffies;
-		dev_watchdog_up(dev);
-	}
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4f6b267..d595265 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1089,6 +1089,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+ 		config_changed |= IEEE80211_CONF_CHANGE_PS;
+ 	}
++	local->ps_sdata = NULL;
+ 
+ 	ieee80211_hw_config(local, config_changed);
+ 
+-- 
+1.7.0.4
 
-so it is (usually) not 0.
-
-Thanks for your input on the tx timeout issue, now that I understand
-it better I think the right plan of action is to remove it from
-libertas entirely, I'll CC you on the patch.
-
-Daniel
