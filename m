@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22649 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:47873 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755861Ab1EXJlV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 05:41:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 02:40:50 -0700
-Message-ID: <4DDB7D2A.2030602@atheros.com> (sfid-20110524_114131_894196_DA5AE3DB)
-Date: Tue, 24 May 2011 15:10:58 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH v2] ath9k: wake up chip before initializing PAPRD table
-References: <1306229170-18368-1-git-send-email-mshajakhan@atheros.com>
-In-Reply-To: <1306229170-18368-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	id S1752435Ab1EZOPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 10:15:11 -0400
+Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a
+ hardware limit?
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>
+Cc: Stevie Trujillo <stevie.trujillo@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4DDE1458.9090004@t-online.de>
+References: <201105251813.36804.stevie.trujillo@gmail.com>
+	 <1306352560.20732.0.camel@wwguy-ubuntu>
+	 <201105252154.06204.stevie.trujillo@gmail.com>
+	 <1306376938.20732.2.camel@wwguy-ubuntu>  <4DDE1458.9090004@t-online.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 26 May 2011 07:11:49 -0700
+Message-ID: <1306419109.20732.6.camel@wwguy-ubuntu> (sfid-20110526_161536_615047_038E3156)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 24 May 2011 02:56 PM, Mohammed Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->
-> In PAPRD table initialization path we do some register read, so
-> make sure the chip is awake during that. Currently PAPRD is disabled.
->
-> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> ---
->   drivers/net/wireless/ath/ath9k/main.c |    5 +++--
->   1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a198ee3..4a71f4e 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -394,8 +394,10 @@ void ath_paprd_calibrate(struct work_struct *work)
->   	if (!caldata)
->   		return;
->
-> +	ath9k_ps_wakeup(sc);
-> +
->   	if (ar9003_paprd_init_table(ah)<  0)
-> -		return;
-> +		goto fail_paprd;
->
->   	skb = alloc_skb(len, GFP_KERNEL);
->   	if (!skb)
+On Thu, 2011-05-26 at 01:50 -0700, Richard Schütz wrote:
+> > On Wed, 2011-05-25 at 12:54 -0700, Stevie Trujillo wrote:
+> >> On Wednesday 25 May 2011 21:42:40 wwguy wrote:
+> >>> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
+> >>>> Hello,
+> >>>>
+> >>>> I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
+> >>>> and I was wondering if the card could do more than that.
+> >>>
+> >>> the card should not and will not do more than what required by
+> >>> regulatory
+> >>
+> >> I'm allowed to do 20dBm here and was wondering if I could make the card do
+> >> that.
+> >>
+> > the tx power in Intel WiFi device is regulated by uCode to make sure we
+> > are within regulatory limits. What country you are in?
+> >
+> > Thanks
+> > Wey
+> 
+> I am also having the same issue with my Intel PRO/Wireless 5100 AGN. 
+> Here in Germany I'm allowed to use 20 dBm (in the 2.4 GHz band), but the 
+> card is limited to 15 dBm. So in some situations other cards are working 
+> fine (as they use 20 dBm) and the Intel can't establish a connection.
+> 
+We do not have different SKUs for different regions of the world. Now I
+understand your problem. Thank you very much for reporting. I will raise
+the issue and see how we should fix it. 
 
-need to handle this case of skb_allocation failure :(, will send a v3. 
-thanks to Vivek.
+Sorry, I don't have a solution for you today. But it is very important
+for us and we need to result it.
+  
+Thanks
+Wey
 
-> @@ -411,7 +413,6 @@ void ath_paprd_calibrate(struct work_struct *work)
->   	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
->   	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
->
-> -	ath9k_ps_wakeup(sc);
->   	for (chain = 0; chain<  AR9300_MAX_CHAINS; chain++) {
->   		if (!(common->tx_chainmask&  BIT(chain)))
->   			continue;
-
--- 
-thanks,
-shafi
