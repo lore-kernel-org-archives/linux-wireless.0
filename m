@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:33163 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755382Ab1EWNyA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 09:54:00 -0400
-Received: by pwi15 with SMTP id 15so2611783pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 06:54:00 -0700 (PDT)
-Message-ID: <4DDA66E3.8030207@ring3k.org> (sfid-20110523_155409_901544_A3627481)
-Date: Mon, 23 May 2011 22:53:39 +0900
-From: Mike McCormack <mikem@ring3k.org>
-MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/8] rtlwifi: Synchronize IRQ after disabling it
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:61629 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab1E0QIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 12:08:02 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/10] iwlagn: change the logging level for aggregation enable check
+Date: Fri, 27 May 2011 08:40:31 -0700
+Message-Id: <1306510833-32049-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180819_419189_30F1E1F7)
+In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This make sure any IRQ handlers running on other CPUs complete.
+Aggregation will not enable if the traffic is lower than the threshold,
+this is not an error condition, so change the logging level.
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 4a56138..87b8a79 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1196,6 +1196,7 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
- 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
- 	rtlpci->irq_enabled = false;
-+	synchronize_irq(rtlpci->pdev->irq);
- }
- 
- static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 592b0cf..85e0828 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -426,7 +426,7 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 			ieee80211_stop_tx_ba_session(sta, tid);
+ 		}
+ 	} else {
+-		IWL_ERR(priv, "Aggregation not enabled for tid %d "
++		IWL_DEBUG_HT(priv, "Aggregation not enabled for tid %d "
+ 			"because load = %u\n", tid, load);
+ 	}
+ 	return ret;
 -- 
-1.7.4.1
-
+1.7.0.4
 
