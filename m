@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29861 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:15911 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755928Ab1EDVBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2011 17:01:36 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 04 May 2011 14:01:08 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Fiona Cain <fcain@atheros.com>,
-	Zhen Xie <Zhen.Xie@Atheros.com>,
-	Kathy Giori <kathy.giori@atheros.com>,
-	Neha Choksi <neha.choksi@atheros.com>,
-	Wayne Daniel <wayne.daniel@atheros.com>,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Samira Naraghi <samira.naraghi@atheros.com>,
-	Ashok Chennupati <ashok.chennupati@atheros.com>,
-	Lance Zimmerman <lance.zimmerman@atheros.com>
-Subject: [PATCH] ath9k_hw: fix power for the HT40 duplicate frames
-Date: Wed, 4 May 2011 14:01:26 -0700
-Message-ID: <1304542886-19347-1-git-send-email-lrodriguez@atheros.com> (sfid-20110504_230139_691291_515E567C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753961Ab1E0OwG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 10:52:06 -0400
+Subject: Re: [PATCH] libertas: Set command sequence number later to ensure
+ consistency
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Fri, 27 May 2011 09:53:50 -0500
+In-Reply-To: <20110526203108.ADEDB9D401C@zog.reactivated.net>
+References: <20110526203108.ADEDB9D401C@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1306508032.22126.3.camel@dcbw.foobar.com> (sfid-20110527_165218_351919_CB8A3F1C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With AR9003 at about ~ 10 feet from an AP that uses RTS / CTS you
-will be able to associate but not not get data through given that
-the power for the rates used was set too low. This increases the
-power and permits data connectivity at longer distances from
-access points when connected with HT40. Without this you will not
-get any data through when associated to APs configured in HT40
-at about more than 10 feet away.
+On Thu, 2011-05-26 at 21:31 +0100, Daniel Drake wrote:
+> Before this patch, the command sequence number is being set before
+> lbs_queue_cmd() adds the command to the queue. However, lbs_queue_cmd()
+> sometimes forces commands to queue-jump (e.g. CMD_802_11_WAKEUP_CONFIRM).
+> It currently does this without considering that sequence numbers might need
+> adjusting to keep things running in order.
+> 
+> Fix this by setting the sequence number at a later stage, just before
+> we're actually submitting the command to the hardware. Also fixes a
+> possible race where seqnum was being modified outside of the driver
+> lock.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-Cc: stable@kernel.org
-Cc: Fiona Cain <fcain@atheros.com>
-Cc: Zhen Xie <Zhen.Xie@Atheros.com>
-Cc: Kathy Giori <kathy.giori@atheros.com>
-Cc: Neha Choksi <neha.choksi@atheros.com>
-Cc: Wayne Daniel <wayne.daniel@atheros.com>
-Cc: Gaurav Jauhar <gaurav.jauhar@atheros.com>
-Cc: Samira Naraghi <samira.naraghi@atheros.com>
-CC: Ashok Chennupati <ashok.chennupati@atheros.com>
-Cc: Lance Zimmerman <lance.zimmerman@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index fb892e5..3b13c1b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4005,6 +4005,16 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L], 0)
- 	    );
- 
-+        /* Write the power for duplicated frames - HT40 */
-+
-+        /* dup40_cck (LSB), dup40_ofdm, ext20_cck, ext20_ofdm (MSB) */
-+	REG_WRITE(ah, 0xa3e0,
-+		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24], 24) |
-+		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L], 16) |
-+		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24],  8) |
-+		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L],  0)
-+	    );
-+
- 	/* Write the HT20 power per rate set */
- 
- 	/* 0/8/16 (LSB), 1-3/9-11/17-19, 4, 5 (MSB) */
--- 
-1.7.4.15.g7811d
+> ---
+>  drivers/net/wireless/libertas/cmd.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 84566db..71c8f3f 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -994,6 +994,8 @@ static void lbs_submit_command(struct lbs_private *priv,
+>  	cmd = cmdnode->cmdbuf;
+>  
+>  	spin_lock_irqsave(&priv->driver_lock, flags);
+> +	priv->seqnum++;
+> +	cmd->seqnum = cpu_to_le16(priv->seqnum);
+>  	priv->cur_cmd = cmdnode;
+>  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  
+> @@ -1621,11 +1623,9 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+>  	/* Copy the incoming command to the buffer */
+>  	memcpy(cmdnode->cmdbuf, in_cmd, in_cmd_size);
+>  
+> -	/* Set sequence number, clean result, move to buffer */
+> -	priv->seqnum++;
+> +	/* Set command, clean result, move to buffer */
+>  	cmdnode->cmdbuf->command = cpu_to_le16(command);
+>  	cmdnode->cmdbuf->size    = cpu_to_le16(in_cmd_size);
+> -	cmdnode->cmdbuf->seqnum  = cpu_to_le16(priv->seqnum);
+>  	cmdnode->cmdbuf->result  = 0;
+>  
+>  	lbs_deb_host("PREP_CMD: command 0x%04x\n", command);
+
 
