@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62343 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680Ab1EIRVD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 13:21:03 -0400
-Received: by iyb14 with SMTP id 14so4478930iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 10:21:02 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: restrict AP beacon intervals
-From: Steve Brown <sbrown@cortland.com>
-Reply-To: sbrown@cortland.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1304959783.12202.7.camel@jlt3.sipsolutions.net>
-References: <1304959275.12202.4.camel@jlt3.sipsolutions.net>
-	 <4DC81A61.9080101@candelatech.com>
-	 <1304959783.12202.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 13:20:56 -0400
-Message-ID: <1304961656.2615.9.camel@mythtv.ewol.com> (sfid-20110509_192107_645499_9BE9F1B1)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753845Ab1E0QH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 12:07:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/10] iwlagn: send tx power command if defer cause by RXON not match
+Date: Fri, 27 May 2011 08:40:24 -0700
+Message-Id: <1306510833-32049-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180802_261309_A8D44E90)
+In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 18:49 +0200, Johannes Berg wrote:
-> On Mon, 2011-05-09 at 09:46 -0700, Ben Greear wrote:
-> > On 05/09/2011 09:41 AM, Johannes Berg wrote:
-> > > From: Johannes Berg<johannes.berg@intel.com>
-> > >
-> > > Multiple virtual AP interfaces can currently try
-> > > to use different beacon intervals, but that just
-> > > leads to problems since it won't actually be done
-> > > that way by drivers. Return an error in this case
-> > > to make sure it won't be done wrong.
-> > 
-> > I think there is no problem with having different beacon
-> > intervals, as long as they are all a multiple of
-> > the smallest interval and the driver does things properly.
-> > 
-> > I'm not sure ath9k or ath5k currently supports this properly,
-> > but there was a patch floating around for a while that did
-> > this for ath9k I think...
-> 
-> If you really care greatly about having different beacon intervals (and
-> I don't see why you would?) then maybe you can think how we can enforce
-> and advertise that to userspace. For now, I'm more comfortable just
-> restricting it.
-> 
-> johannes
+During channge channel, tx power will not send to uCode, the tx power command
+should send after scan complete. but should also can send after RXON command.
 
-I posted a patch for different beacon intervals to the ath9k list last
-Jan. This was to allow both a mesh (interval 1000) and ap (interval 100)
-vif on the same radio. This combination seems useful, at least for me.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-Steve
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index a95ad84..58c095c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -362,6 +362,11 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 		}
+ 
+ 		memcpy(active, &ctx->staging, sizeof(*active));
++		/*
++		 * We do not commit tx power settings while channel changing,
++		 * do it now if after settings changed.
++		 */
++		iwl_set_tx_power(priv, priv->tx_power_next, false);
+ 		return 0;
+ 	}
+ 
+-- 
+1.7.0.4
 
