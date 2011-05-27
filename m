@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27767 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911Ab1EMTiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 15:38:46 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:35826 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750886Ab1E0Me7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 08:34:59 -0400
+Received: by mail-ew0-f41.google.com with SMTP id 9so661715ewy.28
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2011 05:34:57 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/13] iwlagn: change default beacon interval
-Date: Fri, 13 May 2011 12:13:29 -0700
-Message-Id: <1305314010-18073-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110513_213851_543003_5B9A6C26)
-In-Reply-To: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1305314010-18073-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org, eliad@wizery.com
+Subject: [PATCH 2.6.40 0/4] wl12xx: fix passive and DFS scheduled scan
+Date: Fri, 27 May 2011 15:34:44 +0300
+Message-Id: <1306499688-26603-1-git-send-email-coelho@ti.com> (sfid-20110527_143502_622093_C45B0249)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi John,
 
-When the PAN context is active, but unused, it
-may still block scans that take more dwell time
-than its beacon interval (which is odd). Work
-around this problem by using a default beacon
-interval of 200 so scans will fit between.
+I found an oops in wl12xx when trying to run a passive scheduled scan.  While
+at it, I found a few other bugs with the generation of the passive and DFS scan
+lists.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+This series fixes all this.  Do you think it can be included in 2.6.40 still?
+At least the fourth patch is very important because it fixes the oops.  If you
+want to take only the oops fix but not the rest, I can make a separate patch
+for 2.6.40 to prevent the oops by simply returning -EOPNOTSUPP.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index ab29ab5..22a6e3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -81,7 +81,7 @@ struct iwl_tx_queue;
- #define MAX_RTS_THRESHOLD         2347U
- #define MAX_MSDU_SIZE		  2304U
- #define MAX_MPDU_SIZE		  2346U
--#define DEFAULT_BEACON_INTERVAL   100U
-+#define DEFAULT_BEACON_INTERVAL   200U
- #define	DEFAULT_SHORT_RETRY_LIMIT 7U
- #define	DEFAULT_LONG_RETRY_LIMIT  4U
- 
--- 
-1.7.0.4
+What do you think? Should we push all patches to fix this correctly for 2.6.40
+or should we just quick-fix the oops? Please let me know what you prefer.
+
+This series replaces the "fix oops in sched_scan when forcing a passive scan" I
+have sent earlier.
+
+Cheers,
+Luca.
+
+
+Luciano Coelho (4):
+  wl12xx: fix passive and radar channel generation for scheduled scan
+  wl12xx: fix DFS channels handling in scheduled scan
+  wl12xx: add separate config value for DFS dwell time on sched scan
+  wl12xx: fix oops in sched_scan when forcing a passive scan
+
+ drivers/net/wireless/wl12xx/conf.h |    3 ++
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ drivers/net/wireless/wl12xx/scan.c |   49 ++++++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/scan.h |    3 ++
+ 4 files changed, 40 insertions(+), 16 deletions(-)
 
