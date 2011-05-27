@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from os-mail-3.tamu.edu ([165.91.23.217]:17331 "EHLO
-	os-mail-3.tamu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757162Ab1ELOGr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 10:06:47 -0400
-Received: by bwz15 with SMTP id 15so1314046bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 06:57:14 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:34435 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751389Ab1E0PIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 11:08:40 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 27 May 2011 08:08:09 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC] ath9k: make use of get_paprd_scale_factor helper
+Date: Fri, 27 May 2011 20:38:15 +0530
+Message-ID: <1306508895-22960-1-git-send-email-mshajakhan@atheros.com> (sfid-20110527_170843_864822_EB81FCC0)
 MIME-Version: 1.0
-In-Reply-To: <4DCB3DFF.1030809@lockie.ca>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
-	<4DCB3DFF.1030809@lockie.ca>
-Date: Thu, 12 May 2011 08:57:14 -0500
-Message-ID: <BANLkTi=qeUO4SR2Op2QzQaSB-8TBzcdSPA@mail.gmail.com> (sfid-20110512_160728_523837_DC9738D7)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-From: Songgang Xu <sxu@tamu.edu>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for the reply. I think N network in the university is OK.
-Because,  old computer connected it without any problem. The windows
-system can also connect it. From the output of wpa_supplicant, the
-authentication part works well. I've tried to use the latest drive
-from realtek. The firmware distribute is exactly the same as that in
-Ubuntu 11.04. But this will make core dump.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-I will try some other distributions. But the driver and the kernel are
-the same,  so I don't think this will make any difference.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   18 +++---------------
+ 1 files changed, 3 insertions(+), 15 deletions(-)
 
-On Wed, May 11, 2011 at 8:55 PM, James <bjlockie@lockie.ca> wrote:
-> On 05/11/11 15:29, Flaminigo wrote:
->> MY university deployed 802.11n wireless LAN. However, my new T420
->> cannot connect to the network under ubuntu 11.04. I found the driver
->> for realtek 8188CE is rtl8192ce.ko, rtlwifi. I asked network
->> administrator to help me. They told me my wireless adapter didn't work
->> well with the 802.11n network. Is this because of the driver? The
->> following are the wpa_supplicant output. FYI
->
-> Is there another N network you can try (preferably unencrypted)?
->
-> Or can you try the card under Windows?
->
-> Try a bunch of other distros on livecds (or USBs).
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index e4d6a87..4985a81 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -46,11 +46,10 @@ EXPORT_SYMBOL(ar9003_paprd_enable);
+ 
+ static int ar9003_get_training_power_2g(struct ath_hw *ah)
+ {
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	struct ar9300_modal_eep_header *hdr = &eep->modalHeader2G;
++	struct ath9k_channel *chan = ah->curchan;
+ 	unsigned int power, scale, delta;
+ 
+-	scale = MS(le32_to_cpu(hdr->papdRateMaskHt20), AR9300_PAPRD_SCALE_1);
++	scale = ar9003_get_paprd_scale_factor(ah, chan);
+ 	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
+ 			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
+ 
+@@ -67,21 +66,10 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
+ static int ar9003_get_training_power_5g(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	struct ar9300_modal_eep_header *hdr = &eep->modalHeader5G;
+ 	struct ath9k_channel *chan = ah->curchan;
+ 	unsigned int power, scale, delta;
+ 
+-	if (chan->channel >= 5700)
+-		scale = MS(le32_to_cpu(hdr->papdRateMaskHt20),
+-			   AR9300_PAPRD_SCALE_1);
+-	else if (chan->channel >= 5400)
+-		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
+-			   AR9300_PAPRD_SCALE_2);
+-	else
+-		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
+-			   AR9300_PAPRD_SCALE_1);
+-
++	scale = ar9003_get_paprd_scale_factor(ah, chan);
+ 	if (IS_CHAN_HT40(chan))
+ 		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE8,
+ 			AR_PHY_POWERTX_RATE8_POWERTXHT40_5);
 -- 
-Regards
-Songgang
+1.7.0.4
+
