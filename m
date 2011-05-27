@@ -1,64 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:50022 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932595Ab1EQXN6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 19:13:58 -0400
-Received: by pzk9 with SMTP id 9so452429pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 16:13:58 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH] mac80211: Don't sleep when growing the mesh path
-Date: Tue, 17 May 2011 16:13:34 -0700
-Message-Id: <1305674014-24136-1-git-send-email-javier@cozybit.com> (sfid-20110518_011402_689203_A938EACA)
-In-Reply-To: <BANLkTikyymbnXHANmB3N0ecJWdkY9xCG=Q@mail.gmail.com>
-References: <BANLkTikyymbnXHANmB3N0ecJWdkY9xCG=Q@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:26815 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab1E0QH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 12:07:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/10] iwlagn: remove un-necessary tx power ops
+Date: Fri, 27 May 2011 08:40:25 -0700
+Message-Id: <1306510833-32049-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180804_228029_2D88B849)
+In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit 1928ecab620907a0953f811316d05f367f3f4dba (mac80211: fix and
-simplify mesh locking) mesh table allocation is performed with the
-pathtbl_resize_lock taken.  Under those conditions one should not sleep.
-This patch makes the allocations GFP_ATOMIC to prevent that.
+All agn devices use the same tx power function, remove the ops
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/mesh_pathtbl.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-core.c |    5 +----
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ 6 files changed, 1 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 6abe25d..0d2faac 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -76,12 +76,12 @@ static struct mesh_table *mesh_table_alloc(int size_order)
- 	int i;
- 	struct mesh_table *newtbl;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 61d4a11..9940950 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -174,7 +174,6 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	.rx_handler_setup = iwlagn_rx_handler_setup,
+ 	.setup_deferred_work = iwlagn_setup_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.apm_ops = {
+ 		.init = iwl_apm_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 86feec8..a37c41b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -256,7 +256,6 @@ static struct iwl_lib_ops iwl2000_lib = {
+ 	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
+ 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.set_channel_switch = iwl2030_hw_channel_switch,
+ 	.apm_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a70b8cf..a8dbbd0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -342,7 +342,6 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.rx_handler_setup = iwlagn_rx_handler_setup,
+ 	.setup_deferred_work = iwlagn_setup_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.set_channel_switch = iwl5000_hw_channel_switch,
+ 	.apm_ops = {
+@@ -373,7 +372,6 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	.rx_handler_setup = iwlagn_rx_handler_setup,
+ 	.setup_deferred_work = iwlagn_setup_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.set_channel_switch = iwl5000_hw_channel_switch,
+ 	.apm_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index f8c710d..eabf3b8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -281,7 +281,6 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.rx_handler_setup = iwlagn_rx_handler_setup,
+ 	.setup_deferred_work = iwlagn_setup_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.set_channel_switch = iwl6000_hw_channel_switch,
+ 	.apm_ops = {
+@@ -314,7 +313,6 @@ static struct iwl_lib_ops iwl6030_lib = {
+ 	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
+ 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
+ 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
+-	.send_tx_power = iwlagn_send_tx_power,
+ 	.update_chain_flags = iwl_update_chain_flags,
+ 	.set_channel_switch = iwl6000_hw_channel_switch,
+ 	.apm_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 4653dea..52e9413 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1131,9 +1131,6 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 	if (priv->tx_power_user_lmt == tx_power && !force)
+ 		return 0;
  
--	newtbl = kmalloc(sizeof(struct mesh_table), GFP_KERNEL);
-+	newtbl = kmalloc(sizeof(struct mesh_table), GFP_ATOMIC);
- 	if (!newtbl)
- 		return NULL;
+-	if (!priv->cfg->ops->lib->send_tx_power)
+-		return -EOPNOTSUPP;
+-
+ 	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
+ 		IWL_WARN(priv,
+ 			 "Requested user TXPOWER %d below lower limit %d.\n",
+@@ -1167,7 +1164,7 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 	prev_tx_power = priv->tx_power_user_lmt;
+ 	priv->tx_power_user_lmt = tx_power;
  
- 	newtbl->hash_buckets = kzalloc(sizeof(struct hlist_head) *
--			(1 << size_order), GFP_KERNEL);
-+			(1 << size_order), GFP_ATOMIC);
+-	ret = priv->cfg->ops->lib->send_tx_power(priv);
++	ret = iwlagn_send_tx_power(priv);
  
- 	if (!newtbl->hash_buckets) {
- 		kfree(newtbl);
-@@ -89,7 +89,7 @@ static struct mesh_table *mesh_table_alloc(int size_order)
- 	}
+ 	/* if fail to set tx_power, restore the orig. tx power */
+ 	if (ret) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3bb76f6..a87b54f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -141,7 +141,6 @@ struct iwl_lib_ops {
+ 	struct iwl_apm_ops apm_ops;
  
- 	newtbl->hashwlock = kmalloc(sizeof(spinlock_t) *
--			(1 << size_order), GFP_KERNEL);
-+			(1 << size_order), GFP_ATOMIC);
- 	if (!newtbl->hashwlock) {
- 		kfree(newtbl->hash_buckets);
- 		kfree(newtbl);
+ 	/* power */
+-	int (*send_tx_power) (struct iwl_priv *priv);
+ 	void (*update_chain_flags)(struct iwl_priv *priv);
+ 
+ 	/* eeprom operations (as defined in iwl-eeprom.h) */
 -- 
-1.7.1
+1.7.0.4
 
