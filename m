@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47873 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752435Ab1EZOPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 10:15:11 -0400
-Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a
- hardware limit?
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>
-Cc: Stevie Trujillo <stevie.trujillo@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4DDE1458.9090004@t-online.de>
-References: <201105251813.36804.stevie.trujillo@gmail.com>
-	 <1306352560.20732.0.camel@wwguy-ubuntu>
-	 <201105252154.06204.stevie.trujillo@gmail.com>
-	 <1306376938.20732.2.camel@wwguy-ubuntu>  <4DDE1458.9090004@t-online.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 26 May 2011 07:11:49 -0700
-Message-ID: <1306419109.20732.6.camel@wwguy-ubuntu> (sfid-20110526_161536_615047_038E3156)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38581 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345Ab1E0Itc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 04:49:32 -0400
+Received: by wwa36 with SMTP id 36so1624417wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2011 01:49:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTi=0wo+io1LjUwP-Rgy5qH=Qv+v_nw@mail.gmail.com>
+References: <24ECC725-EA49-48CA-8B9D-FDD71BD257A0@cs.washington.edu>
+	<BANLkTi=Hxaj+mDm5Ecqut2hxefNHyuO8-Q@mail.gmail.com>
+	<BANLkTi=3mGWzGghuip2xyo+24yd2mJXfUg@mail.gmail.com>
+	<BANLkTimgLTw2A27qtfHPdM3-tKf29xFGVw@mail.gmail.com>
+	<BANLkTi=0wo+io1LjUwP-Rgy5qH=Qv+v_nw@mail.gmail.com>
+Date: Fri, 27 May 2011 14:19:31 +0530
+Message-ID: <BANLkTikuKy6y0dcWDx4ar=ftQY5GbWFy2w@mail.gmail.com> (sfid-20110527_104936_475536_AE8C66A4)
+Subject: Re: [PATCH/RFC] ath9k: fix two more bugs in tx power
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	stable@kernel.org, blaise@willowgarage.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-26 at 01:50 -0700, Richard SchÃ¼tz wrote:
-> > On Wed, 2011-05-25 at 12:54 -0700, Stevie Trujillo wrote:
-> >> On Wednesday 25 May 2011 21:42:40 wwguy wrote:
-> >>> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
-> >>>> Hello,
-> >>>>
-> >>>> I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
-> >>>> and I was wondering if the card could do more than that.
-> >>>
-> >>> the card should not and will not do more than what required by
-> >>> regulatory
-> >>
-> >> I'm allowed to do 20dBm here and was wondering if I could make the card do
-> >> that.
-> >>
-> > the tx power in Intel WiFi device is regulated by uCode to make sure we
-> > are within regulatory limits. What country you are in?
-> >
-> > Thanks
-> > Wey
-> 
-> I am also having the same issue with my Intel PRO/Wireless 5100 AGN. 
-> Here in Germany I'm allowed to use 20 dBm (in the 2.4 GHz band), but the 
-> card is limited to 15 dBm. So in some situations other cards are working 
-> fine (as they use 20 dBm) and the Intel can't establish a connection.
-> 
-We do not have different SKUs for different regions of the world. Now I
-understand your problem. Thank you very much for reporting. I will raise
-the issue and see how we should fix it. 
+On Fri, May 27, 2011 at 1:36 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 27 May 2011 15:58, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>
+>> yes, but I am not sure whether this configuration from eeprom is
+>> needed for AR9003?
+>> if they are hardcoding the data from eeprom may return 0 ?
+>
+> No idea, I don't know the AR9003 code yet. :)
+>
+>> hmmm in ath9k not exactly the same is there,
+>>   REG_WRITE(ah, AR_PHY_POWER_TX_SUB,
+>>                  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
+>>                  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
+>
+> Hm, I'm not sure what that's for. Is it for per-packet TPC?
 
-Sorry, I don't have a solution for you today. But it is very important
-for us and we need to result it.
-  
-Thanks
-Wey
+yes
+quoting the descritption:
+subtract this value  in dBm (0.5dB steps) from  per_packet_powertx_max
+ when  3 /2 chains are active
 
+>
+>
+>
+> Adrian
+>
+
+
+
+-- 
+shafi
