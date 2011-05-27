@@ -1,139 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46014 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:61629 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756435Ab1EQTKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 15:10:06 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	rmanoharan@atheros.com
-Subject: [PATCH v2] ath9k: implement .tx_last_beacon()
-Date: Tue, 17 May 2011 21:09:54 +0200
-Message-Id: <1305659394-61466-1-git-send-email-nbd@openwrt.org> (sfid-20110517_211010_528470_EA12B456)
+	id S1755298Ab1E0QIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 12:08:01 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/10] iwlwifi: disambiguate invalid DMA index warnings
+Date: Fri, 27 May 2011 08:40:28 -0700
+Message-Id: <1306510833-32049-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110527_180809_447195_555BFD72)
+In-Reply-To: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    3 ++
- drivers/net/wireless/ath/ath9k/beacon.c |   12 +++++++++
- drivers/net/wireless/ath/ath9k/main.c   |   40 +++++++++++++++++++++++++++++++
- 3 files changed, 55 insertions(+), 0 deletions(-)
+From: Daniel Halperin <dhalperi@cs.washington.edu>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 03b37d7..d6e7825 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -397,6 +397,9 @@ struct ath_beacon {
- 	struct ath_descdma bdma;
- 	struct ath_txq *cabq;
- 	struct list_head bbuf;
-+
-+	bool tx_processed;
-+	bool tx_last;
- };
+The exact same error message is used in three different functions in
+iwlagn. Add the function name to the error string to disambiguate where
+the error is coming from.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-tx.c      |    6 +++---
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index f803fb6..4ab77c8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -408,9 +408,9 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
+ 	unsigned long flags;
  
- void ath_beacon_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 0199af0..e8756c5 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -18,6 +18,12 @@
+ 	if ((index >= txq->q.n_bd) || (iwl_queue_used(&txq->q, index) == 0)) {
+-		IWL_ERR(priv, "Read index for DMA queue txq_id (%d) index %d "
+-			  "is out of range [0-%d] %d %d\n", txq_id,
+-			  index, txq->q.n_bd, txq->q.write_ptr,
++		IWL_ERR(priv, "%s: Read index for DMA queue txq_id (%d) "
++			  "index %d is out of range [0-%d] %d %d\n", __func__,
++			  txq_id, index, txq->q.n_bd, txq->q.write_ptr,
+ 			  txq->q.read_ptr);
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 9acf0e9..631d0a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1231,9 +1231,9 @@ int iwlagn_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 	struct ieee80211_hdr *hdr;
  
- #define FUDGE 2
+ 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
+-		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
+-			  "is out of range [0-%d] %d %d.\n", txq_id,
+-			  index, q->n_bd, q->write_ptr, q->read_ptr);
++		IWL_ERR(priv, "%s: Read index for DMA queue txq id (%d), "
++			  "index %d is out of range [0-%d] %d %d.\n", __func__,
++			  txq_id, index, q->n_bd, q->write_ptr, q->read_ptr);
+ 		return 0;
+ 	}
  
-+static void ath9k_reset_beacon_status(struct ath_softc *sc)
-+{
-+	sc->beacon.tx_processed = false;
-+	sc->beacon.tx_last = false;
-+}
-+
- /*
-  *  This function will modify certain transmit queue properties depending on
-  *  the operating mode of the station (AP or AdHoc).  Parameters are AIFS
-@@ -72,6 +78,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	struct ieee80211_supported_band *sband;
- 	u8 rate = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 686e176..1084fe0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -753,9 +753,9 @@ static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id, int idx)
+ 	int nfreed = 0;
  
-+	ath9k_reset_beacon_status(sc);
-+
- 	ds = bf->bf_desc;
- 	flags = ATH9K_TXDESC_NOACK;
+ 	if ((idx >= q->n_bd) || (iwl_queue_used(q, idx) == 0)) {
+-		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
+-			  "is out of range [0-%d] %d %d.\n", txq_id,
+-			  idx, q->n_bd, q->write_ptr, q->read_ptr);
++		IWL_ERR(priv, "%s: Read index for DMA queue txq id (%d), "
++			  "index %d is out of range [0-%d] %d %d.\n", __func__,
++			  txq_id, idx, q->n_bd, q->write_ptr, q->read_ptr);
+ 		return;
+ 	}
  
-@@ -134,6 +142,8 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info;
- 	int cabq_depth;
- 
-+	ath9k_reset_beacon_status(sc);
-+
- 	avp = (void *)vif->drv_priv;
- 	cabq = sc->beacon.cabq;
- 
-@@ -644,6 +654,8 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 tsf, delta, intval, nexttbtt;
- 
-+	ath9k_reset_beacon_status(sc);
-+
- 	tsf = ath9k_hw_gettsf32(ah) + TU_TO_USEC(FUDGE);
- 	intval = TU_TO_USEC(conf->beacon_interval & ATH9K_BEACON_PERIOD);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 17ebdf1..473aff5 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2332,6 +2332,45 @@ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
- 	return false;
- }
- 
-+int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ieee80211_vif *vif;
-+	struct ath_vif *avp;
-+	struct ath_buf *bf;
-+	struct ath_tx_status ts;
-+	int status;
-+
-+	vif = sc->beacon.bslot[0];
-+	if (!vif)
-+		return 0;
-+
-+	avp = (void *)vif->drv_priv;
-+	if (!avp->is_bslot_active)
-+		return 0;
-+
-+	if (!sc->beacon.tx_processed) {
-+		tasklet_disable(&sc->bcon_tasklet);
-+
-+		bf = avp->av_bcbuf;
-+		if (!bf || !bf->bf_mpdu)
-+			goto skip;
-+
-+		status = ath9k_hw_txprocdesc(ah, bf->bf_desc, &ts);
-+		if (status == -EINPROGRESS)
-+			goto skip;
-+
-+		sc->beacon.tx_processed = true;
-+		sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
-+
-+skip:
-+		tasklet_enable(&sc->bcon_tasklet);
-+	}
-+
-+	return sc->beacon.tx_last;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2356,4 +2395,5 @@ struct ieee80211_ops ath9k_ops = {
- 	.set_coverage_class = ath9k_set_coverage_class,
- 	.flush		    = ath9k_flush,
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
-+	.tx_last_beacon = ath9k_tx_last_beacon,
- };
 -- 
-1.7.3.2
+1.7.0.4
 
