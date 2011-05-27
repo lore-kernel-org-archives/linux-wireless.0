@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bytecamp.net ([212.204.60.9]:50081 "EHLO mail.bytecamp.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755187Ab1EVNSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 09:18:17 -0400
-From: Jo-Philipp Wich <jow@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Jo-Philipp Wich <jow@openwrt.org>
-Subject: [PATCH] iw: Fix calculation of fractional multicast rates
-Date: Sun, 22 May 2011 15:09:51 +0200
-Message-Id: <1306069791-21079-1-git-send-email-jow@openwrt.org> (sfid-20110522_151821_674879_8740E2FC)
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:62866 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274Ab1E0IGr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2011 04:06:47 -0400
+Received: by gwaa18 with SMTP id a18so600429gwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2011 01:06:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTimgLTw2A27qtfHPdM3-tKf29xFGVw@mail.gmail.com>
+References: <24ECC725-EA49-48CA-8B9D-FDD71BD257A0@cs.washington.edu>
+	<BANLkTi=Hxaj+mDm5Ecqut2hxefNHyuO8-Q@mail.gmail.com>
+	<BANLkTi=3mGWzGghuip2xyo+24yd2mJXfUg@mail.gmail.com>
+	<BANLkTimgLTw2A27qtfHPdM3-tKf29xFGVw@mail.gmail.com>
+Date: Fri, 27 May 2011 16:06:46 +0800
+Message-ID: <BANLkTi=0wo+io1LjUwP-Rgy5qH=Qv+v_nw@mail.gmail.com> (sfid-20110527_100652_709760_51E1EA2D)
+Subject: Re: [PATCH/RFC] ath9k: fix two more bugs in tx power
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	stable@kernel.org, blaise@willowgarage.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to missing brackets around the "(int) rate * 10" expression
-the float value of "rate" is converted to an integer first and
-then multiplied which results for example in "50" instead of the
-expected "55" for a give rate of 5.5 Mbps, resulting in an invalid
-argument error from iw.
+On 27 May 2011 15:58, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-This patch simply puts the multiplication expression in brackets,
-so that the type cast is performed on the result and not the
-first operand.
+> yes, but I am not sure whether this configuration from eeprom is
+> needed for AR9003?
+> if they are hardcoding the data from eeprom may return 0 ?
 
-Signed-off-by: Jo-Philipp Wich <jow@openwrt.org>
----
- ibss.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+No idea, I don't know the AR9003 code yet. :)
 
-diff --git a/ibss.c b/ibss.c
-index ca8a4ec..b70dee3 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -104,7 +104,7 @@ static int join_ibss(struct nl80211_state *state,
- 		if (*end != '\0')
- 			return 1;
- 
--		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int) rate * 10);
-+		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int)(rate * 10));
- 		argv++;
- 		argc--;
- 	}
--- 
-1.7.0.4
+> hmmm in ath9k not exactly the same is there,
+>   REG_WRITE(ah, AR_PHY_POWER_TX_SUB,
+>                  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
+>                  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
 
+Hm, I'm not sure what that's for. Is it for per-packet TPC?
+
+
+
+Adrian
