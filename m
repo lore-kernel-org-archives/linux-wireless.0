@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62049 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab1ECPS1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 11:18:27 -0400
-Received: by wya21 with SMTP id 21so143207wya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2011 08:18:26 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:54157 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756503Ab1E0AXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2011 20:23:13 -0400
+Message-ID: <4DDEEEEC.6010800@openwrt.org> (sfid-20110527_022316_527351_9754009D)
+Date: Fri, 27 May 2011 02:23:08 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1304432929.3720.4.camel@jlt3.sipsolutions.net>
-References: <570950.1322951304422032629.JavaMail.defaultUser@defaultHost>
-	<BANLkTim3-ve4BD6wghA=F-asEqJmcDip6Q@mail.gmail.com>
-	<7DDF37406E10F0438561DBB78326DF3902F35339F2@SC-VEXCH1.marvell.com>
-	<1304432929.3720.4.camel@jlt3.sipsolutions.net>
-Date: Tue, 3 May 2011 20:48:26 +0530
-Message-ID: <BANLkTinZp_EW=Jfyv_S4g9kqqd8atVb8Eg@mail.gmail.com> (sfid-20110503_171830_710787_28803950)
-Subject: Re: WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x52/0x150
- [mac80211]()
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Yogesh Powar <yogeshp@marvell.com>
-Cc: "rossi.f@inwind.it" <rossi.f@inwind.it>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com, Matt Smith <Matt.Smith@atheros.com>
+Subject: Re: Initial automatic channel selection implementation
+References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com> <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com> <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com> <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com> <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com> <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com> <4DDE2F5B.3020804@openwrt.org> <BANLkTimuaOoV0uvyzs9PbeK_k6vwOG=+YA@mail.gmail.com>
+In-Reply-To: <BANLkTimuaOoV0uvyzs9PbeK_k6vwOG=+YA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 3, 2011 at 7:58 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-05-03 at 07:25 -0700, Yogesh Powar wrote:
->> >so may will this help? I don't know whether its a correct and with a
->> >quick test the warning gets fixed.
->> That should solve our problem with following explanation.
+On 2011-05-27 1:45 AM, Luis R. Rodriguez wrote:
+> On Thu, May 26, 2011 at 3:45 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>  On 2011-05-25 9:27 PM, Luis R. Rodriguez wrote:
+>>>  The missing piece is how to deal with noise info here. In short the
+>>>  lower noise we have the better signal we'll get. The challenge then is
+>>>  to take into consideration the noise mathematically in such a that a
+>>>  high noise value would nullify any clean idle air time ratio
+>>>  conditions from the formula postulated before. Let me review again
+>>>  with some modifications.
+>>>
+>>>  Active time is the time we spend on the channel, so to get an idea of
+>>>  how "busy" that channel is we have to remove the tx and rx time from
+>>>  that channel. That gives us the time we spent idle on that channel.
+>>>  Then the busy time is a subset of the entire active time but we should
+>>>  also exclude the time we spent tx'ing and rx'ing as well. We then
+>>>  have:
+>>>
+>>>    (busy time - rx time - tx time) / (active time - rx time - tx time)
+>>>
+>>>  This is a bounded ratio already, given that if we spent 0 time tx'ing
+>>>  0 time rx'ing, but 10 ms on a channel, and all that time we had busy
+>>>  time as well we'd have a ratio of 10 / 10 = 1. In the best case we'd
+>>>  have  0 / 10 = 0.
+>>>
+>>>  What I'd like to do is to affect the ratio to nullify it if the noise
+>>>  is very low on the channel. Given that noise is logarithmic we'd have
+>>>  to use a logarithmic function as well. Working on that now.
 >>
->> The devices that require IV generation in software need tailroom reservation
->> for ICVs used in TKIP or WEP encryptions.
->>
->> Currently, decision to skip the tailroom reservation in the tx
->> path was taken only on whether driver wants MMIC to be generated
->> in software or not. Following patch appends IV generation check for such
->> decisions.
->>
->> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
->> index ca3c626..f3c4deb 100644
->> --- a/net/mac80211/key.c
->> +++ b/net/mac80211/key.c
->> @@ -102,7 +102,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
->>       if (!ret) {
->>               key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
->>
->> -             if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
->> +             if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
->> +                             (key->conf.flags &
->> +                                     IEEE80211_KEY_FLAG_GENERATE_IV)))
->>                       key->local->crypto_tx_tailroom_needed_cnt--;
+>>  Please explain why you want to remove the rx time, it makes no sense to me.
+>>  Without rx time you will usually not get any useful indication of how busy
+>>  the channel is.
 >
-> Can we have a bit nicer code style? :)
->
-> Also, need to submit a proper patch with S-o-b etc, and reported-by
-> rossi.
+> The busy time that happens when do not TX or RX accounts for
+> interference on the frequency which is not accounted for. RX time may
+> mean receiving beacons or probe responses, this type of data exchange
+> doesn't necessarily mean interference. I believe sampling conditions
+> each frequency without TX or RX'ing data would yield a more fair
+> representation of general interference on the channel, otherwise the
+> interference would be taking into consideration explicit forced
+> interference on the frequency by our own radio.
+I think real channel load (including rx) is much more interesting for 
+channel selection than only interference. Interference time shouldn't 
+really matter that much in practice unless it's excessively high. Also, 
+even normal packets will increase the measured non-rx/tx busy time, 
+partially due to collisions, partially (on Atheros radios) because of 
+the way the radio works.
 
-Can please send the patch, with some more testing.
-
-
->
-> johannes
->
->
+- Felix
