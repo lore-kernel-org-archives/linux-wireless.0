@@ -1,75 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:60767 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093Ab1EaSKS convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52534 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754144Ab1E1TCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 14:10:18 -0400
-Received: by gyd10 with SMTP id 10so1872364gyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 11:10:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com>
-References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
-	<1304529896-20934-1-git-send-email-javier@cozybit.com>
-	<BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com>
-	<BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com>
-Date: Tue, 31 May 2011 21:10:15 +0300
-Message-ID: <BANLkTimphsVZsuji3T4yJt5hHdWtU65Z0g@mail.gmail.com> (sfid-20110531_201022_652174_7ACF9231)
-Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
-From: Eliad Peller <eliad@wizery.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 28 May 2011 15:02:49 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4F2BD540157
+	for <linux-wireless@vger.kernel.org>; Sat, 28 May 2011 15:09:07 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110528190248.0378B40EC3@repository3.orbit-lab.org> (sfid-20110528_210253_797778_E01CDCE6)
+Date: Sat, 28 May 2011 15:02:47 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 31, 2011 at 8:26 PM, Javier Cardona <javier@cozybit.com> wrote:
-> On Mon, May 30, 2011 at 3:51 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
->> On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
->>> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
->>> infrastructure BSS, or IBSS are differentiated by the Capability
->>> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
->>> subfields to 0 in transmitted Beacon or Probe Response management
->>> frames.
->>
->> This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
->> to zero. Is there any other way to find if it is a mesh other than
->> this check?
->
-> Bummer.  I guess that's a collision between WiFi Alliance and IEEE,
-> respectively the organizations standardizing P2P and 802.11s.
-> The 11s draft is pretty clear about that.  I can consult the task
-> group and see if they have thought about this conflict.
->
->>> index fbf6f33..62e542a 100644
->>> --- a/net/wireless/scan.c
->>> +++ b/net/wireless/scan.c
->>
->>> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->>>
->>>        res->ts = jiffies;
->>>
->>> -       if (is_zero_ether_addr(res->pub.bssid)) {
->>> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
->>>                /* must be mesh, verify */
->>
->> Reverting the above change, makes P2P work. Any other better fix?
->
-> We could check that the WLAN_CAPABILITY_IS_MBSS *and* that the bssid
-> matches the TA.  Do you think that would work?
->
-i guess you are referring to SA (rather than TA).
-in that case, this solution is not enough, as SA==bssid also holds
-true for the p2p probe responses (at least when a single vif is being
-used).
 
-btw, i've already submitted some workaround for this issue:
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/70763
+compat-wireless code metrics
 
-in case we won't find a better solution...
-
-Eliad.
+    822952 - Total upstream lines of code being pulled
+      2394 - backport code changes
+      2086 - backport code additions
+       308 - backport code deletions
+      8070 - backport from compat module
+     10464 - total backport code
+    1.2715 - % of code consists of backport work
