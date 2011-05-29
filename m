@@ -1,128 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:50278 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030208Ab1EWV2w convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38481 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572Ab1E2M5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 17:28:52 -0400
-Received: by ywe9 with SMTP id 9so2133980ywe.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2011 14:28:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DDACF56.9070403@candelatech.com>
-References: <4DD6E9B5.3020905@candelatech.com> <BANLkTindTMFNNpyNpNndhhGv7qWB5_haGQ@mail.gmail.com>
- <4DDA913B.1060002@candelatech.com> <4DDAA9ED.1050606@candelatech.com>
- <4DDAACF3.3050705@candelatech.com> <BANLkTimizNePq-GFsOYxNtfDNLc8kqjJFw@mail.gmail.com>
- <4DDABEE9.9090608@candelatech.com> <BANLkTineDDcWvmr8M5hp-=b0LDRamZyovQ@mail.gmail.com>
- <4DDAC8DC.5060803@candelatech.com> <BANLkTimSUvfSzAHXQJppZ=7T2TKMuP37fQ@mail.gmail.com>
- <4DDACF56.9070403@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 May 2011 14:28:31 -0700
-Message-ID: <BANLkTikSb-6Uh5jnEUD4wrGCKUNmrF3Zow@mail.gmail.com> (sfid-20110523_232856_307822_DE45E6E2)
-Subject: Re: ath9k 9380: All 5Ghz channels flagged as passive-scanning
-To: Ben Greear <greearb@candelatech.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 29 May 2011 08:57:01 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so3143732wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:57:00 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] wl12xx_sdio: enable wowlan only if enable_irq_wake() succeeded
+Date: Sun, 29 May 2011 15:56:52 +0300
+Message-Id: <1306673812-27978-4-git-send-email-eliad@wizery.com> (sfid-20110529_145706_749088_D44A6351)
+In-Reply-To: <1306673812-27978-1-git-send-email-eliad@wizery.com>
+References: <1306673812-27978-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 23, 2011 at 2:19 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/23/2011 01:59 PM, Luis R. Rodriguez wrote:
->>
->> On Mon, May 23, 2011 at 1:51 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>
->>> On 05/23/2011 01:25 PM, Luis R. Rodriguez wrote:
->>>>
->>>> On Mon, May 23, 2011 at 1:09 PM, Ben Greear<greearb@candelatech.com>
->>>>  wrote:
->>>>>
->>>>> Makes it basically useless as a 5Ghz AP though, eh?
->>>>
->>>> Um yup. The card is a world roaming card... not an AP card. For AP
->>>> mode of functionality vendors have to go through a regulatory test
->>>> specific to 3 regions, and depending on which region they get
->>>> certification for they will have then programmed in the values
->>>> required for regulatory on the CTLs. The EEPROM would be configured
->>>> for the region the card was being tested for.
->>>
->>> Well, if you have an AP on a 5Ghz channel, and associate a station
->>> interface, that one channel becomes
->>> usable, and then you can start hostapd, as far as I can tell.
->>> You just can't use an un-used channel, which is of course
->>> a pain if you want to do some 5Ghz AP testing on a clean
->>> channel!
->>
->> You don't even need to associate, you just need to scan, that's it. It
->> is a pain to test AP functionality but that is not how vendors test AP
->> functionality -- remember you are using a world roaming card, the fact
->> that you can even get away with beaconing modes of operation on some
->> channels is actually a feature.
->>
->> The issue here comes from the fact that people think using AP mode of
->> functionality is a freedom they are entitled to with any 802.11 card
->> on any channel. Its obviously more complicated than that and figuring
->> out a proper way to do this is part of our own effort to enable APs
->> with Linux properly and in a regulatory compliant manner.
->
-> Do you know of any 3x3 AR9380 NICs that can be used
-> as 5Ghz APs w/out regdomain hacks?
+Some platforms don't support the wake_irq, so disable wowlan
+in this case, and avoid the "Unbalanced IRQ wake disable"
+warning on disable_irq_wake().
 
-802.11 cards that can be used as APs would be cards programmed for
-certain regions, there is no way around it. You can use world roaming
-cards but again, that will not get you immediate beaconing mode of
-operation on certain channels unless you scan and find a beacon from
-an AP.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c   |   25 +++++++++++++++----------
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-> Sparklan was the only NIC I found, and
-> I didn't notice any way to order a specific regdomain
-> on the NIC.
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 74fd7c6..35b16f2 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -267,17 +267,20 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 		goto out_free;
+ 	}
+ 
+-	enable_irq_wake(wl->irq);
+-	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
++	ret = enable_irq_wake(wl->irq);
++	if (!ret) {
++		wl->irq_wake_enabled = true;
++		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
+ 
+-	disable_irq(wl->irq);
++		disable_irq(wl->irq);
+ 
+-	/* if sdio can keep power while host is suspended, enable wow */
+-	mmcflags = sdio_get_host_pm_caps(func);
+-	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
++		/* if sdio can keep power while host is suspended, enable wow */
++		mmcflags = sdio_get_host_pm_caps(func);
++		wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", mmcflags);
+ 
+-	if (mmcflags & MMC_PM_KEEP_POWER)
+-		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
++		if (mmcflags & MMC_PM_KEEP_POWER)
++			hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
++	}
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+ 	if (ret)
+@@ -311,8 +314,10 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	wl1271_unregister_hw(wl);
+-	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
+-	disable_irq_wake(wl->irq);
++	if (wl->irq_wake_enabled) {
++		device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
++		disable_irq_wake(wl->irq);
++	}
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
+ }
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 1cafb08..06785db 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -579,6 +579,7 @@ struct wl1271 {
+ 	 * (currently, only "ANY" trigger is supported)
+ 	 */
+ 	bool wow_enabled;
++	bool irq_wake_enabled;
+ 
+ 	/*
+ 	 * AP-mode - links indexed by HLID. The global and broadcast links
+-- 
+1.7.0.4
 
-Try calling and see if they can do the regulatory testing for you and
-programming of the card's CTLs for you. Not sure what else to
-recommend.
-
->>>> The real solution to these issues is for regulatory agencies to start
->>>> warming up to the idea about dynamic regulatory selection but for this
->>>> you will also then need to ensure each card gets properly tested for
->>>> each regulatory region -- or we'd have to restrict the card to work in
->>>
->>> What kinds of things could fail in one region and not
->>> another?
->>
->> Atheros cards are optimized to output as much power in the middle area
->> of a spectrum, towards the ends of the spectrum regulatory agencies
->> sometimes require a bit tighter power constraints and cards are
->> required to meet certain power curve constraints. This is one of the
->> reasons for the EEPROM CTLs on the Atheros cards. This is one example
->> of such considerations.
->>
->>>  Are there any known regions of the world where
->>> the AR9380 actually fails to function in any mode?
->>
->> Huh? AR9380 will work in any region so long as its tested for that
->> region and the CTLs get programmed as such.
->
-> Testing doesn't make something work, it just makes sure that it
-> does work.  Now, programming the CTLs sounds like something important.
-> Is there any way to tell if a NIC is properly programmed for a particular
-> region, or is each brand/revision programmed independently?
-
-The card's EEPROM tells us the CTLs that can be used. So a card with a
-regulatory domain for the US will be usable for APs in any other
-country that also uses the CTLs for that CTL region. Some cards may be
-programmed in the EEPROM with more than one CTL and the only way to
-find that out is to to some inspection of the EEPROM, otherwise the
-values will be high, yes high, not low. So reprogramming the EEPROM
-with a new country will not simply comply, you'd have then test the
-region as well and write the CTLs for that region.
-
-> Since it *is* possible to start an AP on a channel with existing AP,
-> I assume that the NIC must be able to handle this properly..or is
-> that ability to start on a scanned channel just a bug?  (Please
-> don't fix it, if it is :P)
-
-It a feature, AP functionality is allowed on that channel on a world
-roaming card given that no CTL is present so the lower regulatory
-value, from CRDA, is used instead of the CTL value.
-
- Luis
