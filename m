@@ -1,30 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46706 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751600Ab1EaTjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:39:19 -0400
-Message-ID: <4DE543E2.9070600@openwrt.org> (sfid-20110531_213922_628813_09D79765)
-Date: Tue, 31 May 2011 21:39:14 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:57973 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab1E2UFu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 May 2011 16:05:50 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id 073F1EF4B5
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:49 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id DBC2A158A63
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:47 +0300 (EEST)
+Subject: [RFC PATCH 14/27] mac80211: rename ieee80211_if_ap to mac80211_if_ap
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 29 May 2011 23:05:47 +0300
+Message-ID: <20110529200547.16479.24721.stgit@localhost6.localdomain6> (sfid-20110529_220555_331812_A417F9C8)
+In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
-References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>	 <1306869394-83047-2-git-send-email-nbd@openwrt.org> <1306870354.29989.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1306870354.29989.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-31 9:32 PM, Johannes Berg wrote:
-> On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
->>  When a STA entry is created too early, a lot of essential information
->>  required for rate control is missing.
->
-> I don't understand how you can rely on beacons for WDS.
-You usually set up WDS links between APs on the same channel, each 
-running both a normal AP vif and a WDS vif. The remote AP's beacons are 
-then used to detect the capabilities of the peer.
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
+---
+ net/mac80211/mac80211_i.h |    6 +++---
+ net/mac80211/sta_info.c   |    8 ++++----
+ net/mac80211/tx.c         |    8 ++++----
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-- Felix
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index d4aa73f..f41a342 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -213,7 +213,7 @@ struct beacon_data {
+ 	int dtim_period;
+ };
+ 
+-struct ieee80211_if_ap {
++struct mac80211_if_ap {
+ 	struct beacon_data __rcu *beacon;
+ 
+ 	struct list_head vlans;
+@@ -587,13 +587,13 @@ struct ieee80211_sub_if_data {
+ 	 * corresponding AP in VLAN mode, NULL for
+ 	 * all others (might be needed later in IBSS)
+ 	 */
+-	struct ieee80211_if_ap *bss;
++	struct mac80211_if_ap *bss;
+ 
+ 	/* bitmap of allowed (non-MCS) rate indexes for rate control */
+ 	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
+ 
+ 	union {
+-		struct ieee80211_if_ap ap;
++		struct mac80211_if_ap ap;
+ 		struct ieee80211_if_wds wds;
+ 		struct ieee80211_if_vlan vlan;
+ 		struct ieee80211_if_managed mgd;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 5f649aa..d148159 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -496,7 +496,7 @@ int sta_info_insert(struct sta_info *sta)
+ 	return err;
+ }
+ 
+-static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_set(struct mac80211_if_ap *bss, u16 aid)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+@@ -505,7 +505,7 @@ static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
+ 	bss->tim[aid / 8] |= (1 << (aid % 8));
+ }
+ 
+-static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
++static inline void __bss_tim_clear(struct mac80211_if_ap *bss, u16 aid)
+ {
+ 	/*
+ 	 * This format has been mandated by the IEEE specifications,
+@@ -514,7 +514,7 @@ static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
+ 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
+ }
+ 
+-static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
++static void __sta_info_set_tim_bit(struct mac80211_if_ap *bss,
+ 				   struct sta_info *sta)
+ {
+ 	BUG_ON(!bss);
+@@ -539,7 +539,7 @@ void sta_info_set_tim_bit(struct sta_info *sta)
+ 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
+ }
+ 
+-static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
++static void __sta_info_clear_tim_bit(struct mac80211_if_ap *bss,
+ 				     struct sta_info *sta)
+ {
+ 	BUG_ON(!bss);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 02f6968..85b2a0c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -331,7 +331,7 @@ static void purge_old_ps_buffers(struct mac80211_local *local)
+ 	rcu_read_lock();
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		struct ieee80211_if_ap *ap;
++		struct mac80211_if_ap *ap;
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP)
+ 			continue;
+ 		ap = &sdata->u.ap;
+@@ -2093,7 +2093,7 @@ void ieee80211_tx_pending(unsigned long data)
+ 
+ /* functions for drivers to get certain frames */
+ 
+-static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
++static void ieee80211_beacon_add_tim(struct mac80211_if_ap *bss,
+ 				     struct sk_buff *skb,
+ 				     struct beacon_data *beacon)
+ {
+@@ -2165,7 +2165,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+-	struct ieee80211_if_ap *ap = NULL;
++	struct mac80211_if_ap *ap = NULL;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_band band = local->hw.conf.channel->band;
+@@ -2481,7 +2481,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct mac80211_tx_data tx;
+ 	struct ieee80211_sub_if_data *sdata;
+-	struct ieee80211_if_ap *bss = NULL;
++	struct mac80211_if_ap *bss = NULL;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_tx_info *info;
+ 
+
