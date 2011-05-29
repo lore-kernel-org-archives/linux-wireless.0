@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37729 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589Ab1EFNSp convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38481 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537Ab1E2M46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 09:18:45 -0400
-Received: by vxi39 with SMTP id 39so3416501vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2011 06:18:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110506081356.08ac93a8@tomh>
-References: <20110506081356.08ac93a8@tomh>
-Date: Fri, 6 May 2011 15:18:44 +0200
-Message-ID: <BANLkTi=R_4-OgRbq+5Mi3Cyv4nNJE8RPQQ@mail.gmail.com> (sfid-20110506_151849_036215_EE6DED6F)
-Subject: Re: r8192cu AP mode?
-From: Juan Carlos Garza <juancarlosgarza@gmail.com>
-To: Tom Horsley <horsley1953@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 29 May 2011 08:56:58 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so3143732wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:56:57 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] wl12xx: clear wl->wow_enabled on resume
+Date: Sun, 29 May 2011 15:56:50 +0300
+Message-Id: <1306673812-27978-2-git-send-email-eliad@wizery.com> (sfid-20110529_145702_081742_9D23E395)
+In-Reply-To: <1306673812-27978-1-git-send-email-eliad@wizery.com>
+References: <1306673812-27978-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+We set wl->wow_enabled on every suspend(), so we need to clear it
+on every resume().
+(we can't rely on setting wl->wow_enabled=false in suspend(),
+as it being called only when wowlan triggers are configured)
 
-On Fri, May 6, 2011 at 2:13 PM, Tom Horsley <horsley1953@gmail.com> wrote:
-> I recently got a cheap usb wi-fi dongle I would love to get
-> working as an access point. I see the driver table on
-> the linux wireless website has question marks on most
-> of the columns in the row for the r8192cu. Anything I
-> can do to help fill in "yes" in those columns?
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-The required functionality for Access Points is not yet implemented in
-the mac80211 driver for the rtl8192cu chipset.
-
->
-> Here's my experience and findings so far:
->
-> http://home.comcast.net/~tomhorsley/hardware/rtl8192cu/rtl8192cu.html
->
-> I'm currently working on fedora 14 with the 2.6.35
-> kernel fedora ships. Might I have more luck with a
-> later kernel.org kernel?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8eb52b7..4f20711 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1606,6 +1606,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
+ 		wl1271_enable_interrupts(wl);
+ 	}
+ 	wl1271_configure_resume(wl);
++	wl->wow_enabled = false;
+ 
+ 	return 0;
+ }
 -- 
-Juan Carlos Garza
+1.7.0.4
+
