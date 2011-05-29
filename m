@@ -1,67 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:52082 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab1EHRG0 (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:37831 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756500Ab1E2UFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 13:06:26 -0400
-Received: by pxi16 with SMTP id 16so3163314pxi.4
-        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2011 10:06:25 -0700 (PDT)
-Message-ID: <4DC6CD8C.6080104@lwfinger.net> (sfid-20110508_190630_106268_ACCB6E16)
-Date: Sun, 08 May 2011 12:06:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 29 May 2011 16:05:09 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id EF2B78BDC8
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:07 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id D3BF9E51A5
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:06 +0300 (EEST)
+Subject: [RFC PATCH 08/27] mac80211: rename ieee80211_fragment_entry to
+	mac80211_fragment_entry
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 29 May 2011 23:05:06 +0300
+Message-ID: <20110529200506.16479.60512.stgit@localhost6.localdomain6> (sfid-20110529_220521_161052_6FF47BF6)
+In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/3] ssb/b43(legacy): clean dangling cores workarounds
-References: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1304874564-6426-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2011 12:09 PM, Rafał Miłecki wrote:
-> There is no perfect place for this workarounds, but keeping it in ssb sounds
-> more reasonable.
-> 1) We already have in ssb similar workarounds for different cores
-> 2) We do not register not working devices in system
-> 3) We do not duplicate code in b43 and b43legacy
->
-> Rafał Miłecki (3):
->    ssb: update list of devices supporting multiple 80211 cores
->    b43: drop ssb-duplicated workaround for dangling cores
->    b43legacy: drop ssb-duplicated workaround for dangling cores
->
->   drivers/net/wireless/b43/main.c       |   17 -----------------
->   drivers/net/wireless/b43legacy/main.c |   18 ------------------
->   drivers/ssb/scan.c                    |    5 ++++-
->   3 files changed, 4 insertions(+), 36 deletions(-)
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
+---
+ net/mac80211/mac80211_i.h |    4 ++--
+ net/mac80211/rx.c         |   10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-First of all, a minor grammatical mistake. It should be "this workaround" as 
-there is only only one workaround discussed here.
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index 82e60c2..ddaf7de 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -62,7 +62,7 @@ struct mac80211_local;
+ #define IEEE80211_DEFAULT_MAX_SP_LEN		\
+ 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+ 
+-struct ieee80211_fragment_entry {
++struct mac80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+ 	unsigned int rx_queue;
+@@ -565,7 +565,7 @@ struct ieee80211_sub_if_data {
+ 	bool old_idle;
+ 
+ 	/* Fragment table for host-based reassembly */
+-	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
++	struct mac80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
+ 	unsigned int fragment_next;
+ 
+ 	struct ieee80211_key __rcu *keys[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 22d066d..d49fa8b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1254,12 +1254,12 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	return RX_CONTINUE;
+ } /* ieee80211_rx_h_sta_process */
+ 
+-static inline struct ieee80211_fragment_entry *
++static inline struct mac80211_fragment_entry *
+ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+ 			 unsigned int frag, unsigned int seq, int rx_queue,
+ 			 struct sk_buff **skb)
+ {
+-	struct ieee80211_fragment_entry *entry;
++	struct mac80211_fragment_entry *entry;
+ 	int idx;
+ 
+ 	idx = sdata->fragment_next;
+@@ -1293,12 +1293,12 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+ 	return entry;
+ }
+ 
+-static inline struct ieee80211_fragment_entry *
++static inline struct mac80211_fragment_entry *
+ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
+ 			  unsigned int frag, unsigned int seq,
+ 			  int rx_queue, struct ieee80211_hdr *hdr)
+ {
+-	struct ieee80211_fragment_entry *entry;
++	struct mac80211_fragment_entry *entry;
+ 	int i, idx;
+ 
+ 	idx = sdata->fragment_next;
+@@ -1343,7 +1343,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	u16 sc;
+ 	__le16 fc;
+ 	unsigned int frag, seq;
+-	struct ieee80211_fragment_entry *entry;
++	struct mac80211_fragment_entry *entry;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_rx_status *status;
+ 
 
-Secondly, "we do not register not working" is a little awkward. "We do not 
-register inactive devices..." would be better.
-
-Finally, this commit message will never show up in the git commit logs. I think 
-this info is valuable, thus it should be in the real commits.
-
-My suggestion for the [1/3] patch is something like:
-
-"Many of the BCM43xx chips contain cores that are attached to the SSB, but are 
-inactive as they do not connect to the external environment. These must not be 
-registered. Several of these types are handled in driver ssb; however, the 
-specific case of an inactive 802.11 cores is now treated in b43 and b43legacy. 
-Although the current setup works, this minor change will place all such 
-workarounds in ssb, and simplify the code in drivers b43 and b43legacy."
-
-In each of the other two patches, add a commit message something like:
-
-"Remove the code to detect inactive 802.11 cores, as that function is now done 
-in ssb."
-
-I have not yet tested the patches, but will do so soon.
-
-Larry
