@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:58695 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753344Ab1EIIRT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 04:17:19 -0400
-Received: by eydd26 with SMTP id d26so1965300eyd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2011 01:17:16 -0700 (PDT)
-Subject: Re: [PATCH 1/3] cfg80211/nl80211: add support for scheduled scans
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1304928720.3475.0.camel@jlt3.sipsolutions.net>
-References: <1304600420-24227-1-git-send-email-coelho@ti.com>
-	 <1304600420-24227-2-git-send-email-coelho@ti.com>
-	 <1304928720.3475.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 11:17:13 +0300
-Message-ID: <1304929033.12586.447.camel@cumari> (sfid-20110509_101727_964105_17634CE4)
-Mime-Version: 1.0
+Received: from mx4.wp.pl ([212.77.101.8]:39925 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433Ab1E2Koe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 May 2011 06:44:34 -0400
+Date: Sun, 29 May 2011 12:45:29 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-2.6] rt2x00: fix rmmod crash
+Message-ID: <20110529104529.GA2769@localhost.localdomain> (sfid-20110529_124442_115082_C9468D02)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 10:12 +0200, Johannes Berg wrote:
-> On Thu, 2011-05-05 at 16:00 +0300, Luciano Coelho wrote:
-> > Implement new functionality for scheduled scan offload.  With this feature we
-> > can scan automatically at certain intervals.
-> > 
-> > The idea is that the hardware can perform scan automatically and filter on
-> > desired results without waking up the host unnecessarily.
-> > 
-> > Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
-> > commands to the nl80211 interface.  When results are available they are
-> > reported by NL80211_CMD_SCHED_SCAN_RESULTS events.  The userspace is
-> > informed when the scheduled scan has stopped with a
-> > NL80211_CMD_SCHED_SCAN_STOPPED event, which can be triggered either by
-> > the driver or by a call to NL80211_CMD_STOP_SCHED_SCAN.
-> 
-> Didn't you initially want to differentiate between SCAN_SSIDS and
-> SSIDS_FILTER?
+Do not destroy workqueue, which still can be used by autowakeup_work,
+before ieee80211_unregister_hw() is called.
 
-Yes, I'll add SSID filtering soon, as separate patches, if that's okay.
-For now, the SSIDs that you can pass via nl80211 are used in the
-probe_reqs.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-We can also filter on RSSI, SNR and/or group results into one event.
-This are other features that our firmware supports.  For now I have not
-exposed this, but it could also be added to nl80211 in the future.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index c018d67..2f2627b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1165,7 +1165,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 		cancel_work_sync(&rt2x00dev->rxdone_work);
+ 		cancel_work_sync(&rt2x00dev->txdone_work);
+ 	}
+-	destroy_workqueue(rt2x00dev->workqueue);
+ 
+ 	/*
+ 	 * Free the tx status fifo.
+@@ -1198,6 +1197,11 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00lib_remove_hw(rt2x00dev);
+ 
+ 	/*
++	 * Now nobody use workqueue anymore.
++	 */
++	destroy_workqueue(rt2x00dev->workqueue);
++
++	/*
+ 	 * Free firmware image.
+ 	 */
+ 	rt2x00lib_free_firmware(rt2x00dev);
 -- 
-Cheers,
-Luca.
+1.7.4
 
