@@ -1,52 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:34269 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395Ab1EWP73 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47794 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818Ab1E2MxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2011 11:59:29 -0400
-Subject: [PATCH] ath6kl: export firmware version to user space
-To: gregkh@suse.de
-From: Kalle Valo <kalle.valo@atheros.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Mon, 23 May 2011 18:52:37 +0300
-Message-ID: <20110523155237.12512.49752.stgit@localhost6.localdomain6> (sfid-20110523_175932_822597_0D18DDD7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 29 May 2011 08:53:25 -0400
+Received: by wya21 with SMTP id 21so2119360wya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:53:23 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: don't drop p2p probe responses
+Date: Sun, 29 May 2011 15:53:20 +0300
+Message-Id: <1306673600-27838-1-git-send-email-eliad@wizery.com> (sfid-20110529_145328_359529_B0527065)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 exports wiphy->fw_version to user space via ethtool interface.
+Commit 0a35d36 ("cfg80211: Use capability info to detect mesh beacons")
+assumed that probe response with both ESS and IBSS bits cleared
+means that the frame was sent by a mesh sta.
 
-The obligatory screenshot:
+However, these capabilities are also being used in the p2p_find phase,
+and the mesh-validation broke it.
 
-$ sudo ethtool -i wlan0
-driver: ath6kl_hifdev
-version: 2.6.39-rc4+
-firmware-version: 3:1:1:149
-bus-info: mmc0:0001:1
-$
+Rename the WLAN_CAPABILITY_IS_MBSS macro, and verify that mesh ies
+exist before assuming this frame was sent by a mesh sta.
 
-Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+i don't have a mesh env, so it was only compile-tested.
+note that i had to remove some mesh ie verification
+from cfg80211_bss_update(), so please re-add it properly
+if it's still needed there.
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 48dd9e3..30ae63b 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -4114,6 +4114,13 @@ ar6000_ready_event(void *devt, u8 *datap, u8 phyCap, u32 sw_ver, u32 abi_ver)
-     ar->arVersion.wlan_ver = sw_ver;
-     ar->arVersion.abi_ver = abi_ver;
+ include/linux/ieee80211.h |    8 ++++++--
+ net/wireless/scan.c       |   43 ++++++++++++++++++++++++-------------------
+ 2 files changed, 30 insertions(+), 21 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b2eee58..bf56b6f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1003,8 +1003,12 @@ struct ieee80211_ht_info {
+ #define WLAN_CAPABILITY_ESS		(1<<0)
+ #define WLAN_CAPABILITY_IBSS		(1<<1)
  
-+    snprintf(ar->wdev->wiphy->fw_version, sizeof(ar->wdev->wiphy->fw_version),
-+	     "%u:%u:%u:%u",
-+	     (ar->arVersion.wlan_ver & 0xf0000000) >> 28,
-+	     (ar->arVersion.wlan_ver & 0x0f000000) >> 24,
-+	     (ar->arVersion.wlan_ver & 0x00ff0000) >> 16,
-+	     (ar->arVersion.wlan_ver & 0x0000ffff));
+-/* A mesh STA sets the ESS and IBSS capability bits to zero */
+-#define WLAN_CAPABILITY_IS_MBSS(cap)	\
++/*
++ * A mesh STA sets the ESS and IBSS capability bits to zero.
++ * however, this holds true for p2p probe responses (in the p2p_find
++ * phase) as well.
++ */
++#define WLAN_CAPABILITY_IS_STA_BSS(cap)	\
+ 	(!((cap) & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)))
+ 
+ #define WLAN_CAPABILITY_CF_POLLABLE	(1<<2)
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 73a441d..7a6c676 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -267,13 +267,35 @@ static bool is_bss(struct cfg80211_bss *a,
+ 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
+ }
+ 
++static bool is_mesh_bss(struct cfg80211_bss *a)
++{
++	const u8 *ie;
 +
-     /* Indicate to the waiting thread that the ready event was received */
-     ar->arWmiReady = true;
-     wake_up(&arEvent);
++	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
++		return false;
++
++	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
++			      a->information_elements,
++			      a->len_information_elements);
++	if (!ie)
++		return false;
++
++	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
++			      a->information_elements,
++			      a->len_information_elements);
++	if (!ie)
++		return false;
++
++	return true;
++}
++
+ static bool is_mesh(struct cfg80211_bss *a,
+ 		    const u8 *meshid, size_t meshidlen,
+ 		    const u8 *meshcfg)
+ {
+ 	const u8 *ie;
+ 
+-	if (!WLAN_CAPABILITY_IS_MBSS(a->capability))
++	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
+ 		return false;
+ 
+ 	ie = cfg80211_find_ie(WLAN_EID_MESH_ID,
+@@ -311,7 +333,7 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 	if (a->channel != b->channel)
+ 		return b->channel->center_freq - a->channel->center_freq;
+ 
+-	if (WLAN_CAPABILITY_IS_MBSS(a->capability | b->capability)) {
++	if (is_mesh_bss(a) && is_mesh_bss(b)) {
+ 		r = cmp_ies(WLAN_EID_MESH_ID,
+ 			    a->information_elements,
+ 			    a->len_information_elements,
+@@ -457,7 +479,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 		    struct cfg80211_internal_bss *res)
+ {
+ 	struct cfg80211_internal_bss *found = NULL;
+-	const u8 *meshid, *meshcfg;
+ 
+ 	/*
+ 	 * The reference to "res" is donated to this function.
+@@ -470,22 +491,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 
+ 	res->ts = jiffies;
+ 
+-	if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+-		/* must be mesh, verify */
+-		meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
+-					  res->pub.information_elements,
+-					  res->pub.len_information_elements);
+-		meshcfg = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
+-					   res->pub.information_elements,
+-					   res->pub.len_information_elements);
+-		if (!meshid || !meshcfg ||
+-		    meshcfg[1] != sizeof(struct ieee80211_meshconf_ie)) {
+-			/* bogus mesh */
+-			kref_put(&res->ref, bss_release);
+-			return NULL;
+-		}
+-	}
+-
+ 	spin_lock_bh(&dev->bss_lock);
+ 
+ 	found = rb_find_bss(dev, res);
+-- 
+1.7.0.4
 
