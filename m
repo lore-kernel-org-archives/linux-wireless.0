@@ -1,77 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4901 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab1EYFVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 01:21:52 -0400
-Message-ID: <4DDC91E1.40104@broadcom.com> (sfid-20110525_072210_099245_9D3FA89A)
-Date: Wed, 25 May 2011 07:21:37 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45766 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab1E2UEA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 May 2011 16:04:00 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 969F918CED6
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:03:58 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 71DFB1C6383
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:03:56 +0300 (EEST)
+Subject: [RFC PATCH 00/27] mac80211: create mac80211_ prefix
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 29 May 2011 23:03:55 +0300
+Message-ID: <20110529195022.16479.71762.stgit@localhost6.localdomain6> (sfid-20110529_220404_889043_FDA190CD)
 MIME-Version: 1.0
-To: "George Spelvin" <linux@horizon.com>
-cc: "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"error27@gmail.com" <error27@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8
- algorithm
-References: <20110524225224.32163.qmail@science.horizon.com>
-In-Reply-To: <20110524225224.32163.qmail@science.horizon.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2011 12:52 AM, George Spelvin wrote:
->> V3:
->> - added function crc8_create().
->> - crc8_create() takes polynomial and bit direction as parameters.
-> May I suggest that crc8_create is A Stupid Idea.  Since the bit order
-> (and polynomial) will always be compile-time constants, just let the
-> call sites call crc8_create_[lm]sb_first() directly.
+It has always annoyed me that mac80211 uses ieee80211_ prefix. For some time
+already I have been planning to try to do something about it and finally I
+started it. Here's my first shot at it. 
 
-Thanks for be subtle in your suggestion. The crc8 module can have 
-multiple callers, which have their own bit order and polynomial. From 
-caller perspective they are likely compile-time constants. You are right 
-that the extra layer crc8_create is not adding much and callers should 
-the bit order specific create functions directly.
-> That way there's no need for the enum, and specifying something
-> other than lsb_first and msb_first is a compile-time error rather than
-> a run-time one
+In this patchset I first fix some issues I found from the drivers, then
+create mac80211-compat.h to make the transition as smooth as possible and
+then start changing mac80211 itself.
 
-If callers use the specific function they can not specify a bit order so 
-no compile-time error.
+I now changed only parts of mac80211_i.h, I anticipate there will be still
+three or four patchsets before mac80211 has been converted. Once that is done
+I'm planning to start converting the drivers, one at a time. Unless driver
+maintainers beat me to it, of course. I'm hoping that the conversion would be
+fast enough so that mac80211-compat.h would not be included in any of the
+official linux releases.
 
-> It might be nice to add some const declarations, and use size_t
-> for the buffer length:
-> u8 crc8(u8 const *table, u8 const *pdata, size_t nbytes, u8 crc)
-> or
-> u8 crc8(u8 const table[256], u8 const *pdata, size_t nbytes, u8 crc)
->
->
-> Style points you might consider, but I do not consider essential:
->
-> Personally, when a function parameter is a pointer to
-> a fixed-size array, I prefer to declare it as
-> 	void crc8_create_lsb_first(u8 table[256], u8 poly)
-> for better documentation, but that's your choice.
->
-> The CRC8_GOOD_VALUE could be explained if you like.  "If a CRC is inverted
-> before transmission, the CRC computed over the while (message+crc)
-> is _table[x], when x is the bit pattern of the modification (almost
-> always 0xff)."
+But what do people think? Is this worth the effort?
 
-Great remarks. Will update the code.
+Or have I drank too much coke and totally lost my mind? ;)
 
-> Thanks!
+---
 
-Thanks.
+Kalle Valo (27):
+      iwlegacy: fix stop/wake queue hacks
+      iwlwifi: fix stop/wake queue hacks
+      zd1211rw: include mac80211.h from zd_chip.h
+      rtlwifi: include mac80211.h from core.h
+      mac80211: switch mac80211.h to use mac80211 prefix
+      mac80211: rename ieee80211_i.h to mac80211_i.h
+      mac80211: rename ieee80211_local to mac80211_local
+      mac80211: rename ieee80211_fragment_entry to mac80211_fragment_entry
+      mac80211: rename ieee80211_bss to mac80211_bss
+      mac80211: rename ieee80211_tx_data to mac80211_tx_data
+      mac80211: rename ieee80211_packet_rx_flags to mac80211_packet_rx_flags
+      mac80211: rename ieee80211_rx_flags to mac80211_i_rx_flags
+      mac80211: rename ieee80211_rx_data to mac80211_rx_data
+      mac80211: rename ieee80211_if_ap to mac80211_if_ap
+      mac80211: change ieee80211_if_wds and _vlan to use mac80211 prefix
+      mac80211: rename ieee80211_work_type to mac80211_work_type
+      mac80211: rename ieee80211_work to mac80211_work
+      mac80211: rename ieee80211_sta_flags to mac80211_sta_flags
+      mac80211: rename ieee80211_if_managed to mac80211_if_managed
+      mac80211: rename ieee80211_if_ibss to mac80211_if_ibss
+      mac80211: rename ieee80211_if_mesh to mac80211_if_mesh
+      mac80211: rename ieee80211_sub_if_data_flags to mac80211_sub_if_data_flags
+      mac80211: rename ieee80211_sdata_state_bits to mac80211_sdata_state_bits
+      mac80211: ieee80211_sub_if_data to mac80211_sub_if_data
+      mac80211: use mac80211 prefix with rx and tx msg flags
+      mac80211: change queue stop reasons to use mac80211 prefix
+      mac80211: use mac80211_hw
 
-Gr. AvS
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+ drivers/net/wireless/iwlegacy/iwl-helpers.h |    9 
+ drivers/net/wireless/iwlwifi/iwl-helpers.h  |    9 
+ drivers/net/wireless/rtlwifi/core.h         |    2 
+ drivers/net/wireless/zd1211rw/zd_chip.h     |    2 
+ include/net/mac80211-compat.h               |  273 +++++
+ include/net/mac80211.h                      | 1428 ++++++++++++++-------------
+ net/mac80211/agg-rx.c                       |   10 
+ net/mac80211/agg-tx.c                       |   60 +
+ net/mac80211/cfg.c                          |  176 ++-
+ net/mac80211/chan.c                         |   18 
+ net/mac80211/debugfs.c                      |   32 -
+ net/mac80211/debugfs.h                      |    4 
+ net/mac80211/debugfs_key.c                  |    8 
+ net/mac80211/debugfs_key.h                  |   12 
+ net/mac80211/debugfs_netdev.c               |   56 +
+ net/mac80211/debugfs_netdev.h               |   12 
+ net/mac80211/debugfs_sta.c                  |    2 
+ net/mac80211/driver-ops.h                   |  122 +-
+ net/mac80211/driver-trace.h                 |  172 ++-
+ net/mac80211/event.c                        |    4 
+ net/mac80211/ht.c                           |   18 
+ net/mac80211/ibss.c                         |   94 +-
+ net/mac80211/ieee80211_i.h                  | 1409 ---------------------------
+ net/mac80211/iface.c                        |  106 +-
+ net/mac80211/key.c                          |   32 -
+ net/mac80211/key.h                          |   22 
+ net/mac80211/led.c                          |   44 -
+ net/mac80211/led.h                          |   38 -
+ net/mac80211/mac80211_i.h                   | 1409 +++++++++++++++++++++++++++
+ net/mac80211/main.c                         |   80 +-
+ net/mac80211/mesh.c                         |   92 +-
+ net/mac80211/mesh.h                         |   86 +-
+ net/mac80211/mesh_hwmp.c                    |   48 -
+ net/mac80211/mesh_pathtbl.c                 |   34 -
+ net/mac80211/mesh_plink.c                   |   32 -
+ net/mac80211/mlme.c                         |  426 ++++----
+ net/mac80211/offchannel.c                   |   44 -
+ net/mac80211/pm.c                           |   12 
+ net/mac80211/rate.c                         |   10 
+ net/mac80211/rate.h                         |   16 
+ net/mac80211/rc80211_minstrel.c             |    8 
+ net/mac80211/rc80211_minstrel.h             |    2 
+ net/mac80211/rc80211_minstrel_ht.c          |    6 
+ net/mac80211/rc80211_pid_algo.c             |    2 
+ net/mac80211/rx.c                           |  250 ++---
+ net/mac80211/scan.c                         |   86 +-
+ net/mac80211/spectmgmt.c                    |    8 
+ net/mac80211/sta_info.c                     |   88 +-
+ net/mac80211/sta_info.h                     |   28 -
+ net/mac80211/status.c                       |   26 
+ net/mac80211/tkip.c                         |    4 
+ net/mac80211/tx.c                           |  154 +--
+ net/mac80211/util.c                         |  172 ++-
+ net/mac80211/wep.c                          |   22 
+ net/mac80211/wep.h                          |   12 
+ net/mac80211/wme.c                          |   10 
+ net/mac80211/wme.h                          |    8 
+ net/mac80211/work.c                         |  146 +--
+ net/mac80211/wpa.c                          |   22 
+ net/mac80211/wpa.h                          |   18 
+ 60 files changed, 3916 insertions(+), 3619 deletions(-)
+ create mode 100644 include/net/mac80211-compat.h
+ delete mode 100644 net/mac80211/ieee80211_i.h
+ create mode 100644 net/mac80211/mac80211_i.h
 
