@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3418 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754147Ab1EIOdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:44 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/10] staging: brcm80211: make use of fls bit operation
- in wlc_phy_compute_dB
-Date: Mon, 9 May 2011 16:33:27 +0200
-Message-ID: <1304951609-2493-8-git-send-email-arend@broadcom.com> (sfid-20110509_163741_764946_A1A1F9CC)
-In-Reply-To: <1304951609-2493-1-git-send-email-arend@broadcom.com>
-References: <1304951609-2493-1-git-send-email-arend@broadcom.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45966 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab1E2UFg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 May 2011 16:05:36 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 2ABF218CE94
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:35 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id 1878E158A65
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:33 +0300 (EEST)
+Subject: [RFC PATCH 12/27] mac80211: rename ieee80211_rx_flags to
+	mac80211_i_rx_flags
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 29 May 2011 23:05:33 +0300
+Message-ID: <20110529200533.16479.51520.stgit@localhost6.localdomain6> (sfid-20110529_220546_023886_FD68A379)
+In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wlc_phy_compute_dB converts absolute power value to dB implementing
-a fixed point calculation for 10*log10(x). It does this by determining
-the most significant bit for value x. This can be done using the fls()
-bit operation, which has arch specific and possibly more efficient
-implementation.
+Add _i_ because, strangely enough,  mac80211_i.h already has another
+definition of mac80211_rx_flags.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |   19 ++++++++-----------
- 1 files changed, 8 insertions(+), 11 deletions(-)
+ net/mac80211/mac80211_i.h |    6 +++---
+ net/mac80211/rx.c         |    4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-index 446dc84..6cba4df 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-@@ -18,10 +18,12 @@
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index 4ef1594..5f7b684 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -183,15 +183,15 @@ enum mac80211_packet_rx_flags {
+ };
  
- #include <linux/kernel.h>
- #include <linux/string.h>
--#include <bcmdefs.h>
-+#include <linux/bitops.h>
- #include <linux/delay.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+
-+#include <bcmdefs.h>
- #include <bcmnvram.h>
- #include <sbchipc.h>
- #include <bcmdevs.h>
-@@ -2746,20 +2748,15 @@ s8 lcnphy_gain_index_offset_for_pkt_rssi[] = {
+ /**
+- * enum ieee80211_rx_flags - RX data flags
++ * enum mac80211_i_rx_flags - RX data flags
+  *
+  * @MAC80211_RX_CMNTR: received on cooked monitor already
+  *
+  * These flags are used across handling multiple interfaces
+  * for a single frame.
+  */
+-enum ieee80211_rx_flags {
+-	IEEE80211_RX_CMNTR		= BIT(0),
++enum mac80211_i_rx_flags {
++	MAC80211_RX_CMNTR		= BIT(0),
+ };
  
- void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
- {
--	u8 shift_ct, lsb, msb, secondmsb, i;
-+	u8 msb, secondmsb, i;
- 	u32 tmp;
+ struct ieee80211_rx_data {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 12086b4..8245813 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2394,9 +2394,9 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 	 * If cooked monitor has been processed already, then
+ 	 * don't do it again. If not, set the flag.
+ 	 */
+-	if (rx->flags & IEEE80211_RX_CMNTR)
++	if (rx->flags & MAC80211_RX_CMNTR)
+ 		goto out_free_skb;
+-	rx->flags |= IEEE80211_RX_CMNTR;
++	rx->flags |= MAC80211_RX_CMNTR;
  
- 	for (i = 0; i < core; i++) {
-+		secondmsb = 0;
- 		tmp = cmplx_pwr[i];
--		shift_ct = msb = secondmsb = 0;
--		while (tmp != 0) {
--			tmp = tmp >> 1;
--			shift_ct++;
--			lsb = (u8) (tmp & 1);
--			if (lsb == 1)
--				msb = shift_ct;
--		}
--		secondmsb = (u8) ((cmplx_pwr[i] >> (msb - 1)) & 1);
-+		msb = fls(tmp);
-+		if (msb)
-+			secondmsb = (u8) ((tmp >> (--msb - 1)) & 1);
- 		p_cmplx_pwr_dB[i] = (s8) (3 * msb + 2 * secondmsb);
- 	}
- }
--- 
-1.7.4.1
-
+ 	if (skb_headroom(skb) < sizeof(*rthdr) &&
+ 	    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC))
 
