@@ -1,60 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54427 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933080Ab1EZSBJ (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38481 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572Ab1E2M47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2011 14:01:09 -0400
-Date: Thu, 26 May 2011 13:55:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"gregkh@suse.de" <gregkh@suse.de>
-Subject: Re: %d in wlan log messages
-Message-ID: <20110526175553.GE3595@tuxdriver.com> (sfid-20110526_200113_545115_76A6E107)
-References: <4DDE63B4.4030309@broadcom.com>
- <BANLkTina0R-SJamJ_GFbxJsYcvvdyxzZNg@mail.gmail.com>
- <4DDE9391.6020302@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DDE9391.6020302@broadcom.com>
+	Sun, 29 May 2011 08:56:59 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so3143732wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 05:56:59 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/4] wl12xx: enable/disable beacon filtering on ap suspend/resume
+Date: Sun, 29 May 2011 15:56:51 +0300
+Message-Id: <1306673812-27978-3-git-send-email-eliad@wizery.com> (sfid-20110529_145704_458735_DF54426E)
+In-Reply-To: <1306673812-27978-1-git-send-email-eliad@wizery.com>
+References: <1306673812-27978-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 26, 2011 at 07:53:21PM +0200, Arend van Spriel wrote:
-> On 05/26/2011 05:09 PM, Daniel Halperin wrote:
-> >On Thu, May 26, 2011 at 7:29 AM, Arend van Spriel<arend@broadcom.com>  wrote:
-> >>[  563.120590] wlan%d: authenticate with c0:c1:c0:04:b8:2c (try 1)
-> >>[  563.128143] wlan%d: authenticated
-> >>[  563.131517] wlan%d: associate with c0:c1:c0:04:b8:2c (try 1)
-> >>[  563.140933] wlan%d: RX AssocResp from c0:c1:c0:04:b8:2c (capab=0x411
-> >>status=0 aid=4)
-> >>[  563.148714] wlan%d: associated
-> >>[  563.177019] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> >>
-> >>On latest staging-next I noticed above mentioned log messages. I assume
-> >>these message are from cfg80211 or mac80211. Has this been reported?
-> >>
-> >Interface names [including any numbers] are set by userspace, right?
-> >On my Ubuntu 10.04.2 LTS system, it's
-> >/etc/udev/rules.d/70-persistent.net.rules (or so, this is from
-> >memory). Not a kernel bug.
-> >
-> >Dan
-> 
-> Weird. I did not change anything in udev rules (using Ubuntu 10.10
-> over here). So the only variant in my setup is move to 2.6.39. Can
-> you explain that netdev apparently has the proper interface id (see
-> timestamp [563.177019] above?
+Beacon filtering needs to be enabled so AP won't wake up by
+by every received beacon.
 
-Wasn't a problem like this recently reported w/ compat-wireless?
-And the fix was to backport some patch to the networking core?
-I could be hallucinating again...
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   49 +++++++++++++++++++++++++++++------
+ 1 files changed, 40 insertions(+), 9 deletions(-)
 
-Is it possible that you somehow have a "dirty" build?  Could you try
-doing a 'make clean' and rebuilding?
-
-John
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4f20711..97f565c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1467,13 +1467,10 @@ static struct notifier_block wl1271_dev_notifier = {
+ 	.notifier_call = wl1271_dev_notify,
+ };
+ 
+-static int wl1271_configure_suspend(struct wl1271 *wl)
++static int wl1271_configure_suspend_sta(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	if (wl->bss_type != BSS_TYPE_STA_BSS)
+-		return 0;
+-
+ 	mutex_lock(&wl->mutex);
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+@@ -1518,11 +1515,41 @@ out:
+ 
+ }
+ 
++static int wl1271_configure_suspend_ap(struct wl1271 *wl)
++{
++	int ret;
++
++	mutex_lock(&wl->mutex);
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
++	ret = wl1271_acx_set_ap_beacon_filter(wl, true);
++
++	wl1271_ps_elp_sleep(wl);
++out_unlock:
++	mutex_unlock(&wl->mutex);
++	return ret;
++
++}
++
++static int wl1271_configure_suspend(struct wl1271 *wl)
++{
++	if (wl->bss_type == BSS_TYPE_STA_BSS)
++		return wl1271_configure_suspend_sta(wl);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		return wl1271_configure_suspend_ap(wl);
++	return 0;
++}
++
+ static void wl1271_configure_resume(struct wl1271 *wl)
+ {
+ 	int ret;
++	bool is_sta = wl->bss_type == BSS_TYPE_STA_BSS;
++	bool is_ap = wl->bss_type == BSS_TYPE_AP_BSS;
+ 
+-	if (wl->bss_type != BSS_TYPE_STA_BSS)
++	if (!is_sta && !is_ap)
+ 		return;
+ 
+ 	mutex_lock(&wl->mutex);
+@@ -1530,10 +1557,14 @@ static void wl1271_configure_resume(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	/* exit psm if it wasn't configured */
+-	if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
+-		wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
+-				   wl->basic_rate, true);
++	if (is_sta) {
++		/* exit psm if it wasn't configured */
++		if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
++			wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
++					   wl->basic_rate, true);
++	} else if (is_ap) {
++		wl1271_acx_set_ap_beacon_filter(wl, false);
++	}
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ out:
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
