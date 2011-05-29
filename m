@@ -1,78 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53487 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753203Ab1EaTrt (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:46018 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab1E2UF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 15:47:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 30/32] ath9k: configure internal regulator for AR9330
-Date: Tue, 31 May 2011 21:37:21 +0200
-Message-Id: <1306870643-7935-31-git-send-email-juhosg@openwrt.org> (sfid-20110531_214915_674204_32E61B3C)
-In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	Sun, 29 May 2011 16:05:56 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 9989318CE94
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:55 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 82B0A27D85
+	for <linux-wireless@vger.kernel.org>; Sun, 29 May 2011 23:05:54 +0300 (EEST)
+Subject: [RFC PATCH 15/27] mac80211: change ieee80211_if_wds and _vlan to use
+	mac80211 prefix
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 29 May 2011 23:05:54 +0300
+Message-ID: <20110529200554.16479.96246.stgit@localhost6.localdomain6> (sfid-20110529_220559_896938_D80ABCB8)
+In-Reply-To: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+References: <20110529195022.16479.71762.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   25 +++++++++++++++++++----
- 1 files changed, 20 insertions(+), 5 deletions(-)
+ net/mac80211/mac80211_i.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ffdfa6d..963dc9b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3712,7 +3712,7 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index f41a342..dc30f13 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -228,12 +228,12 @@ struct mac80211_if_ap {
+ 	bool dtim_bc_mc;
+ };
  
- 	if (internal_regulator) {
--		if (AR_SREV_9485(ah)) {
-+		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
- 			int reg_pmu_set;
+-struct ieee80211_if_wds {
++struct mac80211_if_wds {
+ 	struct sta_info *sta;
+ 	u8 remote_addr[ETH_ALEN];
+ };
  
- 			reg_pmu_set = REG_READ(ah, AR_PHY_PMU2) & ~AR_PHY_PMU2_PGM;
-@@ -3720,9 +3720,24 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
- 				return;
+-struct ieee80211_if_vlan {
++struct mac80211_if_vlan {
+ 	struct list_head list;
  
--			reg_pmu_set = (5 << 1) | (7 << 4) | (1 << 8) |
--				      (2 << 14) | (6 << 17) | (1 << 20) |
--				      (3 << 24) | (1 << 28);
-+			if (AR_SREV_9330(ah)) {
-+				if (ah->is_clk_25mhz) {
-+					reg_pmu_set = (3 << 1) | (8 << 4) |
-+						      (3 << 8) | (1 << 14) |
-+						      (6 << 17) | (1 << 20) |
-+						      (3 << 24);
-+				} else {
-+					reg_pmu_set = (4 << 1)  | (7 << 4) |
-+						      (3 << 8)  | (1 << 14) |
-+						      (6 << 17) | (1 << 20) |
-+						      (3 << 24);
-+				}
-+			} else {
-+				reg_pmu_set = (5 << 1) | (7 << 4) |
-+					      (1 << 8) | (2 << 14) |
-+					      (6 << 17) | (1 << 20) |
-+					      (3 << 24) | (1 << 28);
-+			}
+ 	/* used for all tx if the VLAN is configured to 4-addr mode */
+@@ -594,8 +594,8 @@ struct ieee80211_sub_if_data {
  
- 			REG_WRITE(ah, AR_PHY_PMU1, reg_pmu_set);
- 			if (!is_pmu_set(ah, AR_PHY_PMU1, reg_pmu_set))
-@@ -3753,7 +3768,7 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- 					   AR_RTC_REG_CONTROL1_SWREG_PROGRAM);
- 		}
- 	} else {
--		if (AR_SREV_9485(ah)) {
-+		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
- 			REG_RMW_FIELD(ah, AR_PHY_PMU2, AR_PHY_PMU2_PGM, 0);
- 			while (REG_READ_FIELD(ah, AR_PHY_PMU2,
- 					      AR_PHY_PMU2_PGM))
--- 
-1.7.2.1
+ 	union {
+ 		struct mac80211_if_ap ap;
+-		struct ieee80211_if_wds wds;
+-		struct ieee80211_if_vlan vlan;
++		struct mac80211_if_wds wds;
++		struct mac80211_if_vlan vlan;
+ 		struct ieee80211_if_managed mgd;
+ 		struct ieee80211_if_ibss ibss;
+ 		struct ieee80211_if_mesh mesh;
 
