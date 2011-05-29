@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64319 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759552Ab1EMQjx convert rfc822-to-8bit (ORCPT
+Received: from nm20-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.165]:35475 "HELO
+	nm20-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756143Ab1E2SkY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 12:39:53 -0400
-Received: by pvg12 with SMTP id 12so1223379pvg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 09:39:53 -0700 (PDT)
+	Sun, 29 May 2011 14:40:24 -0400
+Message-ID: <345324.53571.qm@web161601.mail.bf1.yahoo.com> (sfid-20110529_204027_845239_7CADF577)
+Date: Sun, 29 May 2011 11:40:23 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: AP mode - usb wlan interface: Sagem XG-76NA 802.11bg
+To: linux-wireless@vger.kernel.org, mafeuser@gmail.com
+In-Reply-To: <umt4k4d932ey.fsf@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110513160113.GA14293@zenon.in.qult.net>
-References: <20110513160113.GA14293@zenon.in.qult.net>
-Date: Fri, 13 May 2011 12:39:53 -0400
-Message-ID: <BANLkTikiWNXnB6NcS48-1x9KYes_o=omjg@mail.gmail.com> (sfid-20110513_183957_159701_71619D4C)
-Subject: Re: WPA in ad-hoc mode with carl9170
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2011 at 12:01 PM, Ignacy Gawedzki <i@lri.fr> wrote:
-> Hi,
->
-> I've been trying to setup WPA using wpa_supplicant in an ad-hoc network,
-> specifically using AR9170 USB interfaces with the carl9170 driver and
-> firmware.
->
-> Although wpa_supplicant is supposed to be able to setup a single shared group
-> key for all communications, it appears at least the broadcast traffic is
-> neither enciphered at the sending end nor received at the receiving end
-> (tested with both TKIP and CCMP).
->
-> I was wondering whether this is supposed to work or it is just too soon.  If
-> there's anything that I could do to contribute, I'd be happy to help.
->
-> Thanks.
->
-> Ignacy
+Hi Paul,
 
-Have you tested only with hw crypto?  Try passing the nohwcrypt param
-to the module while loading.
+Your device has ZyDAS zd1211b chip which is covered by the zd1211rw driver. Recently AP support has been implemented for this module. You'll likely need compat-wireless to enable it on your system.
 
--Brian
+Walter
+
+> Date: Sunday, May 29, 2011, 7:19 PM
+> Hallo group members.
+> 
+> I wonder if I can put it to AP (master mode) or in other
+> words, does
+> AP/master mode have to be supported by hardware or is it
+> only matter of
+> software(driver)?
+> 
+> best redards,
+> Paul
+> --
+
+> 
