@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4691 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361Ab1EHInn convert rfc822-to-8bit (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:57094 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754516Ab1E3Vem (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 May 2011 04:43:43 -0400
-Message-ID: <4DC657A4.7020800@broadcom.com> (sfid-20110508_104356_031187_1566C9A8)
-Date: Sun, 8 May 2011 10:43:16 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "George Kashperko" <george@znau.edu.ua>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Greg KH" <greg@kroah.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH][WAS:bcmai,axi] bcma: add Broadcom specific AMBA bus
- driver
-References: <1304632783-8781-1-git-send-email-zajec5@gmail.com>
- <201105061605.31625.arnd@arndb.de>
- <BANLkTikjr0ZTNOu69F+iKhwufE9KKMg4Tg@mail.gmail.com>
- <BANLkTimGBNT4FkS4mO9ToLWft0bCEYcEgg@mail.gmail.com>
- <1304790665.13983.10.camel@dev.znau.edu.ua>
- <BANLkTikLFff_86Fvg+jSty9vGLENiELF2Q@mail.gmail.com>
- <1304792795.13983.28.camel@dev.znau.edu.ua>
- <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-In-Reply-To: <BANLkTi=6BFD4OmtU1WPxjbFJQe36=mZKEA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Mon, 30 May 2011 17:34:42 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mike McCormack <mikem@ring3k.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-CR3xGLoCZkKVlu4bYBOF"
+Date: Mon, 30 May 2011 22:34:31 +0100
+Message-ID: <1306791271.4277.39.camel@localhost> (sfid-20110530_233445_941591_34CD9BDB)
+Mime-Version: 1.0
+Subject: rtl8192se replacing rtl8192e?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/2011 08:48 PM, Rafał Miłecki wrote:
-> 2011/5/7 George Kashperko<george@znau.edu.ua>:
->> I guess core id 0x800 by 0x04BF vendor and 0x800 by 0x043B vendor will
->> both be reported as ChipCommon which most likely is wrong for second
->> one. Btw, ChipCommon is 0x500 for 4706 and there will be more new core
->> codes for new Broadcom devices. Don't think its right to build core
->> names database into kernel while there will be at most few of them used
->> on particular end system.
-> This is constructive, I'll fix this, thanks.
 
-Hi Rafał,
+--=-CR3xGLoCZkKVlu4bYBOF
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Late response, but I tried to tell what George clarified by the example 
-above so you need nested switch.
+I'm happy to see rtl8192se in Linux 3.0-rc1.  I noticed that it claims
+PCI device ID 10ec:8192, which is already claimed by staging driver
+rtl8192e.  Is it intended to replace that driver, or are there two
+different devices with that ID which they will distinguish in their
+probe functions?
 
-I tend to agree with George that having this id to name conversion in 
-the bus driver may be nice for debugging, but apart from memory usage it 
-also gives you additional maintenance work. Leave it up to you.
+If is intended to replace rtl8192e, shouldn't it also claim these device
+IDs?
 
-Gr. AvS
+	/* Corega */
+	{ PCI_DEVICE(0x07aa, 0x0044) },
+	{ PCI_DEVICE(0x07aa, 0x0047) },
 
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-CR3xGLoCZkKVlu4bYBOF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATeQNZ+e/yOyVhhEJAQrS1RAAt4aHZP72Nw+Tk6s1z9HYfvUDPMpYjcz2
+zkAyTGmNedxZtwmcQwbMS3YvQX7bkwI+31mYoBlQWc1Fl/PzLOE/apgnC3g8DRk9
+n+ySBW0rWzq8n0ogyasmFAzWZA22PEAfgsjuA6bHegCyR7xinqLy7kdrulbp5VyJ
+mBZsCudL0DkFPcMEpH0eMjdaT/o+eNK8Y8ZEhUUEoFd9hTKlrM9+np6Xq+1vaGcU
+qUDxCqtVvs5xicanLLzQDV9J9tzz3s9KclddKJYJwfKJqhm6HBK9tAjaj2/++RIO
+sylURHZeU2QK+Rdl9Hpo7CqY0h4yc1T/LCI0zEh75wHVUENp/GC/JIu2buRSUY4y
+tVpppdoG2ZWgudwpKtZ8F2t+sx9tbhgDEYlbcn0yvcWcrOOZUfQJXZryUv9O20Ja
+IpndCLl3bg2P1a50PUruFzgKVZDOcPEkrk3l+Dtef71atOZQXQlFSIjSswWUAD3r
+dEH7NFqYMfQVeAU1kPG4jgtU1LVsTUaKu90zWhkBsUhSg7+ATHDQwnxsbcY5HnCc
+sNIby2NyXBUwHAc0iEmsUipt/RIYRDoUAA0vmmJ05x56pXf0V8qfxVGGv5pFqpGH
+rAExSJF5mVQ2EEVMkGBPeXTTCj1m+xR0VizZMGzia6rgPLjITPzBpoP3Bmpp0opk
+yfaPegCF22k=
+=X9PI
+-----END PGP SIGNATURE-----
+
+--=-CR3xGLoCZkKVlu4bYBOF--
