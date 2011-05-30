@@ -1,129 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21165 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757194Ab1EYOQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 10:16:47 -0400
-Subject: Re: [PATCH] iwlagn: use cts-to-self protection on 5000 adapters
- series
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110525122731.GA2546@redhat.com>
-References: <20110525122731.GA2546@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 25 May 2011 07:13:26 -0700
-Message-ID: <1306332806.17516.7.camel@wwguy-ubuntu> (sfid-20110525_161651_745193_25053124)
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:46418 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751041Ab1E3TEP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 15:04:15 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 96674540157
+	for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 15:10:37 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110530190414.11CE840EB8@repository3.orbit-lab.org> (sfid-20110530_210419_104724_F251F54B)
+Date: Mon, 30 May 2011 15:04:14 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-05-25 at 05:33 -0700, Stanislaw Gruszka wrote:
-> This patch fixes 802.11n stability and performance regression we have
-> since 2.6.35. It boost performance on my 5GHz N-only network from about
-> 5MB/s to 8MB/s. Similar percentage boost can be observed on 2.4 GHz.
-> 
-> These are test results of 5x downloading of approximately 700MB iso
-> image:
-> 
-> vanilla: 5.27 5.22 4.94 4.47 5.31 ; avr 5.0420 std 0.35110
-> patched: 8.07 7.95 8.06 7.99 7.96 ; avr 8.0060 std 0.055946
-> 
-> This was achieved with NetworkManager configured to do not perform
-> periodical scans, by configuring constant BSSID. With periodical scans,
-> after some time, performance downgrade to unpached driver level, like
-                                         unpatched?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + dd05f4f...81cd8a9 akpm-end   -> origin/akpm-end  (forced update)
+   bc9bc72..55922c9  akpm-start -> origin/akpm-start
+   675e7e3..7fd96ba  history    -> origin/history
+ + 23e9216...e2cf001 master     -> origin/master  (forced update)
+   bc9bc72..55922c9  stable     -> origin/stable
+ * [new tag]         next-20110530 -> next-20110530
+ * [new tag]         v3.0-rc1   -> v3.0-rc1
 
-> in example below:
-> 
-> patched: 7.40 7.61 4.28 4.37 4.80 avr 5.6920 std 1.6683
-> 
-> However patch still make better here, since similar test on unpached
-                                                          unpatched?
+compat-wireless code metrics
 
-> driver make link disconnects with below messages after some time:
-> 
-> wlan1: authenticate with 00:23:69:35:d1:3f (try 1)
-> wlan1: authenticate with 00:23:69:35:d1:3f (try 2)
-> wlan1: authenticate with 00:23:69:35:d1:3f (try 3)
-> wlan1: authentication with 00:23:69:35:d1:3f timed out
-> 
-> On 2.6.35 kernel patch helps against connection hangs with messages:
-> 
-> iwlagn 0000:20:00.0: queue 10 stuck 3 time. Fw reload.
-> iwlagn 0000:20:00.0: On demand firmware reload
-> iwlagn 0000:20:00.0: Stopping AGG while state not ON or starting
-> 
-> Cc: stable@kernel.org # 2.6.35+
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 -
->  drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |   12 ++----------
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    8 ++++++++
->  3 files changed, 10 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> index a70b8cf..f96eb5b 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> @@ -425,7 +425,6 @@ static struct iwl_base_params iwl5000_base_params = {
->  };
->  static struct iwl_ht_params iwl5000_ht_params = {
->  	.ht_greenfield_support = true,
-> -	.use_rts_for_aggregation = true, /* use rts/cts protection */
->  };
->  
->  #define IWL_DEVICE_5000						\
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-> index b12c72d..23fa93d 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-> @@ -163,17 +163,9 @@ static void iwlagn_tx_cmd_protection(struct iwl_priv *priv,
->  				     __le16 fc, __le32 *tx_flags)
->  {
->  	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS ||
-> -	    info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-> +	    info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT ||
-> +	    info->flags & IEEE80211_TX_CTL_AMPDU)
->  		*tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
-> -		return;
-> -	}
-> -
-> -	if (priv->cfg->ht_params &&
-> -	    priv->cfg->ht_params->use_rts_for_aggregation &&
-> -	    info->flags & IEEE80211_TX_CTL_AMPDU) {
-> -		*tx_flags |= TX_CMD_FLG_PROT_REQUIRE_MSK;
-> -		return;
-> -	}
->  }
->  
->  /* Calc max signal level (dBm) among 3 possible receivers */
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-> index a95ad84..0a1941d 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-> @@ -325,6 +325,14 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
->  			return 0;
->  	}
->  
-> +	/*
-> +	 * force CTS-to-self frames protection if RTS-CTS is not preferred
-> +	 * one aggregation protection method
-             on?
-> +	 */
-> +	if (!(priv->cfg->ht_params &&
-> +	      priv->cfg->ht_params->use_rts_for_aggregation))
-> +		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
-> +
->  	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
->  	    !(ctx->staging.flags & RXON_FLG_BAND_24G_MSK))
->  		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
-
-if I remember correctly, the RTS/CTS was added to fix 6000 performance
-issue 2 years ago. Did you see the similar performance downgrade issue
-on other devices beside 5000?
-
-Thanks
-Wey
-
+    822946 - Total upstream lines of code being pulled
+      2394 - backport code changes
+      2086 - backport code additions
+       308 - backport code deletions
+      8070 - backport from compat module
+     10464 - total backport code
+    1.2715 - % of code consists of backport work
