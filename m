@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:53309 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab1EPNN7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2011 09:13:59 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:17982 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751986Ab1E3Mwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 08:52:44 -0400
+Date: Mon, 30 May 2011 14:52:21 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH wireless-2.6] rt2x00: fix rmmod crash
+Message-ID: <20110530125221.GD2417@redhat.com> (sfid-20110530_145247_997555_CEDACE0D)
+References: <20110529104529.GA2769@localhost.localdomain>
+ <4DE278CD.3030708@gmail.com>
+ <20110529204200.GA2472@localhost.localdomain>
+ <4DE3380C.2@gmail.com>
+ <20110530095259.GB2417@redhat.com>
+ <BANLkTi=Hcqd3rJtzhY3RnnNydb63_gyUAg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com>
-References: <BANLkTimkgtQL1A2A3iAP-UYK2KdDvPmY3Q@mail.gmail.com>
- <BANLkTinb3kaK7_b=47AL+Mb6Zmt9twEM9g@mail.gmail.com> <BANLkTi=aBLPX7OMKi=sMhT81x-2f6Ci6sQ@mail.gmail.com>
-From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
-Date: Mon, 16 May 2011 15:13:38 +0200
-Message-ID: <BANLkTi=xJbL-26Hzg0Pp5zKPUi35bV6VmA@mail.gmail.com> (sfid-20110516_151409_902093_0204A4F6)
-Subject: Re: several packets in a single buffer in Rx
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, guy.cohen@intel.com
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <BANLkTi=Hcqd3rJtzhY3RnnNydb63_gyUAg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 16 maja 2011 14:59 u¿ytkownik Emmanuel Grumbach
-<egrumbach@gmail.com> napisa³:
-> 2011/5/16 Micha³ Miros³aw <mirqus@gmail.com>:
->> 2011/5/16 Emmanuel Grumbach <egrumbach@gmail.com>:
->>> I would like to be able to deliver the same page several times to the
->>> stack without having the stack consume it before the last time I
->>> deliver it.
->>> Of course I would like to avoid cloning it.
->>
->> Just do get_page() on the page having another packet in it before
->> passing skb up.
->>
->
-> I can see the path:
-> __kfree_skb -> skb_release_all -> skb_release_data -> put_page
-> put_page will free the page iff the _count variable reaches 0. Of course,
-> _count is incremented by get_page.
->
-> I will give it try.
->
-> I understand that this will work regardless the order given to
-> alloc_pages right ?
+On Mon, May 30, 2011 at 01:26:37PM +0200, Gertjan van Wingerde wrote:
+> > It's not stable fix, this bug was introduced currently by
+> >
+> > commit 1c0bcf89d85cc97a0d9ce4cd909351a81fa4fdde
+> > Author: Ivo van Doorn <ivdoorn@gmail.com>
+> > Date:   Sat Apr 30 17:18:18 2011 +0200
+> >
+> >    rt2x00: Add autowake support for USB hardware
+> >
+> 
+> I cannot check it right now, but that patch is not yet included in
+> wireless-2.6, which
+> you indicate (in the email subject) as being the target for this patch.
+> Which tree do you want this patch to be applied to?
 
-Yes. Remember that if you put a lot of packets in a big-order page
-then the memory will be freed only after all packets are freed.
+Oh, indeed. But it is in current Linus' tree, patch is targeted there.
 
-Best Regards,
-Micha³ Miros³aw
+Stanislaw
