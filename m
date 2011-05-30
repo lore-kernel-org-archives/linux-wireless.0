@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:31900 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752129Ab1EMP3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 11:29:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 May 2011 08:29:20 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: make npending frames check as bool
-Date: Fri, 13 May 2011 20:59:42 +0530
-Message-ID: <1305300582-5723-1-git-send-email-mshajakhan@atheros.com> (sfid-20110513_172957_556123_F75412EF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:35891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586Ab1E3JVz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 05:21:55 -0400
+Subject: Re: [rt2x00-users] [PATCH 1/3] rt2x00: Serialize TX operations on
+ a queue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201105300955.43779.helmut.schaa@googlemail.com> (sfid-20110530_095755_602931_64334292)
+References: <cover.1306586311.git.gwingerde@gmail.com>
+	 <201105281647.35855.helmut.schaa@googlemail.com>
+	 <4DE288DB.7040309@gmail.com>
+	 <201105300955.43779.helmut.schaa@googlemail.com>
+	 (sfid-20110530_095755_602931_64334292)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 May 2011 11:03:06 +0200
+Message-ID: <1306746186.3745.1.camel@jlt3.sipsolutions.net> (sfid-20110530_112159_004767_2BB9F128)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Mon, 2011-05-30 at 09:55 +0200, Helmut Schaa wrote:
 
-we are not doing anything by tracking the number of pending frames.
-bail out when we first find a pending frame in any one of the 10 queues.
+> > >> AFAICT not all tx calls from mac80211 are protected by local_bh_disable/enable. I believe
+> > >> that this is the case for the "process" context tx calls from
+> > > 
+> > >> ieee80211_subif_start_xmit
+> > > 
+> > > This should only be called from the network softirq and thus doesn't require bottom halves
+> > > to be disabled (AFAIK).
+> > > 
+> > >> and
+> > >> ieee80211_monitor_start_xmit.
+> > > 
+> > > Same here.
+> > 
+> > Hmm, are you sure about this?
+> 
+> Maybe Johannes can clarify this for us ;)
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+The above assertion ("not all TX calls are protected") is wrong.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4eec494..17ebdf1 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2284,7 +2284,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 		timeout = 1;
- 
- 	for (j = 0; j < timeout; j++) {
--		int npend = 0;
-+		bool npend = false;
- 
- 		if (j)
- 			usleep_range(1000, 2000);
-@@ -2293,7 +2293,10 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 			if (!ATH_TXQ_SETUP(sc, i))
- 				continue;
- 
--			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
-+			npend = ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
-+
-+			if (npend)
-+				break;
- 		}
- 
- 		if (!npend)
--- 
-1.7.0.4
+> Johannes, are all calls to the drivers tx callback done in softirq context or
+> adequately protected by local_bh_disable/enable? Or is this presumption wrong?
+
+All of them are invoked with BHs disabled.
+
+Cf. ieee80211_tx_skb(), which is the only function that can be called
+from process context. The _start_xmit functions listed above are called
+by the networking layer and always invoked with BHs disabled.
+
+johannes
 
