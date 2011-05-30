@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34260 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60173 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057Ab1ENIjB (ORCPT
+	with ESMTP id S1756630Ab1E3Qqh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 04:39:01 -0400
-Subject: Re: iw connect syntax for wep
+	Mon, 30 May 2011 12:46:37 -0400
+Subject: Re: [RFC 1/2] mac80211: add ieee80211_get_operstate() function
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Frankish <j-frankish@slb.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1305361659.3437.3.camel@jlt3.sipsolutions.net> (sfid-20110514_102747_082779_483E4E25)
-References: <654DF80AD31A344E93DBCC6280BD6DEF19352F42@NL0230MBX08N1.DIR.slb.com>
-	 (sfid-20110514_091121_246970_E2FF9308)  <1305361659.3437.3.camel@jlt3.sipsolutions.net>
-	 (sfid-20110514_102747_082779_483E4E25)
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1306418007-27573-1-git-send-email-eliad@wizery.com> (sfid-20110526_155333_039329_FF0E4F28)
+References: <1306418007-27573-1-git-send-email-eliad@wizery.com>
+	 (sfid-20110526_155333_039329_FF0E4F28)
 Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 May 2011 10:38:57 +0200
-Message-ID: <1305362337.3437.6.camel@jlt3.sipsolutions.net> (sfid-20110514_103906_830179_A9BD65DF)
+Date: Mon, 30 May 2011 18:46:34 +0200
+Message-ID: <1306773994.3448.9.camel@jlt3.sipsolutions.net> (sfid-20110530_184640_624634_BD9F866C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-05-14 at 10:27 +0200, Johannes Berg wrote:
-> On Sat, 2011-05-14 at 07:01 +0000, John Frankish wrote:
-> > The iw documentation and "iw --help" states the following for establishing a wep connection:
-> > 
-> > iw wlan0 connect foo keys 0:abcde d:1:0011223344
-> > 
-> > What command syntax is supposed to be used when connecting to an ap using a single wep code consisting of 13 hex pairs?
-> > 
-> > "iw wlan0 connect ssid keys 1:00112233445566778899AABBCC" does not work
+On Thu, 2011-05-26 at 16:53 +0300, Eliad Peller wrote:
+> Add ieee80211_get_operstate() function to get the operstate
+> of the netdevice.
 > 
-> 13 hex pairs isn't a valid key. WEP keys are either 5 or 10 bytes.
+> This is needed for drivers that need to know when the interface
+> is IF_OPER_UP (e.g. wl12xx), and block notifiers can't be used
+> (e.g. because the interface is already IF_OPER_UP, like after
+> resuming from suspend)
 
-Err, no, I got confused, it's either 5 or 13 bytes of course, and the
-above works fine for me. If you have iw earlier than 0.9.16 you
-absolutely need to make on key default though by prefixing "d:", later
-versions will automatically select one key (basically at random though).
+I don't see how this is necessary since the operstate can't change
+during suspend?
 
 johannes
 
