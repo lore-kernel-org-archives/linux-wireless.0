@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:60504 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755875Ab1EJMDW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258Ab1E3Jim (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2011 08:03:22 -0400
-Received: by mail-ey0-f170.google.com with SMTP id 5so3728752eyf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2011 05:03:21 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 2/5] wl12xx: listen to scheduled scan events
-Date: Tue, 10 May 2011 15:03:07 +0300
-Message-Id: <1305028990-14044-3-git-send-email-coelho@ti.com> (sfid-20110510_140325_412574_9510EEE3)
-In-Reply-To: <1305028990-14044-1-git-send-email-coelho@ti.com>
-References: <1305028990-14044-1-git-send-email-coelho@ti.com>
+	Mon, 30 May 2011 05:38:42 -0400
+Subject: Re: [rt2x00-users] [PATCH 1/3] rt2x00: Serialize TX operations on
+ a queue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTinu9dBnBdYb7_bxdVUkTfzJ2cO9OQ@mail.gmail.com> (sfid-20110530_113247_224720_43BC97D5)
+References: <cover.1306586311.git.gwingerde@gmail.com>
+	 <201105281647.35855.helmut.schaa@googlemail.com>
+	 <4DE288DB.7040309@gmail.com>
+	 <201105300955.43779.helmut.schaa@googlemail.com>
+	 <1306746186.3745.1.camel@jlt3.sipsolutions.net>
+	 <BANLkTinu9dBnBdYb7_bxdVUkTfzJ2cO9OQ@mail.gmail.com>
+	 (sfid-20110530_113247_224720_43BC97D5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 May 2011 11:38:37 +0200
+Message-ID: <1306748317.3448.0.camel@jlt3.sipsolutions.net> (sfid-20110530_113845_568214_2A74A406)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subscribe and listen to PERIODIC_SCAN_REPORT_EVENT_ID and
-PERIODIC_SCAN_COMPLETE_EVENT_ID in preparation for the scheduled scan
-implementation.
+On Mon, 2011-05-30 at 11:32 +0200, Gertjan van Wingerde wrote:
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/boot.c  |    4 +++-
- drivers/net/wireless/wl12xx/event.c |   10 ++++++++++
- 2 files changed, 13 insertions(+), 1 deletions(-)
+> As a follow-up question, is it valid that mac80211 calls the driver's
+> tx function simultaneously
+> for multiple frames, or are we experiencing an issue with mac80211 here?
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 2b0cf85..b07f8b7 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -478,7 +478,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		DISCONNECT_EVENT_COMPLETE_ID |
- 		RSSI_SNR_TRIGGER_0_EVENT_ID |
- 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
--		SOFT_GEMINI_SENSE_EVENT_ID;
-+		SOFT_GEMINI_SENSE_EVENT_ID |
-+		PERIODIC_SCAN_REPORT_EVENT_ID |
-+		PERIODIC_SCAN_COMPLETE_EVENT_ID;
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS)
- 		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index ae69330..dc110e8 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -188,6 +188,16 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 		wl1271_scan_stm(wl);
- 	}
- 
-+	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
-+		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_REPORT_EVENT "
-+			     "(status 0x%0x)", mbox->scheduled_scan_status);
-+	}
-+
-+	if (vector & PERIODIC_SCAN_COMPLETE_EVENT_ID) {
-+		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT "
-+			     "(status 0x%0x)", mbox->scheduled_scan_status);
-+	}
-+
- 	/* disable dynamic PS when requested by the firmware */
- 	if (vector & SOFT_GEMINI_SENSE_EVENT_ID &&
- 	    wl->bss_type == BSS_TYPE_STA_BSS) {
--- 
-1.7.1
+That can happen by design, yes.
+
+johannes
 
