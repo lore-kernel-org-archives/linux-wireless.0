@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:55460 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751869Ab1EGFms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2011 01:42:48 -0400
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlagn: crash when unloading the module
-References: <87iptsgk5y.fsf@purkki.adurom.net>
-	<20110504132602.GA2183@redhat.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 07 May 2011 08:42:46 +0300
-In-Reply-To: <20110504132602.GA2183@redhat.com> (Stanislaw Gruszka's message of "Wed\, 4 May 2011 15\:26\:03 +0200")
-Message-ID: <87pqnvf4mh.fsf@purkki.adurom.net> (sfid-20110507_074250_487255_FAC6BC3D)
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:33384 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab1E3KvY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 06:51:24 -0400
+Received: by gxk21 with SMTP id 21so1361642gxk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 03:51:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1304529896-20934-1-git-send-email-javier@cozybit.com>
+References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
+	<1304529896-20934-1-git-send-email-javier@cozybit.com>
+Date: Mon, 30 May 2011 16:21:23 +0530
+Message-ID: <BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com> (sfid-20110530_125127_440969_07612A08)
+Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
+> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
+> infrastructure BSS, or IBSS are differentiated by the Capability
+> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
+> subfields to 0 in transmitted Beacon or Probe Response management
+> frames.
 
-> On Tue, May 03, 2011 at 01:20:25PM +0300, Kalle Valo wrote:
->> I noticed today a crash when removing iwlagn module. I can see the
->> crash everytime on my lenovo x201 (x86 64bit, i5) with this wireless
->> chip:
->> 
->> [   19.484551] iwlagn 0000:02:00.0: Detected Intel(R) Centrino(R)
->> Ultimate-N 6300 AGN, REV=0x74
+This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
+to zero. Is there any other way to find if it is a mesh other than
+this check?
 
-[...]
+> index fbf6f33..62e542a 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
 
-> We can not exclude iwlagn problem only triggered with intel iommu,
-> because problem does not happen with other modules, or does it?
+> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>
+>        res->ts = jiffies;
+>
+> -       if (is_zero_ether_addr(res->pub.bssid)) {
+> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+>                /* must be mesh, verify */
 
-I have only seen the crash with iwlagn. But I have to admit that I
-haven't tried to unload modules that much.
+Reverting the above change, makes P2P work. Any other better fix?
 
-> Except test patch pointed by Johannes, I suggest turning on
-> CONFIG_DMA_API_DEBUG
+>                meshid = cfg80211_find_ie(WLAN_EID_MESH_ID,
+>                                          res->pub.information_elements,
+> --
 
-I already had this on and I haven't noticed anything wrong.
-
-> and test with intel_iommu=on and intel_iommu=off.
-
-I'll skip these as David's patch seem to already help.
-
--- 
-Kalle Valo
+Vivek.
