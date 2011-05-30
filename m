@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32782 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab1EEOuv (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49976 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542Ab1E3SZi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 10:50:51 -0400
-Message-ID: <4DC2B941.6@candelatech.com> (sfid-20110505_165053_874968_6012B8B5)
-Date: Thu, 05 May 2011 07:50:41 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 30 May 2011 14:25:38 -0400
+Received: by qwk3 with SMTP id 3so1768224qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 11:25:38 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 3/3] cfg80211/nl80211: add interval attribute for scheduled
- scans
-References: <1304600420-24227-1-git-send-email-coelho@ti.com>	 <1304600420-24227-4-git-send-email-coelho@ti.com>	 <4DC2B78E.3000205@candelatech.com> <1304607108.3594.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1304607108.3594.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110529104529.GA2769@localhost.localdomain>
+References: <20110529104529.GA2769@localhost.localdomain>
+Date: Mon, 30 May 2011 20:25:37 +0200
+Message-ID: <BANLkTinABm=J0eZnwAjkYPwA1e3AgoFW6Q@mail.gmail.com> (sfid-20110530_202542_315505_B59EFA7E)
+Subject: Re: [PATCH wireless-2.6] rt2x00: fix rmmod crash
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2011 07:51 AM, Johannes Berg wrote:
-> On Thu, 2011-05-05 at 07:43 -0700, Ben Greear wrote:
->> On 05/05/2011 06:00 AM, Luciano Coelho wrote:
->>> Introduce NL80211_ATTR_SCHED_SCAN_INTERVAL as a required attribute for
->>> NL80211_CMD_START_SCHED_SCAN.  This value informs the driver at which
->>> intervals the scheduled scan cycles should be executed.
->>
->> Please default to something useful instead of requiring
->> this so that things are backwards compatible.
->
-> Backward compatible to what?
+Hi,
 
-To anything sending older style netlink messages?
+On Sun, May 29, 2011 at 12:45 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> Do not destroy workqueue, which still can be used by autowakeup_work,
+> before ieee80211_unregister_hw() is called.
 
-Thanks,
-Ben
+Well isn't the bug then that autowakeup_work isn't cancelled using
+cancel_work_sync
+like the other workqueue tasks?
 
+I rather add the call to cancel_work_sync then moving the killing of
+the workqueue.
+The position where the workqueue is destroyed should be the place
+where we cancel
+all scheduled work, that way we can assume no rt2x00-related threads ater this
+position.
+
+Ivo
+
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
 >
-> johannes
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index c018d67..2f2627b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1165,7 +1165,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>                cancel_work_sync(&rt2x00dev->rxdone_work);
+>                cancel_work_sync(&rt2x00dev->txdone_work);
+>        }
+> -       destroy_workqueue(rt2x00dev->workqueue);
 >
+>        /*
+>         * Free the tx status fifo.
+> @@ -1198,6 +1197,11 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>        rt2x00lib_remove_hw(rt2x00dev);
+>
+>        /*
+> +        * Now nobody use workqueue anymore.
+> +        */
+> +       destroy_workqueue(rt2x00dev->workqueue);
+> +
+> +       /*
+>         * Free firmware image.
+>         */
+>        rt2x00lib_free_firmware(rt2x00dev);
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> 1.7.4
+>
+>
