@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2929 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758835Ab1EMKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 06:00:16 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Sukesh Srikakula" <sukeshs@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 28/32] staging: brcm80211: Removed unused variable from
- brcmfmac driver
-Date: Fri, 13 May 2011 11:59:48 +0200
-Message-ID: <1305280792-9475-28-git-send-email-arend@broadcom.com> (sfid-20110513_120041_392420_D80027D0)
-In-Reply-To: <1305280792-9475-1-git-send-email-arend@broadcom.com>
-References: <1305280792-9475-1-git-send-email-arend@broadcom.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:55205 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753058Ab1EaDPf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 23:15:35 -0400
+Received: by vxi39 with SMTP id 39so2991384vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 20:15:34 -0700 (PDT)
+Message-ID: <4DE45D54.9050301@lwfinger.net> (sfid-20110531_051603_190710_52E73DDA)
+Date: Mon, 30 May 2011 22:15:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mike McCormack <mikem@ring3k.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192se replacing rtl8192e?
+References: <1306791271.4277.39.camel@localhost>
+In-Reply-To: <1306791271.4277.39.camel@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On 05/30/2011 04:34 PM, Ben Hutchings wrote:
+> I'm happy to see rtl8192se in Linux 3.0-rc1.  I noticed that it claims
+> PCI device ID 10ec:8192, which is already claimed by staging driver
+> rtl8192e.  Is it intended to replace that driver, or are there two
+> different devices with that ID which they will distinguish in their
+> probe functions?
+>
+> If is intended to replace rtl8192e, shouldn't it also claim these device
+> IDs?
+>
+> 	/* Corega */
+> 	{ PCI_DEVICE(0x07aa, 0x0044) },
+> 	{ PCI_DEVICE(0x07aa, 0x0047) },
 
-Removed unused variable from wl_profile structure
+The RTL8192E is a different device than the RTL8192SE, thus rtl8192se will not 
+replace rtl8192e. The way to tell them apart is the PCIe revision id. At 
+present, I don't have a method to use that info to load the correct driver, but 
+I will be working on it. In addition, I need to acquire an RTL8192E.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    5 -----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    1 -
- 2 files changed, 0 insertions(+), 6 deletions(-)
+No, rtl8192se should not claim those Corega devices.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index abdf857..eb7f611 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4107,8 +4107,6 @@ static void *wl_read_prof(struct wl_priv *wl, s32 item)
- 	switch (item) {
- 	case WL_PROF_SEC:
- 		return &wl->profile->sec;
--	case WL_PROF_ACT:
--		return &wl->profile->active;
- 	case WL_PROF_BSSID:
- 		return &wl->profile->bssid;
- 	case WL_PROF_SSID:
-@@ -4142,9 +4140,6 @@ wl_update_prof(struct wl_priv *wl, const wl_event_msg_t *e, void *data,
- 	case WL_PROF_SEC:
- 		memcpy(&wl->profile->sec, data, sizeof(wl->profile->sec));
- 		break;
--	case WL_PROF_ACT:
--		wl->profile->active = *(bool *)data;
--		break;
- 	case WL_PROF_BEACONINT:
- 		wl->profile->beacon_interval = *(u16 *)data;
- 		break;
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index ced637d..2e8e14d 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -235,7 +235,6 @@ struct wl_profile {
- 	struct wl_security sec;
- 	struct wl_ibss ibss;
- 	s32 band;
--	bool active;
- };
- 
- /* dongle iscan event loop */
--- 
-1.7.4.1
-
-
+Larry
