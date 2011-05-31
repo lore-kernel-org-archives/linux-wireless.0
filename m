@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dell.nexicom.net ([216.168.96.13]:49463 "EHLO smtp.nexicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750941Ab1ESAER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2011 20:04:17 -0400
-Received: from mail.lockie.ca (dyn-dsl-mb-216-168-124-14.nexicom.net [216.168.124.14])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p4J04GXX022883
-	for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 20:04:16 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 2FC101E0132
-	for <linux-wireless@vger.kernel.org>; Wed, 18 May 2011 20:04:15 -0400 (EDT)
-Message-ID: <4DD45EA6.4020301@lockie.ca> (sfid-20110519_020420_940971_ED9D3819)
-Date: Wed, 18 May 2011 20:04:54 -0400
-From: James <bjlockie@lockie.ca>
+Received: from nm22-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.126]:44067 "HELO
+	nm22-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751368Ab1EaIBw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 04:01:52 -0400
+Message-ID: <802107.19454.qm@web161618.mail.bf1.yahoo.com> (sfid-20110531_100157_786160_5435DCD1)
+Date: Tue, 31 May 2011 01:01:51 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [RFC PATCH 03/27] zd1211rw: include mac80211.h from zd_chip.h
+To: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
+Cc: jussi.kivilinna@mbnet.fi
+In-Reply-To: <20110529200417.16479.30806.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless release for 2011-05-18 is baked
-References: <20110518190500.0573640EC3@repository3.orbit-lab.org>
-In-Reply-To: <20110518190500.0573640EC3@repository3.orbit-lab.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/11 15:04, Compat-wireless cronjob account wrote:
-> >From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->  + 65f200d...6896821 akpm-end   -> origin/akpm-end  (forced update)
->    df8d06a..c1d10d1  akpm-start -> origin/akpm-start
->    9e8a885..55b972e  history    -> origin/history
->  + 9e41cd5...bff5277 master     -> origin/master  (forced update)
->    df8d06a..c1d10d1  stable     -> origin/stable
->  * [new tag]         next-20110518 -> next-20110518
->
-> compat-wireless code metrics
->
->     821979 - Total upstream lines of code being pulled
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Tar files don't seem to be created on orbit.
-The last one on
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/2011/05/ is 16.
+
+> Date: Sunday, May 29, 2011, 11:04 PM
+> zd_chip.h contains one function with
+> a pointer to ieee80211_hw but doesn't
+> include mac80211.h. As a temporary solution include
+> mac80211.h to avoid
+> a warning.
+
+I'm still getting a warning with this patch. I think this happened when Jussi fixed some stuff awhile back.
+
+In function ‘zd_mac_alloc_hw’:
+drivers/net/wireless/zd1211rw/zd_mac.c:1340:7: warning: statement with no effect
+
+Walter
