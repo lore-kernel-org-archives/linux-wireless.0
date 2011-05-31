@@ -1,121 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:57127 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab1EDDHP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 23:07:15 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: fix simultaneous assoc and scan issue
-Date: Tue,  3 May 2011 20:11:45 -0700
-Message-Id: <1304478706-31673-1-git-send-email-bzhao@marvell.com> (sfid-20110504_050724_795684_42779908)
+Received: from mx1.redhat.com ([209.132.183.28]:22271 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754070Ab1EaNiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 09:38:14 -0400
+Date: Tue, 31 May 2011 15:37:39 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [iwl4965] Microcode SW error detected
+Message-ID: <20110531133736.GA2935@redhat.com> (sfid-20110531_153817_026759_096486D0)
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+ <20110524070941.GA2189@redhat.com>
+ <1306255853.12267.14.camel@x61.thuisdomein>
+ <20110525131130.GA3260@redhat.com>
+ <1306330313.2119.4.camel@x61.thuisdomein>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1306330313.2119.4.camel@x61.thuisdomein>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, May 25, 2011 at 03:31:53PM +0200, Paul Bolle wrote:
+> On Wed, 2011-05-25 at 15:11 +0200, Stanislaw Gruszka wrote:
+> 
+> > What channel do you use?
+> 11, 2.462 GHz (according to my basestation)
+> 
+> > Is network 11n or 11g or mixed ?
+> Network is mixed 11b and 11g (according to my basestation)
+> 
+> > WEP is 40 bits or other?
+> 128 bits, 26 hex digits (again, according to my basestation)
 
-When scan and assoc (infra/ibss) commands are simultaneously
-given in two terminals, association response is erroneously
-served while serving the scan response.
+My all attempts of reproduce the problem was unsuccessful. Please
+send me (off list since this could be quite big) dmesg output from 
+loading module to first microcode error, when using verbose debug eg:
 
-mwifiex_cfg80211_results() is the common routine for sending
-ioctl (scan, assoc etc.) results to cfg80211 stack. In above
-scenario even if the common routine is called for scan ioctl
-context, it also tries to send information about assoc ioctl to
-cfg80211 because "priv->assoc_request/priv->ibss_join_request"
-flag is on at that time.
+$ modprobe -r iwl4965
+$ modprobe iwl4965 debug=0x47ffffff  
 
-Fix the issue by updating request variable after assoc handling
-and modifying the variable check in mwifiex_cfg80211_results.
+Note: driver have to be compiled with CONFIG_IWLWIFI_LEGACY_DEBUG.
+Also dmesg circular buffer can be too small to contain all requested
+messages. In such case, you will have to configure syslog like described
+here:
+https://bugzilla.kernel.org/show_bug.cgi?id=35932#c2
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   11 +++++++----
- drivers/net/wireless/mwifiex/main.h     |    4 ++--
- 2 files changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 98009e2..77a8029 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1044,7 +1044,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		goto done;
- 	}
- 
--	priv->assoc_request = 1;
-+	priv->assoc_request = -EINPROGRESS;
- 
- 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
- 	       (char *) sme->ssid, sme->bssid);
-@@ -1052,6 +1052,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
- 				     priv->bss_mode, sme->channel, sme, 0);
- 
-+	priv->assoc_request = 1;
- done:
- 	priv->assoc_result = ret;
- 	queue_work(priv->workqueue, &priv->cfg_workqueue);
-@@ -1080,7 +1081,7 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 		goto done;
- 	}
- 
--	priv->ibss_join_request = 1;
-+	priv->ibss_join_request = -EINPROGRESS;
- 
- 	wiphy_dbg(wiphy, "info: trying to join to %s and bssid %pM\n",
- 	       (char *) params->ssid, params->bssid);
-@@ -1088,6 +1089,8 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 	ret = mwifiex_cfg80211_assoc(priv, params->ssid_len, params->ssid,
- 				params->bssid, priv->bss_mode,
- 				params->channel, NULL, params->privacy);
-+
-+	priv->ibss_join_request = 1;
- done:
- 	priv->ibss_join_result = ret;
- 	queue_work(priv->workqueue, &priv->cfg_workqueue);
-@@ -1380,7 +1383,7 @@ done:
- 		kfree(scan_req);
- 	}
- 
--	if (priv->assoc_request) {
-+	if (priv->assoc_request == 1) {
- 		if (!priv->assoc_result) {
- 			cfg80211_connect_result(priv->netdev, priv->cfg_bssid,
- 						NULL, 0, NULL, 0,
-@@ -1399,7 +1402,7 @@ done:
- 		priv->assoc_result = 0;
- 	}
- 
--	if (priv->ibss_join_request) {
-+	if (priv->ibss_join_request == 1) {
- 		if (!priv->ibss_join_result) {
- 			cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid,
- 					     GFP_KERNEL);
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5043fcd..b4bb5ec 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -479,9 +479,9 @@ struct mwifiex_private {
- 	u8 report_scan_result;
- 	struct cfg80211_scan_request *scan_request;
- 	int scan_result_status;
--	bool assoc_request;
-+	int assoc_request;
- 	u16 assoc_result;
--	bool ibss_join_request;
-+	int ibss_join_request;
- 	u16 ibss_join_result;
- 	bool disconnect;
- 	u8 cfg_bssid[6];
--- 
-1.7.0.2
-
+Stanislaw
