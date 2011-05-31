@@ -1,69 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:28125 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759588Ab1EMQrd (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53504 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758245Ab1EaTrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2011 12:47:33 -0400
-Date: Fri, 13 May 2011 09:46:57 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Tue, 31 May 2011 15:47:51 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH v2] ssb: fix pcicore build breakage
-Message-Id: <20110513094657.5d38e959.randy.dunlap@oracle.com> (sfid-20110513_184737_228307_51EE2A6A)
-In-Reply-To: <1305296570-23671-1-git-send-email-linville@tuxdriver.com>
-References: <1305294214.12573.3.camel@maggie>
-	<1305296570-23671-1-git-send-email-linville@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 03/32] ath9k: add MAC revision detection for AR9330
+Date: Tue, 31 May 2011 21:36:54 +0200
+Message-Id: <1306870643-7935-4-git-send-email-juhosg@openwrt.org> (sfid-20110531_214844_822280_05172C59)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 13 May 2011 10:22:50 -0400 John W. Linville wrote:
+The AR9330 1.0 and 1.1 are using the same revision,
+thus it is not possible to distinguish the two chips.
+The platform setup code can distinguish the chips based
+on the SoC revision.
 
-> drivers/ssb/main.c:1336: error: 'SSB_PCICORE_BCAST_ADDR' undeclared (first use in this function)
-> drivers/ssb/main.c:1337: error: 'SSB_PCICORE_BCAST_DATA' undeclared (first use in this function)
-> drivers/ssb/main.c:1349: error: 'struct ssb_pcicore' has no member named 'dev'
+Add a callback function to ath9k_platform_data in order
+to allow getting the revision number from the platform code.
 
-This patch does not fix the last error above when CONFIG_PCI is not enabled.
-
-
-> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Use CHIPCO definitions since they should always(?) be valid...
-> 
->  drivers/ssb/main.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-> index ee2937c..b2abd0f 100644
-> --- a/drivers/ssb/main.c
-> +++ b/drivers/ssb/main.c
-> @@ -1332,14 +1332,16 @@ EXPORT_SYMBOL(ssb_bus_powerup);
->  static void ssb_broadcast_value(struct ssb_device *dev,
->  				u32 address, u32 data)
->  {
-> +#ifdef CONFIG_SSB_DRIVER_PCICORE
->  	/* This is used for both, PCI and ChipCommon core, so be careful. */
->  	BUILD_BUG_ON(SSB_PCICORE_BCAST_ADDR != SSB_CHIPCO_BCAST_ADDR);
->  	BUILD_BUG_ON(SSB_PCICORE_BCAST_DATA != SSB_CHIPCO_BCAST_DATA);
-> +#endif
->  
-> -	ssb_write32(dev, SSB_PCICORE_BCAST_ADDR, address);
-> -	ssb_read32(dev, SSB_PCICORE_BCAST_ADDR); /* flush */
-> -	ssb_write32(dev, SSB_PCICORE_BCAST_DATA, data);
-> -	ssb_read32(dev, SSB_PCICORE_BCAST_DATA); /* flush */
-> +	ssb_write32(dev, SSB_CHIPCO_BCAST_ADDR, address);
-> +	ssb_read32(dev, SSB_CHIPCO_BCAST_ADDR); /* flush */
-> +	ssb_write32(dev, SSB_CHIPCO_BCAST_DATA, data);
-> +	ssb_read32(dev, SSB_CHIPCO_BCAST_DATA); /* flush */
->  }
->  
->  void ssb_commit_settings(struct ssb_bus *bus)
-> -- 
-
-
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/net/wireless/ath/ath9k/hw.c   |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    1 +
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ include/linux/ath9k_platform.h        |    1 +
+ 4 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 05c2ba2..ade8655 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -251,6 +251,15 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 	case AR5416_AR9100_DEVID:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 		break;
++	case AR9300_DEVID_AR9330:
++		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
++		if (ah->get_mac_revision) {
++			ah->hw_version.macRev = ah->get_mac_revision();
++		} else {
++			val = REG_READ(ah, AR_SREV);
++			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
++		}
++		return;
+ 	case AR9300_DEVID_AR9340:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
+ 		val = REG_READ(ah, AR_SREV);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9f23451..8d9ac49 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -863,6 +863,7 @@ struct ath_hw {
+ 	u32 ent_mode;
+ 
+ 	bool is_clk_25mhz;
++	int (*get_mac_revision)(void);
+ };
+ 
+ struct ath_bus_ops {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 45c585a..c2defa2 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -575,6 +575,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 		sc->sc_ah->gpio_val = pdata->gpio_val;
+ 		sc->sc_ah->led_pin = pdata->led_pin;
+ 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
++		ah->get_mac_revision = pdata->get_mac_revision;
+ 	}
+ 
+ 	common = ath9k_hw_common(ah);
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index 60a7c49..c207607 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -30,6 +30,7 @@ struct ath9k_platform_data {
+ 	u32 gpio_val;
+ 
+ 	bool is_clk_25mhz;
++	int (*get_mac_revision)(void);
+ };
+ 
+ #endif /* _LINUX_ATH9K_PLATFORM_H */
+-- 
+1.7.2.1
+
