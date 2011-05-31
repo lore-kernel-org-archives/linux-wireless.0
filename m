@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45232 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757260Ab1ELN7E convert rfc822-to-8bit (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53503 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758244Ab1EaTrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 09:59:04 -0400
-Received: by bwz15 with SMTP id 15so1315622bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2011 06:59:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DCB3DFF.1030809@lockie.ca>
-References: <BANLkTikOw0j8hLBRf6m1p7REpJvNf3mqCw@mail.gmail.com>
-	<4DCB3DFF.1030809@lockie.ca>
-Date: Thu, 12 May 2011 08:59:03 -0500
-Message-ID: <BANLkTimEWJbgJJOmCjBoNGtFrSFcoE8aWQ@mail.gmail.com> (sfid-20110512_155910_012195_6AD7D20D)
-Subject: Re: rtl8192ce.ko doesn't work with 802.11n?
-From: Flaminigo <sunnyiez@gmail.com>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 31 May 2011 15:47:51 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 16/32] ath9k: skip internal regulator configuration for AR9330
+Date: Tue, 31 May 2011 21:37:07 +0200
+Message-Id: <1306870643-7935-17-git-send-email-juhosg@openwrt.org> (sfid-20110531_214807_798398_4669A0AF)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for the reply. I think N network in the university is OK.
-Because,  old computer connected it without any problem. The windows
-system can also connect it. From the output of wpa_supplicant, the
-authentication part works well. I've tried to use the latest drive
-from realtek. The firmware distribute is exactly the same as that in
-Ubuntu 11.04. But this will make core dump.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I will try some other distributions. But the driver and the kernel are
-the same,  so I don't think this will make any difference.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 729534c..6021186 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3795,7 +3795,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_ant_ctrl_apply(ah, IS_CHAN_2GHZ(chan));
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+-	if (!AR_SREV_9340(ah))
++	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
+ 		ar9003_hw_apply_tuning_caps(ah);
+-- 
+1.7.2.1
 
-On Wed, May 11, 2011 at 8:55 PM, James <bjlockie@lockie.ca> wrote:
-> On 05/11/11 15:29, Flaminigo wrote:
->> MY university deployed 802.11n wireless LAN. However, my new T420
->> cannot connect to the network under ubuntu 11.04. I found the driver
->> for realtek 8188CE is rtl8192ce.ko, rtlwifi. I asked network
->> administrator to help me. They told me my wireless adapter didn't work
->> well with the 802.11n network. Is this because of the driver? The
->> following are the wpa_supplicant output. FYI
->
-> Is there another N network you can try (preferably unencrypted)?
->
-> Or can you try the card under Windows?
->
-> Try a bunch of other distros on livecds (or USBs).
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
