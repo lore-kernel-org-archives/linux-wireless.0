@@ -1,111 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:33292 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755777Ab1ESHrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2011 03:47:25 -0400
-Date: Thu, 19 May 2011 09:47:22 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: James <bjlockie@lockie.ca>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: help to bisect
-Message-ID: <20110519074722.GD14049@liondog.tnic> (sfid-20110519_094752_391035_4465BA71)
-References: <4DD31264.4070704@lockie.ca>
- <20110518072245.GB17608@liondog.tnic>
- <4DD42F10.90602@lockie.ca>
- <20110518211723.GA4313@liondog.tnic>
- <4DD45D2D.7060300@lockie.ca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4DD45D2D.7060300@lockie.ca>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53487 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757587Ab1EaTru (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 15:47:50 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 09/32] ath9k: add AR9330 specific PLL initialization
+Date: Tue, 31 May 2011 21:37:00 +0200
+Message-Id: <1306870643-7935-10-git-send-email-juhosg@openwrt.org> (sfid-20110531_214853_042918_49CE401E)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2011 at 07:58:37PM -0400, James wrote:
-> On 05/18/11 17:17, Borislav Petkov wrote:
-> > First of all, please hit "reply-to-all" next time so that all recipients
-> > can receive your mail and not find it by chance when looking thru the
-> > new lkml messages.
-> >
-> > On Wed, May 18, 2011 at 04:41:52PM -0400, James wrote:
-> >> Here is what I did:
-> >>
-> >> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
-> >> $ cd linux-2.6.37.y
-> >> $ git checkout v2.6.36
-> >> build and boot kernel
-> > what does that mean? Is .36 ok?
-> Yes, no problems.
-> >> $ cd linux-2.6.37.y
-> >> $ git bisect start
-> >> $ git bisect good v2.6.36
-> >> $ git bisect bad v2.6.37.6
-> > Also, is .37.6 bad?
-> Yes, it is bad.
-> >> build and boot kernel
-> >> git bisect good|bad
-> >> repeat
-> >>
-> >> 3044100e58c84e133791c8b60a2f5bef69d732e4 is the first bad commit.
-> > Which is a merge commit and it means that you most likely made a mistake
-> > during bisection.
-> Am I doing it right?
-> boot kernel, cd to git source, git bisect good or bad, compile new
-> kernel and copy it to /boot,
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   35 ++++++++++++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 1 deletions(-)
 
-Dumb question: do you boot into that new kernel and test it each time
-before tagging it as good or bad?
-
-> repeat
-> > What is actually the problem you're experiencing with .37.6?
-> >
-> > ..
-> >
-> >> How do I find out what change causes the problem?
-> >> The problem causes my wireless card not to work.
-> > Ah, here it is.
-> >
-> >> Other people have similar cards that do work so the problem seems
-> >> isolated to my hardware but kernel-2.6.36 works so I don't think my
-> >> hardware is faulty.
-> > Which card is that? (adding linux-wireless)
-> D-Link dwa552
-> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
-> mem=0xffffc90000140
-> 000, irq=16
-> Other people have this card working so it is probably my system
-> configuration that is causing an obscure bug.
-> 
-> > Please, describe in a very detailed way how your problem incarnates
-> > itself: dmesg, error messages, what exactly do you do to trigger it?
-> It seems to be 100% that if "ath: Failed to stop TX DMA in 100 msec
-> after killing last frame
-> ath: Failed to stop TX DMA!" shows up in dmesg that scans don't return
-> any APs or 1-3 (iwlist wlan0 scan | grep SSID).
-> If there is a different way to scan, I'll try that.
-> 
-> 
-> 
-> > Also, can you test whether 38.6 works for ya - it could've been fixed in
-> > the meantime. You can also test .39 which will be released any minute
-> > now.
-> 38.6 does NOT work and compat-wireless-2011-05-11 works on kernel-2.6.36
-> which is why I think it is the kernel and not the wireless code.
-> > I think that should be enough for now.
-
-Aha, here's the deal. You're using compat-wireless which is a bunch of
-patches ontop of the kernel so you want to add them to the repository
-you're bisecting in so that they can be considered too. Anyway, I've
-added Luis to Cc for comment.
-
-@Luis: bug descrption is above.
-
-Btw, there's a newer version against 2.6.39-rc6 which you might want to
-test too: http://marc.info/?l=linux-wireless&m=130455450126421&w=2
-
-HTH.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ade8655..826ed5d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -733,6 +733,39 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
+ 			      AR_CH0_BB_DPLL2_PLL_PWD, 0x0);
+ 		udelay(1000);
++	} else if (AR_SREV_9330(ah)) {
++		u32 ddr_dpll2, pll_control2, kd;
++
++		if (ah->is_clk_25mhz) {
++			ddr_dpll2 = 0x18e82f01;
++			pll_control2 = 0xe04a3d;
++			kd = 0x1d;
++		} else {
++			ddr_dpll2 = 0x19e82f01;
++			pll_control2 = 0x886666;
++			kd = 0x3d;
++		}
++
++		/* program DDR PLL ki and kd value */
++		REG_WRITE(ah, AR_CH0_DDR_DPLL2, ddr_dpll2);
++
++		/* program DDR PLL phase_shift */
++		REG_RMW_FIELD(ah, AR_CH0_DDR_DPLL3,
++			      AR_CH0_DPLL3_PHASE_SHIFT, 0x1);
++
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
++		udelay(1000);
++
++		/* program refdiv, nint, frac to RTC register */
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, pll_control2);
++
++		/* program BB PLL kd and ki value */
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2, AR_CH0_DPLL2_KD, kd);
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2, AR_CH0_DPLL2_KI, 0x06);
++
++		/* program BB PLL phase_shift */
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
++			      AR_CH0_BB_DPLL3_PHASE_SHIFT, 0x1);
+ 	} else if (AR_SREV_9340(ah)) {
+ 		u32 regval, pll2_divint, pll2_divfrac, refdiv;
+ 
+@@ -774,7 +807,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
+ 		udelay(1000);
+ 
+ 	/* Switch the core clock for ar9271 to 117Mhz */
 -- 
-Regards/Gruss,
-    Boris.
+1.7.2.1
+
