@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61617 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752025Ab1EACan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Apr 2011 22:30:43 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 30 Apr 2011 19:30:16 -0700
-From: Naveen Singh <sningh@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	Naveen Singh <nsingh@atheros.com>
-Subject: 
-Date: Sat, 30 Apr 2011 19:30:38 -0700
-Message-ID: <1304217038-1654-1-git-send-email-sningh@atheros.com> (sfid-20110501_043058_891986_1A574C4C)
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:35550 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab1EaD3p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 May 2011 23:29:45 -0400
+Received: by gxk21 with SMTP id 21so1616176gxk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 20:29:45 -0700 (PDT)
+Message-ID: <4DE460A6.6050200@lwfinger.net> (sfid-20110531_052948_884255_61CCA917)
+Date: Mon, 30 May 2011 22:29:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mike McCormack <mikem@ring3k.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192se replacing rtl8192e?
+References: <1306791271.4277.39.camel@localhost>	 <4DE45D54.9050301@lwfinger.net> <1306812013.4277.89.camel@localhost>
+In-Reply-To: <1306812013.4277.89.camel@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naveen Singh <nsingh@atheros.com>
+On 05/30/2011 10:20 PM, Ben Hutchings wrote:
+> On Mon, 2011-05-30 at 22:15 -0500, Larry Finger wrote:
+>> On 05/30/2011 04:34 PM, Ben Hutchings wrote:
+>>> I'm happy to see rtl8192se in Linux 3.0-rc1.  I noticed that it claims
+>>> PCI device ID 10ec:8192, which is already claimed by staging driver
+>>> rtl8192e.  Is it intended to replace that driver, or are there two
+>>> different devices with that ID which they will distinguish in their
+>>> probe functions?
+>>>
+>>> If is intended to replace rtl8192e, shouldn't it also claim these device
+>>> IDs?
+>>>
+>>> 	/* Corega */
+>>> 	{ PCI_DEVICE(0x07aa, 0x0044) },
+>>> 	{ PCI_DEVICE(0x07aa, 0x0047) },
+>>
+>> The RTL8192E is a different device than the RTL8192SE, thus rtl8192se will not
+>> replace rtl8192e. The way to tell them apart is the PCIe revision id. At
+>> present, I don't have a method to use that info to load the correct driver, but
+>> I will be working on it.
+>
+> It doesn't matter too much if both drivers get loaded, so long as their
+> respective probe() functions fail cleanly and return -ENODEV when called
+> for the wrong device.
 
-The WPA-PSK association was not going through with 2.6.38
-kernel. It was found that supplicant was not able to set
-the PTK key. On further analysis it was found that the function
-nl80211_set_key in file net/wireless/nl80211.c is returning with
-code as -EOPNOTSUPP. This function has been modified to check for
-the flag "WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS"in wiphy
-struct. If this flag is not set in the driver init, it returns
-from here thereby causing the association to fail. The solution
-is to set this flag in driver init as there would be separate
-default keys for unicast and multicast packets.
+Yes, I understand the issue and I have trial patches but no hardware for testing.
 
-Signed-off-by: Naveen Singh <nsingh@atheros.com>
----
- drivers/staging/ath6kl/os/linux/cfg80211.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index e87d3aa..ec22408 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1455,6 +1455,11 @@ ar6k_cfg80211_init(struct device *dev)
-     wdev->wiphy->cipher_suites = cipher_suites;
-     wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
-+    /*Support the seprate keys for unicast and multicast packets
-+     *This flag is needed because because nl80211 checks for this
-+     *flag before calling cfg ops for setting the key.*/
-+    wdev->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS;
-+
-     ret = wiphy_register(wdev->wiphy);
-     if(ret < 0) {
-         AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
--- 
-1.7.0.4
+Larry
 
