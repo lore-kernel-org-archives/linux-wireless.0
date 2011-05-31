@@ -1,73 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59675 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab1E3H5e (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53493 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755664Ab1EaTru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2011 03:57:34 -0400
-Received: by bwz15 with SMTP id 15so2669289bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2011 00:57:33 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 1/3] rt2x00: Serialize TX operations on a queue.
-Date: Mon, 30 May 2011 09:55:43 +0200
-Cc: users@rt2x00.serialmonkey.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-References: <cover.1306586311.git.gwingerde@gmail.com> <201105281647.35855.helmut.schaa@googlemail.com> <4DE288DB.7040309@gmail.com>
-In-Reply-To: <4DE288DB.7040309@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201105300955.43779.helmut.schaa@googlemail.com> (sfid-20110530_095738_092833_3850D674)
+	Tue, 31 May 2011 15:47:50 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 06/32] ath9k: initialize mode registers for AR9330
+Date: Tue, 31 May 2011 21:36:57 +0200
+Message-Id: <1306870643-7935-7-git-send-email-juhosg@openwrt.org> (sfid-20110531_214850_320192_35E4087C)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[CC'ed Johannes & linux-wireless]
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  |  110 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    3 +
+ 2 files changed, 112 insertions(+), 1 deletions(-)
 
-Am Sonntag, 29. Mai 2011 schrieb Gertjan van Wingerde:
-> On 05/28/11 16:47, Helmut Schaa wrote:
-> > Am Samstag, 28. Mai 2011 schrieb Gertjan van Wingerde:
-> >>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> >>>> index f1e1381..2ace0f9 100644
-> >>>> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> >>>> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> >>>> @@ -555,15 +555,21 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
-> >>>>  			       bool local)
-> >>>>  {
-> >>>>  	struct ieee80211_tx_info *tx_info;
-> >>>> -	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
-> >>>> +	struct queue_entry *entry;
-> >>>>  	struct txentry_desc txdesc;
-> >>>>  	struct skb_frame_desc *skbdesc;
-> >>>>  	u8 rate_idx, rate_flags;
-> >>>> +	int ret = 0;
-> >>>> +
-> >>>> +	spin_lock_bh(&queue->tx_lock);
-> >>>> +
-> >>>
-> >>> Shouldn't spin_lock be enough already? All tx calls from mac80211 are already
-> >>> done in softirq context or protected by local_bh_disable/enable. This would be
-> >>> especially useful on single CPU machines since spin_lock (without _bh) can be
-> >>> optimized out on these.
-> >>
-> >> AFAICT not all tx calls from mac80211 are protected by local_bh_disable/enable. I believe
-> >> that this is the case for the "process" context tx calls from
-> > 
-> >> ieee80211_subif_start_xmit
-> > 
-> > This should only be called from the network softirq and thus doesn't require bottom halves
-> > to be disabled (AFAIK).
-> > 
-> >> and
-> >> ieee80211_monitor_start_xmit.
-> > 
-> > Same here.
-> 
-> Hmm, are you sure about this?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 392bf0f..dc0ad4a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -19,6 +19,8 @@
+ #include "ar9003_2p2_initvals.h"
+ #include "ar9485_initvals.h"
+ #include "ar9340_initvals.h"
++#include "ar9330_1p1_initvals.h"
++#include "ar9330_1p2_initvals.h"
+ 
+ /* General hardware code for the AR9003 hadware family */
+ 
+@@ -29,7 +31,113 @@
+  */
+ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ {
+-	if (AR_SREV_9340(ah)) {
++	if (AR_SREV_9330_11(ah)) {
++		/* mac */
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
++				ar9331_1p1_mac_core,
++				ARRAY_SIZE(ar9331_1p1_mac_core), 2);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
++				ar9331_1p1_mac_postamble,
++				ARRAY_SIZE(ar9331_1p1_mac_postamble), 5);
++
++		/* bb */
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
++				ar9331_1p1_baseband_core,
++				ARRAY_SIZE(ar9331_1p1_baseband_core), 2);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
++				ar9331_1p1_baseband_postamble,
++				ARRAY_SIZE(ar9331_1p1_baseband_postamble), 5);
++
++		/* radio */
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
++				ar9331_1p1_radio_core,
++				ARRAY_SIZE(ar9331_1p1_radio_core), 2);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST], NULL, 0, 0);
++
++		/* soc */
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
++				ar9331_1p1_soc_preamble,
++				ARRAY_SIZE(ar9331_1p1_soc_preamble), 2);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
++				ar9331_1p1_soc_postamble,
++				ARRAY_SIZE(ar9331_1p1_soc_postamble), 2);
++
++		/* rx/tx gain */
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++				ar9331_common_rx_gain_1p1,
++				ARRAY_SIZE(ar9331_common_rx_gain_1p1), 2);
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9331_modes_lowest_ob_db_tx_gain_1p1,
++			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p1),
++			5);
++
++		/* additional clock settings */
++		if (ah->is_clk_25mhz)
++			INIT_INI_ARRAY(&ah->iniModesAdditional,
++					ar9331_1p1_xtal_25M,
++					ARRAY_SIZE(ar9331_1p1_xtal_25M), 2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesAdditional,
++					ar9331_1p1_xtal_40M,
++					ARRAY_SIZE(ar9331_1p1_xtal_40M), 2);
++	} else if (AR_SREV_9330_12(ah)) {
++		/* mac */
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
++				ar9331_1p2_mac_core,
++				ARRAY_SIZE(ar9331_1p2_mac_core), 2);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
++				ar9331_1p2_mac_postamble,
++				ARRAY_SIZE(ar9331_1p2_mac_postamble), 5);
++
++		/* bb */
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
++				ar9331_1p2_baseband_core,
++				ARRAY_SIZE(ar9331_1p2_baseband_core), 2);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
++				ar9331_1p2_baseband_postamble,
++				ARRAY_SIZE(ar9331_1p2_baseband_postamble), 5);
++
++		/* radio */
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_PRE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
++				ar9331_1p2_radio_core,
++				ARRAY_SIZE(ar9331_1p2_radio_core), 2);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST], NULL, 0, 0);
++
++		/* soc */
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
++				ar9331_1p2_soc_preamble,
++				ARRAY_SIZE(ar9331_1p2_soc_preamble), 2);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_CORE], NULL, 0, 0);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
++				ar9331_1p2_soc_postamble,
++				ARRAY_SIZE(ar9331_1p2_soc_postamble), 2);
++
++		/* rx/tx gain */
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++				ar9331_common_rx_gain_1p2,
++				ARRAY_SIZE(ar9331_common_rx_gain_1p2), 2);
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9331_modes_lowest_ob_db_tx_gain_1p2,
++			ARRAY_SIZE(ar9331_modes_lowest_ob_db_tx_gain_1p2),
++			5);
++
++		/* additional clock settings */
++		if (ah->is_clk_25mhz)
++			INIT_INI_ARRAY(&ah->iniModesAdditional,
++					ar9331_1p2_xtal_25M,
++					ARRAY_SIZE(ar9331_1p2_xtal_25M), 2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesAdditional,
++					ar9331_1p2_xtal_40M,
++					ARRAY_SIZE(ar9331_1p2_xtal_40M), 2);
++	} else if (AR_SREV_9340(ah)) {
+ 		/* mac */
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_PRE], NULL, 0, 0);
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 892c48b..48893f1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -659,6 +659,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional,
+ 				modesIndex, regWrites);
+ 
++	if (AR_SREV_9300(ah))
++		REG_WRITE_ARRAY(&ah->iniModesAdditional, 1, regWrites);
++
+ 	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional_40M, 1, regWrites);
+ 
+-- 
+1.7.2.1
 
-Maybe Johannes can clarify this for us ;)
-
-Johannes, are all calls to the drivers tx callback done in softirq context or
-adequately protected by local_bh_disable/enable? Or is this presumption wrong?
-
-Thanks,
-Helmut
