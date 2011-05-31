@@ -1,36 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38884 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753211Ab1EFWaK (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53502 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758248Ab1EaTrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:30:10 -0400
-Date: Fri, 6 May 2011 23:31:18 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: <akpm@linux-foundation.org>, <mingo@redhat.com>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<allen.kao@atheros.com>, <roman.gezikov@atheros.com>,
-	<joonas.viskari@atheros.com>
-Subject: Re: [PATCH] x86: fix mrst sparse complaints
-Message-ID: <20110506233118.76b092ad@lxorguk.ukuu.org.uk> (sfid-20110507_003057_327195_3BD858A0)
-In-Reply-To: <1304719209-26913-1-git-send-email-lrodriguez@atheros.com>
-References: <1304719209-26913-1-git-send-email-lrodriguez@atheros.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 31 May 2011 15:47:51 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 01/32] ath9k: define mac version for AR9330
+Date: Tue, 31 May 2011 21:36:52 +0200
+Message-Id: <1306870643-7935-2-git-send-email-juhosg@openwrt.org> (sfid-20110531_214844_299685_4F8FAECB)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 May 2011 15:00:09 -0700
-"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    5 ++++-
+ drivers/net/wireless/ath/ath9k/reg.h |   16 ++++++++++++++++
+ 2 files changed, 20 insertions(+), 1 deletions(-)
 
-> This fixes these few sparse complaints:
-> 
->   CHECK   arch/x86/platform/mrst/mrst.c
-> arch/x86/platform/mrst/mrst.c:197:13: warning: symbol 'mrst_time_init' was not declared. Should it be static?
-> arch/x86/platform/mrst/mrst.c:219:16: warning: symbol 'mrst_arch_setup' was not declared. Should it be static?
->   CC      arch/x86/platform/mrst/mrst.o
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1be7c8b..05c2ba2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -551,6 +551,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	case AR_SREV_VERSION_9287:
+ 	case AR_SREV_VERSION_9271:
+ 	case AR_SREV_VERSION_9300:
++	case AR_SREV_VERSION_9330:
+ 	case AR_SREV_VERSION_9485:
+ 	case AR_SREV_VERSION_9340:
+ 		break;
+@@ -561,7 +562,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9100(ah) || AR_SREV_9340(ah) ||
++	    AR_SREV_9330(ah))
+ 		ah->is_pciexpress = false;
+ 
+ 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
+@@ -2574,6 +2576,7 @@ static struct {
+ 	{ AR_SREV_VERSION_9287,         "9287" },
+ 	{ AR_SREV_VERSION_9271,         "9271" },
+ 	{ AR_SREV_VERSION_9300,         "9300" },
++	{ AR_SREV_VERSION_9330,         "9330" },
+ 	{ AR_SREV_VERSION_9485,         "9485" },
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c18ee99..a483388 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -788,6 +788,10 @@
+ #define AR_SREV_REVISION_9271_11	1
+ #define AR_SREV_VERSION_9300		0x1c0
+ #define AR_SREV_REVISION_9300_20	2 /* 2.0 and 2.1 */
++#define AR_SREV_VERSION_9330		0x200
++#define AR_SREV_REVISION_9330_10	0
++#define AR_SREV_REVISION_9330_11	1
++#define AR_SREV_REVISION_9330_12	2
+ #define AR_SREV_VERSION_9485		0x240
+ #define AR_SREV_REVISION_9485_10	0
+ #define AR_SREV_REVISION_9485_11        1
+@@ -862,6 +866,18 @@
+ #define AR_SREV_9300_20_OR_LATER(_ah) \
+ 	((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9300)
+ 
++#define AR_SREV_9330(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9330))
++#define AR_SREV_9330_10(_ah) \
++	(AR_SREV_9330((_ah)) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_10))
++#define AR_SREV_9330_11(_ah) \
++	(AR_SREV_9330((_ah)) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_11))
++#define AR_SREV_9330_12(_ah) \
++	(AR_SREV_9330((_ah)) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_12))
++
+ #define AR_SREV_9485(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
+ #define AR_SREV_9485_10(_ah) \
+-- 
+1.7.2.1
 
-Please Cc me on Moorestown/Medfield tree stuff. Looks sane enough.
-
-Alan
