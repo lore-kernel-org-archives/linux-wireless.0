@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:45696 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752711Ab1EYFqg (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53488 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862Ab1EaTrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2011 01:46:36 -0400
-Date: 25 May 2011 01:46:34 -0400
-Message-ID: <20110525054634.5033.qmail@science.horizon.com> (sfid-20110525_074651_314035_33CDDB37)
-From: "George Spelvin" <linux@horizon.com>
-To: arend@broadcom.com, linux@horizon.com
-Subject: Re: [RFC] lib: crc8: add new library module providing crc8 algorithm
-Cc: akpm@linux-foundation.org, error27@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <4DDC91E1.40104@broadcom.com>
+	Tue, 31 May 2011 15:47:49 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 20/32] ath9k: set NF limits for AR9330
+Date: Tue, 31 May 2011 21:37:11 +0200
+Message-Id: <1306870643-7935-21-git-send-email-juhosg@openwrt.org> (sfid-20110531_214922_694168_AD9903CB)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 05/25/2011 12:52 AM, George Spelvin wrote:
->> May I suggest that crc8_create is A Stupid Idea.  Since the bit order
->> (and polynomial) will always be compile-time constants, just let the
->> call sites call crc8_create_[lm]sb_first() directly.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 ++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
-> Thanks for be subtle in your suggestion.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index a0ca1eb..eb18b63 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1089,7 +1089,10 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
+ {
+ 	ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
+ 	ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
+-	ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
++	if (AR_SREV_9300(ah))
++		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
++	else
++		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
+ 	ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
+ 	ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
+ 	ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_9300_5GHZ;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 443090d..d259278 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -332,6 +332,8 @@
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
+ 
++#define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
++
+ /*
+  * AGC Field Definitions
+  */
+-- 
+1.7.2.1
 
-Since you are obviously being ironic in your phrasing, I hope I did not
-give serious offense.  What I wrote is a fairly accurate description of
-my reflex reaction, but I could have phrased it more diplomatically.
-
-> If callers use the specific function they can not specify a bit order so 
-> no compile-time error.
-
-What I meant was, the bit order is specified by the function name.
-An invalid bit order translates to an invalid function name, which the
-linker will complain about.
-
-
-If you feel ambitious, you can fold the crc7 code into yours.  Its an
-msbit-first CRC.  The resultant table will be left-justified rather
-than the current right-justified, but if you look at all the call sites,
-you'll notice that they all shift the result left 1 bit!
-
-I have a pending bug report about some of the calling code which I
-noticed when trying to update it myself, but it doesn't actally
-prevent updating the crc7() call sites:
-http://marc.info/?l=linux-wireless&m=130616050311698
