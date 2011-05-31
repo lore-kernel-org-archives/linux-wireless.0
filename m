@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49023 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131Ab1EQKkL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 06:40:11 -0400
-Received: by qyg14 with SMTP id 14so187601qyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2011 03:40:10 -0700 (PDT)
+Received: from plane.gmane.org ([80.91.229.3]:50078 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757767Ab1EaRHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 13:07:38 -0400
+Received: from public by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <public@plane.gmane.org>)
+	id 1QRSPn-0004Tg-6c
+	for linux-wireless@vger.kernel.org; Tue, 31 May 2011 19:07:35 +0200
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?=
+	<public-zajec5-Re5JQEeQqe8AvxtiuMwx3w@plane.gmane.org>,
+	Michael =?utf-8?Q?B=C3=BCsch?=
+	<public-mb-fseUSCV1ubazQB+pC5nmwQ@plane.gmane.org>,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org,
+	"John W. Linville"
+	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@plane.gmane.org>,
+	public-b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@plane.gmane.org,
+	linuxppc-dev@ozlabs.org
+Subject: Re: [PATCH] ssb: pci: implement serdes workaround
+References: <1301657212-12126-1-git-send-email-zajec5@gmail.com>
+	<m2vcwr9pn8.fsf@linux-m68k.org> <4DE505C6.8020601@lwfinger.net>
+	<m3wrh6hnmn.fsf@linux-m68k.org> <4DE51487.1000808@lwfinger.net>
+Date: Tue, 31 May 2011 19:07:19 +0200
+In-Reply-To: <4DE51487.1000808@lwfinger.net> (Larry Finger's message of "Tue,
+	31 May 2011 11:17:11 -0500")
+Message-ID: <m239jukddk.fsf@igel.home> (sfid-20110531_190741_544567_0F999BC3)
 MIME-Version: 1.0
-Date: Tue, 17 May 2011 12:40:10 +0200
-Message-ID: <BANLkTik2Sc9aWi_cHVvLJzGv3esey=wPag@mail.gmail.com> (sfid-20110517_124015_554239_60D0A877)
-Subject: ssb: how did we get special reject bit for SSB rev 2.3?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've just received 14e4:4312 card which is G-PHY BCM4311.
 
-I've checked for SSB rev in MMIO dump:
-read32 0xfaafcff8 -> 0x100422c5
 
-0x100422c5 & (SSB_IDLOW_SSBREV == 0xF0000000) = 0x10000000
-So this is SSB rev 2.3:
-#define  SSB_IDLOW_SSBREV_23	0x10000000 /* 2.3 */
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Currently we are using different REJECT bit for SSB rev 2.3:
-#define  SSB_TMSLOW_REJECT	0x00000002 /* Reject (Standard Backplane) */
-#define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
+> On 05/31/2011 10:54 AM, Andreas Schwab wrote:
+>> Larry Finger<Larry.Finger@lwfinger.net>  writes:
+>>
+>>>  From the traceback, it must be the serdes_pll_device read that failed.
+>>
+>> Why not ssb_pcicore_polarity_workaround (note r4 == 0x134)?
+>
+> Mainly because the last two steps in the traceback are
+>
+> [c2ca5c40] [f2146244] ssb_pcie_read+0x4c/0x54 [ssb]
+> [c2ca5c50] [f2146440] ssb_pcicore_serdes_workaround+0x1c/0x170 [ssb]
 
-Does anyone know where did we get this from?
+Which exactly is what ssb_pcicore_polarity_workaround is doing.
 
-wl does never use this bit:
-
-$ grep "ssb_write32(0xf98)" wl.4312.txt | sort | uniq
-ssb_write32(0xf98) <- 0x00000003
-ssb_write32(0xf98) <- 0x00010000
-ssb_write32(0xf98) <- 0x00010002
-ssb_write32(0xf98) <- 0x00030003
-ssb_write32(0xf98) <- 0x00040003
-ssb_write32(0xf98) <- 0x00070000
-ssb_write32(0xf98) <- 0x00070001
-ssb_write32(0xf98) <- 0x00070003
-ssb_write32(0xf98) <- 0x20010000
-ssb_write32(0xf98) <- 0x20010002
-ssb_write32(0xf98) <- 0x20040003
-ssb_write32(0xf98) <- 0x20070000
-ssb_write32(0xf98) <- 0x20070001
-ssb_write32(0xf98) <- 0x20070003
+Andreas.
 
 -- 
-Rafał
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
+
