@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:57080 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632Ab1EWAYI (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:41099 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932175Ab1EaR1L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2011 20:24:08 -0400
-Date: Sun, 22 May 2011 17:16:20 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net
-Subject: [PATCH] wireless: fix cfg80211.h new kernel-doc warnings
-Message-Id: <20110522171620.51458555.randy.dunlap@oracle.com> (sfid-20110523_022416_429934_78E3CABF)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 31 May 2011 13:27:11 -0400
+Received: by vxi39 with SMTP id 39so3446573vxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 10:27:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com>
+References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
+ <1304529896-20934-1-git-send-email-javier@cozybit.com> <BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 31 May 2011 10:26:50 -0700
+Message-ID: <BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com> (sfid-20110531_192721_018915_90C1BEAF)
+Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Mon, May 30, 2011 at 3:51 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
+> On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
+>> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
+>> infrastructure BSS, or IBSS are differentiated by the Capability
+>> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
+>> subfields to 0 in transmitted Beacon or Probe Response management
+>> frames.
+>
+> This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
+> to zero. Is there any other way to find if it is a mesh other than
+> this check?
 
-Fix new kernel-doc warnings in <net/cfg80211.h>:
+Bummer.  I guess that's a collision between WiFi Alliance and IEEE,
+respectively the organizations standardizing P2P and 802.11s.
+The 11s draft is pretty clear about that.  I can consult the task
+group and see if they have thought about this conflict.
 
-Warning(linux-2.6.39-git5/include/net/cfg80211.h:560): No description found for parameter 'bss_param'
-Warning(linux-2.6.39-git5/include/net/cfg80211.h:1555): Enum value 'WIPHY_FLAG_SUPPORTS_SCHED_SCAN' not described in enum 'wiphy_flags'
+>> index fbf6f33..62e542a 100644
+>> --- a/net/wireless/scan.c
+>> +++ b/net/wireless/scan.c
+>
+>> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>>
+>>        res->ts = jiffies;
+>>
+>> -       if (is_zero_ether_addr(res->pub.bssid)) {
+>> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+>>                /* must be mesh, verify */
+>
+> Reverting the above change, makes P2P work. Any other better fix?
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- include/net/cfg80211.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+We could check that the WLAN_CAPABILITY_IS_MBSS *and* that the bssid
+matches the TA.  Do you think that would work?
 
---- linux-2.6.39-git5.orig/include/net/cfg80211.h
-+++ linux-2.6.39-git5/include/net/cfg80211.h
-@@ -531,6 +531,7 @@ struct sta_bss_parameters {
-  * @tx_retries: cumulative retry counts
-  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
-  * @rx_dropped_misc:  Dropped for un-specified reason.
-+ * @bss_param: current BSS parameters
-  * @generation: generation number for nl80211 dumps.
-  *	This number should increase every time the list of stations
-  *	changes, i.e. when a station is added or removed, so that
-@@ -1537,7 +1538,7 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
-  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-- * @WIPHY_FLAG_SCHED_SCAN: The device supports scheduled scans.
-+ * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+Thanks,
+
+Javier
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
