@@ -1,785 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39670 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753605Ab1EIQzV (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:47622 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753328Ab1EaDUX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 12:55:21 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.75)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1QJTjr-00030b-Gt
-	for linux-wireless@vger.kernel.org; Mon, 09 May 2011 18:55:19 +0200
-Subject: [RFC] nl80211: advertise possible interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 18:55:20 +0200
-Message-ID: <1304960120.12202.9.camel@jlt3.sipsolutions.net> (sfid-20110509_185529_501896_FE700F25)
+	Mon, 30 May 2011 23:20:23 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mike McCormack <mikem@ring3k.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4DE45D54.9050301@lwfinger.net>
+References: <1306791271.4277.39.camel@localhost>
+	 <4DE45D54.9050301@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512"; protocol="application/pgp-signature"; boundary="=-C3PE5kUxDoZV6mTQC4CJ"
+Date: Tue, 31 May 2011 04:20:13 +0100
+Message-ID: <1306812013.4277.89.camel@localhost> (sfid-20110531_052026_798707_C08C83BF)
 Mime-Version: 1.0
+Subject: Re: rtl8192se replacing rtl8192e?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-This adds the ability to advertise interface combinations
-in nl80211. This allows the driver to indicate what the
-combinations are that it supports. "Combinations" of just
-a single interface are implicit, as previously. Note that
-cfg80211 will enforce that the restrictions are met, but
-not for all drivers yet (once all drivers are updated, we
-can remove the flag and enforce for all).
+--=-C3PE5kUxDoZV6mTQC4CJ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-nl80211 will list an empty list of combinations when no
-combinations are actually supported so that userspace can
-know if the kernel exported this info or not (although it
-isn't clear to me what tools using the info should do if
-the kernel didn't export it).
+On Mon, 2011-05-30 at 22:15 -0500, Larry Finger wrote:
+> On 05/30/2011 04:34 PM, Ben Hutchings wrote:
+> > I'm happy to see rtl8192se in Linux 3.0-rc1.  I noticed that it claims
+> > PCI device ID 10ec:8192, which is already claimed by staging driver
+> > rtl8192e.  Is it intended to replace that driver, or are there two
+> > different devices with that ID which they will distinguish in their
+> > probe functions?
+> >
+> > If is intended to replace rtl8192e, shouldn't it also claim these devic=
+e
+> > IDs?
+> >
+> > 	/* Corega */
+> > 	{ PCI_DEVICE(0x07aa, 0x0044) },
+> > 	{ PCI_DEVICE(0x07aa, 0x0047) },
+>=20
+> The RTL8192E is a different device than the RTL8192SE, thus rtl8192se wil=
+l not=20
+> replace rtl8192e. The way to tell them apart is the PCIe revision id. At=
+=20
+> present, I don't have a method to use that info to load the correct drive=
+r, but=20
+> I will be working on it.
 
-Since some interface types are purely virtual/software
-and don't fit the restrictions, those are exposed in a
-new list of software types, not subject to restrictions.
-This mainly applies to AP-VLAN and monitor interfaces
-if they are supported.
+It doesn't matter too much if both drivers get loaded, so long as their
+respective probe() functions fail cleanly and return -ENODEV when called
+for the wrong device.
 
-As an example, iwlwifi gets its combinations exported.
+> In addition, I need to acquire an RTL8192E.
+>=20
+> No, rtl8192se should not claim those Corega devices.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   83 +++++++++++++++++++++++++
- include/linux/nl80211.h                |   89 ++++++++++++++++++++++++++
- include/net/cfg80211.h                 |   88 ++++++++++++++++++++++++++
- net/mac80211/main.c                    |   16 +++-
- net/wireless/core.c                    |   69 ++++++++++++++++++++
- net/wireless/core.h                    |   11 +++
- net/wireless/nl80211.c                 |  109 ++++++++++++++++++++++++++++-----
- net/wireless/util.c                    |   80 ++++++++++++++++++++++++
- 8 files changed, 526 insertions(+), 19 deletions(-)
+Thanks.
 
---- a/include/linux/nl80211.h	2011-05-09 17:08:20.000000000 +0200
-+++ b/include/linux/nl80211.h	2011-05-09 17:24:15.000000000 +0200
-@@ -921,6 +921,14 @@ enum nl80211_commands {
-  *	used by %NL80211_CMD_GET_WOWLAN to get the currently enabled WoWLAN
-  *	triggers.
-  *
-+ * @NL80211_ATTR_INTERFACE_COMBINATIONS: Nested attribute listing the supported
-+ *	interface combinations. In each nested item, it contains attributes
-+ *	defined in &enum nl80211_if_combination_attrs.
-+ * @NL80211_ATTR_SOFTWARE_IFTYPES: Nested attribute (just like
-+ *	%NL80211_ATTR_SUPPORTED_IFTYPES) containing the interface types that
-+ *	are managed in software: interfaces of these types aren't subject to
-+ *	any restrictions in their number or combinations.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1113,6 +1121,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WOWLAN_TRIGGERS,
- 	NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED,
- 
-+	NL80211_ATTR_INTERFACE_COMBINATIONS,
-+	NL80211_ATTR_SOFTWARE_IFTYPES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1165,7 +1176,9 @@ enum nl80211_attrs {
-  * @NL80211_IFTYPE_ADHOC: independent BSS member
-  * @NL80211_IFTYPE_STATION: managed BSS member
-  * @NL80211_IFTYPE_AP: access point
-- * @NL80211_IFTYPE_AP_VLAN: VLAN interface for access points
-+ * @NL80211_IFTYPE_AP_VLAN: VLAN interface for access points; VLAN interfaces
-+ *	are a bit special in that they must always be tied to a pre-existing
-+ *	AP type interface.
-  * @NL80211_IFTYPE_WDS: wireless distribution interface
-  * @NL80211_IFTYPE_MONITOR: monitor interface receiving all frames
-  * @NL80211_IFTYPE_MESH_POINT: mesh point
-@@ -2160,4 +2173,78 @@ enum nl80211_wowlan_triggers {
- 	MAX_NL80211_WOWLAN_TRIG = NUM_NL80211_WOWLAN_TRIG - 1
- };
- 
-+/**
-+ * enum nl80211_iface_limit_attrs - limit attributes
-+ * @NL80211_IFACE_LIMIT_UNSPEC: (reserved)
-+ * @NL80211_IFACE_LIMIT_MAX: maximum number of interfaces that
-+ *	can be chosen from this set of interface types (u32)
-+ * @NL80211_IFACE_LIMIT_TYPES: nested attribute containing a
-+ *	flag attribute for each interface type in this set
-+ * @NUM_NL80211_IFACE_LIMIT: number of attributes
-+ * @MAX_NL80211_IFACE_LIMIT: highest attribute number
-+ */
-+enum nl80211_iface_limit_attrs {
-+	NL80211_IFACE_LIMIT_UNSPEC,
-+	NL80211_IFACE_LIMIT_MAX,
-+	NL80211_IFACE_LIMIT_TYPES,
-+
-+	/* keep last */
-+	NUM_NL80211_IFACE_LIMIT,
-+	MAX_NL80211_IFACE_LIMIT = NUM_NL80211_IFACE_LIMIT - 1
-+};
-+
-+/**
-+ * enum nl80211_if_combination_attrs -- interface combination attributes
-+ *
-+ * @NL80211_IFACE_COMB_UNSPEC: (reserved)
-+ * @NL80211_IFACE_COMB_LIMITS: Nested attributes containing the limits
-+ *	for given interface types, see &enum nl80211_iface_limit_attrs.
-+ * @NL80211_IFACE_COMB_MAXNUM: u32 attribute giving the total number of
-+ *	interfaces that can be created in this group. This number doesn't
-+ *	apply to interfaces purely managed in software, which are listed
-+ *	in a separate attribute %NL80211_ATTR_INTERFACES_SOFTWARE.
-+ * @NL80211_IFACE_COMB_STA_AP_BI_MATCH: flag attribute specifying that
-+ *	beacon intervals within this group must be all the same even for
-+ *	infrastructure and AP/GO combinations, i.e. the GO(s) must adopt
-+ *	the infrastructure network's beacon interval.
-+ * @NL80211_IFACE_COMB_NUM_CHANNELS: u32 attribute specifying how many
-+ *	different channels may be used within this group.
-+ * @NUM_NL80211_IFACE_COMB: number of attributes
-+ * @MAX_NL80211_IFACE_COMB: highest attribute number
-+ *
-+ * Examples:
-+ *	limits = [ #{STA} <= 1, #{AP} <= 1 ], matching BI, channels = 1, max = 2
-+ *	=> allows an AP and a STA that must match BIs
-+ *
-+ *	numbers = [ #{AP, P2P-GO} <= 8 ], channels = 1, max = 8
-+ *	=> allows 8 of AP/GO
-+ *
-+ *	numbers = [ #{STA} <= 2 ], channels = 2, max = 2
-+ *	=> allows two STAs on different channels
-+ *
-+ *	numbers = [ #{STA} <= 1, #{P2P-client,P2P-GO} <= 3 ], max = 4
-+ *	=> allows a STA plus three P2P interfaces
-+ *
-+ * The list of these four possiblities could completely be contained
-+ * within the %NL80211_ATTR_INTERFACE_COMBINATIONS attribute to indicate
-+ * that any of these groups must match.
-+ *
-+ * "Combinations" of just a single interface will not be listed here,
-+ * a single interface of any valid interface type is assumed to always
-+ * be possible by itself. This means that implicitly, for each valid
-+ * interface type, the following group always exists:
-+ *	numbers = [ #{<type>} <= 1 ], channels = 1, max = 1
-+ */
-+enum nl80211_if_combination_attrs {
-+	NL80211_IFACE_COMB_UNSPEC,
-+	NL80211_IFACE_COMB_LIMITS,
-+	NL80211_IFACE_COMB_MAXNUM,
-+	NL80211_IFACE_COMB_STA_AP_BI_MATCH,
-+	NL80211_IFACE_COMB_NUM_CHANNELS,
-+
-+	/* keep last */
-+	NUM_NL80211_IFACE_COMB,
-+	MAX_NL80211_IFACE_COMB = NUM_NL80211_IFACE_COMB - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- a/include/net/cfg80211.h	2011-05-09 17:08:20.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-05-09 17:24:15.000000000 +0200
-@@ -1478,6 +1478,10 @@ struct cfg80211_ops {
-  *	hints read the documenation for regulatory_hint_found_beacon()
-  * @WIPHY_FLAG_NETNS_OK: if not set, do not allow changing the netns of this
-  *	wiphy at all
-+ * @WIPHY_FLAG_ENFORCE_COMBINATIONS: Set this flag to enforce interface
-+ *	combinations for this device. This flag is used for backward
-+ *	compatibility only until all drivers advertise combinations and
-+ *	they will always be enforced.
-  * @WIPHY_FLAG_PS_ON_BY_DEFAULT: if set to true, powersave will be enabled
-  *	by default -- this flag will be set depending on the kernel's default
-  *	on wiphy_new(), but can be changed by the driver if it has a good
-@@ -1503,6 +1507,81 @@ enum wiphy_flags {
- 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
- 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
- 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
-+	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(11),
-+};
-+
-+/**
-+ * struct ieee80211_iface_limit - limit on certain interface types
-+ * @max: maximum number of interfaces of these types
-+ * @types: interface types (bits)
-+ */
-+struct ieee80211_iface_limit {
-+	u16 max;
-+	u16 types;
-+};
-+
-+/**
-+ * struct ieee80211_iface_combination - possible interface combination
-+ * @limits: limits for the given interface types
-+ * @n_limits: number of limitations
-+ * @num_different_channels: can use up to this many different channels
-+ * @max_interfaces: maximum number of interfaces in total allowed in this
-+ *	group
-+ * @beacon_int_infra_match: In this combination, the beacon intervals
-+ *	between infrastructure and AP types must match. This is required
-+ *	only in special cases.
-+ *
-+ * These examples can be expressed as follows:
-+ *
-+ * Allow #STA <= 1, #AP <= 1, matching BI, channels = 1, 2 total:
-+ *
-+ *  struct ieee80211_iface_limit limits1[] = {
-+ *	{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-+ *	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP}, },
-+ *  };
-+ *  struct ieee80211_iface_combination combination1 = {
-+ *	.limits = limits1,
-+ *	.n_limits = ARRAY_SIZE(limits1),
-+ *	.max_interfaces = 2,
-+ *	.beacon_int_infra_match = true,
-+ *  };
-+ *
-+ *
-+ * Allow #{AP, P2P-GO} <= 8, channels = 1, 8 total:
-+ *
-+ *  struct ieee80211_iface_limit limits2[] = {
-+ *	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) |
-+ *			     BIT(NL80211_IFTYPE_P2P_GO), },
-+ *  };
-+ *  struct ieee80211_iface_combination combination2 = {
-+ *	.limits = limits2,
-+ *	.n_limits = ARRAY_SIZE(limits2),
-+ *	.max_interfaces = 8,
-+ *	.num_different_channels = 1,
-+ *  };
-+ *
-+ *
-+ * Allow #STA <= 1, #{P2P-client,P2P-GO} <= 3 on two channels, 4 total.
-+ * This allows for an infrastructure connection and three P2P connections.
-+ *
-+ *  struct ieee80211_iface_limit limits3[] = {
-+ *	{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-+ *	{ .max = 3, .types = BIT(NL80211_IFTYPE_P2P_GO) |
-+ *			     BIT(NL80211_IFTYPE_P2P_CLIENT), },
-+ *  };
-+ *  struct ieee80211_iface_combination combination3 = {
-+ *	.limits = limits3,
-+ *	.n_limits = ARRAY_SIZE(limits3),
-+ *	.max_interfaces = 4,
-+ *	.num_different_channels = 2,
-+ *  };
-+ */
-+struct ieee80211_iface_combination {
-+	const struct ieee80211_iface_limit *limits;
-+	u32 num_different_channels;
-+	u16 max_interfaces;
-+	u8 n_limits;
-+	bool beacon_int_infra_match;
- };
- 
- struct mac_address {
-@@ -1582,6 +1661,11 @@ struct wiphy_wowlan_support {
-  * @priv: driver private data (sized according to wiphy_new() parameter)
-  * @interface_modes: bitmask of interfaces types valid for this wiphy,
-  *	must be set by driver
-+ * @iface_combinations: Valid interface combinations array, should not
-+ *	list single interface types.
-+ * @n_iface_combinations: number of entries in @iface_combinations array.
-+ * @software_iftypes: bitmask of software interface types, these are not
-+ *	subject to any restrictions since they are purely managed in SW.
-  * @flags: wiphy flags, see &enum wiphy_flags
-  * @bss_priv_size: each BSS struct has private data allocated with it,
-  *	this variable determines its size
-@@ -1626,6 +1710,10 @@ struct wiphy {
- 
- 	const struct ieee80211_txrx_stypes *mgmt_stypes;
- 
-+	const struct ieee80211_iface_combination *iface_combinations;
-+	int n_iface_combinations;
-+	u16 software_iftypes;
-+
- 	u16 n_addresses;
- 
- 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
---- a/net/wireless/nl80211.c	2011-05-09 17:08:20.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-05-09 18:45:47.000000000 +0200
-@@ -561,6 +561,92 @@ static int nl80211_key_allowed(struct wi
- 	return 0;
- }
- 
-+static int nl80211_put_iftypes(struct sk_buff *msg, u32 attr, u16 ifmodes)
-+{
-+	struct nlattr *nl_modes = nla_nest_start(msg, attr);
-+	int i;
-+
-+	if (!nl_modes)
-+		goto nla_put_failure;
-+
-+	i = 0;
-+	while (ifmodes) {
-+		if (ifmodes & 1)
-+			NLA_PUT_FLAG(msg, i);
-+		ifmodes >>= 1;
-+		i++;
-+	}
-+
-+	nla_nest_end(msg, nl_modes);
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_put_iface_combinations(struct wiphy *wiphy,
-+					  struct sk_buff *msg)
-+{
-+	struct nlattr *nl_combis;
-+	int i, j;
-+
-+	nl_combis = nla_nest_start(msg,
-+				NL80211_ATTR_INTERFACE_COMBINATIONS);
-+	if (!nl_combis)
-+		goto nla_put_failure;
-+
-+	if (!wiphy->n_iface_combinations)
-+		goto no_combinations;
-+
-+	for (i = 0; i < wiphy->n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		struct nlattr *nl_combi, *nl_limits;
-+
-+		c = &wiphy->iface_combinations[i];
-+
-+		nl_combi = nla_nest_start(msg, i + 1);
-+		if (!nl_combi)
-+			goto nla_put_failure;
-+
-+		nl_limits = nla_nest_start(msg, NL80211_IFACE_COMB_LIMITS);
-+		if (!nl_limits)
-+			goto nla_put_failure;
-+
-+		for (j = 0; j < c->n_limits; j++) {
-+			struct nlattr *nl_limit;
-+
-+			nl_limit = nla_nest_start(msg, j + 1);
-+			if (!nl_limit)
-+				goto nla_put_failure;
-+			NLA_PUT_U32(msg, NL80211_IFACE_LIMIT_MAX,
-+				    c->limits[j].max);
-+			if (nl80211_put_iftypes(msg, NL80211_IFACE_LIMIT_TYPES,
-+						c->limits[j].types))
-+				goto nla_put_failure;
-+			nla_nest_end(msg, nl_limit);
-+		}
-+
-+		nla_nest_end(msg, nl_limits);
-+
-+		if (c->beacon_int_infra_match)
-+			NLA_PUT_FLAG(msg,
-+				NL80211_IFACE_COMB_STA_AP_BI_MATCH);
-+		NLA_PUT_U32(msg, NL80211_IFACE_COMB_NUM_CHANNELS,
-+			    c->num_different_channels);
-+		NLA_PUT_U32(msg, NL80211_IFACE_COMB_MAXNUM,
-+			    c->max_interfaces);
-+
-+		nla_nest_end(msg, nl_combi);
-+	}
-+
-+no_combinations:
-+	nla_nest_end(msg, nl_combis);
-+
-+	return 0;
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
- static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 			      struct cfg80211_registered_device *dev)
- {
-@@ -568,13 +654,11 @@ static int nl80211_send_wiphy(struct sk_
- 	struct nlattr *nl_bands, *nl_band;
- 	struct nlattr *nl_freqs, *nl_freq;
- 	struct nlattr *nl_rates, *nl_rate;
--	struct nlattr *nl_modes;
- 	struct nlattr *nl_cmds;
- 	enum ieee80211_band band;
- 	struct ieee80211_channel *chan;
- 	struct ieee80211_rate *rate;
- 	int i;
--	u16 ifmodes = dev->wiphy.interface_modes;
- 	const struct ieee80211_txrx_stypes *mgmt_stypes =
- 				dev->wiphy.mgmt_stypes;
- 
-@@ -634,20 +718,10 @@ static int nl80211_send_wiphy(struct sk_
- 		}
- 	}
- 
--	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
--	if (!nl_modes)
-+	if (nl80211_put_iftypes(msg, NL80211_ATTR_SUPPORTED_IFTYPES,
-+				dev->wiphy.interface_modes))
- 		goto nla_put_failure;
- 
--	i = 0;
--	while (ifmodes) {
--		if (ifmodes & 1)
--			NLA_PUT_FLAG(msg, i);
--		ifmodes >>= 1;
--		i++;
--	}
--
--	nla_nest_end(msg, nl_modes);
--
- 	nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
- 	if (!nl_bands)
- 		goto nla_put_failure;
-@@ -860,6 +934,13 @@ static int nl80211_send_wiphy(struct sk_
- 		nla_nest_end(msg, nl_wowlan);
- 	}
- 
-+	if (nl80211_put_iftypes(msg, NL80211_ATTR_SOFTWARE_IFTYPES,
-+				dev->wiphy.software_iftypes))
-+		goto nla_put_failure;
-+
-+	if (nl80211_put_iface_combinations(&dev->wiphy, msg))
-+		goto nla_put_failure;
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
---- a/net/wireless/core.c	2011-05-09 17:08:20.000000000 +0200
-+++ b/net/wireless/core.c	2011-05-09 17:24:15.000000000 +0200
-@@ -416,6 +416,67 @@ struct wiphy *wiphy_new(const struct cfg
- }
- EXPORT_SYMBOL(wiphy_new);
- 
-+static int wiphy_verify_combinations(struct wiphy *wiphy)
-+{
-+	const struct ieee80211_iface_combination *c;
-+	int i, j;
-+
-+	/* If we have combinations enforce them */
-+	if (wiphy->n_iface_combinations)
-+		wiphy->flags |= WIPHY_FLAG_ENFORCE_COMBINATIONS;
-+
-+	for (i = 0; i < wiphy->n_iface_combinations; i++) {
-+		u32 cnt = 0;
-+		u16 all_iftypes = 0;
-+
-+		c = &wiphy->iface_combinations[i];
-+
-+		/* Combinations with just one interface aren't real */
-+		if (WARN_ON(c->max_interfaces < 2))
-+			return -EINVAL;
-+
-+		/* Need at least one channel */
-+		if (WARN_ON(!c->num_different_channels))
-+			return -EINVAL;
-+
-+		if (WARN_ON(!c->n_limits))
-+			return -EINVAL;
-+
-+		for (j = 0; j < c->n_limits; j++) {
-+			u16 types = c->limits[j].types;
-+
-+			/*
-+			 * interface types shouldn't overlap, this is
-+			 * used in cfg80211_can_change_interface()
-+			 */
-+			if (WARN_ON(types & all_iftypes))
-+				return -EINVAL;
-+			all_iftypes |= types;
-+
-+			if (WARN_ON(!c->limits[j].max))
-+				return -EINVAL;
-+
-+			/* Shouldn't list software iftypes in combinations! */
-+			if (WARN_ON(wiphy->software_iftypes & types))
-+				return -EINVAL;
-+
-+			cnt += c->limits[j].max;
-+			/*
-+			 * Don't advertise an unsupported type
-+			 * in a combination.
-+			 */
-+			if (WARN_ON((wiphy->interface_modes & types) != types))
-+				return -EINVAL;
-+		}
-+
-+		/* You can't even choose that many! */
-+		if (WARN_ON(cnt < c->max_interfaces))
-+			return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- int wiphy_register(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-@@ -444,6 +505,10 @@ int wiphy_register(struct wiphy *wiphy)
- 	if (WARN_ON(ifmodes != wiphy->interface_modes))
- 		wiphy->interface_modes = ifmodes;
- 
-+	res = wiphy_verify_combinations(wiphy);
-+	if (res)
-+		return res;
-+
- 	/* sanity check supported bands/channels */
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		sband = wiphy->bands[band];
-@@ -693,6 +758,7 @@ static int cfg80211_netdev_notifier_call
- 	struct net_device *dev = ndev;
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev;
-+	int ret;
- 
- 	if (!wdev)
- 		return NOTIFY_DONE;
-@@ -884,6 +950,9 @@ static int cfg80211_netdev_notifier_call
- 			return notifier_from_errno(-EOPNOTSUPP);
- 		if (rfkill_blocked(rdev->rfkill))
- 			return notifier_from_errno(-ERFKILL);
-+		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
-+		if (ret)
-+			return notifier_from_errno(ret);
- 		break;
- 	}
- 
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-05-09 17:08:20.000000000 +0200
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-05-09 18:23:44.000000000 +0200
-@@ -2420,6 +2420,77 @@ unlock:
-  *
-  *****************************************************************************/
- 
-+static const struct ieee80211_iface_limit iwlagn_sta_ap_limits[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_AP),
-+	},
-+};
-+
-+static const struct ieee80211_iface_limit iwlagn_2sta_limits[] = {
-+	{
-+		.max = 2,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+};
-+
-+static const struct ieee80211_iface_limit iwlagn_p2p_sta_go_limits[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_P2P_GO) |
-+			 BIT(NL80211_IFTYPE_AP),
-+	},
-+};
-+
-+static const struct ieee80211_iface_limit iwlagn_p2p_2sta_limits[] = {
-+	{
-+		.max = 2,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_P2P_CLIENT),
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination
-+iwlagn_iface_combinations_dualmode[] = {
-+	{ .num_different_channels = 1,
-+	  .max_interfaces = 2,
-+	  .beacon_int_infra_match = true,
-+	  .limits = iwlagn_sta_ap_limits,
-+	  .n_limits = ARRAY_SIZE(iwlagn_sta_ap_limits),
-+	},
-+	{ .num_different_channels = 1,
-+	  .max_interfaces = 2,
-+	  .limits = iwlagn_2sta_limits,
-+	  .n_limits = ARRAY_SIZE(iwlagn_2sta_limits),
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination
-+iwlagn_iface_combinations_p2p[] = {
-+	{ .num_different_channels = 1,
-+	  .max_interfaces = 2,
-+	  .beacon_int_infra_match = true,
-+	  .limits = iwlagn_p2p_sta_go_limits,
-+	  .n_limits = ARRAY_SIZE(iwlagn_p2p_sta_go_limits),
-+	},
-+	{ .num_different_channels = 1,
-+	  .max_interfaces = 2,
-+	  .limits = iwlagn_p2p_2sta_limits,
-+	  .n_limits = ARRAY_SIZE(iwlagn_p2p_2sta_limits),
-+	},
-+};
-+
- /*
-  * Not a mac80211 entry point function, but it fits in with all the
-  * other mac80211 functions grouped here.
-@@ -2460,6 +2531,18 @@ static int iwl_mac_setup_register(struct
- 		hw->wiphy->interface_modes |= ctx->exclusive_interface_modes;
- 	}
- 
-+	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
-+
-+	if (hw->wiphy->interface_modes & NL80211_IFTYPE_P2P_CLIENT) {
-+		hw->wiphy->iface_combinations = iwlagn_iface_combinations_p2p;
-+		hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(iwlagn_iface_combinations_p2p);
-+	} else if (hw->wiphy->interface_modes & NL80211_IFTYPE_AP) {
-+		hw->wiphy->iface_combinations = iwlagn_iface_combinations_dualmode;
-+		hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(iwlagn_iface_combinations_dualmode);
-+	}
-+
- 	hw->wiphy->max_remain_on_channel_duration = 1000;
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY |
---- a/net/mac80211/main.c	2011-05-09 17:08:20.000000000 +0200
-+++ b/net/mac80211/main.c	2011-05-09 17:24:15.000000000 +0200
-@@ -681,7 +681,7 @@ EXPORT_SYMBOL(ieee80211_alloc_hw);
- int ieee80211_register_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	int result;
-+	int result, i;
- 	enum ieee80211_band band;
- 	int channels, max_bitrates;
- 	bool supp_ht;
-@@ -736,11 +736,19 @@ int ieee80211_register_hw(struct ieee802
- 		return -ENOMEM;
- 
- 	/* if low-level driver supports AP, we also support VLAN */
--	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP))
--		local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
-+		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-+		hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
-+	}
- 
- 	/* mac80211 always supports monitor */
--	local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
-+	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
-+	hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_MONITOR);
-+
-+	/* mac80211 doesn't support more than 1 channel */
-+	for (i = 0; i < hw->wiphy->n_iface_combinations; i++)
-+		if (hw->wiphy->iface_combinations[i].num_different_channels > 1)
-+			return -EINVAL;
- 
- #ifndef CONFIG_MAC80211_MESH
- 	/* mesh depends on Kconfig, but drivers should set it if they want */
---- a/net/wireless/core.h	2011-05-09 17:08:20.000000000 +0200
-+++ b/net/wireless/core.h	2011-05-09 17:24:15.000000000 +0200
-@@ -417,6 +417,17 @@ int cfg80211_change_iface(struct cfg8021
- 			  u32 *flags, struct vif_params *params);
- void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
- 
-+int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-+				  struct wireless_dev *wdev,
-+				  enum nl80211_iftype iftype);
-+
-+static inline int
-+cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
-+			   enum nl80211_iftype iftype)
-+{
-+	return cfg80211_can_change_interface(rdev, NULL, iftype);
-+}
-+
- struct ieee80211_channel *
- rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 		  int freq, enum nl80211_channel_type channel_type);
---- a/net/wireless/util.c	2011-05-09 17:08:20.000000000 +0200
-+++ b/net/wireless/util.c	2011-05-09 17:24:15.000000000 +0200
-@@ -803,6 +803,11 @@ int cfg80211_change_iface(struct cfg8021
- 		return -EBUSY;
- 
- 	if (ntype != otype) {
-+		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
-+						    ntype);
-+		if (err)
-+			return err;
-+
- 		dev->ieee80211_ptr->use_4addr = false;
- 		dev->ieee80211_ptr->mesh_id_up_len = 0;
- 
-@@ -921,3 +926,78 @@ int cfg80211_validate_beacon_int(struct
- 
- 	return res;
- }
-+
-+int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-+				  struct wireless_dev *wdev,
-+				  enum nl80211_iftype iftype)
-+{
-+	struct wireless_dev *wdev_iter;
-+	int num[NUM_NL80211_IFTYPES];
-+	int total = 1;
-+	int i, j;
-+
-+	ASSERT_RTNL();
-+
-+	/* Always allow software iftypes */
-+	if (rdev->wiphy.software_iftypes & BIT(iftype))
-+		return 0;
-+
-+	/*
-+	 * Drivers will gradually all set this flag, until all
-+	 * have it we only enforce for those that set it.
-+	 */
-+	if (!(rdev->wiphy.flags & WIPHY_FLAG_ENFORCE_COMBINATIONS))
-+		return 0;
-+
-+	memset(num, 0, sizeof(num));
-+
-+	num[iftype] = 1;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
-+		if (wdev_iter == wdev)
-+			continue;
-+		if (!netif_running(wdev_iter->netdev))
-+			continue;
-+
-+		if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
-+			continue;
-+
-+		num[wdev_iter->iftype]++;
-+		total++;
-+	}
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
-+		const struct ieee80211_iface_combination *c;
-+		struct ieee80211_iface_limit *limits;
-+
-+		c = &rdev->wiphy.iface_combinations[i];
-+
-+		limits = kmemdup(c->limits, sizeof(limits[0]) * c->n_limits,
-+				 GFP_KERNEL);
-+		if (!limits)
-+			return -ENOMEM;
-+		if (total > c->max_interfaces)
-+			goto cont;
-+
-+		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
-+			if (rdev->wiphy.software_iftypes & BIT(iftype))
-+				continue;
-+			for (j = 0; j < c->n_limits; j++) {
-+				if (!(limits[j].types & iftype))
-+					continue;
-+				if (limits[j].max < num[iftype])
-+					goto cont;
-+				limits[j].max -= num[iftype];
-+			}
-+		}
-+		/* yay, it fits */
-+		kfree(limits);
-+		return 0;
-+ cont:
-+		kfree(limits);
-+	}
-+
-+	return -EBUSY;
-+}
+Ben.
 
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
 
+--=-C3PE5kUxDoZV6mTQC4CJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATeRebee/yOyVhhEJAQpQSQ/8CxLbr47Yq3SUA212n3JXKeXEjmZMCYb1
+ZH1IRc3t/WX7XLmPwqrZFJainbuRGtloO7KzC23Oh2ZJfbez2lm7ZLjC8Qgjjz0N
+adPR7E3crISYg7HIUCZxsSgzqa36KB2e4x75JszIeEtjigKQ6CJD+D6oOdT6CmE3
+5bymu2WqWW0CR4RukeJcvc0az0kho1m7HU8vCLiz6LAALpnQEKRT2GDtZaMpP6Y6
+NFI1xqKaFp9Hrr/UGSMZuCkCKxZGazBJ4MToiL5bThhsMXUuxt+FBGfqyMneTjaP
+dH0cF6vGEmw+52NW7zClHDh9rpcsAL2rfw36KlTkRDxnUfo7xEtH2Rf9kP7/DBQM
+f1JfDHbqZYEH1BtOFMm0x0Q4gnVPJManiVY2RACh0gY16fqphpBzWEWZ3+fB+Enr
+lzM5he3O+4RF2sydIWNcoHhR47UQyNAfOKrrh8fd8wjnckU5NTf/+xlSvHGiJj8D
+dBWMeqdQzhuQDbs5L3NuT3UkSswF87Etbx24rg9KXIUpJEoWMwj3Mm3UeDtAguJ4
+8xZGsoOe16/55Q787ZamjJytFyemrjt+yV2WgVplP9sBcYrtXRuceAkiyRe7jR/Y
+QB0bvHyKMxVLb3xD42VzBqQIbJJ7DlmByRxGSvPEMsvx1PV9xPW8Xo18wHLnYVTx
+mv/c8mvDkb4=
+=1DWd
+-----END PGP SIGNATURE-----
+
+--=-C3PE5kUxDoZV6mTQC4CJ--
