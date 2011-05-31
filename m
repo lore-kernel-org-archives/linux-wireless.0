@@ -1,77 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1622 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170Ab1ECJgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2011 05:36:18 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>
-Subject: [PATCH 12/61] staging: brcm80211: remove
- wl_ops_set_rts_threshold
-Date: Tue, 3 May 2011 11:35:12 +0200
-Message-ID: <1304415361-7813-13-git-send-email-arend@broadcom.com> (sfid-20110503_113827_449940_A9F3C691)
-In-Reply-To: <1304415361-7813-1-git-send-email-arend@broadcom.com>
-References: <1304415361-7813-1-git-send-email-arend@broadcom.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:64754 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758064Ab1EaSii convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 14:38:38 -0400
+Received: by vxi39 with SMTP id 39so3504660vxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 11:38:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTimphsVZsuji3T4yJt5hHdWtU65Z0g@mail.gmail.com>
+References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
+ <1304529896-20934-1-git-send-email-javier@cozybit.com> <BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com>
+ <BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com> <BANLkTimphsVZsuji3T4yJt5hHdWtU65Z0g@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 31 May 2011 11:38:17 -0700
+Message-ID: <BANLkTi=9a-UCo=hgAr-sPvPiTM_jUKefjQ@mail.gmail.com> (sfid-20110531_203847_375957_A0ED5831)
+Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
+To: Eliad Peller <eliad@wizery.com>
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function is not required as the driver does honour the USE_RTS_CTS
-flag. The mac80211 API notes state that either one or the other is required
-(see http://wireless.kernel.org/en/developers/Documentation/mac80211/API).
+On Tue, May 31, 2011 at 11:10 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Tue, May 31, 2011 at 8:26 PM, Javier Cardona <javier@cozybit.com> wrote:
+>> On Mon, May 30, 2011 at 3:51 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
+>>> On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
+>>>> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
+>>>> infrastructure BSS, or IBSS are differentiated by the Capability
+>>>> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
+>>>> subfields to 0 in transmitted Beacon or Probe Response management
+>>>> frames.
+>>>
+>>> This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
+>>> to zero. Is there any other way to find if it is a mesh other than
+>>> this check?
+>>
+>> Bummer.  I guess that's a collision between WiFi Alliance and IEEE,
+>> respectively the organizations standardizing P2P and 802.11s.
+>> The 11s draft is pretty clear about that.  I can consult the task
+>> group and see if they have thought about this conflict.
+>>
+>>>> index fbf6f33..62e542a 100644
+>>>> --- a/net/wireless/scan.c
+>>>> +++ b/net/wireless/scan.c
+>>>
+>>>> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>>>>
+>>>>        res->ts = jiffies;
+>>>>
+>>>> -       if (is_zero_ether_addr(res->pub.bssid)) {
+>>>> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+>>>>                /* must be mesh, verify */
+>>>
+>>> Reverting the above change, makes P2P work. Any other better fix?
+>>
+>> We could check that the WLAN_CAPABILITY_IS_MBSS *and* that the bssid
+>> matches the TA.  Do you think that would work?
+>>
+> i guess you are referring to SA (rather than TA).
+> in that case, this solution is not enough, as SA==bssid also holds
+> true for the p2p probe responses (at least when a single vif is being
+> used).
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
+Yes, you are right, SA or Address 2  (11s changes the address field
+definitions from DA, SA, BSSID to Address 1, 2 and 3).  In mesh
+management frames, Address 2 always equals Address 3.  Is this also
+the case for some P2P management frames?
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index 8144587..0faf105 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -131,7 +131,6 @@ static void wl_ops_sw_scan_complete(struct ieee80211_hw *hw);
- static void wl_ops_set_tsf(struct ieee80211_hw *hw, u64 tsf);
- static int wl_ops_get_stats(struct ieee80211_hw *hw,
- 			    struct ieee80211_low_level_stats *stats);
--static int wl_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value);
- static void wl_ops_sta_notify(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      enum sta_notify_cmd cmd,
-@@ -508,16 +507,6 @@ wl_ops_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--static int wl_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
--{
--	struct wl_info *wl = hw->priv;
--
--	WL_LOCK(wl);
--	wlc_iovar_setint(wl->wlc, "rtsthresh", value & 0xFFFF);
--	WL_UNLOCK(wl);
--	return 0;
--}
--
- static void
- wl_ops_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		  enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
-@@ -669,7 +658,6 @@ static const struct ieee80211_ops wl_ops = {
- 	.sw_scan_complete = wl_ops_sw_scan_complete,
- 	.set_tsf = wl_ops_set_tsf,
- 	.get_stats = wl_ops_get_stats,
--	.set_rts_threshold = wl_ops_set_rts_threshold,
- 	.sta_notify = wl_ops_sta_notify,
- 	.conf_tx = wl_ops_conf_tx,
- 	.get_tsf = wl_ops_get_tsf,
+> btw, i've already submitted some workaround for this issue:
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/70763
+>
+> in case we won't find a better solution...
+
+OK.  If the answer to my question above is yes, then I guess we'll
+have to do it as you suggest.  Thanks!
+
+Javier
+
 -- 
-1.7.4.1
-
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
