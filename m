@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34004 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183Ab1ELTCw (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53483 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757547Ab1EaTrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2011 15:02:52 -0400
-Subject: Re: [PATCH v2] net: rfkill: add generic gpio rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rhyland Klein <rklein@nvidia.com>
-Cc: "olof@lixom.net" <olof@lixom.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1305226377.10961.12.camel@rklein-linux2>
-References: <1305159661-11982-1-git-send-email-rklein@nvidia.com>
-	 <1305189092.3461.10.camel@jlt3.sipsolutions.net>
-	 <1305224592.10961.10.camel@rklein-linux2>
-	 <1305225648.3461.37.camel@jlt3.sipsolutions.net>
-	 <1305226377.10961.12.camel@rklein-linux2>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 May 2011 21:02:49 +0200
-Message-ID: <1305226969.3461.38.camel@jlt3.sipsolutions.net> (sfid-20110512_210309_024718_C37AC4F2)
-Mime-Version: 1.0
+	Tue, 31 May 2011 15:47:48 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 21/32] ath9k: enable antenna diversity for AR9330
+Date: Tue, 31 May 2011 21:37:12 +0200
+Message-Id: <1306870643-7935-22-git-send-email-juhosg@openwrt.org> (sfid-20110531_214845_357929_EE048549)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-05-12 at 11:52 -0700, Rhyland Klein wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> > If, on the other hand, rfkill decides that at the time of loading the
-> > driver wifi should be on, then the first change would be +1 and it'll
-> > flip between 0 and +1.
-> > 
-> > This seems like it'll cause issues at some point, so I think you should
-> > either allow the driver to set the initial state or hardcode one of
-> > these possibilities (so at least it's predictable)
-
-> I won't go negative, if you look, it only will disable clock if it knows
-> it has already enabled it. 
-
-Ah, you're right, I misread the macros.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a35af90..323b6ab 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2072,7 +2072,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 
+-	if (AR_SREV_9485(ah)) {
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 		/*
+ 		 * enable the diversity-combining algorithm only when
+-- 
+1.7.2.1
 
