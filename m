@@ -1,100 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3217 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753900Ab1EIOdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 10:33:04 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] staging: brcm80211: fix perimeter locking in
- wl_ops_bss_info_changed
-Date: Mon, 9 May 2011 16:32:53 +0200
-Message-ID: <1304951576-2351-2-git-send-email-arend@broadcom.com> (sfid-20110509_163606_267563_87DDD826)
-In-Reply-To: <1304951576-2351-1-git-send-email-arend@broadcom.com>
-References: <1304951576-2351-1-git-send-email-arend@broadcom.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:60767 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093Ab1EaSKS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 14:10:18 -0400
+Received: by gyd10 with SMTP id 10so1872364gyd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 11:10:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com>
+References: <1304513847.3563.15.camel@jlt3.sipsolutions.net>
+	<1304529896-20934-1-git-send-email-javier@cozybit.com>
+	<BANLkTinoKZ7QB-eJH+peNg4HopHssZtofg@mail.gmail.com>
+	<BANLkTimruu0+g8w3EGesvR12g7Yy55tmAA@mail.gmail.com>
+Date: Tue, 31 May 2011 21:10:15 +0300
+Message-ID: <BANLkTimphsVZsuji3T4yJt5hHdWtU65Z0g@mail.gmail.com> (sfid-20110531_201022_652174_7ACF9231)
+Subject: Re: [PATCH] cfg80211: Use capability info to detect mesh beacons.
+From: Eliad Peller <eliad@wizery.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several code path in the wl_ops_bss_info_changed() callback were not
-using the perimeter lock. This gives potential of raise conditions
-so lock/unlock calls have been added.
+On Tue, May 31, 2011 at 8:26 PM, Javier Cardona <javier@cozybit.com> wrote:
+> On Mon, May 30, 2011 at 3:51 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
+>> On Wed, May 4, 2011 at 10:54 PM, Javier Cardona <javier@cozybit.com> wrote:
+>>> Mesh beacons no longer use all-zeroes BSSID.  Beacon frames for MBSS,
+>>> infrastructure BSS, or IBSS are differentiated by the Capability
+>>> Information field in the Beacon frame.  A mesh STA sets the ESS and IBSS
+>>> subfields to 0 in transmitted Beacon or Probe Response management
+>>> frames.
+>>
+>> This breaks P2P mode as a P2P STA also sets the ESS and IBSS subfields
+>> to zero. Is there any other way to find if it is a mesh other than
+>> this check?
+>
+> Bummer.  I guess that's a collision between WiFi Alliance and IEEE,
+> respectively the organizations standardizing P2P and 802.11s.
+> The 11s draft is pretty clear about that.  I can consult the task
+> group and see if they have thought about this conflict.
+>
+>>> index fbf6f33..62e542a 100644
+>>> --- a/net/wireless/scan.c
+>>> +++ b/net/wireless/scan.c
+>>
+>>> @@ -407,7 +407,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>>>
+>>>        res->ts = jiffies;
+>>>
+>>> -       if (is_zero_ether_addr(res->pub.bssid)) {
+>>> +       if (WLAN_CAPABILITY_IS_MBSS(res->pub.capability)) {
+>>>                /* must be mesh, verify */
+>>
+>> Reverting the above change, makes P2P work. Any other better fix?
+>
+> We could check that the WLAN_CAPABILITY_IS_MBSS *and* that the bssid
+> matches the TA.  Do you think that would work?
+>
+i guess you are referring to SA (rather than TA).
+in that case, this solution is not enough, as SA==bssid also holds
+true for the p2p probe responses (at least when a single vif is being
+used).
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcoom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   15 +++++++++++----
- 1 files changed, 11 insertions(+), 4 deletions(-)
+btw, i've already submitted some workaround for this issue:
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/70763
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index a932284..9f2e5a2 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -340,7 +340,9 @@ wl_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		 */
- 		wiphy_err(wiphy, "%s: %s: %sassociated\n", KBUILD_MODNAME,
- 			  __func__, info->assoc ? "" : "dis");
-+		WL_LOCK(wl);
- 		wlc_associate_upd(wl->wlc, info->assoc);
-+		WL_UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		/* slot timing changed */
-@@ -356,12 +358,15 @@ wl_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_HT) {
- 		/* 802.11n parameters changed */
- 		u16 mode = info->ht_operation_mode;
-+
-+		WL_LOCK(wl);
- 		wlc_protection_upd(wl->wlc, WLC_PROT_N_CFG,
- 			mode & IEEE80211_HT_OP_MODE_PROTECTION);
- 		wlc_protection_upd(wl->wlc, WLC_PROT_N_NONGF,
- 			mode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
- 		wlc_protection_upd(wl->wlc, WLC_PROT_N_OBSS,
- 			mode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT);
-+		WL_UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_BASIC_RATES) {
- 		struct ieee80211_supported_band *bi;
-@@ -370,13 +375,11 @@ wl_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		struct wl_rateset rs;
- 		int error;
- 
--		/* Basic rateset changed */
--		no_printk("%s: change basic rates: 0x%x\n",
--			 __func__, (u32) info->basic_rates);
--
- 		/* retrieve the current rates */
-+		WL_LOCK(wl);
- 		error = wlc_ioctl(wl->wlc, WLC_GET_CURR_RATESET,
- 				  &rs, sizeof(rs), NULL);
-+		WL_UNLOCK(wl);
- 		if (error) {
- 			wiphy_err(wiphy, "%s: retrieve rateset failed: %d\n",
- 				  __func__, error);
-@@ -394,11 +397,15 @@ wl_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 
- 		/* update the rate set */
-+		WL_LOCK(wl);
- 		wlc_ioctl(wl->wlc, WLC_SET_RATESET, &rs, sizeof(rs), NULL);
-+		WL_UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_BEACON_INT) {
- 		/* Beacon interval changed */
-+		WL_LOCK(wl);
- 		wlc_set(wl->wlc, WLC_SET_BCNPRD, info->beacon_int);
-+		WL_UNLOCK(wl);
- 	}
- 	if (changed & BSS_CHANGED_BSSID) {
- 		/* BSSID changed, for whatever reason (IBSS and managed mode) */
--- 
-1.7.4.1
+in case we won't find a better solution...
 
-
+Eliad.
