@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:48220 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161Ab1EEP0X convert rfc822-to-8bit (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53491 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758216Ab1EaTru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2011 11:26:23 -0400
-Received: by qwk3 with SMTP id 3so1501839qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2011 08:26:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTimW+UGSt94fEKj976XUNnM=Vq-1AA@mail.gmail.com>
-References: <BANLkTikui4mKvDjPfOw9CAXh5_oyR59xYQ@mail.gmail.com>
-	<BANLkTimW+UGSt94fEKj976XUNnM=Vq-1AA@mail.gmail.com>
-Date: Thu, 5 May 2011 17:26:22 +0200
-Message-ID: <BANLkTimD5i4oCTT=bc0LRgDHcpXzjnN=Gw@mail.gmail.com> (sfid-20110505_172636_654993_3B901A02)
-Subject: Re: [ath9k-devel] virtual CS / NAV
-From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
-To: Sagar Bijwe <sag.bijwe@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 31 May 2011 15:47:50 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 12/32] ath9k: read spur frequency information from eeprom for AR9330
+Date: Tue, 31 May 2011 21:37:03 +0200
+Message-Id: <1306870643-7935-13-git-send-email-juhosg@openwrt.org> (sfid-20110531_214857_050672_BE83CBB1)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for your answer!
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Do you know if it takes into account the CFPDurRemaining field of the
-CF element? Otherwise, is it possible to change the
-NAV value from software? (maybe through the AR_NAV register??) I was
-playind around with this register right now :P.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 48893f1..2df72cb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -168,7 +168,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	 * is out-of-band and can be ignored.
+ 	 */
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9340(ah)) {
++	if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah)) {
+ 		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
+ 							 IS_CHAN_2GHZ(chan));
+ 		if (spur_fbin_ptr[0] == 0) /* No spur */
+@@ -193,7 +193,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 
+ 	for (i = 0; i < max_spur_cnts; i++) {
+ 		negative = 0;
+-		if (AR_SREV_9485(ah) || AR_SREV_9340(ah))
++		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
+ 			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
+ 					IS_CHAN_2GHZ(chan)) - synth_freq;
+ 		else
+-- 
+1.7.2.1
 
-Regards!
-
-
-
-2011/5/5 Sagar Bijwe <sag.bijwe@gmail.com>:
-> The virtual carrier sense is not implemented in software. It is handled by
-> hw. There are flags to enable or disable NAV.
-> -Sagar
->
-> On Thu, May 5, 2011 at 6:55 PM, Manuel Sáez <manuelsaezr@gmail.com> wrote:
->>
->> Hi all,
->>
->> I am trying to find out if the "virtual carrier sense" is implemented
->> in the ath9k or mac80211 and where/how is it done. I would like to
->> know if the NAV is managed in software or hardware or maybe is not
->> being used at all. Does anybody have an idea of how it works?
->>
->> Any help would be great!
->>
->> Thank you!
->> Manolo
->> _______________________________________________
->> ath9k-devel mailing list
->> ath9k-devel@lists.ath9k.org
->> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
->
