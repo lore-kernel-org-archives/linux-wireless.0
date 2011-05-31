@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38866 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753442Ab1EFWZs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2011 18:25:48 -0400
-Date: Fri, 6 May 2011 23:26:38 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: <akpm@linux-foundation.org>, <mingo@redhat.com>,
-	<tglx@linutronix.de>, <hpa@zytor.com>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<allen.kao@atheros.com>, <roman.gezikov@atheros.com>,
-	<joonas.viskari@atheros.com>
-Subject: Re: [RFC 1/2] misc: add Atheros ar1520 GPS support
-Message-ID: <20110506232638.72e8900a@lxorguk.ukuu.org.uk> (sfid-20110507_002605_942761_2E4A29A3)
-In-Reply-To: <1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
-References: <1304719780-27347-1-git-send-email-lrodriguez@atheros.com>
-	<1304719780-27347-2-git-send-email-lrodriguez@atheros.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nbd.name ([46.4.11.11]:49355 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932185Ab1EaUWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 16:22:51 -0400
+Message-ID: <4DE54E16.7000709@openwrt.org> (sfid-20110531_222254_607187_875FC504)
+Date: Tue, 31 May 2011 22:22:46 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
+ after receiving a beacon
+References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>	 <1306869394-83047-2-git-send-email-nbd@openwrt.org>	 <1306870354.29989.1.camel@jlt3.sipsolutions.net>	 <4DE543E2.9070600@openwrt.org> <1306872395.29989.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1306872395.29989.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Last time this driver came up the answer was that the userspace was
-proprietary and this was in fact part of a mixed user/kernel driver which
-seemed to raise all sorts of interesting questions.
+On 2011-05-31 10:06 PM, Johannes Berg wrote:
+> On Tue, 2011-05-31 at 21:39 +0200, Felix Fietkau wrote:
+>>  On 2011-05-31 9:32 PM, Johannes Berg wrote:
+>>  >  On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
+>>  >>   When a STA entry is created too early, a lot of essential information
+>>  >>   required for rate control is missing.
+>>  >
+>>  >  I don't understand how you can rely on beacons for WDS.
+>>  You usually set up WDS links between APs on the same channel, each
+>>  running both a normal AP vif and a WDS vif. The remote AP's beacons are
+>>  then used to detect the capabilities of the peer.
+>
+> I don't think we can rely on "usually" unless we also enforce that
+> somehow. Otherwise this link will basically be dead. There's nothing
+> that requires you to add WDS to an AP interface only after all.
+I don't think using WDS without APs makes any sense. Since WDS alone 
+does not use beacons or probe requests, there's nothing else that would 
+ensure that rate information, HT capabilities, etc. get exchanged.
 
-This was NAKked before for that reason so why the resubmit. Kernel policy
-is clear enough ?
-
-> + * You need a userspace application to cooperate with this driver. It and
-> + * more information about this driver can be obtained here:
-> + *
-> + * http://wireless.kernel.org/en/users/Drivers/ar5120
-
-Which says:
-
-Userspace application
-
-This driver requires a userspace application which will interact with the
-driver via ioctl. More information on this to be posted later. 
-
-So NAK
-
-
-Let's see an open userspace and then this driver can be submitted
-
-+		time =
-  wait_event_interruptible_timeout(ar1520_data->wait_irq,
-+
-  ar1520_data->irq_rx, +
-  msecs_to_jiffies(3142));
-
-Why 3142 ?
-
-Come to think of it why not fixes the races while you are it.
-
-Alan
+- Felix
