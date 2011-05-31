@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3714 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754976Ab1EQRe1 convert rfc822-to-8bit (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53479 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753484Ab1EaTrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2011 13:34:27 -0400
-Message-ID: <4DD2B178.3050907@broadcom.com> (sfid-20110517_193443_462523_265DA3C5)
-Date: Tue, 17 May 2011 19:33:44 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"Greg KH" <greg@kroah.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"George Kashperko" <george@znau.edu.ua>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Russell King" <rmk@arm.linux.org.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	"Andy Botting" <andy@andybotting.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V7] bcma: add Broadcom specific AMBA bus driver
-References: <1304960206-8832-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1304960206-8832-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Tue, 31 May 2011 15:47:48 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 24/32] ath9k: fix antenna diversity configuration for non AR9485 chips
+Date: Tue, 31 May 2011 21:37:15 +0200
+Message-Id: <1306870643-7935-25-git-send-email-juhosg@openwrt.org> (sfid-20110531_214920_642585_B3B3D9D7)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 06:56 PM, Rafał Miłecki wrote:
-> Broadcom has released cards based on a new AMBA-based bus type. From a
-> programming point of view, this new bus type differs from AMBA and does
-> not use AMBA common registers. It also differs enough from SSB. We
-> decided that a new bus driver is needed to keep the code clean.
->
-> In its current form, the driver detects devices present on the bus and
-> registers them in the system. It allows registering BCMA drivers for
-> specified bus devices and provides them basic operations. The bus driver
-> itself includes two important bus managing drivers: ChipCommon core
-> driver and PCI(c) core driver. They are early used to allow correct
-> initialization.
->
-> Currently code is limited to supporting buses on PCI(e) devices, however
-> the driver is designed to be used also on other hosts. The host
-> abstraction layer is implemented and already used for PCI(e).
->
-> Support for PCI(e) hosts is working and seems to be stable (access to
-> 80211 core was tested successfully on a few devices). We can still
-> optimize it by using some fixed windows, but this can be done later
-> without affecting any external code. Windows are just ranges in MMIO
-> used for accessing cores on the bus.
-Hi Rafał,
+The current values must be used only on AR9485 chips. Other chips
+requires different values.
 
-Just some minor feedback on coding style. I wanted to make a change in 
-host_pci.c to avoid changing the PCI BAR window and noticed following:
-1. indentation is all spaces.
-2. initial indent is 7 spaces, and subsequent indents are 8 spaces.
-3. pointer assignment: ptr =&var;
-4. output parameter: foo(bar,&yabar);
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-I am not sure whether checkpatch.pl triggers on any of these, but can we 
-fix at least items 1) and 2).
-
-Gr. AvS
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index eb18b63..b9f0b27 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1214,8 +1214,14 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 				 AR_PHY_9485_ANT_DIV_ALT_LNACONF_S;
+ 	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
+ 				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
+-	antconf->lna1_lna2_delta = -9;
+-	antconf->div_group = 2;
++
++	if (AR_SREV_9485(ah)) {
++		antconf->lna1_lna2_delta = -9;
++		antconf->div_group = 2;
++	} else {
++		antconf->lna1_lna2_delta = -3;
++		antconf->div_group = 0;
++	}
+ }
+ 
+ static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+1.7.2.1
 
