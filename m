@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53431 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758193Ab1ENPz5 (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53490 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758085Ab1EaTrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2011 11:55:57 -0400
-Message-ID: <4DCEA60A.5010600@candelatech.com> (sfid-20110514_175600_913591_01F43DB9)
-Date: Sat, 14 May 2011 08:55:54 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Can't get hostapd to start, channels are all passive-scanning?
-References: <4DCDC068.9060307@candelatech.com>	<4DCDC7A0.2020504@candelatech.com> <BANLkTikv9jhZaC=+Rtn5DmHADEJkvqo3KQ@mail.gmail.com>
-In-Reply-To: <BANLkTikv9jhZaC=+Rtn5DmHADEJkvqo3KQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 31 May 2011 15:47:49 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 02/32] ath9k: define device id for AR9330
+Date: Tue, 31 May 2011 21:36:53 +0200
+Message-Id: <1306870643-7935-3-git-send-email-juhosg@openwrt.org> (sfid-20110531_214911_042922_6072E446)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/2011 08:41 PM, Adrian Chadd wrote:
-> What's the regulatory domain of the NIC?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
- From the boot where it worked:
-
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-
-Seems this isn't saved in /var/log/messages, so no idea what it was on the
-previous boot where things were more weird than normal.
-
-> Is it some strange race condition with CRDA?
-
-Hard to say.  I did check the 'iw reg get' and it looked
-sane..but maybe that wouldn't show the problem...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 4b157c5..9f23451 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -45,6 +45,7 @@
+ #define AR9300_DEVID_PCIE	0x0030
+ #define AR9300_DEVID_AR9340	0x0031
+ #define AR9300_DEVID_AR9485_PCIE 0x0032
++#define AR9300_DEVID_AR9330	0x0035
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.1
+
