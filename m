@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44919 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958Ab1EILde (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:46410 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932346Ab1EaTDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 07:33:34 -0400
-Subject: Re: [PATCH] mac80211: add a couple of trace event classes to
- reduce duplicated code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1304940469-4978-1-git-send-email-coelho@ti.com>
-References: <1304940469-4978-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 May 2011 13:33:28 +0200
-Message-ID: <1304940808.12202.0.camel@jlt3.sipsolutions.net> (sfid-20110509_133337_263752_F2791C78)
-Mime-Version: 1.0
+	Tue, 31 May 2011 15:03:52 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id A2CDA5403F4
+	for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 15:10:16 -0400 (EDT)
+Subject: Compat-wireless release for 2011-05-31 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110531190350.EF43440EB8@repository3.orbit-lab.org> (sfid-20110531_210404_997966_64730093)
+Date: Tue, 31 May 2011 15:03:50 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-09 at 14:27 +0300, Luciano Coelho wrote:
-> The functions drv_add_interface() and drv_remove_interface() print out
-> the same values in the traces.  Combine the traces of these two
-> functions into one event class to remove some duplicate code.
-> 
-> Also add a new class for functions drv_set_frag_threshold() and
-> drv_set_rts_threshold().
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new branch]      linux-3.0.0.y -> origin/linux-3.0.0.y
+ * [new branch]      linux-3.0.y -> origin/linux-3.0.y
+ * [new tag]         compat-wireless-v3.0-rc1 -> compat-wireless-v3.0-rc1
+ * [new tag]         compat-wireless-v3.0-rc1-1 -> compat-wireless-v3.0-rc1-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+ * [new branch]      linux-3.0.0.y -> origin/linux-3.0.0.y
+ * [new tag]         compat-v3.0-1 -> compat-v3.0-1
+ * [new tag]         compat-v3.0-2 -> compat-v3.0-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 81cd8a9...3f921c6 akpm-end   -> origin/akpm-end  (forced update)
+   7fd96ba..9185b01  history    -> origin/history
+ + e2cf001...25c5fa8 master     -> origin/master  (forced update)
+ * [new tag]         next-20110531 -> next-20110531
 
-Nice :)
+compat-wireless code metrics
 
-
-> +DECLARE_EVENT_CLASS(local_value_evt,
-
-Though I wonder if that might be better as "local_u32_evt"?
-
-johannes
-
+    823149 - Total upstream lines of code being pulled
+      2394 - backport code changes
+      2086 - backport code additions
+       308 - backport code deletions
+      8070 - backport from compat module
+     10464 - total backport code
+    1.2712 - % of code consists of backport work
