@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50376 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719Ab1EXTLw (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53494 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758235Ab1EaTrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2011 15:11:52 -0400
-Received: by fxm17 with SMTP id 17so4873324fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2011 12:11:51 -0700 (PDT)
-Message-ID: <4DDC02F3.4000807@googlemail.com> (sfid-20110524_211156_014640_621013DE)
-Date: Tue, 24 May 2011 21:11:47 +0200
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [ath5k] kernel panic while using compat-wireless-2.6.38.2-2
-References: <4DCA672E.2080906@googlemail.com> <4DDA89A4.5040101@googlemail.com> <4DDA8CCA.3050703@candelatech.com>
-In-Reply-To: <4DDA8CCA.3050703@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Tue, 31 May 2011 15:47:51 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 10/32] ath9k: use different BB watchdog timeout value for AR9330
+Date: Tue, 31 May 2011 21:37:01 +0200
+Message-Id: <1306870643-7935-11-git-send-email-juhosg@openwrt.org> (sfid-20110531_214803_082567_DA710981)
+In-Reply-To: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Problem has been solved by using latest compat-wireless-2.6.39-1 from 
-last night.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Finally.
-
-Thank you, linux-wireless folks!
-
-Best regards,
-Dennis
-
-Am 23.05.2011 18:35, schrieb Ben Greear:
-> On 05/23/2011 09:21 AM, Dennis Borgmann wrote:
->> Hello linux-wireless list!
->>
->> Is there really no one with an idea? Is there no one among the
->> developers, who is interested in this bug, if it is a bug?
->>
->> I'm starting to lose my hope...
->
-> Can you reproduce this in the wireless-testing tree?
->
-> Ben
->
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 826ed5d..f53a3bf 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -615,7 +615,10 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
+ 
+-	ah->bb_watchdog_timeout_ms = 25;
++	if (AR_SREV_9330(ah))
++		ah->bb_watchdog_timeout_ms = 85;
++	else
++		ah->bb_watchdog_timeout_ms = 25;
+ 
+ 	common->state = ATH_HW_INITIALIZED;
+ 
+-- 
+1.7.2.1
 
