@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48567 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947Ab1EIT2z (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:53194 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856Ab1EaHUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2011 15:28:55 -0400
-Message-ID: <4DC84071.4080500@lwfinger.net> (sfid-20110509_212917_798482_61D986FB)
-Date: Mon, 09 May 2011 14:28:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 31 May 2011 03:20:51 -0400
+Received: by gwaa18 with SMTP id a18so1657974gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 00:20:50 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V2] rtlwifi: rtl8192cu: Fix memset/memcpy using sizeof(ptr)
- not sizeof(*ptr)
-References: <1304919832.19586.15.camel@Joe-Laptop>	 <4DC81009.5060501@lwfinger.net> <1304960976.19586.51.camel@Joe-Laptop>
-In-Reply-To: <1304960976.19586.51.camel@Joe-Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1306823717.9366.3.camel@jlt3.sipsolutions.net>
+References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+	<1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
+	<1306823717.9366.3.camel@jlt3.sipsolutions.net>
+Date: Tue, 31 May 2011 15:20:50 +0800
+Message-ID: <BANLkTimotXTy3Lk8CH6LZ3KD=f9iWOtJmw@mail.gmail.com> (sfid-20110531_092054_853681_D3D17A71)
+Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2011 12:09 PM, Joe Perches wrote:
-> On Mon, 2011-05-09 at 11:02 -0500, Larry Finger wrote:
->> On 05/09/2011 12:43 AM, Joe Perches wrote:
->>> Found via coccinelle script
->>> @@
->>> type T;
->>> T* ptr;
->>> expression E1;
->>> @@
->>> * memset(E1, 0, sizeof(ptr));
->>> Signed-off-by: Joe Perches<joe@perches.com>
->>> ---
->>>    drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 +-
->>>    1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
->>> @@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
-> []
->>> +	memset(rx_status, 0, sizeof(*rx_status));
->> ACK.
->
-> Hey Larry.
->
-> If this is correct, then probably the memcpy at the
-> end of the routine needs conversion too.
->
-> ---
->
->   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> index 79c98f6..3a92ba3 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> @@ -372,7 +372,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
->   	__le16 fc;
->   	struct ieee80211_hdr *hdr;
->
-> -	memset(rx_status, 0, sizeof(rx_status));
-> +	memset(rx_status, 0, sizeof(*rx_status));
->   	rxdesc	= skb->data;
->   	skb_len	= skb->len;
->   	drvinfo_len = (GET_RX_DESC_DRVINFO_SIZE(rxdesc) * RTL_RX_DRV_INFO_UNIT);
-> @@ -434,7 +434,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
->   		 "0x%02X\n", fc, (u32)hdr->addr1[0], (u32)hdr->addr1[1],
->   		 (u32)hdr->addr1[2], (u32)hdr->addr1[3], (u32)hdr->addr1[4],
->   		 (u32)hdr->addr1[5]));
-> -	memcpy(IEEE80211_SKB_RXCB(skb),&rx_status, sizeof(rx_status));
-> +	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
->   	ieee80211_rx_irqsafe(hw, skb);
->   }
+On 31 May 2011 14:35, Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Yes it does. After you posted V1 of the patch, I reviewed all the sizeof() calls 
-in the rtlwifi tree and found the second one at line 437.
+> Looks like I completely missed this since you hid it in an ath9k
+> patchset. DON'T DO THAT.
+>
+> Anyway, John, please revert. This is completely useless. Not only is
+> abusing the CSA stop reason a show-stopper, the whole patch is also just
+> not right, it seems like a workaround around a rate control algorithm
+> that isn't able to do an atomic HT change by itself. Also, it won't even
+> do what you want, there may be packets being processed concurrently
+> while stopping the queue -- calling stop_queues() is no guarantee that
+> no packet will be processed afterwards.
 
-ACK for V2 once the commit message is fixed.
+I'm unsure of what's going on in mac80211 and ath9k here.
 
-Larry
+FreeBSD handles it very simply - it goes via ath_reset() which drains
+each TX queue, freeing existing packets. Inefficient (ie, packet loss)
+but fine for now.
+
+How is ath9k handling the situation where the hardware currently has
+HT40 packets queued in the TX queues and you do a 40->20 change?
+The 40->20 change in the ath9k instance requires reinit'ing of the
+card. What happens to currently queued packets?
+
+Adrian
