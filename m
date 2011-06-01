@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:65359 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab1FIMEM (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53693 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161735Ab1FAIwZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 08:04:12 -0400
-Received: by ywe9 with SMTP id 9so726062ywe.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 05:04:11 -0700 (PDT)
+	Wed, 1 Jun 2011 04:52:25 -0400
+Message-ID: <4DE5FDB0.3060406@openwrt.org> (sfid-20110601_105232_803658_08C4C52A)
+Date: Wed, 01 Jun 2011 10:52:00 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Date: Thu, 9 Jun 2011 13:04:11 +0100
-Message-ID: <BANLkTik=TGub=tEFC01bTrF_Erp5FT8C5w@mail.gmail.com> (sfid-20110609_140415_837344_C9F6ED6D)
-Subject: Query regarding features and intel wireless NICs supported
-From: "M. A." <jdiq123@googlemail.com>
-To: ipw3945-devel@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: Re: [RFC 20/32] ath9k: set NF limits for AR9330
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org> <1306870643-7935-21-git-send-email-juhosg@openwrt.org> <4DE573AF.8060405@openwrt.org>
+In-Reply-To: <4DE573AF.8060405@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+2011.06.01. 1:03 keltezéssel, Felix Fietkau írta:
+> On 2011-05-31 9:37 PM, Gabor Juhos wrote:
+>> Signed-off-by: Gabor Juhos<juhosg@openwrt.org>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
+>>   drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 ++
+>>   2 files changed, 6 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> index a0ca1eb..eb18b63 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> @@ -1089,7 +1089,10 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
+>>   {
+>>       ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
+>>       ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
+>> -    ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
+>> +    if (AR_SREV_9300(ah))
+>> +        ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
+> Typo in the SREV check?
 
-I would be very grateful if people can advise on the features present
-in Intels 3x3 MIMO (450Mbps) chipsets, namely (Ultimate N WiFi Link
-5300 and 6300 NICs) and the features that are currently supported by
-the iwlwifi/iwlang Linux driver.
+Yes, definitely.
 
-e.g. the output of "iw list" command of the cards would be very helpful.
-
-For example does it support:
-
-1) Configuring as an AP (via hostapd or otherwise).
-2) STBC, 3) Greenfield, 4) Short gaurd interval, 4) Low-density parity
-check (LDPC) encoding, 5) Maximum likelihood demodulation (MLD) and
-MRC, 6) Transmit beamforming (TxBF), 7) Ability to control antenna-
-power/chain mask etc,
-8) Support for HT IBSS/ad hoc speeds (Alexander's patch).
-9) Per-Packet. Information (PPI) capturing
-
-Also to those who have tested these intel NICs, can you please provide
-a purchase recommendation as I intend to use it to run parameter
-specific tests (one at a time) via install these on around 5 laptops
-and similar platforms.
-
-Thank you all very much
+Thanks,
+Gabor
