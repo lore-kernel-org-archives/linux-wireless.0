@@ -1,65 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2698 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3783 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751292Ab1FISHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 14:07:41 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, "Rafal Milecki" <zajec5@gmail.com>
-Subject: [PATCH] drivers: bcma: export bcma_core_disable() function
-Date: Thu, 9 Jun 2011 20:07:20 +0200
-Message-ID: <1307642840-3043-1-git-send-email-arend@broadcom.com> (sfid-20110609_200744_317564_E86095B8)
+	id S1758850Ab1FALqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:35 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 51/83] staging: brcm80211: clean up dhd.h in fullmac
+Date: Wed, 1 Jun 2011 13:45:36 +0200
+Message-ID: <1306928768-7501-51-git-send-email-rvossen@broadcom.com> (sfid-20110601_134901_901705_7DF70DEF)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the brcm80211 driver we disable the 80211 core when the driver is
-'down'. The bcma_core_disable() function exactly does the same as
-our implementation so exporting this function makes sense.
+From: Franky Lin <frankyl@broadcom.com>
 
-Cc: linux-wireless@vger.kernel.org
-Cc: Rafal Milecki <zajec5@gmail.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Remove #include lines in dhd.h
+
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/bcma/core.c       |    3 ++-
- include/linux/bcma/bcma.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    2 ++
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    4 ++--
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |    1 +
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    1 +
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |   17 -----------------
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |    2 ++
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |    3 +++
+ .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    3 +++
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    1 +
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    3 +++
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |    3 +++
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c         |    2 ++
+ 12 files changed, 23 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index ced379f..1ec7d45 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -19,7 +19,7 @@ bool bcma_core_is_enabled(struct bcma_device *core)
- }
- EXPORT_SYMBOL_GPL(bcma_core_is_enabled);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index e11c615..b8af4ed 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -18,9 +18,11 @@
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+ #include <linux/pci_ids.h>
++#include <linux/sched.h>
+ #include <bcmdefs.h>
+ #include <bcmdevs.h>
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ #include <bcmsoc.h>
  
--static void bcma_core_disable(struct bcma_device *core, u32 flags)
-+void bcma_core_disable(struct bcma_device *core, u32 flags)
- {
- 	if (bcma_aread32(core, BCMA_RESET_CTL) & BCMA_RESET_CTL_RESET)
- 		return;
-@@ -31,6 +31,7 @@ static void bcma_core_disable(struct bcma_device *core, u32 flags)
- 	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
- 	udelay(1);
- }
-+EXPORT_SYMBOL_GPL(bcma_core_disable);
+ #include <bcmsdh.h>		/* BRCM API for SDIO
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index d441500..c0b9330 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -23,16 +23,16 @@
+ #include <linux/netdevice.h>
+ #include <linux/pci.h>
+ #include <linux/completion.h>
++#include <linux/sched.h>
  
- int bcma_core_enable(struct bcma_device *core, u32 flags)
- {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 6ff080e..3895aeb 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -244,6 +244,7 @@ void bcma_awrite32(struct bcma_device *core, u16 offset, u32 value)
- }
+ #include <bcmdefs.h>
+ #include <bcmdevs.h>
+ #include <bcmutils.h>
++#include <bcmwifi.h>
  
- extern bool bcma_core_is_enabled(struct bcma_device *core);
-+extern void bcma_core_disable(struct bcma_device *core, u32 flags);
- extern int bcma_core_enable(struct bcma_device *core, u32 flags);
+ #if defined(OOB_INTR_ONLY)
+ #include <linux/irq.h>
+ extern void dhdsdio_isr(void *args);
+-#include <dngl_stats.h>
+-#include <dhd.h>
+ #endif				/* defined(OOB_INTR_ONLY) */
+ #if defined(CONFIG_MACH_SANDGATE2G) || defined(CONFIG_MACH_LOGICPD_PXA270)
+ #if !defined(BCMPLATFORM_BUS)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index cc4738a..067404b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -18,6 +18,7 @@
+ #include <bcmdefs.h>
+ #include <bcmdevs.h>
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ #include <sdio.h>		/* SDIO Device and Protocol Specs */
+ #include <sdioh.h>		/* SDIO Host Controller Specification */
+ #include <bcmsdbus.h>		/* bcmsdh to/from specific controller APIs */
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+index 2792a4d..196b15e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+@@ -18,6 +18,7 @@
+ #include <linux/netdevice.h>
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ #include <sdio.h>		/* SDIO Specs */
+ #include <bcmsdbus.h>		/* bcmsdh to/from specific controller APIs */
+ #include <sdiovar.h>		/* to get msglevel bit values */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 081cda0..1fc5202 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -21,23 +21,6 @@
+ #ifndef _dhd_h_
+ #define _dhd_h_
  
- #endif /* LINUX_BCMA_H_ */
+-#include <linux/sched.h>
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/slab.h>
+-#include <linux/skbuff.h>
+-#include <linux/netdevice.h>
+-#include <linux/etherdevice.h>
+-#include <linux/random.h>
+-#include <linux/spinlock.h>
+-#include <linux/ethtool.h>
+-#include <linux/suspend.h>
+-#include <asm/uaccess.h>
+-#include <asm/unaligned.h>
+-#include "bcmdefs.h"
+-/* The kernel threading is sdio-specific */
+-#include "bcmwifi.h"
+-
+ /* Forward decls */
+ struct dhd_bus;
+ struct dhd_prot;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
+index 424eacb..f655322 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
+@@ -16,9 +16,11 @@
+ 
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
++#include <linux/sched.h>
+ #include <bcmdefs.h>
+ 
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ 
+ #include <dngl_stats.h>
+ #include <dhd.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 85d87db..79df125 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -15,8 +15,11 @@
+  */
+ #include <linux/kernel.h>
+ #include <linux/string.h>
++#include <linux/sched.h>
+ #include <bcmdefs.h>
++#include <bcmwifi.h>
+ #include <linux/netdevice.h>
++#include <asm/unaligned.h>
+ #include <bcmutils.h>
+ #include <dngl_stats.h>
+ #include <dhd.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+index abd41e3..a3ea415 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+@@ -15,7 +15,10 @@
+  */
+ 
+ #include <linux/netdevice.h>
++#include <linux/sched.h>
+ #include <bcmutils.h>
++#include <bcmdefs.h>
++#include <bcmwifi.h>
+ 
+ #include <dngl_stats.h>
+ #include <dhd.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index f356c56..b023fc8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -33,6 +33,7 @@
+ #include <linux/uaccess.h>
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ 
+ #include <dngl_stats.h>
+ #include <dhd.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index ad3f0e6..cd0ea4b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -18,10 +18,13 @@
+ #include <linux/kernel.h>
+ #include <linux/pci_ids.h>
+ #include <linux/netdevice.h>
++#include <linux/sched.h>
++#include <asm/unaligned.h>
+ #include <bcmdefs.h>
+ #include <bcmsdh.h>
+ 
+ #include <bcmdefs.h>
++#include <bcmwifi.h>
+ #include <bcmutils.h>
+ #include <bcmdevs.h>
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 6aa186e..2e5e996 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -16,8 +16,11 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/if_arp.h>
++#include <linux/sched.h>
+ 
+ #include <bcmutils.h>
++#include <bcmdefs.h>
++#include <bcmwifi.h>
+ 
+ #include <asm/uaccess.h>
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index 9819a35..da052e7e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -18,8 +18,10 @@
+ #include <linux/semaphore.h>
+ #include <bcmdefs.h>
+ #include <linux/netdevice.h>
++#include <linux/etherdevice.h>
+ 
+ #include <bcmutils.h>
++#include <bcmwifi.h>
+ 
+ #include <linux/if_arp.h>
+ #include <asm/uaccess.h>
 -- 
 1.7.4.1
 
