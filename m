@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49863 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758258Ab1FVRPz (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:46124 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab1FASCD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 13:15:55 -0400
-Received: by iyb12 with SMTP id 12so839197iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 10:15:54 -0700 (PDT)
+	Wed, 1 Jun 2011 14:02:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <loom.20110622T103452-665@post.gmane.org>
-References: <1308704862-5684-1-git-send-email-lrodriguez@atheros.com> <loom.20110622T103452-665@post.gmane.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Jun 2011 10:15:33 -0700
-Message-ID: <BANLkTimr-37bhou=zcw+ePiRvofv7EFBZA@mail.gmail.com> (sfid-20110622_191558_925373_B1A9CA7F)
-Subject: Re: [RFC v2] hostapd: add Automatic Channel Selection (ACS) support
-To: jpo <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20110601144313.GA9695@redhat.com>
+References: <20110513203448.GA3523@gandalf>
+	<20110516172513.GA2546@tuxdriver.com>
+	<BANLkTi=JU2VkyArY4jrt1iE-sdwKp+JaAQ@mail.gmail.com>
+	<20110601144313.GA9695@redhat.com>
+Date: Wed, 1 Jun 2011 19:02:02 +0100
+Message-ID: <BANLkTi=pmOMFqX+h9sRQ_NDeC7EVMB665Q@mail.gmail.com> (sfid-20110601_200223_988448_71A867B9)
+Subject: Re: BUG: scheduling while atomic 2.6.39-rc7 (iwl3945_irq_tasklet)
+From: James Hogan <james@albanarts.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 1:39 AM, jpo <pommnitz@yahoo.com> wrote:
-> Luis R. Rodriguez <lrodriguez@...> writes:
->
+On 1 June 2011 15:43, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Tue, May 17, 2011 at 09:41:42AM +0100, James Hogan wrote:
+>> On 16 May 2011 18:25, John W. Linville <linville@tuxdriver.com> wrote:
+>> > On Fri, May 13, 2011 at 09:34:49PM +0100, James Hogan wrote:
+>> >> On 2.6.39-rc7 I've seen a panic due to "BUG: scheduling while atomic"
+>> >> with the backtrace below (not much detail as it was written in a text
+>> >> message while it was displayed on the screen!). All worked fine in
+>> >> 2.6.38.
+>> >>
+>> >> This was soon after resuming from suspend (enough time to unlock the
+>> >> screen, but not much else). I think it was the same bug I saw in rc2 but
+>> >> didn't have time to track down. I can probably get it to happen again if
+>> >> more detail is needed. It doesn't happen every suspend (I think it had
+>> >> survived a couple of suspend/resume cycles at this point).
+>> >>
+>> >> I could bisect if necessary, but hopefully the backtrace will be enough
+>> >> to see what's going on?
+>> >
+>> > A bisect might be very helpful -- time is short for 2.6.39 already.
 >>
->> This adds Automatic Channel Selection (ACS) support to hostapd
->> using the Survery based ACS algorithm [1].
+>> Hmm, it won't reproduce. I'll have to try and bisect this evening, as
+>> it was in my home network that it hit the BUG before.
 >
-> Will there be a command line tool for IBSS? I imagine something like
-> iw dev wlan0 ibss join "TheNetwork" $(acstool dev wlan0)
-> or as part of iw
-> iw dev wlan0 ibss join "TheNetwork" acs
+> We use mutex in atomic contex when changing channel. I'm not sure if
+> this is the particular problem you have. If you found a way to
+> reproduce, you may try this patch:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/acs.git
+Thanks, I haven't managed to reproduce the problem at all
+unfortunately so cannot bisect it (although I have had several failed
+suspends, where it just boots up again from scratch instead of
+resuming).
 
-So you can use this, we can also throw into iw, up to Johannes, might
-come in handy so it can also be used with mesh and stuff, we can also
-just keep it separate.
+I'll try the patch when i get a chance
 
-  Luis
+Cheers
+James
+
+>
+> diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
+> index 42df832..01244b2 100644
+> --- a/drivers/net/wireless/iwlegacy/iwl-core.c
+> +++ b/drivers/net/wireless/iwlegacy/iwl-core.c
+> @@ -861,9 +861,7 @@ void iwl_legacy_chswitch_done(struct iwl_priv *priv, bool is_success)
+>
+>        if (priv->switch_rxon.switch_in_progress) {
+>                ieee80211_chswitch_done(ctx->vif, is_success);
+> -               mutex_lock(&priv->mutex);
+>                priv->switch_rxon.switch_in_progress = false;
+> -               mutex_unlock(&priv->mutex);
+>        }
+>  }
+>  EXPORT_SYMBOL(iwl_legacy_chswitch_done);
+>
+
+
+
+-- 
+James Hogan
