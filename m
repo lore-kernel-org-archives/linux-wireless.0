@@ -1,15 +1,14 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4949 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3784 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758834Ab1FALqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:32 -0400
+	id S1758821Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:29 -0400
 From: "Roland Vossen" <rvossen@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 45/83] staging: brcm80211: deleted sbconfig.h, renamed
- sbcc.h
-Date: Wed, 1 Jun 2011 13:45:30 +0200
-Message-ID: <1306928768-7501-45-git-send-email-rvossen@broadcom.com> (sfid-20110601_134719_420161_D4FBA143)
+Subject: [PATCH 22/83] staging: brcm80211: removed 'hnd' from filenames
+Date: Wed, 1 Jun 2011 13:45:07 +0200
+Message-ID: <1306928768-7501-22-git-send-email-rvossen@broadcom.com> (sfid-20110601_134926_572336_90D90EC2)
 In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
@@ -17,248 +16,407 @@ Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup.
+Cleanup. 'hnd' is a company specific acronym.
 
 Signed-off-by: Roland Vossen <rvossen@broadcom.com>
 Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    2 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    8 ++++----
+ .../brcmfmac/{hndrte_armtrap.h => rte_armtrap.h}   |    0
+ .../brcmfmac/{hndrte_cons.h => rte_cons.h}         |    0
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    2 +-
  drivers/staging/brcm80211/brcmsmac/aiutils.c       |    2 +-
+ .../{include/hnddma.h => brcmsmac/bcmdma.h}        |    0
  drivers/staging/brcm80211/brcmsmac/bcmotp.c        |    2 +-
  drivers/staging/brcm80211/brcmsmac/bcmsrom.c       |    2 +-
+ .../staging/brcm80211/brcmsmac/{hnddma.c => dma.c} |    6 +++---
  drivers/staging/brcm80211/brcmsmac/nicpci.c        |    2 +-
  drivers/staging/brcm80211/brcmsmac/nvram.c         |    2 +-
  .../staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c   |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    2 +-
  drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c |    2 +-
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    2 +-
- drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c  |    2 +-
- drivers/staging/brcm80211/brcmsmac/wlc_pmu.c       |    2 +-
- drivers/staging/brcm80211/include/bcmdefs.h        |   12 +++++++
- drivers/staging/brcm80211/include/bcmsoc.h         |    1 -
- .../brcm80211/include/{sbchipc.h => chipcommon.h}  |    0
- drivers/staging/brcm80211/include/sbconfig.h       |   32 --------------------
- 15 files changed, 23 insertions(+), 44 deletions(-)
- rename drivers/staging/brcm80211/include/{sbchipc.h => chipcommon.h} (100%)
- delete mode 100644 drivers/staging/brcm80211/include/sbconfig.h
+ .../brcm80211/brcmsmac/phy/wlc_phytbl_lcn.c        |    2 +-
+ .../staging/brcm80211/brcmsmac/phy/wlc_phytbl_n.c  |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_alloc.c     |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c     |    4 ++--
+ drivers/staging/brcm80211/brcmsmac/wlc_antsel.c    |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c      |    4 ++--
+ drivers/staging/brcm80211/brcmsmac/wlc_channel.c   |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c      |    4 ++--
+ drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c  |    4 ++--
+ drivers/staging/brcm80211/brcmsmac/wlc_rate.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_stf.c       |    2 +-
+ .../brcm80211/include/{hndsoc.h => bcmsoc.h}       |    0
+ .../brcm80211/include/{sbhnddma.h => sbdma.h}      |    0
+ 29 files changed, 33 insertions(+), 33 deletions(-)
+ rename drivers/staging/brcm80211/brcmfmac/{hndrte_armtrap.h => rte_armtrap.h} (100%)
+ rename drivers/staging/brcm80211/brcmfmac/{hndrte_cons.h => rte_cons.h} (100%)
+ rename drivers/staging/brcm80211/{include/hnddma.h => brcmsmac/bcmdma.h} (100%)
+ rename drivers/staging/brcm80211/brcmsmac/{hnddma.c => dma.c} (99%)
+ rename drivers/staging/brcm80211/include/{hndsoc.h => bcmsoc.h} (100%)
+ rename drivers/staging/brcm80211/include/{sbhnddma.h => sbdma.h} (100%)
 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 3750fcf..e11c615 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -21,7 +21,7 @@
+ #include <bcmdefs.h>
+ #include <bcmdevs.h>
+ #include <bcmutils.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ 
+ #include <bcmsdh.h>		/* BRCM API for SDIO
+ 			 clients (such as wl, dhd) */
 diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 275fa7c..67768bb 100644
+index 7b94613..9593cff 100644
 --- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
 +++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -130,7 +130,7 @@ typedef struct {
- } rte_cons_t;
+@@ -29,13 +29,13 @@
+ #include <bcmutils.h>
+ #include <bcmdevs.h>
  
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ #ifdef DHD_DEBUG
+-#include <hndrte_armtrap.h>
+-#include <hndrte_cons.h>
++#include <rte_armtrap.h>
++#include <rte_cons.h>
  #endif				/* DHD_DEBUG */
--#include <sbchipc.h>
-+#include <chipcommon.h>
- #include <sbdma.h>
+ #include <sbchipc.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
  
  #include <sdio.h>
+ #include <sbsdio.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/hndrte_armtrap.h b/drivers/staging/brcm80211/brcmfmac/rte_armtrap.h
+similarity index 100%
+rename from drivers/staging/brcm80211/brcmfmac/hndrte_armtrap.h
+rename to drivers/staging/brcm80211/brcmfmac/rte_armtrap.h
+diff --git a/drivers/staging/brcm80211/brcmfmac/hndrte_cons.h b/drivers/staging/brcm80211/brcmfmac/rte_cons.h
+similarity index 100%
+rename from drivers/staging/brcm80211/brcmfmac/hndrte_cons.h
+rename to drivers/staging/brcm80211/brcmfmac/rte_cons.h
+diff --git a/drivers/staging/brcm80211/brcmsmac/Makefile b/drivers/staging/brcm80211/brcmsmac/Makefile
+index 8d75fe1..4356a29 100644
+--- a/drivers/staging/brcm80211/brcmsmac/Makefile
++++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+@@ -49,7 +49,7 @@ BRCMSMAC_OFILES := \
+ 	phy/wlc_phy_qmath.o \
+ 	bcmotp.o \
+ 	bcmsrom.o \
+-	hnddma.o \
++	dma.o \
+ 	nicpci.o \
+ 	nvram.o
+ 
 diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index e065895..2de6cfb 100644
+index a61185f..73587b3 100644
 --- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
 +++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -23,7 +23,7 @@
+@@ -22,7 +22,7 @@
+ #include <linux/pci.h>
  #include <bcmutils.h>
  #include <aiutils.h>
- #include <bcmsoc.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ #include <sbchipc.h>
+ #include <pcicfg.h>
  #include <bcmdevs.h>
- 
- /* ********** from siutils.c *********** */
+diff --git a/drivers/staging/brcm80211/include/hnddma.h b/drivers/staging/brcm80211/brcmsmac/bcmdma.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/hnddma.h
+rename to drivers/staging/brcm80211/brcmsmac/bcmdma.h
 diff --git a/drivers/staging/brcm80211/brcmsmac/bcmotp.c b/drivers/staging/brcm80211/brcmsmac/bcmotp.c
-index dab71fb..2b7f061 100644
+index d09628b..f025641 100644
 --- a/drivers/staging/brcm80211/brcmsmac/bcmotp.c
 +++ b/drivers/staging/brcm80211/brcmsmac/bcmotp.c
-@@ -26,7 +26,7 @@
+@@ -25,7 +25,7 @@
+ #include <bcmdevs.h>
  #include <bcmutils.h>
  #include <aiutils.h>
- #include <bcmsoc.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ #include <sbchipc.h>
  #include <bcmotp.h>
  
- #define OTPS_GUP_MASK		0x00000f00
 diff --git a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-index c776a76..2946d06 100644
+index bbfc642..9de10fe 100644
 --- a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
 +++ b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-@@ -23,7 +23,7 @@
- #include "wlc_types.h"
+@@ -21,7 +21,7 @@
+ #include <linux/pci.h>
+ #include <stdarg.h>
  #include <bcmutils.h>
- #include <bcmsoc.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ #include <sbchipc.h>
  #include <bcmdevs.h>
- #include <nicpci.h>
+ #include <pcicfg.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/hnddma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+similarity index 99%
+rename from drivers/staging/brcm80211/brcmsmac/hnddma.c
+rename to drivers/staging/brcm80211/brcmsmac/dma.c
+index f607315..6fde51f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/hnddma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -20,12 +20,12 @@
+ #include <linux/pci.h>
+ #include <bcmdefs.h>
+ #include <bcmdevs.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ #include <bcmutils.h>
  #include <aiutils.h>
+ 
+-#include <sbhnddma.h>
+-#include <hnddma.h>
++#include <sbdma.h>
++#include <bcmdma.h>
+ 
+ #if defined(__mips__)
+ #include <asm/addrspace.h>
 diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-index 8bc65e0..6b9cb6b 100644
+index 18b844a..51d56b6 100644
 --- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
 +++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-@@ -23,7 +23,7 @@
+@@ -21,7 +21,7 @@
+ #include <bcmutils.h>
+ #include <bcmnvram.h>
  #include <aiutils.h>
- #include <bcmsoc.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
  #include <bcmdevs.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
- #include <nicpci.h>
- 
- /* SPROM offsets */
+ #include <sbchipc.h>
+ #include <pci_core.h>
 diff --git a/drivers/staging/brcm80211/brcmsmac/nvram.c b/drivers/staging/brcm80211/brcmsmac/nvram.c
-index 65fee2f..5cef837 100644
+index 085ec0b..65fee2f 100644
 --- a/drivers/staging/brcm80211/brcmsmac/nvram.c
 +++ b/drivers/staging/brcm80211/brcmsmac/nvram.c
-@@ -19,7 +19,7 @@
- #include <bcmdefs.h>
- #include <bcmutils.h>
+@@ -21,7 +21,7 @@
  #include <bcmnvram.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+ #include <sbchipc.h>
  #include <bcmdevs.h>
- #include <bcmsoc.h>
+-#include <hndsoc.h>
++#include <bcmsoc.h>
+ 
+ #define NVR_MSG(x)
  
 diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-index 1e9865f..d54e264 100644
+index 07a5bcb..22ba415 100644
 --- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
 +++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_cmn.c
-@@ -25,7 +25,7 @@
- 
- #include <bcmdefs.h>
+@@ -27,7 +27,7 @@
  #include <bcmnvram.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+ #include <sbchipc.h>
  #include <bcmdevs.h>
- #include <sbdma.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
  
+ #include <wlc_phy_int.h>
+ #include <wlc_phyreg_n.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index b8864c5..b5ec9ae 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -25,7 +25,7 @@
+ #include <bcmnvram.h>
+ 
+ #include <bcmdevs.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "wlc_phy_radio.h"
+ #include "wlc_phy_int.h"
 diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
-index 78d8cbe..bc362f3 100644
+index 7127509..123bd6a 100644
 --- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
 +++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_n.c
-@@ -21,7 +21,7 @@
- #include <linux/delay.h>
- #include <linux/pci.h>
- #include <aiutils.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+@@ -25,7 +25,7 @@
  #include <wlc_pmu.h>
  
  #include <bcmdevs.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include <wlc_phy_radio.h>
+ #include <wlc_phy_int.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_lcn.c
+index 81c59b0..e9d8661 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_lcn.c
+@@ -15,7 +15,7 @@
+  */
+ 
+ #include <linux/types.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ #include <wlc_phy_int.h>
+ #include <wlc_phytbl_lcn.h>
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_n.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_n.c
+index 742df99..e4a15c4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phytbl_n.c
+@@ -16,7 +16,7 @@
+ 
+ #include <linux/kernel.h>
+ 
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ #include <wlc_phy_int.h>
+ #include <wlc_phytbl_n.h>
+ 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 590d65b..f58272a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -32,7 +32,7 @@
+ #include <bcmutils.h>
+ #include <bcmnvram.h>
+ #include <pcicfg.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "phy/wlc_phy_int.h"
+ #include "d11.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_alloc.c b/drivers/staging/brcm80211/brcmsmac/wlc_alloc.c
+index 3b04e02..8a4875d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_alloc.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_alloc.c
+@@ -19,7 +19,7 @@
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
+ #include <aiutils.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "d11.h"
+ #include "wlc_types.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+index c83896b..53ca0ff 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_ampdu.c
+@@ -19,8 +19,8 @@
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
+ #include <aiutils.h>
+-#include <sbhnddma.h>
+-#include <hnddma.h>
++#include <sbdma.h>
++#include <bcmdma.h>
+ #include <d11.h>
+ 
+ #include "wlc_types.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+index efdc62a..d26a520 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_antsel.c
+@@ -25,7 +25,7 @@
+ #include <bcmnvram.h>
+ #include <aiutils.h>
+ #include <bcmdevs.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "d11.h"
+ #include "wlc_rate.h"
 diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-index d069ebe..0f876a7 100644
+index f98f0fd..492fb3e 100644
 --- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
 +++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-@@ -29,7 +29,7 @@
- #include <bcmotp.h>
+@@ -33,8 +33,8 @@
+ #include <sbconfig.h>
+ #include <sbchipc.h>
+ #include <pcicfg.h>
+-#include <sbhnddma.h>
+-#include <hnddma.h>
++#include <sbdma.h>
++#include <bcmdma.h>
+ 
+ #include "wlc_types.h"
+ #include "wlc_pmu.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+index 9e29339..0b980ac 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_channel.c
+@@ -23,7 +23,7 @@
  #include <bcmutils.h>
  #include <bcmnvram.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
- #include <nicpci.h>
- #include <sbdma.h>
- #include <bcmdma.h>
+ #include <aiutils.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "wlc_types.h"
+ #include "d11.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 54b5b79..c63920c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -27,8 +27,8 @@
+ #include <aiutils.h>
+ #include <pcicfg.h>
+ #include <bcmsrom.h>
+-#include <sbhnddma.h>
+-#include <hnddma.h>
++#include <sbdma.h>
++#include <bcmdma.h>
+ 
+ #include "wlc_pmu.h"
+ #include "d11.h"
 diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
-index c94b459..b97fa3e 100644
+index c33b61b..3a80706 100644
 --- a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
 +++ b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
-@@ -28,7 +28,7 @@
- #include <bcmutils.h>
- #include <bcmwifi.h>
- #include <aiutils.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
- #include <sbdma.h>
- #include <bcmdma.h>
+@@ -33,8 +33,8 @@
+ #include <sbconfig.h>
+ #include <sbchipc.h>
+ #include <pcicfg.h>
+-#include <sbhnddma.h>
+-#include <hnddma.h>
++#include <sbdma.h>
++#include <bcmdma.h>
  #include <wlc_pmu.h>
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-index ab2c0b7..047cd1a 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pmu.c
-@@ -19,7 +19,7 @@
- #include <linux/io.h>
  
- #include <bcmdevs.h>
--#include <sbchipc.h>
-+#include <chipcommon.h>
+ #include "wlc_types.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_rate.c b/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
+index 6c9574a..4b84cc1 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_rate.c
+@@ -20,7 +20,7 @@
+ #include <bcmdefs.h>
  #include <bcmutils.h>
+ #include <aiutils.h>
+-#include <sbhnddma.h>
++#include <sbdma.h>
+ 
+ #include "wlc_types.h"
+ #include "d11.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+index ca1b8aa..cd051d9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_stf.c
+@@ -24,7 +24,7 @@
+ #include <aiutils.h>
+ #include <bcmwifi.h>
  #include <bcmnvram.h>
- #include "wlc_pmu.h"
-diff --git a/drivers/staging/brcm80211/include/bcmdefs.h b/drivers/staging/brcm80211/include/bcmdefs.h
-index cf9dc0e..304d8ed 100644
---- a/drivers/staging/brcm80211/include/bcmdefs.h
-+++ b/drivers/staging/brcm80211/include/bcmdefs.h
-@@ -95,4 +95,16 @@ typedef struct wl_rateset {
- #define PM_MAX	1
- #define PM_FAST 2
+-#include <sbhnddma.h>
++#include <sbdma.h>
  
-+/*
-+ * Sonics Configuration Space Registers.
-+ */
-+#define	SBCONFIGOFF		0xf00	/* core sbconfig regs are top 256bytes of regs */
-+
-+/* cpp contortions to concatenate w/arg prescan */
-+#ifndef	PAD
-+#define	_PADLINE(line)	pad ## line
-+#define	_XSTR(line)	_PADLINE(line)
-+#define	PAD		_XSTR(__LINE__)
-+#endif
-+
- #endif				/* _bcmdefs_h_ */
-diff --git a/drivers/staging/brcm80211/include/bcmsoc.h b/drivers/staging/brcm80211/include/bcmsoc.h
-index 6435686..012e465 100644
---- a/drivers/staging/brcm80211/include/bcmsoc.h
-+++ b/drivers/staging/brcm80211/include/bcmsoc.h
-@@ -18,7 +18,6 @@
- #define	_HNDSOC_H
- 
- /* Include the soci specific files */
--#include <sbconfig.h>
- #include <aidmp.h>
- 
- /*
-diff --git a/drivers/staging/brcm80211/include/sbchipc.h b/drivers/staging/brcm80211/include/chipcommon.h
+ #include "wlc_types.h"
+ #include "d11.h"
+diff --git a/drivers/staging/brcm80211/include/hndsoc.h b/drivers/staging/brcm80211/include/bcmsoc.h
 similarity index 100%
-rename from drivers/staging/brcm80211/include/sbchipc.h
-rename to drivers/staging/brcm80211/include/chipcommon.h
-diff --git a/drivers/staging/brcm80211/include/sbconfig.h b/drivers/staging/brcm80211/include/sbconfig.h
-deleted file mode 100644
-index 68e4b54..0000000
---- a/drivers/staging/brcm80211/include/sbconfig.h
-+++ /dev/null
-@@ -1,32 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef	_SBCONFIG_H
--#define	_SBCONFIG_H
--
--/* cpp contortions to concatenate w/arg prescan */
--#ifndef PAD
--#define	_PADLINE(line)	pad ## line
--#define	_XSTR(line)	_PADLINE(line)
--#define	PAD		_XSTR(__LINE__)
--#endif
--
--/*
-- * Sonics Configuration Space Registers.
-- */
--#define	SBCONFIGOFF		0xf00	/* core sbconfig regs are top 256bytes of regs */
--
--#endif				/* _SBCONFIG_H */
+rename from drivers/staging/brcm80211/include/hndsoc.h
+rename to drivers/staging/brcm80211/include/bcmsoc.h
+diff --git a/drivers/staging/brcm80211/include/sbhnddma.h b/drivers/staging/brcm80211/include/sbdma.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/sbhnddma.h
+rename to drivers/staging/brcm80211/include/sbdma.h
 -- 
 1.7.4.1
 
