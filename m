@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55832 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1FYNI4 (ORCPT
+Received: from smtp5.freeserve.com ([193.252.22.151]:31845 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758733Ab1FAKs6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2011 09:08:56 -0400
-Subject: Re: [3.0 regression] DMAR faults in iwlagn
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Lutomirski <luto@mit.edu>,
-	Kyle McMartin <kmcmartin@redhat.com>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTi=-=EbuijX-RLeyD-GKv+fFYf+B2g@mail.gmail.com> (sfid-20110624_171411_462603_69EC6B86)
-References: <BANLkTikKia-UXL8LJ60sLDV1uZBFEP8Kwg@mail.gmail.com>
-	 <1308774283.29571.24.camel@jlt3.sipsolutions.net>
-	 <BANLkTi=-=EbuijX-RLeyD-GKv+fFYf+B2g@mail.gmail.com>
-	 (sfid-20110624_171411_462603_69EC6B86)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 25 Jun 2011 15:08:51 +0200
-Message-ID: <1309007331.4317.1.camel@jlt3.sipsolutions.net> (sfid-20110625_150858_988329_FE02490B)
+	Wed, 1 Jun 2011 06:48:58 -0400
+Date: Wed, 1 Jun 2011 11:48:39 +0100
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael =?ISO-8859-1?B?QvxzY2g=?= <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: b43 error under heavy load
+Message-ID: <20110601114839.433ae42d@boulder.homenet> (sfid-20110601_124902_625631_9EAFB909)
+In-Reply-To: <BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
+References: <4CEAB969.20702@lwfinger.net>
+	<1290451982.20888.2.camel@maggie>
+	<4CEAC095.7020706@lwfinger.net>
+	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
+	<4DC9853A.1090508@lwfinger.net>
+	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
+	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-24 at 09:13 -0600, Andrew Lutomirski wrote:
-> On Wed, Jun 22, 2011 at 2:24 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Andy, could you try this patch?
+On Wed, 1 Jun 2011 11:23:45 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+> W dniu 1 czerwca 2011 01:29 użytkownik Chris Vine
+> <chris@cvine.freeserve.co.uk> napisał:
+> > However, fixing this bug reveals something else.  After about 2
+> > hours of streaming on MLB.TV I got this, apparently at random (but
+> > this is not a hard error: by disassociating from the AP and
+> > reassociating, the rest of the game played fine, and there was no
+> > need to load or unload modules):
 > >
-> > I haven't tested it at all yet, it's kinda late here.
-
-> Works for me.
+> > b43-phy0 debug: TX-status contains invalid cookie: 0x0DCE
+> > b43-phy0 debug: Out of order TX status report on DMA ring 1.
+> > Expected 74, but got 76
 > 
-> Tested-by: Andy Lutomirski <luto@mit.edu>
+> Chris, my first suspicion for this issue is filling the whole TX
+> buffer. This could explain what does it happen on high traffic.
+> 
+> Below there is an idea how we can easily test it. Can you take a look
+> at this, and perform some testing?
+> 
+> 
+> 2011/5/10 Rafał Miłecki <zajec5@gmail.com>:
+> > It seems to happen only under heavy load... maybe it has something
+> > to do with reaching end of the ring (not whole ring, just end of
+> > free slots)?
+> >
+> > Did you try verbose debugging? I wonder if there is any relation
+> > between Out of order and:
+> > if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+> >        b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+> > }
+> >
+> > Could you try it?
+> 
+> AFAIK to enable this debugging you only need to:
+> echo 1 > /sys/kernel/debug/b43/phy0/debug_dmaverbose
 
-Thanks Andrew, Kyle.
+I don't have a /sys/kernel/debug directory with a running 3.0.0-rc1
+kernel, so it appears that b43 debugging (which I do have enabled)
+doesn't use it.
 
-I don't pretend to understand what the device is doing, but for now I
-guess we'll keep this and I'll try to figure out independently why this
-happens.
+On the question of whether it is a firmware problem, I have not
+experienced a similar issue with the wl driver, but the firmware that
+b43 uses from broadcom-wl-4.178.10.4 seems to be an earlier version, so
+that does not rule out the firmware: the earliest hybrid-portsrc wl
+driver I have used is v5.10.91.9.3.
 
-johannes
+Chris
+
 
