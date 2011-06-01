@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58723 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182Ab1FXPNs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 11:13:48 -0400
-Received: by pzk9 with SMTP id 9so1833600pzk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 08:13:47 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2305 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758818Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:29 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 58/83] staging: brcm80211: clean up wl_iw.h in fullmac
+Date: Wed, 1 Jun 2011 13:45:43 +0200
+Message-ID: <1306928768-7501-58-git-send-email-rvossen@broadcom.com> (sfid-20110601_134931_192386_42477D0B)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1308774283.29571.24.camel@jlt3.sipsolutions.net>
-References: <BANLkTikKia-UXL8LJ60sLDV1uZBFEP8Kwg@mail.gmail.com> <1308774283.29571.24.camel@jlt3.sipsolutions.net>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Fri, 24 Jun 2011 09:13:27 -0600
-Message-ID: <BANLkTi=-=EbuijX-RLeyD-GKv+fFYf+B2g@mail.gmail.com> (sfid-20110624_171354_998101_2CB4DBA8)
-Subject: Re: [3.0 regression] DMAR faults in iwlagn
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 2:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Andy, could you try this patch?
->
-> I haven't tested it at all yet, it's kinda late here.
->
-> johannes
->
-> iwlagn: map command buffers BIDI
+From: Franky Lin <frankyl@broadcom.com>
 
-Works for me.
+Remove #include lines in wl_iw.h
 
-Tested-by: Andy Lutomirski <luto@mit.edu>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    2 --
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c         |    1 +
+ drivers/staging/brcm80211/brcmfmac/wl_iw.h         |    2 --
+ 3 files changed, 1 insertions(+), 4 deletions(-)
 
-Thanks!
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+index a3ea415..a942333 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+@@ -23,8 +23,6 @@
+ #include <dngl_stats.h>
+ #include <dhd.h>
+ 
+-#include <wl_iw.h>
+-
+ #define WL_ERROR(fmt, args...) printk(fmt, ##args)
+ #define WL_TRACE(fmt, args...) no_printk(fmt, ##args)
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index da052e7e..47960de 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -19,6 +19,7 @@
+ #include <bcmdefs.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
++#include <linux/wireless.h>
+ 
+ #include <bcmutils.h>
+ #include <bcmwifi.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.h b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
+index c92a8b5..aa8902c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
+@@ -17,8 +17,6 @@
+ #ifndef _wl_iw_h_
+ #define _wl_iw_h_
+ 
+-#include <linux/wireless.h>
+-
+ #define WL_SCAN_PARAMS_SSID_MAX	10
+ #define GET_SSID	"SSID="
+ #define GET_CHANNEL	"CH="
+-- 
+1.7.4.1
+
+
