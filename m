@@ -1,177 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47527 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754803Ab1FSVwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 17:52:15 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v2 06/12] bcma: add serial console support
-Date: Sun, 19 Jun 2011 23:50:03 +0200
-Message-Id: <1308520209-668-7-git-send-email-hauke@hauke-m.de> (sfid-20110619_235220_393580_3E1954C9)
-In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
-References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.neratec.ch ([80.75.119.105]:50239 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161739Ab1FAIfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 04:35:30 -0400
+Message-ID: <4DE5F9CE.7080904@neratec.com> (sfid-20110601_103536_792286_7B5C04B7)
+Date: Wed, 01 Jun 2011 10:35:26 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: "M. A." <jdiq123@googlemail.com>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] Override Minstrel HT RC to set an MCS bitrate (mask)
+References: <AANLkTin2ob-EOmY_iqxZbQ98dTA6_vAGsGWrMNKBZTVV@mail.gmail.com>	<AANLkTinRhmByJFoMLsN82ZVfvRa=WOsKVhAcbk8hX2Pv@mail.gmail.com>	<BANLkTinQcXReH8JXFVvmv1LG_7rUog--jg@mail.gmail.com> <BANLkTimv8_GYyMCH_M3Pyv9_5R+wvr8YpA@mail.gmail.com>
+In-Reply-To: <BANLkTimv8_GYyMCH_M3Pyv9_5R+wvr8YpA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for serial console to bcma, when operating on an
-embedded device.
+Hi M.A.,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/bcma_private.h           |    6 +++
- drivers/bcma/driver_chipcommon.c      |   64 +++++++++++++++++++++++++++++++++
- drivers/bcma/driver_mips.c            |    9 +++++
- include/linux/bcma/bcma_driver_mips.h |   11 ++++++
- 4 files changed, 90 insertions(+), 0 deletions(-)
+I posted a related patch two weeks ago (see. [1]).
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index c0685ac..17a2358 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -34,6 +34,12 @@ int bcma_sprom_get(struct bcma_bus *bus);
- unsigned int bcma_core_mips_irq(struct bcma_device *dev);
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
-+/* driver_chipcommon.c */
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
-+				   struct bcma_drv_mips_serial_port *ports);
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
-+
- #ifdef CONFIG_BCMA_HOST_PCI
- /* host_pci.c */
- extern int __init bcma_host_pci_init(void);
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 70321c6..88533ca 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -92,3 +92,67 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
- 	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
- }
-+
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
-+			    struct bcma_drv_mips_serial_port *ports)
-+{
-+	int nr_ports = 0;
-+	u32 plltype;
-+	unsigned int irq;
-+	u32 baud_base, div;
-+	u32 i, n;
-+	unsigned int ccrev = cc->core->id.rev;
-+
-+	plltype = (cc->capabilities & BCMA_CC_CAP_PLLT);
-+	irq = bcma_core_mips_irq(cc->core);
-+
-+	if ((ccrev >= 11) && (ccrev != 15) && (ccrev != 20)) {
-+		/* Fixed ALP clock */
-+		baud_base = 20000000;
-+		if (cc->capabilities & BCMA_CC_CAP_PMU) {
-+			/* FIXME: baud_base is different for devices with a PMU */
-+			WARN_ON(1);
-+		}
-+		div = 1;
-+		if (ccrev >= 21) {
-+			/* Turn off UART clock before switching clocksource. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       & ~BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+		/* Set the override bit so we don't divide it */
-+		bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+			       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+			       | BCMA_CC_CORECTL_UARTCLK0);
-+		if (ccrev >= 21) {
-+			/* Re-enable the UART clock. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       | BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+	} else
-+		pr_err("serial not supported on this device ccrev: 0x%x\n",
-+		       ccrev);
-+
-+	/* Determine the registers of the UARTs */
-+	n = (cc->capabilities & BCMA_CC_CAP_NRUART);
-+	for (i = 0; i < n; i++) {
-+		void __iomem *cc_mmio;
-+		void __iomem *uart_regs;
-+
-+		cc_mmio = cc->core->bus->mmio +
-+			  (cc->core->core_index * BCMA_CORE_SIZE);
-+		uart_regs = cc_mmio + BCMA_CC_UART0_DATA;
-+		uart_regs += (i * 256);
-+
-+		nr_ports++;
-+		ports[i].regs = uart_regs;
-+		ports[i].irq = irq;
-+		ports[i].baud_base = baud_base;
-+		ports[i].reg_shift = 0;
-+	}
-+
-+	return nr_ports;
-+}
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index d49f9af..6524b44 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -155,6 +155,14 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
- 	}
- }
- 
-+static void bcma_core_mips_serial_init(struct bcma_drv_mips *mcore)
-+{
-+	struct bcma_bus *bus = mcore->core->bus;
-+
-+	mcore->nr_serial_ports = bcma_chipco_serial_init(&bus->drv_cc,
-+							 mcore->serial_ports);
-+}
-+
- static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus = mcore->core->bus;
-@@ -227,6 +235,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 	if (mcore->setup_done)
- 		return;
- 
-+	bcma_core_mips_serial_init(mcore);
- 	bcma_core_mips_flash_detect(mcore);
- 	mcore->setup_done = true;
- }
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index 6bd7555..ce0a578 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -32,11 +32,22 @@
- 
- struct bcma_device;
- 
-+struct bcma_drv_mips_serial_port {
-+	void *regs;
-+	unsigned long clockspeed;
-+	unsigned int irq;
-+	unsigned int baud_base;
-+	unsigned int reg_shift;
-+};
-+
- struct bcma_drv_mips {
- 	struct bcma_device *core;
- 	u8 setup_done:1;
- 	unsigned int assigned_irqs;
- 
-+	int nr_serial_ports;
-+	struct bcma_drv_mips_serial_port serial_ports[4];
-+
- 	u8 flash_buswidth;
- 	u32 flash_window;
- 	u32 flash_window_size;
--- 
-1.7.4.1
+It was addressed also to you, since I remembered you were asking for
+such a feature. Isn't it doing what it should?
+
+
+Cheers
+
+
+[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/70428/
+
+On 05/31/2011 07:06 PM, M. A. wrote:
+> Hi all,
+> 
+> I would be grateful if anyone can advise on setting/masking a fixed
+> MCS HT rate (ath9k) at runtime, as I am only able to mask legacy
+> rates..
+> 
+> If this is not yet implemented, can anyone please advise on how to
+> implement this as I am in urgent need of this functionality.
+> 
+> Thank you all in advance!
+> 
+> 
+>> On Tue, Mar 15, 2011 at 5:02 AM, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+>>> On Tue, Mar 8, 2011 at 11:10 PM, M. A. <jdiq123@googlemail.com> wrote:
+>>>> Hi all,
+>>>>
+>>>> My question is how can I modify Minstrel HT rate control to be able to
+>>>> override it (by a boolean or otherwise) to select an MCS or specific
+>>>> rate index from user space (such that once set it driver will only try
+>>>> sending at that rate until unset then driver will resort back to
+>>>> Minstrel RC).
+>>>
+>>> I don't think we can fix the MCS rate index from user space, may be we
+>>> need a hack.
+>>> iw  dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
+>>> and this is only for legacy rates.
+>>>
+>>>
+>>>>
+>>>> I have been able to change other kernel parameters at runtime(echo
+>>>> /sys/kernel/debug/ieee80211/...) by passing them through (fops) to
+>>>> DebugFs. however I am unsure of what parameters to pass through in the
+>>>> case of MCS rate fixing and what modifications to the code are
+>>>> required to achieve this.
+>>>
+>>> don't know and I am not sure whether this can be easily done.
+>>>
+>>>>
+>>>>
+>>>> Also I have been told that these sections of code facilitate the
+>>>> masking of rates;
+>>>>
+>>>> =========================================================================
+>>>> include/net/cfg80211.h: cfg80211_bitrate_mask
+>>>> -------------------------------------------------------------------------------------------------------
+>>>> /*
+>>>>  * cfg80211_bitrate_mask - masks for bitrate control
+>>>>  */
+>>>> struct cfg80211_bitrate_mask {
+>>>>        struct {
+>>>>                u32 legacy;
+>>>>                /* TODO: add support for masking MCS rates; e.g.: */
+>>>>                /* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
+>>>>        } control[IEEE80211_NUM_BANDS];
+>>>> };
+>>>> -------------------------------------------------------------------------------------------------------
+>>>> net/mac80211/cfg.c ieee80211_set_bitrate_mask
+>>>> -------------------------------------------------------------------------------------------------------
+>>>> static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+>>>>                                      struct net_device *dev,
+>>>>                                      const u8 *addr,
+>>>>                                      const struct cfg80211_bitrate_mask *mask)
+>>>> {
+>>>>        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>>>>        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+>>>>        int i;
+>>>>
+>>>>        /*
+>>>>         * This _could_ be supported by providing a hook for
+>>>>         * drivers for this function, but at this point it
+>>>>         * doesn't seem worth bothering.
+>>>>         */
+>>>>        if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+>>>>                return -EOPNOTSUPP;
+>>>>
+>>>>
+>>>>        for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+>>>>                sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+>>>>
+>>>>        return 0;
+>>>> }
+>>>> -------------------------------------------------------------------------------------------------------
+>>>> net/wireless/nl80211.c: nl80211_set_tx_bitrate_mask
+>>>> -------------------------------------------------------------------------------------------------------
+>>>> static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+>>>>                                       struct genl_info *info)
+>>>> {
+>>>>        struct nlattr *tb[NL80211_TXRATE_MAX + 1];
+>>>>        struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>>>>        struct cfg80211_bitrate_mask mask;
+>>>>        int rem, i;
+>>>>        struct net_device *dev = info->user_ptr[1];
+>>>>        struct nlattr *tx_rates;
+>>>>        struct ieee80211_supported_band *sband;
+>>>>
+>>>>        if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
+>>>>                return -EINVAL;
+>>>>
+>>>>        if (!rdev->ops->set_bitrate_mask)
+>>>>                return -EOPNOTSUPP;
+>>>>
+>>>>        memset(&mask, 0, sizeof(mask));
+>>>>        /* Default to all rates enabled */
+>>>>        for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+>>>>                sband = rdev->wiphy.bands[i];
+>>>>                mask.control[i].legacy =
+>>>>                        sband ? (1 << sband->n_bitrates) - 1 : 0;
+>>>>        }
+>>>>
+>>>>        /*
+>>>>         * The nested attribute uses enum nl80211_band as the index. This maps
+>>>>         * directly to the enum ieee80211_band values used in cfg80211.
+>>>>         */
+>>>>        nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+>>>>        {
+>>>>                enum ieee80211_band band = nla_type(tx_rates);
+>>>>                if (band < 0 || band >= IEEE80211_NUM_BANDS)
+>>>>                        return -EINVAL;
+>>>>                sband = rdev->wiphy.bands[band];
+>>>>                if (sband == NULL)
+>>>>                        return -EINVAL;
+>>>>                nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+>>>>                          nla_len(tx_rates), nl80211_txattr_policy);
+>>>>                if (tb[NL80211_TXRATE_LEGACY]) {
+>>>>                        mask.control[band].legacy = rateset_to_mask(
+>>>>                                sband,
+>>>>                                nla_data(tb[NL80211_TXRATE_LEGACY]),
+>>>>                                nla_len(tb[NL80211_TXRATE_LEGACY]));
+>>>>                        if (mask.control[band].legacy == 0)
+>>>>                                return -EINVAL;
+>>>>                }
+>>>>        }
+>>>>
+>>>>        return rdev->ops->set_bitrate_mask(&rdev->wiphy, dev, NULL, &mask);
+>>>> }
+>>>
+>>> As you see everything is for legacy thing and for MCS it's a TODO section.
+>>>
+>>>> ====================================================================================================================
+>>>>
+>>>>
+>>>> Any help is much appreciated!
+>>>>
+>>>> Thank you all very much
+>>>> _______________________________________________
+>>>> ath9k-devel mailing list
+>>>> ath9k-devel@lists.ath9k.org
+>>>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>>>>
+>>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
