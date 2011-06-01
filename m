@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2020 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4848 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758063Ab1F2Xs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:57 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1161298Ab1FALq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:27 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 073/119] staging: brcm80211: remove custom gpio support
- code
-Date: Wed, 29 Jun 2011 16:47:37 -0700
-Message-ID: <1309391303-22741-74-git-send-email-frankyl@broadcom.com> (sfid-20110630_015722_901229_434DF537)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 33/83] staging: brcm80211: remove inclusion of
+ bcmsrom_fmt.h
+Date: Wed, 1 Jun 2011 13:45:18 +0200
+Message-ID: <1306928768-7501-33-git-send-email-rvossen@broadcom.com> (sfid-20110601_134649_314297_4811FF8D)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -19,39 +19,400 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Arend van Spriel <arend@broadcom.com>
 
-The custom gpio code is intended for hardware platform for specific
-customers and require supporting functionality not included in the
-fullmac driver. The fullmac driver does not need this so it has been
-removed.
+The header file bcmsrom_fmt.h contains a lot of macro definitions
+used by bcmsrom.c and one type definition used by wlc_phy_int.h.
+The defintions have been moved appropriately and the include file
+bcmsrom_fmt.h is removed.
 
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/Makefile        |    1 -
- .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |  156 --------------------
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    8 +-
- 3 files changed, 1 insertions(+), 164 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+ drivers/staging/brcm80211/brcmsmac/bcmsrom.c       |  311 +++++++++++++++++
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |   13 +-
+ drivers/staging/brcm80211/include/bcmsrom.h        |    2 -
+ drivers/staging/brcm80211/include/bcmsrom_fmt.h    |  367 --------------------
+ 4 files changed, 321 insertions(+), 372 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/include/bcmsrom_fmt.h
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
-index f097246..c38fa55 100644
---- a/drivers/staging/brcm80211/brcmfmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-@@ -30,7 +30,6 @@ DHDOFILES = \
- 	wl_cfg80211.o \
- 	dhd_cdc.o \
- 	dhd_common.o \
--	dhd_custom_gpio.o \
- 	dhd_sdio.o	\
- 	dhd_linux.o \
- 	bcmsdh.o \
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+diff --git a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
+index a1a2fc5..d374673 100644
+--- a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
++++ b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
+@@ -41,6 +41,317 @@
+ #define WRITE_WORD_DELAY	20	/* 20 ms between each word write */
+ #endif
+ 
++/* Maximum srom: 6 Kilobits == 768 bytes */
++#define	SROM_MAX		768
++
++/* PCI fields */
++#define PCI_F0DEVID		48
++
++#define	SROM_WORDS		64
++
++#define	SROM_SSID		2
++
++#define	SROM_WL1LHMAXP		29
++
++#define	SROM_WL1LPAB0		30
++#define	SROM_WL1LPAB1		31
++#define	SROM_WL1LPAB2		32
++
++#define	SROM_WL1HPAB0		33
++#define	SROM_WL1HPAB1		34
++#define	SROM_WL1HPAB2		35
++
++#define	SROM_MACHI_IL0		36
++#define	SROM_MACMID_IL0		37
++#define	SROM_MACLO_IL0		38
++#define	SROM_MACHI_ET1		42
++#define	SROM_MACMID_ET1		43
++#define	SROM_MACLO_ET1		44
++#define	SROM3_MACHI		37
++#define	SROM3_MACMID		38
++#define	SROM3_MACLO		39
++
++#define	SROM_BXARSSI2G		40
++#define	SROM_BXARSSI5G		41
++
++#define	SROM_TRI52G		42
++#define	SROM_TRI5GHL		43
++
++#define	SROM_RXPO52G		45
++
++#define	SROM_AABREV		46
++/* Fields in AABREV */
++#define	SROM_BR_MASK		0x00ff
++#define	SROM_CC_MASK		0x0f00
++#define	SROM_CC_SHIFT		8
++#define	SROM_AA0_MASK		0x3000
++#define	SROM_AA0_SHIFT		12
++#define	SROM_AA1_MASK		0xc000
++#define	SROM_AA1_SHIFT		14
++
++#define	SROM_WL0PAB0		47
++#define	SROM_WL0PAB1		48
++#define	SROM_WL0PAB2		49
++
++#define	SROM_LEDBH10		50
++#define	SROM_LEDBH32		51
++
++#define	SROM_WL10MAXP		52
++
++#define	SROM_WL1PAB0		53
++#define	SROM_WL1PAB1		54
++#define	SROM_WL1PAB2		55
++
++#define	SROM_ITT		56
++
++#define	SROM_BFL		57
++#define	SROM_BFL2		28
++#define	SROM3_BFL2		61
++
++#define	SROM_AG10		58
++
++#define	SROM_CCODE		59
++
++#define	SROM_OPO		60
++
++#define	SROM3_LEDDC		62
++
++#define	SROM_CRCREV		63
++
++/* SROM Rev 4: Reallocate the software part of the srom to accommodate
++ * MIMO features. It assumes up to two PCIE functions and 440 bytes
++ * of usable srom i.e. the usable storage in chips with OTP that
++ * implements hardware redundancy.
++ */
++
++#define	SROM4_WORDS		220
++
++#define	SROM4_SIGN		32
++#define	SROM4_SIGNATURE		0x5372
++
++#define	SROM4_BREV		33
++
++#define	SROM4_BFL0		34
++#define	SROM4_BFL1		35
++#define	SROM4_BFL2		36
++#define	SROM4_BFL3		37
++#define	SROM5_BFL0		37
++#define	SROM5_BFL1		38
++#define	SROM5_BFL2		39
++#define	SROM5_BFL3		40
++
++#define	SROM4_MACHI		38
++#define	SROM4_MACMID		39
++#define	SROM4_MACLO		40
++#define	SROM5_MACHI		41
++#define	SROM5_MACMID		42
++#define	SROM5_MACLO		43
++
++#define	SROM4_CCODE		41
++#define	SROM4_REGREV		42
++#define	SROM5_CCODE		34
++#define	SROM5_REGREV		35
++
++#define	SROM4_LEDBH10		43
++#define	SROM4_LEDBH32		44
++#define	SROM5_LEDBH10		59
++#define	SROM5_LEDBH32		60
++
++#define	SROM4_LEDDC		45
++#define	SROM5_LEDDC		45
++
++#define	SROM4_AA		46
++
++#define	SROM4_AG10		47
++#define	SROM4_AG32		48
++
++#define	SROM4_TXPID2G		49
++#define	SROM4_TXPID5G		51
++#define	SROM4_TXPID5GL		53
++#define	SROM4_TXPID5GH		55
++
++#define SROM4_TXRXC		61
++#define SROM4_TXCHAIN_MASK	0x000f
++#define SROM4_TXCHAIN_SHIFT	0
++#define SROM4_RXCHAIN_MASK	0x00f0
++#define SROM4_RXCHAIN_SHIFT	4
++#define SROM4_SWITCH_MASK	0xff00
++#define SROM4_SWITCH_SHIFT	8
++
++/* Per-path fields */
++#define	MAX_PATH_SROM		4
++#define	SROM4_PATH0		64
++#define	SROM4_PATH1		87
++#define	SROM4_PATH2		110
++#define	SROM4_PATH3		133
++
++#define	SROM4_2G_ITT_MAXP	0
++#define	SROM4_2G_PA		1
++#define	SROM4_5G_ITT_MAXP	5
++#define	SROM4_5GLH_MAXP		6
++#define	SROM4_5G_PA		7
++#define	SROM4_5GL_PA		11
++#define	SROM4_5GH_PA		15
++
++/* All the miriad power offsets */
++#define	SROM4_2G_CCKPO		156
++#define	SROM4_2G_OFDMPO		157
++#define	SROM4_5G_OFDMPO		159
++#define	SROM4_5GL_OFDMPO	161
++#define	SROM4_5GH_OFDMPO	163
++#define	SROM4_2G_MCSPO		165
++#define	SROM4_5G_MCSPO		173
++#define	SROM4_5GL_MCSPO		181
++#define	SROM4_5GH_MCSPO		189
++#define	SROM4_CDDPO		197
++#define	SROM4_STBCPO		198
++#define	SROM4_BW40PO		199
++#define	SROM4_BWDUPPO		200
++
++#define	SROM4_CRCREV		219
++
++/* SROM Rev 8: Make space for a 48word hardware header for PCIe rev >= 6.
++ * This is acombined srom for both MIMO and SISO boards, usable in
++ * the .130 4Kilobit OTP with hardware redundancy.
++ */
++#define	SROM8_BREV		65
++
++#define	SROM8_BFL0		66
++#define	SROM8_BFL1		67
++#define	SROM8_BFL2		68
++#define	SROM8_BFL3		69
++
++#define	SROM8_MACHI		70
++#define	SROM8_MACMID		71
++#define	SROM8_MACLO		72
++
++#define	SROM8_CCODE		73
++#define	SROM8_REGREV		74
++
++#define	SROM8_LEDBH10		75
++#define	SROM8_LEDBH32		76
++
++#define	SROM8_LEDDC		77
++
++#define	SROM8_AA		78
++
++#define	SROM8_AG10		79
++#define	SROM8_AG32		80
++
++#define	SROM8_TXRXC		81
++
++#define	SROM8_BXARSSI2G		82
++#define	SROM8_BXARSSI5G		83
++#define	SROM8_TRI52G		84
++#define	SROM8_TRI5GHL		85
++#define	SROM8_RXPO52G		86
++
++#define SROM8_FEM2G		87
++#define SROM8_FEM5G		88
++#define SROM8_FEM_ANTSWLUT_MASK		0xf800
++#define SROM8_FEM_ANTSWLUT_SHIFT	11
++#define SROM8_FEM_TR_ISO_MASK		0x0700
++#define SROM8_FEM_TR_ISO_SHIFT		8
++#define SROM8_FEM_PDET_RANGE_MASK	0x00f8
++#define SROM8_FEM_PDET_RANGE_SHIFT	3
++#define SROM8_FEM_EXTPA_GAIN_MASK	0x0006
++#define SROM8_FEM_EXTPA_GAIN_SHIFT	1
++#define SROM8_FEM_TSSIPOS_MASK		0x0001
++#define SROM8_FEM_TSSIPOS_SHIFT		0
++
++#define SROM8_THERMAL		89
++
++/* Temp sense related entries */
++#define SROM8_MPWR_RAWTS		90
++#define SROM8_TS_SLP_OPT_CORRX	91
++/* FOC: freiquency offset correction, HWIQ: H/W IOCAL enable, IQSWP: IQ CAL swap disable */
++#define SROM8_FOC_HWIQ_IQSWP	92
++
++/* Temperature delta for PHY calibration */
++#define SROM8_PHYCAL_TEMPDELTA	93
++
++/* Per-path offsets & fields */
++#define	SROM8_PATH0		96
++#define	SROM8_PATH1		112
++#define	SROM8_PATH2		128
++#define	SROM8_PATH3		144
++
++#define	SROM8_2G_ITT_MAXP	0
++#define	SROM8_2G_PA		1
++#define	SROM8_5G_ITT_MAXP	4
++#define	SROM8_5GLH_MAXP		5
++#define	SROM8_5G_PA		6
++#define	SROM8_5GL_PA		9
++#define	SROM8_5GH_PA		12
++
++/* All the miriad power offsets */
++#define	SROM8_2G_CCKPO		160
++
++#define	SROM8_2G_OFDMPO		161
++#define	SROM8_5G_OFDMPO		163
++#define	SROM8_5GL_OFDMPO	165
++#define	SROM8_5GH_OFDMPO	167
++
++#define	SROM8_2G_MCSPO		169
++#define	SROM8_5G_MCSPO		177
++#define	SROM8_5GL_MCSPO		185
++#define	SROM8_5GH_MCSPO		193
++
++#define	SROM8_CDDPO		201
++#define	SROM8_STBCPO		202
++#define	SROM8_BW40PO		203
++#define	SROM8_BWDUPPO		204
++
++/* SISO PA parameters are in the path0 spaces */
++#define	SROM8_SISO		96
++
++/* Legacy names for SISO PA paramters */
++#define	SROM8_W0_ITTMAXP	(SROM8_SISO + SROM8_2G_ITT_MAXP)
++#define	SROM8_W0_PAB0		(SROM8_SISO + SROM8_2G_PA)
++#define	SROM8_W0_PAB1		(SROM8_SISO + SROM8_2G_PA + 1)
++#define	SROM8_W0_PAB2		(SROM8_SISO + SROM8_2G_PA + 2)
++#define	SROM8_W1_ITTMAXP	(SROM8_SISO + SROM8_5G_ITT_MAXP)
++#define	SROM8_W1_MAXP_LCHC	(SROM8_SISO + SROM8_5GLH_MAXP)
++#define	SROM8_W1_PAB0		(SROM8_SISO + SROM8_5G_PA)
++#define	SROM8_W1_PAB1		(SROM8_SISO + SROM8_5G_PA + 1)
++#define	SROM8_W1_PAB2		(SROM8_SISO + SROM8_5G_PA + 2)
++#define	SROM8_W1_PAB0_LC	(SROM8_SISO + SROM8_5GL_PA)
++#define	SROM8_W1_PAB1_LC	(SROM8_SISO + SROM8_5GL_PA + 1)
++#define	SROM8_W1_PAB2_LC	(SROM8_SISO + SROM8_5GL_PA + 2)
++#define	SROM8_W1_PAB0_HC	(SROM8_SISO + SROM8_5GH_PA)
++#define	SROM8_W1_PAB1_HC	(SROM8_SISO + SROM8_5GH_PA + 1)
++#define	SROM8_W1_PAB2_HC	(SROM8_SISO + SROM8_5GH_PA + 2)
++
++/* SROM REV 9 */
++#define SROM9_2GPO_CCKBW20	160
++#define SROM9_2GPO_CCKBW20UL	161
++#define SROM9_2GPO_LOFDMBW20	162
++#define SROM9_2GPO_LOFDMBW20UL	164
++
++#define SROM9_5GLPO_LOFDMBW20	166
++#define SROM9_5GLPO_LOFDMBW20UL	168
++#define SROM9_5GMPO_LOFDMBW20	170
++#define SROM9_5GMPO_LOFDMBW20UL	172
++#define SROM9_5GHPO_LOFDMBW20	174
++#define SROM9_5GHPO_LOFDMBW20UL	176
++
++#define SROM9_2GPO_MCSBW20	178
++#define SROM9_2GPO_MCSBW20UL	180
++#define SROM9_2GPO_MCSBW40	182
++
++#define SROM9_5GLPO_MCSBW20	184
++#define SROM9_5GLPO_MCSBW20UL	186
++#define SROM9_5GLPO_MCSBW40	188
++#define SROM9_5GMPO_MCSBW20	190
++#define SROM9_5GMPO_MCSBW20UL	192
++#define SROM9_5GMPO_MCSBW40	194
++#define SROM9_5GHPO_MCSBW20	196
++#define SROM9_5GHPO_MCSBW20UL	198
++#define SROM9_5GHPO_MCSBW40	200
++
++#define SROM9_PO_MCS32		202
++#define SROM9_PO_LOFDM40DUP	203
++
+ /* SROM flags (see sromvar_t) */
+ #define SRFL_MORE	1	/* value continues as described by the next entry */
+ #define	SRFL_NOFFS	2	/* value bits can't be all one's */
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
+index 10cbf52..8e7fb94 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
+@@ -21,7 +21,6 @@
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
+ 
+-#include <bcmsrom_fmt.h>
+ #include <wlc_phy_hal.h>
+ 
+ #define PHYHAL_ERROR	0x0001
+@@ -42,6 +41,14 @@ extern u32 phyhal_msg_level;
+ 
+ #define LCNXN_BASEREV		16
+ 
++typedef struct {
++	u8 tssipos;		/* TSSI positive slope, 1: positive, 0: negative */
++	u8 extpagain;	/* Ext PA gain-type: full-gain: 0, pa-lite: 1, no_pa: 2 */
++	u8 pdetrange;	/* support 32 combinations of different Pdet dynamic ranges */
++	u8 triso;		/* TR switch isolation */
++	u8 antswctrllut;	/* antswctrl lookup table configuration: 32 possible choices */
++} wlc_phy_srom_fem_t;
++
+ struct wlc_hw_info;
+ typedef struct phy_info phy_info_t;
+ typedef void (*initfn_t) (phy_info_t *);
+@@ -653,8 +660,8 @@ struct phy_info {
+ 	s8 tx_power_offset[TXP_NUM_RATES];
+ 	u8 tx_power_target[TXP_NUM_RATES];
+ 
+-	srom_fem_t srom_fem2g;
+-	srom_fem_t srom_fem5g;
++	wlc_phy_srom_fem_t srom_fem2g;
++	wlc_phy_srom_fem_t srom_fem5g;
+ 
+ 	u8 tx_power_max;
+ 	u8 tx_power_max_rate_ind;
+diff --git a/drivers/staging/brcm80211/include/bcmsrom.h b/drivers/staging/brcm80211/include/bcmsrom.h
+index b2dc895..b9500ec 100644
+--- a/drivers/staging/brcm80211/include/bcmsrom.h
++++ b/drivers/staging/brcm80211/include/bcmsrom.h
+@@ -17,8 +17,6 @@
+ #ifndef	_bcmsrom_h_
+ #define	_bcmsrom_h_
+ 
+-#include <bcmsrom_fmt.h>
+-
+ /* Prototypes */
+ extern int srom_var_init(si_t *sih, uint bus, void *curmap,
+ 			 char **vars, uint *count);
+diff --git a/drivers/staging/brcm80211/include/bcmsrom_fmt.h b/drivers/staging/brcm80211/include/bcmsrom_fmt.h
 deleted file mode 100644
-index 6fd1072..0000000
---- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+index 4666afd..0000000
+--- a/drivers/staging/brcm80211/include/bcmsrom_fmt.h
 +++ /dev/null
-@@ -1,156 +0,0 @@
+@@ -1,367 +0,0 @@
 -/*
 - * Copyright (c) 2010 Broadcom Corporation
 - *
@@ -68,182 +429,358 @@ index 6fd1072..0000000
 - * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 - */
 -
--#include <linux/netdevice.h>
--#include <linux/sched.h>
--#include <brcmu_utils.h>
--#include <defs.h>
--#include <brcmu_wifi.h>
+-#ifndef	_bcmsrom_fmt_h_
+-#define	_bcmsrom_fmt_h_
 -
--#include "dngl_stats.h"
--#include "dhd.h"
+-/* Maximum srom: 6 Kilobits == 768 bytes */
+-#define	SROM_MAX		768
+-#define SROM_MAXW		384
+-#define VARS_MAX		4096
 -
--#define WL_ERROR(fmt, args...) printk(fmt, ##args)
--#define WL_TRACE(fmt, args...) no_printk(fmt, ##args)
+-/* PCI fields */
+-#define PCI_F0DEVID		48
 -
--#ifdef CUSTOMER_HW
--extern void bcm_wlan_power_off(int);
--extern void bcm_wlan_power_on(int);
--#endif				/* CUSTOMER_HW */
--#ifdef CUSTOMER_HW2
--int wifi_set_carddetect(int on);
--int wifi_set_power(int on, unsigned long msec);
--int wifi_get_irq_number(unsigned long *irq_flags_ptr);
--#endif
+-#define	SROM_WORDS		64
 -
--#if defined(OOB_INTR_ONLY)
+-#define SROM3_SWRGN_OFF		28	/* s/w region offset in words */
 -
--extern int sdioh_mmc_irq(int irq);
+-#define	SROM_SSID		2
 -
--#ifdef CUSTOMER_HW3
--#include <mach/gpio.h>
--#endif
+-#define	SROM_WL1LHMAXP		29
 -
--/* Customer specific Host GPIO definition  */
--static int dhd_oob_gpio_num = -1;	/* GG 19 */
+-#define	SROM_WL1LPAB0		30
+-#define	SROM_WL1LPAB1		31
+-#define	SROM_WL1LPAB2		32
 -
--module_param(dhd_oob_gpio_num, int, 0644);
--MODULE_PARM_DESC(dhd_oob_gpio_num, "DHD oob gpio number");
+-#define	SROM_WL1HPAB0		33
+-#define	SROM_WL1HPAB1		34
+-#define	SROM_WL1HPAB2		35
 -
--int brcmf_customer_oob_irq_map(unsigned long *irq_flags_ptr)
--{
--	int host_oob_irq = 0;
+-#define	SROM_MACHI_IL0		36
+-#define	SROM_MACMID_IL0		37
+-#define	SROM_MACLO_IL0		38
+-#define	SROM_MACHI_ET0		39
+-#define	SROM_MACMID_ET0		40
+-#define	SROM_MACLO_ET0		41
+-#define	SROM_MACHI_ET1		42
+-#define	SROM_MACMID_ET1		43
+-#define	SROM_MACLO_ET1		44
+-#define	SROM3_MACHI		37
+-#define	SROM3_MACMID		38
+-#define	SROM3_MACLO		39
 -
--#ifdef CUSTOMER_HW2
--	host_oob_irq = wifi_get_irq_number(irq_flags_ptr);
+-#define	SROM_BXARSSI2G		40
+-#define	SROM_BXARSSI5G		41
 -
--#else				/* for NOT  CUSTOMER_HW2 */
--#if defined(CUSTOM_OOB_GPIO_NUM)
--	if (dhd_oob_gpio_num < 0)
--		dhd_oob_gpio_num = CUSTOM_OOB_GPIO_NUM;
--#endif
+-#define	SROM_TRI52G		42
+-#define	SROM_TRI5GHL		43
 -
--	if (dhd_oob_gpio_num < 0) {
--		WL_ERROR("%s: ERROR customer specific Host GPIO is NOT defined\n",
--			 __func__);
--		return dhd_oob_gpio_num;
--	}
+-#define	SROM_RXPO52G		45
 -
--	WL_ERROR("%s: customer specific Host GPIO number is (%d)\n",
--		 __func__, dhd_oob_gpio_num);
+-#define	SROM2_ENETPHY		45
 -
--#if defined CUSTOMER_HW
--	host_oob_irq = MSM_GPIO_TO_INT(dhd_oob_gpio_num);
--#elif defined CUSTOMER_HW3
--	gpio_request(dhd_oob_gpio_num, "oob irq");
--	host_oob_irq = gpio_to_irq(dhd_oob_gpio_num);
--	gpio_direction_input(dhd_oob_gpio_num);
--#endif				/* CUSTOMER_HW */
--#endif				/* CUSTOMER_HW2 */
+-#define	SROM_AABREV		46
+-/* Fields in AABREV */
+-#define	SROM_BR_MASK		0x00ff
+-#define	SROM_CC_MASK		0x0f00
+-#define	SROM_CC_SHIFT		8
+-#define	SROM_AA0_MASK		0x3000
+-#define	SROM_AA0_SHIFT		12
+-#define	SROM_AA1_MASK		0xc000
+-#define	SROM_AA1_SHIFT		14
 -
--	return host_oob_irq;
--}
--#endif				/* defined(OOB_INTR_ONLY) */
+-#define	SROM_WL0PAB0		47
+-#define	SROM_WL0PAB1		48
+-#define	SROM_WL0PAB2		49
 -
--/* Customer function to control hw specific wlan gpios */
--void brcmf_customer_gpio_wlan_ctrl(int onoff)
--{
--	switch (onoff) {
--	case WLAN_RESET_OFF:
--		WL_TRACE("%s: call customer specific GPIO to insert WLAN RESET\n",
--			 __func__);
--#ifdef CUSTOMER_HW
--		bcm_wlan_power_off(2);
--#endif				/* CUSTOMER_HW */
--#ifdef CUSTOMER_HW2
--		wifi_set_power(0, 0);
--#endif
--		WL_ERROR("=========== WLAN placed in RESET ========\n");
--		break;
+-#define	SROM_LEDBH10		50
+-#define	SROM_LEDBH32		51
 -
--	case WLAN_RESET_ON:
--		WL_TRACE("%s: callc customer specific GPIO to remove WLAN RESET\n",
--			 __func__);
--#ifdef CUSTOMER_HW
--		bcm_wlan_power_on(2);
--#endif				/* CUSTOMER_HW */
--#ifdef CUSTOMER_HW2
--		wifi_set_power(1, 0);
--#endif
--		WL_ERROR("=========== WLAN going back to live  ========\n");
--		break;
+-#define	SROM_WL10MAXP		52
 -
--	case WLAN_POWER_OFF:
--		WL_TRACE("%s: call customer specific GPIO to turn off WL_REG_ON\n",
--			 __func__);
--#ifdef CUSTOMER_HW
--		bcm_wlan_power_off(1);
--#endif				/* CUSTOMER_HW */
--		break;
+-#define	SROM_WL1PAB0		53
+-#define	SROM_WL1PAB1		54
+-#define	SROM_WL1PAB2		55
 -
--	case WLAN_POWER_ON:
--		WL_TRACE("%s: call customer specific GPIO to turn on WL_REG_ON\n",
--			 __func__);
--#ifdef CUSTOMER_HW
--		bcm_wlan_power_on(1);
--#endif				/* CUSTOMER_HW */
--		/* Lets customer power to get stable */
--		udelay(200);
--		break;
--	}
--}
+-#define	SROM_ITT		56
 -
--#ifdef GET_CUSTOM_MAC_ENABLE
--/* Function to get custom MAC address */
--int brcmf_custom_get_mac_address(unsigned char *buf)
--{
--	WL_TRACE("%s Enter\n", __func__);
--	if (!buf)
--		return -EINVAL;
+-#define	SROM_BFL		57
+-#define	SROM_BFL2		28
+-#define	SROM3_BFL2		61
 -
--	/* Customer access to MAC address stored outside of DHD driver */
+-#define	SROM_AG10		58
 -
--#ifdef EXAMPLE_GET_MAC
--	/* EXAMPLE code */
--	{
--		u8 ea_example[ETH_ALEN] = {0x00, 0x11, 0x22, 0x33, 0x44, 0xFF};
--		memcpy(buf, ea_example, ETH_ALEN);
--	}
--#endif				/* EXAMPLE_GET_MAC */
+-#define	SROM_CCODE		59
 -
--	return 0;
--}
--#endif				/* GET_CUSTOM_MAC_ENABLE */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 6507891..5a0bcb2 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -2192,8 +2192,6 @@ static void __exit brcmf_module_cleanup(void)
- #if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
- 	wifi_del_dev();
- #endif
--	/* Call customer gpio to turn off power with WL_REG_ON signal */
--	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
- }
- 
- static int __init brcmf_module_init(void)
-@@ -2216,8 +2214,6 @@ static int __init brcmf_module_init(void)
- 		DHD_ERROR(("Invalid module parameters.\n"));
- 		return -EINVAL;
- 	} while (0);
--	/* Call customer gpio to turn on power with WL_REG_ON signal */
--	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_ON);
- 
- #if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
- 	sema_init(&wifi_control_sem, 0);
-@@ -2245,11 +2241,9 @@ static int __init brcmf_module_init(void)
- 		DHD_ERROR(("%s: dhd_bus_register failed\n", __func__));
- 		goto failed;
- 	}
--	return error;
-+	return 0;
- 
- failed:
--	/* turn off power and exit */
--	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
- 	return -EINVAL;
- }
- 
+-#define	SROM_OPO		60
+-
+-#define	SROM3_LEDDC		62
+-
+-#define	SROM_CRCREV		63
+-
+-/* SROM Rev 4: Reallocate the software part of the srom to accommodate
+- * MIMO features. It assumes up to two PCIE functions and 440 bytes
+- * of usable srom i.e. the usable storage in chips with OTP that
+- * implements hardware redundancy.
+- */
+-
+-#define	SROM4_WORDS		220
+-
+-#define	SROM4_SIGN		32
+-#define	SROM4_SIGNATURE		0x5372
+-
+-#define	SROM4_BREV		33
+-
+-#define	SROM4_BFL0		34
+-#define	SROM4_BFL1		35
+-#define	SROM4_BFL2		36
+-#define	SROM4_BFL3		37
+-#define	SROM5_BFL0		37
+-#define	SROM5_BFL1		38
+-#define	SROM5_BFL2		39
+-#define	SROM5_BFL3		40
+-
+-#define	SROM4_MACHI		38
+-#define	SROM4_MACMID		39
+-#define	SROM4_MACLO		40
+-#define	SROM5_MACHI		41
+-#define	SROM5_MACMID		42
+-#define	SROM5_MACLO		43
+-
+-#define	SROM4_CCODE		41
+-#define	SROM4_REGREV		42
+-#define	SROM5_CCODE		34
+-#define	SROM5_REGREV		35
+-
+-#define	SROM4_LEDBH10		43
+-#define	SROM4_LEDBH32		44
+-#define	SROM5_LEDBH10		59
+-#define	SROM5_LEDBH32		60
+-
+-#define	SROM4_LEDDC		45
+-#define	SROM5_LEDDC		45
+-
+-#define	SROM4_AA		46
+-#define	SROM4_AA2G_MASK		0x00ff
+-#define	SROM4_AA2G_SHIFT	0
+-#define	SROM4_AA5G_MASK		0xff00
+-#define	SROM4_AA5G_SHIFT	8
+-
+-#define	SROM4_AG10		47
+-#define	SROM4_AG32		48
+-
+-#define	SROM4_TXPID2G		49
+-#define	SROM4_TXPID5G		51
+-#define	SROM4_TXPID5GL		53
+-#define	SROM4_TXPID5GH		55
+-
+-#define SROM4_TXRXC		61
+-#define SROM4_TXCHAIN_MASK	0x000f
+-#define SROM4_TXCHAIN_SHIFT	0
+-#define SROM4_RXCHAIN_MASK	0x00f0
+-#define SROM4_RXCHAIN_SHIFT	4
+-#define SROM4_SWITCH_MASK	0xff00
+-#define SROM4_SWITCH_SHIFT	8
+-
+-/* Per-path fields */
+-#define	MAX_PATH_SROM		4
+-#define	SROM4_PATH0		64
+-#define	SROM4_PATH1		87
+-#define	SROM4_PATH2		110
+-#define	SROM4_PATH3		133
+-
+-#define	SROM4_2G_ITT_MAXP	0
+-#define	SROM4_2G_PA		1
+-#define	SROM4_5G_ITT_MAXP	5
+-#define	SROM4_5GLH_MAXP		6
+-#define	SROM4_5G_PA		7
+-#define	SROM4_5GL_PA		11
+-#define	SROM4_5GH_PA		15
+-
+-/* Fields in the ITT_MAXP and 5GLH_MAXP words */
+-#define	B2G_MAXP_MASK		0xff
+-#define	B2G_ITT_SHIFT		8
+-#define	B5G_MAXP_MASK		0xff
+-#define	B5G_ITT_SHIFT		8
+-#define	B5GH_MAXP_MASK		0xff
+-#define	B5GL_MAXP_SHIFT		8
+-
+-/* All the miriad power offsets */
+-#define	SROM4_2G_CCKPO		156
+-#define	SROM4_2G_OFDMPO		157
+-#define	SROM4_5G_OFDMPO		159
+-#define	SROM4_5GL_OFDMPO	161
+-#define	SROM4_5GH_OFDMPO	163
+-#define	SROM4_2G_MCSPO		165
+-#define	SROM4_5G_MCSPO		173
+-#define	SROM4_5GL_MCSPO		181
+-#define	SROM4_5GH_MCSPO		189
+-#define	SROM4_CDDPO		197
+-#define	SROM4_STBCPO		198
+-#define	SROM4_BW40PO		199
+-#define	SROM4_BWDUPPO		200
+-
+-#define	SROM4_CRCREV		219
+-
+-/* SROM Rev 8: Make space for a 48word hardware header for PCIe rev >= 6.
+- * This is acombined srom for both MIMO and SISO boards, usable in
+- * the .130 4Kilobit OTP with hardware redundancy.
+- */
+-
+-#define	SROM8_SIGN		64
+-
+-#define	SROM8_BREV		65
+-
+-#define	SROM8_BFL0		66
+-#define	SROM8_BFL1		67
+-#define	SROM8_BFL2		68
+-#define	SROM8_BFL3		69
+-
+-#define	SROM8_MACHI		70
+-#define	SROM8_MACMID		71
+-#define	SROM8_MACLO		72
+-
+-#define	SROM8_CCODE		73
+-#define	SROM8_REGREV		74
+-
+-#define	SROM8_LEDBH10		75
+-#define	SROM8_LEDBH32		76
+-
+-#define	SROM8_LEDDC		77
+-
+-#define	SROM8_AA		78
+-
+-#define	SROM8_AG10		79
+-#define	SROM8_AG32		80
+-
+-#define	SROM8_TXRXC		81
+-
+-#define	SROM8_BXARSSI2G		82
+-#define	SROM8_BXARSSI5G		83
+-#define	SROM8_TRI52G		84
+-#define	SROM8_TRI5GHL		85
+-#define	SROM8_RXPO52G		86
+-
+-#define SROM8_FEM2G		87
+-#define SROM8_FEM5G		88
+-#define SROM8_FEM_ANTSWLUT_MASK		0xf800
+-#define SROM8_FEM_ANTSWLUT_SHIFT	11
+-#define SROM8_FEM_TR_ISO_MASK		0x0700
+-#define SROM8_FEM_TR_ISO_SHIFT		8
+-#define SROM8_FEM_PDET_RANGE_MASK	0x00f8
+-#define SROM8_FEM_PDET_RANGE_SHIFT	3
+-#define SROM8_FEM_EXTPA_GAIN_MASK	0x0006
+-#define SROM8_FEM_EXTPA_GAIN_SHIFT	1
+-#define SROM8_FEM_TSSIPOS_MASK		0x0001
+-#define SROM8_FEM_TSSIPOS_SHIFT		0
+-
+-#define SROM8_THERMAL		89
+-
+-/* Temp sense related entries */
+-#define SROM8_MPWR_RAWTS		90
+-#define SROM8_TS_SLP_OPT_CORRX	91
+-/* FOC: freiquency offset correction, HWIQ: H/W IOCAL enable, IQSWP: IQ CAL swap disable */
+-#define SROM8_FOC_HWIQ_IQSWP	92
+-
+-/* Temperature delta for PHY calibration */
+-#define SROM8_PHYCAL_TEMPDELTA	93
+-
+-/* Per-path offsets & fields */
+-#define	SROM8_PATH0		96
+-#define	SROM8_PATH1		112
+-#define	SROM8_PATH2		128
+-#define	SROM8_PATH3		144
+-
+-#define	SROM8_2G_ITT_MAXP	0
+-#define	SROM8_2G_PA		1
+-#define	SROM8_5G_ITT_MAXP	4
+-#define	SROM8_5GLH_MAXP		5
+-#define	SROM8_5G_PA		6
+-#define	SROM8_5GL_PA		9
+-#define	SROM8_5GH_PA		12
+-
+-/* All the miriad power offsets */
+-#define	SROM8_2G_CCKPO		160
+-
+-#define	SROM8_2G_OFDMPO		161
+-#define	SROM8_5G_OFDMPO		163
+-#define	SROM8_5GL_OFDMPO	165
+-#define	SROM8_5GH_OFDMPO	167
+-
+-#define	SROM8_2G_MCSPO		169
+-#define	SROM8_5G_MCSPO		177
+-#define	SROM8_5GL_MCSPO		185
+-#define	SROM8_5GH_MCSPO		193
+-
+-#define	SROM8_CDDPO		201
+-#define	SROM8_STBCPO		202
+-#define	SROM8_BW40PO		203
+-#define	SROM8_BWDUPPO		204
+-
+-/* SISO PA parameters are in the path0 spaces */
+-#define	SROM8_SISO		96
+-
+-/* Legacy names for SISO PA paramters */
+-#define	SROM8_W0_ITTMAXP	(SROM8_SISO + SROM8_2G_ITT_MAXP)
+-#define	SROM8_W0_PAB0		(SROM8_SISO + SROM8_2G_PA)
+-#define	SROM8_W0_PAB1		(SROM8_SISO + SROM8_2G_PA + 1)
+-#define	SROM8_W0_PAB2		(SROM8_SISO + SROM8_2G_PA + 2)
+-#define	SROM8_W1_ITTMAXP	(SROM8_SISO + SROM8_5G_ITT_MAXP)
+-#define	SROM8_W1_MAXP_LCHC	(SROM8_SISO + SROM8_5GLH_MAXP)
+-#define	SROM8_W1_PAB0		(SROM8_SISO + SROM8_5G_PA)
+-#define	SROM8_W1_PAB1		(SROM8_SISO + SROM8_5G_PA + 1)
+-#define	SROM8_W1_PAB2		(SROM8_SISO + SROM8_5G_PA + 2)
+-#define	SROM8_W1_PAB0_LC	(SROM8_SISO + SROM8_5GL_PA)
+-#define	SROM8_W1_PAB1_LC	(SROM8_SISO + SROM8_5GL_PA + 1)
+-#define	SROM8_W1_PAB2_LC	(SROM8_SISO + SROM8_5GL_PA + 2)
+-#define	SROM8_W1_PAB0_HC	(SROM8_SISO + SROM8_5GH_PA)
+-#define	SROM8_W1_PAB1_HC	(SROM8_SISO + SROM8_5GH_PA + 1)
+-#define	SROM8_W1_PAB2_HC	(SROM8_SISO + SROM8_5GH_PA + 2)
+-
+-#define	SROM8_CRCREV		219
+-
+-/* SROM REV 9 */
+-#define SROM9_2GPO_CCKBW20	160
+-#define SROM9_2GPO_CCKBW20UL	161
+-#define SROM9_2GPO_LOFDMBW20	162
+-#define SROM9_2GPO_LOFDMBW20UL	164
+-
+-#define SROM9_5GLPO_LOFDMBW20	166
+-#define SROM9_5GLPO_LOFDMBW20UL	168
+-#define SROM9_5GMPO_LOFDMBW20	170
+-#define SROM9_5GMPO_LOFDMBW20UL	172
+-#define SROM9_5GHPO_LOFDMBW20	174
+-#define SROM9_5GHPO_LOFDMBW20UL	176
+-
+-#define SROM9_2GPO_MCSBW20	178
+-#define SROM9_2GPO_MCSBW20UL	180
+-#define SROM9_2GPO_MCSBW40	182
+-
+-#define SROM9_5GLPO_MCSBW20	184
+-#define SROM9_5GLPO_MCSBW20UL	186
+-#define SROM9_5GLPO_MCSBW40	188
+-#define SROM9_5GMPO_MCSBW20	190
+-#define SROM9_5GMPO_MCSBW20UL	192
+-#define SROM9_5GMPO_MCSBW40	194
+-#define SROM9_5GHPO_MCSBW20	196
+-#define SROM9_5GHPO_MCSBW20UL	198
+-#define SROM9_5GHPO_MCSBW40	200
+-
+-#define SROM9_PO_MCS32		202
+-#define SROM9_PO_LOFDM40DUP	203
+-
+-#define SROM9_REV_CRC		219
+-
+-typedef struct {
+-	u8 tssipos;		/* TSSI positive slope, 1: positive, 0: negative */
+-	u8 extpagain;	/* Ext PA gain-type: full-gain: 0, pa-lite: 1, no_pa: 2 */
+-	u8 pdetrange;	/* support 32 combinations of different Pdet dynamic ranges */
+-	u8 triso;		/* TR switch isolation */
+-	u8 antswctrllut;	/* antswctrl lookup table configuration: 32 possible choices */
+-} srom_fem_t;
+-
+-#endif				/* _bcmsrom_fmt_h_ */
 -- 
-1.7.1
+1.7.4.1
 
 
