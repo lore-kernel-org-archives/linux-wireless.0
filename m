@@ -1,131 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:42178 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757318Ab1F0M6M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 08:58:12 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so1789080fxd.11
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 05:58:11 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/5] b43: HT-PHY: perform some tables ops on channel switching
-Date: Mon, 27 Jun 2011 14:58:52 +0200
-Message-Id: <1309179534-8081-3-git-send-email-zajec5@gmail.com> (sfid-20110627_150220_562675_74E927E8)
-In-Reply-To: <1309179534-8081-1-git-send-email-zajec5@gmail.com>
-References: <1309179534-8081-1-git-send-email-zajec5@gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1142 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758894Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:51 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 17/83] staging: brcm80211: remove iovars IOV_POWER
+Date: Wed, 1 Jun 2011 13:45:02 +0200
+Message-ID: <1306928768-7501-17-git-send-email-rvossen@broadcom.com> (sfid-20110601_134808_464848_86C566E4)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Starring at MMIO dumps around PHY channel switching has led to finding
-serie of 3 similar ops this patch implements.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Remove unused sdio related iovars IOV_POWER for fullmac driver
+
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
-The interesting part of MMIO dump:
-phy_write(0x01ce) <- 0x03dd
-phy_write(0x01cf) <- 0x03d9
-phy_write(0x01d0) <- 0x03d5
-phy_write(0x01d1) <- 0x0424
-phy_write(0x01d2) <- 0x0429
-phy_write(0x01d3) <- 0x042d
->>> Uploading PHY tables end
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    4 ----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   13 -------------
+ 2 files changed, 0 insertions(+), 17 deletions(-)
 
->>> Some magic ops start
- phy_read(0x00b0) -> 0x0df7
- phy_read(0x00b0) -> 0x0df7
-phy_write(0x00b0) <- 0x0df7
- phy_read(0x0c0a) -> 0x0100
-phy_write(0x0c0a) <- 0x0100
->>> Some magic ops end
-
-phy_write(0x0072) <- 0x68e8
- phy_read(0x0073) -> 0x0033
- phy_read(0x0074) -> 0x1019
- phy_read(0x0908) -> 0x0000
-phy_write(0x0908) <- 0x0000
-phy_write(0x0072) <- 0x1d10
-phy_write(0x0073) <- 0x1019
-phy_write(0x0072) <- 0x3463
-phy_write(0x0073) <- 0x0033
-phy_write(0x0072) <- 0x3473
-phy_write(0x0073) <- 0x0033
-
-phy_write(0x0072) <- 0x68e8
- phy_read(0x0073) -> 0x0033
- phy_read(0x0074) -> 0x1019
- phy_read(0x0908) -> 0x0000
-phy_write(0x0908) <- 0x0000
-phy_write(0x0072) <- 0x1d11
-phy_write(0x0073) <- 0x1019
-phy_write(0x0072) <- 0x3467
-phy_write(0x0073) <- 0x0033
-phy_write(0x0072) <- 0x3477
-phy_write(0x0073) <- 0x0033
-
-phy_write(0x0072) <- 0x68e8
- phy_read(0x0073) -> 0x0033
- phy_read(0x0074) -> 0x1019
- phy_read(0x0908) -> 0x0000
-phy_write(0x0908) <- 0x0000
-phy_write(0x0072) <- 0x1d12
-phy_write(0x0073) <- 0x1019
-phy_write(0x0072) <- 0x346b
-phy_write(0x0073) <- 0x0033
-phy_write(0x0072) <- 0x347b
-phy_write(0x0073) <- 0x0033
----
- drivers/net/wireless/b43/phy_ht.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index c48bcf6..42bea30 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -24,6 +24,7 @@
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index ab4d0cc..5b8529c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -365,10 +365,6 @@ void bcmsdh_unregister_oob_intr(void)
+ extern uint sd_msglevel;	/* Debug message level */
+ module_param(sd_msglevel, uint, 0);
  
- #include "b43.h"
- #include "phy_ht.h"
-+#include "tables_phy_ht.h"
- #include "radio_2059.h"
- #include "main.h"
+-extern uint sd_power;		/* 0 = SD Power OFF,
+-					 1 = SD Power ON. */
+-module_param(sd_power, uint, 0);
+-
+ extern uint sd_clock;		/* SD Clock Control, 0 = SD Clock OFF,
+ 				 1 = SD Clock ON */
+ module_param(sd_clock, uint, 0);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 02fa5b4..a2d0ad8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -48,7 +48,6 @@ extern PBCMSDH_SDMMC_INSTANCE gInstance;
+ uint sd_sdmode = SDIOH_MODE_SD4;	/* Use SD4 mode by default */
+ uint sd_f2_blocksize = 512;	/* Default blocksize */
  
-@@ -83,6 +84,7 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 				struct ieee80211_channel *new_channel)
- {
- 	bool old_band_5ghz;
-+	u8 i;
+-uint sd_power = 1;		/* Default to SD Slot powered ON */
+ uint sd_clock = 1;		/* Default to SD Clock turned ON */
+ uint sd_hiok = false;		/* Don't use hi-speed mode by default */
+ uint sd_msglevel = 0x01;
+@@ -355,7 +354,6 @@ enum {
+ 	IOV_SDMODE,
+ 	IOV_HISPEED,
+ 	IOV_HCIREGS,
+-	IOV_POWER,
+ 	IOV_CLOCK,
+ 	IOV_RXCHAIN
+ };
+@@ -368,8 +366,6 @@ const bcm_iovar_t sdioh_iovars[] = {
+ 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
+ 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
+ 	,
+-	{"sd_power", IOV_POWER, 0, IOVT_UINT32, 0}
+-	,
+ 	{"sd_clock", IOV_CLOCK, 0, IOVT_UINT32, 0}
+ 	,
+ 	{"sd_mode", IOV_SDMODE, 0, IOVT_UINT32, 100}
+@@ -506,15 +502,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
  
- 	old_band_5ghz = b43_phy_read(dev, B43_PHY_HT_BANDCTL) & 0; /* FIXME */
- 	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
-@@ -97,6 +99,23 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 	b43_phy_write(dev, B43_PHY_HT_BW4, e->bw4);
- 	b43_phy_write(dev, B43_PHY_HT_BW5, e->bw5);
- 	b43_phy_write(dev, B43_PHY_HT_BW6, e->bw6);
-+
-+	/* TODO: some ops on PHY regs 0x0B0 and 0xC0A */
-+
-+	/* TODO: separated function? */
-+	for (i = 0; i < 3; i++) {
-+		u32 tmp = b43_httab_read(dev, B43_HTTAB32(26, 0xE8));
-+
-+		/* TODO: some op on PHY reg 0x908 */
-+
-+		b43_httab_write(dev, B43_HTTAB16(7, 0x110 + i), tmp >> 16);
-+		b43_httab_write(dev, B43_HTTAB8(13, 0x63 + (i * 4)),
-+				tmp & 0xFF);
-+		b43_httab_write(dev, B43_HTTAB8(13, 0x73 + (i * 4)),
-+				tmp & 0xFF);
-+	}
-+
-+	b43_phy_write(dev, 0x017e, 0x3830);
- }
+ 		break;
  
- static int b43_phy_ht_set_channel(struct b43_wldev *dev,
+-	case IOV_GVAL(IOV_POWER):
+-		int_val = (u32) sd_power;
+-		memcpy(arg, &int_val, val_size);
+-		break;
+-
+-	case IOV_SVAL(IOV_POWER):
+-		sd_power = int_val;
+-		break;
+-
+ 	case IOV_GVAL(IOV_CLOCK):
+ 		int_val = (u32) sd_clock;
+ 		memcpy(arg, &int_val, val_size);
 -- 
-1.7.1
+1.7.4.1
+
 
