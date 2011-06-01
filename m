@@ -1,82 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:60881 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751027Ab1F2GNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 02:13:47 -0400
-Date: Wed, 29 Jun 2011 16:13:38 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	randy.dunlap@oracle.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192de: Fix build errors when using allyes
- configuration
-Message-Id: <20110629161338.7d265efd.sfr@canb.auug.org.au> (sfid-20110629_081406_601955_EF770D4D)
-In-Reply-To: <4e0a6a06.Y78QUdJvxEiJ3SGd%Larry.Finger@lwfinger.net>
-References: <4e0a6a06.Y78QUdJvxEiJ3SGd%Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL"
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63745 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759259Ab1FASs1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 14:48:27 -0400
+Date: Wed, 1 Jun 2011 15:48:33 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH] bluetooth: fix error cases
+Message-ID: <20110601184833.GA2564@joana> (sfid-20110601_204833_039589_5A2C869D)
+References: <1306910377.3867.5.camel@jlt3.sipsolutions.net>
+ <20110601184036.GD2509@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20110601184036.GD2509@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+* John W. Linville <linville@tuxdriver.com> [2011-06-01 14:40:37 -0400]:
 
-On Tue, 28 Jun 2011 18:55:50 -0500 Larry Finger <Larry.Finger@lwfinger.net>=
- wrote:
->
-> After adding rtl8192de to linux-next, making the rtlwifi drivers be built=
--in
-> results in the following warnings:
->=20
->   LD      drivers/net/wireless/rtlwifi/built-in.o
-> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_s=
-w_led_on':
-> (.text+0x11fb6): multiple definition of `rtl92ce_sw_led_on'
-> drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa326): first d=
-efined here
-> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o:(.bss+0x0): multiple de=
-finition of `dm_digtable'
-> drivers/net/wireless/rtlwifi/rtl8192c/built-in.o:(.bss+0x0): first define=
-d here
-> ld: Warning: size of symbol `dm_digtable' changed from 40 in drivers/net/=
-wireless/rtlwifi/rtl8192c/built-in.o to 48 in drivers/net/wireless/rtlwifi/=
-rtl8192de/built-in.o
-> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_s=
-w_led_off':
-> (.text+0x11cfe): multiple definition of `rtl92ce_sw_led_off'
-> drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa06e): first d=
-efined here
->=20
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> On Wed, Jun 01, 2011 at 08:39:37AM +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > The error cases in a few functions can use a
+> > socket variable that was never initialised,
+> > gcc correctly warns about this:
+> > net/bluetooth/l2cap_core.c: In function ‘l2cap_recv_frame’:
+> > include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
+> > net/bluetooth/l2cap_core.c:3789:15: note: ‘sk’ was declared here
+> > include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
+> > net/bluetooth/l2cap_core.c:3756:15: note: ‘sk’ was declared here
+> > 
+> > Initialise the socket to NULL as clearly intended
+> > by the error handling code.
+> > 
+> > Also fix a "set but not used" warning.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> Dave fixed part of these a couple of weeks ago:
+> 
+> commit 6dcae1eaee2b437536b2fe928a609f9589691ebf
+> Author: David S. Miller <davem@davemloft.net>
+> Date:   Mon May 16 23:09:26 2011 -0400
+> 
+>     bluetooth: Fix warnings in l2cap_core.c
+>     
+>     net/bluetooth/l2cap_core.c: In function ‘l2cap_recv_frame’:
+>     net/bluetooth/l2cap_core.c:3758:15: warning: ‘sk’ may be used uninitialized 
+>     net/bluetooth/l2cap_core.c:3758:15: note: ‘sk’ was declared here
+>     net/bluetooth/l2cap_core.c:3791:15: warning: ‘sk’ may be used uninitialized 
+>     net/bluetooth/l2cap_core.c:3791:15: note: ‘sk’ was declared here
+>     
+>     Signed-off-by: David S. Miller <davem@davemloft.net>
+> 
+> The "set but not used" bit still applies...
 
-I have added this patch to linux-next for today (and it fixed the build fai=
-lure).
+Those are fixed in my -next tree now.
 
-Acked-by: Stephen Rothwell <sfr@canb.auug.org.au>
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJOCsKSAAoJEDMEi1NhKgbsUHQH/3gIvDMsQ8RI/veGWU2os2Xy
-qZzpg17/WUDMosdwAfrTtsFUrpPpe+Z7cDnye4/NMoowGwDdoE8FAW6OauMuPbV6
-517aHdw4Hth5b1q2F66EU37quzCPWQj4FYYzrN/1W5aL26tACsK4wQpV6DfC8b+E
-AgMvfBnADqFXRKZFpq1gtVvboLNFP9j0jbJLJ37QAyykNuHri+IBF0vxTZODbdQr
-ebsNeuei/9e9o2LTIdt+3PLoTubI+jNUxx1AoxjchW3Qr75mV8LSRw8RcdlTDo04
-xVvxJP2+tSZ6oxs13BiMGGaobvLqrpocBfvmDjbtGHtvJJ9hWKpdf3zvBsE8lVY=
-=ReGl
------END PGP SIGNATURE-----
-
---Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL--
+-- 
+Gustavo F. Padovan
+http://profusion.mobi
