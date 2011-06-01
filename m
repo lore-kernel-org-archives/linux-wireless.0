@@ -1,51 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33077 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756547Ab1FIWER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:17 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 07/11] compat-wireless: activate CONFIG_RT2800{USB,PCI}_RT35XX by default.
-Date: Fri, 10 Jun 2011 00:03:38 +0200
-Message-Id: <1307657022-23808-8-git-send-email-hauke@hauke-m.de> (sfid-20110610_000437_118880_7649F8F3)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:2340 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758842Ab1FALqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:34 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 71/83] staging: brcm80211: further simplified register
+ access macro's
+Date: Wed, 1 Jun 2011 13:45:56 +0200
+Message-ID: <1306928768-7501-71-git-send-email-rvossen@broadcom.com> (sfid-20110601_134911_530157_BE912033)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now activated by default in the Kconfig so it should be save for us too.
+The SELECT_BUS_READ and SELECT_BUS_WRITE macro's always select
+a (sdio) bus operation for fullmac, and a memory operation for
+softmac. Thus they can be removed by expanding them in place.
 
-Add to compat-3.0-stable
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- config.mk |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |  102 +++------------------
+ drivers/staging/brcm80211/brcmsmac/wlc_types.h |  116 ++++++++++--------------
+ 2 files changed, 61 insertions(+), 157 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 29e6e06..da1ebeb 100644
---- a/config.mk
-+++ b/config.mk
-@@ -340,7 +340,7 @@ CONFIG_RT2500PCI=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800PCI=m
- CONFIG_RT2800PCI_RT33XX=y
--# CONFIG_RT2800PCI_RT35XX=y
-+CONFIG_RT2800PCI_RT35XX=y
- # CONFIG_RT2800PCI_RT53XX=y
- endif #CONFIG_CRC_CCITT
- NEED_RT2X00=y
-@@ -469,7 +469,7 @@ CONFIG_RT2500USB=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800USB=m
- CONFIG_RT2800USB_RT33XX=y
--# CONFIG_RT2800USB_RT35XX=y
-+CONFIG_RT2800USB_RT35XX=y
- # CONFIG_RT2800USB_RT53XX=y
- CONFIG_RT2800USB_UNKNOWN=y
- endif #CONFIG_CRC_CCITT
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 8da6589..2a93f3b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -38,102 +38,30 @@
+ #endif
+ #endif
+ 
+-#if defined(BCMSDIO)
+-#define SELECT_BUS_WRITE(mmap_op, bus_op) bus_op
+-#define SELECT_BUS_READ(mmap_op, bus_op) bus_op
+-#else
+-#define SELECT_BUS_WRITE(mmap_op, bus_op) mmap_op
+-#define SELECT_BUS_READ(mmap_op, bus_op) mmap_op
+-#endif
+-
+ /* register access macros */
+ #ifndef __BIG_ENDIAN
+ #ifndef __mips__
+-#define R_REG(r) (\
+-	SELECT_BUS_READ(sizeof(*(r)) == sizeof(u8) ? \
+-	readb((volatile u8*)(r)) : \
+-	sizeof(*(r)) == sizeof(u16) ? readw((volatile u16*)(r)) : \
+-	readl((volatile u32*)(r)), bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))) \
+-)
++#define R_REG(r) \
++	bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))
+ #else				/* __mips__ */
+-#define R_REG(r) (\
+-	SELECT_BUS_READ( \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			__asm__ __volatile__("sync"); \
+-			switch (sizeof(*(r))) { \
+-			case sizeof(u8): \
+-				__osl_v = readb((volatile u8*)(r)); \
+-				break; \
+-			case sizeof(u16): \
+-				__osl_v = readw((volatile u16*)(r)); \
+-				break; \
+-			case sizeof(u32): \
+-				__osl_v = \
+-				readl((volatile u32*)(r)); \
+-				break; \
+-			} \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v; \
+-		}), \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v = bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r)); \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v; \
+-		})) \
+-)
++#define R_REG(r) \
++	({ \
++		__typeof(*(r)) __osl_v; \
++		__asm__ __volatile__("sync"); \
++		__osl_v = bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r)); \
++		__asm__ __volatile__("sync"); \
++		__osl_v; \
++	})
+ #endif				/* __mips__ */
+ 
+ #define W_REG(r, v) do { \
+-	SELECT_BUS_WRITE( \
+-		switch (sizeof(*(r))) { \
+-		case sizeof(u8): \
+-			writeb((u8)(v), (volatile u8*)(r)); break; \
+-		case sizeof(u16): \
+-			writew((u16)(v), (volatile u16*)(r)); break; \
+-		case sizeof(u32): \
+-			writel((u32)(v), (volatile u32*)(r)); break; \
+-		}, \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), (v))); \
++		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), (v)); \
+ 	} while (0)
+ #else				/* __BIG_ENDIAN */
+-#define R_REG(r) (\
+-	SELECT_BUS_READ( \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			switch (sizeof(*(r))) { \
+-			case sizeof(u8): \
+-				__osl_v = \
+-				readb((volatile u8*)((r)^3)); \
+-				break; \
+-			case sizeof(u16): \
+-				__osl_v = \
+-				readw((volatile u16*)((r)^2)); \
+-				break; \
+-			case sizeof(u32): \
+-				__osl_v = readl((volatile u32*)(r)); \
+-				break; \
+-			} \
+-			__osl_v; \
+-		}), \
+-		bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))) \
+-)
++#define R_REG(r) \
++	bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))
+ #define W_REG(r, v) do { \
+-	SELECT_BUS_WRITE( \
+-		switch (sizeof(*(r))) { \
+-		case sizeof(u8):	\
+-			writeb((u8)(v), \
+-			(volatile u8*)((r)^3)); break; \
+-		case sizeof(u16):	\
+-			writew((u16)(v), \
+-			(volatile u16*)((r)^2)); break; \
+-		case sizeof(u32):	\
+-			writel((u32)(v), \
+-			(volatile u32*)(r)); break; \
+-		}, \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), v)); \
++		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), v); \
+ 	} while (0)
+ #endif				/* __BIG_ENDIAN */
+ 
+@@ -154,8 +82,6 @@
+ #define SET_REG(r, mask, val) \
+ 		W_REG((r), ((R_REG(r) & ~(mask)) | (val)))
+ 
+-
+-
+ #ifdef DHD_DEBUG
+ 
+ /* ARM trap handling */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_types.h b/drivers/staging/brcm80211/brcmsmac/wlc_types.h
+index 12c35bd..059dc17 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_types.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_types.h
+@@ -48,56 +48,39 @@ do {						\
+ #endif
+ #endif
+ 
+-#if defined(BCMSDIO)
+-#define SELECT_BUS_WRITE(mmap_op, bus_op) bus_op
+-#define SELECT_BUS_READ(mmap_op, bus_op) bus_op
+-#else
+-#define SELECT_BUS_WRITE(mmap_op, bus_op) mmap_op
+-#define SELECT_BUS_READ(mmap_op, bus_op) mmap_op
+-#endif
+-
+ /* register access macros */
+ #ifndef __BIG_ENDIAN
+ #ifndef __mips__
+-#define R_REG(r) (\
+-	SELECT_BUS_READ(sizeof(*(r)) == sizeof(u8) ? \
+-	readb((volatile u8*)(r)) : \
+-	sizeof(*(r)) == sizeof(u16) ? readw((volatile u16*)(r)) : \
+-	readl((volatile u32*)(r)), bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))) \
+-)
++#define R_REG(r) \
++	({\
++		sizeof(*(r)) == sizeof(u8) ? \
++		readb((volatile u8*)(r)) : \
++		sizeof(*(r)) == sizeof(u16) ? readw((volatile u16*)(r)) : \
++		readl((volatile u32*)(r)); \
++	})
+ #else				/* __mips__ */
+-#define R_REG(r) (\
+-	SELECT_BUS_READ( \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			__asm__ __volatile__("sync"); \
+-			switch (sizeof(*(r))) { \
+-			case sizeof(u8): \
+-				__osl_v = readb((volatile u8*)(r)); \
+-				break; \
+-			case sizeof(u16): \
+-				__osl_v = readw((volatile u16*)(r)); \
+-				break; \
+-			case sizeof(u32): \
+-				__osl_v = \
+-				readl((volatile u32*)(r)); \
+-				break; \
+-			} \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v; \
+-		}), \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v = bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r)); \
+-			__asm__ __volatile__("sync"); \
+-			__osl_v; \
+-		})) \
+-)
++#define R_REG(r) \
++	({ \
++		__typeof(*(r)) __osl_v; \
++		__asm__ __volatile__("sync"); \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8): \
++			__osl_v = readb((volatile u8*)(r)); \
++			break; \
++		case sizeof(u16): \
++			__osl_v = readw((volatile u16*)(r)); \
++			break; \
++		case sizeof(u32): \
++			__osl_v = \
++			readl((volatile u32*)(r)); \
++			break; \
++		} \
++		__asm__ __volatile__("sync"); \
++		__osl_v; \
++	})
+ #endif				/* __mips__ */
+ 
+ #define W_REG(r, v) do { \
+-	SELECT_BUS_WRITE( \
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8): \
+ 			writeb((u8)(v), (volatile u8*)(r)); break; \
+@@ -105,33 +88,29 @@ do {						\
+ 			writew((u16)(v), (volatile u16*)(r)); break; \
+ 		case sizeof(u32): \
+ 			writel((u32)(v), (volatile u32*)(r)); break; \
+-		}, \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), (v))); \
++		}; \
+ 	} while (0)
+ #else				/* __BIG_ENDIAN */
+-#define R_REG(r) (\
+-	SELECT_BUS_READ( \
+-		({ \
+-			__typeof(*(r)) __osl_v; \
+-			switch (sizeof(*(r))) { \
+-			case sizeof(u8): \
+-				__osl_v = \
+-				readb((volatile u8*)((r)^3)); \
+-				break; \
+-			case sizeof(u16): \
+-				__osl_v = \
+-				readw((volatile u16*)((r)^2)); \
+-				break; \
+-			case sizeof(u32): \
+-				__osl_v = readl((volatile u32*)(r)); \
+-				break; \
+-			} \
+-			__osl_v; \
+-		}), \
+-		bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))) \
+-)
++#define R_REG(r) \
++	({ \
++		__typeof(*(r)) __osl_v; \
++		switch (sizeof(*(r))) { \
++		case sizeof(u8): \
++			__osl_v = \
++			readb((volatile u8*)((r)^3)); \
++			break; \
++		case sizeof(u16): \
++			__osl_v = \
++			readw((volatile u16*)((r)^2)); \
++			break; \
++		case sizeof(u32): \
++			__osl_v = readl((volatile u32*)(r)); \
++			break; \
++		} \
++		__osl_v; \
++	})
++
+ #define W_REG(r, v) do { \
+-	SELECT_BUS_WRITE( \
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8):	\
+ 			writeb((u8)(v), \
+@@ -142,8 +121,7 @@ do {						\
+ 		case sizeof(u32):	\
+ 			writel((u32)(v), \
+ 			(volatile u32*)(r)); break; \
+-		}, \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), v)); \
++		} \
+ 	} while (0)
+ #endif				/* __BIG_ENDIAN */
+ 
 -- 
 1.7.4.1
+
 
