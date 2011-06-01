@@ -1,163 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4701 "EHLO mms2.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2273 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757898Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:44 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1758812Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:29 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 078/119] staging: brcm80211: move waitqueue code to
- dhd_sdio.c
-Date: Wed, 29 Jun 2011 16:47:42 -0700
-Message-ID: <1309391303-22741-79-git-send-email-frankyl@broadcom.com> (sfid-20110630_014956_103260_CA3E04EE)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 37/83] staging: brcm80211: remove usage of pcicfg.h from
+ brcmsmac driver
+Date: Wed, 1 Jun 2011 13:45:22 +0200
+Message-ID: <1306928768-7501-37-git-send-email-rvossen@broadcom.com> (sfid-20110601_134942_403261_F0584323)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In fullmac waitqueue for tx control is used by bus interface layer
-only. So move the related code to dhd_sdio.c
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+All PCI related definitions needed by the brcmsmac driver are going to
+be consolidated in single header file nicpci.h. This commit removes
+need to include pcicfg.h in brcmsmac driver sources.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h       |    3 --
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   20 ------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   26 ++++++++++++++++++++++-
- 3 files changed, 24 insertions(+), 25 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c      |    1 -
+ drivers/staging/brcm80211/brcmsmac/bcmsrom.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/nicpci.c       |    3 +-
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c  |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c     |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c     |    1 -
+ drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c |    2 -
+ drivers/staging/brcm80211/include/nicpci.h        |   42 ++++++++++++++++++++-
+ 8 files changed, 45 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 7e19d80..ffdee84 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -963,9 +963,6 @@ extern int brcmf_sendpkt(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pkt);
- extern int brcmf_bus_devreset(dhd_pub_t *dhdp, u8 flag);
- extern int brcmf_bus_start(dhd_pub_t *dhdp);
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 9aec084..bae40fe 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -24,7 +24,6 @@
+ #include <aiutils.h>
+ #include <bcmsoc.h>
+ #include <sbchipc.h>
+-#include <pcicfg.h>
+ #include <bcmdevs.h>
  
--extern void brcmf_wait_for_event(dhd_pub_t *dhd, bool * lockvar);
--extern void brcmf_wait_event_wakeup(dhd_pub_t *dhd);
--
- extern void brcmf_c_pktfilter_offload_set(dhd_pub_t *dhd, char *arg);
- extern void brcmf_c_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg,
- 					     int enable, int master_mode);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 6f351eb..6516cc6 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -100,7 +100,6 @@ typedef struct dhd_info {
- 	bool set_multicast;
- 	bool set_macaddress;
- 	u8 macvalue[ETH_ALEN];
--	wait_queue_head_t ctrl_wait;
- 	atomic_t pend_8021x_cnt;
+ /* ********** from siutils.c *********** */
+diff --git a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
+index 952bc40..e0899c8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
++++ b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
+@@ -25,7 +25,7 @@
+ #include <bcmsoc.h>
+ #include <sbchipc.h>
+ #include <bcmdevs.h>
+-#include <pcicfg.h>
++#include <nicpci.h>
+ #include <aiutils.h>
+ #include <bcmsrom.h>
  
- #ifdef CONFIG_HAS_EARLYSUSPEND
-@@ -1641,7 +1640,6 @@ dhd_pub_t *brcmf_attach(struct dhd_bus *bus, uint bus_hdrlen)
- 	sema_init(&dhd->proto_sem, 1);
- 	/* Initialize other structure content */
- 	init_waitqueue_head(&dhd->ioctl_resp_wait);
--	init_waitqueue_head(&dhd->ctrl_wait);
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+index 806b2ca..a96173d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+@@ -27,7 +27,6 @@
+ #include <pci_core.h>
+ #include <pcie_core.h>
+ #include <nicpci.h>
+-#include <pcicfg.h>
  
- 	/* Initialize the spinlocks */
- 	spin_lock_init(&dhd->sdlock);
-@@ -2255,24 +2253,6 @@ static int brcmf_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
- 	return bcmerror;
- }
- 
--void brcmf_wait_for_event(dhd_pub_t *dhd, bool *lockvar)
--{
--	struct dhd_info *dhdinfo = dhd->info;
--	brcmf_os_sdunlock(dhd);
--	wait_event_interruptible_timeout(dhdinfo->ctrl_wait,
--					 (*lockvar == false), HZ * 2);
--	brcmf_os_sdlock(dhd);
--	return;
--}
--
--void brcmf_wait_event_wakeup(dhd_pub_t *dhd)
--{
--	struct dhd_info *dhdinfo = dhd->info;
--	if (waitqueue_active(&dhdinfo->ctrl_wait))
--		wake_up_interruptible(&dhdinfo->ctrl_wait);
--	return;
--}
--
- int brcmf_netdev_reset(struct net_device *dev, u8 flag)
+ /* chipcontrol */
+ #define CHIPCTRL_4321_PLL_DOWN	0x800000	/* serdes PLL down override */
+@@ -83,7 +82,7 @@ static bool pcicore_pmecap(pcicore_info_t *pi);
+ /* Initialize the PCI core. It's caller's responsibility to make sure that this is done
+  * only once
+  */
+-void *pcicore_init(si_t *sih, void *pdev, void *regs)
++void *pcicore_init(struct si_pub *sih, void *pdev, void *regs)
  {
- 	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(dev);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index a97fd7c..ec2c744 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -586,6 +586,7 @@ typedef struct dhd_bus {
- 	bool ctrl_frame_stat;
+ 	pcicore_info_t *pi;
  
- 	spinlock_t txqlock;
-+	wait_queue_head_t ctrl_wait;
- } dhd_bus_t;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 3d9f791..ee026d3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -29,7 +29,7 @@
+ #include <bcmwifi.h>
+ #include <bcmutils.h>
+ #include <bcmnvram.h>
+-#include <pcicfg.h>
++#include <nicpci.h>
+ #include <sbdma.h>
  
- typedef volatile struct _sbconfig {
-@@ -777,6 +778,8 @@ static void brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio *sdh, u32 corebase);
- static void brcmf_sdbrcm_sdiod_drive_strength_init(struct dhd_bus *bus,
- 					u32 drivestrength);
- static void brcmf_sdbrcm_chip_detach(struct dhd_bus *bus);
-+static void brcmf_sdbrcm_wait_for_event(dhd_pub_t *dhd, bool *lockvar);
-+static void brcmf_sdbrcm_wait_event_wakeup(dhd_bus_t *bus);
+ #include "phy/wlc_phy_int.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index a7994e4..2ee0785 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -30,7 +30,7 @@
+ #include <bcmutils.h>
+ #include <bcmnvram.h>
+ #include <sbchipc.h>
+-#include <pcicfg.h>
++#include <nicpci.h>
+ #include <sbdma.h>
+ #include <bcmdma.h>
  
- /* Packet free applicable unconditionally for sdio and sdspi.
-  * Conditional if bufpool was present for gspi bus.
-@@ -1501,7 +1504,7 @@ brcmf_sdbrcm_bus_txctl(struct dhd_bus *bus, unsigned char *msg, uint msglen)
- 		bus->ctrl_frame_buf = frame;
- 		bus->ctrl_frame_len = len;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index c50f335..18a5463 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -25,7 +25,6 @@
+ #include <bcmwifi.h>
+ #include <bcmnvram.h>
+ #include <aiutils.h>
+-#include <pcicfg.h>
+ #include <bcmsrom.h>
+ #include <sbdma.h>
+ #include <bcmdma.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
+index 7bb122b..c94b459 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_phy_shim.c
+@@ -23,14 +23,12 @@
  
--		brcmf_wait_for_event(bus->dhd, &bus->ctrl_frame_stat);
-+		brcmf_sdbrcm_wait_for_event(bus->dhd, &bus->ctrl_frame_stat);
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+-#include <linux/pci.h>
  
- 		if (bus->ctrl_frame_stat == false) {
- 			DHD_INFO(("%s: ctrl_frame_stat == false\n", __func__));
-@@ -4577,7 +4580,7 @@ clkwait:
+ #include <bcmdefs.h>
+ #include <bcmutils.h>
+ #include <bcmwifi.h>
+ #include <aiutils.h>
+ #include <sbchipc.h>
+-#include <pcicfg.h>
+ #include <sbdma.h>
+ #include <bcmdma.h>
+ #include <wlc_pmu.h>
+diff --git a/drivers/staging/brcm80211/include/nicpci.h b/drivers/staging/brcm80211/include/nicpci.h
+index f901c60..e9058c6 100644
+--- a/drivers/staging/brcm80211/include/nicpci.h
++++ b/drivers/staging/brcm80211/include/nicpci.h
+@@ -17,7 +17,47 @@
+ #ifndef	_NICPCI_H
+ #define	_NICPCI_H
  
- 		DHD_INFO(("Return_dpc value is : %d\n", ret));
- 		bus->ctrl_frame_stat = false;
--		brcmf_wait_event_wakeup(bus->dhd);
-+		brcmf_sdbrcm_wait_event_wakeup(bus);
- 	}
- 	/* Send queued frames (limit 1 if rx may still be pending) */
- 	else if ((bus->clkstate == CLK_AVAIL) && !bus->fcstate &&
-@@ -5213,6 +5216,7 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
- 	}
- 
- 	spin_lock_init(&bus->txqlock);
-+	init_waitqueue_head(&bus->ctrl_wait);
- 
- 	/* Attach to the dhd/OS/network interface */
- 	bus->dhd = brcmf_attach(bus, SDPCM_RESERVE);
-@@ -6317,3 +6321,21 @@ brcmf_sdbrcm_chip_detach(struct dhd_bus *bus)
- 	kfree(bus->ci);
- 	bus->ci = NULL;
- }
++/* PCI configuration address space size */
++#define PCI_SZPCR		256
 +
-+static void
-+brcmf_sdbrcm_wait_for_event(dhd_pub_t *dhd, bool *lockvar)
-+{
-+	brcmf_os_sdunlock(dhd);
-+	wait_event_interruptible_timeout(dhd->bus->ctrl_wait,
-+					 (*lockvar == false), HZ * 2);
-+	brcmf_os_sdlock(dhd);
-+	return;
-+}
++/* Brcm PCI configuration registers */
++/* backplane address space accessed by BAR0 */
++#define PCI_BAR0_WIN		0x80
++/* sprom property control */
++#define PCI_SPROM_CONTROL	0x88
++/* mask of PCI and other cores interrupts */
++#define PCI_INT_MASK		0x94
++/* backplane core interrupt mask bits offset */
++#define  PCI_SBIM_SHIFT		8
++/* backplane address space accessed by second 4KB of BAR0 */
++#define PCI_BAR0_WIN2		0xac
++/* pci config space gpio input (>=rev3) */
++#define PCI_GPIO_IN		0xb0
++/* pci config space gpio output (>=rev3) */
++#define PCI_GPIO_OUT		0xb4
++/* pci config space gpio output enable (>=rev3) */
++#define PCI_GPIO_OUTEN		0xb8
 +
-+static void
-+brcmf_sdbrcm_wait_event_wakeup(dhd_bus_t *bus)
-+{
-+	if (waitqueue_active(&bus->ctrl_wait))
-+		wake_up_interruptible(&bus->ctrl_wait);
-+	return;
-+}
++/* bar0 + 4K accesses external sprom */
++#define PCI_BAR0_SPROM_OFFSET	(4 * 1024)
++/* bar0 + 6K accesses pci core registers */
++#define PCI_BAR0_PCIREGS_OFFSET	(6 * 1024)
++/*
++ * pci core SB registers are at the end of the
++ * 8KB window, so their address is the "regular"
++ * address plus 4K
++ */
++#define PCI_BAR0_PCISBR_OFFSET	(4 * 1024)
++/* bar0 window size Match with corerev 13 */
++#define PCI_BAR0_WINSZ		(16 * 1024)
++/* On pci corerev >= 13 and all pcie, the bar0 is now 16KB and it maps: */
++/* bar0 + 8K accesses pci/pcie core registers */
++#define PCI_16KB0_PCIREGS_OFFSET (8 * 1024)
++/* bar0 + 12K accesses chipc core registers */
++#define PCI_16KB0_CCREGS_OFFSET	(12 * 1024)
++
+ struct sbpcieregs;
++struct si_pub;
+ 
+ extern u8 pcicore_find_pci_capability(void *dev, u8 req_cap_id,
+ 					 unsigned char *buf, u32 *buflen);
+@@ -29,7 +69,7 @@ extern uint pcie_writereg(struct sbpcieregs *pcieregs,
+ extern u8 pcie_clkreq(void *pch, u32 mask, u32 val);
+ extern u32 pcie_lcreg(void *pch, u32 mask, u32 val);
+ 
+-extern void *pcicore_init(si_t *sih, void *pdev, void *regs);
++extern void *pcicore_init(struct si_pub *sih, void *pdev, void *regs);
+ extern void pcicore_deinit(void *pch);
+ extern void pcicore_attach(void *pch, char *pvars, int state);
+ extern void pcicore_hwup(void *pch);
 -- 
-1.7.1
+1.7.4.1
 
 
