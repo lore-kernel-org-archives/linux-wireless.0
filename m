@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49165 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028Ab1FRSp4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 14:45:56 -0400
-Received: by wwe5 with SMTP id 5so1391590wwe.1
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 11:45:55 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: fix rx->key NULL dereference during mic failure
-Date: Sat, 18 Jun 2011 21:45:49 +0300
-Message-Id: <1308422749-16939-1-git-send-email-arik@wizery.com> (sfid-20110618_204559_893731_C7BC5AC8)
+Received: from mx1.redhat.com ([209.132.183.28]:11804 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755567Ab1FAPSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 11:18:35 -0400
+Date: Wed, 1 Jun 2011 17:17:57 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwl4965: correctly validate temperature value
+Message-ID: <20110601151752.GA9254@redhat.com> (sfid-20110601_171838_874130_81074D62)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes when reporting a MIC failure rx->key may be unset. This
-code path is hit when receiving a packet meant for a multicast
-address, and decryption is performed in HW.
+In some cases we can read wrong temperature value. If after that
+temperature value will not be updated to good one, we badly configure
+tx power parameters and device is unable to send a data.
 
-Fortunately, the failing key_idx is not used for anything up to
-(and including) usermode, so we allow ourselves to set a bogus one
-when a key cannot be retrieved.
+Resolves:
+https://bugzilla.kernel.org/show_bug.cgi?id=35932
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/wpa.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Cc: stable@kernel.org # 2.6.39+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9dc3b5f..c6dafc1 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -154,7 +154,8 @@ update_iv:
- 	return RX_CONTINUE;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
+index f5433c7..f9db25b 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
+@@ -1543,7 +1543,7 @@ static void iwl4965_temperature_calib(struct iwl_priv *priv)
+ 	s32 temp;
  
- mic_fail:
--	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
-+	mac80211_ev_michael_mic_failure(rx->sdata,
-+					rx->key ? rx->key->conf.keyidx : -1,
- 					(void *) skb->data, NULL, GFP_ATOMIC);
- 	return RX_DROP_UNUSABLE;
- }
--- 
-1.7.4.1
-
+ 	temp = iwl4965_hw_get_temperature(priv);
+-	if (temp < 0)
++	if (IWL_TX_POWER_TEMPERATURE_OUT_OF_RANGE(temp))
+ 		return;
+ 
+ 	if (priv->temperature != temp) {
