@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1615 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754781Ab1FFHb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 03:31:59 -0400
-Message-ID: <4DEC825A.2020404@broadcom.com> (sfid-20110606_093202_193462_3587BF33)
-Date: Mon, 6 Jun 2011 09:31:38 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:59972 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754862Ab1FAQ2q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 12:28:46 -0400
+Received: by qyg14 with SMTP id 14so3083530qyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 09:28:45 -0700 (PDT)
 MIME-Version: 1.0
-To: "Julian Calaby" <julian.calaby@gmail.com>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t
- with struct si_pub
+In-Reply-To: <4DE6678F.1020803@broadcom.com>
 References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
- <1306928768-7501-44-git-send-email-rvossen@broadcom.com>
- <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
- <4DE90DCE.6060207@broadcom.com>
- <BANLkTimQacOURw4wQzkyNizksZZj=nhvfQ@mail.gmail.com>
- <4DEB3FF3.8090904@broadcom.com>
- <BANLkTi=HrP5pSi0t-18N2yGpBueeL2qMSg@mail.gmail.com>
-In-Reply-To: <BANLkTi=HrP5pSi0t-18N2yGpBueeL2qMSg@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	<BANLkTinwvwauMOMXiFnUTnDonfB2oSxdRw@mail.gmail.com>
+	<4DE6678F.1020803@broadcom.com>
+Date: Wed, 1 Jun 2011 18:28:45 +0200
+Message-ID: <BANLkTi=6P=2qbf9mkuH5PL5TnpYu8q4-bw@mail.gmail.com> (sfid-20110601_182849_695090_2D771249)
+Subject: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
+ specific ioctls codes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
-
->> I am afraid I have to disagree with you, for the reason that by including
->> the header file you introduce unnecessary coupling. Let me elaborate. If a
->> .c file does not need to know the contents of a struct, but it only needs to
->> know that a pointer to an opaque struct, then one should not provide the C
->> file with knowledge on the internals of the struct (hence not include the .h
->> file).
+W dniu 1 czerwca 2011 18:23 użytkownik Henry Ptasinski
+<henryp@broadcom.com> napisał:
+> On 06/01/2011 04:59 AM, Rafał Miłecki wrote:
+>>
+>> 2011/6/1 Roland Vossen<rvossen@broadcom.com>:
+>>>
+>>> Code cleanup. Removal of code that is not invoked.
+>>
+>> Have you heard of "Release early, release often"? It's something, we
+>> like here...
 >
-> Fair enough. I guess I just don't like void pointers.
+> These are all changes that piled up during the merge window.
+>
+> We had some issues previously with patch dependencies when sending patches
+> out early and often, so we're trying to organize the patches a little
+> better.  Perhaps we went a little to far with this set.  We'll try to find a
+> better balance in the future.
 
-Well, what I mean is this: suppose you have a function that gets a 
-pointer to a struct as one of its parameters. This function calls 
-another function with this parameter:
+Yeah, merge window is something ugly for development :( I got already
+lost with my bcma/b43 patches and I'm just waiting for John to start
+grabbing old patches.
 
-void foo(struct *bar) {
-	some_other_fnct(bar);
-}
+John, wireless guys: did you ever consider creating some tree open
+during merge window? Something like to-become-wireless-next?
 
-Then foo() simply passes the pointer on to some_other_fnct(), and foo() 
-does not need to know about the members inside struct bar. So I am not 
-talking about void pointers here as the alternative.
-
-Bye, Roland.
-
+-- 
+Rafał
