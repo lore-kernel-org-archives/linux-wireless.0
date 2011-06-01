@@ -1,120 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2020 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753496Ab1F2Xsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:43 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 096/119] staging: brcm80211: removed
- brcmf_sdioh_interrupt_pending()
-Date: Wed, 29 Jun 2011 16:48:00 -0700
-Message-ID: <1309391303-22741-97-git-send-email-frankyl@broadcom.com> (sfid-20110630_014921_465013_ADCFB09D)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43436 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab1FATBN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 15:01:13 -0400
+Date: Wed, 1 Jun 2011 14:58:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
+Message-ID: <20110601185859.GF2509@tuxdriver.com> (sfid-20110601_210117_967685_89E4D264)
+References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+ <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
+ <1306823717.9366.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1306823717.9366.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Tue, May 31, 2011 at 08:35:17AM +0200, Johannes Berg wrote:
+> On Fri, 2011-05-20 at 17:52 +0530, Rajkumar Manoharan wrote:
+> > Stop tx queues before updating rate control to ensure
+> > proper rate selection. Otherwise packets can be transmitted
+> > in 40 Mhz whereas hw is configured in HT20.
+> 
+> Looks like I completely missed this since you hid it in an ath9k
+> patchset. DON'T DO THAT.
+> 
+> Anyway, John, please revert. This is completely useless. Not only is
+> abusing the CSA stop reason a show-stopper, the whole patch is also just
+> not right, it seems like a workaround around a rate control algorithm
+> that isn't able to do an atomic HT change by itself. Also, it won't even
+> do what you want, there may be packets being processed concurrently
+> while stopping the queue -- calling stop_queues() is no guarantee that
+> no packet will be processed afterwards.
 
-Code cleanup. This function always returned 0.
+Rajkumar, do you have an alternative fix to propose?
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    4 ----
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    8 --------
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 -------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    3 +--
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    5 -----
- 5 files changed, 1 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-index ee01e48..656caeb 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-@@ -53,10 +53,6 @@ brcmf_sdioh_interrupt_query(struct sdioh_info *si, bool *onoff);
- extern int
- brcmf_sdioh_interrupt_set(struct sdioh_info *si, bool enable_disable);
- 
--#if defined(BCMDBG)
--extern bool brcmf_sdioh_interrupt_pending(struct sdioh_info *si);
--#endif
--
- extern int brcmf_sdioh_claim_host_and_lock(struct sdioh_info *si);
- extern int brcmf_sdioh_release_host_and_unlock(struct sdioh_info *si);
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 4c7e4a9..132b18f 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -138,14 +138,6 @@ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_card *card)
- 	return brcmf_sdioh_interrupt_deregister(card->sdioh);
- }
- 
--#if defined(BCMDBG)
--bool brcmf_sdcard_intr_pending(struct brcmf_sdio_card *card)
--{
--	ASSERT(card);
--	return brcmf_sdioh_interrupt_pending(card->sdioh);
--}
--#endif
--
- int brcmf_sdcard_devremove_reg(struct brcmf_sdio_card *card,
- 			       brcmf_sdiocard_cb_fn_t fn,
- 			       void *argh)
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index d0e9b3d..092d044 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -244,13 +244,6 @@ brcmf_sdioh_interrupt_query(struct sdioh_info *sd, bool *onoff)
- 	return 0;
- }
- 
--#if defined(BCMDBG)
--extern bool brcmf_sdioh_interrupt_pending(struct sdioh_info *sd)
--{
--	return 0;
--}
--#endif
--
- uint brcmf_sdioh_query_iofnum(struct sdioh_info *sd)
- {
- 	return sd->num_funcs;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 3ed9e12..e43c53a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1889,8 +1889,7 @@ void brcmf_sdbrcm_bus_dump(struct brcmf_pub *dhdp, struct brcmu_strbuf *strbuf)
- #endif				/* SDTEST */
- #ifdef BCMDBG
- 	brcmu_bprintf(strbuf, "dpc_sched %d host interrupt%spending\n",
--		    bus->dpc_sched,
--		    (brcmf_sdcard_intr_pending(bus->card) ? " " : " not "));
-+		      bus->dpc_sched, " not ");
- 	brcmu_bprintf(strbuf, "blocksize %d roundup %d\n", bus->blocksize,
- 		    bus->roundup);
- #endif				/* BCMDBG */
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 5c5bbca..f05067a 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -93,11 +93,6 @@ brcmf_sdcard_intr_reg(struct brcmf_sdio_card *card, brcmf_sdiocard_cb_fn_t fn,
- 
- extern int brcmf_sdcard_intr_dereg(struct brcmf_sdio_card *card);
- 
--#if defined(BCMDBG)
--/* Query pending interrupt status from the host controller */
--extern bool brcmf_sdcard_intr_pending(struct brcmf_sdio_card *card);
--#endif
--
- /* Register a callback to be called on device removal.
-  * No-op in the case of non-removable/hardwired devices.
-  */
 -- 
-1.7.1
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
