@@ -1,105 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4963 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758838Ab1FALqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:32 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 48/83] staging: brcm80211: remove phy_version.h
-Date: Wed, 1 Jun 2011 13:45:33 +0200
-Message-ID: <1306928768-7501-48-git-send-email-rvossen@broadcom.com> (sfid-20110601_134717_400912_8806C20C)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829Ab1FAGjm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 02:39:42 -0400
+Subject: [PATCH] bluetooth: fix error cases
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Gustavo F. Padovan" <padovan@profusion.mobi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Jun 2011 08:39:37 +0200
+Message-ID: <1306910377.3867.5.camel@jlt3.sipsolutions.net> (sfid-20110601_083948_288860_F079B1E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Removed the file phy_version.h from the driver sources. It was not
-used. For keeping track of the phy version, which is a separately
-developed component, one definition has been kept and placed in
-wlc_phy_int.h.
+The error cases in a few functions can use a
+socket variable that was never initialised,
+gcc correctly warns about this:
+net/bluetooth/l2cap_core.c: In function ‘l2cap_recv_frame’:
+include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
+net/bluetooth/l2cap_core.c:3789:15: note: ‘sk’ was declared here
+include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
+net/bluetooth/l2cap_core.c:3756:15: note: ‘sk’ was declared here
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Initialise the socket to NULL as clearly intended
+by the error handling code.
+
+Also fix a "set but not used" warning.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../staging/brcm80211/brcmsmac/phy/phy_version.h   |   36 --------------------
- .../staging/brcm80211/brcmsmac/phy/wlc_phy_int.h   |    2 +
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c   |    1 -
- 3 files changed, 2 insertions(+), 37 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmsmac/phy/phy_version.h
+ net/bluetooth/l2cap_core.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_version.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_version.h
-deleted file mode 100644
-index 51a2238..0000000
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_version.h
-+++ /dev/null
-@@ -1,36 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef phy_version_h_
--#define phy_version_h_
--
--#define	PHY_MAJOR_VERSION		1
--
--#define	PHY_MINOR_VERSION		82
--
--#define	PHY_RC_NUMBER		8
--
--#define	PHY_INCREMENTAL_NUMBER	0
--
--#define	PHY_BUILD_NUMBER		0
--
--#define	PHY_VERSION			{ 1, 82, 8, 0 }
--
--#define	PHY_VERSION_NUM		0x01520800
--
--#define	PHY_VERSION_STR		"1.82.8.0"
--
--#endif				/* phy_version_h_ */
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-index 51e37aa..92064ba 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_int.h
-@@ -23,6 +23,8 @@
+--- a/net/bluetooth/l2cap_core.c	2011-06-01 08:33:36.000000000 +0200
++++ b/net/bluetooth/l2cap_core.c	2011-06-01 08:34:35.000000000 +0200
+@@ -3667,7 +3667,6 @@ static inline int l2cap_data_channel(str
+ {
+ 	struct l2cap_chan *chan;
+ 	struct sock *sk = NULL;
+-	struct l2cap_pinfo *pi;
+ 	u16 control;
+ 	u8 tx_seq;
+ 	int len;
+@@ -3679,7 +3678,6 @@ static inline int l2cap_data_channel(str
+ 	}
  
- #include <wlc_phy_hal.h>
+ 	sk = chan->sk;
+-	pi = l2cap_pi(sk);
  
-+#define	PHY_VERSION			{ 1, 82, 8, 0 }
-+
- #define PHYHAL_ERROR	0x0001
- #define PHYHAL_TRACE	0x0002
- #define PHYHAL_INFORM	0x0004
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index 0f4a1cc..6856a60 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -36,7 +36,6 @@
- #include "d11.h"
- #include "wlc_types.h"
- #include "wlc_cfg.h"
--#include "phy/phy_version.h"
- #include "wlc_key.h"
- #include "wlc_channel.h"
- #include "wlc_scb.h"
--- 
-1.7.4.1
+ 	BT_DBG("chan %p, len %d", chan, skb->len);
+ 
+@@ -3755,7 +3753,7 @@ done:
+ 
+ static inline int l2cap_conless_channel(struct l2cap_conn *conn, __le16 psm, struct sk_buff *skb)
+ {
+-	struct sock *sk;
++	struct sock *sk = NULL;
+ 	struct l2cap_chan *chan;
+ 
+ 	chan = l2cap_global_chan_by_psm(0, psm, conn->src);
+@@ -3788,7 +3786,7 @@ done:
+ 
+ static inline int l2cap_att_channel(struct l2cap_conn *conn, __le16 cid, struct sk_buff *skb)
+ {
+-	struct sock *sk;
++	struct sock *sk = NULL;
+ 	struct l2cap_chan *chan;
+ 
+ 	chan = l2cap_global_chan_by_scid(0, cid, conn->src);
 
 
