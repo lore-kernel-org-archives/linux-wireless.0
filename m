@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:62898 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909Ab1FTBp3 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39555 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab1FASD5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 21:45:29 -0400
-Received: by pzk9 with SMTP id 9so3104662pzk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 18:45:29 -0700 (PDT)
-Message-ID: <4DFEA5FF.3080908@ring3k.org> (sfid-20110620_034533_419956_F823689C)
-Date: Mon, 20 Jun 2011 10:44:31 +0900
-From: Mike McCormack <mikem@ring3k.org>
+	Wed, 1 Jun 2011 14:03:57 -0400
+Received: by qwk3 with SMTP id 3so29856qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 11:03:56 -0700 (PDT)
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] rtlwifi: Various cleanups
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20110601184931.499557c6@boulder.homenet>
+References: <4CEAB969.20702@lwfinger.net>
+	<1290451982.20888.2.camel@maggie>
+	<4CEAC095.7020706@lwfinger.net>
+	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
+	<4DC9853A.1090508@lwfinger.net>
+	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
+	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
+	<20110601114839.433ae42d@boulder.homenet>
+	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
+	<20110601130842.077da1c3@boulder.homenet>
+	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
+	<20110601160101.75e30b3d@boulder.homenet>
+	<BANLkTim9pQc+yxdQLSL1-6VNiyM6_tvJ6g@mail.gmail.com>
+	<20110601184931.499557c6@boulder.homenet>
+Date: Wed, 1 Jun 2011 20:03:56 +0200
+Message-ID: <BANLkTi=Cm1o8HVqugC6JNooP8h+HpJ=aRQ@mail.gmail.com> (sfid-20110601_200400_849677_B3B60A01)
+Subject: Re: b43 error under heavy load
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
+> The one which failed caused the cessation of
+> wireless traffic, and was accompanied by the debug log reports of out
+> of order TX status earlier referred to, and with only one single report
 
-The following series is a bunch of cleanups for the rtlwifi drivers.
+As I said, I don't really suspect any relation between full TX ring
+and out of order problems anymore.
 
-thanks,
-
-Mike
-
-Mike McCormack (3):
-  rtlwifi: Fix typo in variable name
-  rtlwifi: rtl8192cu: Remove unused parameter
-  rtlwifi: rtl8192{c,ce,cu,se}: Remove comparisons of booleans with
-    true
-
- drivers/net/wireless/rtlwifi/base.c               |    2 +-
- drivers/net/wireless/rtlwifi/core.c               |    8 +-
- drivers/net/wireless/rtlwifi/efuse.c              |    8 +-
- drivers/net/wireless/rtlwifi/pci.c                |    3 +-
- drivers/net/wireless/rtlwifi/ps.c                 |   65 ++-------------------
- drivers/net/wireless/rtlwifi/ps.h                 |    3 +-
- drivers/net/wireless/rtlwifi/rc.c                 |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |   10 ++--
- drivers/net/wireless/rtlwifi/rtl8192ce/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c       |    9 ++-
- drivers/net/wireless/rtlwifi/rtl8192se/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c      |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192se/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |    6 +-
- drivers/net/wireless/rtlwifi/wifi.h               |    2 +-
- 23 files changed, 49 insertions(+), 105 deletions(-)
+But it won't hurt to ask just in case:
+Did you see relation between this single "Stopped TX ring 1" and
+massive out of order messages? Did out of order messages starter right
+after "Stopped TX ring 1" one?
 
 -- 
-1.7.4.1
-
+Rafał
