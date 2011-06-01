@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4072 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:41827 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753628Ab1FHOkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 10:40:53 -0400
-Subject: Re: iwlagn aggregation problem when stations are removed/re-added
- quickly
-From: wwguy <wey-yi.w.guy@intel.com>
+	id S933373Ab1FAKxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 06:53:12 -0400
+Message-ID: <4DE61A11.1070708@openwrt.org> (sfid-20110601_125315_717219_B851BBD2)
+Date: Wed, 01 Jun 2011 12:53:05 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1307531276.3961.8.camel@jlt3.sipsolutions.net>
-References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
-	 (sfid-20110514_005657_579238_E23F3390)  <1307531276.3961.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 07:37:04 -0700
-Message-ID: <1307543824.5115.10.camel@wwguy-ubuntu> (sfid-20110608_164058_529361_6C718BEF)
-Mime-Version: 1.0
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
+ after receiving a beacon
+References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>	 <1306869394-83047-2-git-send-email-nbd@openwrt.org>	 <1306870354.29989.1.camel@jlt3.sipsolutions.net>	 <4DE543E2.9070600@openwrt.org>	 <1306872395.29989.3.camel@jlt3.sipsolutions.net>	 <4DE54E16.7000709@openwrt.org> <1306901843.3867.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1306901843.3867.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-08 at 04:07 -0700, Johannes Berg wrote:
-> On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
-> 
-> > I'm running an experiment where a client connects to the AP (both HT
-> > iwlagn devices), starts a large transfer that gets aggregation going,
-> > disassociates, and then reassociates and restarts the transfer.
-> > 
-> > When mac80211 stops the queue (as part of the client's disassocation
-> > process), it goes into the following code:
-> > 
-> >                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
-> >                 priv->stations[sta_id].tid[tid].agg.state =
-> >                                 IWL_EMPTYING_HW_QUEUE_DELBA;
-> >                 spin_unlock_irqrestore(&priv->sta_lock, flags);
-> > 
-> > but if the station is removed right away the packets stay in the
-> > queue. Indeed, when the client reconnects, the packets are then
-> > delivered! But then the queue gets stuck and the AP issues a firmware
-> > reset, which doesn't actually get traffic flowing again. Below,
-> > there's a log with IWL_DL_HT set. It may be something racy; adding
-> > DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
-> > in a few tries.
-> > 
-> > I suspect this will also be a problem with P2P, and not just my klugey
-> > use of AP mode. Any suggestions as to how to fix?
-> 
-> Sorry I'm replying this late. I'm not sure what the best way to fix it
-> would be, but it makes sense that this would happen. Maybe we can flush
-> the aggregation queue (asking the ucode to drop all frames) when the
-> station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
-> know if that's possible?
-> 
-flush the queue might be a good solution, I was being told (I don't
-remember who and when which is bad), the "tx flush" command is needed
-especially for P2P
+On 2011-06-01 6:17 AM, Johannes Berg wrote:
+> On Tue, 2011-05-31 at 22:22 +0200, Felix Fietkau wrote:
+>>  On 2011-05-31 10:06 PM, Johannes Berg wrote:
+>>  >  On Tue, 2011-05-31 at 21:39 +0200, Felix Fietkau wrote:
+>>  >>   On 2011-05-31 9:32 PM, Johannes Berg wrote:
+>>  >>   >   On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
+>>  >>   >>    When a STA entry is created too early, a lot of essential information
+>>  >>   >>    required for rate control is missing.
+>>  >>   >
+>>  >>   >   I don't understand how you can rely on beacons for WDS.
+>>  >>   You usually set up WDS links between APs on the same channel, each
+>>  >>   running both a normal AP vif and a WDS vif. The remote AP's beacons are
+>>  >>   then used to detect the capabilities of the peer.
+>>  >
+>>  >  I don't think we can rely on "usually" unless we also enforce that
+>>  >  somehow. Otherwise this link will basically be dead. There's nothing
+>>  >  that requires you to add WDS to an AP interface only after all.
+>>  I don't think using WDS without APs makes any sense. Since WDS alone
+>>  does not use beacons or probe requests, there's nothing else that would
+>>  ensure that rate information, HT capabilities, etc. get exchanged.
+>
+> I just don't like the fact that you can create a non-functional WDS
+> interface by adding it when there's no AP interface.
+Actually, I just noticed that ieee80211_assign_perm_addr forces you to 
+use the MAC address of an existing AP interface for a WDS interface, 
+same as for an AP VLAN interface. So the requirement to also have an AP 
+mode interface is not new.
 
-btw, there are 2 type of "tx flush", flush all the frames in uCode, or
-just flush the frames in specified queue.
-
-Thanks
-Wey
-
-
-
-
+- Felix
