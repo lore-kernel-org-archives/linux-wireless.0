@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1349 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961Ab1FOMJe convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36090 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932665Ab1FAAqv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 08:09:34 -0400
-Message-ID: <4DF8A0EF.5030702@broadcom.com> (sfid-20110615_140938_247283_C6EB54E7)
-Date: Wed, 15 Jun 2011 14:09:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Tue, 31 May 2011 20:46:51 -0400
+Received: by yxs7 with SMTP id 7so2016495yxs.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 17:46:50 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+In-Reply-To: <BANLkTik73ww-bKt+zmUonNWmGB8oLPgTWA@mail.gmail.com>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	<BANLkTik73ww-bKt+zmUonNWmGB8oLPgTWA@mail.gmail.com>
+Date: Wed, 1 Jun 2011 08:46:50 +0800
+Message-ID: <BANLkTinxtWs9_DCEfjivxb2ae6xhfQgG3A@mail.gmail.com> (sfid-20110601_024654_206829_EFC5E60D)
+Subject: Re: [RFC 00/32] ath9k: add initial support for AR9330
+From: Adrian Chadd <adrian@freebsd.org>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: Gabor Juhos <juhosg@openwrt.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
->   static u8 bcma_sprom_crc(const u16 *sprom)
->   {
-> -	int word;
-> -	u8 crc = 0xFF;
-> +	u8 crc;
-> +	u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
-> +	u8 table[CRC8_TABLE_SIZE];
-> +	u16 word;
+Hi,
+
+On 1 June 2011 03:51, Daniel Halperin <dhalperi@cs.washington.edu> wrote:
+> On Tue, May 31, 2011 at 12:36 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> It is a 1x1 chip and supports 2.4GHz only.
 >
-> +	/* u16 to u8 */
->   	for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
-> -		crc = bcma_crc8(crc, sprom[word]&  0x00FF);
-> -		crc = bcma_crc8(crc, (sprom[word]&  0xFF00)>>  8);
-> +		sprom2[word * 2] = sprom[word]&  0x00FF;
-> +		sprom2[(word * 2) + 1] = (sprom[word]&  0xFF00)>>  8;
->   	}
-> -	crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF);
-> +	/* 127th byte */
-> +	sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
-> +				sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF;
-> +
-> +	/* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
-> +	crc8_populate_lsb(table, 0xAB);
-> +
-> +	/* Calculate */
-> +	crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
->   	crc ^= 0xFF;
+> [snip]
 >
->   	return crc;
+>> �ath9k: enable antenna diversity for AR9330
+>
+> I'm confused by the combination of these two.
 
-You could do (I think):
+I bet it's like the AR9285 - there's one TX and one RX chain, but two
+RX inputs, two LNAs and some controllable bits to determine how the
+baseband controls how the LNAs are configured/combined for packet RX.
 
-crc8_populate_lsb(table, 0xAB);
-for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4; word++) {
-	u16 val = cpu_to_le16(sprom[word]);
-	crc = crc8(table,&val, sizeof(u16), crc);
-}
-
-
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+For clarity (heh), see the diversity combining code in recv.c; it
+outlines the various LNA combination modes.
 
 
+Adrian
