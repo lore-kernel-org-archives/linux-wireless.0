@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:37826 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753089Ab1F3BRy convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37092 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398Ab1FAXWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 21:17:54 -0400
-Received: by gwaa18 with SMTP id a18so683862gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 18:17:54 -0700 (PDT)
+	Wed, 1 Jun 2011 19:22:36 -0400
+Received: by iyb14 with SMTP id 14so231986iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 16:22:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinhc2QAgWTk9tur9Y-m2i3tDhvXOQ@mail.gmail.com>
-References: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
-	<BANLkTinhc2QAgWTk9tur9Y-m2i3tDhvXOQ@mail.gmail.com>
-Date: Thu, 30 Jun 2011 02:17:53 +0100
-Message-ID: <BANLkTi=3imkrK7Chzb5_-c2GT5omo0Ae=g@mail.gmail.com> (sfid-20110630_031802_499021_70325542)
-Subject: Re: [ath9k-devel] STBC functionality details request
-From: Fred Matthews <fredmm@hotmail.co.uk>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1306928768-7501-54-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com> <1306928768-7501-54-git-send-email-rvossen@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 2 Jun 2011 09:22:15 +1000
+Message-ID: <BANLkTimFNLgUf8bOps7bWFVfYzOMzvWEcA@mail.gmail.com> (sfid-20110602_012242_493831_F7DDFAFF)
+Subject: Re: [PATCH 54/83] staging: brcm80211: combine sbsdpcmdev.h and sbsdio.h
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-Thanks for replying Adrian,
+On Wed, Jun 1, 2011 at 21:45, Roland Vossen <rvossen@broadcom.com> wrote:
+> From: Franky Lin <frankyl@broadcom.com>
+>
+> Combine two head files both for sdio sb configuration in fullmac
+>
+> Signed-off-by: Franky Lin <frankyl@broadcom.com>
+> Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
 
-OK, just for clarity, you are saying for 1-stream STBC NICs
-(AR9380/9280), when I enable STBC from hostapd, the driver only
-transmits in STBC (transmits multiple copies of data to each antenna)
-if it sending at MCSs 0-7 (1 stream rates), due to low signal quality
-or via fixing the MCS to those values. For all other MCSs STBC is
-disabled.
+You might want to mention the typedef removal in the description of
+this and the other similar patches.
 
-Does the rate adaptation (minstrel/ath9k) tell the driver to use STBC,
-or is this done at automatically at a lower level?
+Thanks,
 
-Any other information about STBC would be appreciated.
+-- 
+Julian Calaby
 
-Cheers
-
-On Thu, Jun 30, 2011 at 1:57 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> I think things are a bit confusing, but here goes.
->
-> The earlier NICs only support either RX STBC (pre ar9280?) or TX
-> 1-stream STBC (ar9280 or above). Multi-stream STBC isn't in any of the
-> AR9xxx NICs. It may be in the AR9287; it may be in the AR9300/AR9400.
-> I've not looked.
->
-> I bet what you're finding is:
->
-> * with STBC enabled, for single stream rates, it's tx'ing using STBC.
-> It just sets a bit in the TX descriptor.
-> * with STBC enabled, for multi-stream rates, it's not setting the STBC
-> TX bit and it's instead sending it as a 2 stream packet w/out STBC.
->
-> The AR9280 is not a one stream NIC - it's a two stream TX/RX NIC.
-> (Unless you're using the AR9281 - which is an AR9280 1T2R stream
-> device.) The AR9285 is a 1x1 stream device. The AR9287 is a 2x2 stream
-> device.
->
-> HTH,
->
->
-> Adrian
->
->> I am using STBC (Space Time Block Coding) 1 stream NICs like the AR9280.I would be very grateful someone can kindly advise on how exactly STBC(transmits multiple copies of a data across each of the antennas) works in ath9k.
->> I ask this because when I enable STBC 1-stream, the driver seems to uses Space division multiplexing (can this be disabled/enabled?), since the rate is over 150Mbps.
->> When is STBC activated ?, ...Does Minstrel/ath9k rate adaptation mechanism find first check if Spatial multiplexing is better, if not uses STBC ?
->> Thank you for your time
->> _______________________________________________
->> ath9k-devel mailing list
->> ath9k-devel@lists.ath9k.org
->> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
