@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:18423 "EHLO c60.cesmail.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:1377 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759575Ab1FWPov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 11:44:51 -0400
-Message-ID: <4E035F71.20602@gnu.org> (sfid-20110623_174455_010179_169C80E6)
-Date: Thu, 23 Jun 2011 11:44:49 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1758389Ab1FAQXy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 12:23:54 -0400
+Message-ID: <4DE6678F.1020803@broadcom.com> (sfid-20110601_182400_638829_F3F6BA4C)
+Date: Wed, 1 Jun 2011 09:23:43 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
 MIME-Version: 1.0
-To: Maya it <maya1625it@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] dev_base list head in the linux kernel code
-References: <BANLkTinvscyX=xh_auh96nf2UPV=njkYXg@mail.gmail.com>
-In-Reply-To: <BANLkTinvscyX=xh_auh96nf2UPV=njkYXg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
+ specific ioctls codes
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+ <BANLkTinwvwauMOMXiFnUTnDonfB2oSxdRw@mail.gmail.com>
+In-Reply-To: <BANLkTinwvwauMOMXiFnUTnDonfB2oSxdRw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/22/2011 10:12 PM, Maya it wrote:
-> Hi all,
+On 06/01/2011 04:59 AM, Rafał Miłecki wrote:
+> 2011/6/1 Roland Vossen<rvossen@broadcom.com>:
+>> Code cleanup. Removal of code that is not invoked.
 >
-> I have two wireless cards (wlan0 and wlan1) and want to access them
-> separately. I plan to keep both in adhoc mode and communicate with wlan0 and
-> wlan1 respectively at the other end of this communication. But since I am
-> working at the kernel level, and I want to access these devices from the
-> dev_base list. As far as I know, dev_base saves the net_devices which are
-> initialized at boot up time. So I want to open the device and change its
-> configuration after the kernel has loaded.
+> Have you heard of "Release early, release often"? It's something, we
+> like here...
+
+These are all changes that piled up during the merge window.
+
+We had some issues previously with patch dependencies when sending 
+patches out early and often, so we're trying to organize the patches a 
+little better.  Perhaps we went a little to far with this set.  We'll 
+try to find a better balance in the future.
+
+> I've no idea who will try to review 83 patches :|
 >
-> Please guide and let me know if I am wrong in understanding the basics of
-> the dev_base list.
+> And you didn't even send [00/83] with summary.
+>
 
-Please don't cross-post.  Cross-posting should be reserved for really 
-important topics, such as announcements by lead developers.  I'm 
-trimming the cc list.  Actually, your question would be suitable for the 
-netdev list, as there it nothing specific in your question about 
-wireless devices, let alone ath9k.  Or better yet, maybe you could find 
-some forum or list for the newbies in kernel programming?
+Yea, that's not good.  Will make sure to include a summary in the future.
 
-I suggest that you check the latest kernel source for examples before 
-asking questions.  You can easily find that access to dev_base is 
-encapsulated by macros defined in netdevice.h, such as for_each_netdev.
+Thanks,
+- Henry
 
-Now you can look for examples of for_each_netdev in the code and see if 
-they do what you need.
-
--- 
-Regards,
-Pavel Roskin
