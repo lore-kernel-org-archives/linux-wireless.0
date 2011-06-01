@@ -1,61 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34924 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2406 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756176Ab1FFNbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 09:31:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 06:31:12 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] ath9k: Fix sending of PAPRD frames in HT40
-Date: Mon, 6 Jun 2011 19:01:21 +0530
-Message-ID: <1307367081-7841-1-git-send-email-mshajakhan@atheros.com> (sfid-20110606_153149_082381_1F0F3BAD)
+	id S1758860Ab1FALqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:40 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 77/83] staging: brcm80211: moved /include/sdio_host.h to
+ /brcmfmac dir
+Date: Wed, 1 Jun 2011 13:46:02 +0200
+Message-ID: <1306928768-7501-77-git-send-email-rvossen@broadcom.com> (sfid-20110601_134740_980345_5413435E)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Code cleanup.
 
-when the AP is configured with HT40 and when PAPRD is enabled in station
-we have PAPRD training frames never sent out because of the following
-failure "PAPRD target power delta out of range". This mainly happens in
-channel 10,11 in OTA testing and sometimes in channel 6 under wired setup.
-	the reason behind this issue is all the HT40 rates target power are 0
-as they seem to take this value from EEPROM template.
-	need to make further investigation to make sure this is the
-correct fix rather than a work around.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h      |    2 ++
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    2 --
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    2 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |    2 +-
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    4 +---
+ .../brcm80211/{include => brcmfmac}/sdio_host.h    |    0
+ 7 files changed, 6 insertions(+), 8 deletions(-)
+ rename drivers/staging/brcm80211/{include => brcmfmac}/sdio_host.h (100%)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ff8150e..2e370c6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -1461,7 +1461,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index 53c3291..e9da1ce 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -17,6 +17,8 @@
+ #ifndef	_sdio_api_h_
+ #define	_sdio_api_h_
  
--		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
-+		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++#include "sdio_host.h"
++
+ #define SDIOH_API_RC_SUCCESS                          (0x00)
+ #define SDIOH_API_RC_FAIL	                      (0x01)
+ #define SDIOH_API_SUCCESS(status) (status == 0)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index d6e90d7..b3bdd48 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -25,8 +25,6 @@
+ #include <brcmu_wifi.h>
+ #include <soc.h>
  
-@@ -2616,7 +2616,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+-#include <sdio_host.h>		/* BRCM API for SDIO
+-			 clients (such as wl, dhd) */
+ #include <bcmsdbus.h>		/* common SDIO/controller interface */
+ #include <sbsdio.h>		/* BRCM sdio device core */
  
--		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
-+		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index 37cf61a..71ef23a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -28,8 +28,8 @@
+ #include <defs.h>
+ #include <brcm_hw_ids.h>
+ #include <brcmu_utils.h>
+-#include <sdio_host.h>
+ #include <brcmu_wifi.h>
++#include "sdio_host.h"
  
+ #if defined(OOB_INTR_ONLY)
+ #include <linux/irq.h>
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 03a5966..66e204b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -20,7 +20,7 @@
+ #include <brcm_hw_ids.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+-#include <sdio_host.h>
++#include "sdio_host.h"
+ #include <bcmsdbus.h>		/* bcmsdh to/from specific controller APIs */
+ #include <sdiovar.h>		/* ioctl/iovars */
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+index 85ed095..9fc491d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+@@ -20,7 +20,7 @@
+ #include <defs.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+-#include <sdio_host.h>
++#include "sdio_host.h"
+ #include <bcmsdbus.h>		/* bcmsdh to/from specific controller APIs */
+ #include <sdiovar.h>		/* to get msglevel bit values */
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 966d98d..899890f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -22,9 +22,7 @@
+ #include <linux/mmc/sdio.h>
+ #include <asm/unaligned.h>
+ #include <defs.h>
+-#include <sdio_host.h>
+-
+-#include <defs.h>
++#include "sdio_host.h"
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include <brcm_hw_ids.h>
+diff --git a/drivers/staging/brcm80211/include/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/sdio_host.h
+rename to drivers/staging/brcm80211/brcmfmac/sdio_host.h
 -- 
-1.7.0.4
+1.7.4.1
+
 
