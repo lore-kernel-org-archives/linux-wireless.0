@@ -1,55 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43356 "EHLO mga09.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3783 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757062Ab1F0Ioq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 04:44:46 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 27 Jun 2011 11:43:27 +0300
-Subject: RE: [PATCH 18/25] iwlagn: warn about nested SYNC commands
-Message-ID: <4825B8A2C4E264489E57869F0DCFB2234455F7035C@hasmsx502.ger.corp.intel.com> (sfid-20110627_105906_712905_8D5E5231)
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110618_180558_166798_E27083E7)
-  <1309164053.3911.3.camel@jlt3.sipsolutions.net>
-	 (sfid-20110627_104220_919345_63C0C0BA)
- <1309164172.3911.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1309164172.3911.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	id S1161139Ab1FALqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:24 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 15/83] staging: brcm80211: remove iovars IOV_HOSTREG
+Date: Wed, 1 Jun 2011 13:45:00 +0200
+Message-ID: <1306928768-7501-15-git-send-email-rvossen@broadcom.com> (sfid-20110601_134638_848250_751A6CFB)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QWdncmVlZCBhZ2FpbiA6LSkNCg0KVGhhbmtzLA0KICAgICAgIEVtbWFudWVsDQoNCg0KPiAtLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9o
-YW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogTW9uZGF5LCBKdW5lIDI3LCAyMDExIDEx
-OjQzIEFNDQo+IFRvOiBHdXksIFdleS1ZaSBXDQo+IENjOiBsaW52aWxsZUB0dXhkcml2ZXIuY29t
-OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEdydW1iYWNoLA0KPiBFbW1hbnVlbA0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIIDE4LzI1XSBpd2xhZ246IHdhcm4gYWJvdXQgbmVzdGVkIFNZ
-TkMgY29tbWFuZHMNCj4gDQo+IE9uIE1vbiwgMjAxMS0wNi0yNyBhdCAxMDo0MCArMDIwMCwgSm9o
-YW5uZXMgQmVyZyB3cm90ZToNCj4gPiBPbiBTYXQsIDIwMTEtMDYtMTggYXQgMDg6MzQgLTA3MDAs
-IFdleS1ZaSBHdXkgd3JvdGU6DQo+ID4gPiBGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51
-ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+ID4NCj4gPiA+IFNpbmNlIHRoZXJlIGlzIG5vIHBy
-b3RlY3Rpb24gYXJvdW5kIFNZTkMgaG9zdCBjb21tYW5kIG1lY2hhbmlzbSwgYXQNCj4gbGVhc3Qg
-V0FSTg0KPiA+ID4gd2hlbiBjb2xsaXNpb24gaGFwcGVucyBiZXR3ZWVuIHR3byBTWU5DIGhvc3Qg
-Y29tYW1uZHMuIEkgYW0gbm90IHN1cmUNCj4gdGhlcmUgaXMgYQ0KPiA+ID4gcmVhbCAgaXNzdWUg
-KGJleW9uZCB0aGUgSENNRF9BQ1RJVkUgZmxhZyBtYWludGVuYW5jZSkgd2l0aCBoYXZpbmcgdHdv
-DQo+IFNZTkMgaG9zdA0KPiA+ID4gY29tbWFuZHMgYXQgdGhlIHNhbWUgdGltZSwgYnV0IGF0IGxl
-YXN0IG5vdywgd2Ugd2lsbCBrbm93IGFib3V0IGl0Lg0KPiA+DQo+ID4gUGxlYXNlIGRyb3AgdGhp
-cyBwYXJ0aWN1bGFyIHBhdGNoLiBXZSBkaXNjdXNzZWQgdGhpcyBidXQgdGhlbiBmb3Jnb3QNCj4g
-PiBhYm91dCBpdCAtLSB0aGlzIHBhdGNoIG9ubHkgd2FybnMgd2hlbiBjb2xsaXNpb25zIGFjdHVh
-bGx5IGhhcHBlbiwgYnV0DQo+ID4gd2UgY2FuIHVzZSBsb2NrZGVwIHRvIHdhcm4gd2hlbiBjb2xs
-aXNpb25zIF9jb3VsZF8gaGFwcGVuIGFzIHdlbGwuDQo+IA0KPiBPb3BzLCBuL20sIEkgc2VlIGl0
-J3MgYWxyZWFkeSBpbi4gV2lsbCBzdWJtaXQgYSBmb2xsb3ctdXAgdGhhdCBwdXRzDQo+IGJldHRl
-ciBjb2RlIGluIHBsYWNlIGluc3RlYWQuDQo+IA0KPiBqb2hhbm5lcw0KDQotLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
-SW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50
-cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0
-aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBv
-dGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
-CnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
-ZXMuCg==
+From: Franky Lin <frankyl@broadcom.com>
+
+Remove unused sdio related iovars IOV_HOSTREG for fullmac driver
+
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   53 ---------------------
+ 1 files changed, 0 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 44b1371..f24de82 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -353,7 +353,6 @@ enum {
+ 	IOV_BLOCKSIZE,
+ 	IOV_USEINTS,
+ 	IOV_NUMINTS,
+-	IOV_HOSTREG,
+ 	IOV_DEVREG,
+ 	IOV_DIVISOR,
+ 	IOV_SDMODE,
+@@ -370,8 +369,6 @@ const bcm_iovar_t sdioh_iovars[] = {
+ 								 size) */
+ 	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
+ 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
+-	{"sd_hostreg", IOV_HOSTREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
+-	,
+ 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
+ 	,
+ 	{"sd_divisor", IOV_DIVISOR, 0, IOVT_UINT32, 0}
+@@ -564,56 +561,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 		memcpy(arg, &int_val, val_size);
+ 		break;
+ 
+-	case IOV_GVAL(IOV_HOSTREG):
+-		{
+-			sdreg_t *sd_ptr = (sdreg_t *) params;
+-
+-			if (sd_ptr->offset < SD_SysAddr
+-			    || sd_ptr->offset > SD_MaxCurCap) {
+-				sd_err(("%s: bad offset 0x%x\n", __func__,
+-					sd_ptr->offset));
+-				bcmerror = -EINVAL;
+-				break;
+-			}
+-
+-			sd_trace(("%s: rreg%d at offset %d\n", __func__,
+-				  (sd_ptr->offset & 1) ? 8
+-				  : ((sd_ptr->offset & 2) ? 16 : 32),
+-				  sd_ptr->offset));
+-			if (sd_ptr->offset & 1)
+-				int_val = 8;	/* sdioh_sdmmc_rreg8(si,
+-						 sd_ptr->offset); */
+-			else if (sd_ptr->offset & 2)
+-				int_val = 16;	/* sdioh_sdmmc_rreg16(si,
+-						 sd_ptr->offset); */
+-			else
+-				int_val = 32;	/* sdioh_sdmmc_rreg(si,
+-						 sd_ptr->offset); */
+-
+-			memcpy(arg, &int_val, sizeof(int_val));
+-			break;
+-		}
+-
+-	case IOV_SVAL(IOV_HOSTREG):
+-		{
+-			sdreg_t *sd_ptr = (sdreg_t *) params;
+-
+-			if (sd_ptr->offset < SD_SysAddr
+-			    || sd_ptr->offset > SD_MaxCurCap) {
+-				sd_err(("%s: bad offset 0x%x\n", __func__,
+-					sd_ptr->offset));
+-				bcmerror = -EINVAL;
+-				break;
+-			}
+-
+-			sd_trace(("%s: wreg%d value 0x%08x at offset %d\n",
+-				  __func__, sd_ptr->value,
+-				  (sd_ptr->offset & 1) ? 8
+-				  : ((sd_ptr->offset & 2) ? 16 : 32),
+-				  sd_ptr->offset));
+-			break;
+-		}
+-
+ 	case IOV_GVAL(IOV_DEVREG):
+ 		{
+ 			sdreg_t *sd_ptr = (sdreg_t *) params;
+-- 
+1.7.4.1
+
 
