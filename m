@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43220 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753924Ab1FVIjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 04:39:49 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QZIyQ-0003vR-B5
-	for linux-wireless@vger.kernel.org; Wed, 22 Jun 2011 10:39:46 +0200
-Received: from proxyext.iabg.de ([proxyext.iabg.de])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 10:39:46 +0200
-Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 10:39:46 +0200
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: [RFC v2] hostapd: add Automatic Channel Selection (ACS) support
-Date: Wed, 22 Jun 2011 08:39:34 +0000 (UTC)
-Message-ID: <loom.20110622T103452-665@post.gmane.org> (sfid-20110622_103954_247447_25C0C7E7)
-References: <1308704862-5684-1-git-send-email-lrodriguez@atheros.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:46307 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933005Ab1FABNv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2011 21:13:51 -0400
+Received: by gwaa18 with SMTP id a18so2019702gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2011 18:13:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTinmPug5v=tmrP-TvAXbtJNiXU5Xng@mail.gmail.com>
+References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org>
+	<BANLkTik73ww-bKt+zmUonNWmGB8oLPgTWA@mail.gmail.com>
+	<BANLkTinxtWs9_DCEfjivxb2ae6xhfQgG3A@mail.gmail.com>
+	<BANLkTinmPug5v=tmrP-TvAXbtJNiXU5Xng@mail.gmail.com>
+Date: Wed, 1 Jun 2011 09:13:49 +0800
+Message-ID: <BANLkTi=R6ZTnWMhJ6N=9p2i7iUh47b_H2w@mail.gmail.com> (sfid-20110601_031354_541410_79B8D507)
+Subject: Re: [RFC 00/32] ath9k: add initial support for AR9330
+From: Adrian Chadd <adrian@freebsd.org>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <lrodriguez@...> writes:
+On 1 June 2011 09:05, Daniel Halperin <dhalperi@cs.washington.edu> wrote:
 
-> 
-> This adds Automatic Channel Selection (ACS) support to hostapd
-> using the Survery based ACS algorithm [1].
+> Gotcha. I was under the impression that Atheros has historically
+> marketed these (misleadingly) as '1x2' devices, e.g., see the '3x3'
+> devices that have 3 antennas but only 2 chains.
 
-Will there be a command line tool for IBSS? I imagine something like
-iw dev wlan0 ibss join "TheNetwork" $(acstool dev wlan0)
-or as part of iw
-iw dev wlan0 ibss join "TheNetwork" acs
+Ah yes, that really confuses people (including me to begin with.)
+
+A lot of the AR9001 series stuff is marketed (still) as 3x3 by all the
+card vendors.
+I've made it clear on the FreeBSD ath card support matrix that they're
+2x2 devices with 3 antennas, not 3x3 devices. Same with AR9285 - 1x1,
+2 antennas.
 
 
-
+Adrian
