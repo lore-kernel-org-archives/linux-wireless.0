@@ -1,112 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1999 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757955Ab1FKOzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 10:55:40 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/18] iwlagn: move no_sleep_autoadjust as part of iwlagn_mod_params
-Date: Sat, 11 Jun 2011 07:25:39 -0700
-Message-Id: <1307802352-16398-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165550_581861_A129CD62)
-In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44843 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758334Ab1FAPm5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 11:42:57 -0400
+Received: by qwk3 with SMTP id 3so2646792qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 08:42:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110601160101.75e30b3d@boulder.homenet>
+References: <4CEAB969.20702@lwfinger.net>
+	<1290451982.20888.2.camel@maggie>
+	<4CEAC095.7020706@lwfinger.net>
+	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
+	<4DC9853A.1090508@lwfinger.net>
+	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
+	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
+	<20110601114839.433ae42d@boulder.homenet>
+	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
+	<20110601130842.077da1c3@boulder.homenet>
+	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
+	<20110601160101.75e30b3d@boulder.homenet>
+Date: Wed, 1 Jun 2011 17:42:55 +0200
+Message-ID: <BANLkTim9pQc+yxdQLSL1-6VNiyM6_tvJ6g@mail.gmail.com> (sfid-20110601_174302_255146_3C50F693)
+Subject: Re: b43 error under heavy load
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move no_sleep_autoadjust module parameter into iwlagn_mod_params structure
-along with all the other iwlagn module parameters
+2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
+> On Wed, 1 Jun 2011 14:25:23 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>> I think you should easily get this error by transmitting. Streaming
+>> some video is mostly receiving. Just putting some random
+>> (ftp/sftp/iperf) server in the network would make the trick.
+>
+> OK rather than recompile the kernel with debugfs enabled, as you
+> suggested I took the debugging call to b43dbg() out of the
+> B43_DBG_DMAVERBOSE if block (so it is entered whether or not verbose
+> debugging is set).
+>
+> I transferred a 268MB file across the LAN in a little over 5 minutes
+> (so the transfer speed was a little under 10Mb/s).  During the course
+> of the transfer I got about 500 "b43-phy0 debug: Stopped TX ring 1"
+> statements logged.
+>
+> However the interesting thing is that with this debugging statement
+> included, I got no messages about any out of order TX status; instead,
+> apart from the overrun messages to the debug log, the link performed
+> normally. The file transfer did not fail (I have checked that the file
+> received is identical to the file sent) nor was the link to the router
+> lost. Probably writing to the debug log has changed some timing race
+> somewhere to the benefit of link integrity.
+>
+> However, as I said, I am not going to be in a position to do much
+> testing by way of transferring further files over the LAN for a period
+> of time, for unrelated reasons.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   10 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h    |    1 +
- drivers/net/wireless/iwlwifi/iwl-power.c   |   13 ++-----------
- 4 files changed, 14 insertions(+), 11 deletions(-)
+Well, it just seems that hitting full TX ring does not cause firmware
+problems and out of order issue. However I've no idea what else can
+cause it. We were also seeing this issue with free firmware on G-PHY
+cards.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index f0dacfb..58f6da0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -623,6 +623,7 @@ struct iwl_mod_params iwlagn_mod_params = {
- 	.restart_fw = 1,
- 	.plcp_check = true,
- 	.bt_coex_active = true,
-+	.no_sleep_autoadjust = true,
- 	/* the rest are 0 by default */
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3268356..8bed315 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4099,3 +4099,13 @@ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bt co-exist (default: enable)");
- module_param_named(led_mode, iwlagn_mod_params.led_mode, int, S_IRUGO);
- MODULE_PARM_DESC(led_mode, "0=system default, "
- 		"1=On(RF On)/Off(RF Off), 2=blinking (default: 0)");
-+
-+/*
-+ * For now, keep using power level 1 instead of automatically
-+ * adjusting ...
-+ */
-+module_param_named(no_sleep_autoadjust, iwlagn_mod_params.no_sleep_autoadjust,
-+		bool, S_IRUGO);
-+MODULE_PARM_DESC(no_sleep_autoadjust,
-+		 "don't automatically adjust sleep level "
-+		 "according to maximum network latency (default: true)");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index f950da0..a16daf7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -175,6 +175,7 @@ struct iwl_mod_params {
- 	bool ack_check;		/* def: false = disable ack health check */
- 	bool bt_coex_active;	/* def: true = enable bt coex */
- 	int led_mode;		/* def: 0 = system default */
-+	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
- };
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 595c930..a69b551 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -36,6 +36,7 @@
- 
- #include "iwl-eeprom.h"
- #include "iwl-dev.h"
-+#include "iwl-agn.h"
- #include "iwl-core.h"
- #include "iwl-io.h"
- #include "iwl-commands.h"
-@@ -51,16 +52,6 @@
-  */
- 
- /*
-- * For now, keep using power level 1 instead of automatically
-- * adjusting ...
-- */
--bool no_sleep_autoadjust = true;
--module_param(no_sleep_autoadjust, bool, S_IRUGO);
--MODULE_PARM_DESC(no_sleep_autoadjust,
--		 "don't automatically adjust sleep level "
--		 "according to maximum network latency");
--
--/*
-  * This defines the old power levels. They are still used by default
-  * (level 1) and for thermal throttle (levels 3 through 5)
-  */
-@@ -367,7 +358,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
- 		iwl_static_sleep_cmd(priv, cmd,
- 				     priv->power_data.debug_sleep_level_override,
- 				     dtimper);
--	else if (no_sleep_autoadjust)
-+	else if (iwlagn_mod_params.no_sleep_autoadjust)
- 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_1, dtimper);
- 	else
- 		iwl_power_fill_sleep_cmd(priv, cmd,
+Maybe this is some hardware issue firmware has to workaround? Maybe
+updating firmware could help? My next idea is to try 508.1107
+firmware.
+
 -- 
-1.7.0.4
-
+Rafał
