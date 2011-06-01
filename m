@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38862 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756059Ab1FEXXQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2011 19:23:16 -0400
-Received: by iyb14 with SMTP id 14so2711158iyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Jun 2011 16:23:16 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1145 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758896Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:51 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/83] staging: brcm80211: removed unused timeout fields
+ in wlc_protection
+Date: Wed, 1 Jun 2011 13:44:49 +0200
+Message-ID: <1306928768-7501-4-git-send-email-rvossen@broadcom.com> (sfid-20110601_134751_105072_666AB06B)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1307311658-15853-4-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <1307311658-15853-4-git-send-email-hauke@hauke-m.de>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 6 Jun 2011 09:22:56 +1000
-Message-ID: <BANLkTi=atiB_=_N3xSJBAjRGXjTV8a97CA@mail.gmail.com> (sfid-20110606_012326_297138_0CEBB0B6)
-Subject: Re: [RFC][PATCH 03/10] bcma: add embedded bus
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke,
+From: Arend van Spriel <arend@broadcom.com>
 
-Minor nit:
+The structure definition wlc_protection contained a numbers of timeout
+fields that were not used in the driver. These have been removed.
 
-On Mon, Jun 6, 2011 at 08:07, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This patch adds support for using bcma on an embedded bus. An embedded
-> system like the bcm4716 could register this bus and it searches for the
-> bcma cores then.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
-> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-> index 70b39f7..9229615 100644
-> --- a/drivers/bcma/scan.c
-> +++ b/drivers/bcma/scan.c
-> @@ -219,9 +219,34 @@ int bcma_bus_scan(struct bcma_bus *bus)
->        bus->chipinfo.id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
->        bus->chipinfo.rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
->        bus->chipinfo.pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
-> +       bus->nr_cores = (tmp & BCMA_CC_ID_NRCORES) >> BCMA_CC_ID_NRCORES_SHIFT;
-> +
-> +       /* If we are an embedded device we now know the number of avaliable
-> +        * core and ioremap the correct space.
-> +        */
-> +       if (bus->hosttype == BCMA_HOSTTYPE_EMBEDDED) {
-> +               iounmap(bus->mmio);
-> +               mmio = ioremap(BCMA_ADDR_BASE, BCMA_CORE_SIZE * bus->nr_cores);
-> +               if (!mmio)
-> +                       return -ENOMEM;
-> +               bus->mmio = mmio;
-> +
-> +               mmio = ioremap(BCMA_WRAP_BASE, BCMA_CORE_SIZE * bus->nr_cores);
-> +               if (!mmio)
-> +                       return -ENOMEM;
-> +               bus->host_embedded = mmio;
-> +       }
-> +       /* reset it to 0 as we use it for counting */
-> +       bus->nr_cores = 0;
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h |   13 -------------
+ 1 files changed, 0 insertions(+), 13 deletions(-)
 
-Would it make sense to use a local variable for nr_cores, and only use
-it within the BCMA_HOSTTYPE_EMBEDDED if statement, rather than
-re-using bus->nr_cores and having to reset it?
-
-Thanks,
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+index 193f73a..4d45972 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+@@ -208,19 +208,6 @@ struct wlc_protection {
+ 	s8 nongf_override;	/* override for use of GF protection */
+ 	s8 n_pam_override;	/* override for preamble: MM or GF */
+ 	bool n_obss;		/* indicated OBSS Non-HT STA present */
+-
+-	uint longpre_detect_timeout;	/* #sec until long preamble bcns gone */
+-	uint barker_detect_timeout;	/* #sec until bcns signaling Barker long preamble */
+-	/* only is gone */
+-	uint ofdm_ibss_timeout;	/* #sec until ofdm IBSS beacons gone */
+-	uint ofdm_ovlp_timeout;	/* #sec until ofdm overlapping BSS bcns gone */
+-	uint nonerp_ibss_timeout;	/* #sec until nonerp IBSS beacons gone */
+-	uint nonerp_ovlp_timeout;	/* #sec until nonerp overlapping BSS bcns gone */
+-	uint g_ibss_timeout;	/* #sec until bcns signaling Use_Protection gone */
+-	uint n_ibss_timeout;	/* #sec until bcns signaling Use_OFDM_Protection gone */
+-	uint ht20in40_ovlp_timeout;	/* #sec until 20MHz overlapping OPMODE gone */
+-	uint ht20in40_ibss_timeout;	/* #sec until 20MHz-only HT station bcns gone */
+-	uint non_gf_ibss_timeout;	/* #sec until non-GF bcns gone */
+ };
+ 
+ /* anything affects the single/dual streams/antenna operation */
 -- 
-Julian Calaby
+1.7.4.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+
