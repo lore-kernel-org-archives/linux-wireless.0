@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:47436 "EHLO purkki.adurom.net"
+Received: from mms3.broadcom.com ([216.31.210.19]:4868 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753723Ab1FMIVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 04:21:47 -0400
-To: Dan Carpenter <error27@gmail.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org, vasanth@atheros.com
-Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan is ongoing
-References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
-	<20110608115501.32208.82264.stgit@localhost6.localdomain6>
-	<20110608200332.GC4069@shale.localdomain>
-	<20110608201458.GD4069@shale.localdomain>
-	<87sjrj6svb.fsf@purkki.adurom.net>
-	<20110609152453.GH4069@shale.localdomain>
-	<87fwne6uda.fsf@purkki.adurom.net>
-	<20110613075533.GD3583@shale.localdomain>
-	<87boy26tuu.fsf@purkki.adurom.net>
-	<20110613081816.GE3583@shale.localdomain>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 13 Jun 2011 11:21:42 +0300
-In-Reply-To: <20110613081816.GE3583@shale.localdomain> (Dan Carpenter's message of "Mon\, 13 Jun 2011 11\:18\:16 +0300")
-Message-ID: <874o3u6t0p.fsf@purkki.adurom.net> (sfid-20110613_102150_785533_F67A8193)
+	id S1161374Ab1FALq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:27 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 41/83] staging: brcm80211: add braces to SI_INFO macro
+ definition
+Date: Wed, 1 Jun 2011 13:45:26 +0200
+Message-ID: <1306928768-7501-41-git-send-email-rvossen@broadcom.com> (sfid-20110601_134654_507659_5216AE11)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <error27@gmail.com> writes:
+From: Arend van Spriel <arend@broadcom.com>
 
-> On Mon, Jun 13, 2011 at 11:03:37AM +0300, Kalle Valo wrote:
->> Thanks, I'll mention this in the cover letter. I'll also change the
->> order of patches so that the most important patches are first.
->> 
->
-> Greg could say for sure, but sometimes it helps to break it up into
-> two separate patch sets.  When you're applying them, you just tag
-> all the messages in the thread and apply them with one command.
->
-> [PATCH 0/2] fix crashes for 3.0
-> [PATCH 0/2] new stuff for 3.1  (applies on top of the fixes)
+The additional braces allow the casted parameter to be indirected
+immediately. Here is an example to clarify:
+	x = SI_INFO(y);    => z = SI_INFO(y)->field_a;
+	z = x->field_a;
 
-I'll do that, thanks.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index 2941537..a0fec83 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -271,7 +271,7 @@
+ #define	CST4330_CBUCK_POWER_OK		0x00004000
+ #define	CST4330_BB_PLL_LOCKED		0x00008000
+ 
+-#define	SI_INFO(sih)	(si_info_t *)sih
++#define	SI_INFO(sih)	((si_info_t *)sih)
+ 
+ #define	GOODCOREADDR(x, b) \
+ 	(((x) >= (b)) && ((x) < ((b) + SI_MAXCORES * SI_CORE_SIZE)) && \
 -- 
-Kalle Valo
+1.7.4.1
+
+
