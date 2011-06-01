@@ -1,77 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40949 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755310Ab1FTR3l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 13:29:41 -0400
-Subject: RE: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Powar <yogeshp@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-In-Reply-To: <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
-References: <20110616102138.GA24447@hertz.marvell.com>
-	 <20110616102707.GB24458@hertz.marvell.com>
-	 <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
-	 <20110617132527.GA27436@hertz.marvell.com>
-	 <1308331485.7329.2.camel@Nokia-N900-51-1>
-	 <20110620143051.GA31035@hertz.marvell.com>
-	 ,<1308583799.4322.9.camel@jlt3.sipsolutions.net>
-	 <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Jun 2011 19:29:40 +0200
-Message-ID: <1308590980.4322.19.camel@jlt3.sipsolutions.net> (sfid-20110620_192944_767498_5D0F739E)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:3785 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758820Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:29 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 21/83] staging: brcm80211: added support for more
+ bcm43224 based boards
+Date: Wed, 1 Jun 2011 13:45:06 +0200
+Message-ID: <1306928768-7501-21-git-send-email-rvossen@broadcom.com> (sfid-20110601_134930_664193_2E70198D)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-06-20 at 09:49 -0700, Yogesh Powar wrote:
-> >No, they're not, the mutex trickery seems completely pointless, and the
-> >conditional (on _is_locked no less) locking is horrible.
-> Ok.
-> 
-> Will spend some more time on exploring solutions using rcu primitives only
-> (synchronize_net or something similar).
-> 
-> If nothing  of only-RCU is feasible then, I think, we need to resize the skb if it has
-> already skipped the tailroom instead of WARN_ON. This will come in to picuture
-> only during the race cases. But this wont get rid of race.
+Patch created by Gottfried Haider. Add support for BCM943224HMB devices
+as found in recent Lenovo ThinkPads.
 
-Ahrg, seriously, just analyse the situation for once. Do I really need
-to do that?
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |    5 ++++-
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c    |    3 ++-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.c    |    3 ++-
+ drivers/staging/brcm80211/include/bcmdevs.h      |    1 +
+ 4 files changed, 9 insertions(+), 3 deletions(-)
 
-There are two race cases, during transitions:
- 1) need to resize -> no need to (key moved to HW)
- 2) no need to resize -> need to (new key, ...)
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 105f426..590d65b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -95,6 +95,8 @@ static struct pci_device_id wl_id_table[] = {
+ 	{PCI_VENDOR_ID_BROADCOM, 0x4357, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* 43225 2G */
+ 	{PCI_VENDOR_ID_BROADCOM, 0x4353, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* 43224 DUAL */
+ 	{PCI_VENDOR_ID_BROADCOM, 0x4727, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},	/* 4313 DUAL */
++	/* 43224 Ven */
++	{PCI_VENDOR_ID_BROADCOM, 0x0576, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+ 	{0}
+ };
+ 
+@@ -1112,7 +1114,8 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	       PCI_FUNC(pdev->devfn), pdev->irq);
+ 
+ 	if ((pdev->vendor != PCI_VENDOR_ID_BROADCOM) ||
+-	    (((pdev->device & 0xff00) != 0x4300) &&
++	    ((pdev->device != 0x0576) &&
++	     ((pdev->device & 0xff00) != 0x4300) &&
+ 	     ((pdev->device & 0xff00) != 0x4700) &&
+ 	     ((pdev->device < 43000) || (pdev->device > 43999))))
+ 		return -ENODEV;
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index adc06fc..f98f0fd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -741,7 +741,8 @@ int wlc_bmac_attach(struct wlc_info *wlc, u16 vendor, u16 device, uint unit,
+ 		wlc->war16165 = true;
+ 
+ 	/* check device id(srom, nvram etc.) to set bands */
+-	if (wlc_hw->deviceid == BCM43224_D11N_ID) {
++	if (wlc_hw->deviceid == BCM43224_D11N_ID ||
++	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1) {
+ 		/* Dualband boards */
+ 		wlc_hw->_nbands = 2;
+ 	} else
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+index 0837e8d..54b5b79 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
+@@ -2857,9 +2857,10 @@ bool wlc_chipmatch(u16 vendor, u16 device)
+ 		return false;
+ 	}
+ 
++	if (device == BCM43224_D11N_ID_VEN1)
++		return true;
+ 	if ((device == BCM43224_D11N_ID) || (device == BCM43225_D11N2G_ID))
+ 		return true;
+-
+ 	if (device == BCM4313_D11N2G_ID)
+ 		return true;
+ 	if ((device == BCM43236_D11N_ID) || (device == BCM43236_D11N2G_ID))
+diff --git a/drivers/staging/brcm80211/include/bcmdevs.h b/drivers/staging/brcm80211/include/bcmdevs.h
+index 26947ef..eba10b6 100644
+--- a/drivers/staging/brcm80211/include/bcmdevs.h
++++ b/drivers/staging/brcm80211/include/bcmdevs.h
+@@ -30,6 +30,7 @@
+ #define BCM4319_D11N5G_ID	0x4339	/* 4319 802.11n 5G device */
+ 
+ #define BCM43224_D11N_ID	0x4353	/* 43224 802.11n dualband device */
++#define BCM43224_D11N_ID_VEN1	0x0576	/* Vendor specific 43224 802.11n db */
+ 
+ #define BCM43225_D11N2G_ID	0x4357	/* 43225 802.11n 2.4GHz device */
+ 
+-- 
+1.7.4.1
 
-The first is uninteresting, it's fine if the race happens and the skb is
-still resized even if it didn't need to.
-
-The second one is what's causing issues. But the race happens like this:
-  - counter is 0
-	- skb goes through tx start, no tailroom allocated
-  - key added, counter > 0
-	- key lookup while TX processing is successful
-
-So ... how can you solve it? Clearly, the locking attempts you made were
-pretty useless. But now that we understand the race, can we fix it? I
-think we can, by doing something like this:
-
-	counter++;
-	/* flush packets being processed */
-	synchronize_net();
-	/* do whatever causes the key to be found by sw crypto */
-
-That should be it. The only overhead is a little bit in control paths
-for key settings which are delayed a bit by synchronize_net(), but who
-cares, we don't change keys every packet.
-
-Of course you need to encapsulate that code into a small function and
-write comments about why it's necessary and how it works.
-
-Was that so hard? :-)
-
-johannes
 
