@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51457 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588Ab1FBQbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:31:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/4] Add support for kernel 3.XX
-Date: Thu,  2 Jun 2011 18:31:00 +0200
-Message-Id: <1307032264-14663-1-git-send-email-hauke@hauke-m.de> (sfid-20110602_183120_510794_824B5BAC)
+Received: from [193.252.22.128] ([193.252.22.128]:7744 "EHLO
+	smtp5.freeserve.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1757134Ab1FAPBU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 11:01:20 -0400
+Date: Wed, 1 Jun 2011 16:01:01 +0100
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael =?ISO-8859-1?B?QvxzY2g=?= <mb@bu3sch.de>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: b43 error under heavy load
+Message-ID: <20110601160101.75e30b3d@boulder.homenet> (sfid-20110601_170124_833614_32374BBE)
+In-Reply-To: <BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
+References: <4CEAB969.20702@lwfinger.net>
+	<1290451982.20888.2.camel@maggie>
+	<4CEAC095.7020706@lwfinger.net>
+	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
+	<4DC9853A.1090508@lwfinger.net>
+	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
+	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
+	<20110601114839.433ae42d@boulder.homenet>
+	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
+	<20110601130842.077da1c3@boulder.homenet>
+	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series mostly add support for kernel 3.XX. It also fixes a 
-bug. Patch 1 and 3 are needing some patches in compat-wireless and vice 
-versa.
+On Wed, 1 Jun 2011 14:25:23 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+> I think you should easily get this error by transmitting. Streaming
+> some video is mostly receiving. Just putting some random
+> (ftp/sftp/iperf) server in the network would make the trick.
 
-All these patches should so go into linux-3.0.0.y branch.
+OK rather than recompile the kernel with debugfs enabled, as you
+suggested I took the debugging call to b43dbg() out of the
+B43_DBG_DMAVERBOSE if block (so it is entered whether or not verbose
+debugging is set).
 
-Hauke Mehrtens (4):
-  compat: add support for kernel 3.0
-  compat: add device name in register_netdevice(dev)
-  compat: rename CONFIG_COMPAT_KERNEL_
-  compat: add KEY_WPS_BUTTON
+I transferred a 268MB file across the LAN in a little over 5 minutes
+(so the transfer speed was a little under 10Mb/s).  During the course
+of the transfer I got about 500 "b43-phy0 debug: Stopped TX ring 1"
+statements logged.
 
- compat/Makefile               |   38 +++++++++++++++++++-------------------
- include/linux/compat-2.6.34.h |    2 ++
- include/linux/compat-2.6.40.h |   29 -----------------------------
- include/linux/compat-2.6.h    |    3 ++-
- include/linux/compat-3.0.h    |   31 +++++++++++++++++++++++++++++++
- include/linux/compat-3.1.h    |   27 +++++++++++++++++++++++++++
- 6 files changed, 81 insertions(+), 49 deletions(-)
- delete mode 100644 include/linux/compat-2.6.40.h
- create mode 100644 include/linux/compat-3.0.h
- create mode 100644 include/linux/compat-3.1.h
+However the interesting thing is that with this debugging statement
+included, I got no messages about any out of order TX status; instead,
+apart from the overrun messages to the debug log, the link performed
+normally. The file transfer did not fail (I have checked that the file
+received is identical to the file sent) nor was the link to the router
+lost. Probably writing to the debug log has changed some timing race
+somewhere to the benefit of link integrity.
 
--- 
-1.7.4.1
+However, as I said, I am not going to be in a position to do much
+testing by way of transferring further files over the LAN for a period
+of time, for unrelated reasons.
+
+Chris
+
 
