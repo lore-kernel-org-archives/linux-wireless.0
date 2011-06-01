@@ -1,35 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:38287 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757703Ab1F0LH3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 07:07:29 -0400
-Received: by mail-bw0-f49.google.com with SMTP id 12so1700244bwf.36
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 04:07:27 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: use _ni version of ieee80211_tx_status
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1307432439-1752-1-git-send-email-eliad@wizery.com>
-References: <1307432439-1752-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Jun 2011 14:07:24 +0300
-Message-ID: <1309172844.30221.29.camel@cumari> (sfid-20110627_131559_406448_A187E308)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4854 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758886Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:51 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/83] staging: brcm80211: remove iovars
+ IOV_NUMLOCALINTS
+Date: Wed, 1 Jun 2011 13:44:59 +0200
+Message-ID: <1306928768-7501-14-git-send-email-rvossen@broadcom.com> (sfid-20110601_134820_008145_2E846D11)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-07 at 10:40 +0300, Eliad Peller wrote: 
-> wl1271_flush_deferred_work(), which calls ieee80211_rx() and
-> ieee80211_tx_status(), is called from a process context.
-> hence, use ieee80211_tx_status_ni() instead of ieee80211_tx_status().
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+From: Franky Lin <frankyl@broadcom.com>
 
-Applied, thanks!
+Remove unused sdio related iovars IOV_NUMLOCALINTS for fullmac driver
 
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index a0f2463..44b1371 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -353,7 +353,6 @@ enum {
+ 	IOV_BLOCKSIZE,
+ 	IOV_USEINTS,
+ 	IOV_NUMINTS,
+-	IOV_NUMLOCALINTS,
+ 	IOV_HOSTREG,
+ 	IOV_DEVREG,
+ 	IOV_DIVISOR,
+@@ -371,7 +370,6 @@ const bcm_iovar_t sdioh_iovars[] = {
+ 								 size) */
+ 	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
+ 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
+-	{"sd_numlocalints", IOV_NUMLOCALINTS, 0, IOVT_UINT32, 0},
+ 	{"sd_hostreg", IOV_HOSTREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
+ 	,
+ 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
+@@ -566,11 +564,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ 		memcpy(arg, &int_val, val_size);
+ 		break;
+ 
+-	case IOV_GVAL(IOV_NUMLOCALINTS):
+-		int_val = (s32) 0;
+-		memcpy(arg, &int_val, val_size);
+-		break;
+-
+ 	case IOV_GVAL(IOV_HOSTREG):
+ 		{
+ 			sdreg_t *sd_ptr = (sdreg_t *) params;
 -- 
-Cheers,
-Luca.
+1.7.4.1
+
 
