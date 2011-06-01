@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2232 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752953Ab1FIOp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:29 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/21] staging: brcm80211: remove regs variable from
- brcms_ioctl function
-Date: Thu, 9 Jun 2011 16:44:46 +0200
-Message-ID: <1307630701-9170-7-git-send-email-rvossen@broadcom.com> (sfid-20110609_164534_384336_3ADCA5B9)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60706 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab1FATOv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 15:14:51 -0400
+Received: by qwk3 with SMTP id 3so59237qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 12:14:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1306918871-16965-1-git-send-email-zajec5@gmail.com>
+References: <1306918871-16965-1-git-send-email-zajec5@gmail.com>
+Date: Wed, 1 Jun 2011 21:14:50 +0200
+Message-ID: <BANLkTinSdDZv7gshYfi4mK5N9K-E7vk3Yw@mail.gmail.com> (sfid-20110601_211500_332098_7F9B0391)
+Subject: Re: [RFT][PATCH 3.0] ssb: fix PCI(e) driver regression causing oops
+ on PCI cards
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Andreas Schwab <schwab@linux-m68k.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org, linuxppc-dev@ozlabs.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+2011/6/1 Rafał Miłecki <zajec5@gmail.com>:
+> We were incorrectly executing PCIe specific workarounds on PCI cards.
+> This resulted in:
+> Machine check in kernel mode.
+> Caused by (from SRR1=149030): Transfer error ack signal
+> Oops: Machine check, sig: 7 [#1]
 
-This variable was declared and initialized but never used so it has
-been removed.
+John, I've tested this patch myself on my PCI BCM4318, including
+checking for 0xFFFFFFFF reads in MMIO dumps.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+The patch is correct, please take it for 3.0.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index c8d6679..28ae741 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -2515,7 +2515,6 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
- 	int val, *pval;
- 	bool bool_val;
- 	int bcmerror;
--	d11regs_t *regs;
- 	struct scb *nextscb;
- 	bool ta_ok;
- 	uint band;
-@@ -2551,7 +2550,6 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
- 	/* bool conversion to avoid duplication below */
- 	bool_val = val != 0;
- 	bcmerror = 0;
--	regs = wlc->regs;
- 
- 	if ((arg == NULL) || (len <= 0)) {
- 		wiphy_err(wlc->wiphy, "wl%d: %s: Command %d needs arguments\n",
 -- 
-1.7.4.1
-
-
+Rafał
