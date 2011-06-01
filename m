@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48060 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56396 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab1F0Q5b (ORCPT
+	with ESMTP id S1752302Ab1FAGaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 12:57:31 -0400
-Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+	Wed, 1 Jun 2011 02:30:00 -0400
+Subject: [PATCH] bluetooth l2cap: fix locking in l2cap_global_chan_by_psm
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Alexey Dobriyan <adobriyan@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-In-Reply-To: <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5)
-References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-	 <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
-	 <BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
-	 <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com>
-	 <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Gustavo F. Padovan" <padovan@profusion.mobi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Jun 2011 18:57:24 +0200
-Message-ID: <1309193844.3911.27.camel@jlt3.sipsolutions.net> (sfid-20110627_185807_456889_072B942D)
+Date: Wed, 01 Jun 2011 08:29:54 +0200
+Message-ID: <1306909794.3867.3.camel@jlt3.sipsolutions.net> (sfid-20110601_083004_768270_3B5B32CE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-06-27 at 18:49 +0200, Arend van Spriel wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > That's why I think it's safe to include linux/slab.h in bcma_private.h.
-> > But if that's just my opinion, everybody think it's wrong idea, I'm OK with it.
-> 
-> My rule of thumb is: Header file a.h may only include header b.h when 
-> a.h needs some definition from b.h. Convenience is never a good reason 
-> for nested includes.
+read_lock() ... read_unlock_bh() is clearly bogus.
+This was broken by
 
-Yeah, good rule. Consider if you have a.h, b.h and z.c, z.c needs b.h
-but not a.h, and now b.h includes a.h ("for convenience") -- changing
-a.h would needlessly recompile z.c. Now, changing slab.h will probably
-recompile everything anyway, but still...
+commit 23691d75cdc69c3b285211b4d77746aa20a17d18
+Author: Gustavo F. Padovan <padovan@profusion.mobi>
+Date:   Wed Apr 27 18:26:32 2011 -0300
 
-johannes
+    Bluetooth: Remove l2cap_sk_list
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/bluetooth/l2cap_core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/net/bluetooth/l2cap_core.c	2011-06-01 08:27:44.000000000 +0200
++++ b/net/bluetooth/l2cap_core.c	2011-06-01 08:27:51.000000000 +0200
+@@ -906,7 +906,7 @@ static struct l2cap_chan *l2cap_global_c
+ 		if (c->psm == psm) {
+ 			/* Exact match. */
+ 			if (!bacmp(&bt_sk(sk)->src, src)) {
+-				read_unlock_bh(&chan_list_lock);
++				read_unlock(&chan_list_lock);
+ 				return c;
+ 			}
+ 
+
 
