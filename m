@@ -1,77 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50003 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754736Ab1FJT2N convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45549 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752005Ab1FATEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 15:28:13 -0400
-Received: by iwn34 with SMTP id 34so2412406iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 12:28:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
-References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
-	<AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
-	<AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
-	<AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
-	<1296633772.3624.2.camel@jlt3.sipsolutions.net>
-	<20110202113052.GA14126@jm.kir.nu>
-	<1296646434.5671.1.camel@jlt3.sipsolutions.net>
-	<20110202133839.GA14904@jm.kir.nu>
-	<AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
-Date: Fri, 10 Jun 2011 21:28:12 +0200
-Message-ID: <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com> (sfid-20110610_212817_283562_DDBD8530)
-Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
-From: hedwin <hedwin.koning@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Jun 2011 15:04:55 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D5A1D540048
+	for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2011 15:11:21 -0400 (EDT)
+Subject: Compat-wireless release for 2011-06-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110601190454.104A240EBC@repository3.orbit-lab.org> (sfid-20110601_210458_682102_DAB74CE7)
+Date: Wed,  1 Jun 2011 15:04:53 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The problem with nl80211 and wpa_supplicant in android is that afaik
-libnl is needed, correct?
-Only problem with libnl is that it is LGPL which doesn't fit into the
-android license policy.
-Although this is a mailing list about wireless drivers this also needs
-to be addressed
-because it is part of the problem to get wireless support working in android.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 3f921c6...b15250a akpm-end   -> origin/akpm-end  (forced update)
+   55922c9..e12ca23  akpm-start -> origin/akpm-start
+   9185b01..64fb945  history    -> origin/history
+ + 25c5fa8...55d1720 master     -> origin/master  (forced update)
+   55922c9..e12ca23  stable     -> origin/stable
+ * [new tag]         next-20110601 -> next-20110601
 
-Hedwin
+compat-wireless code metrics
 
-On Wed, Feb 2, 2011 at 5:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Feb 2, 2011 at 5:38 AM, Jouni Malinen <j@w1.fi> wrote:
->> On Wed, Feb 02, 2011 at 12:33:54PM +0100, Johannes Berg wrote:
->>> What's the driver_cmd things they use? If we they add support for
->>> whatever it is to nl80211, why can those not be normal supplicant
->>> interfaces?
->>
->> I have not reviewed what exactly gets used and how, so this is only
->> based on what the modification for wpa_supplicant are exposing.
->>
->> There seems to be some kind of mechanism for stopping/starting/reloading
->> the driver which I do not fully understand. It includes some kind of
->> driver hang detection and maybe recovery from that etc..
->>
->> Then there is a very generic mechanism of passing any command from user
->> space (i.e., command string to a SIOCSIWPRIV) and that goes
->> transparently through wpa_supplicant.. The response comes back as a
->> string. In other words, you could implement pretty much anything in a
->> driver specific way with that.. At least following commands are used or
->> have used with that: RSSI, LINKSPEED, MACADDR, GETPOWER, GETBAND.
->>
->> Since it is difficult to tell just from wpa_supplicant changes what
->> exactly is done with these interfaces, the answer to the question of
->> why these could not be normal supplicant interfaces is not immediately
->> clear to me. I would assume that some of this functionality could
->> certainly be added once identified clearly what is needed. Some may
->> already be available (like MACADDR; assuming it is used to fetch local
->> MAC address).
->
-> Sounds like Android kernel guys need to get their shit together. Why
-> is this so hard?
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+    823213 - Total upstream lines of code being pulled
+      2394 - backport code changes
+      2086 - backport code additions
+       308 - backport code deletions
+      8070 - backport from compat module
+     10464 - total backport code
+    1.2711 - % of code consists of backport work
