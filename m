@@ -1,143 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1999 "EHLO mga09.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4925 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758553Ab1FKOzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 10:55:39 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/18] iwlagn: move bt_coex_active as part of iwlagn_mod_params
-Date: Sat, 11 Jun 2011 07:25:37 -0700
-Message-Id: <1307802352-16398-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165605_350584_ACA3AF23)
-In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1758829Ab1FALqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:32 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 64/83] staging: brcm80211: removed Broadcom specific
+ acronym 'hnd'.
+Date: Wed, 1 Jun 2011 13:45:49 +0200
+Message-ID: <1306928768-7501-64-git-send-email-rvossen@broadcom.com> (sfid-20110601_134727_317535_8664E95A)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move bt_coex_active module parameter into iwlagn_mod_params structure
-along with all the other iwlagn module parameters
+Code cleanup.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    4 +++-
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   20 ++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c    |   23 +----------------------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 +-
- 4 files changed, 25 insertions(+), 24 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/pcicfg.h   |    2 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.h  |    4 +---
+ drivers/staging/brcm80211/brcmsmac/bcmdma.h   |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/d11.h      |    2 --
+ drivers/staging/brcm80211/brcmsmac/dma.c      |   18 +++++++++---------
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    2 +-
+ drivers/staging/brcm80211/brcmsmac/wlc_main.h |    2 +-
+ drivers/staging/brcm80211/include/bcmsoc.h    |    8 ++++----
+ 8 files changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 677f73c..f0dacfb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -622,6 +622,7 @@ struct iwl_mod_params iwlagn_mod_params = {
- 	.amsdu_size_8K = 1,
- 	.restart_fw = 1,
- 	.plcp_check = true,
-+	.bt_coex_active = true,
- 	/* the rest are 0 by default */
- };
+diff --git a/drivers/staging/brcm80211/brcmfmac/pcicfg.h b/drivers/staging/brcm80211/brcmfmac/pcicfg.h
+index d0c617a..3258449 100644
+--- a/drivers/staging/brcm80211/brcmfmac/pcicfg.h
++++ b/drivers/staging/brcm80211/brcmfmac/pcicfg.h
+@@ -22,7 +22,7 @@
+ /* PCI configuration address space size */
+ #define PCI_SZPCR		256
  
-@@ -1699,7 +1700,8 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
- 	 * (might be in monitor mode), or the interface is in
- 	 * IBSS mode (no proper uCode support for coex then).
- 	 */
--	if (!bt_coex_active || priv->iw_mode == NL80211_IFTYPE_ADHOC) {
-+	if (!iwlagn_mod_params.bt_coex_active ||
-+	    priv->iw_mode == NL80211_IFTYPE_ADHOC) {
- 		basic.flags = IWLAGN_BT_FLAG_COEX_MODE_DISABLED;
- 	} else {
- 		basic.flags = IWLAGN_BT_FLAG_COEX_MODE_3W <<
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6f1edb4..6ecee3c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4075,3 +4075,23 @@ MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
+-/* Everything below is BRCM HND proprietary */
++/* Everything below is Broadcom specific */
  
- module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
- MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
-+
-+/*
-+ * set bt_coex_active to true, uCode will do kill/defer
-+ * every time the priority line is asserted (BT is sending signals on the
-+ * priority line in the PCIx).
-+ * set bt_coex_active to false, uCode will ignore the BT activity and
-+ * perform the normal operation
-+ *
-+ * User might experience transmit issue on some platform due to WiFi/BT
-+ * co-exist problem. The possible behaviors are:
-+ *   Able to scan and finding all the available AP
-+ *   Not able to associate with any AP
-+ * On those platforms, WiFi communication can be restored by set
-+ * "bt_coex_active" module parameter to "false"
-+ *
-+ * default: bt_coex_active = true (BT_COEX_ENABLE)
-+ */
-+module_param_named(bt_coex_active, iwlagn_mod_params.bt_coex_active,
-+		bool, S_IRUGO);
-+MODULE_PARM_DESC(bt_coex_active, "enable wifi/bt co-exist (default: enable)");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5416b12..ad54f82 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,27 +43,6 @@
- #include "iwl-helpers.h"
- #include "iwl-agn.h"
+ /* Brcm PCI configuration registers */
+ #define PCI_BAR0_WIN		0x80	/* backplane address space accessed by BAR0 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index ec7acd1..211a27a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -151,9 +151,7 @@
+ 					 * maps all unused address ranges
+ 					 */
  
--
--/*
-- * set bt_coex_active to true, uCode will do kill/defer
-- * every time the priority line is asserted (BT is sending signals on the
-- * priority line in the PCIx).
-- * set bt_coex_active to false, uCode will ignore the BT activity and
-- * perform the normal operation
-- *
-- * User might experience transmit issue on some platform due to WiFi/BT
-- * co-exist problem. The possible behaviors are:
-- *   Able to scan and finding all the available AP
-- *   Not able to associate with any AP
-- * On those platforms, WiFi communication can be restored by set
-- * "bt_coex_active" module parameter to "false"
-- *
-- * default: bt_coex_active = true (BT_COEX_ENABLE)
+-/* There are TWO constants on all HND chips: SI_ENUM_BASE above,
+- * and chipcommon being the first core:
 - */
--bool bt_coex_active = true;
--module_param(bt_coex_active, bool, S_IRUGO);
--MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
--
- u32 iwl_debug_level;
++/* chipcommon being the first core: */
+ #define	SI_CC_IDX		0
  
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-@@ -1179,7 +1158,7 @@ void iwl_send_bt_config(struct iwl_priv *priv)
- 		.kill_cts_mask = 0,
- 	};
+ /* SOC Interconnect types (aka chip types) */
+diff --git a/drivers/staging/brcm80211/brcmsmac/bcmdma.h b/drivers/staging/brcm80211/brcmsmac/bcmdma.h
+index 1a1ca03..dd55e29 100644
+--- a/drivers/staging/brcm80211/brcmsmac/bcmdma.h
++++ b/drivers/staging/brcm80211/brcmsmac/bcmdma.h
+@@ -58,9 +58,9 @@ typedef volatile struct {
  
--	if (!bt_coex_active)
-+	if (!iwlagn_mod_params.bt_coex_active)
- 		bt_cmd.flags = BT_COEX_DISABLE;
- 	else
- 		bt_cmd.flags = BT_COEX_ENABLE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 05ea88a..1a43a62 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -173,6 +173,7 @@ struct iwl_mod_params {
- 	int restart_fw;		/* def: 1 = restart firmware */
- 	bool plcp_check;	/* def: true = enable plcp health check */
- 	bool ack_check;		/* def: false = disable ack health check */
-+	bool bt_coex_active;	/* def: true = enable bt coex */
- };
+ /* range param for dma_getnexttxp() and dma_txreclaim */
+ typedef enum txd_range {
+-	HNDDMA_RANGE_ALL = 1,
+-	HNDDMA_RANGE_TRANSMITTED,
+-	HNDDMA_RANGE_TRANSFERED
++	DMA_RANGE_ALL = 1,
++	DMA_RANGE_TRANSMITTED,
++	DMA_RANGE_TRANSFERED
+ } txd_range_t;
+ 
+ /* dma function type */
+diff --git a/drivers/staging/brcm80211/brcmsmac/d11.h b/drivers/staging/brcm80211/brcmsmac/d11.h
+index 12a0ead..e9fa4ca 100644
+--- a/drivers/staging/brcm80211/brcmsmac/d11.h
++++ b/drivers/staging/brcm80211/brcmsmac/d11.h
+@@ -105,8 +105,6 @@ typedef volatile struct {
  
  /*
-@@ -624,7 +625,6 @@ static inline bool iwl_advanced_bt_coexist(struct iwl_priv *priv)
- 	       priv->cfg->bt_params->advanced_bt_coexist;
- }
+  * Host Interface Registers
+- * - primed from hnd_cores/dot11mac/systemC/registers/ihr.h
+- * - but definitely not complete
+  */
+ typedef volatile struct _d11regs {
+ 	/* Device Control ("semi-standard host registers") */
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index d50395d..a754cdd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -1292,9 +1292,9 @@ static void dma64_txreclaim(dma_info_t *di, txd_range_t range)
+ 	void *p;
  
--extern bool bt_coex_active;
- extern bool bt_siso_mode;
+ 	DMA_TRACE(("%s: dma_txreclaim %s\n", di->name,
+-		   (range == HNDDMA_RANGE_ALL) ? "all" :
++		   (range == DMA_RANGE_ALL) ? "all" :
+ 		   ((range ==
+-		     HNDDMA_RANGE_TRANSMITTED) ? "transmitted" :
++		     DMA_RANGE_TRANSMITTED) ? "transmitted" :
+ 		    "transferred")));
  
+ 	if (di->txin == di->txout)
+@@ -1649,11 +1649,11 @@ static int dma64_txfast(dma_info_t *di, struct sk_buff *p0,
+ /*
+  * Reclaim next completed txd (txds if using chained buffers) in the range
+  * specified and return associated packet.
+- * If range is HNDDMA_RANGE_TRANSMITTED, reclaim descriptors that have be
++ * If range is DMA_RANGE_TRANSMITTED, reclaim descriptors that have be
+  * transmitted as noted by the hardware "CurrDescr" pointer.
+- * If range is HNDDMA_RANGE_TRANSFERED, reclaim descriptors that have be
++ * If range is DMA_RANGE_TRANSFERED, reclaim descriptors that have be
+  * transferred by the DMA as noted by the hardware "ActiveDescr" pointer.
+- * If range is HNDDMA_RANGE_ALL, reclaim all txd(s) posted to the ring and
++ * If range is DMA_RANGE_ALL, reclaim all txd(s) posted to the ring and
+  * return associated packet regardless of the value of hardware pointers.
+  */
+ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
+@@ -1663,9 +1663,9 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
+ 	void *txp;
  
+ 	DMA_TRACE(("%s: dma_getnexttxp %s\n", di->name,
+-		   (range == HNDDMA_RANGE_ALL) ? "all" :
++		   (range == DMA_RANGE_ALL) ? "all" :
+ 		   ((range ==
+-		     HNDDMA_RANGE_TRANSMITTED) ? "transmitted" :
++		     DMA_RANGE_TRANSMITTED) ? "transmitted" :
+ 		    "transferred")));
+ 
+ 	if (di->ntxd == 0)
+@@ -1674,7 +1674,7 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
+ 	txp = NULL;
+ 
+ 	start = di->txin;
+-	if (range == HNDDMA_RANGE_ALL)
++	if (range == DMA_RANGE_ALL)
+ 		end = di->txout;
+ 	else {
+ 		dma64regs_t *dregs = di->d64txregs;
+@@ -1685,7 +1685,7 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
+ 				 D64_XS0_CD_MASK) -
+ 				di->xmtptrbase) & D64_XS0_CD_MASK, dma64dd_t));
+ 
+-		if (range == HNDDMA_RANGE_TRANSFERED) {
++		if (range == DMA_RANGE_TRANSFERED) {
+ 			active_desc =
+ 			    (u16) (R_REG(&dregs->status1) &
+ 				      D64_XS1_AD_MASK);
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index 6b02ebe..caee8d9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -3415,7 +3415,7 @@ static void wlc_flushqueues(struct wlc_info *wlc)
+ 	/* free any posted tx packets */
+ 	for (i = 0; i < NFIFO; i++)
+ 		if (wlc_hw->di[i]) {
+-			dma_txreclaim(wlc_hw->di[i], HNDDMA_RANGE_ALL);
++			dma_txreclaim(wlc_hw->di[i], DMA_RANGE_ALL);
+ 			TXPKTPENDCLR(wlc, i);
+ 			BCMMSG(wlc->wiphy, "pktpend fifo %d clrd\n", i);
+ 		}
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+index 916b2a0..1dfa04b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
+@@ -736,7 +736,7 @@ struct antsel_info {
+ #define TXPKTPENDCLR(wlc, fifo)		((wlc)->core->txpktpend[(fifo)] = 0)
+ #define TXAVAIL(wlc, fifo)		(*(wlc)->core->txavail[(fifo)])
+ #define GETNEXTTXP(wlc, _queue)								\
+-		dma_getnexttxp((wlc)->hw->di[(_queue)], HNDDMA_RANGE_TRANSMITTED)
++		dma_getnexttxp((wlc)->hw->di[(_queue)], DMA_RANGE_TRANSMITTED)
+ 
+ #define WLC_IS_MATCH_SSID(wlc, ssid1, ssid2, len1, len2) \
+ 	((len1 == len2) && !memcmp(ssid1, ssid2, len1))
+diff --git a/drivers/staging/brcm80211/include/bcmsoc.h b/drivers/staging/brcm80211/include/bcmsoc.h
+index 012e465..4df0c64 100644
+--- a/drivers/staging/brcm80211/include/bcmsoc.h
++++ b/drivers/staging/brcm80211/include/bcmsoc.h
+@@ -14,8 +14,8 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#ifndef	_HNDSOC_H
+-#define	_HNDSOC_H
++#ifndef	_BCMSOC_H
++#define	_BCMSOC_H
+ 
+ /* Include the soci specific files */
+ #include <aidmp.h>
+@@ -130,7 +130,7 @@
+ 					 * unused address ranges
+ 					 */
+ 
+-/* There are TWO constants on all HND chips: SI_ENUM_BASE above,
++/* There are TWO constants on all Broadcom chips: SI_ENUM_BASE above,
+  * and chipcommon being the first core:
+  */
+ #define	SI_CC_IDX		0
+@@ -195,4 +195,4 @@
+ #define	BISZ_BSSEND_IDX		6	/*      6: bss end */
+ #define BISZ_SIZE		7	/* descriptor size in 32-bit integers */
+ 
+-#endif				/* _HNDSOC_H */
++#endif				/* _BCMSOC_H */
 -- 
-1.7.0.4
+1.7.4.1
+
 
