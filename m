@@ -1,81 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:48796 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab1FOXX2 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53791 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757732Ab1FAX6w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 19:23:28 -0400
-Received: by mail-pz0-f46.google.com with SMTP id 9so673021pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 16:23:28 -0700 (PDT)
-Message-ID: <4DF93EC7.7050102@ring3k.org> (sfid-20110616_012331_428473_78B314CF)
-Date: Thu, 16 Jun 2011 08:22:47 +0900
-From: Mike McCormack <mikem@ring3k.org>
+	Wed, 1 Jun 2011 19:58:52 -0400
+Received: by iyb14 with SMTP id 14so249001iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 16:58:52 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] rtlwifi: Fix typo in variable name
+In-Reply-To: <1306928768-7501-44-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com> <1306928768-7501-44-git-send-email-rvossen@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 2 Jun 2011 09:58:32 +1000
+Message-ID: <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com> (sfid-20110602_015858_922438_43A53484)
+Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t with
+ struct si_pub
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-offchan_deley should be offchan_delay
+On Wed, Jun 1, 2011 at 21:45, Roland Vossen <rvossen@broadcom.com> wrote:
+> Code cleanup.
+>
+> Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
+>
+> diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+> index 2cc9bc7..9819a35 100644
+> --- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+> +++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+> @@ -27,7 +27,8 @@
+>  #include <dngl_stats.h>
+>  #include <dhd.h>
+>  #include <linux/ieee80211.h>
+> -typedef const struct si_pub si_t;
+> +
+> +struct si_pub;
+>
+>  #include <dngl_stats.h>
+>  #include <dhd.h>
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
----
- drivers/net/wireless/rtlwifi/core.c |    4 ++--
- drivers/net/wireless/rtlwifi/pci.c  |    3 +--
- drivers/net/wireless/rtlwifi/wifi.h |    2 +-
- 3 files changed, 4 insertions(+), 5 deletions(-)
+Should this struct definition be in a header file somewhere?
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 605514b..3313ce6 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -335,8 +335,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * before going offchannel, or dis-association or delete BA will
- 		 * happen by AP
- 		 */
--		if (rtlpriv->mac80211.offchan_deley) {
--			rtlpriv->mac80211.offchan_deley = false;
-+		if (rtlpriv->mac80211.offchan_delay) {
-+			rtlpriv->mac80211.offchan_delay = false;
- 			mdelay(50);
- 		}
- 		rtlphy->current_channel = wide_chan;
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index d4c2da8..4195b01 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -581,7 +581,7 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
- 		fc = rtl_get_fc(skb);
- 		if (ieee80211_is_nullfunc(fc)) {
- 			if (ieee80211_has_pm(fc)) {
--				rtlpriv->mac80211.offchan_deley = true;
-+				rtlpriv->mac80211.offchan_delay = true;
- 				rtlpriv->psc.state_inap = 1;
- 			} else {
- 				rtlpriv->psc.state_inap = 0;
-@@ -788,7 +788,6 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- {
- 	struct ieee80211_hw *hw = dev_id;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	unsigned long flags;
- 	u32 inta = 0;
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index fcf2c9f..c54cda5 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -938,7 +938,7 @@ struct rtl_mac {
- 	int n_channels;
- 	int n_bitrates;
- 
--	bool offchan_deley;
-+	bool offchan_delay;
- 
- 	/*filters */
- 	u32 rx_conf;
+Thanks,
+
 -- 
-1.7.4.1
+Julian Calaby
 
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
