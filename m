@@ -1,61 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:50748 "EHLO mail.atheros.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4822 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750757Ab1FQFho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 01:37:44 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 22:37:09 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<Fiona.Cain@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Fix a corner case failure in sending PAPRD frames in HT40
-Date: Fri, 17 Jun 2011 11:07:32 +0530
-Message-ID: <1308289052-4219-1-git-send-email-mshajakhan@atheros.com> (sfid-20110617_073750_410556_C0D7A5A9)
+	id S1758832Ab1FALqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:32 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 72/83] staging: brcm80211: cleanup after R_REG/W_REG
+ patches
+Date: Wed, 1 Jun 2011 13:45:57 +0200
+Message-ID: <1306928768-7501-72-git-send-email-rvossen@broadcom.com> (sfid-20110601_134720_961564_FEF9AE99)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Code cleanup. Removed unused sections. Added () to make macro safe.
 
-when the AP is configured with HT40/2.4GHz and when PAPRD is enabled in station
-we have PAPRD training frames never sent out because of the following
-failure "PAPRD target power delta out of range". This consistently happens
-in channel 10,11 in Over The Air testing and rarely in channel 6 under wired
-setup.
-        the reason behind this issue is all the HT40 rates target power
-are 0 when we operate in channel 10/11 at 2.4GHz
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c   |   29 ++++------------------
+ drivers/staging/brcm80211/brcmsmac/wlc_types.h  |    7 -----
+ drivers/staging/brcm80211/include/brcmu_utils.h |    4 ---
+ 3 files changed, 6 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ff8150e..2e370c6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -1461,7 +1461,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 2a93f3b..397798a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -32,50 +32,33 @@
+ #include <bcmsoc.h>
  
--		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
-+		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ /* register access macros */
+-#if defined(BCMSDIO)
+-#ifdef BRCM_FULLMAC
+-#include <bcmsdh.h>
+-#endif
+-#endif
+-
+-/* register access macros */
+ #ifndef __BIG_ENDIAN
+ #ifndef __mips__
+ #define R_REG(r) \
+-	bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))
++	bcmsdh_reg_read(NULL, (unsigned long)(r), sizeof(*(r)))
+ #else				/* __mips__ */
+ #define R_REG(r) \
+ 	({ \
+ 		__typeof(*(r)) __osl_v; \
+ 		__asm__ __volatile__("sync"); \
+-		__osl_v = bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r)); \
++		__osl_v = bcmsdh_reg_read(NULL, (unsigned long)(r),\
++					  sizeof(*(r))); \
+ 		__asm__ __volatile__("sync"); \
+ 		__osl_v; \
+ 	})
+ #endif				/* __mips__ */
  
-@@ -2616,7 +2616,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ #define W_REG(r, v) do { \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), (v)); \
++		bcmsdh_reg_write(NULL, (unsigned long)(r), sizeof(*(r)), (v)); \
+ 	} while (0)
+ #else				/* __BIG_ENDIAN */
+ #define R_REG(r) \
+-	bcmsdh_reg_read(NULL, (unsigned long)r, sizeof(*r))
++	bcmsdh_reg_read(NULL, (unsigned long)(r), sizeof(*(r)))
+ #define W_REG(r, v) do { \
+-		bcmsdh_reg_write(NULL, (unsigned long)r, sizeof(*r), v); \
++		bcmsdh_reg_write(NULL, (unsigned long)(r), sizeof(*(r)), (v)); \
+ 	} while (0)
+ #endif				/* __BIG_ENDIAN */
  
--		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
-+		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+-#ifdef __mips__
+-/*
+- * bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+- * transactions. As a fix, a read after write is performed on certain places
+- * in the code. Older chips and the newer 5357 family don't require this fix.
+- */
+-#define W_REG_FLUSH(r, v)	({ W_REG((r), (v)); (void)R_REG(r); })
+-#else
+-#define W_REG_FLUSH(r, v)	W_REG((r), (v))
+-#endif				/* __mips__ */
+-
+ #define AND_REG(r, v)	W_REG((r), R_REG(r) & (v))
+ #define OR_REG(r, v)	W_REG((r), R_REG(r) | (v))
  
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_types.h b/drivers/staging/brcm80211/brcmsmac/wlc_types.h
+index 059dc17..db296d4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_types.h
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_types.h
+@@ -42,13 +42,6 @@ do {						\
+ #define WL_ERROR_ON()		(brcm_msg_level & LOG_ERROR_VAL)
+ 
+ /* register access macros */
+-#if defined(BCMSDIO)
+-#ifdef BRCM_FULLMAC
+-#include <bcmsdh.h>
+-#endif
+-#endif
+-
+-/* register access macros */
+ #ifndef __BIG_ENDIAN
+ #ifndef __mips__
+ #define R_REG(r) \
+diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
+index 94ae604..e4007d4 100644
+--- a/drivers/staging/brcm80211/include/brcmu_utils.h
++++ b/drivers/staging/brcm80211/include/brcmu_utils.h
+@@ -239,10 +239,6 @@ extern int brcmu_iovar_lencheck(const struct brcmu_iovar *table, void *arg,
+ #define	PKTBUFSZ	2048
+ 
+ #define OSL_SYSUPTIME()		((u32)jiffies * (1000 / HZ))
+-#ifdef BRCM_FULLMAC
+-#include <linux/kernel.h>	/* for vsn/printf's */
+-#include <linux/string.h>	/* for mem*, str* */
+-#endif
+ 
+ #ifndef setbit
+ #ifndef NBBY			/* the BSD family defines NBBY */
 -- 
-1.7.0.4
+1.7.4.1
+
 
