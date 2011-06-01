@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:59274 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624Ab1FFMjv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39377 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab1FAERE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 08:39:51 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v12.0.0)
-	with ESMTP id md50000010001.msg
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 15:39:46 +0300
-Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
-From: George Kashperko <george@znau.edu.ua>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>, Greg KH <greg@kroah.com>,
-	linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com
-In-Reply-To: <201106061332.51661.arnd@arndb.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-	 <1307311658-15853-2-git-send-email-hauke@hauke-m.de>
-	 <BANLkTimAPHPcqKKJ+Rphef_+1RB0aHR4ug@mail.gmail.com>
-	 <201106061332.51661.arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 06 Jun 2011 15:29:59 +0300
-Message-Id: <1307363399.28734.25.camel@dev.znau.edu.ua> (sfid-20110606_143956_151606_6DE359A5)
+	Wed, 1 Jun 2011 00:17:04 -0400
+Subject: Re: [PATCH v7] mac80211_hwsim driver support userspace frame tx/rx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Lopez <jlopex@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com, j@w1.fi,
+	javier@cozybit.com
+In-Reply-To: <1306879610-21242-1-git-send-email-jlopex@gmail.com> (sfid-20110601_000722_231691_6D77025C)
+References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
+	 <1306879610-21242-1-git-send-email-jlopex@gmail.com>
+	 (sfid-20110601_000722_231691_6D77025C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Jun 2011 06:16:54 +0200
+Message-ID: <1306901814.3867.1.camel@jlt3.sipsolutions.net> (sfid-20110601_061709_681761_3400344D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-06-01 at 00:06 +0200, Javier Lopez wrote:
+> This patch adds to mac80211_hwsim the capability to send traffic via 
+> userspace.
 
-> On Monday 06 June 2011, Rafał Miłecki wrote:
-> > Greg, Arnd: could you take a look at this patch, please?
-> > 
-> > With proposed patch we are going back to this ugly array and wrappers hacks.
-> > 
-> > I was really happy with our final solution, but it seems it's not
-> > doable for embedded systems...? Is there something better we can do
-> > about this?
-> > 
-> > 2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
-> > > When using bcma on a embedded device it is initialized very early at
-> > > boot. We have to do so as the cpu and interrupt management and all
-> > > other devices are attached to this bus and it has to be initialized so
-> > > early. In that stage we can not allocate memory or sleep, just use the
-> > > memory on the stack and in the text segment as the kernel is not
-> > > initialized far enough. This patch removed the kzallocs from the scan
-> > > code. Some earlier version of the bcma implementation and the normal
-> > > ssb implementation are doing it like this.
-> > > The __bcma_dev_wrapper struct is used as the container for the device
-> > > struct as bcma_device will be too big if it includes struct device.
-> > >
-> > > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> 
-> If you rely on device scan to find your CPUs and interrupt controllers,
-> you are screwed already, this won't work.
-> 
-> In that case, it's better to have a few "early" drivers, as few as
-> possible, that don't go through the bus scan at all but have their
-> own ways of bootstrapping themselves. I don't know what you mean by
-> "CPU management", but I can only assume that it's not doing that much,
-> and you can just put the register values into the device tree.
-GPIOs, flash and UART could get initialized early without erom scanning
-as Chipcommon seems always to be the #0 core on the amba interconnect.
+Looks good, thanks for your patience.
 
-> 
-> For an interrupt controller, it should be ok to have it initialized
-> late, as long as it's only responsible for the devices on the same
-> bus and not for instance for IPI interrupts. Just make sure that you
-> do the bus scan and the initialization of the IRQ driver before you
-> initialize any drivers that rely in on the interrupts to be working.
-Without proper timer init (which requires both the chipcommon and mips
-cores knowledge) kernel will get hung somewhere inside calibrate_delay.
-It could get addressed if get bus scan called in arch_init_irq or
-plat_time_init - both are executed before calibrate_delay and with slab
-available.
+> +++ b/drivers/net/wireless/mac80211_hwsim.h
 
-Have nice day,
-George
+This file is for userspace, no?
 
+> @@ -0,0 +1,131 @@
+> +/*
+> + * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
+> + * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
+> + * Copyright (c) 2011, Javier Lopez <jlopex@gmail.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include <net/mac80211.h>
+
+It shouldn't include that then, but it doesn't really matter anyway.
+
+johannes
 
