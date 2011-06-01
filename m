@@ -1,84 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51689 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754324Ab1F0Urw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 16:47:52 -0400
-Received: by iwn6 with SMTP id 6so4411962iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 13:47:51 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2414 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758863Ab1FALqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2011 07:46:40 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 79/83] staging: brcm80211: moved /include/srom.h into
+ /brcmsmac dir
+Date: Wed, 1 Jun 2011 13:46:04 +0200
+Message-ID: <1306928768-7501-79-git-send-email-rvossen@broadcom.com> (sfid-20110601_134743_311812_2C7741E2)
+In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1309178198.3911.11.camel@jlt3.sipsolutions.net>
-References: <1309073538-24071-1-git-send-email-arik@wizery.com> <1309178198.3911.11.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 27 Jun 2011 23:47:36 +0300
-Message-ID: <BANLkTi=jR7BC52OZH6N0cNZyHbcGrFaKEQ@mail.gmail.com> (sfid-20110627_225207_732294_DE2718A8)
-Subject: Re: [PATCH v2 1/2] mac80211: propagate information about STA WME
- support down
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 27, 2011 at 15:36, Johannes Berg <johannes@sipsolutions.net> wrote:
-> I wonder, would it make sense to _move_ the flag instead of trying to
-> keep it twice? Since the flag shouldn't ever change that could even
-> remove some locking around it in some hotpaths...
+Code cleanup.
 
-I'm not sure, but I haven't seen any atomic operations on this flag in a tx/rx.
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c       |    2 +-
+ drivers/staging/brcm80211/brcmsmac/bottom_mac.c    |    2 +-
+ drivers/staging/brcm80211/brcmsmac/main.c          |    2 +-
+ drivers/staging/brcm80211/brcmsmac/phy_shim.c      |    2 +-
+ drivers/staging/brcm80211/brcmsmac/srom.c          |    2 +-
+ .../staging/brcm80211/{include => brcmsmac}/srom.h |    0
+ 6 files changed, 5 insertions(+), 5 deletions(-)
+ rename drivers/staging/brcm80211/{include => brcmsmac}/srom.h (100%)
 
->
->> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
->> index 421eaa6..efa1d86 100644
->> --- a/net/mac80211/ibss.c
->> +++ b/net/mac80211/ibss.c
->> @@ -310,11 +310,14 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->>                       } else
->>                               sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
->>                                               mgmt->sa, supp_rates,
->> +                                             elems->wmm_info != NULL,
->>                                               GFP_ATOMIC);
->>               }
->>
->> -             if (sta && elems->wmm_info)
->> +             if (sta && elems->wmm_info) {
->>                       set_sta_flags(sta, WLAN_STA_WME);
->> +                     sta->sta.wme = true;
->> +             }
->
-> This seems duplicate now that you're passing it into ibss_add_sta().
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 7eabe90..fee8966 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -29,7 +29,7 @@
+ 
+ /* ********** from siutils.c *********** */
+ #include <nicpci.h>
+-#include <srom.h>
++#include "srom.h"
+ #include <pmu.h>
+ #include <scb.h>
+ #include <pub.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/bottom_mac.c b/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
+index 365cae0..719df41 100644
+--- a/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
++++ b/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
+@@ -25,7 +25,7 @@
+ #include <brcm_hw_ids.h>
+ #include <brcmu_wifi.h>
+ #include <aiutils.h>
+-#include <srom.h>
++#include "srom.h"
+ #include "otp.h"
+ #include <brcmu_utils.h>
+ #include <chipcommon.h>
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 759e68f..fc3d71d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -24,7 +24,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ #include <aiutils.h>
+-#include <srom.h>
++#include "srom.h"
+ #include "dma.h"
+ 
+ #include "pmu.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.c b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
+index 3300015..8b891f4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy_shim.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
+@@ -40,7 +40,7 @@
+ #include "pub.h"
+ #include "phy/phy_hal.h"
+ #include "channel.h"
+-#include <srom.h>
++#include "srom.h"
+ #include "key.h"
+ #include "bottom_mac.h"
+ #include "phy_hal.h"
+diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
+index 5a7b434..17e0f2a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/srom.c
++++ b/drivers/staging/brcm80211/brcmsmac/srom.c
+@@ -27,7 +27,7 @@
+ #include <brcm_hw_ids.h>
+ #include <nicpci.h>
+ #include <aiutils.h>
+-#include <srom.h>
++#include "srom.h"
+ #include "otp.h"
+ 
+ #define SROM_OFFSET(sih) ((sih->ccrev > 31) ? \
+diff --git a/drivers/staging/brcm80211/include/srom.h b/drivers/staging/brcm80211/brcmsmac/srom.h
+similarity index 100%
+rename from drivers/staging/brcm80211/include/srom.h
+rename to drivers/staging/brcm80211/brcmsmac/srom.h
+-- 
+1.7.4.1
 
-Not really, the ibss_add_sta is not always called in the above code path.
 
->
-> However, it's currently sort of necessary to keep it correct:
->
->> @@ -2652,7 +2652,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
->>                       else
->>                               rate_idx = status->rate_idx;
->>                       rx->sta = ieee80211_ibss_add_sta(sdata, bssid,
->> -                                     hdr->addr2, BIT(rate_idx), GFP_ATOMIC);
->> +                                     hdr->addr2, BIT(rate_idx), false,
->> +                                     GFP_ATOMIC);
->>               }
->>               break;
->>       case NL80211_IFTYPE_MESH_POINT:
->
-> since you're not parsing anything here. Which also seems strange, at
-> least you could check if it was a QoS frame?
->
-> In any case, it seems to me that the driver needs to know the WME flag
-> while adding the station, not only at some arbitrary point later, which
-> doesn't happen here.
-
-I admit it was a halfhearted attempt to introduce the flag. But
-pre-parsing the packet here seemed ugly to me.
-
->
-> Maybe you should make the flag be AP-mode only after all :-)
->
-
-Yea I guess there's no use adding (fairly trivial) code that's not
-really used by anyone.
-
-Arik
