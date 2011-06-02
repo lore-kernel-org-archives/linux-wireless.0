@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab1FATBN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 15:01:13 -0400
-Date: Wed, 1 Jun 2011 14:58:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
-Message-ID: <20110601185859.GF2509@tuxdriver.com> (sfid-20110601_210117_967685_89E4D264)
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
- <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
- <1306823717.9366.3.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1306823717.9366.3.camel@jlt3.sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60510 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753449Ab1FBQfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 12:35:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/9] compat-wireless: activate CARL9170_WPC by default
+Date: Thu,  2 Jun 2011 18:35:22 +0200
+Message-Id: <1307032525-18916-7-git-send-email-hauke@hauke-m.de> (sfid-20110602_183605_493430_F97EFE7B)
+In-Reply-To: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
+References: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 31, 2011 at 08:35:17AM +0200, Johannes Berg wrote:
-> On Fri, 2011-05-20 at 17:52 +0530, Rajkumar Manoharan wrote:
-> > Stop tx queues before updating rate control to ensure
-> > proper rate selection. Otherwise packets can be transmitted
-> > in 40 Mhz whereas hw is configured in HT20.
-> 
-> Looks like I completely missed this since you hid it in an ath9k
-> patchset. DON'T DO THAT.
-> 
-> Anyway, John, please revert. This is completely useless. Not only is
-> abusing the CSA stop reason a show-stopper, the whole patch is also just
-> not right, it seems like a workaround around a rate control algorithm
-> that isn't able to do an atomic HT change by itself. Also, it won't even
-> do what you want, there may be packets being processed concurrently
-> while stopping the queue -- calling stop_queues() is no guarantee that
-> no packet will be processed afterwards.
+Add to compat-3.0-stable
 
-Rajkumar, do you have an alternative fix to propose?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/config.mk b/config.mk
+index 2160409..00408bf 100644
+--- a/config.mk
++++ b/config.mk
+@@ -454,7 +454,7 @@ ifdef CONFIG_MAC80211_LEDS
+ CONFIG_CARL9170_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ # CONFIG_CARL9170_DEBUGFS=y
+-# CONFIG_CARL9170_WPC=y
++CONFIG_CARL9170_WPC=y
+ endif #CONFIG_COMPAT_KERNEL_2629
+ 
+ # This activates a threading fix for usb urb.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
