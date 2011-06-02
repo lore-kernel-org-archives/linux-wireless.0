@@ -1,57 +1,586 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36005 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab1FZHgN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2011 03:36:13 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so3924480wwe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jun 2011 00:36:12 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 3/3] wl12xx: use 802.11 header location after relocation to frame start
-Date: Sun, 26 Jun 2011 10:36:04 +0300
-Message-Id: <1309073764-24219-3-git-send-email-arik@wizery.com> (sfid-20110626_093618_375552_677248DE)
-In-Reply-To: <1309073764-24219-1-git-send-email-arik@wizery.com>
-References: <1309073764-24219-1-git-send-email-arik@wizery.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60525 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753463Ab1FBQfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 12:35:54 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 8/9] compat-wireless: sync atheros-debug.mk with config.mk
+Date: Thu,  2 Jun 2011 18:35:24 +0200
+Message-Id: <1307032525-18916-9-git-send-email-hauke@hauke-m.de> (sfid-20110602_183606_809320_0E5B43D4)
+In-Reply-To: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
+References: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating with TKIP encryption, the function wl1271_tx_fill_hdr()
-relocates the 802.11 header to the start of the frame, and leaves room
-for the security header.
+Add to compat-3.0-stable
 
-Some functions in the Tx path rely on the location of the header,
-namely, for purposes of roaming in STA mode and connecting new stations
-in AP mode. Call these functions only after the header is relocated.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/wl12xx/tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ defconfigs/atheros-debug.mk |  247 ++++++++++++++++++++++++++-----------------
+ 1 files changed, 150 insertions(+), 97 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index f3d79c8..0de04da 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -383,6 +383,8 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	if (ret < 0)
- 		return ret;
+diff --git a/defconfigs/atheros-debug.mk b/defconfigs/atheros-debug.mk
+index d9534eb..81ddee6 100644
+--- a/defconfigs/atheros-debug.mk
++++ b/defconfigs/atheros-debug.mk
+@@ -14,20 +14,27 @@ else
+ include $(KLIB_BUILD)/.config
+ endif
  
-+	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+-# We will warn when you don't have MQ support or NET_SCHED enabled.
+-#
+-# We could consider just quiting if MQ and NET_SCHED is disabled
+-# as I suspect all users of this package want 802.11e (WME) and
+-# 802.11n (HT) support.
+ ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
+-COMPAT_LATEST_VERSION = 37
+-KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
 +
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
- 		wl1271_tx_regulate_link(wl, hlid);
-@@ -390,8 +392,6 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 		wl1271_tx_update_filters(wl, skb);
- 	}
++COMPAT_LATEST_VERSION = 1
++KERNEL_VERSION := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
++
++ifeq ($(KERNEL_VERSION),3)
++KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^3\.\([0-9]\+\).*/\1/p')
++else
++COMPAT_26LATEST_VERSION = 39
++KERNEL_26SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
++COMPAT_26VERSIONS := $(shell I=$(COMPAT_26LATEST_VERSION); while [ "$$I" -gt $(KERNEL_26SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
++$(foreach ver,$(COMPAT_26VERSIONS),$(eval CONFIG_COMPAT_KERNEL_26$(ver)=y))
++KERNEL_SUBLEVEL := -1
++endif
++
+ COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
+-$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
++$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3$(ver)=y))
  
--	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+-ifdef CONFIG_COMPAT_KERNEL_24
++ifdef CONFIG_COMPAT_KERNEL_2624
+ $(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
+-endif #CONFIG_COMPAT_KERNEL_24
++endif #CONFIG_COMPAT_KERNEL_2624
+ 
+ ifeq ($(CONFIG_CFG80211),y)
+ $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
+@@ -54,14 +61,21 @@ endif
+ #
+ # In kernel 2.6.32 both attributes were removed.
+ #
+-ifeq ($(shell test $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
++ifeq ($(KERNEL_VERSION),2)
++ifeq ($(shell test $(KERNEL_26SUBLEVEL) -ge 27 -a $(KERNEL_26SUBLEVEL) -le 31 && echo yes),yes)
+ ifeq ($(CONFIG_MAC80211),)
+ $(error "ERROR: Your >=2.6.27 and <= 2.6.31 kernel has CONFIG_MAC80211 disabled, you should have it CONFIG_MAC80211=m if you want to use this thing.")
+ endif
+ endif
++endif
+ 
+ ifneq ($(KERNELRELEASE),) # This prevents a warning
+ 
++# We will warn when you don't have MQ support or NET_SCHED enabled.
++#
++# We could consider just quiting if MQ and NET_SCHED is disabled
++# as I suspect all users of this package want 802.11e (WME) and
++# 802.11n (HT) support.
+ ifeq ($(CONFIG_NET_SCHED),)
+  QOS_REQS_MISSING+=CONFIG_NET_SCHED
+ endif
+@@ -92,21 +106,20 @@ else
+ endif
+ 
+ # The Bluetooth compatibility only builds on kernels >= 2.6.27 for now
+-ifndef CONFIG_COMPAT_KERNEL_27
++ifndef CONFIG_COMPAT_KERNEL_2627
+ ifeq ($(CONFIG_BT),y)
+ # we'll ignore compiling bluetooth
+ else
+  CONFIG_COMPAT_BLUETOOTH=y
+  CONFIG_COMPAT_BLUETOOTH_MODULES=m
+ endif
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+-ifdef CONFIG_COMPAT_KERNEL_33
++ifdef CONFIG_COMPAT_KERNEL_2633
+ ifdef CONFIG_FW_LOADER
+  CONFIG_COMPAT_FIRMWARE_CLASS=m
+ endif #CONFIG_FW_LOADER
+-endif #CONFIG_COMPAT_KERNEL_33
 -
- 	/*
- 	 * The length of each packet is stored in terms of
- 	 * words. Thus, we must pad the skb data to make sure its
++endif #CONFIG_COMPAT_KERNEL_2633
+ 
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
+@@ -133,7 +146,9 @@ CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
+ CONFIG_MAC80211_RC_PID=y
+ CONFIG_MAC80211_RC_MINSTREL=y
+ CONFIG_MAC80211_RC_MINSTREL_HT=y
++ifdef CONFIG_LEDS_TRIGGERS
+ CONFIG_MAC80211_LEDS=y
++endif #CONFIG_LEDS_TRIGGERS
+ 
+ # enable mesh networking too
+ CONFIG_MAC80211_MESH=y
+@@ -153,8 +168,8 @@ CONFIG_LIB80211_CRYPT_TKIP=m
+ # CONFIG_LIB80211_DEBUG=y
+ 
+ CONFIG_BT=m
+-CONFIG_BT_L2CAP=m
+-CONFIG_BT_SCO=m
++CONFIG_COMPAT_BT_L2CAP=y
++CONFIG_COMPAT_BT_SCO=y
+ CONFIG_BT_RFCOMM=m
+ CONFIG_BT_RFCOMM_TTY=y
+ CONFIG_BT_BNEP=m
+@@ -164,7 +179,9 @@ CONFIG_BT_BNEP_PROTO_FILTER=y
+ ifdef CONFIG_ISDN_CAPI
+ CONFIG_BT_CMTP=m
+ endif #CONFIG_ISDN_CAPI
+-CONFIG_BT_HIDP=m
++ifndef CONFIG_COMPAT_KERNEL_2628
++CONFIG_COMPAT_BT_HIDP=m
++endif #CONFIG_COMPAT_KERNEL_2628
+ 
+ CONFIG_BT_HCIUART=M
+ CONFIG_BT_HCIUART_H4=y
+@@ -196,26 +213,24 @@ else #CONFIG_CFG80211_WEXT
+ $(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
+ endif #CONFIG_WIRELESS_EXT
+ 
+-ifneq ($(CONFIG_STAGING),)
+- CONFIG_COMPAT_STAGING=m
+-endif
++ifdef CONFIG_STAGING
++CONFIG_COMPAT_STAGING=m
++endif #CONFIG_STAGING
+ 
+ # mac80211 test driver
+ CONFIG_MAC80211_HWSIM=m
+ 
+-# PCI Drivers
+-ifdef CONFIG_PCI
+-
+ CONFIG_ATH5K=m
+ CONFIG_ATH5K_DEBUG=y
+-CONFIG_ATH9K_HW=m
++# CONFIG_ATH5K_AHB=y
++
+ CONFIG_ATH9K=m
+-# Note: once ath9k_htc is added we'll have to move
+-# CONFIG_ATH9K_COMMON to an area that doesn't depend on PCI
+-# as you could then have ath9k disabled but ath9k_htc enabled.
++CONFIG_ATH9K_HW=m
+ CONFIG_ATH9K_COMMON=m
+ CONFIG_ATH9K_DEBUGFS=y
++# CONFIG_ATH9K_AHB=y
+ CONFIG_ATH9K_PKTLOG=y
++
+ # Disable this to get minstrel as default, we leave the ath9k
+ # rate control algorithm as the default for now as that is also
+ # default upstream on the kernel. We will move this to minstrel
+@@ -224,15 +239,25 @@ CONFIG_ATH9K_PKTLOG=y
+ # for long range considerations.
+ CONFIG_ATH9K_RATE_CONTROL=y
+ 
++# PCI Drivers
++ifdef CONFIG_PCI
+ 
+-CONFIG_COMPAT_IWLWIFI=m
++CONFIG_ATH5K_PCI=y
++CONFIG_ATH9K_PCI=y
++
++CONFIG_IWLAGN=m
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
+-CONFIG_IWLAGN=m
+-CONFIG_COMPAT_IWL4965=y
+-CONFIG_IWL5000=y
++# CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
++CONFIG_IWL_P2P=y
++
++CONFIG_IWLWIFI_LEGACY=m
++CONFIG_COMPAT_IWL4965=m
+ CONFIG_IWL3945=m
++# CONFIG_IWLWIFI_LEGACY_DEBUG=y
++# CONFIG_IWLWIFI_LEGACY_DEBUGFS=y
++# CONFIG_IWLWIFI_LEGACY_DEVICE_TRACING=y
+ 
+ 
+ CONFIG_B43=m
+@@ -241,16 +266,20 @@ CONFIG_B43_PCI_AUTOSELECT=y
+ ifdef CONFIG_PCMCIA
+ CONFIG_B43_PCMCIA=y
+ endif #CONFIG_PCMCIA
++ifdef CONFIG_MAC80211_LEDS
+ CONFIG_B43_LEDS=y
++endif #CONFIG_MAC80211_LEDS
+ CONFIG_B43_PHY_LP=y
+-CONFIG_B43_NPHY=y
++CONFIG_B43_PHY_N=y
+ # CONFIG_B43_FORCE_PIO=y
+ # CONFIG_B43_DEBUG=y
+ 
+ CONFIG_B43LEGACY=m
+ CONFIG_B43LEGACY_HWRNG=y
+ CONFIG_B43LEGACY_PCI_AUTOSELECT=y
++ifdef CONFIG_MAC80211_LEDS
+ CONFIG_B43LEGACY_LEDS=y
++endif #CONFIG_MAC80211_LEDS
+ # CONFIG_B43LEGACY_DEBUG=y
+ CONFIG_B43LEGACY_DMA=y
+ CONFIG_B43LEGACY_PIO=y
+@@ -286,7 +315,6 @@ endif #CONFIG_WIRELESS_EXT
+ ifdef CONFIG_SSB
+ # Sonics Silicon Backplane
+ CONFIG_SSB_SPROM=y
+-# CONFIG_SSB_DEBUG=y
+ 
+ CONFIG_SSB_BLOCKIO=y
+ CONFIG_SSB_PCIHOST=y
+@@ -312,10 +340,9 @@ CONFIG_RT2400PCI=m
+ CONFIG_RT2500PCI=m
+ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800PCI=m
+-CONFIG_RT2800PCI_PCI=y
+-# CONFIG_RT2800PCI_RT30XX=y
+-# CONFIG_RT2800PCI_RT35XX=y
+-# CONFIG_RT2800PCI_SOC=y
++CONFIG_RT2800PCI_RT33XX=y
++CONFIG_RT2800PCI_RT35XX=y
++# CONFIG_RT2800PCI_RT53XX=y
+ endif #CONFIG_CRC_CCITT
+ NEED_RT2X00=y
+ 
+@@ -324,7 +351,6 @@ NEED_RT2X00=y
+ # driver as we're in the PCI section.
+ ifdef CONFIG_CRC_ITU_T
+ CONFIG_RT61PCI=m
+-NEED_RT2X00_FIRMWARE=y
+ endif #CONFIG_CRC_ITU_T
+ 
+ CONFIG_MWL8K=m
+@@ -333,11 +359,11 @@ CONFIG_MWL8K=m
+ CONFIG_ATL1=m
+ CONFIG_ATL2=m
+ CONFIG_ATL1E=m
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_ATL1C=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ CONFIG_ATL1C=m
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+ ifdef CONFIG_WIRELESS_EXT
+ CONFIG_HERMES=m
+@@ -355,18 +381,25 @@ CONFIG_PCMCIA_SPECTRUM=m
+ endif #CONFIG_PCMCIA
+ endif #CONFIG_WIRELESS_EXT
+ 
++CONFIG_RTL8192CE=m
++CONFIG_RTL8192SE=m
++
++ifdef CONFIG_COMPAT_STAGING
++CONFIG_BRCMSMAC=m
++endif #CONFIG_COMPAT_STAGING
++
+ endif #CONFIG_PCI
+ ## end of PCI
+ 
+ ifdef CONFIG_PCMCIA
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS=n
+ CONFIG_LIBERTAS_CS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_CS=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+ endif #CONFIG_PCMCIA
+ ## end of PCMCIA
+@@ -376,8 +409,10 @@ CONFIG_EEPROM_93CX6=m
+ 
+ # USB Drivers
+ ifdef CONFIG_USB
+-CONFIG_ZD1211RW=m
++ifndef CONFIG_COMPAT_KERNEL_2629
++CONFIG_COMPAT_ZD1211RW=m
+ # CONFIG_ZD1211RW_DEBUG=y
++endif #CONFIG_COMPAT_KERNEL_2629
+ 
+ # Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
+ 
+@@ -386,38 +421,41 @@ CONFIG_ZD1211RW=m
+ # is only wireless RNDIS chip known to date.
+ # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
+ # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
+-ifdef CONFIG_COMPAT_KERNEL_29
++ifdef CONFIG_COMPAT_KERNEL_2629
+ CONFIG_USB_COMPAT_USBNET=n
+ CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
+ CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
+ CONFIG_USB_NET_COMPAT_CDCETHER=n
+-else #CONFIG_COMPAT_KERNEL_29
++else #CONFIG_COMPAT_KERNEL_2629
+ CONFIG_USB_COMPAT_USBNET=m
+ ifdef CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+ CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
+ endif #CONFIG_USB_NET_CDCETHER
++ifdef CONFIG_USB_NET_CDCETHER_MODULE
++CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
++CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
++endif #CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_CDCETHER=m
+-endif #CONFIG_COMPAT_KERNEL_29
++endif #CONFIG_COMPAT_KERNEL_2629
+ 
+ 
+ CONFIG_P54_USB=m
+ CONFIG_RTL8187=m
++ifdef CONFIG_MAC80211_LEDS
+ CONFIG_RTL8187_LEDS=y
++endif #CONFIG_MAC80211_LEDS
+ 
+ CONFIG_AT76C50X_USB=m
+ 
+-ifndef CONFIG_COMPAT_KERNEL_28
+-CONFIG_AR9170_USB=m
+-CONFIG_AR9170_LEDS=y
+-endif #CONFIG_COMPAT_KERNEL_28
+-
+-ifndef CONFIG_COMPAT_KERNEL_29
++ifndef CONFIG_COMPAT_KERNEL_2629
+ CONFIG_CARL9170=m
++ifdef CONFIG_MAC80211_LEDS
+ CONFIG_CARL9170_LEDS=y
++endif #CONFIG_MAC80211_LEDS
+ CONFIG_CARL9170_DEBUGFS=y
+ CONFIG_CARL9170_WPC=y
+-endif #CONFIG_COMPAT_KERNEL_29
++endif #CONFIG_COMPAT_KERNEL_2629
+ 
+ # This activates a threading fix for usb urb.
+ # this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
+@@ -431,8 +469,9 @@ CONFIG_ATH9K_HTC_DEBUGFS=y
+ CONFIG_RT2500USB=m
+ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800USB=m
+-CONFIG_RT2800USB_RT30XX=y
++CONFIG_RT2800USB_RT33XX=y
+ CONFIG_RT2800USB_RT35XX=y
++# CONFIG_RT2800USB_RT53XX=y
+ CONFIG_RT2800USB_UNKNOWN=y
+ endif #CONFIG_CRC_CCITT
+ CONFIG_RT2X00_LIB_USB=m
+@@ -440,18 +479,17 @@ NEED_RT2X00=y
+ # RT73USB requires firmware
+ ifdef CONFIG_CRC_ITU_T
+ CONFIG_RT73USB=m
+-NEED_RT2X00_FIRMWARE=y
+ endif #CONFIG_CRC_ITU_T
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_THINFIRM_USB=n
+ CONFIG_LIBERTAS_USB=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_THINFIRM_USB=m
+ CONFIG_LIBERTAS_USB=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+ CONFIG_ORINOCO_USB=m
+ 
+@@ -461,26 +499,28 @@ CONFIG_BT_HCIBPA10X=m
+ CONFIG_BT_HCIBFUSB=m
+ CONFIG_BT_ATH3K=m
+ 
++CONFIG_RTL8192CU=m
++
+ endif #CONFIG_USB end of USB driver list
+ 
+ ifdef CONFIG_SPI_MASTER
+-ifndef CONFIG_COMPAT_KERNEL_25
++ifndef CONFIG_COMPAT_KERNEL_2625
+ 
+ ifdef CONFIG_CRC7
+ CONFIG_WL1251_SPI=m
+-CONFIG_WL1271_SPI=m
++CONFIG_WL12XX_SPI=m
+ endif #CONFIG_CRC7
+ CONFIG_P54_SPI=m
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_SPI=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_SPI=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+-endif #CONFIG_COMPAT_KERNEL_25
++endif #CONFIG_COMPAT_KERNEL_2625
+ endif #CONFIG_SPI_MASTER end of SPI driver list
+ 
+ ifdef CONFIG_MMC
+@@ -489,23 +529,27 @@ CONFIG_SSB_SDIOHOST=y
+ CONFIG_B43_SDIO=y
+ 
+ ifdef CONFIG_CRC7
+-CONFIG_WL1251_SDIO=m
++ifdef CONFIG_WL12XX_PLATFORM_DATA
++CONFIG_COMPAT_WL1251_SDIO=m
++endif #CONFIG_WL12XX_PLATFORM_DATA
+ 
+-ifndef CONFIG_COMPAT_KERNEL_32
++ifndef CONFIG_COMPAT_KERNEL_2632
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
+-CONFIG_WL1271_SDIO=m
++CONFIG_COMPAT_WL12XX_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
+-endif #CONFIG_COMPAT_KERNEL_32
++endif #CONFIG_COMPAT_KERNEL_2632
+ 
+ endif #CONFIG_CRC7
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++CONFIG_MWIFIEX_SDIO=m
++
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_SDIO=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS_SDIO=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+ CONFIG_IWM=m
+ # CONFIG_IWM_DEBUG=y
+@@ -513,10 +557,8 @@ CONFIG_IWM=m
+ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
+-ifneq ($(CONFIG_COMPAT_STAGING),)
++ifdef CONFIG_COMPAT_STAGING
+ ifdef CONFIG_WIRELESS_EXT
+-CONFIG_ATH6KL_CFG80211=y
+-CONFIG_ATH6KL_DEBUG=y
+ # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+ # CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
+ # CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set
+@@ -527,66 +569,77 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
+ 
+-CONFIG_BRCM80211=m
+-CONFIG_BRCM80211_PCI=y
++CONFIG_BRCMFMAC=m
+ 
+ endif #CONFIG_WIRELESS_EXT
+-endif #CONFIG_MMC
++endif #CONFIG_COMPAT_STAGING
++
+ 
++endif #CONFIG_MMC
+ 
+-endif # end of SDIO driver list
++CONFIG_RTLWIFI=m
++CONFIG_RTL8192C_COMMON=m
+ 
+ # Common rt2x00 requirements
+ ifeq ($(NEED_RT2X00),y)
+ CONFIG_RT2X00=y
+ CONFIG_RT2X00_LIB=m
+ CONFIG_RT2800_LIB=m
+-CONFIG_RT2X00_LIB_HT=y
+ CONFIG_RT2X00_LIB_FIRMWARE=y
+ CONFIG_RT2X00_LIB_CRYPTO=y
+-ifdef CONFIG_COMPAT_KERNEL_25
++# CONFIG_RT2X00_LIB_SOC=y
++ifdef CONFIG_COMPAT_KERNEL_2625
+ CONFIG_RT2X00_LIB_LEDS=n
+-else #CONFIG_COMPAT_KERNEL_25
++else #CONFIG_COMPAT_KERNEL_2625
++ifdef CONFIG_LEDS_CLASS
+ CONFIG_RT2X00_LIB_LEDS=y
+-endif #CONFIG_COMPAT_KERNEL_25
++endif #CONFIG_LEDS_CLASS
++endif #CONFIG_COMPAT_KERNEL_2625
+ # CONFIG_RT2X00_DEBUG=y
+ # CONFIG_RT2X00_LIB_DEBUGFS
+ endif
+ 
+-ifeq ($(NEED_RT2X00_FIRMWARE),y)
+-CONFIG_RT2X00_LIB_FIRMWARE=y
+-endif
+-
+ # p54
+ CONFIG_P54_COMMON=m
++ifdef CONFIG_MAC80211_LEDS
+ CONFIG_P54_LEDS=y
++endif #CONFIG_MAC80211_LEDS
+ 
+ # Atheros
+ CONFIG_ATH_COMMON=m
+ CONFIG_ATH_DEBUG=y
+ 
+-CONFIG_WL12XX=y
++ifdef CONFIG_COMPAT_STAGING
++CONFIG_BRCMUTIL=m
++# CONFIG_BRCMDBG=y
++endif #CONFIG_COMPAT_STAGING
++
+ ifdef CONFIG_CRC7
+ CONFIG_WL1251=m
+-CONFIG_WL1271=m
++CONFIG_WL12XX=m
++CONFIG_WL12XX_HT=y
+ endif #CONFIG_CRC7
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++CONFIG_MWIFIEX=m
++
++ifdef CONFIG_COMPAT_KERNEL_2627
+ CONFIG_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2627
+ ifeq ($(NEED_LIBERTAS),y)
+ CONFIG_LIBERTAS_THINFIRM=m
+ CONFIG_LIBERTAS=m
+ CONFIG_LIBERTAS_MESH=y
+ # CONFIG_LIBERTAS_DEBUG=y
+ endif
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2627
+ 
+ # We need the backported rfkill module on kernel < 2.6.31.
+ # In more recent kernel versions use the in kernel rfkill module.
+-ifdef CONFIG_COMPAT_KERNEL_31
++ifdef CONFIG_COMPAT_KERNEL_2631
+ CONFIG_RFKILL_BACKPORT=m
++ifdef CONFIG_LEDS_TRIGGERS
+ CONFIG_RFKILL_BACKPORT_LEDS=y
++endif #CONFIG_LEDS_TRIGGERS
+ CONFIG_RFKILL_BACKPORT_INPUT=y
+-endif #CONFIG_COMPAT_KERNEL_31
++endif #CONFIG_COMPAT_KERNEL_2631
+ 
 -- 
 1.7.4.1
 
