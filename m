@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:54831 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749Ab1FSDty (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 23:49:54 -0400
-Date: Sat, 18 Jun 2011 22:49:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192se: Handle duplicate PCI ID 0x10ec:0x8192 conflict with r8192e_pci
-Message-ID: <4dfd71e1.ZoVUM+vtSzINuBtU%Larry.Finger@lwfinger.net> (sfid-20110619_054958_195930_FD0F0FD4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:53131 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753523Ab1FBRDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 13:03:00 -0400
+Subject: Re: [PATCH 07/10] iwlagn: advertise interface combinations
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <20110602162241.GE4580@redhat.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1306510833-32049-8-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110602162241.GE4580@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Jun 2011 09:59:31 -0700
+Message-ID: <1307033971.14344.4.camel@wwguy-ubuntu> (sfid-20110602_190304_456523_2AAB1F56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two devices with PCI ID 0x10ec:0x8192, namely RTL8192E and
-RTL8192SE. The method of distinguishing them is by the revision ID
-at offset 0x8 of the PCI configuration space. If the value is 0x10,
-then the device uses rtl8192se for a driver.
+On Thu, 2011-06-02 at 09:22 -0700, Stanislaw Gruszka wrote:
+> On Fri, May 27, 2011 at 08:40:30AM -0700, Wey-Yi Guy wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > With this, iwlwifi will advertise the limits on
+> > concurrency of virtual interfaces.
+> 
+> John, please revert this patch, it disallow to register new device
+> with below error. I believe, Wey already asked you to not a apply it.
+> 
+> WARNING: at net/wireless/core.c:468 wiphy_register+0x46e/0x5c0
+> [cfg80211]()
+> Hardware name: HP xw8600 Workstation
+> Modules linked in: iwlagn(+) mac80211 cfg80211 fuse cpufreq_ondemand
+> acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4
+> nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6
+> nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6
+> ext3 jbd dm_mirror dm_region_hash dm_log dm_mod uinput sg hp_wmi
+> sparse_keymap rfkill microcode serio_raw shpchp ext4 mbcache jbd2 sr_mod
+> cdrom sd_mod crc_t10dif firewire_ohci firewire_core crc_itu_t mptsas
+> mptscsih mptbase scsi_transport_sas ahci libahci pata_acpi ata_generic
+> ata_piix floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core
+> mxm_wmi wmi video [last unloaded: scsi_wait_scan]
+> Pid: 7333, comm: firmware/iwlwif Not tainted 3.0.0-rc1-wl+ #82
+> Call Trace:
+>  [<ffffffff8106438f>] warn_slowpath_common+0x7f/0xc0
+>  [<ffffffff810643ea>] warn_slowpath_null+0x1a/0x20
+>  [<ffffffffa03ea65e>] wiphy_register+0x46e/0x5c0 [cfg80211]
+>  [<ffffffff8115ce73>] ? __kmalloc+0x1b3/0x2d0
+>  [<ffffffffa042732e>] ? ieee80211_register_hw+0xde/0x670 [mac80211]
+>  [<ffffffffa04274dc>] ieee80211_register_hw+0x28c/0x670 [mac80211]
+>  [<ffffffffa047b9ca>] iwl_ucode_callback+0xd3a/0x11d0 [iwlagn]
+>  [<ffffffff81220607>] ? kobject_release+0xa7/0x1d0
+>  [<ffffffff8130f160>] ? _request_firmware+0x4e0/0x4e0
+>  [<ffffffff8130f1a1>] request_firmware_work_func+0x41/0x80
+>  [<ffffffff81088376>] kthread+0xb6/0xc0
+>  [<ffffffff810a1575>] ? trace_hardirqs_on_caller+0x155/0x1a0
+>  [<ffffffff814ba404>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff814b1454>] ? retint_restore_args+0x13/0x13
+>  [<ffffffff810882c0>] ? __init_kthread_worker+0x70/0x70
+>  [<ffffffff814ba400>] ? gs_change+0x13/0x13
+> ---[ end trace 971e83aec02c096b ]---
+> iwlagn 0000:80:00.0: Failed to register hw (error -22)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+hmm, 
+I thought I ask John not to merge this patch, we also see the similar
+problem. Johannes has the fix already.
 
-John,
+John, Could you revert the patch, I will re-submit.
 
-This patch is for kernel 3.0.
+Thanks
+Wey
 
-Larry
----
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -1615,6 +1615,16 @@ static bool _rtl_pci_find_adapter(struct
- 	pci_read_config_byte(pdev, 0x8, &revisionid);
- 	pci_read_config_word(pdev, 0x3C, &irqline);
- 
-+	/* PCI ID 0x10ec:0x8192 occurs for both RTL8192E, which uses
-+	 * r8192e_pci, and RTL8192SE, which uses this driver. If the
-+	 * revision ID is RTL_PCI_REVISION_ID_8192PCIE (0x01), then
-+	 * the correct driver is r8192e_pci, thus this routine should
-+	 * return false.
-+	 */
-+	if (deviceid == RTL_PCI_8192SE_DID &&
-+	    revisionid == RTL_PCI_REVISION_ID_8192PCIE)
-+		return false;
-+
- 	if (deviceid == RTL_PCI_8192_DID ||
- 	    deviceid == RTL_PCI_0044_DID ||
- 	    deviceid == RTL_PCI_0047_DID ||
-@@ -1847,7 +1857,8 @@ int __devinit rtl_pci_probe(struct pci_d
- 	pci_write_config_byte(pdev, 0x04, 0x07);
- 
- 	/* find adapter */
--	_rtl_pci_find_adapter(pdev, hw);
-+	if (!_rtl_pci_find_adapter(pdev, hw))
-+		goto fail3;
- 
- 	/* Init IO handler */
- 	_rtl_pci_io_handler_init(&pdev->dev, hw);
