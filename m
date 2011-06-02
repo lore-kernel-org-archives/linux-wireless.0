@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [193.252.22.128] ([193.252.22.128]:48891 "EHLO
-	smtp5.freeserve.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1757276Ab1FASJr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 14:09:47 -0400
-Date: Wed, 1 Jun 2011 19:09:29 +0100
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael =?ISO-8859-1?B?QvxzY2g=?= <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: b43 error under heavy load
-Message-ID: <20110601190929.244c57ed@boulder.homenet> (sfid-20110601_200950_629179_0415ACDF)
-In-Reply-To: <BANLkTi=Cm1o8HVqugC6JNooP8h+HpJ=aRQ@mail.gmail.com>
-References: <4CEAB969.20702@lwfinger.net>
-	<1290451982.20888.2.camel@maggie>
-	<4CEAC095.7020706@lwfinger.net>
-	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
-	<4DC9853A.1090508@lwfinger.net>
-	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
-	<20110601114839.433ae42d@boulder.homenet>
-	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
-	<20110601130842.077da1c3@boulder.homenet>
-	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
-	<20110601160101.75e30b3d@boulder.homenet>
-	<BANLkTim9pQc+yxdQLSL1-6VNiyM6_tvJ6g@mail.gmail.com>
-	<20110601184931.499557c6@boulder.homenet>
-	<BANLkTi=Cm1o8HVqugC6JNooP8h+HpJ=aRQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from trent.utfs.org ([194.246.123.103]:45190 "EHLO trent.utfs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361Ab1FBG14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 02:27:56 -0400
+Date: Wed, 1 Jun 2011 23:20:55 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+cc: Andreas Schwab <schwab@linux-m68k.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org, linuxppc-dev@ozlabs.org
+Subject: Re: [RFT][PATCH 3.0] ssb: fix PCI(e) driver regression causing oops
+ on PCI cards
+In-Reply-To: <BANLkTi=mbBiSOGbEZ4AEYqZgyvgW0oXKtw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.01.1106012317230.21697@trent.utfs.org> (sfid-20110602_082800_997785_484E6AB6)
+References: <1306918871-16965-1-git-send-email-zajec5@gmail.com> <BANLkTinSdDZv7gshYfi4mK5N9K-E7vk3Yw@mail.gmail.com> <BANLkTi=mbBiSOGbEZ4AEYqZgyvgW0oXKtw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 1 Jun 2011 20:03:56 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
-> 2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
-> > The one which failed caused the cessation of
-> > wireless traffic, and was accompanied by the debug log reports of
-> > out of order TX status earlier referred to, and with only one
-> > single report
-> 
-> As I said, I don't really suspect any relation between full TX ring
-> and out of order problems anymore.
-> 
-> But it won't hurt to ask just in case:
-> Did you see relation between this single "Stopped TX ring 1" and
-> massive out of order messages? Did out of order messages starter right
-> after "Stopped TX ring 1" one?
+On Thu, 2 Jun 2011 at 08:13, Rafał Miłecki wrote:
+> John, I'm afraid more and more people get angry at me because of this ;)
 
-The "Stopped TX ring 1" message was near the end (but not at the end)
-of the out of order messages. It was definitely not at the beginning of
-the out of order messages.
+Erm, I'm not angry at anyone :-) On the contrary, I'm happy about the fix 
+so quickly available!
 
-Chris
+Though I'm a bit afraid of the next git bisect session, as it might not be 
+so straightforward than this one...
 
+Thanks to all involved,
+Christian.
+-- 
+BOFH excuse #230:
 
+Lusers learning curve appears to be fractal
