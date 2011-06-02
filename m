@@ -1,36 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60725 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab1FGVvJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 17:51:09 -0400
-Received: by qyg14 with SMTP id 14so2759103qyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2011 14:51:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <D69C90565D53114396BF743585AF5A0912A8674CC4@VSHINMSMBX01.vshodc.lntinfotech.com>
-References: <D69C90565D53114396BF743585AF5A0912A8674CC4@VSHINMSMBX01.vshodc.lntinfotech.com>
-Date: Tue, 7 Jun 2011 23:51:08 +0200
-Message-ID: <BANLkTikMW7H=NYqX0N-TbhpBd61SSK9ayA@mail.gmail.com> (sfid-20110607_235114_079452_A42FBB54)
-Subject: Re: bcm4329 background scanning
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Viral Mehta <Viral.Mehta@lntinfotech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60499 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753424Ab1FBQfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 12:35:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/9] compat-wireless: make patches apply again
+Date: Thu,  2 Jun 2011 18:35:20 +0200
+Message-Id: <1307032525-18916-5-git-send-email-hauke@hauke-m.de> (sfid-20110602_183604_392486_12E6848C)
+In-Reply-To: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
+References: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/7 Viral Mehta <Viral.Mehta@lntinfotech.com>:
-> I was looking at bcm4329 driver to understand how scanning is happening ?
->
-> I have two questions,
-> 1. Does bcm4329 supports background scanning ?
->
-> from looking at the code, it looks like NO
 
-I think bcm4329 barely maintained and noone really work on it.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/09-threaded-irq.patch |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
-Did you think about switching to brcmfmac? It receives some love from
-Broadcom and it's more probably you will get some help with this one.
-
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index acfe043..d13e3cc 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -6,39 +6,39 @@ thread in process context as well.
+ 
+ --- a/drivers/net/wireless/b43/main.c
+ +++ b/drivers/net/wireless/b43/main.c
+-@@ -3970,8 +3970,13 @@ redo:
+- 	if (dev->sdev->bus->bustype == SSB_BUSTYPE_SDIO) {
++@@ -3971,8 +3971,13 @@ redo:
++ 	if (b43_bus_host_is_sdio(dev->dev)) {
+  		b43_sdio_free_irq(dev);
+  	} else {
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +		compat_synchronize_threaded_irq(&dev->irq_compat);
+ +		compat_free_threaded_irq(&dev->irq_compat);
+ +#else
+- 		synchronize_irq(dev->sdev->irq);
+- 		free_irq(dev->sdev->irq, dev);
++ 		synchronize_irq(dev->dev->irq);
++ 		free_irq(dev->dev->irq, dev);
+ +#endif
+  	}
+  	mutex_lock(&wl->mutex);
+  	dev = wl->current_dev;
+-@@ -4011,9 +4016,17 @@ static int b43_wireless_core_start(struc
++@@ -4012,9 +4017,17 @@ static int b43_wireless_core_start(struc
+  			goto out;
+  		}
+  	} else {
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +		err = compat_request_threaded_irq(&dev->irq_compat,
+-+						  dev->sdev->irq,
+++						  dev->dev->irq,
+ +						  b43_interrupt_handler,
+ +						  b43_interrupt_thread_handler,
+ +						  IRQF_SHARED, KBUILD_MODNAME, dev);
+ +#else
+- 		err = request_threaded_irq(dev->sdev->irq, b43_interrupt_handler,
++ 		err = request_threaded_irq(dev->dev->irq, b43_interrupt_handler,
+  					   b43_interrupt_thread_handler,
+  					   IRQF_SHARED, KBUILD_MODNAME, dev);
+ +#endif
+  		if (err) {
+  			b43err(dev->wl, "Cannot request IRQ-%d\n",
+- 			       dev->sdev->irq);
+-@@ -4728,6 +4741,10 @@ static int b43_setup_bands(struct b43_wl
++ 			       dev->dev->irq);
++@@ -4734,6 +4747,10 @@ static int b43_setup_bands(struct b43_wl
+  
+  static void b43_wireless_core_detach(struct b43_wldev *dev)
+  {
+@@ -51,7 +51,7 @@ thread in process context as well.
+  	b43_release_firmware(dev);
+ --- a/drivers/net/wireless/b43/b43.h
+ +++ b/drivers/net/wireless/b43/b43.h
+-@@ -772,6 +772,9 @@ struct b43_wldev {
++@@ -774,6 +774,9 @@ struct b43_wldev {
+  	unsigned int tx_count;
+  	unsigned int rx_count;
+  #endif
 -- 
-Rafał
+1.7.4.1
+
