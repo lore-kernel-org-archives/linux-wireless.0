@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que31.charter.net ([209.225.8.23]:46893 "EHLO que31.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752Ab1FMOvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 10:51:17 -0400
-Message-ID: <4DF61E7E.908@cuw.edu> (sfid-20110613_165123_535900_CD05F2E1)
-Date: Mon, 13 Jun 2011 09:28:14 -0500
-From: Greg Dietsche <gregory.dietsche@cuw.edu>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:35828 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361Ab1FBTMf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 15:12:35 -0400
+Received: by qyg14 with SMTP id 14so590979qyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 12:12:34 -0700 (PDT)
 MIME-Version: 1.0
-To: sgruszka@redhat.com, linville@tuxdriver.com
-CC: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] iwlegacy: remove unreachable code
-References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
-In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4DD4569C.7080303@candelatech.com>
+References: <1305586296-23147-1-git-send-email-greearb@candelatech.com>
+ <1305759738.8827.6.camel@jlt3.sipsolutions.net> <4DD4569C.7080303@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 2 Jun 2011 12:12:14 -0700
+Message-ID: <BANLkTinozbG2SfOCRd1U__8-Pz9-8HCkPQ@mail.gmail.com> (sfid-20110602_211238_294668_E3CAACEF)
+Subject: Re: [PATCH v2] wireless: Support can-scan-one logic.
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/2011 09:06 PM, Greg Dietsche wrote:
-> return; at the end of the function is unecessary.
+On Wed, May 18, 2011 at 4:30 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 05/18/2011 04:02 PM, Johannes Berg wrote:
+>>
+>> On Mon, 2011-05-16 at 15:51 -0700, greearb@candelatech.com wrote:
+>>>
+>>> From: Ben Greear<greearb@candelatech.com>
+>>>
+>>> Enable this by passing a -1 for a scan frequency.
+>>
+>> I still don't think we should do that, especially not with -1. That's
+>> totally non-netlink like inband signalling. I'll also reply to your
+>> other mail though since I don't think it makes sense to have this sort
+>> of convenience function in the kernel.
 >
-> Signed-off-by: Greg Dietsche<Gregory.Dietsche@cuw.edu>
-> ---
->   drivers/net/wireless/iwlegacy/iwl-eeprom.c |    1 -
->   1 files changed, 0 insertions(+), 1 deletions(-)
+> It's virtually impossible (as far as I can tell) to carry an
+> out-of-tree netlink patch that uses a new netlink message
+> and still keep things backwards-compat when someone adds a
+> new message to the upstream kernel.  So, the -1 hack works
+> well for me.
 >
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-> index cb346d1..5bf3f49 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-> @@ -316,7 +316,6 @@ static void iwl_legacy_init_band_reference(const struct iwl_priv *priv,
->   		break;
->   	default:
->   		BUG();
-> -		return;
->   	}
->   }
+> If it were to go into the kernel proper, then we could
+> add a proper flag to the netlink API and start using
+> that.
 >
->    
+> If you just don't like the feature, thats OK...it is a pretty
+> specialized feature, and easy enough to carry in my own tree.
 
-any comments/reviews/acks on this patch series?
+Since this shit was merged can you add a respective documentation
+extension for the command for nl80211.h?
 
-thanks,
-Greg
-
+  Luis
