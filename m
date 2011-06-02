@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2634 "EHLO MMS3.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:31972 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752279Ab1FJQaL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 12:30:11 -0400
-Message-ID: <4DF24685.3080702@broadcom.com> (sfid-20110610_183015_439659_1BDA9B14)
-Date: Fri, 10 Jun 2011 18:29:57 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: =?ISO-8859-2?Q?Michael_B=FCsch?= <m@bues.ch>,
-	"=?ISO-8859-2?Q?Rafa=B3_?= =?ISO-8859-2?Q?Mi=B3ecki?="
-	<zajec5@gmail.com>, "Michael Buesch" <mb@bu3sch.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Greg KH" <greg@kroah.com>
-Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
-References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
- <BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com>
- <4DF2042C.6060605@broadcom.com> <20110610133911.36f9f8b2@Nokia-N900>
- <20110610134016.GC2665@tuxdriver.com>
-In-Reply-To: <20110610134016.GC2665@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-2;
- format=flowed
+	id S1752683Ab1FBO6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 10:58:11 -0400
+Subject: Re: [PATCH 2/2] iwlagn: refactor iwlagn_mac_channel_switch
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110602144619.GB4580@redhat.com>
+References: <20110602144424.GA4580@redhat.com>
+	 <20110602144619.GB4580@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Jun 2011 07:29:52 -0700
+Message-ID: <1307024992.13397.3.camel@wwguy-huron> (sfid-20110602_165815_232256_F8304BB2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2011 03:40 PM, John W. Linville wrote:
-> On Fri, Jun 10, 2011 at 01:39:11PM +0000, Michael Büsch wrote:
->> On Fri, 10 Jun 2011 13:46:52 +0200
->> "Arend van Spriel"<arend@broadcom.com>  wrote:
->>>> Michael said we should not do do such a exporting without getting
->>>> users within the same patch serie.
->>> That is going to be hard for me despite my willingness to comply. Our
->>> driver is still in staging so we submit our brcm80211 patches to Greg
->>> KH. I figured it would be better to do submit patches for bcma on
->>> wireless repository.
->> There are no rules without exceptions ;-)
-> Right, so I don't really mind taking it.  OTOH, maybe Greg could just
-> carry the patch in his staging tree...?
->
-> John
+On Thu, 2011-06-02 at 07:46 -0700, Stanislaw Gruszka wrote:
+> Use less indentions and remove uneeded irq-save flags.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks, John
-
-I leave it up to Rafa³ and Michael to decide. Both ways are fine by me.
-
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |  106 ++++++++++++++++----------------
+>  1 files changed, 52 insertions(+), 54 deletions(-)
+> 
 
 
