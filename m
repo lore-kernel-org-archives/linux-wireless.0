@@ -1,107 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54497 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754337Ab1FVM5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 08:57:03 -0400
-Date: Wed, 22 Jun 2011 14:57:10 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-Message-ID: <20110622125710.GD22420@sortiz-mobl> (sfid-20110622_145707_407773_47BB918C)
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
- <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
- <1308728084.3883.9.camel@jlt3.sipsolutions.net>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42638 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753701Ab1FBRXQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 13:23:16 -0400
+Received: by qwk3 with SMTP id 3so471514qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 10:23:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308728084.3883.9.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20110531093201.GA15266@redhat.com>
+References: <20110529104529.GA2769@localhost.localdomain>
+	<BANLkTinABm=J0eZnwAjkYPwA1e3AgoFW6Q@mail.gmail.com>
+	<20110531093201.GA15266@redhat.com>
+Date: Thu, 2 Jun 2011 19:23:15 +0200
+Message-ID: <BANLkTin8xTf2AJGfXwo1RiA72gE=GtAakg@mail.gmail.com> (sfid-20110602_192320_856750_69ACE3F3)
+Subject: Re: [PATCH wireless-2.6] rt2x00: fix rmmod crash
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi,
 
-On Wed, Jun 22, 2011 at 09:34:44AM +0200, Johannes Berg wrote:
-> 
-> > + * @NFC_ATTR_TARGET_SENS_RES: extra information for NFC-A targets
-> > + * @NFC_ATTR_TARGET_SEL_RES: extra information for NFC-A targets
-> 
-> Those descriptions aren't very useful to me, but hopefully if I knew
-> anything about NFC I'd understand :)
-You might, yes :)
+>> Well isn't the bug then that autowakeup_work isn't cancelled using
+>> cancel_work_sync
+>> like the other workqueue tasks?
+>>
+>> I rather add the call to cancel_work_sync then moving the killing of
+>> the workqueue.
+>> The position where the workqueue is destroyed should be the place
+>> where we cancel
+>> all scheduled work, that way we can assume no rt2x00-related threads ater this
+>> position.
+>
+> rt2x00lib_config() could be running simultaneously to rt2x00lib_remove_dev()
+> and queue just canceled autowake_work again into (just destroyed) workqueue.
+> Other solution to fix, would be use ieee80211_queue_work() instead of custom
+> workqueue, is that better?
 
+Well 3 things are needed then,
+1) Don't schedule autowake_work when DEVICE_PRESENT flag is not set
+2) The handler for autowake_work should exit immediately when
+DEVICE_PRESENT flag is not set
+3) add a cancel_work_sync for the autowake_work inside remove_dev
 
-> > +struct nfc_target {
-> > +	u32 idx;
-> > +	u32 supported_protocols;
-> > +	u16 sens_res;
-> > +	u8 sel_res;
-> > +};
-> 
-> There's no list_head here.
-> 
-> >  struct nfc_dev {
-> >  	unsigned idx;
-> > +	unsigned target_idx;
-> > +	struct nfc_target *targets;
-> 
-> And this looks like an array. Do you really want to do that? That means
-> lots of reallocations.
-So NFC polling is a bit weird. Whenever you start polling for passive targets,
-the polling results are minimal: You only know that there is _a_ target on a
-particular frequency/modulation. It could be the same as the one you got 5
-minutes ago, or not. To verify it, you'd need to select the target (and put
-all other ones on standby) and start sending specific commands to it (Of
-course, you have a different set of commands per target family...). Only then
-you _may_ read some sort of UID that could help you matching targets from your
-previous poll cycle.
-My point is, when we start polling, we will invalidate all existing targets
-anyway. So a linked list or an array won't make a big difference in that area.
+That should effictively prevent the entire work structure from running
+while the driver
+is being rmmodded, or the device is being unplugged.
 
-
-> > +/**
-> > + * nfc_targets_found - inform that targets were found
-> > + *
-> > + * @dev: The nfc device that found the targets
-> > + * @targets: array of nfc targets found
-> > + * @ntargets: targets array size
-> > + *
-> > + * The device driver must call this function when one or many nfc targets
-> > + * are found. After calling this function, the device driver must stop
-> > + * polling for targets.
-> > + */
-> > +int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
-> > +							int n_targets)
-> 
-> I haven't looked at the API users, but do you really expect them to
-> build an array? That seems rather odd since I'd typically expect targets
-> to be discovered one by one, not en bloc.
-That's a typical use case, yes. But the HCI specs clearly leaves some room for
-detecting one target per frequency/modulation. So for example if you have a
-Felica card and a Mifare one next to your NFC dongle, the dongle itself will
-send an event to the host saying "I found several targets". You then read some
-sort of pseudo registry for each rf family to check if there is a target for
-it or not. So, the driver gets one single event for several targets found.
-
-> > @@ -298,7 +353,10 @@ int nfc_register_device(struct nfc_dev *dev)
-> >  	rc = device_add(&dev->dev);
-> >  	mutex_unlock(&nfc_devlist_mutex);
-> >  
-> > -	return rc;
-> > +	if (rc < 0)
-> > +		return rc;
-> > +
-> > +	return nfc_genl_device_added(dev);
-> 
-> No rollback if nfc_genl_device_added() fails? Either you need to ignore
-> the error or roll back I think.
-True.
-
-Cheers,
-Samuel.
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Ivo
