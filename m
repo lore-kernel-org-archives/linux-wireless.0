@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59672 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932595Ab1FWTGI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 15:06:08 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 80E98540048
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 15:13:20 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-23 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110623190606.1A71B40EC8@repository3.orbit-lab.org> (sfid-20110623_210612_287871_0162ADBD)
-Date: Thu, 23 Jun 2011 15:06:06 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga02.intel.com ([134.134.136.20]:6361 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754330Ab1FBUAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 16:00:21 -0400
+Subject: Re: [PATCH] iwlagn: fix interface combinations
+From: wwguy <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20110602194936.GB2511@tuxdriver.com>
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1306510833-32049-8-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110602162241.GE4580@redhat.com> <1307033971.14344.4.camel@wwguy-ubuntu>
+	 <1307036323.3738.3.camel@jlt3.sipsolutions.net>
+	 <20110602194936.GB2511@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Jun 2011 12:56:52 -0700
+Message-ID: <1307044612.14344.182.camel@wwguy-ubuntu> (sfid-20110602_220031_791871_68A6994C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + a86aade...d75c141 akpm-end   -> origin/akpm-end  (forced update)
-   e08f6d4..1bd58f8  akpm-start -> origin/akpm-start
-   65e7d23..71c90ac  history    -> origin/history
- + a0b885f...f0598df master     -> origin/master  (forced update)
-   e08f6d4..2992c4b  stable     -> origin/stable
- * [new tag]         next-20110623 -> next-20110623
+On Thu, 2011-06-02 at 12:49 -0700, John W. Linville wrote:
+> On Thu, Jun 02, 2011 at 07:38:43PM +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > My patch to advertise interface combinations
+> > worked by pure luck in the P2P case, but all
+> > other cases are broken. This is due to a dumb
+> > mistake in the code that checks what should
+> > be advertised, fix that.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> I swear, I thought I had taken it out of my queue.  I'm getting old... :-(
+> 
+> > ---
+> > Alternatively, this fixes it. Sorry.
+> 
+> I'd rather just apply this -- any objections?
 
-compat-wireless code metrics
+It works, thanks
+My mistake to push and ask revert at the first place, sorry :-(
 
-    823408 - Total upstream lines of code being pulled
-      2385 - backport code changes
-      2078 - backport code additions
-       307 - backport code deletions
-      8123 - backport from compat module
-     10508 - total backport code
-    1.2762 - % of code consists of backport work
+Wey
+
+
+
