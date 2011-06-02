@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:52291 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754686Ab1FSUEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 16:04:14 -0400
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix rx->key NULL dereference during mic failure
-References: <1308422749-16939-1-git-send-email-arik@wizery.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 19 Jun 2011 23:04:12 +0300
-In-Reply-To: <1308422749-16939-1-git-send-email-arik@wizery.com> (Arik Nemtsov's message of "Sat\, 18 Jun 2011 21\:45\:49 +0300")
-Message-ID: <87ips11tc3.fsf@purkki.adurom.net> (sfid-20110619_220418_681360_4EF17055)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61078 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754082Ab1FBS1N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 14:27:13 -0400
+Received: by wya21 with SMTP id 21so822303wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 11:27:11 -0700 (PDT)
+Message-ID: <4DE7D5FD.2050707@arif-ali.co.uk> (sfid-20110602_202717_391379_86C20D3A)
+Date: Thu, 02 Jun 2011 19:27:09 +0100
+From: Arif Ali <mail@arif-ali.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+CC: larry.finger@lwfinger.net
+Subject: r8192se_pci or rtlwifi/rtl8192ce
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov <arik@wizery.com> writes:
+Hi,
 
-> Sometimes when reporting a MIC failure rx->key may be unset. This
-> code path is hit when receiving a packet meant for a multicast
-> address, and decryption is performed in HW.
->
-> Fortunately, the failing key_idx is not used for anything up to
-> (and including) usermode, so we allow ourselves to set a bogus one
-> when a key cannot be retrieved.
+I was asked to post to this list wrt the problem I have with the wireless on
+my new laptop
 
-[...]
+I have just bought a Thinkpad Edge 15, which has the following card
 
-> -	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
-> +	mac80211_ev_michael_mic_failure(rx->sdata,
-> +					rx->key ? rx->key->conf.keyidx : -1,
->  					(void *) skb->data, NULL, GFP_ATOMIC);
+  *-network
+       description: Wireless interface
+       product: RTL8191SEvB Wireless LAN Controller
+       vendor: Realtek Semiconductor Co., Ltd.
+       physical id: 0
+       bus info: pci@0000:09:00.0
+       logical name: wlan0
+       version: 10
+       serial: 5c:ac:4c:bc:27:1e
+       width: 32 bits
+       clock: 33MHz
+       capabilities: bus_master cap_list ethernet physical wireless
+       configuration: broadcast=yes driver=rtl819xSE
+driverversion=0019.1207.2010 firmware=63 ip=192.168.10.51 latency=0
+multicast=yes wireless=802.11bg
+       resources: irq:18 ioport:d000(size=256) memory:d0500000-d0503fff
 
-In special cases like this a comment in the code would be nice.
+I have then tried to re-compile the drivers from realtek, with no avail,
+having similar problems
+
+At the moment in Ubuntu 11.04, I am using r8192se_pci, which seems to be
+very flakey to say the least, where my connections from remote servers
+disconnect within 5 minutes. It was suggested to me that I use the
+compat-wireless drivers, of which I did
+
+I tried loading the rtlwifi with rtl8192ce, but that didn't work and didn't
+see my card, but then I guess that would be expected as the aliases were not
+there for my card. although the DID is mentioned in the pci.h, so I was
+wondering would this driver work with my card, or should I be looking
+elsewhere?
+
+Any input on advice on this card would be appreciated
+thanks
+
+Arif Ali
 
 -- 
-Kalle Valo
+Arif Ali
+
