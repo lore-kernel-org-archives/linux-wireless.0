@@ -1,70 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49690 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753027Ab1FFRcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 13:32:41 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 10:32:08 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: make use of a helper to get paprd scale factor
-Date: Mon, 6 Jun 2011 23:02:33 +0530
-Message-ID: <1307381553-8980-1-git-send-email-mshajakhan@atheros.com> (sfid-20110606_193244_785659_0F317263)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60485 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753357Ab1FBQfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 12:35:41 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/9] compat-wireless: Add support for kernel 3.XX
+Date: Thu,  2 Jun 2011 18:35:16 +0200
+Message-Id: <1307032525-18916-1-git-send-email-hauke@hauke-m.de> (sfid-20110602_183548_157728_492F13FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+This patch series mostly add support for kernel 3.XX.
+Some of these patches are needing patches for compat.git.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   17 +++--------------
- 1 files changed, 3 insertions(+), 14 deletions(-)
+The patches with "Add to compat-3.0-stable" should also be applied to 
+linux-3.0.0.y.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index fee38ce..2e7f0f2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -46,11 +46,10 @@ EXPORT_SYMBOL(ar9003_paprd_enable);
- 
- static int ar9003_get_training_power_2g(struct ath_hw *ah)
- {
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	struct ar9300_modal_eep_header *hdr = &eep->modalHeader2G;
-+	struct ath9k_channel *chan = ah->curchan;
- 	unsigned int power, scale, delta;
- 
--	scale = MS(le32_to_cpu(hdr->papdRateMaskHt20), AR9300_PAPRD_SCALE_1);
-+	scale = ar9003_get_paprd_scale_factor(ah, chan);
- 	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
- 			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
- 
-@@ -67,20 +66,10 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
- static int ar9003_get_training_power_5g(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
--	struct ar9300_modal_eep_header *hdr = &eep->modalHeader5G;
- 	struct ath9k_channel *chan = ah->curchan;
- 	unsigned int power, scale, delta;
- 
--	if (chan->channel >= 5700)
--		scale = MS(le32_to_cpu(hdr->papdRateMaskHt20),
--			   AR9300_PAPRD_SCALE_1);
--	else if (chan->channel >= 5400)
--		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
--			   AR9300_PAPRD_SCALE_2);
--	else
--		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
--			   AR9300_PAPRD_SCALE_1);
-+	scale = ar9003_get_paprd_scale_factor(ah, chan);
- 
- 	if (IS_CHAN_HT40(chan))
- 		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE8,
+Hauke Mehrtens (9):
+  comapt-wireless: move doku to the correct place in config.mk
+  compat-wireless: rename CONFIG_COMPAT_KERNEL_
+  compat-wireless: add support for kernel 3.XX
+  compat-wireless: make patches apply again
+  compat-wireless: add missing header
+  compat-wireless: activate CARL9170_WPC by default
+  compat-wireless: activate CONFIG_RT2800{USB,PCI}_RT35XX by default.
+  compat-wireless: sync atheros-debug.mk with config.mk
+  compat-wireless: update enable-older-kernels patches
+
+ config.mk                                |  122 ++++++++-------
+ defconfigs/atheros-debug.mk              |  247 ++++++++++++++++++------------
+ enable-older-kernels/enable-2.6.21.patch |   12 +-
+ enable-older-kernels/enable-2.6.22.patch |   12 +-
+ enable-older-kernels/enable-2.6.23.patch |   12 +-
+ patches/09-threaded-irq.patch            |   20 ++--
+ scripts/admin-update.sh                  |    2 +-
+ scripts/gen-compat-autoconf.sh           |   19 ++-
+ 8 files changed, 263 insertions(+), 183 deletions(-)
+
 -- 
-1.7.0.4
+1.7.4.1
 
