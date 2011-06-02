@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36457 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708Ab1F0OJW convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49440 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab1FBT4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 10:09:22 -0400
+	Thu, 2 Jun 2011 15:56:49 -0400
+Date: Thu, 2 Jun 2011 15:49:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] iwlagn: fix interface combinations
+Message-ID: <20110602194936.GB2511@tuxdriver.com> (sfid-20110602_215652_872864_AA83A650)
+References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1306510833-32049-8-git-send-email-wey-yi.w.guy@intel.com>
+ <20110602162241.GE4580@redhat.com>
+ <1307033971.14344.4.camel@wwguy-ubuntu>
+ <1307036323.3738.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
-References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-	<BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
-Date: Mon, 27 Jun 2011 16:09:21 +0200
-Message-ID: <BANLkTintpOOnu-DCGkvOYPizu9ZigHfbVg@mail.gmail.com> (sfid-20110627_160952_413347_9AC94A3E)
-Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1307036323.3738.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/27 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/6/26 Geert Uytterhoeven <geert@linux-m68k.org>:
->> m68k allmodconfig:
->>
->> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
->> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
->
-> We already include slab.h in:
-> host_pci.c
-> scan.c
-> sprom.c
->
-> Maybe we can just include this in bcma.h as a better solution? We
-> could drop other includes then.
-> Can you submit patch for this?
+On Thu, Jun 02, 2011 at 07:38:43PM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> My patch to advertise interface combinations
+> worked by pure luck in the P2P case, but all
+> other cases are broken. This is due to a dumb
+> mistake in the code that checks what should
+> be advertised, fix that.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-If bcma.h doesn't use linux/slab.h, IMHO it should not include linux/slab.h.
+I swear, I thought I had taken it out of my queue.  I'm getting old... :-(
 
-Gr{oetje,eeting}s,
+> ---
+> Alternatively, this fixes it. Sorry.
 
-                        Geert
+I'd rather just apply this -- any objections?
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-06-02 19:36:58.000000000 +0200
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-06-02 19:37:09.000000000 +0200
+> @@ -2533,11 +2533,11 @@ static int iwl_mac_setup_register(struct
+>  
+>  	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
+>  
+> -	if (hw->wiphy->interface_modes & NL80211_IFTYPE_P2P_CLIENT) {
+> +	if (hw->wiphy->interface_modes & BIT(NL80211_IFTYPE_P2P_CLIENT)) {
+>  		hw->wiphy->iface_combinations = iwlagn_iface_combinations_p2p;
+>  		hw->wiphy->n_iface_combinations =
+>  			ARRAY_SIZE(iwlagn_iface_combinations_p2p);
+> -	} else if (hw->wiphy->interface_modes & NL80211_IFTYPE_AP) {
+> +	} else if (hw->wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+>  		hw->wiphy->iface_combinations = iwlagn_iface_combinations_dualmode;
+>  		hw->wiphy->n_iface_combinations =
+>  			ARRAY_SIZE(iwlagn_iface_combinations_dualmode);
+> 
+> 
+> 
+> 
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
