@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:37872 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755310Ab1FNIxf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 04:53:35 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Tue, 14 Jun 2011 01:46:04 -0700
-Subject: RE: [PATCH net-next 1/2] wireless: Remove casts of void *
-Message-ID: <477F20668A386D41ADCC57781B1F704307FF7C4650@SC-VEXCH1.marvell.com> (sfid-20110614_105355_973182_529A62A1)
-References: <cover.1308024069.git.joe@perches.com>,<337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
-In-Reply-To: <337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from qult.net ([82.238.217.46]:54214 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324Ab1FCUtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 16:49:42 -0400
+Received: from zenon.in.qult.net ([192.168.128.3])
+	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QSbJM-0001dp-P2
+	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:49:40 +0200
+Received: from ig by zenon.in.qult.net with local (Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QSbJL-0003Ot-KJ
+	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:49:39 +0200
+Date: Fri, 3 Jun 2011 22:49:39 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: linux-wireless@vger.kernel.org
+Subject: Re: sta_find_ibss (active_ibss=1) in a loop?
+Message-ID: <20110603204939.GA12854@zenon.in.qult.net> (sfid-20110603_224946_722302_0BD6B2EC)
+References: <20110603201644.GA7836@zenon.in.qult.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110603201644.GA7836@zenon.in.qult.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> - pt = (T *)pv;
-> + pt = pv;
-> 
-> Signed-off-by: Joe Perches joe@perches.com
-...
-> drivers/net/wireless/mwifiex/11n.c             |    5 ++---
-> drivers/net/wireless/mwifiex/cmdevt.c          |    3 +--
-> drivers/net/wireless/mwifiex/join.c            |    2 +-
-> drivers/net/wireless/mwifiex/scan.c            |    2 +-
-> drivers/net/wireless/mwifiex/sta_cmd.c         |    4 ++--
-> drivers/net/wireless/mwifiex/sta_cmdresp.c     |   12 ++++++------
-> drivers/net/wireless/mwifiex/txrx.c            |    2 +-
-> drivers/net/wireless/p54/eeprom.c              |    4 ++--
-> 22 files changed, 41 insertions(+), 47 deletions(-)
+On Fri, Jun 03, 2011 at 10:16:44PM +0200, thus spake Ignacy Gawedzki:
+> I can't confirm right now that this is indeed what's happening, but I'll post
+> more information as soon as possible.
 
-For mwifiex part, Acked-by: Bing Zhao bzhao@marvell.com
+I can now confirm that the state is MLME_SEARCH and that the ignored station
+can't be added because of the following in ieee80211_ibss_add_sta():
 
-Thanks,
-Bing
+          if (ifibss->state == IEEE80211_IBSS_MLME_SEARCH)
+                return NULL;
+
+-- 
+I have not lost my mind, it's backed up on disk somewhere.
