@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:54214 "EHLO qult.net"
+Received: from que31.charter.net ([209.225.8.23]:54154 "EHLO que31.charter.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324Ab1FCUtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 16:49:42 -0400
-Received: from zenon.in.qult.net ([192.168.128.3])
-	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.74)
-	(envelope-from <i@lri.fr>)
-	id 1QSbJM-0001dp-P2
-	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:49:40 +0200
-Received: from ig by zenon.in.qult.net with local (Exim 4.74)
-	(envelope-from <i@lri.fr>)
-	id 1QSbJL-0003Ot-KJ
-	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:49:39 +0200
-Date: Fri, 3 Jun 2011 22:49:39 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: linux-wireless@vger.kernel.org
-Subject: Re: sta_find_ibss (active_ibss=1) in a loop?
-Message-ID: <20110603204939.GA12854@zenon.in.qult.net> (sfid-20110603_224946_722302_0BD6B2EC)
-References: <20110603201644.GA7836@zenon.in.qult.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110603201644.GA7836@zenon.in.qult.net>
+	id S1752195Ab1FCClk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 22:41:40 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: sgruszka@redhat.com, linville@tuxdriver.com
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH 4/5] iwlegacy: propagate error return value
+Date: Thu,  2 Jun 2011 21:06:09 -0500
+Message-Id: <1307066770-27309-4-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_044154_723231_2F2C1981)
+In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 03, 2011 at 10:16:44PM +0200, thus spake Ignacy Gawedzki:
-> I can't confirm right now that this is indeed what's happening, but I'll post
-> more information as soon as possible.
+propogate the return value from iwl4965_get_tx_atten_grp instead
+of implicitly returning -EINVAL in the error case.
 
-I can now confirm that the state is MLME_SEARCH and that the ignored station
-can't be added because of the following in ieee80211_ibss_add_sta():
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-          if (ifibss->state == IEEE80211_IBSS_MLME_SEARCH)
-                return NULL;
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
+index 06dcee5..79e7ce6 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
+@@ -915,7 +915,7 @@ static int iwl4965_fill_txpower_tbl(struct iwl_priv *priv, u8 band, u16 channel,
+ 	if (txatten_grp < 0) {
+ 		IWL_ERR(priv, "Can't find txatten group for channel %d.\n",
+ 			  channel);
+-		return -EINVAL;
++		return txatten_grp;
+ 	}
+ 
+ 	IWL_DEBUG_TXPOWER(priv, "channel %d belongs to txatten group %d\n",
 -- 
-I have not lost my mind, it's backed up on disk somewhere.
+1.7.2.5
+
