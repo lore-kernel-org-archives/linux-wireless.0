@@ -1,97 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45372 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754571Ab1FFMPV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 08:15:21 -0400
-Received: by iyb14 with SMTP id 14so3040936iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 05:15:20 -0700 (PDT)
+Received: from qult.net ([82.238.217.46]:33680 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752399Ab1FCUQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 16:16:48 -0400
+Received: from zenon.in.qult.net ([192.168.128.3])
+	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QSanW-0001aP-6M
+	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:16:46 +0200
+Received: from ig by zenon.in.qult.net with local (Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QSanU-00036Y-UR
+	for linux-wireless@vger.kernel.org; Fri, 03 Jun 2011 22:16:44 +0200
+Date: Fri, 3 Jun 2011 22:16:44 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: linux-wireless@vger.kernel.org
+Subject: sta_find_ibss (active_ibss=1) in a loop?
+Message-ID: <20110603201644.GA7836@zenon.in.qult.net> (sfid-20110603_221651_789574_377D0667)
 MIME-Version: 1.0
-In-Reply-To: <4DEC825A.2020404@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
- <1306928768-7501-44-git-send-email-rvossen@broadcom.com> <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
- <4DE90DCE.6060207@broadcom.com> <BANLkTimQacOURw4wQzkyNizksZZj=nhvfQ@mail.gmail.com>
- <4DEB3FF3.8090904@broadcom.com> <BANLkTi=HrP5pSi0t-18N2yGpBueeL2qMSg@mail.gmail.com>
- <4DEC825A.2020404@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 6 Jun 2011 22:14:59 +1000
-Message-ID: <BANLkTin1Cv9L+mDDjXSPEPthPPX2uGtaVQ@mail.gmail.com> (sfid-20110606_141524_508258_0EA540AF)
-Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t with
- struct si_pub
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 6, 2011 at 17:31, Roland Vossen <rvossen@broadcom.com> wrote:
-> Hi Julian,
->
->>> I am afraid I have to disagree with you, for the reason that by including
->>> the header file you introduce unnecessary coupling. Let me elaborate. If
->>> a
->>> .c file does not need to know the contents of a struct, but it only needs
->>> to
->>> know that a pointer to an opaque struct, then one should not provide the
->>> C
->>> file with knowledge on the internals of the struct (hence not include the
->>> .h
->>> file).
->>
->> Fair enough. I guess I just don't like void pointers.
->
-> Well, what I mean is this: suppose you have a function that gets a pointer
-> to a struct as one of its parameters. This function calls another function
-> with this parameter:
->
-> void foo(struct *bar) {
->        some_other_fnct(bar);
-> }
->
-> Then foo() simply passes the pointer on to some_other_fnct(), and foo() does
-> not need to know about the members inside struct bar. So I am not talking
-> about void pointers here as the alternative.
+Hi,
 
-The reason I was pointing this out was that while foo() doesn't need
-to know what's in struct bar, it will help type safety and general
-code cleanliness to have some declaration of struct bar in the
-headers.
+I'm still investigating on that problem but have such a hard time reproducing
+it that I thought maybe someone here could help.
 
-If we have a module that exports a set of functions in it's header
-file (say "bar.h") like:
+I have a testbed of three nodes in IBSS (using carl9170 from compat-wireless'
+latest snapshot), that happen to go into suspend-to-ram quite often.
+Sometimes it appears one of the nodes just can't "see" some other node.
+Then tcpdump doesn't see it either, but another vif in monitor mode sees
+everyone just fine.
 
-extern struct bar *get_bar();
-extern void foo(struct bar *bar);
+I activated as much debug options as I could and I saw something quite strange
+in the kernel messages (just after the node goes back from suspend-to-ram):
 
-the struct bar is part of the API of the module, even if no caller
-ever uses it's internals. Therefore the header file should include the
-line:
+  [16226.464987] ieee80211 phy14: device no longer idle - in use
+  [16226.465043] wlan1: sta_find_ibss (active_ibss=0)
+  [16226.465055]    sta_find_ibss: selected 83:12:97:63:54:f2 current
+  00:00:00:00:00:00
+  [16226.465063] wlan1: Selected IBSS BSSID 83:12:97:63:54:f2 based on
+  configured SSID
+  [16226.632608] ieee80211 phy14: Adding new IBSS station 00:26:f2:ed:60:f9
+  (dev=wlan1)
+  [16226.632648] ieee80211 phy14: Allocated STA 00:26:f2:ed:60:f9
+  [16226.633549] ieee80211 phy14: Added IBSS STA 00:26:f2:ed:60:f9
+  [16226.633598] wlan1: No active IBSS STAs - trying to scan for other IBSS
+  networks with same SSID (merge)
+  [16226.633626] ieee80211 phy14: Finished adding IBSS STA 00:26:f2:ed:60:f9
+  [16226.948957] ieee80211 phy14: Adding new IBSS station 00:24:b2:5c:bb:b5
+  (dev=wlan1)
+  [16226.949004] ieee80211 phy14: Allocated STA 00:24:b2:5c:bb:b5
+  [16226.950495] ieee80211 phy14: Added IBSS STA 00:24:b2:5c:bb:b5
+  [16226.950593] ieee80211 phy14: Finished adding IBSS STA 00:24:b2:5c:bb:b5
+  [16228.050250] wlan1: updated supp_rates set for 00:24:b2:5c:bb:b5 based on
+  beacon/probe_resp (0x1 -> 0xfff)
+  [16229.180184] ieee80211 phy14: Removed STA 00:24:b2:5c:bb:b5
+  [16229.180339] ieee80211 phy14: Destroyed STA 00:24:b2:5c:bb:b5
+  [16229.196176] ieee80211 phy14: Removed STA 00:26:f2:ed:60:f9
+  [16229.196322] ieee80211 phy14: Destroyed STA 00:26:f2:ed:60:f9
+  [16229.199085] ieee80211 phy14: Adding new IBSS station 00:26:f2:ed:60:f9
+  (dev=wlan1)
+  [16229.199113] ieee80211 phy14: Allocated STA 00:26:f2:ed:60:f9
+  [16229.199845] ieee80211 phy14: Added IBSS STA 00:26:f2:ed:60:f9
+  [16229.212204] ieee80211 phy14: device now idle
+  [16229.212222] ieee80211 phy14: Finished adding IBSS STA 00:26:f2:ed:60:f9
+  [16229.212909] ieee80211 phy14: device no longer idle - in use
+  [16229.212956] wlan1: sta_find_ibss (active_ibss=1)
+  [16229.277675] wlan1: sta_find_ibss (active_ibss=1)
+  [16229.311661] wlan1: sta_find_ibss (active_ibss=1)
+  [16229.379920] wlan1: sta_find_ibss (active_ibss=1)
+  [16229.414232] wlan1: sta_find_ibss (active_ibss=1)
+  ...
 
-struct bar;
+the following is just a long stream of sta_find_ibss (active_ibss=1).
 
-so that users of the API don't have to declare it themselves to
-suppress the compiler warnings that would be generated otherwise.
+>From that point on, the interface sees 00:26:f2:ed:60:f9 but not
+00:24:b2:5c:bb:b5.  BTW, why are both neighbors removed?  When this problem is
+not appearing, both neighbors are still removed, but they're both added
+immediately after that (and there's no stream of sta_find_ibss).  Here only
+00:26:f2:ed:60:f9 is added back.
 
-My objection was to the struct declaration appearing at the top of
-wl_iw.c, rather than in the header file that defines the functions
-that use it.
+As I read the code in net/mac80211/ibss.c to try to understand how things
+work, I noticed the following in ieee80211_sta_find_ibss().  Apparently the
+function does nothing if the call to ieee80211_sta_active_ibss() returns
+non-zero, i.e. the last received frame from a known station was too recent.
 
-In fact, looking a bit further around, it appears that this
-declaration is already in aiutils.h making it's appearance at the top
-of wl_iw.c completely redundant, especially given that the file in
-question appears to not use *any* functions that use the struct, and
-if it does, it should include aiutils.h rather than declaring the
-struct itself - and this isn't introducing extra coupling, this is
-merely including the header that defines the API for the code that
-actually uses this struct.
+So I wonder, what happens if state somehow becomes IEEE80211_IBSS_MLME_SEARCH
+and a neighbor station is sending plenty of frames.  Apparently we don't come
+out of this state, since we don't get a chance to set it back to
+IEEE80211_IBSS_MLME_JOINED.
+
+Am I obviously missing something here?
+
+I can't confirm right now that this is indeed what's happening, but I'll post
+more information as soon as possible.  Besides, if anyone has any suggestion
+regarding what additional debug info could be useful, please go ahead.
 
 Thanks,
 
--- 
-Julian Calaby
+Ignacy
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+-- 
+NO CARRIER
