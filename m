@@ -1,180 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:34870 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257Ab1FMWho (ORCPT
+Received: from liberdade2.minaslivre.org ([74.50.53.203]:53388 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754858Ab1FCNDQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:37:44 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 2DCD413B555
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:43 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id 07DE2158A64
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:41 +0300 (EEST)
-Subject: [PATCH v2 20/27] mac80211: rename ieee80211_if_ibss to
-	mac80211_if_ibss
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Jun 2011 01:37:41 +0300
-Message-ID: <20110613223741.10517.53106.stgit@localhost6.localdomain6> (sfid-20110614_005723_719836_26386FF5)
-In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+	Fri, 3 Jun 2011 09:03:16 -0400
+Date: Fri, 3 Jun 2011 10:03:09 -0300
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: Arif Ali <mail@arif-ali.co.uk>
+Cc: linux-wireless@vger.kernel.org, larry.finger@lwfinger.net
+Subject: Re: r8192se_pci or rtlwifi/rtl8192ce
+Message-ID: <20110603130308.GB2379@nautilus.holoscopio.com> (sfid-20110603_150319_706441_5961C44B)
+References: <4DE7D5FD.2050707@arif-ali.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TRYliJ5NKNqkz5bu"
+In-Reply-To: <4DE7D5FD.2050707@arif-ali.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/ibss.c       |   24 ++++++++++++------------
- net/mac80211/mac80211_i.h |    4 ++--
- net/mac80211/tx.c         |    2 +-
- 3 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 6d6729b..9094687 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -67,7 +67,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				      const u32 basic_rates,
- 				      const u16 capability, u64 tsf)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 	int rates, i;
- 	struct sk_buff *skb;
-@@ -420,7 +420,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 					u8 *bssid,u8 *addr, u32 supp_rates,
- 					gfp_t gfp)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int band = local->hw.conf.channel->band;
-@@ -496,7 +496,7 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
- 
- static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	lockdep_assert_held(&ifibss->mtx);
- 
-@@ -525,7 +525,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	u8 bssid[ETH_ALEN];
- 	u16 capability;
- 	int i;
-@@ -566,7 +566,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 
- static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_channel *chan = NULL;
-@@ -657,7 +657,7 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
- 					struct sk_buff *req)
- {
- 	struct ieee80211_mgmt *mgmt = (void *)req->data;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 	int tx_last_beacon, len = req->len;
- 	struct sk_buff *skb;
-@@ -801,7 +801,7 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	mutex_lock(&ifibss->mtx);
- 
-@@ -833,7 +833,7 @@ static void ieee80211_ibss_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 
- 	if (local->quiescing) {
-@@ -847,7 +847,7 @@ static void ieee80211_ibss_timer(unsigned long data)
- #ifdef CONFIG_PM
- void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	if (del_timer_sync(&ifibss->timer))
- 		ifibss->timer_running = true;
-@@ -855,7 +855,7 @@ void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	if (ifibss->timer_running) {
- 		add_timer(&ifibss->timer);
-@@ -866,7 +866,7 @@ void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
- 		    (unsigned long) sdata);
-@@ -957,7 +957,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- {
- 	struct sk_buff *skb;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct mac80211_local *local = sdata->local;
- 	struct cfg80211_bss *cbss;
- 	u16 capability;
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index d62abf4..d079142 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -419,7 +419,7 @@ struct mac80211_if_managed {
- 	int last_cqm_event_signal;
- };
- 
--struct ieee80211_if_ibss {
-+struct mac80211_if_ibss {
- 	struct timer_list timer;
- 
- 	struct mutex mtx;
-@@ -597,7 +597,7 @@ struct ieee80211_sub_if_data {
- 		struct mac80211_if_wds wds;
- 		struct mac80211_if_vlan vlan;
- 		struct mac80211_if_managed mgd;
--		struct ieee80211_if_ibss ibss;
-+		struct mac80211_if_ibss ibss;
- 		struct ieee80211_if_mesh mesh;
- 		u32 mntr_flags;
- 	} u;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f0218ac..151b9f8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2236,7 +2236,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		} else
- 			goto out;
- 	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+		struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
- 		struct ieee80211_hdr *hdr;
- 		struct sk_buff *presp = rcu_dereference(ifibss->presp);
- 
+--TRYliJ5NKNqkz5bu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, Jun 02, 2011 at 07:27:09PM +0100, Arif Ali wrote:
+> Hi,
+>=20
+> I was asked to post to this list wrt the problem I have with the wireless=
+ on
+> my new laptop
+>=20
+> I have just bought a Thinkpad Edge 15, which has the following card
+>=20
+>  *-network
+>       description: Wireless interface
+>       product: RTL8191SEvB Wireless LAN Controller
+>       vendor: Realtek Semiconductor Co., Ltd.
+>       physical id: 0
+>       bus info: pci@0000:09:00.0
+>       logical name: wlan0
+>       version: 10
+>       serial: 5c:ac:4c:bc:27:1e
+>       width: 32 bits
+>       clock: 33MHz
+>       capabilities: bus_master cap_list ethernet physical wireless
+>       configuration: broadcast=3Dyes driver=3Drtl819xSE
+> driverversion=3D0019.1207.2010 firmware=3D63 ip=3D192.168.10.51 latency=
+=3D0
+> multicast=3Dyes wireless=3D802.11bg
+>       resources: irq:18 ioport:d000(size=3D256) memory:d0500000-d0503fff
+>=20
+> I have then tried to re-compile the drivers from realtek, with no avail,
+> having similar problems
+>=20
+> At the moment in Ubuntu 11.04, I am using r8192se_pci, which seems to be
+> very flakey to say the least, where my connections from remote servers
+> disconnect within 5 minutes. It was suggested to me that I use the
+> compat-wireless drivers, of which I did
+>=20
+> I tried loading the rtlwifi with rtl8192ce, but that didn't work and didn=
+'t
+> see my card, but then I guess that would be expected as the aliases were =
+not
+> there for my card. although the DID is mentioned in the pci.h, so I was
+> wondering would this driver work with my card, or should I be looking
+> elsewhere?
+>=20
+> Any input on advice on this card would be appreciated
+> thanks
+>=20
+> Arif Ali
+>=20
+> --=20
+> Arif Ali
+>=20
+
+Hello, Arif.
+
+I have a RTL8191SEvA card, not a vB. But I guess that should work. The
+vendor and product ID are 0x10ec (Realtek) and 0x8171. It's working very
+nicely with rtl8192se driver from rtlwifi from 3.0-rc1. That support
+does not exist for 2.6.39 or previous versions of Linux.
+
+Regards,
+Cascardo.
+
+--TRYliJ5NKNqkz5bu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJN6NuMAAoJEEWxSg7udFZIDj4QAMYywuoTT/D5twqOuis84qRW
+7kblWCIZpEtZ9D1+XcDelFuOtbbXegsWxRKv5dqo4n+MwLbk00t91S+v+ihCJ8B2
+lKLlS5xOSH1Z2PJTwAwGh2yStHbtS0lMG5+vDRdQZ08aUh3GW2o4CV6ChjpZki0V
+Ad62sMbw8BWKZDu/+5M8W2JWcXNiDbr2jNipp5KVCC/oJkvYg5sBWOAydfcs0x/G
+Phy0VrlqPb3/5EYhdzLLvSWZ2OmvZHDC4gV5KfY0aCZvlKThSIG6IO0seI7yGpDo
+KDFF1usq5NTm74o7Y2ljZ0ggrpCBGQwRtGZ7FFkOY2dZLsF96hjg8C+aFXO7SMSg
+kUS7YccXPxmq7+Gq9SyUcpazdrgoDPf1IHXHm+TJpcTZ1Bbwrs/7mTM62ys3Gmn+
+oRGBs0ez7AlBGGa/mvyGEEk1rDFimA+wDgV1+iOi7mUpWMZH/U+AxqbH9AIbES0L
+Oh26H7N+qU3GJnlYLR1b5JAPa8E+liL+CjwlRjM3dd0B9cSkqRI9QyrqQ4mqgNGy
+reIgDMwTDmXuD8CsL0nHHxciVujOrwS2L5P6DL2Cp3S26OwpSoTPebbWhiK31aW3
+XOVFzxHNAS8l9ULvnVKFOogRfJwR8ew96THvQbFKbKNcWxTZRBrDuDT1a0GtZkdZ
+ZFca9knC9VtHBxowplhi
+=+Y31
+-----END PGP SIGNATURE-----
+
+--TRYliJ5NKNqkz5bu--
