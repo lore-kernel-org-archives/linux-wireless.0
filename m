@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3838 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758822Ab1FALqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:30 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 39/83] staging: brcm80211: remove functions from
- nicpci.h
-Date: Wed, 1 Jun 2011 13:45:24 +0200
-Message-ID: <1306928768-7501-39-git-send-email-rvossen@broadcom.com> (sfid-20110601_134925_828291_D957D678)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55046 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135Ab1FCHw5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 03:52:57 -0400
+Received: by wya21 with SMTP id 21so1189574wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 00:52:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <BANLkTimnkGyQmEJ2fcowoiv_f+aLm2AQcg@mail.gmail.com>
+References: <BANLkTimnkGyQmEJ2fcowoiv_f+aLm2AQcg@mail.gmail.com>
+Date: Fri, 3 Jun 2011 13:22:56 +0530
+Message-ID: <BANLkTincKD1k1Uq=R8uR-KjExMOErDrOgA@mail.gmail.com> (sfid-20110603_095300_723572_E2F4575E)
+Subject: Re: master-2011-06-01 git tree can't recognize my AR9285 chip.
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@novell.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Fri, Jun 3, 2011 at 12:13 PM, Matt Chen <machen@novell.com> wrote:
+> Hi all,
+> I git pull the latest version of wireless-testing tree and built whole
+> the kernel and related driver. I found my AR9285 (10ec:002b) can't be
+> recognized, and the ath9k is not loaded automatically. I tried the
+> kernel 2.6.39, it is working right.
 
-Couple of functions in the header file are actually only used by
-nicpci.c itself and as such made static and removed from the header
-file.
+i am compiling the latest tree, i will try out. any debug messages?
+sudo modprobe -r ath9k
+sudo modprobe -v ath9k debug=0xffffffff(you should have enabled
+ATH_DEBUG and ATH9K_DEBUGFS while compiling the kernel).
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/nicpci.c |    6 +++---
- drivers/staging/brcm80211/brcmsmac/nicpci.h |    6 ------
- 2 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-index a96173d..4da155a 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-@@ -180,7 +180,7 @@ pcicore_find_pci_capability(void *dev, u8 req_cap_id,
- }
- 
- /* ***** Register Access API */
--uint
-+static uint
- pcie_readreg(sbpcieregs_t *pcieregs, uint addrtype,
- 	     uint offset)
- {
-@@ -204,7 +204,7 @@ pcie_readreg(sbpcieregs_t *pcieregs, uint addrtype,
- 	return retval;
- }
- 
--uint
-+static uint
- pcie_writereg(sbpcieregs_t *pcieregs, uint addrtype,
- 	      uint offset, uint val)
- {
-@@ -329,7 +329,7 @@ pcie_mdiowrite(pcicore_info_t *pi, uint physmedia, uint regaddr, uint val)
- }
- 
- /* ***** Support functions ***** */
--u8 pcie_clkreq(void *pch, u32 mask, u32 val)
-+static u8 pcie_clkreq(void *pch, u32 mask, u32 val)
- {
- 	pcicore_info_t *pi = (pcicore_info_t *) pch;
- 	u32 reg_val;
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-index e9058c6..a6baf7f 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-@@ -56,17 +56,11 @@
- /* bar0 + 12K accesses chipc core registers */
- #define PCI_16KB0_CCREGS_OFFSET	(12 * 1024)
- 
--struct sbpcieregs;
- struct si_pub;
- 
- extern u8 pcicore_find_pci_capability(void *dev, u8 req_cap_id,
- 					 unsigned char *buf, u32 *buflen);
--extern uint pcie_readreg(struct sbpcieregs *pcieregs,
--			 uint addrtype, uint offset);
--extern uint pcie_writereg(struct sbpcieregs *pcieregs,
--			  uint addrtype, uint offset, uint val);
- 
--extern u8 pcie_clkreq(void *pch, u32 mask, u32 val);
- extern u32 pcie_lcreg(void *pch, u32 mask, u32 val);
- 
- extern void *pcicore_init(struct si_pub *sih, void *pdev, void *regs);
+>
+> Some info as below :
+> 1) linux:/home/linux/git/wireless-testing # git describe
+>    master-2011-06-01
+> 2) linux:/home/linux/git/wireless-testing # lspci -nnk
+>     ....
+>     09:00.0 Network controller [0280]: Atheros Communications Inc.
+> AR9285 Wireless Network Adapter
+>     (PCI-Express) [168c:002b] (rev 01)
+>     ff:00.0 Host bridge [0600]: Intel Corporation Core Processor
+> QuickPath Architecture Generic Non-core Registers
+>     [8086:2c62] (rev 02)
+>     .....
+>
+>
+> --
+> Thanks ~
+> Matt Chen
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.4.1
-
-
+shafi
