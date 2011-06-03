@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41706 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749Ab1FUJY7 (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:41843 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754666Ab1FCNar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:24:59 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 23/32] ath9k: add a missing case statement to ath_ant_div_comb_alt_check
-Date: Tue, 21 Jun 2011 11:23:43 +0200
-Message-Id: <1308648232-9906-24-git-send-email-juhosg@openwrt.org> (sfid-20110621_112546_218505_4081594E)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+	Fri, 3 Jun 2011 09:30:47 -0400
+Date: Fri, 3 Jun 2011 08:30:41 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@gmail.com
+Subject: Re: [PATCH] ath5k: Disable fast channel switching by default
+Message-ID: <20110603133041.GA27529@thinkpad-t410> (sfid-20110603_153051_038032_7C6DA60D)
+References: <20110602000946.GA5951@makis>
+ <BANLkTimbvSP4TxZU6C6vokqZMpW_ASaPCw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTimbvSP4TxZU6C6vokqZMpW_ASaPCw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'ar9003_hw_antdiv_comb_conf_get' function sets div_group to 2
-however that value is not used in 'ath_ant_div_comb_alt_check'.
+On Fri, Jun 03, 2011 at 11:59:41AM +0200, Sedat Dilek wrote:
+> On Thu, Jun 2, 2011 at 2:09 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> > Disable fast channel change by default on AR2413/AR5413 due to
+> > some bug reports (it still works for me but it's better to be safe).
+> > Add a module parameter "fastchanswitch" in case anyone wants to enable
+> > it and play with it.
+> >
+> > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> >
+> 
+> Already tested your initial patch from [1] against linux-next (next-20110601).
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/recv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+It's also been tested by a number of our users and verified to fix the
+wireless problems they've been seeing in .38. I'd suggest Cc-ing stable
+for .38.x and .39.x.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 07e35e5..d0af2f2 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -39,6 +39,7 @@ static inline bool ath_ant_div_comb_alt_check(u8 div_group, int alt_ratio,
- 			result = true;
- 		break;
- 	case 1:
-+	case 2:
- 		if ((((curr_main_set == ATH_ANT_DIV_COMB_LNA2) &&
- 			(curr_alt_set == ATH_ANT_DIV_COMB_LNA1) &&
- 				(alt_rssi_avg >= (main_rssi_avg - 5))) ||
--- 
-1.7.2.1
-
+Seth
