@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr8.hinet.net ([168.95.4.108]:64062 "EHLO msr8.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757493Ab1FVBCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 21:02:32 -0400
-Date: Wed, 22 Jun 2011 09:00:57 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver for the rtl8192su chip.
-Message-ID: <20110622010057.GA12123@internetdog.org> (sfid-20110622_030235_534889_48215316)
-Reply-To: ali@internetdog.org
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com>
- <4DC0312A.4040303@lwfinger.net>
- <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com>
- <4DC0669E.4040100@lwfinger.net>
- <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
- <4DC06BF3.6070208@lwfinger.net>
- <20110621124954.GA8462@internetdog.org>
- <4E011644.3070906@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E011644.3070906@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:49606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913Ab1FCNoY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 09:44:24 -0400
+Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	Waldemar.Rymarkiewicz@tieto.com
+In-Reply-To: <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org> (sfid-20110602_234730_485890_D6D54ECB)
+References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+	 <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
+	 (sfid-20110602_234730_485890_D6D54ECB)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 03 Jun 2011 15:44:21 +0200
+Message-ID: <1307108661.3800.6.camel@jlt3.sipsolutions.net> (sfid-20110603_154426_976200_6EC47AA7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
-> On 06/21/2011 07:49 AM, Ali Bahar wrote:
+On Thu, 2011-06-02 at 18:46 -0300, Lauro Ramos Venancio wrote:
 
-> >this is more of a quick FYI, regarding Staging's r8712u driver.
+> + * @NFC_ATTR_TARGETS: array of targets (see enum nfc_target_attr)
 
-> >root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
-> >Error for wireless request "Set ESSID" (8B1A) :
-> >     SET failed on device wlan2 ; Operation not permitted.
-> >root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
 
-> is implemented. Your command failed because you ran the command as
-> an unprivileged user. Notice the differences in the error messages.
+> +static int nfc_genl_msg_put_target(struct sk_buff *msg,
+> +				struct nfc_target *target)
+> +{
+> +	NLA_PUT_U32(msg, NFC_TARGET_ATTR_TARGET_INDEX, target->idx);
+> +	NLA_PUT_U32(msg, NFC_TARGET_ATTR_SUPPORTED_PROTOCOLS,
+> +				target->supported_protocols);
+> +	NLA_PUT_U8(msg, NFC_TARGET_ATTR_SENS_RES, target->sens_res);
+> +	NLA_PUT_U8(msg, NFC_TARGET_ATTR_SEL_RES, target->sel_res);
+> +
+> +	return 0;
+> +
+> +nla_put_failure:
+> +	return -EMSGSIZE;
+> +}
+> +
+> +int nfc_genl_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
+> +								int ntargets)
+> +{
+> +	struct sk_buff *msg;
+> +	void *hdr;
+> +	struct nlattr *targets_attr;
+> +	int i;
+> +
+> +	pr_debug("%s\n", __func__);
+> +
+> +	dev->genl_data.poll_req_pid = 0;
+> +
+> +	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
+> +	if (!msg)
+> +		return -ENOMEM;
+> +
+> +	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
+> +				NFC_EVENT_TARGETS_FOUND);
+> +	if (!hdr)
+> +		goto free_msg;
+> +
+> +	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
+> +
+> +	targets_attr = nla_nest_start(msg, NFC_ATTR_TARGETS);
+> +
+> +	for (i = 0; i < ntargets; i++) {
+> +		struct nlattr *target = nla_nest_start(msg, i);
+> +
+> +		if (nfc_genl_msg_put_target(msg, &targets[i]))
+> +			goto nla_put_failure;
+> +
+> +		nla_nest_end(msg, target);
+> +	}
+> +
+> +	nla_nest_end(msg, targets_attr);
+> +	genlmsg_end(msg, hdr);
+> +
+> +	return genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_ATOMIC);
 
-How is root unprivileged? The shell-prompt shows the user.
+This is almost certainly not a good idea.
 
-Right after the failure, I ran the exact same steps, in the same
-shell, on a different card of the same box. It worked, as it always
-has.
+Eventually, you will want to add more information about a target. I know
+NFC is a pretty limited protocol, but I wouldn't want to make this
+harder in the future than it must be. The way you're doing it, you're
+currently limiting yourself to about 100 targets. Each new target
+attribute that you might add in the future will reduce that number
+significantly.
 
-thanks,
-ali
+IMHO, the better way to structure this would be to create an event that
+contains no information, and then allow a dump of the targets (with a
+generation counter). That way, there are no such artificial limits due
+to message sizes.
+
+
+> +static int nfc_genl_dump_devices(struct sk_buff *skb,
+> +                               struct netlink_callback *cb)
+
+You should have a generation counter here so that applications getting a
+dump can know whether their dump was a complete and consistent snapshot.
+Otherwise, if devices are added or removed during the dump applications
+will not be able to know that their dump wasn't right.
+
+johannes
+
