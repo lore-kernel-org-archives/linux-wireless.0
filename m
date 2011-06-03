@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:51187 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758045Ab1FJUL5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 16:11:57 -0400
-Date: Fri, 10 Jun 2011 15:11:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/13] rtlwifi: Fix build problems introduced by merging
- rtl8192de
-Message-ID: <4df27a8b.YldKf4dbdMxD7qWs%Larry.Finger@lwfinger.net> (sfid-20110610_221200_098363_37BAAC6D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from que11.charter.net ([209.225.8.21]:47646 "EHLO que11.charter.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083Ab1FCDR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 23:17:58 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: sgruszka@redhat.com, linville@tuxdriver.com
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH 2/5] iwlegacy: remove unecessary if statement
+Date: Thu,  2 Jun 2011 21:06:07 -0500
+Message-Id: <1307066770-27309-2-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_051808_039582_D78B21EB)
+In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches allow compilation of rtlwifi, rtl8192c_common,
-rtl8192ce, rtl8192cu and rtl8192se to compile after rtl8192de
-was added.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+the code always returns ret regardless, so if(ret) check is unecessary.
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
 ---
+ drivers/net/wireless/iwlegacy/iwl-4965.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-@@ -303,9 +303,6 @@ enum hw_variables {
- 	HW_VAR_DATA_FILTER,
- };
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
+index f5433c7..ffda05c 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
+@@ -1185,8 +1185,6 @@ static int iwl4965_send_rxon_assoc(struct iwl_priv *priv,
  
--#define HWSET_MAX_SIZE				128
--#define EFUSE_MAX_SECTION			16
--
- enum _RT_MEDIA_STATUS {
- 	RT_MEDIA_DISCONNECT = 0,
- 	RT_MEDIA_CONNECT = 1
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -1203,7 +1203,9 @@
- #define EPROM_CMD_CONFIG			0x3
- #define EPROM_CMD_LOAD				1
+ 	ret = iwl_legacy_send_cmd_pdu_async(priv, REPLY_RXON_ASSOC,
+ 				     sizeof(rxon_assoc), &rxon_assoc, NULL);
+-	if (ret)
+-		return ret;
  
-+#define HWSET_MAX_SIZE				128
- #define	HWSET_MAX_SIZE_92S			HWSET_MAX_SIZE
-+#define EFUSE_MAX_SECTION			16
- 
- #define	WL_HWPDN_EN				BIT(0)
- 
+ 	return ret;
+ }
+-- 
+1.7.2.5
+
