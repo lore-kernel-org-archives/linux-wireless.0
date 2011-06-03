@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:50651 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756635Ab1FGUg1 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60242 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752207Ab1FCJ7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 16:36:27 -0400
-From: Peter Huewe <peterhuewe@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Peter Huewe <peterhuewe@gmx.de>
-Subject: [PATCH] net/mac80211/debugfs: Convert to kstrou8_from_user
-Date: Tue,  7 Jun 2011 22:36:14 +0200
-Message-Id: <1307478974-32727-1-git-send-email-peterhuewe@gmx.de> (sfid-20110607_223650_931323_B4A679E1)
+	Fri, 3 Jun 2011 05:59:42 -0400
+Received: by qyg14 with SMTP id 14so863037qyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 02:59:41 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20110602000946.GA5951@makis>
+References: <20110602000946.GA5951@makis>
+Date: Fri, 3 Jun 2011 11:59:41 +0200
+Message-ID: <BANLkTimbvSP4TxZU6C6vokqZMpW_ASaPCw@mail.gmail.com> (sfid-20110603_115946_119894_9CB51659)
+Subject: Re: [PATCH] ath5k: Disable fast channel switching by default
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces the code for getting an number from a
-userspace buffer by a simple call to kstrou8_from_user.
-This makes it easier to read and less error prone.
+On Thu, Jun 2, 2011 at 2:09 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> Disable fast channel change by default on AR2413/AR5413 due to
+> some bug reports (it still works for me but it's better to be safe).
+> Add a module parameter "fastchanswitch" in case anyone wants to enable
+> it and play with it.
+>
+> Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
 
-Since the old buffer was only 10 bytes long and the value is masked by a
-nibble-mask anyway, we don't need to use kstrtoul but rather kstrtou8.
+Already tested your initial patch from [1] against linux-next (next-20110601).
 
-Kernel Version: v3.0-rc2
+Feel free to add...
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
----
- net/mac80211/debugfs.c |   14 +++-----------
- 1 files changed, 3 insertions(+), 11 deletions(-)
+     Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 186e02f..267ed45 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -195,20 +195,12 @@ static ssize_t uapsd_queues_write(struct file *file,
- 				  size_t count, loff_t *ppos)
- {
- 	struct ieee80211_local *local = file->private_data;
--	unsigned long val;
--	char buf[10];
--	size_t len;
-+	u8 val;
- 	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	ret = strict_strtoul(buf, 0, &val);
--
-+	ret = kstrtou8_from_user(user_buf, count, 0, &val);
- 	if (ret)
--		return -EINVAL;
-+		return ret;
- 
- 	if (val & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
- 		return -ERANGE;
--- 
-1.7.3.4
+- Sedat -
 
+[1] http://www.kernel.org/pub/linux/kernel/people/mickflemm/01-fast-chan-switch-modparm
