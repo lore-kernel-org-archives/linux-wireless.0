@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:45389 "EHLO bues.ch"
+Received: from que31.charter.net ([209.225.8.23]:54154 "EHLO que31.charter.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754900Ab1FZVEh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2011 17:04:37 -0400
-Date: Sun, 26 Jun 2011 23:04:25 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Improvement in b43 on BCM4312 (14e4:4315)
-Message-ID: <20110626230425.744da739@maggie> (sfid-20110626_230940_741767_42A879FB)
-In-Reply-To: <BANLkTi=6yY6i=EoivVkNUq6RGD6W6hWftg@mail.gmail.com>
-References: <4E03A25F.7080103@lwfinger.net>
-	<BANLkTi=6yY6i=EoivVkNUq6RGD6W6hWftg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1751401Ab1FCCli (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2011 22:41:38 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: sgruszka@redhat.com, linville@tuxdriver.com
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH 3/5] iwlegacy: return -EINVAL instead of -1
+Date: Thu,  2 Jun 2011 21:06:08 -0500
+Message-Id: <1307066770-27309-3-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_044154_135647_3333C561)
+In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 26 Jun 2011 22:48:59 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
-> > Only one of the patches to ssb seems to be the "fix", namely commit eb40e3e8
-> > entitled "drivers/ssb/driver_chipcommon_pmu.c: uninitilized warning" by
-> > Connor Hansen. I need to do more tests on this patch, but the kernel from
-> > Linus's tree could reinstall itself when I added this patch. I see no
-> > indication in the commit message regarding pushing this one to stable, but I
-> > think it should go upstream to mainline and the stable trees.
-> 
-> It does not look like possible fix to me. Plus it sounds like false
-> warning from compiler.
-> 
-> Take a look at relation between:
-> 1) updown_tab and updown_tab_size
-> 2) depend_tab and depend_tab_size
+Cleanup the code to return -EINVAL instead of -1
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-The patch in question does nothing but silence a bogus compiler warning.
-No logical change to the code.
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
+index ffda05c..06dcee5 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
+@@ -496,7 +496,7 @@ static s32 iwl4965_get_tx_atten_grp(u16 channel)
+ 	    channel <= CALIB_IWL_TX_ATTEN_GR4_LCH)
+ 		return CALIB_CH_GROUP_4;
+ 
+-	return -1;
++	return -EINVAL;
+ }
+ 
+ static u32 iwl4965_get_sub_band(const struct iwl_priv *priv, u32 channel)
+-- 
+1.7.2.5
+
