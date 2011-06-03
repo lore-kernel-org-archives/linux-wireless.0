@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab1FHOxM (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51425 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247Ab1FCXBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 10:53:12 -0400
-Subject: Re: iwlagn aggregation problem when stations are removed/re-added
- quickly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1307543824.5115.10.camel@wwguy-ubuntu>
-References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
-	 (sfid-20110514_005657_579238_E23F3390)  <1307531276.3961.8.camel@jlt3.sipsolutions.net>
-	 <1307543824.5115.10.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 16:53:01 +0200
-Message-ID: <1307544781.30277.6.camel@jlt3.sipsolutions.net> (sfid-20110608_165316_129197_1CBF944A)
-Mime-Version: 1.0
+	Fri, 3 Jun 2011 19:01:30 -0400
+Received: by iyb14 with SMTP id 14so1737246iyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 16:01:29 -0700 (PDT)
+Message-ID: <4DE967C6.4050207@lwfinger.net> (sfid-20110604_010137_554655_FF64F724)
+Date: Fri, 03 Jun 2011 18:01:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Arif Ali <mail@arif-ali.co.uk>
+CC: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: r8192se_pci or rtlwifi/rtl8192ce
+References: <4DE7D5FD.2050707@arif-ali.co.uk>	<20110603130308.GB2379@nautilus.holoscopio.com>	<4DE8E4F5.7010009@arif-ali.co.uk> <BANLkTimLuM4rpfYmTtxA3-6LXyEE4JqqdQ@mail.gmail.com>
+In-Reply-To: <BANLkTimLuM4rpfYmTtxA3-6LXyEE4JqqdQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-08 at 07:37 -0700, wwguy wrote:
-> On Wed, 2011-06-08 at 04:07 -0700, Johannes Berg wrote:
-> > On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
-> > 
-> > > I'm running an experiment where a client connects to the AP (both HT
-> > > iwlagn devices), starts a large transfer that gets aggregation going,
-> > > disassociates, and then reassociates and restarts the transfer.
-> > > 
-> > > When mac80211 stops the queue (as part of the client's disassocation
-> > > process), it goes into the following code:
-> > > 
-> > >                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
-> > >                 priv->stations[sta_id].tid[tid].agg.state =
-> > >                                 IWL_EMPTYING_HW_QUEUE_DELBA;
-> > >                 spin_unlock_irqrestore(&priv->sta_lock, flags);
-> > > 
-> > > but if the station is removed right away the packets stay in the
-> > > queue. Indeed, when the client reconnects, the packets are then
-> > > delivered! But then the queue gets stuck and the AP issues a firmware
-> > > reset, which doesn't actually get traffic flowing again. Below,
-> > > there's a log with IWL_DL_HT set. It may be something racy; adding
-> > > DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
-> > > in a few tries.
-> > > 
-> > > I suspect this will also be a problem with P2P, and not just my klugey
-> > > use of AP mode. Any suggestions as to how to fix?
-> > 
-> > Sorry I'm replying this late. I'm not sure what the best way to fix it
-> > would be, but it makes sense that this would happen. Maybe we can flush
-> > the aggregation queue (asking the ucode to drop all frames) when the
-> > station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
-> > know if that's possible?
-> > 
-> flush the queue might be a good solution, I was being told (I don't
-> remember who and when which is bad), the "tx flush" command is needed
-> especially for P2P
-> 
-> btw, there are 2 type of "tx flush", flush all the frames in uCode, or
-> just flush the frames in specified queue.
+On 06/03/2011 12:29 PM, Arif Ali wrote:
+> For some reason the rc1 kernel didn't work from the mainline kernels from
+> ubuntu, I downloaded the latest kernel from mainline, (although it says it is
+> for oneiric)
+>
+> i.e. The kernel below for me works
+>
+> http://kernel.ubuntu.com/~kernel-ppa/mainline/daily/2011-06-02-oneiric/
+>
+> i.e. 3.0.0-999-generic
+>
+> The driver being used here is rtl8192se, and the stability issues I had are now
+> gone, will test for a few more days and see how it goes.
+>
+> Thanks for all those people who replied
 
-Right, but the flush seems to be implemented per FIFO and queue, so it's
-a bit confusing. In this case we should drop all frames out of the
-aggretgaiton queue.
+Sorry that I did not reply earlier, but I was traveling without access to Email.
 
-johannes
+The driver rtl8192se in kernel 3.0-rc1 is the correct one as you noted. For me, 
+it has been very stable. There is one fix that is in the pipeline, in 
+wireless-testing, but not yet in the mainline tree. The symptoms are kernel 
+panics due to excessive fragmentation causing buffer allocation failures. This 
+problem affects both rtl8192ce and rtl8192se. As it took a long time for me to 
+have problems with the drivers, you will likely not see the problem. The fix 
+should be in 3.0-rc2. If you want, I can send you the patches.
+
+Larry
 
