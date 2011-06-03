@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2226 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753128Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:29 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 32/83] staging: brcm80211: remove extern variable
- definitions in bcmsrom.c
-Date: Wed, 1 Jun 2011 13:45:17 +0200
-Message-ID: <1306928768-7501-32-git-send-email-rvossen@broadcom.com> (sfid-20110601_134704_229506_D90903FF)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324Ab1FCU6t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 16:58:49 -0400
+Subject: Re: rfkill deadlock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: duaneg@dghda.com
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20110603160049.GA8767@kereru>
+References: <20110603160049.GA8767@kereru>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 03 Jun 2011 22:58:47 +0200
+Message-ID: <1307134727.3800.12.camel@jlt3.sipsolutions.net> (sfid-20110603_225853_212522_DD615BCA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Fri, 2011-06-03 at 17:00 +0100, duaneg@dghda.com wrote:
+> Hi there,
+> 
+> I'm getting a deadlock with 3.0.0-rc1:
+> 
+> Jun  3 12:06:20 kereru kernel: =======================================================
+> Jun  3 12:06:20 kereru kernel: [ INFO: possible circular locking dependency detected ]
+> Jun  3 12:06:20 kereru kernel: 3.0.0-rc1-00049-g1fa7b6a #57
+> Jun  3 12:06:20 kereru kernel: -------------------------------------------------------
+> Jun  3 12:06:20 kereru kernel: kworker/0:1/4525 is trying to acquire lock:
+> Jun  3 12:06:20 kereru kernel: (&rdev->mtx){+.+.+.}, at: [<ffffffff8164c831>] cfg80211_netdev_notifier_call+0x131/0x5b0
+> Jun  3 12:06:20 kereru kernel: 
+> Jun  3 12:06:20 kereru kernel: but task is already holding lock:
+> Jun  3 12:06:20 kereru kernel: (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff8164dcef>] cfg80211_rfkill_set_block+0x4f/0xa0
+> Jun  3 12:06:20 kereru kernel: 
+> Jun  3 12:06:20 kereru kernel: which lock already depends on the new lock.
 
-The file bcmsrom.c defined two global externals. As these were also
-not used these have been removed.
+This is caused by Luca's scheduled scan changes. The reason is that
+cfg80211_rfkill_set_block holds devlist_mtx, but then he added
+cfg80211_lock_rdev(rdev); to NETDEV_GOING_DOWN, which is of course
+invoked by dev_close() in cfg80211_rfkill_set_block(). Thus, the
+problem. Not sure what to do to solve it, I'll let him sort it out :)
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/bcmsrom.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-index 487e731..a1a2fc5 100644
---- a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-+++ b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-@@ -64,8 +64,6 @@ typedef struct varbuf {
- 	char *buf;		/* pointer to current position */
- 	unsigned int size;	/* current (residual) size in bytes */
- } varbuf_t;
--extern char *_vars;
--extern uint _varsz;
- 
- /* Assumptions:
-  * - Ethernet address spans across 3 consective words
--- 
-1.7.4.1
-
+johannes
 
