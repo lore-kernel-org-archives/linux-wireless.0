@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38511 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753280Ab1FHLZq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 07:25:46 -0400
-Subject: [PATCH] mac80211: fix IBSS teardown race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ignacy Gawedzki <i@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 13:25:43 +0200
-Message-ID: <1307532343.3961.9.camel@jlt3.sipsolutions.net> (sfid-20110608_132549_830215_50FA69C7)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1501 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752855Ab1FCQhr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 12:37:47 -0400
+Message-ID: <4DE90DCE.6060207@broadcom.com> (sfid-20110603_183751_979598_E5B3920A)
+Date: Fri, 3 Jun 2011 18:37:34 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "Julian Calaby" <julian.calaby@gmail.com>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t
+ with struct si_pub
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+ <1306928768-7501-44-git-send-email-rvossen@broadcom.com>
+ <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
+In-Reply-To: <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Julian,
 
-Ignacy reports that sometimes after leaving an IBSS
-joining a new one didn't work because there still
-were stations on the list. He fixed it by flushing
-stations when attempting to join a new IBSS, but
-this shouldn't be happening in the first case. When
-I looked into it I saw a race condition in teardown
-that could cause stations to be added after flush,
-and thus cause this situation. Ignacy confirms that
-after applying my patch he hasn't seen this happen
-again.
+the structure definition itself is already in a header file (aiutils.h). 
+Probably you are referring to the forward declaration used in the patch?
 
-Reported-by: Ignacy Gawedzki <i@lri.fr>
-Debugged-by: Ignacy Gawedzki <i@lri.fr>
-Tested-by: Ignacy Gawedzki <i@lri.fr>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Bye, Roland.
 
---- a/net/mac80211/ibss.c	2011-06-08 07:55:21.000000000 +0200
-+++ b/net/mac80211/ibss.c	2011-06-08 13:16:20.000000000 +0200
-@@ -965,6 +965,10 @@ int ieee80211_ibss_leave(struct ieee8021
- 
- 	mutex_lock(&sdata->u.ibss.mtx);
- 
-+	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
-+	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
-+	sdata->u.ibss.ssid_len = 0;
-+
- 	active_ibss = ieee80211_sta_active_ibss(sdata);
- 
- 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-@@ -999,8 +1003,6 @@ int ieee80211_ibss_leave(struct ieee8021
- 	kfree_skb(skb);
- 
- 	skb_queue_purge(&sdata->skb_queue);
--	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
--	sdata->u.ibss.ssid_len = 0;
- 
- 	del_timer_sync(&sdata->u.ibss.timer);
- 
+On 06/02/2011 01:58 AM, Julian Calaby wrote:
+> On Wed, Jun 1, 2011 at 21:45, Roland Vossen<rvossen@broadcom.com>  wrote:
+>> Code cleanup.
+>>
+>> Signed-off-by: Roland Vossen<rvossen@broadcom.com>
+>> Reviewed-by: Arend van Spriel<arend@broadcom.com>
+>>
+>> diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+>> index 2cc9bc7..9819a35 100644
+>> --- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+>> +++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+>> @@ -27,7 +27,8 @@
+>>   #include<dngl_stats.h>
+>>   #include<dhd.h>
+>>   #include<linux/ieee80211.h>
+>> -typedef const struct si_pub si_t;
+>> +
+>> +struct si_pub;
+>>
+>>   #include<dngl_stats.h>
+>>   #include<dhd.h>
+>
+> Should this struct definition be in a header file somewhere?
 
 
