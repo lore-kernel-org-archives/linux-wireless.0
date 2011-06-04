@@ -1,113 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55144 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215Ab1FCFXp convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:46476 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754435Ab1FDRn1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 01:23:45 -0400
-Received: by iwn34 with SMTP id 34so1160008iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 22:23:44 -0700 (PDT)
+	Sat, 4 Jun 2011 13:43:27 -0400
+Received: by qyk7 with SMTP id 7so217297qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jun 2011 10:43:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4DE82191.3010205@openwrt.org>
-References: <BANLkTi=-MDn9eAsRsoXtAetDOZehkMEhJw@mail.gmail.com>
- <201105241627.49201.helmut.schaa@googlemail.com> <BANLkTikcEsKYo=c=ZmzJRbmfgjmrFmx9bg@mail.gmail.com>
- <BANLkTin4MvdbqugTjtXvmjz5N8_TyTY7OA@mail.gmail.com> <BANLkTi=xfv_0C1mVAtO=w5JqyXLvh=vtAQ@mail.gmail.com>
- <BANLkTimMXbZE=vY95C0b2H3hx=4XWdU2Qg@mail.gmail.com> <BANLkTi=rS_kDhB8oKBLsz2Mk2nvRJMu5mg@mail.gmail.com>
- <4DDD5691.2040205@openwrt.org> <BANLkTi=1uj52P208p--5NU=Ow4rDndMkAw@mail.gmail.com>
- <BANLkTimRiU9Pv1B1=VC3XuREbmnpLk3S7w@mail.gmail.com> <4DDE2F5B.3020804@openwrt.org>
- <BANLkTimuaOoV0uvyzs9PbeK_k6vwOG=+YA@mail.gmail.com> <4DDEEEEC.6010800@openwrt.org>
- <BANLkTi=fT-Hdio9ArZKFMZCPX0LGLjGB=A@mail.gmail.com> <BANLkTikhihyTqg+yR8MnR1cp5wJ35sybNA@mail.gmail.com>
- <4DE82191.3010205@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Jun 2011 22:23:24 -0700
-Message-ID: <BANLkTikCqZ65nZU6F+7iktKKTZdUV-Kx6w@mail.gmail.com> (sfid-20110603_072348_326217_D7BB6457)
-Subject: Re: Initial automatic channel selection implementation
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Matt Smith <smithm@qca.qualcomm.com>,
-	Sundar Sankaran <sunsanka@qca.qualcomm.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com
+From: Matteo Croce <matteo@openwrt.org>
+Date: Sat, 4 Jun 2011 19:42:46 +0200
+Message-ID: <BANLkTim_YzVXG5g+92AkvJhhQ4OkeW4wMw@mail.gmail.com> (sfid-20110604_194333_802760_1207A93C)
+Subject: [PATCH v3] 802.11n frame injection
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 2, 2011 at 4:49 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-06-03 12:36 AM, Luis R. Rodriguez wrote:
->>
->> On Thu, May 26, 2011 at 5:59 PM, Luis R. Rodriguez<mcgrof@gmail.com>
->>  wrote:
->>>
->>>   What I'd like to do is to affect the ratio to nullify it if the noise
->>>   is very low on the channel. Given that noise is logarithmic we'd have
->>>   to use a logarithmic function as well. Working on that now.
->>
->> OK I've figured a way to plug the noise into this, I designed the
->> following function we can use as a factor:
->>
->> 1.1^(x+110)
->>
->> Wolfram|Alpha boring details of this function:
->>
->> http://bit.ly/mJNXE9
->>
->> x,y results of different noise values in dBm, using apcalc:
->>
->> mcgrof@tux ~ $ calc
->> C-style arbitrary precision calculator (version 2.12.3.3)
->> Calc is open software. For license details type:  help copyright
->> [Type "exit" to exit, or "help" for help.]
->>
->> ; define f(x) = 1.1^(x+110)
->> f(x) defined
->>
->> ; f(-130)
->>        ~0.14864362802414368640
->> ; f(-120)
->>        ~0.38554328942953174736
->> ; f(-119)
->>        ~0.42409761837248492210
->> ; f(-118)
->>        ~0.46650738020973341431
->> ; f(-117)
->>        ~0.51315811823070675574
->> ; f(-116)
->>        ~0.56447393005377743132
->> ; f(-115)
->>        ~0.62092132305915517445
->> ; f(-114)
->>        ~0.68301345536507069189
->> ; f(-113)
->>        ~0.75131480090157776108
->> ; f(-112)
->>        ~0.82644628099173553719
->> ; f(-111)
->>        ~0.90909090909090909091
->> ; f(-110)
->>        1
->> ; f(-109)
->>        1.1
->> ; f(-108)
->>        1.21
->> ; f(-107)
->>        1.331
->>
->> So then, we'd use a frequency for initiating beaconing (AP, Mesh, P2P)
->> which uses the lowest value from the following computation:
->>
->> (busy time - tx time) / (active time - tx time) * 1.1^(noise + 110)
->>
->> The 1.1 factor can be modified more accurately to represent the
->> exponential factor of how noise should affect interference decisions,
->> the 110 value here can be modified for any other arbitrary value we
->> find as representative of a regular noise value from a simple AP on
->> the frequency we are observing, my assumption here was -110 dBm.
->
-> -110 dBm is not a real noise value. It's an unrealistic, ath9k-specific
-> value. I have a patch that changes ath9k to make noise and signal strength
-> values more realistic, and I'll submit it soon, as soon as I've made it a
-> bit more precise.
+Allow to set the tx rate and retries when injecting:
+read the information from the radiotap header and populate the retry chain
 
-Nice. As I noted though this value is arbitrary for now, we can change
-it at will. Any other feedback? If not I'll start hacking on it.
+Signed-off-by: Matteo Croce <matteo@openwrt.org>
 
- Luis
+--- a/net/mac80211/tx.c	2011-06-01 21:04:32.000000000 +0200
++++ b/net/mac80211/tx.c	2011-06-04 19:38:36.356443309 +0200
+@@ -1092,6 +1092,46 @@
+ 				tx->flags |= IEEE80211_TX_FRAGMENTED;
+ 			break;
+
++		case IEEE80211_RADIOTAP_RATE: {
++			struct ieee80211_supported_band *sband =
++				tx->local->hw.wiphy->bands[tx->channel->band];
++			info->control.rates[0].idx = 0;
++			if (*iterator.this_arg) {
++				int i;
++				for (i = 0; i < sband->n_bitrates; i++)
++					if (sband->bitrates[i].bitrate ==
++						*iterator.this_arg * 5) {
++						info->control.rates[0].idx = i;
++						break;
++					}
++			}
++			info->control.rates[0].flags = 0;
++			info->control.rates[1].idx = -1;
++			info->control.rates[2].idx = -1;
++			info->control.rates[3].idx = -1;
++			info->control.rates[4].idx = -1;
++			break;
++		}
++
++		case IEEE80211_RADIOTAP_DATA_RETRIES:
++			info->control.rates[0].count = *iterator.this_arg;
++			break;
++
++		case IEEE80211_RADIOTAP_MCS: {
++			u8 flags = iterator.this_arg[1];
++			u8 mcs = iterator.this_arg[2];
++			info->control.rates[0].idx = mcs;
++			info->control.rates[0].flags |=
++				IEEE80211_TX_RC_MCS;
++			if (flags & IEEE80211_RADIOTAP_MCS_BW_40)
++				info->control.rates[0].flags |=
++				IEEE80211_TX_RC_40_MHZ_WIDTH;
++			if (flags & IEEE80211_RADIOTAP_MCS_SGI)
++				info->control.rates[0].flags |=
++				IEEE80211_TX_RC_SHORT_GI;
++			break;
++		}
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+--- a/net/wireless/radiotap.c	2011-06-01 21:04:24.000000000 +0200
++++ b/net/wireless/radiotap.c	2011-06-04 19:00:49.453007027 +0200
+@@ -40,6 +40,7 @@
+ 	[IEEE80211_RADIOTAP_TX_FLAGS] = { .align = 2, .size = 2, },
+ 	[IEEE80211_RADIOTAP_RTS_RETRIES] = { .align = 1, .size = 1, },
+ 	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
++	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
+ 	/*
+ 	 * add more here as they are defined in radiotap.h
+ 	 */
+
+-- 
+Matteo Croce
+OpenWrt Developer
+ _______                     ________        __
+|       |.-----.-----.-----.|  |  |  |.----.|  |_
+|   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+|_______||   __|_____|__|__||________||__|  |____|
+         |__| W I R E L E S S   F R E E D O M
+ATTITUDE ADJUSTMENT (bleeding edge) --------------
+ * 1/4 oz Vodka      Pour all ingredents into mixing
+ * 1/4 oz Gin        tin with ice, strain into glass.
+ * 1/4 oz Amaretto
+ * 1/4 oz Triple sec
+ * 1/4 oz Peach schnapps
+ * 1/4 oz Sour mix
+ * 1 splash Cranberry juice
+-----------------------------------------------------
