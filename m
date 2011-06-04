@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:33273 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756444Ab1FJNg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 09:36:59 -0400
-Date: Fri, 10 Jun 2011 13:39:11 +0000
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
-Message-ID: <20110610133911.36f9f8b2@Nokia-N900> (sfid-20110610_153703_169769_31B20E76)
-In-Reply-To: <4DF2042C.6060605@broadcom.com>
-References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
-	<BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com>
-	<4DF2042C.6060605@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from aa013-1msr.fastwebnet.it ([62.101.93.133]:47990 "EHLO
+	aa013-1msr.fastwebnet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756239Ab1FDKui (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2011 06:50:38 -0400
+Message-ID: <4DEA0C27.1000508@absence.it> (sfid-20110604_125041_031349_7F976658)
+Date: Sat, 04 Jun 2011 12:42:47 +0200
+From: Marco Chiappero <marco@absence.it>
+MIME-Version: 1.0
+To: Mattia Dongili <malattia@linux.it>
+CC: Matthew Garrett <mjg59@srcf.ucam.org>,
+	platform-driver-x86@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 12/25] sony-laptop: input core improvements improvements
+References: <4DE8FC4A.9010401@absence.it> <4DE9012E.5040207@absence.it> <20110604080717.GC7194@kamineko.org>
+In-Reply-To: <20110604080717.GC7194@kamineko.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 10 Jun 2011 13:46:52 +0200
-"Arend van Spriel" <arend@broadcom.com> wrote:
-> > Michael said we should not do do such a exporting without getting
-> > users within the same patch serie.
-> That is going to be hard for me despite my willingness to comply. Our 
-> driver is still in staging so we submit our brcm80211 patches to Greg 
-> KH. I figured it would be better to do submit patches for bcma on 
-> wireless repository.
+Il 04/06/2011 10:07, Mattia Dongili ha scritto:
+> On Fri, Jun 03, 2011 at 05:43:42PM +0200, Marco Chiappero wrote:
+>> The code is now forwarding the SW_RFKILL_ALL event; added a couple
+>
+> I don't think we should do this.
 
-There are no rules without exceptions ;-)
-
-
+As far as I know this event should be forwarded and the rfkill-input 
+code removed as soon as there is enough userspace support. Another 
+platform driver (thinkpad_acpi) is using it.
+What is right and what is wrong? Should it be removed from thinkpad_acpi 
+too?
