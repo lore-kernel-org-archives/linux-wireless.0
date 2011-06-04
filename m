@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from defaultvalue.org ([70.85.129.156]:46186 "EHLO defaultvalue.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321Ab1FHCjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 22:39:01 -0400
-From: Rob Browning <rlb@defaultvalue.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
-References: <87pqnl5i81.fsf@raven.defaultvalue.org>
-	<4DD074E3.3090502@lwfinger.net>
-	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
-	<4DD09C78.2010304@lwfinger.net>
-	<8762pbkytq.fsf@trouble.defaultvalue.org>
-	<4DD13EF0.2070803@lwfinger.net>
-	<87iptaj8nf.fsf@trouble.defaultvalue.org>
-	<87fwoehtd7.fsf@trouble.defaultvalue.org>
-	<874o45z6b8.fsf@raven.defaultvalue.org>
-Date: Tue, 07 Jun 2011 21:38:59 -0500
-In-Reply-To: <874o45z6b8.fsf@raven.defaultvalue.org> (Rob Browning's message
-	of "Sat, 04 Jun 2011 15:32:11 -0500")
-Message-ID: <874o41rqrg.fsf@trouble.defaultvalue.org> (sfid-20110608_043906_878635_D4E3E3E3)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41616 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969Ab1FDBBJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2011 21:01:09 -0400
+Received: by iwn34 with SMTP id 34so1799790iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 18:01:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4DE91429.9090903@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+ <BANLkTi=Mwbm_yrtL1u8mNboXdYYQz2HbDQ@mail.gmail.com> <4DE91429.9090903@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 4 Jun 2011 11:00:49 +1000
+Message-ID: <BANLkTikhJZzc+PmjBFU1tO-NGCV0=ka4xg@mail.gmail.com> (sfid-20110604_030117_521474_83655A0B)
+Subject: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
+ specific ioctls codes
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rob Browning <rlb@defaultvalue.org> writes:
+On Sat, Jun 4, 2011 at 03:04, Henry Ptasinski <henryp@broadcom.com> wrote:
+> On 06/01/2011 08:06 PM, Julian Calaby wrote:
+>>
+>> Roland,
+>>
+>> I've passed an eye over the entire patch set.
+>
+> Thanks for taking the time and putting in the effort to reveiw them all.
 
-> As another data point, I just tested the same device on a second machine
-> (a desktop), and saw the same behavior -- initially high transfer rates
-> trailing off to about 60K/s.
+No problem!
 
-...and another data point.  Just to be sure it wasn't that particular
-usb device, I got another that I think is the same hardware (this time
-the Airlink 101), and I see exactly the same behavior.
+>> 2. You shouldn't need to #ifdef on BIG_ENDIAN - there are a set of
+>> macros to help with working with different endian systems.
+>
+> Any specific ones we should be looking at?
 
-Next I'll try a different access point -- I'll let you know what I find.
-And if there's anything else I can do to help test, please let me know.
+All of them, to be quite honest. The ones that stuck out for me were
+the ones around the REG_[RW] macros, but any that are in the drivers
+are worthy targets.
 
-Thanks
+>> 3. Do a typedef removal sweep over the code because typedefs are ugly =)
+>
+> Definitely on the list of cleanup.
+>
+>> 4. I had a glance at /Documentation/CodingStyle and saw that there
+>> were some issues mentioned in there that could be fixed in your code.
+>> You might also want to play with checkpatch.
+>
+> A few of the patches have complaints from checkpatch, but I believe that in
+> all cases the complaints are on existing code that's being moved from one
+> file to another to help consolidate things.  We'll keep working on cleaning
+> up those issues as we go along.
+
+That's perfectly valid. This point was more a future-work sort of
+thing, not something I expect you to deal with right now.
+
+> Any specific checkpatch issues in this series that we should take a second
+> look at?
+
+Not really. I was more trying to point out that there are a lot of
+issues with the code as a whole that could be fixed, not that there
+were any specific issues.
+
+> Thanks again for all the effort.
+
+Again, no problem!
+
+> At this point, should we regenerate the whole series to try and address your
+> concerns, or should we do the additional cleanup as followup patches?
+
+I don't see any reason to - unless anyone else has issues. My comments
+are more things to work on in the future - I understand that this
+patch set is about moving and re-organising code, not making it clean
+and shiny.
+
+Unless anyone else has a reason to, I see no reason to re-generate
+this patch set.
+
+Thanks,
+
 -- 
-Rob Browning
-rlb @defaultvalue.org and @debian.org
-GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
