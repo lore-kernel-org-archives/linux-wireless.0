@@ -1,70 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4490 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753130Ab1FXWjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 18:39:12 -0400
-Message-ID: <4E0511FE.3070701@broadcom.com> (sfid-20110625_003917_403249_4DB82ADC)
-Date: Fri, 24 Jun 2011 15:38:54 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:32822 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809Ab1FDSTp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2011 14:19:45 -0400
+Received: by iwn34 with SMTP id 34so2163081iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jun 2011 11:19:44 -0700 (PDT)
+Message-ID: <4DEA773D.5070500@lwfinger.net> (sfid-20110604_201955_719935_13899D30)
+Date: Sat, 04 Jun 2011 13:19:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Dan Carpenter" <error27@gmail.com>
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	"julie Sullivan" <kernelmail.jms@gmail.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH 00/21] staging: brcm80211: code cleanup and fullmac
- bugfix
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
- <20110609185420.GK4069@shale.localdomain>
- <BANLkTi=FuX0H3UOi6M_LL5t5hdDen77WcQ@mail.gmail.com>
- <4DF1D0A5.8080300@broadcom.com>
- <BANLkTi=bVse-E2Gc+ArN8AyS3JwZNAPzmA@mail.gmail.com>
- <20110612190045.GB3583@shale.localdomain>
- <20110614175035.GE9280@broadcom.com>
-In-Reply-To: <20110614175035.GE9280@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: In case 3.0-rc1 from wireless-testing fails to boot
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/14/2011 10:50 AM, Henry Ptasinski wrote:
-> On Sun, Jun 12, 2011 at 12:00:45PM -0700, Dan Carpenter wrote:
->    
->> On Sun, Jun 12, 2011 at 07:23:27PM +0100, julie Sullivan wrote:
->>      
->>>> I am using GregKH's staging-next repo:
->>>> git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
->>>>
->>>>          
->>>        
->>>> The patch applies on top of 5ad7b85b90e30eb5af4fbf6ce21907a2bd8934df.
->>>>
->>>> Bye, Roland.
->>>>
->>>>          
->>> OK, this compiles fine on x86-64/SMP. It's probably not interesting
->>> but there are just a few warnings:
->>>
->>>        
->> Yeah.  The driver only works under 32 bit.  This is listed in the
->> TODO file as something to fix before it leaves staging.
->>
->>      
-> At the moment, we haven't really seen any interest in 64-bit support with sdio
-> (almost all actual usage is 32-bit ARM as far as I can tell), but it will
-> definitely get more relevant when we add USB support to brcmfmac.  We'll work
-> on getting it up and running, but any help would be appreciated.
->
-> Is it safe to assume the related modules (mmc.ko, etc) work on 64-bit?
->
-> - Henry
+When I tried using 3.0-rc1 from mainline, my computer failed to boot because it 
+got into an infinite loop initiated from user space. Bisection led to a 
+particular commit, and reverting it "fixed" the problem. In fact, the actual 
+problem was a faulty merge. This problem is fixed in the current linux-2.6-git, 
+but that patch is not yet in wireless-testing.
 
-I've verified that the brcmfmac driver works on 64-bit x86 kernels.
-There are a few compiler warnings that we'll clean up.
+In case you run into this problem, the fix is commit 0f48f2600911d (reproduced 
+below):
 
-- Henry
+
+commit 0f48f2600911d5de6393829e4a9986d4075558b3
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu Jun 2 05:29:19 2011 +0900
+
+     block: fix mismerge of the DISK_EVENT_MEDIA_CHANGE removal
+
+     Jens' back-merge commit 698567f3fa79 ("Merge commit 'v2.6.39' into
+     for-2.6.40/core") was incorrectly done, and re-introduced the
+     DISK_EVENT_MEDIA_CHANGE lines that had been removed earlier in commits
+
+      - 9fd097b14918 ("block: unexport DISK_EVENT_MEDIA_CHANGE for
+        legacy/fringe drivers")
+
+      - 7eec77a1816a ("ide: unexport DISK_EVENT_MEDIA_CHANGE for ide-gd
+        and ide-cd")
+
+     because of conflicts with the "g->flags" updates near-by by commit
+     d4dc210f69bc ("block: don't block events on excl write for non-optical
+     devices")
+
+     As a result, we re-introduced the hanging behavior due to infinite disk
+     media change reports.
+
+     Tssk, tssk, people! Don't do back-merges at all, and *definitely* don't
+     do them to hide merge conflicts from me - especially as I'm likely
+     better at merging them than you are, since I do so many merges.
+
+     Reported-by: Steven Rostedt <rostedt@goodmis.org>
+     Cc: Jens Axboe <jaxboe@fusionio.com>
+     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
+index a0aabd9..46b8136 100644
+--- a/drivers/block/paride/pcd.c
++++ b/drivers/block/paride/pcd.c
+@@ -321,7 +321,6 @@ static void pcd_init_units(void)
+  		strcpy(disk->disk_name, cd->name);	/* umm... */
+  		disk->fops = &pcd_bdops;
+  		disk->flags = GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
+-		disk->events = DISK_EVENT_MEDIA_CHANGE;
+  	}
+  }
+
+diff --git a/drivers/cdrom/viocd.c b/drivers/cdrom/viocd.c
+index ae15a4d..7878da8 100644
+--- a/drivers/cdrom/viocd.c
++++ b/drivers/cdrom/viocd.c
+@@ -627,7 +627,6 @@ static int viocd_probe(struct vio_dev *vdev, const struct 
+vio_device_id *id)
+  	gendisk->fops = &viocd_fops;
+  	gendisk->flags = GENHD_FL_CD | GENHD_FL_REMOVABLE |
+  			 GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
+-	gendisk->events = DISK_EVENT_MEDIA_CHANGE;
+  	set_capacity(gendisk, 0);
+  	gendisk->private_data = d;
+  	d->viocd_disk = gendisk;
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 6e5123b..144d272 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1782,7 +1782,6 @@ static int ide_cd_probe(ide_drive_t *drive)
+  	ide_cd_read_toc(drive, &sense);
+  	g->fops = &idecd_ops;
+  	g->flags |= GENHD_FL_REMOVABLE | GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
+-	g->events = DISK_EVENT_MEDIA_CHANGE;
+  	add_disk(g);
+  	return 0;
+
 
