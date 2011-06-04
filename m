@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56086 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752359Ab1FBTEy (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:32904 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754473Ab1FDOgS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 15:04:54 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id E31F7540054
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Jun 2011 15:11:22 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-02 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110602190453.0334E40EC4@repository3.orbit-lab.org> (sfid-20110602_210457_386834_1EB475EF)
-Date: Thu,  2 Jun 2011 15:04:52 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 4 Jun 2011 10:36:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110604130413.GA3929@tuxdriver.com>
+References: <20110603195254.GF2509@tuxdriver.com>
+	<BANLkTimoeVDQK+zu=U+nSM_kj0a3-hh_Jg@mail.gmail.com>
+	<20110604130413.GA3929@tuxdriver.com>
+Date: Sat, 4 Jun 2011 16:36:17 +0200
+Message-ID: <BANLkTimF3Jr4Kp7rDo1dvdBxVPepr__OZw@mail.gmail.com> (sfid-20110604_163624_147506_8E129D0E)
+Subject: Re: pull request: wireless-2.6 2011-06-03
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + b15250a...0889926 akpm-end   -> origin/akpm-end  (forced update)
-   e12ca23..1fa7b6a  akpm-start -> origin/akpm-start
-   64fb945..573b39b  history    -> origin/history
- + 55d1720...8e0bcea master     -> origin/master  (forced update)
-   e12ca23..1fa7b6a  stable     -> origin/stable
- * [new tag]         next-20110602 -> next-20110602
+W dniu 4 czerwca 2011 15:04 użytkownik John W. Linville
+<linville@tuxdriver.com> napisał:
+> On Fri, Jun 03, 2011 at 11:24:49PM +0200, Rafał Miłecki wrote:
+>> On Jun 3, 2011 10:03 PM, "John W. Linville" <linville@tuxdriver.com> wrote:
+>> >
+>> > Dave,
+>> >
+>> > Here is a batch of fixes intended for 3.0 -- I guess I'll need to
+>> > rename my tree eventually... :-)
+>> >
+>> > Included are a libertas fix to ensure proper sequence number assignment
+>> > on transmitted frames, an ath9k fix that propogates an earlier fix to a
+>> > few more places,  a fix for a cfg80211 regression caused by some mesh
+>> > code changes, a locking fix for the bluetooth l2cap code, a zd1211rw
+>> > regression fix, a collection of small fixes for wl12xx, an iwl4965
+>> > fix for a bad temperature check, an a device ID-related fix for iwlagn.
+>> >
+>> > Please let me know if there are problems!
+>>
+>> John, you didn't.take my fix for regression in ssb. I really want this for
+>> 3.0.quickly, as few ppl already had problems with machine locking on boot.
+>
+> Yours isn't the only fix, and I had quite a few queued already.  Patience.
 
-compat-wireless code metrics
+OK, I was just afraid you missed this one :) Sorry if I meant rude.
 
-    824412 - Total upstream lines of code being pulled
+-- 
+Rafał
