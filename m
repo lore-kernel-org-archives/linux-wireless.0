@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40201 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750816Ab1FTQwo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 12:52:44 -0400
-From: Yogesh Powar <yogeshp@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Date: Mon, 20 Jun 2011 09:49:44 -0700
-Subject: RE: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-Message-ID: <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com> (sfid-20110620_185247_442296_7AA735A4)
-References: <20110616102138.GA24447@hertz.marvell.com>
-	 <20110616102707.GB24458@hertz.marvell.com>
-	 <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
-	 <20110617132527.GA27436@hertz.marvell.com>
-	 <1308331485.7329.2.camel@Nokia-N900-51-1>
-	 <20110620143051.GA31035@hertz.marvell.com>,<1308583799.4322.9.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1308583799.4322.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mms3.broadcom.com ([216.31.210.19]:2385 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755515Ab1FEIgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2011 04:36:25 -0400
+Message-ID: <4DEB3FF3.8090904@broadcom.com> (sfid-20110605_103629_126360_73D0E5D3)
+Date: Sun, 5 Jun 2011 10:36:03 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
+To: "Julian Calaby" <julian.calaby@gmail.com>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t
+ with struct si_pub
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+ <1306928768-7501-44-git-send-email-rvossen@broadcom.com>
+ <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
+ <4DE90DCE.6060207@broadcom.com>
+ <BANLkTimQacOURw4wQzkyNizksZZj=nhvfQ@mail.gmail.com>
+In-Reply-To: <BANLkTimQacOURw4wQzkyNizksZZj=nhvfQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->No, they're not, the mutex trickery seems completely pointless, and the
->conditional (on _is_locked no less) locking is horrible.
-Ok.
+Hi Julian,
 
-Will spend some more time on exploring solutions using rcu primitives only
-(synchronize_net or something similar).
+> On Sat, Jun 4, 2011 at 02:37, Roland Vossen<rvossen@broadcom.com>  wrote:
+>> Hello Julian,
+>>
+>> the structure definition itself is already in a header file (aiutils.h).
+>> Probably you are referring to the forward declaration used in the patch?
+>
+> Exactly, it probably shouldn't be here as the header file that
+> includes the structure should arguably already be included.
 
-If nothing  of only-RCU is feasible then, I think, we need to resize the skb if it has
-already skipped the tailroom instead of WARN_ON. This will come in to picuture
-only during the race cases. But this wont get rid of race.
+I am afraid I have to disagree with you, for the reason that by 
+including the header file you introduce unnecessary coupling. Let me 
+elaborate. If a .c file does not need to know the contents of a struct, 
+but it only needs to know that a pointer to an opaque struct, then one 
+should not provide the C file with knowledge on the internals of the 
+struct (hence not include the .h file).
 
-Thanks
-Yogesh
+Bye, Roland.
+
