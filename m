@@ -1,501 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3840 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758823Ab1FALqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:30 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 28/83] staging: brcm80211: cleaned bcmeth.h and
- bcmevent.h
-Date: Wed, 1 Jun 2011 13:45:13 +0200
-Message-ID: <1306928768-7501-28-git-send-email-rvossen@broadcom.com> (sfid-20110601_134922_204239_0D733DB4)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33095 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756335Ab1FEWIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2011 18:08:38 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org
+Cc: zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC][PATCH 06/10] bcma: get CPU clock
+Date: Mon,  6 Jun 2011 00:07:34 +0200
+Message-Id: <1307311658-15853-7-git-send-email-hauke@hauke-m.de> (sfid-20110606_000841_347721_6E7F102E)
+In-Reply-To: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. Deleted unused definitions and moved others into less
-generic files.
+Add method to return the clock of the CPU. This is needed by the arch 
+code to calculate the mips_hpt_frequency.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h           |  195 +++++++++++++++++++-
- drivers/staging/brcm80211/brcmfmac/dhd_common.c    |    1 +
- drivers/staging/brcm80211/include/proto/bcmeth.h   |   24 ---
- drivers/staging/brcm80211/include/proto/bcmevent.h |  185 -------------------
- 4 files changed, 194 insertions(+), 211 deletions(-)
+ drivers/bcma/bcma_private.h                 |    3 +
+ drivers/bcma/driver_chipcommon_pmu.c        |   86 +++++++++++++++++++++++++++
+ drivers/bcma/driver_mips.c                  |   12 ++++
+ include/linux/bcma/bcma_driver_chipcommon.h |   35 +++++++++++
+ include/linux/bcma/bcma_driver_mips.h       |    1 +
+ 5 files changed, 137 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index eca6732..081cda0 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -37,8 +37,6 @@
- #include "bcmdefs.h"
- /* The kernel threading is sdio-specific */
- #include "bcmwifi.h"
--#include "proto/bcmeth.h"
--#include "proto/bcmevent.h"
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index c65a6e2..fbabe19 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -22,6 +22,9 @@ int bcma_bus_scan(struct bcma_bus *bus);
+ /* driver_mips.c */
+ extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
  
- /* Forward decls */
- struct dhd_bus;
-@@ -190,6 +188,191 @@ struct dhd_info;
- #define DOT11_BSSTYPE_ANY			2
- #define DOT11_MAX_DEFAULT_KEYS	4
++/* driver_chipcommon_pmu.c */
++extern u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
++
+ /* driver_chipcommon.c */
+ extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
+ 				   struct bcma_drv_mips_serial_port *ports);
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index f44177a..4a700f8 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -11,6 +11,13 @@
+ #include "bcma_private.h"
+ #include <linux/bcma/bcma.h>
  
-+#define BCM_EVENT_MSG_VERSION		1
-+#define BCM_MSG_IFNAME_MAX		16
++static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
++{
++	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
++	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
++	return bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
++}
 +
-+#define WLC_EVENT_MSG_LINK		0x01
-+#define WLC_EVENT_MSG_FLUSHTXQ		0x02
-+#define WLC_EVENT_MSG_GROUP		0x04
-+
-+typedef struct {
-+	u16 version;
-+	u16 flags;
-+	u32 event_type;
-+	u32 status;
-+	u32 reason;
-+	u32 auth_type;
-+	u32 datalen;
-+	u8 addr[ETH_ALEN];
-+	char ifname[BCM_MSG_IFNAME_MAX];
-+} __attribute__((packed)) wl_event_msg_t;
-+
-+typedef  struct bcmeth_hdr {
-+	u16 subtype;
-+	u16 length;
-+	u8 version;
-+	u8 oui[3];
-+	u16 usr_subtype;
-+} __attribute__((packed)) bcmeth_hdr_t;
-+
-+#ifdef BRCM_FULLMAC
-+typedef struct bcm_event {
-+	struct ethhdr eth;
-+	bcmeth_hdr_t		bcm_hdr;
-+	wl_event_msg_t		event;
-+} __attribute__((packed)) bcm_event_t;
-+#endif
-+#define BCM_MSG_LEN	(sizeof(bcm_event_t) - sizeof(bcmeth_hdr_t) - \
-+	sizeof(struct ether_header))
-+
-+#define WLC_E_SET_SSID		0
-+#define WLC_E_JOIN		1
-+#define WLC_E_START		2
-+#define WLC_E_AUTH		3
-+#define WLC_E_AUTH_IND		4
-+#define WLC_E_DEAUTH		5
-+#define WLC_E_DEAUTH_IND	6
-+#define WLC_E_ASSOC		7
-+#define WLC_E_ASSOC_IND		8
-+#define WLC_E_REASSOC		9
-+#define WLC_E_REASSOC_IND	10
-+#define WLC_E_DISASSOC		11
-+#define WLC_E_DISASSOC_IND	12
-+#define WLC_E_QUIET_START	13
-+#define WLC_E_QUIET_END		14
-+#define WLC_E_BEACON_RX		15
-+#define WLC_E_LINK		16
-+#define WLC_E_MIC_ERROR		17
-+#define WLC_E_NDIS_LINK		18
-+#define WLC_E_ROAM		19
-+#define WLC_E_TXFAIL		20
-+#define WLC_E_PMKID_CACHE	21
-+#define WLC_E_RETROGRADE_TSF	22
-+#define WLC_E_PRUNE		23
-+#define WLC_E_AUTOAUTH		24
-+#define WLC_E_EAPOL_MSG		25
-+#define WLC_E_SCAN_COMPLETE	26
-+#define WLC_E_ADDTS_IND		27
-+#define WLC_E_DELTS_IND		28
-+#define WLC_E_BCNSENT_IND	29
-+#define WLC_E_BCNRX_MSG		30
-+#define WLC_E_BCNLOST_MSG	31
-+#define WLC_E_ROAM_PREP		32
-+#define WLC_E_PFN_NET_FOUND	33
-+#define WLC_E_PFN_NET_LOST	34
-+#define WLC_E_RESET_COMPLETE	35
-+#define WLC_E_JOIN_START	36
-+#define WLC_E_ROAM_START	37
-+#define WLC_E_ASSOC_START	38
-+#define WLC_E_IBSS_ASSOC	39
-+#define WLC_E_RADIO		40
-+#define WLC_E_PSM_WATCHDOG	41
-+#define WLC_E_PROBREQ_MSG       44
-+#define WLC_E_SCAN_CONFIRM_IND  45
-+#define WLC_E_PSK_SUP		46
-+#define WLC_E_COUNTRY_CODE_CHANGED 47
-+#define	WLC_E_EXCEEDED_MEDIUM_TIME 48
-+#define WLC_E_ICV_ERROR		49
-+#define WLC_E_UNICAST_DECODE_ERROR 50
-+#define WLC_E_MULTICAST_DECODE_ERROR 51
-+#define WLC_E_TRACE		52
-+#define WLC_E_IF		54
-+#define WLC_E_RSSI		56
-+#define WLC_E_PFN_SCAN_COMPLETE	57
-+#define WLC_E_EXTLOG_MSG	58
-+#define WLC_E_ACTION_FRAME      59
-+#define WLC_E_ACTION_FRAME_COMPLETE 60
-+#define WLC_E_PRE_ASSOC_IND	61
-+#define WLC_E_PRE_REASSOC_IND	62
-+#define WLC_E_CHANNEL_ADOPTED	63
-+#define WLC_E_AP_STARTED	64
-+#define WLC_E_DFS_AP_STOP	65
-+#define WLC_E_DFS_AP_RESUME	66
-+#define WLC_E_RESERVED1		67
-+#define WLC_E_RESERVED2		68
-+#define WLC_E_ESCAN_RESULT 	69
-+#define WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE 	70
-+#define WLC_E_DCS_REQUEST 73
-+
-+#define WLC_E_FIFO_CREDIT_MAP	74
-+
-+#define WLC_E_LAST		75
-+
-+#define WLC_E_STATUS_SUCCESS		0
-+#define WLC_E_STATUS_FAIL		1
-+#define WLC_E_STATUS_TIMEOUT		2
-+#define WLC_E_STATUS_NO_NETWORKS	3
-+#define WLC_E_STATUS_ABORT		4
-+#define WLC_E_STATUS_NO_ACK		5
-+#define WLC_E_STATUS_UNSOLICITED	6
-+#define WLC_E_STATUS_ATTEMPT		7
-+#define WLC_E_STATUS_PARTIAL		8
-+#define WLC_E_STATUS_NEWSCAN		9
-+#define WLC_E_STATUS_NEWASSOC		10
-+#define WLC_E_STATUS_11HQUIET		11
-+#define WLC_E_STATUS_SUPPRESS		12
-+#define WLC_E_STATUS_NOCHANS		13
-+#define WLC_E_STATUS_CS_ABORT		15
-+#define WLC_E_STATUS_ERROR		16
-+
-+#define WLC_E_REASON_INITIAL_ASSOC	0
-+#define WLC_E_REASON_LOW_RSSI		1
-+#define WLC_E_REASON_DEAUTH		2
-+#define WLC_E_REASON_DISASSOC		3
-+#define WLC_E_REASON_BCNS_LOST		4
-+#define WLC_E_REASON_MINTXRATE		9
-+#define WLC_E_REASON_TXFAIL		10
-+
-+#define WLC_E_REASON_FAST_ROAM_FAILED	5
-+#define WLC_E_REASON_DIRECTED_ROAM	6
-+#define WLC_E_REASON_TSPEC_REJECTED	7
-+#define WLC_E_REASON_BETTER_AP		8
-+
-+#define WLC_E_PRUNE_ENCR_MISMATCH	1
-+#define WLC_E_PRUNE_BCAST_BSSID		2
-+#define WLC_E_PRUNE_MAC_DENY		3
-+#define WLC_E_PRUNE_MAC_NA		4
-+#define WLC_E_PRUNE_REG_PASSV		5
-+#define WLC_E_PRUNE_SPCT_MGMT		6
-+#define WLC_E_PRUNE_RADAR		7
-+#define WLC_E_RSN_MISMATCH		8
-+#define WLC_E_PRUNE_NO_COMMON_RATES	9
-+#define WLC_E_PRUNE_BASIC_RATES		10
-+#define WLC_E_PRUNE_CIPHER_NA		12
-+#define WLC_E_PRUNE_KNOWN_STA		13
-+#define WLC_E_PRUNE_WDS_PEER		15
-+#define WLC_E_PRUNE_QBSS_LOAD		16
-+#define WLC_E_PRUNE_HOME_AP		17
-+
-+#define WLC_E_SUP_OTHER			0
-+#define WLC_E_SUP_DECRYPT_KEY_DATA	1
-+#define WLC_E_SUP_BAD_UCAST_WEP128	2
-+#define WLC_E_SUP_BAD_UCAST_WEP40	3
-+#define WLC_E_SUP_UNSUP_KEY_LEN		4
-+#define WLC_E_SUP_PW_KEY_CIPHER		5
-+#define WLC_E_SUP_MSG3_TOO_MANY_IE	6
-+#define WLC_E_SUP_MSG3_IE_MISMATCH	7
-+#define WLC_E_SUP_NO_INSTALL_FLAG	8
-+#define WLC_E_SUP_MSG3_NO_GTK		9
-+#define WLC_E_SUP_GRP_KEY_CIPHER	10
-+#define WLC_E_SUP_GRP_MSG1_NO_GTK	11
-+#define WLC_E_SUP_GTK_DECRYPT_FAIL	12
-+#define WLC_E_SUP_SEND_FAIL		13
-+#define WLC_E_SUP_DEAUTH		14
-+
-+#define WLC_E_IF_ADD		1
-+#define WLC_E_IF_DEL		2
-+#define WLC_E_IF_CHANGE		3
-+
-+#define WLC_E_IF_ROLE_STA		0
-+#define WLC_E_IF_ROLE_AP		1
-+#define WLC_E_IF_ROLE_WDS		2
-+
-+#define WLC_E_LINK_BCN_LOSS	1
-+#define WLC_E_LINK_DISASSOC	2
-+#define WLC_E_LINK_ASSOC_REC	3
-+#define WLC_E_LINK_BSSCFG_DIS	4
-+
- enum cust_gpio_modes {
- 	WLAN_RESET_ON,
- 	WLAN_RESET_OFF,
-@@ -600,6 +783,11 @@ typedef struct {
- 	u32 tick;		/* O/S tick time (usec) */
- } dhd_timeout_t;
- 
-+typedef struct {
-+	uint event;
-+	const char *name;
-+} bcmevent_name_t;
-+
- #if defined(CONFIG_PM_SLEEP)
- extern atomic_t dhd_mmc_suspend;
- #define DHD_PM_RESUME_WAIT_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
-@@ -708,6 +896,9 @@ extern char fw_path[MOD_PARAM_PATHLEN];
- extern char nv_path[MOD_PARAM_PATHLEN];
- 
- extern u32 g_assert_type;
-+extern const bcmevent_name_t bcmevent_names[];
-+extern const int bcmevent_names_size;
-+
- 
- static inline void MUTEX_LOCK_INIT(dhd_pub_t *dhdp)
+ static void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
+ 					u32 offset, u32 mask, u32 set)
  {
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index b7f4e63..85d87db 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -27,6 +27,7 @@
+@@ -132,3 +139,82 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
+ 	bcma_pmu_swreg_init(cc);
+ 	bcma_pmu_workarounds(cc);
+ }
++
++static u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++
++	switch (bus->chipinfo.id) {
++	case 0x4716:
++	case 0x4748:
++	case 47162:
++		/* always 20Mhz */
++		return 20000 * 1000;
++	default:
++		pr_warn("No ALP clock specified for %04X device, "
++			"pmu rev. %d, using default %d Hz\n",
++			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
++	}
++	return BCMA_CC_PMU_ALP_CLOCK;
++}
++
++/* Find the output of the "m" pll divider given pll controls that start with
++ * pllreg "pll0" i.e. 12 for main 6 for phy, 0 for misc.
++ */
++static u32 bcma_pmu_clock(struct bcma_drv_cc *cc, u32 pll0, u32 m)
++{
++	u32 tmp, div, ndiv, p1, p2, fc;
++
++	BUG_ON(!m || m > 4);
++
++	BUG_ON((pll0 & 3) || (pll0 > BCMA_CC_PMU4716_MAINPLL_PLL0));
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_P1P2_OFF);
++	p1 = (tmp & BCMA_CC_PPL_P1_MASK) >> BCMA_CC_PPL_P1_SHIFT;
++	p2 = (tmp & BCMA_CC_PPL_P2_MASK) >> BCMA_CC_PPL_P2_SHIFT;
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_M14_OFF);
++	div = (tmp >> ((m - 1) * BCMA_CC_PPL_MDIV_WIDTH)) & BCMA_CC_PPL_MDIV_MASK;
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_NM5_OFF);
++	ndiv = (tmp & BCMA_CC_PPL_NDIV_MASK) >> BCMA_CC_PPL_NDIV_SHIFT;
++
++	/* Do calculation in Mhz */
++	fc = bcma_pmu_alp_clock(cc) / 1000000;
++	fc = (p1 * ndiv * fc) / p2;
++
++	/* Return clock in Hertz */
++	return (fc / div) * 1000000;
++}
++
++/* query bus clock frequency for PMU-enabled chipcommon */
++u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++
++	switch (bus->chipinfo.id) {
++	case 0x4716:
++	case 0x4748:
++	case 47162:
++		return bcma_pmu_clock(cc, BCMA_CC_PMU4716_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_SSB);
++	default:
++		pr_warn("No backplane clock specified for %04X device, "
++			"pmu rev. %d, using default %d Hz\n",
++			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_HT_CLOCK);
++	}
++	return BCMA_CC_PMU_HT_CLOCK;
++}
++
++/* query cpu clock frequency for PMU-enabled chipcommon */
++u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++
++	if ((cc->pmu.rev == 5 || cc->pmu.rev == 6 || cc->pmu.rev == 7) &&
++	    (bus->chipinfo.id != 0x4319))
++		return bcma_pmu_clock(cc, BCMA_CC_PMU4716_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_CPU);
++
++	return bcma_pmu_get_clockcontrol(cc);
++}
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 40e4a6d..faaa232 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -155,6 +155,18 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+ 	}
+ }
  
- #define BRCM_OUI		"\x00\x10\x18"
- #define DOT11_OUI_LEN			3
-+#define BCMILCP_BCM_SUBTYPE_EVENT		1
++u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
++{
++	struct bcma_bus *bus = mcore->core->bus;
++
++	if (bus->drv_cc.capabilities & BCMA_CC_CAP_PMU)
++		return bcma_pmu_get_clockcpu(&bus->drv_cc);
++
++	pr_err("No PMU available, need this to get the cpu clock\n");
++	return 0;
++}
++EXPORT_SYMBOL(bcma_cpu_clock);
++
+ static void bcma_core_mips_serial_init(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 083c3b6..77dc08c 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -245,6 +245,41 @@
+ #define BCMA_CC_PLLCTL_ADDR		0x0660
+ #define BCMA_CC_PLLCTL_DATA		0x0664
  
- int dhd_msg_level;
- char fw_path[MOD_PARAM_PATHLEN];
-diff --git a/drivers/staging/brcm80211/include/proto/bcmeth.h b/drivers/staging/brcm80211/include/proto/bcmeth.h
-index e98ee65..0053984 100644
---- a/drivers/staging/brcm80211/include/proto/bcmeth.h
-+++ b/drivers/staging/brcm80211/include/proto/bcmeth.h
-@@ -17,28 +17,4 @@
- #ifndef _BCMETH_H_
- #define _BCMETH_H_
++/* Divider allocation in 4716/47162/5356 */
++#define BCMA_CC_PMU5_MAINPLL_CPU	1
++#define BCMA_CC_PMU5_MAINPLL_MEM	2
++#define BCMA_CC_PMU5_MAINPLL_SSB	3
++
++/* PLL usage in 4716/47162 */
++#define BCMA_CC_PMU4716_MAINPLL_PLL0	12
++
++/* ALP clock on pre-PMU chips */
++#define BCMA_CC_PMU_ALP_CLOCK		20000000
++/* HT clock for systems with PMU-enabled chipcommon */
++#define BCMA_CC_PMU_HT_CLOCK		80000000
++
++/* PMU rev 5 (& 6) */
++#define	BCMA_CC_PPL_P1P2_OFF		0
++#define	BCMA_CC_PPL_P1_MASK		0x0f000000
++#define	BCMA_CC_PPL_P1_SHIFT		24
++#define	BCMA_CC_PPL_P2_MASK		0x00f00000
++#define	BCMA_CC_PPL_P2_SHIFT		20
++#define	BCMA_CC_PPL_M14_OFF		1
++#define	BCMA_CC_PPL_MDIV_MASK		0x000000ff
++#define	BCMA_CC_PPL_MDIV_WIDTH		8
++#define	BCMA_CC_PPL_NM5_OFF		2
++#define	BCMA_CC_PPL_NDIV_MASK		0xfff00000
++#define	BCMA_CC_PPL_NDIV_SHIFT		20
++#define	BCMA_CC_PPL_FMAB_OFF		3
++#define	BCMA_CC_PPL_MRAT_MASK		0xf0000000
++#define	BCMA_CC_PPL_MRAT_SHIFT		28
++#define	BCMA_CC_PPL_ABRAT_MASK		0x08000000
++#define	BCMA_CC_PPL_ABRAT_SHIFT		27
++#define	BCMA_CC_PPL_FDIV_MASK		0x07ffffff
++#define	BCMA_CC_PPL_PLLCTL_OFF		4
++#define	BCMA_CC_PPL_PCHI_OFF		5
++#define	BCMA_CC_PPL_PCHI_MASK		0x0000003f
++
+ /* Data for the PMU, if available.
+  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
+  */
+diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
+index 6584e7d..8346fde 100644
+--- a/include/linux/bcma/bcma_driver_mips.h
++++ b/include/linux/bcma/bcma_driver_mips.h
+@@ -47,5 +47,6 @@ struct bcma_drv_mips {
+ };
  
--#define	BCMILCP_SUBTYPE_RATE		1
--#define	BCMILCP_SUBTYPE_LINK		2
--#define	BCMILCP_SUBTYPE_CSA		3
--#define	BCMILCP_SUBTYPE_LARQ		4
--#define BCMILCP_SUBTYPE_VENDOR		5
--#define	BCMILCP_SUBTYPE_FLH		17
--#define BCMILCP_SUBTYPE_VENDOR_LONG	32769
--#define BCMILCP_SUBTYPE_CERT		32770
--#define BCMILCP_SUBTYPE_SES		32771
--#define BCMILCP_BCM_SUBTYPE_RESERVED		0
--#define BCMILCP_BCM_SUBTYPE_EVENT		1
--#define BCMILCP_BCM_SUBTYPE_SES			2
--#define BCMILCP_BCM_SUBTYPE_DPT			4
--#define BCMILCP_BCM_SUBTYPEHDR_MINLENGTH	8
--#define BCMILCP_BCM_SUBTYPEHDR_VERSION		0
--
--typedef  struct bcmeth_hdr {
--	u16 subtype;
--	u16 length;
--	u8 version;
--	u8 oui[3];
--	u16 usr_subtype;
--} __attribute__((packed)) bcmeth_hdr_t;
--
- #endif				/* _BCMETH_H_ */
-diff --git a/drivers/staging/brcm80211/include/proto/bcmevent.h b/drivers/staging/brcm80211/include/proto/bcmevent.h
-index 1b60789..1f4ab64 100644
---- a/drivers/staging/brcm80211/include/proto/bcmevent.h
-+++ b/drivers/staging/brcm80211/include/proto/bcmevent.h
-@@ -19,189 +19,4 @@
+ extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
++extern u32 bcma_cpu_clock(struct bcma_drv_mips *mcore);
  
- #include <linux/if_ether.h>
- 
--#define BCM_EVENT_MSG_VERSION		1
--#define BCM_MSG_IFNAME_MAX		16
--
--#define WLC_EVENT_MSG_LINK		0x01
--#define WLC_EVENT_MSG_FLUSHTXQ		0x02
--#define WLC_EVENT_MSG_GROUP		0x04
--
--typedef struct {
--	u16 version;
--	u16 flags;
--	u32 event_type;
--	u32 status;
--	u32 reason;
--	u32 auth_type;
--	u32 datalen;
--	u8 addr[ETH_ALEN];
--	char ifname[BCM_MSG_IFNAME_MAX];
--} __attribute__((packed)) wl_event_msg_t;
--
--#ifdef BRCM_FULLMAC
--typedef struct bcm_event {
--	struct ethhdr eth;
--	bcmeth_hdr_t		bcm_hdr;
--	wl_event_msg_t		event;
--} __attribute__((packed)) bcm_event_t;
--#endif
--#define BCM_MSG_LEN	(sizeof(bcm_event_t) - sizeof(bcmeth_hdr_t) - \
--	sizeof(struct ether_header))
--
--#define WLC_E_SET_SSID		0
--#define WLC_E_JOIN		1
--#define WLC_E_START		2
--#define WLC_E_AUTH		3
--#define WLC_E_AUTH_IND		4
--#define WLC_E_DEAUTH		5
--#define WLC_E_DEAUTH_IND	6
--#define WLC_E_ASSOC		7
--#define WLC_E_ASSOC_IND		8
--#define WLC_E_REASSOC		9
--#define WLC_E_REASSOC_IND	10
--#define WLC_E_DISASSOC		11
--#define WLC_E_DISASSOC_IND	12
--#define WLC_E_QUIET_START	13
--#define WLC_E_QUIET_END		14
--#define WLC_E_BEACON_RX		15
--#define WLC_E_LINK		16
--#define WLC_E_MIC_ERROR		17
--#define WLC_E_NDIS_LINK		18
--#define WLC_E_ROAM		19
--#define WLC_E_TXFAIL		20
--#define WLC_E_PMKID_CACHE	21
--#define WLC_E_RETROGRADE_TSF	22
--#define WLC_E_PRUNE		23
--#define WLC_E_AUTOAUTH		24
--#define WLC_E_EAPOL_MSG		25
--#define WLC_E_SCAN_COMPLETE	26
--#define WLC_E_ADDTS_IND		27
--#define WLC_E_DELTS_IND		28
--#define WLC_E_BCNSENT_IND	29
--#define WLC_E_BCNRX_MSG		30
--#define WLC_E_BCNLOST_MSG	31
--#define WLC_E_ROAM_PREP		32
--#define WLC_E_PFN_NET_FOUND	33
--#define WLC_E_PFN_NET_LOST	34
--#define WLC_E_RESET_COMPLETE	35
--#define WLC_E_JOIN_START	36
--#define WLC_E_ROAM_START	37
--#define WLC_E_ASSOC_START	38
--#define WLC_E_IBSS_ASSOC	39
--#define WLC_E_RADIO		40
--#define WLC_E_PSM_WATCHDOG	41
--#define WLC_E_PROBREQ_MSG       44
--#define WLC_E_SCAN_CONFIRM_IND  45
--#define WLC_E_PSK_SUP		46
--#define WLC_E_COUNTRY_CODE_CHANGED 47
--#define	WLC_E_EXCEEDED_MEDIUM_TIME 48
--#define WLC_E_ICV_ERROR		49
--#define WLC_E_UNICAST_DECODE_ERROR 50
--#define WLC_E_MULTICAST_DECODE_ERROR 51
--#define WLC_E_TRACE		52
--#define WLC_E_IF		54
--#define WLC_E_RSSI		56
--#define WLC_E_PFN_SCAN_COMPLETE	57
--#define WLC_E_EXTLOG_MSG	58
--#define WLC_E_ACTION_FRAME      59
--#define WLC_E_ACTION_FRAME_COMPLETE 60
--#define WLC_E_PRE_ASSOC_IND	61
--#define WLC_E_PRE_REASSOC_IND	62
--#define WLC_E_CHANNEL_ADOPTED	63
--#define WLC_E_AP_STARTED	64
--#define WLC_E_DFS_AP_STOP	65
--#define WLC_E_DFS_AP_RESUME	66
--#define WLC_E_RESERVED1		67
--#define WLC_E_RESERVED2		68
--#define WLC_E_ESCAN_RESULT 	69
--#define WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE 	70
--#define WLC_E_DCS_REQUEST 73
--
--#define WLC_E_FIFO_CREDIT_MAP	74
--
--#define WLC_E_LAST		75
--
--typedef struct {
--	uint event;
--	const char *name;
--} bcmevent_name_t;
--
--extern const bcmevent_name_t bcmevent_names[];
--extern const int bcmevent_names_size;
--
--#define WLC_E_STATUS_SUCCESS		0
--#define WLC_E_STATUS_FAIL		1
--#define WLC_E_STATUS_TIMEOUT		2
--#define WLC_E_STATUS_NO_NETWORKS	3
--#define WLC_E_STATUS_ABORT		4
--#define WLC_E_STATUS_NO_ACK		5
--#define WLC_E_STATUS_UNSOLICITED	6
--#define WLC_E_STATUS_ATTEMPT		7
--#define WLC_E_STATUS_PARTIAL		8
--#define WLC_E_STATUS_NEWSCAN		9
--#define WLC_E_STATUS_NEWASSOC		10
--#define WLC_E_STATUS_11HQUIET		11
--#define WLC_E_STATUS_SUPPRESS		12
--#define WLC_E_STATUS_NOCHANS		13
--#define WLC_E_STATUS_CS_ABORT		15
--#define WLC_E_STATUS_ERROR		16
--
--#define WLC_E_REASON_INITIAL_ASSOC	0
--#define WLC_E_REASON_LOW_RSSI		1
--#define WLC_E_REASON_DEAUTH		2
--#define WLC_E_REASON_DISASSOC		3
--#define WLC_E_REASON_BCNS_LOST		4
--#define WLC_E_REASON_MINTXRATE		9
--#define WLC_E_REASON_TXFAIL		10
--
--#define WLC_E_REASON_FAST_ROAM_FAILED	5
--#define WLC_E_REASON_DIRECTED_ROAM	6
--#define WLC_E_REASON_TSPEC_REJECTED	7
--#define WLC_E_REASON_BETTER_AP		8
--
--#define WLC_E_PRUNE_ENCR_MISMATCH	1
--#define WLC_E_PRUNE_BCAST_BSSID		2
--#define WLC_E_PRUNE_MAC_DENY		3
--#define WLC_E_PRUNE_MAC_NA		4
--#define WLC_E_PRUNE_REG_PASSV		5
--#define WLC_E_PRUNE_SPCT_MGMT		6
--#define WLC_E_PRUNE_RADAR		7
--#define WLC_E_RSN_MISMATCH		8
--#define WLC_E_PRUNE_NO_COMMON_RATES	9
--#define WLC_E_PRUNE_BASIC_RATES		10
--#define WLC_E_PRUNE_CIPHER_NA		12
--#define WLC_E_PRUNE_KNOWN_STA		13
--#define WLC_E_PRUNE_WDS_PEER		15
--#define WLC_E_PRUNE_QBSS_LOAD		16
--#define WLC_E_PRUNE_HOME_AP		17
--
--#define WLC_E_SUP_OTHER			0
--#define WLC_E_SUP_DECRYPT_KEY_DATA	1
--#define WLC_E_SUP_BAD_UCAST_WEP128	2
--#define WLC_E_SUP_BAD_UCAST_WEP40	3
--#define WLC_E_SUP_UNSUP_KEY_LEN		4
--#define WLC_E_SUP_PW_KEY_CIPHER		5
--#define WLC_E_SUP_MSG3_TOO_MANY_IE	6
--#define WLC_E_SUP_MSG3_IE_MISMATCH	7
--#define WLC_E_SUP_NO_INSTALL_FLAG	8
--#define WLC_E_SUP_MSG3_NO_GTK		9
--#define WLC_E_SUP_GRP_KEY_CIPHER	10
--#define WLC_E_SUP_GRP_MSG1_NO_GTK	11
--#define WLC_E_SUP_GTK_DECRYPT_FAIL	12
--#define WLC_E_SUP_SEND_FAIL		13
--#define WLC_E_SUP_DEAUTH		14
--
--#define WLC_E_IF_ADD		1
--#define WLC_E_IF_DEL		2
--#define WLC_E_IF_CHANGE		3
--
--#define WLC_E_IF_ROLE_STA		0
--#define WLC_E_IF_ROLE_AP		1
--#define WLC_E_IF_ROLE_WDS		2
--
--#define WLC_E_LINK_BCN_LOSS	1
--#define WLC_E_LINK_DISASSOC	2
--#define WLC_E_LINK_ASSOC_REC	3
--#define WLC_E_LINK_BSSCFG_DIS	4
--
- #endif				/* _BCMEVENT_H_ */
+ #endif /* LINUX_BCMA_DRIVER_MIPS_H_ */
 -- 
 1.7.4.1
-
 
