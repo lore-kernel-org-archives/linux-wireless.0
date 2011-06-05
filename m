@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34713 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758509Ab1F3HXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 03:23:19 -0400
-Message-ID: <4E0C245F.5040107@hauke-m.de> (sfid-20110630_092323_740353_0F3383A4)
-Date: Thu, 30 Jun 2011 09:23:11 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45380 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717Ab1FEJUw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2011 05:20:52 -0400
+Received: by iwn34 with SMTP id 34so2422901iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Jun 2011 02:20:52 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Subject: Re: [RFC v3 03/13] bcma: add functions to scan cores needed on SoCs
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>	<1309385518-12097-4-git-send-email-hauke@hauke-m.de> <BANLkTimAE-xphUYeMMzzz6B531tedo6Vkw@mail.gmail.com>
-In-Reply-To: <BANLkTimAE-xphUYeMMzzz6B531tedo6Vkw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4DEB3FF3.8090904@broadcom.com>
+References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+ <1306928768-7501-44-git-send-email-rvossen@broadcom.com> <BANLkTin1hT2WT40_uozZvtX-PH5aZHqfZg@mail.gmail.com>
+ <4DE90DCE.6060207@broadcom.com> <BANLkTimQacOURw4wQzkyNizksZZj=nhvfQ@mail.gmail.com>
+ <4DEB3FF3.8090904@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 5 Jun 2011 19:20:32 +1000
+Message-ID: <BANLkTi=HrP5pSi0t-18N2yGpBueeL2qMSg@mail.gmail.com> (sfid-20110605_112102_998321_3772F68E)
+Subject: Re: [PATCH 44/83] staging: brcm80211: replaced typedef si_t with
+ struct si_pub
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2011 08:42 AM, Rafał Miłecki wrote:
-> 2011/6/30 Hauke Mehrtens <hauke@hauke-m.de>:
--		err = bcma_get_next_core(bus, &eromptr, core);
--		if (err == -ENXIO)
-+		err = bcma_get_next_core(bus, &eromptr, NULL, core_num, core);
-+		if (err == -ENODEV) {
-+			core_num++;
-+			continue;
-+		} else if (err == -ENXIO)
- 			continue;
- 		else if (err == -ESPIPE)
- 			break;
- 		else if (err < 0)
- 			return err;
+On Sun, Jun 5, 2011 at 18:36, Roland Vossen <rvossen@broadcom.com> wrote:
+> Hi Julian,
+>
+>> On Sat, Jun 4, 2011 at 02:37, Roland Vossen<rvossen@broadcom.com> �wrote:
+>>>
+>>> Hello Julian,
+>>>
+>>> the structure definition itself is already in a header file (aiutils.h).
+>>> Probably you are referring to the forward declaration used in the patch?
+>>
+>> Exactly, it probably shouldn't be here as the header file that
+>> includes the structure should arguably already be included.
+>
+> I am afraid I have to disagree with you, for the reason that by including
+> the header file you introduce unnecessary coupling. Let me elaborate. If a
+> .c file does not need to know the contents of a struct, but it only needs to
+> know that a pointer to an opaque struct, then one should not provide the C
+> file with knowledge on the internals of the struct (hence not include the .h
+> file).
 
-+		core->core_index = core_num++;
-+		bus->nr_cores++;
-+
- 		pr_info("Core %d found: %s "
- 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
--			bus->nr_cores, bcma_device_name(&core->id),
-+			core->core_index, bcma_device_name(&core->id),
- 			core->id.manuf, core->id.id, core->id.rev,
- 			core->id.class);
+Fair enough. I guess I just don't like void pointers.
 
--		core->core_index = bus->nr_cores++;
-> 
-> Didn't you just change core indexes (0, 1, ...) to numbers (1, 2,
-> ...)? It would break enabling IRQs on PCI.
-No, the cores are getting the same indexes numbers as before. While
-scanning core_num is increased for every core found also for cores we
-are not searching for or we already found. Then core_num will be
-assigned to core->core_index. bus->nr_cores is no used any more so it
-could be removed or is it needed for something else?
+Thanks,
 
-As you can see here [0] it finds core 0 and 3 at first and then the others.
-> 
-> Didn't test it however yet, I'll have access to my machines tomorrow.
-> 
+-- 
+Julian Calaby
 
-Hauke
-
-[0] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/71851
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
