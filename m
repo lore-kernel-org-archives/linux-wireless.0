@@ -1,28 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40162 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210Ab1FUPue (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58778 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742Ab1FERH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 11:50:34 -0400
-Received: by iyb12 with SMTP id 12so2953681iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 08:50:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1308669921-28413-1-git-send-email-hauke@hauke-m.de>
-References: <1308669921-28413-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 21 Jun 2011 08:50:14 -0700
-Message-ID: <BANLkTikCy2NrMGextDwW8Z9ewJMjVv8U0Q@mail.gmail.com> (sfid-20110621_175038_174177_2D0D1243)
-Subject: Re: [PATCH] compat-wireless: make patches apply again
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 5 Jun 2011 13:07:58 -0400
+Date: Sun, 5 Jun 2011 20:10:42 +0300
+From: Sergei Trofimovich <slyich@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: 3.0.0-rc1: dmesg shows 'wlan%d' instead of 'wlan0'
+Message-ID: <20110605201042.21c86763@sf> (sfid-20110605_190829_907742_31A41E34)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/+lgUSj/K3nJ0QJNuiAPvc9o"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 8:25 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+--Sig_/+lgUSj/K3nJ0QJNuiAPvc9o
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-applied and pushed, thanks!
+Recently I've noticed small discrepancy in dmesg:
 
- Luis
+$ { zcat messages.2.gz messages.1.gz; cat messages; } | egrep "(deauthen|Li=
+nux version)"
+...
+May 21 22:01:31 sf kernel: [    0.000000] Linux version 2.6.39-00004-g29c77=
+fa (slyfox@sf) (gcc version 4.4.5 (Gentoo 4.4.5 p1.2, pie-0.4.5) ) #116 SMP=
+ PREEMPT Thu May 19 22:46:16 EEST 2011
+May 24 05:37:54 sf kernel: [81845.885094] wlan0: deauthenticated from ...
+
+Jun  1 22:38:38 sf kernel: [    0.000000] Linux version 3.0.0-rc1-00035-g79=
+f3f61 (slyfox@sf) (gcc version 4.4.5 (Gentoo 4.4.5 p1.2, pie-0.4.5) ) #118 =
+SMP PREEMPT Wed Jun 1 22:14:46 EEST 2011
+Jun  1 23:41:23 sf kernel: [ 3877.773727] wlan%d: deauthenticating from ...
+
+Jun  1 23:42:16 sf kernel: [    0.000000] Linux version 3.0.0-rc1-00035-g79=
+f3f61-dirty (slyfox@sf) (gcc version 4.4.5 (Gentoo 4.4.5 p1.2, pie-0.4.5) )=
+ #119 SMP PREEMPT Wed Jun 1 23:35:43 EEST 2011
+Jun  2 07:35:10 sf kernel: [ 5972.879970] wlan%d: deauthenticated from ...
+
+Here we see 'wlan0' -> 'wlan%d' switch. I presume those lines go from firmw=
+are
+(and not from userspace).
+
+The card is an iwl4965
+
+10:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN [=
+Kedron] Network Connection (rev 61)
+
+--=20
+
+  Sergei
+
+--Sig_/+lgUSj/K3nJ0QJNuiAPvc9o
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEARECAAYFAk3ruJgACgkQcaHudmEf86q3PQCfadOI+AYwBmOs5785ITPcR+g+
+9+oAn39cmDrXl5GE395hcGzovnF9FMH2
+=1EiS
+-----END PGP SIGNATURE-----
+
+--Sig_/+lgUSj/K3nJ0QJNuiAPvc9o--
