@@ -1,73 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44743 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab1F0Oxn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 10:53:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <BANLkTi=XYQYee_AoKOXXmO4krwscP_qo4g@mail.gmail.com>
-References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-	<BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
-	<BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
-	<4E089730.1080306@gnu.org>
-	<BANLkTi=XYQYee_AoKOXXmO4krwscP_qo4g@mail.gmail.com>
-Date: Mon, 27 Jun 2011 16:53:42 +0200
-Message-ID: <BANLkTi=NNP+-jsR34CdzJ=ygJ=-izRbSXg@mail.gmail.com> (sfid-20110627_165403_593903_27A52EC4)
-Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	Alexey Dobriyan <adobriyan@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33039 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756156Ab1FEWIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2011 18:08:19 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org
+Cc: zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC][PATCH 03/10] bcma: add embedded bus
+Date: Mon,  6 Jun 2011 00:07:31 +0200
+Message-Id: <1307311658-15853-4-git-send-email-hauke@hauke-m.de> (sfid-20110606_000822_492248_23C42BA9)
+In-Reply-To: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/27 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/6/27 Pavel Roskin <proski@gnu.org>:
->> On 06/27/2011 10:24 AM, Alexey Dobriyan wrote:
->>> 2011/6/27 Rafał Miłecki<zajec5@gmail.com>:
->>>> 2011/6/26 Geert Uytterhoeven<geert@linux-m68k.org>:
->>>>>
->>>>> m68k allmodconfig:
->>>>>
->>>>> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
->>>>> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
->>>>
->>>> We already include slab.h in:
->>>> host_pci.c
->>>> scan.c
->>>> sprom.c
->>>>
->>>> Maybe we can just include this in bcma.h as a better solution?
->>>
->>> It isn't better solution.
->>> It results in situation where unnecessary inclusion will be done.
->>> Maybe it's not the case now, but it will be in future.
->>
->> I agree.  kfree() is used in main.c, not in bcma.h.  There is no need for
->> all files that include bcma.h to include linux/slab.h, especially (but not
->> only) because bcma.h is not a private header.
->
-> You ignore the fact I clarified my idea to use bcma_private.h instead of bcma.h.
+This patch adds support for using bcma on an embedded bus. An embedded
+system like the bcm4716 could register this bus and it searches for the
+bcma cores then.
 
-One day A Cleaner will remove it again, seeing bcma_private.h doesn't
-use any slab
-interface, and it still seems to compile on his platform of choice
-(which implicitly
-pulls in slab.h).
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/Kconfig               |    5 ++
+ drivers/bcma/Makefile              |    1 +
+ drivers/bcma/host_embedded.c       |   93 ++++++++++++++++++++++++++++++++++++
+ drivers/bcma/main.c                |    1 +
+ drivers/bcma/scan.c                |   29 ++++++++++-
+ include/linux/bcma/bcma.h          |    3 +
+ include/linux/bcma/bcma_embedded.h |    8 +++
+ 7 files changed, 138 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/bcma/host_embedded.c
+ create mode 100644 include/linux/bcma/bcma_embedded.h
 
-If it's put in main.c, The Cleaner will notice main.c uses kfree(),
-and won't touch it.
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 83e9adf..0390e32 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -27,6 +27,11 @@ config BCMA_HOST_PCI
+ 	bool "Support for BCMA on PCI-host bus"
+ 	depends on BCMA_HOST_PCI_POSSIBLE
+ 
++config BCMA_HOST_EMBEDDED
++	bool
++	depends on BCMA && MIPS
++	default n
++
+ config BCMA_DEBUG
+ 	bool "BCMA debugging"
+ 	depends on BCMA
+diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
+index 0d56245..e509b1b 100644
+--- a/drivers/bcma/Makefile
++++ b/drivers/bcma/Makefile
+@@ -2,6 +2,7 @@ bcma-y					+= main.o scan.o core.o
+ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
+ bcma-y					+= driver_pci.o
+ bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
++bcma-$(CONFIG_BCMA_HOST_EMBEDDED)	+= host_embedded.o
+ obj-$(CONFIG_BCMA)			+= bcma.o
+ 
+ ccflags-$(CONFIG_BCMA_DEBUG)		:= -DDEBUG
+diff --git a/drivers/bcma/host_embedded.c b/drivers/bcma/host_embedded.c
+new file mode 100644
+index 0000000..6942440
+--- /dev/null
++++ b/drivers/bcma/host_embedded.c
+@@ -0,0 +1,93 @@
++/*
++ * Broadcom specific AMBA
++ * PCI Host
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include "bcma_private.h"
++#include "scan.h"
++#include <linux/bcma/bcma.h>
++
++static u8 bcma_host_bcma_read8(struct bcma_device *core, u16 offset)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	return readb(core->bus->mmio + offset);
++}
++
++static u16 bcma_host_bcma_read16(struct bcma_device *core, u16 offset)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	return readw(core->bus->mmio + offset);
++}
++
++static u32 bcma_host_bcma_read32(struct bcma_device *core, u16 offset)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	return readl(core->bus->mmio + offset);
++}
++
++static void bcma_host_bcma_write8(struct bcma_device *core, u16 offset,
++				 u8 value)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	writeb(value, core->bus->mmio + offset);
++}
++
++static void bcma_host_bcma_write16(struct bcma_device *core, u16 offset,
++				 u16 value)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	writew(value, core->bus->mmio + offset);
++}
++
++static void bcma_host_bcma_write32(struct bcma_device *core, u16 offset,
++				 u32 value)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	writel(value, core->bus->mmio + offset);
++}
++
++static u32 bcma_host_bcma_aread32(struct bcma_device *core, u16 offset)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	return readl(core->bus->host_embedded + offset);
++}
++
++static void bcma_host_bcma_awrite32(struct bcma_device *core, u16 offset,
++				  u32 value)
++{
++	offset += core->core_index * BCMA_CORE_SIZE;
++	writel(value, core->bus->host_embedded + offset);
++}
++
++const struct bcma_host_ops bcma_host_bcma_ops = {
++	.read8		= bcma_host_bcma_read8,
++	.read16		= bcma_host_bcma_read16,
++	.read32		= bcma_host_bcma_read32,
++	.write8		= bcma_host_bcma_write8,
++	.write16	= bcma_host_bcma_write16,
++	.write32	= bcma_host_bcma_write32,
++	.aread32	= bcma_host_bcma_aread32,
++	.awrite32	= bcma_host_bcma_awrite32,
++};
++
++int bcma_host_bcma_register(struct bcma_bus *bus)
++{
++	u32 __iomem *mmio;
++
++	/* iomap only first core. We have to read some register on this core
++	 * to get the number of cores. This is sone in bcma_scan()
++	 */
++	mmio = ioremap(BCMA_ADDR_BASE, BCMA_CORE_SIZE * 1);
++	if (!mmio)
++		return -ENOMEM;
++	bus->mmio = mmio;
++
++	/* Host specific */
++	bus->hosttype = BCMA_HOSTTYPE_EMBEDDED;
++	bus->ops = &bcma_host_bcma_ops;
++
++	/* Register */
++	return bcma_bus_register(bus);
++}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 1afa107..c5bcb5f 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -119,6 +119,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 			break;
+ 		case BCMA_HOSTTYPE_NONE:
+ 		case BCMA_HOSTTYPE_SDIO:
++		case BCMA_HOSTTYPE_EMBEDDED:
+ 			break;
+ 		}
+ 
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 70b39f7..9229615 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -203,7 +203,7 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
+ int bcma_bus_scan(struct bcma_bus *bus)
+ {
+ 	u32 erombase;
+-	u32 __iomem *eromptr, *eromend;
++	u32 __iomem *eromptr, *eromend, *mmio;
+ 
+ 	s32 cia, cib;
+ 	u8 ports[2], wrappers[2];
+@@ -219,9 +219,34 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	bus->chipinfo.id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
+ 	bus->chipinfo.rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
+ 	bus->chipinfo.pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
++	bus->nr_cores = (tmp & BCMA_CC_ID_NRCORES) >> BCMA_CC_ID_NRCORES_SHIFT;
++
++	/* If we are an embedded device we now know the number of avaliable
++	 * core and ioremap the correct space.
++	 */
++	if (bus->hosttype == BCMA_HOSTTYPE_EMBEDDED) {
++		iounmap(bus->mmio);
++		mmio = ioremap(BCMA_ADDR_BASE, BCMA_CORE_SIZE * bus->nr_cores);
++		if (!mmio)
++			return -ENOMEM;
++		bus->mmio = mmio;
++
++		mmio = ioremap(BCMA_WRAP_BASE, BCMA_CORE_SIZE * bus->nr_cores);
++		if (!mmio)
++			return -ENOMEM;
++		bus->host_embedded = mmio;
++	}
++	/* reset it to 0 as we use it for counting */
++	bus->nr_cores = 0;
+ 
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+-	eromptr = bus->mmio;
++	if (bus->hosttype == BCMA_HOSTTYPE_EMBEDDED) {
++		eromptr = ioremap(erombase, BCMA_CORE_SIZE);
++		if (!eromptr)
++			return -ENOMEM;
++	} else
++		eromptr = bus->mmio;
++
+ 	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
+ 
+ 	bcma_scan_switch_core(bus, erombase);
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 8b6feca..192c4ae 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -16,6 +16,7 @@ enum bcma_hosttype {
+ 	BCMA_HOSTTYPE_NONE,
+ 	BCMA_HOSTTYPE_PCI,
+ 	BCMA_HOSTTYPE_SDIO,
++	BCMA_HOSTTYPE_EMBEDDED,
+ };
+ 
+ struct bcma_chipinfo {
+@@ -185,6 +186,8 @@ struct bcma_bus {
+ 		struct pci_dev *host_pci;
+ 		/* Pointer to the SDIO device (only for BCMA_HOSTTYPE_SDIO) */
+ 		struct sdio_func *host_sdio;
++		/* Pointer to the embedded iomem (only for BCMA_HOSTTYPE_EMBEDDED) */
++		void __iomem *host_embedded;
+ 	};
+ 
+ 	struct bcma_chipinfo chipinfo;
+diff --git a/include/linux/bcma/bcma_embedded.h b/include/linux/bcma/bcma_embedded.h
+new file mode 100644
+index 0000000..0faf46d
+--- /dev/null
++++ b/include/linux/bcma/bcma_embedded.h
+@@ -0,0 +1,8 @@
++#ifndef LINUX_BCMA_EMBEDDED_H_
++#define LINUX_BCMA_EMBEDDED_H_
++
++#include <linux/bcma/bcma.h>
++
++extern int bcma_host_bcma_register(struct bcma_bus *bus);
++
++#endif /* LINUX_BCMA_EMBEDDED_H_ */
+-- 
+1.7.4.1
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
