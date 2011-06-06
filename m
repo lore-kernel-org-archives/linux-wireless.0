@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35507 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab1FFKCt (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:39757 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab1FFJeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 06:02:49 -0400
-Received: by wwa36 with SMTP id 36so3616452wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:02:48 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: check the vif's operstate after join
-Date: Mon,  6 Jun 2011 13:03:12 +0300
-Message-Id: <1307354592-32685-1-git-send-email-eliad@wizery.com> (sfid-20110606_120252_585244_138CAD2C)
+	Mon, 6 Jun 2011 05:34:01 -0400
+Date: Mon, 6 Jun 2011 14:54:17 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: disable transmission buffer aggregation for
+ AMSDU packets
+Message-ID: <20110606092416.GD28199@hertz.marvell.com> (sfid-20110606_113404_970375_91ABD3E5)
+References: <20110606091615.GA28184@hertz.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110606091615.GA28184@hertz.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When resuming while connected (without wowlan), the interface
-is already IF_OPER_UP, so we won't get the notifier callback,
-and hence never complete the association (from wl12xx perspective)
+Padding per MSDU will affect the length of next packet and hence
+the exact length of next packet is uncertain here.
 
-This situation, among other potential problems, prevents the
-station from entering psm.
+Also, aggregation of transmission buffer, while downloading the
+data to the card, wont gain much on the AMSDU packets as the AMSDU
+packets utilizes the transmission buffer space to the maximum
+(adapter->tx_buf_size).
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
-(this patch depends on the "mac80211: add ieee80211_get_operstate() function"
-patch)
+ drivers/net/wireless/mwifiex/11n_aggr.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/wl12xx/main.c |   23 ++++++++++++++++++-----
- 1 files changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fb0f764..546bcc2 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -393,6 +393,22 @@ static struct platform_device wl1271_device = {
- static DEFINE_MUTEX(wl_list_mutex);
- static LIST_HEAD(wl_list);
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 25312e4..1a453a6 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -233,11 +233,19 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  
-+static int wl1271_check_operstate(struct wl1271 *wl, unsigned char operstate)
-+{
-+	int ret;
-+	if (operstate != IF_OPER_UP)
-+		return 0;
+ 	skb_push(skb_aggr, headroom);
+ 
+-	tx_param.next_pkt_len = ((pra_list->total_pkts_size) ?
+-				 (((pra_list->total_pkts_size) >
+-				   adapter->tx_buf_size) ? adapter->
+-				  tx_buf_size : pra_list->total_pkts_size +
+-				  LLC_SNAP_LEN + sizeof(struct txpd)) : 0);
++	/*
++	 * Padding per MSDU will affect the length of next
++	 * packet and hence the exact length of next packet
++	 * is uncertain here.
++	 *
++	 * Also, aggregation of transmission buffer, while
++	 * downloading the data to the card, wont gain much
++	 * on the AMSDU packets as the AMSDU packets utilizes
++	 * the transmission buffer space to the maximum
++	 * (adapter->tx_buf_size).
++	 */
++	tx_param.next_pkt_len = 0;
 +
-+	if (test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags))
-+		return 0;
-+
-+	ret = wl1271_cmd_set_sta_state(wl);
-+	if (ret < 0)
-+		return ret;
-+
-+	wl1271_info("Association completed.");
-+	return 0;
-+}
- static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
- 			     void *arg)
- {
-@@ -442,11 +458,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
- 	if (ret < 0)
- 		goto out;
- 
--	if ((dev->operstate == IF_OPER_UP) &&
--	    !test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags)) {
--		wl1271_cmd_set_sta_state(wl);
--		wl1271_info("Association completed.");
--	}
-+	wl1271_check_operstate(wl, dev->operstate);
- 
- 	wl1271_ps_elp_sleep(wl);
- 
-@@ -3178,6 +3190,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			wl1271_warning("cmd join failed %d", ret);
- 			goto out;
- 		}
-+		wl1271_check_operstate(wl, ieee80211_get_operstate(vif));
- 	}
- 
- out:
+ 	ret = adapter->if_ops.host_to_card(adapter, MWIFIEX_TYPE_DATA,
+ 					     skb_aggr->data,
+ 					     skb_aggr->len, &tx_param);
 -- 
-1.7.0.4
+1.7.3.5
 
