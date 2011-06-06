@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40131 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752990Ab1F2TFB (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49860 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133Ab1FFKvK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 15:05:01 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id B4D11540055
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 15:12:27 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110629190500.9C63240EC7@repository3.orbit-lab.org> (sfid-20110629_210509_158698_2984EA9F)
-Date: Wed, 29 Jun 2011 15:05:00 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 6 Jun 2011 06:51:10 -0400
+Received: by qwk3 with SMTP id 3so1582545qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:51:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1307356322.28734.11.camel@dev.znau.edu.ua>
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+	<1307311658-15853-4-git-send-email-hauke@hauke-m.de>
+	<BANLkTi=T6xO9q+vOCk5Fu+2J_nUTwX3dcg@mail.gmail.com>
+	<1307356322.28734.11.camel@dev.znau.edu.ua>
+Date: Mon, 6 Jun 2011 12:51:09 +0200
+Message-ID: <BANLkTimkKFAEfbKaWo81=uyuDS=gjESHAw@mail.gmail.com> (sfid-20110606_125114_647922_5E957756)
+Subject: Re: [RFC][PATCH 03/10] bcma: add embedded bus
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, mb@bu3sch.de, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   ce3bc79..89a736d  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 7b31fe9...28c9310 akpm-end   -> origin/akpm-end  (forced update)
- + 04c93b7...b0af8df akpm-start -> origin/akpm-start  (forced update)
-   de335a4..b0e1893  history    -> origin/history
- + ff28b39...3c2ce3e master     -> origin/master  (forced update)
-   4d258b2..b0af8df  stable     -> origin/stable
- * [new tag]         next-20110629 -> next-20110629
- * [new tag]         v3.0-rc5   -> v3.0-rc5
+W dniu 6 czerwca 2011 12:32 użytkownik George Kashperko
+<george@znau.edu.ua> napisał:
+> Hi,
+>
+>> Hauke,
+>>
+>> My idea for naming schema was to use:
+>> bcma_host_TYPE_*
+>>
+>> Like:
+>> bcma_host_pci_*
+>> bcma_host_sdio_*
+>>
+>> You are using:
+>> bcma_host_bcma_*
+>>
+>> What do you think about changing this to:
+>> bcma_host_embedded_*
+>> or just some:
+>> bcma_host_emb_*
+>> ?
+>>
+>> Does it make more sense to you? I was trying to keep names in bcma
+>> really clear, so every first-time-reader can see differences between
+>> hosts, host and driver, etc.
+>
+> how about bcma_host_soc ?
 
-compat-wireless code metrics
+We get then inconsistency with "BCMA_HOSTTYPE_EMBEDDED". I'd like to
+1) See something like bcma_host_emb...
+xor
+2) Use bcma_host_soc_* and BCMA_HOSTTYPE_SOC
 
-    838787 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8125 - backport from compat module
-     10505 - total backport code
-    1.2524 - % of code consists of backport work
+-- 
+Rafał
