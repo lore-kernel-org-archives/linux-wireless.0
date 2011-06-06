@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33173 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756591Ab1FIWFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:05:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/5] compat: add KEY_WPS_BUTTON
-Date: Fri, 10 Jun 2011 00:04:46 +0200
-Message-Id: <1307657087-23900-4-git-send-email-hauke@hauke-m.de> (sfid-20110610_000524_902311_699AC1C9)
-In-Reply-To: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
-References: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
+Received: from shards.monkeyblade.net ([198.137.202.13]:53838 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757043Ab1FFU0y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 16:26:54 -0400
+Date: Mon, 06 Jun 2011 13:25:49 -0700 (PDT)
+Message-Id: <20110606.132549.1074295213687787615.davem@davemloft.net> (sfid-20110606_222716_031075_802B5BE0)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2011-06-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110606190427.GH2604@tuxdriver.com>
+References: <20110606190427.GH2604@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed for carl9170.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 6 Jun 2011 15:04:27 -0400
 
-Add to compat-3.0-stable
----
- include/linux/compat-2.6.34.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> Here are a few more fixes intended for 3.0 -- a libertas fix for a
+> regression related to spurious interrupts, an ath5k fix to disable
+> "fast" channel switching (since it caused a number of devices to
+> regress in performance), an ssb fix for a regression that was applying
+> PCIe workarounds to PCI devices (causing a machine check), an fix for an
+> iwlagn locking regression, and a mac80211 fix for a device-naming
+> regression.
+> 
+> Please let me know if there are problems!
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 663a67e..9743d6c 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -251,6 +251,8 @@ static inline int usb_disable_autosuspend(struct usb_device *udev)
- 
- #define rcu_dereference_raw(p)	rcu_dereference(p)
- 
-+#define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
--- 
-1.7.4.1
-
+Pulled, thanks John.
