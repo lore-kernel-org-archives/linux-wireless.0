@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753494Ab1FRQFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/25] iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
-Date: Sat, 18 Jun 2011 08:34:19 -0700
-Message-Id: <1308411271-26093-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180554_854905_AA844E9C)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43334 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804Ab1FFJcq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 05:32:46 -0400
+Subject: Re: problems with hwcrypt
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>
+In-Reply-To: <4DE9EF9A.1030803@01019freenet.de> (sfid-20110604_104050_418138_29821500)
+References: <4DE9EF9A.1030803@01019freenet.de>
+	 (sfid-20110604_104050_418138_29821500)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Jun 2011 11:32:41 +0200
+Message-ID: <1307352761.3894.0.camel@jlt3.sipsolutions.net> (sfid-20110606_113251_361248_F38ADCCE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Sat, 2011-06-04 at 10:40 +0200, Andreas Hartmann wrote:
 
-The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
+> Jun  4 09:44:52 pc kernel: [ 8517.220574] ------------[ cut here
+> ]------------
+> Jun  4 09:44:52 pc kernel: [ 8517.220595] WARNING: at
+> /raid/home/andreas/tttt/compat-wireless-2011-05-31/net/mac80211/wpa.c:397 ccmp_encrypt_skb+0xc4/0x1f0
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+This is to blame on
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index eeb31bc..1ff8e4b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3352,10 +3352,6 @@ struct ieee80211_ops iwlagn_hw_ops = {
- 
- static u32 iwl_hw_detect(struct iwl_priv *priv)
- {
--	u8 rev_id;
--
--	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID, &rev_id);
--	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
- 	return iwl_read32(priv, CSR_HW_REV);
- }
- 
--- 
-1.7.0.4
+commit aac6af5534fade2b18682a0b9efad1a6c04c34c6
+Author: Yogesh Ashok Powar <yogeshp@marvell.com>
+Date:   Wed Apr 27 18:40:29 2011 +0530
+
+    mac80211: Skip tailroom reservation for full HW-crypto devices
+
+
+John, please revert this for 3.0, Yogesh, please fix the races before
+you resubmit.
+
+johannes
 
