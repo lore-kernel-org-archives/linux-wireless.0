@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:51486 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124Ab1F3T0g (ORCPT
+Received: from mta21.charter.net ([216.33.127.81]:63505 "EHLO
+	mta21.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160Ab1FFAaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 15:26:36 -0400
-Received: by fxd18 with SMTP id 18so2559967fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 12:26:34 -0700 (PDT)
-Message-Id: <0d4976ade6aa9b6b84f68f27c55ec75ec2e8f4d7.1309459253.git.chunkeey@googlemail.com> (sfid-20110630_212640_071561_8EF9744C)
-In-Reply-To: <48506f4c6ef4578f748a77e2c7bca7374cf1a187.1309459253.git.chunkeey@googlemail.com>
-References: <48506f4c6ef4578f748a77e2c7bca7374cf1a187.1309459253.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Thu, 30 Jun 2011 20:31:34 +0200
-Subject: [PATCH 2/3] carl9170: enable IEEE80211_HW_NEED_DTIM_PERIOD
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Sun, 5 Jun 2011 20:30:19 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: linville@tuxdriver.com
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH] iwlwifi: remove unecessary if statement
+Date: Sun,  5 Jun 2011 19:30:11 -0500
+Message-Id: <1307320211-31371-1-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110606_023050_968248_5C77717F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+the code always returns ret regardless, so if(ret) check is unecessary.
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 54d093c..06b9d49 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1577,6 +1577,7 @@ void *carl9170_alloc(size_t priv_size)
- 		     IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		     IEEE80211_HW_SUPPORTS_PS |
- 		     IEEE80211_HW_PS_NULLFUNC_STACK |
-+		     IEEE80211_HW_NEED_DTIM_PERIOD |
- 		     IEEE80211_HW_SIGNAL_DBM;
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index a95ad84..e40ad23 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -163,9 +163,6 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv,
  
- 	if (!modparam_noht) {
+ 	ret = iwl_send_cmd_pdu_async(priv, ctx->rxon_assoc_cmd,
+ 				     sizeof(rxon_assoc), &rxon_assoc, NULL);
+-	if (ret)
+-		return ret;
+-
+ 	return ret;
+ }
+ 
 -- 
-1.7.5.4
+1.7.2.5
 
