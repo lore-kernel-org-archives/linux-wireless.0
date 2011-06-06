@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50196 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595Ab1FIPeb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43341 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab1FFJfD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 11:34:31 -0400
-Received: by wya21 with SMTP id 21so1213895wya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 08:34:30 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat: define create_freezable_workqueue
-Date: Thu,  9 Jun 2011 18:35:03 +0300
-Message-Id: <1307633703-1279-1-git-send-email-eliad@wizery.com> (sfid-20110609_173435_867300_A7A19C94)
+	Mon, 6 Jun 2011 05:35:03 -0400
+Subject: Re: [PATCH v3] 802.11n frame injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTim_YzVXG5g+92AkvJhhQ4OkeW4wMw@mail.gmail.com> (sfid-20110604_194333_802760_1207A93C)
+References: <BANLkTim_YzVXG5g+92AkvJhhQ4OkeW4wMw@mail.gmail.com>
+	 (sfid-20110604_194333_802760_1207A93C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Jun 2011 11:35:01 +0200
+Message-ID: <1307352901.3894.2.camel@jlt3.sipsolutions.net> (sfid-20110606_113507_033122_74845754)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-create_freezeable_workqueue() was renamed to
-create_freezable_workqueue().
+On Sat, 2011-06-04 at 19:42 +0200, Matteo Croce wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- include/linux/compat-2.6.38.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> +		case IEEE80211_RADIOTAP_RATE: {
+> +			struct ieee80211_supported_band *sband =
+> +				tx->local->hw.wiphy->bands[tx->channel->band];
+> +			info->control.rates[0].idx = 0;
+> +			if (*iterator.this_arg) {
+> +				int i;
+> +				for (i = 0; i < sband->n_bitrates; i++)
+> +					if (sband->bitrates[i].bitrate ==
+> +						*iterator.this_arg * 5) {
+> +						info->control.rates[0].idx = i;
+> +						break;
 
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-index 004fe27..2dd1910 100644
---- a/include/linux/compat-2.6.38.h
-+++ b/include/linux/compat-2.6.38.h
-@@ -39,6 +39,7 @@ static inline unsigned long ewma_read(const struct ewma *avg)
- }
- 
- #define pr_warn pr_warning
-+#define create_freezable_workqueue create_freezeable_workqueue
- 
- static inline int skb_checksum_start_offset(const struct sk_buff *skb)
- {
--- 
-1.7.0.4
+I don't think you should set the index if the bitrate doesn't exist.
+
+Also, have you actually _tested_ this patch? I see nothing that would
+cause rate control to be skipped, so rate control should always override
+the data you set up here.
+
+johannes
 
