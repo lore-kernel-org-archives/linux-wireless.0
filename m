@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43919 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758042Ab1FVUQc (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37700 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794Ab1FFLeQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 16:16:32 -0400
-Date: Wed, 22 Jun 2011 16:04:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix rx->key NULL dereference during mic failure
-Message-ID: <20110622200419.GD13533@tuxdriver.com> (sfid-20110622_221635_405345_A4E310DC)
-References: <1308422749-16939-1-git-send-email-arik@wizery.com>
- <87ips11tc3.fsf@purkki.adurom.net>
+	Mon, 6 Jun 2011 07:34:16 -0400
+Received: by qwk3 with SMTP id 3so1596789qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 04:34:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ips11tc3.fsf@purkki.adurom.net>
+In-Reply-To: <1307311658-15853-8-git-send-email-hauke@hauke-m.de>
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+	<1307311658-15853-8-git-send-email-hauke@hauke-m.de>
+Date: Mon, 6 Jun 2011 13:34:15 +0200
+Message-ID: <BANLkTi=6F_T1vwJL3e0DMbKhuFjjnF5pAQ@mail.gmail.com> (sfid-20110606_133420_208742_52FFDE0A)
+Subject: Re: [RFC][PATCH 07/10] bcma: add pci(e) host mode
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 19, 2011 at 11:04:12PM +0300, Kalle Valo wrote:
-> Arik Nemtsov <arik@wizery.com> writes:
-> 
-> > Sometimes when reporting a MIC failure rx->key may be unset. This
-> > code path is hit when receiving a packet meant for a multicast
-> > address, and decryption is performed in HW.
-> >
-> > Fortunately, the failing key_idx is not used for anything up to
-> > (and including) usermode, so we allow ourselves to set a bogus one
-> > when a key cannot be retrieved.
-> 
-> [...]
-> 
-> > -	mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
-> > +	mac80211_ev_michael_mic_failure(rx->sdata,
-> > +					rx->key ? rx->key->conf.keyidx : -1,
-> >  					(void *) skb->data, NULL, GFP_ATOMIC);
-> 
-> In special cases like this a comment in the code would be nice.
+2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
+> +#ifdef CONFIG_BCMA_PCICORE_HOSTMODE
+> +/* driver_pci_host.c */
+> +extern int bcma_pcicore_is_in_hostmode(struct bcma_drv_pci *pc);
+> +extern void bcma_pcicore_init_hostmode(struct bcma_drv_pci *pc);
+> +#endif /* CONFIG_BCMA_PCICORE_HOSTMODE */
 
-Repost with a comment, as Kalle requested?
+I don't know if I'm overreacting, but I really don't like naming mess
+in the ssb.
+
+Why don't you use bcma_core_pci_* to be consistent?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
