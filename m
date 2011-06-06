@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:56988 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599Ab1FTRvu (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:39751 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804Ab1FFJco (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 13:51:50 -0400
-Received: by yxi11 with SMTP id 11so2178645yxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:51:49 -0700 (PDT)
-From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: [RFC][PATCH v2 0/7] NFC subsystem
-Date: Mon, 20 Jun 2011 14:50:05 -0300
-Message-Id: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110620_195153_187956_B7AAA7BF)
+	Mon, 6 Jun 2011 05:32:44 -0400
+Date: Mon, 6 Jun 2011 14:53:02 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: adding check for enough space before padding
+Message-ID: <20110606092300.GC28199@hertz.marvell.com> (sfid-20110606_113250_823097_050052D5)
+References: <20110606091615.GA28184@hertz.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110606091615.GA28184@hertz.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This v2 includes (1) changes on the 'targets_found' report and (2) addition of
-support to report dump consistency.
+All MSDUs, except the last one in an AMSDU, should end up at 4
+bytes boundary. There is need to check if enough skb_tailroom
+space exists before padding the skb.
 
-Due to the size limit of netlink messages, now NFC_EVENT_TARGETS_FOUND only
-informs that new targets were found in a specific device. The userspace must
-call NFC_CMD_GET_TARGET netlink command to get such list.
+Also re-arranging code for better readablity.
 
-In order to inform an eventual dump inconsistency to userspace, generation
-counters are being used internally. For each message to be sent in a dump,
-genl_dump_check_consistent() is called to check if the current message comes
-from a newer generation than previous messages. In that case, the message is
-flagged with NLM_F_DUMP_INTR.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c |   22 ++++++++++++++--------
+ 1 files changed, 14 insertions(+), 8 deletions(-)
 
-The function genl_dump_check_consistent() and the flag NLM_F_DUMP_INTR were
-added by Johannes Berg's patch, which was just sent to netdev and wireless
-kernel lists. As a reference, I added the Johannes's patch at the beggining of
-this patch series. That's the reason to flag this patch series as RFC.
-
-Aloisio Almeida Jr (3):
-  NFC: add NFC socket family
-  NFC: pn533: add NXP pn533 nfc device driver
-  NFC: add Documentation/networking/nfc.txt
-
-Johannes Berg (1):
-  netlink: advertise incomplete dumps
-
-Lauro Ramos Venancio (3):
-  NFC: add nfc subsystem core
-  NFC: add nfc generic netlink interface
-  NFC: add the NFC socket raw protocol
-
- Documentation/networking/nfc.txt |  127 +++
- drivers/Kconfig                  |    2 -
- drivers/Makefile                 |    1 +
- drivers/nfc/Kconfig              |   24 +-
- drivers/nfc/Makefile             |    3 +
- drivers/nfc/pn533.c              | 1630 ++++++++++++++++++++++++++++++++++++++
- include/linux/netlink.h          |    2 +
- include/linux/nfc.h              |  125 +++
- include/linux/socket.h           |    4 +-
- include/net/genetlink.h          |   32 +
- include/net/netlink.h            |   24 +
- include/net/nfc.h                |  152 ++++
- net/Kconfig                      |    1 +
- net/Makefile                     |    1 +
- net/core/sock.c                  |    6 +-
- net/netlink/af_netlink.c         |    2 +
- net/nfc/Kconfig                  |   24 +
- net/nfc/Makefile                 |    9 +
- net/nfc/af_nfc.c                 |   98 +++
- net/nfc/core.c                   |  438 ++++++++++
- net/nfc/netlink.c                |  537 +++++++++++++
- net/nfc/nfc.h                    |  110 +++
- net/nfc/rawsock.c                |  351 ++++++++
- 23 files changed, 3685 insertions(+), 18 deletions(-)
- create mode 100644 Documentation/networking/nfc.txt
- create mode 100644 drivers/nfc/pn533.c
- create mode 100644 include/linux/nfc.h
- create mode 100644 include/net/nfc.h
- create mode 100644 net/nfc/Kconfig
- create mode 100644 net/nfc/Makefile
- create mode 100644 net/nfc/af_nfc.c
- create mode 100644 net/nfc/core.c
- create mode 100644 net/nfc/netlink.c
- create mode 100644 net/nfc/nfc.h
- create mode 100644 net/nfc/rawsock.c
-
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index aee3491..25312e4 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -185,16 +185,15 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 	tx_info_aggr->bss_index = tx_info_src->bss_index;
+ 	skb_aggr->priority = skb_src->priority;
+ 
+-	while (skb_src && ((skb_headroom(skb_aggr) + skb_src->len
+-					+ LLC_SNAP_LEN)
+-				<= adapter->tx_buf_size)) {
++	do {
++		/* Check if AMSDU can accommodate this MSDU */
++		if (skb_tailroom(skb_aggr) < (skb_src->len + LLC_SNAP_LEN))
++			break;
+ 
+ 		skb_src = skb_dequeue(&pra_list->skb_head);
+ 
+-		if (skb_src) {
+-			pra_list->total_pkts_size -= skb_src->len;
+-			pra_list->total_pkts--;
+-		}
++		pra_list->total_pkts_size -= skb_src->len;
++		pra_list->total_pkts--;
+ 
+ 		atomic_dec(&priv->wmm.tx_pkts_queued);
+ 
+@@ -212,8 +211,15 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 			return -1;
+ 		}
+ 
++		if (skb_tailroom(skb_aggr) < pad) {
++			pad = 0;
++			break;
++		}
++		skb_put(skb_aggr, pad);
++
+ 		skb_src = skb_peek(&pra_list->skb_head);
+-	}
++
++	} while (skb_src);
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
+ 
 -- 
-1.7.4.1
+1.7.3.5
 
