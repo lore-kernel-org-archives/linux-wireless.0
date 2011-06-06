@@ -1,106 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2414 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758863Ab1FALqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:40 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 79/83] staging: brcm80211: moved /include/srom.h into
- /brcmsmac dir
-Date: Wed, 1 Jun 2011 13:46:04 +0200
-Message-ID: <1306928768-7501-79-git-send-email-rvossen@broadcom.com> (sfid-20110601_134743_311812_2C7741E2)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from dakia2.marvell.com ([65.219.4.35]:39741 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754874Ab1FFJal (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 05:30:41 -0400
+Date: Mon, 6 Jun 2011 14:50:58 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/4] mwifiex: Remove redundant skb_queue_empty checks
+Message-ID: <20110606092057.GB28199@hertz.marvell.com> (sfid-20110606_113045_226474_7A895543)
+References: <20110606091615.GA28184@hertz.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110606091615.GA28184@hertz.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup.
+The check of skb list empty before calling skb_peek and skb_dequeue is
+redundant. These functions returns NULL if the list is empty.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- drivers/staging/brcm80211/brcmsmac/aiutils.c       |    2 +-
- drivers/staging/brcm80211/brcmsmac/bottom_mac.c    |    2 +-
- drivers/staging/brcm80211/brcmsmac/main.c          |    2 +-
- drivers/staging/brcm80211/brcmsmac/phy_shim.c      |    2 +-
- drivers/staging/brcm80211/brcmsmac/srom.c          |    2 +-
- .../staging/brcm80211/{include => brcmsmac}/srom.h |    0
- 6 files changed, 5 insertions(+), 5 deletions(-)
- rename drivers/staging/brcm80211/{include => brcmsmac}/srom.h (100%)
+ drivers/net/wireless/mwifiex/11n_aggr.c |   15 +++++----------
+ 1 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index 7eabe90..fee8966 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -29,7 +29,7 @@
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 84d2c76..aee3491 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -164,12 +164,13 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 	struct mwifiex_tx_param tx_param;
+ 	struct txpd *ptx_pd = NULL;
  
- /* ********** from siutils.c *********** */
- #include <nicpci.h>
--#include <srom.h>
-+#include "srom.h"
- #include <pmu.h>
- #include <scb.h>
- #include <pub.h>
-diff --git a/drivers/staging/brcm80211/brcmsmac/bottom_mac.c b/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
-index 365cae0..719df41 100644
---- a/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/bottom_mac.c
-@@ -25,7 +25,7 @@
- #include <brcm_hw_ids.h>
- #include <brcmu_wifi.h>
- #include <aiutils.h>
--#include <srom.h>
-+#include "srom.h"
- #include "otp.h"
- #include <brcmu_utils.h>
- #include <chipcommon.h>
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 759e68f..fc3d71d 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -24,7 +24,7 @@
- #include <brcmu_utils.h>
- #include <brcmu_wifi.h>
- #include <aiutils.h>
--#include <srom.h>
-+#include "srom.h"
- #include "dma.h"
+-	if (skb_queue_empty(&pra_list->skb_head)) {
++	skb_src = skb_peek(&pra_list->skb_head);
++	if (!skb_src) {
+ 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+ 				       ra_list_flags);
+ 		return 0;
+ 	}
+-	skb_src = skb_peek(&pra_list->skb_head);
++
+ 	tx_info_src = MWIFIEX_SKB_TXCB(skb_src);
+ 	skb_aggr = dev_alloc_skb(adapter->tx_buf_size);
+ 	if (!skb_aggr) {
+@@ -188,10 +189,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 					+ LLC_SNAP_LEN)
+ 				<= adapter->tx_buf_size)) {
  
- #include "pmu.h"
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.c b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-index 3300015..8b891f4 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-@@ -40,7 +40,7 @@
- #include "pub.h"
- #include "phy/phy_hal.h"
- #include "channel.h"
--#include <srom.h>
-+#include "srom.h"
- #include "key.h"
- #include "bottom_mac.h"
- #include "phy_hal.h"
-diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
-index 5a7b434..17e0f2a 100644
---- a/drivers/staging/brcm80211/brcmsmac/srom.c
-+++ b/drivers/staging/brcm80211/brcmsmac/srom.c
-@@ -27,7 +27,7 @@
- #include <brcm_hw_ids.h>
- #include <nicpci.h>
- #include <aiutils.h>
--#include <srom.h>
-+#include "srom.h"
- #include "otp.h"
+-		if (!skb_queue_empty(&pra_list->skb_head))
+-			skb_src = skb_dequeue(&pra_list->skb_head);
+-		else
+-			skb_src = NULL;
++		skb_src = skb_dequeue(&pra_list->skb_head);
  
- #define SROM_OFFSET(sih) ((sih->ccrev > 31) ? \
-diff --git a/drivers/staging/brcm80211/include/srom.h b/drivers/staging/brcm80211/brcmsmac/srom.h
-similarity index 100%
-rename from drivers/staging/brcm80211/include/srom.h
-rename to drivers/staging/brcm80211/brcmsmac/srom.h
+ 		if (skb_src) {
+ 			pra_list->total_pkts_size -= skb_src->len;
+@@ -214,10 +212,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 			return -1;
+ 		}
+ 
+-		if (!skb_queue_empty(&pra_list->skb_head))
+-			skb_src = skb_peek(&pra_list->skb_head);
+-		else
+-			skb_src = NULL;
++		skb_src = skb_peek(&pra_list->skb_head);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
 -- 
-1.7.4.1
-
+1.7.3.5
 
