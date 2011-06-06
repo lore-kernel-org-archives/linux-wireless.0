@@ -1,88 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2926 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287Ab1FNECo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 00:02:44 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: [PATCH net-next 0/2] drivers/net: Remove casts of void *
-Date: Mon, 13 Jun 2011 21:02:37 -0700
-Message-Id: <cover.1308024069.git.joe@perches.com> (sfid-20110614_060350_261462_C307089F)
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:40375 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757443Ab1FFWuD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 18:50:03 -0400
+Received: by qyk7 with SMTP id 7so1048479qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 15:50:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DED4F6C.5030902@hauke-m.de>
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+	<1307311658-15853-5-git-send-email-hauke@hauke-m.de>
+	<BANLkTim_TtNVmmyH5J3G0pK-vrWNL1+24A@mail.gmail.com>
+	<4DED4F6C.5030902@hauke-m.de>
+Date: Tue, 7 Jun 2011 00:50:02 +0200
+Message-ID: <BANLkTi=OAvaLei6v+qG4u=CDQznetiKsrA@mail.gmail.com> (sfid-20110607_005008_165378_A69685CC)
+Subject: Re: [RFC][PATCH 04/10] bcma: add mips driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (2):
-  wireless: Remove casts of void *
-  drivers/net: Remove casts of void *
-
- drivers/net/a2065.c                            |    2 +-
- drivers/net/appletalk/ltpc.c                   |    8 ++--
- drivers/net/atl1e/atl1e_main.c                 |    5 +--
- drivers/net/atlx/atl2.c                        |    3 +-
- drivers/net/benet/be_cmds.c                    |    3 +-
- drivers/net/benet/be_ethtool.c                 |    4 +-
- drivers/net/bna/bfa_cee.c                      |    2 +-
- drivers/net/bna/cna.h                          |    2 +-
- drivers/net/caif/caif_shmcore.c                |    2 +-
- drivers/net/cnic.c                             |    4 +-
- drivers/net/cxgb3/cxgb3_offload.c              |    2 +-
- drivers/net/davinci_cpdma.c                    |    2 +-
- drivers/net/declance.c                         |   38 ++++++++++++---------
- drivers/net/depca.c                            |    4 +-
- drivers/net/dl2k.c                             |    4 +-
- drivers/net/ehea/ehea_qmr.c                    |    2 +-
- drivers/net/epic100.c                          |    4 +-
- drivers/net/fealnx.c                           |    4 +-
- drivers/net/gianfar.c                          |    4 +-
- drivers/net/hamachi.c                          |    4 +-
- drivers/net/macmace.c                          |    2 +-
- drivers/net/mlx4/en_rx.c                       |    2 +-
- drivers/net/mlx4/en_tx.c                       |    5 +--
- drivers/net/myri_sbus.c                        |    3 +-
- drivers/net/netxen/netxen_nic_ctx.c            |   16 ++++----
- drivers/net/pxa168_eth.c                       |    2 +-
- drivers/net/qla3xxx.c                          |    5 +--
- drivers/net/qlcnic/qlcnic_ctx.c                |   26 +++++++-------
- drivers/net/qlcnic/qlcnic_ethtool.c            |    2 +-
- drivers/net/qlcnic/qlcnic_hw.c                 |    3 +-
- drivers/net/qlcnic/qlcnic_main.c               |    2 +-
- drivers/net/qlge/qlge_main.c                   |    4 +-
- drivers/net/s2io.c                             |   18 ++++------
- drivers/net/sfc/siena.c                        |    2 +-
- drivers/net/sis900.c                           |    4 +-
- drivers/net/tokenring/madgemc.c                |    2 +-
- drivers/net/typhoon.c                          |    2 +-
- drivers/net/vxge/vxge-config.c                 |   44 ++++++++---------------
- drivers/net/vxge/vxge-traffic.c                |    6 ++--
- drivers/net/wan/pc300_tty.c                    |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c    |    2 +-
- drivers/net/wireless/ath/ath9k/htc_hst.c       |    6 +--
- drivers/net/wireless/ath/ath9k/init.c          |    2 +-
- drivers/net/wireless/ath/ath9k/wmi.c           |    2 +-
- drivers/net/wireless/ath/carl9170/usb.c        |    2 +-
- drivers/net/wireless/hostap/hostap_cs.c        |    4 +-
- drivers/net/wireless/hostap/hostap_pci.c       |    4 +-
- drivers/net/wireless/hostap/hostap_plx.c       |    4 +-
- drivers/net/wireless/ipw2x00/ipw2100.c         |    6 +--
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c    |    2 +-
- drivers/net/wireless/iwlegacy/iwl-4965-ucode.c |    8 ++--
- drivers/net/wireless/iwlegacy/iwl3945-base.c   |    8 ++--
- drivers/net/wireless/iwlegacy/iwl4965-base.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c      |    2 +-
- drivers/net/wireless/mwifiex/11n.c             |    5 +--
- drivers/net/wireless/mwifiex/cmdevt.c          |    3 +-
- drivers/net/wireless/mwifiex/join.c            |    2 +-
- drivers/net/wireless/mwifiex/scan.c            |    2 +-
- drivers/net/wireless/mwifiex/sta_cmd.c         |    4 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c     |   12 +++---
- drivers/net/wireless/mwifiex/txrx.c            |    2 +-
- drivers/net/wireless/p54/eeprom.c              |    4 +-
- drivers/net/xilinx_emaclite.c                  |    4 +-
- drivers/net/yellowfin.c                        |    6 ++--
- 64 files changed, 164 insertions(+), 189 deletions(-)
-
--- 
-1.7.6.rc0
-
+VyBkbml1IDcgY3plcndjYSAyMDExIDAwOjA2IHXFvHl0a293bmlrIEhhdWtlIE1laHJ0ZW5zCjxo
+YXVrZUBoYXVrZS1tLmRlPiBuYXBpc2HFgjoKPiBPbiAwNi8wNi8yMDExIDAxOjIzIFBNLCBSYWZh
+xYIgTWnFgmVja2kgd3JvdGU6Cj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IGZvciAoaSA9IDA7IGkgPCBidXMtPm5yX2NvcmVzOyBpKyspCj4+PiArIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmICgoMSA8PCBiY21hX2NvcmVfbWlwc19p
+cnFmbGFnKCZidXMtPmNvcmVzW2ldKSkgPT0gb2xkaXJxZmxhZykgewo+Pj4gKyDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBiY21hX2NvcmVf
+bWlwc19zZXRfaXJxKCZidXMtPmNvcmVzW2ldLCAwKTsKPj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4+PiArIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0KPj4KPj4gQnJhY2VzIGZv
+ciAiZm9yIi4KPiBJcyB0aGlzIG5lZWRlZCBhZnRlciB0aGUgY29kaW5nIGd1aWxkbGluZXM/IFNo
+b3VsZG4ndCB0aGV5IGJlIHJlbW92ZWQgaWYKPiB0aGV5IGFyZSBub3QgbmVlZGVkPwoKV2hvb3Bz
+LCBhZnRlciByZS1jaGVja2luZyBjb2Rpbmcgc3R5bGUgaXQgc2VlbXMgSSB3YXMgd3JvbmcuCgot
+LSAKUmFmYcWCCg==
