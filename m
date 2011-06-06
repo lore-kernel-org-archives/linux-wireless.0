@@ -1,108 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que11.charter.net ([209.225.8.21]:57024 "EHLO que11.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab1FRQQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:16:20 -0400
-Message-ID: <4DFCC9BE.6000006@cuw.edu> (sfid-20110618_181624_651490_04CD2D4B)
-Date: Sat, 18 Jun 2011 10:52:30 -0500
-From: Greg Dietsche <gregory.dietsche@cuw.edu>
-MIME-Version: 1.0
-To: Henry Ptasinski <henryp@broadcom.com>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: brcm80211: return false if not a broadcom board
-References: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu> <20110616013615.GA14700@broadcom.com> <4DF96F22.5070508@cuw.edu> <20110616233736.GA2344@broadcom.com> <BANLkTi=tLWXn7mMf-6pf-3gM6x8zX=WNtw@mail.gmail.com> <20110617220108.GH3801@broadcom.com>
-In-Reply-To: <20110617220108.GH3801@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:55926 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754520Ab1FFQLf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 12:11:35 -0400
+Subject: Re: sta_find_ibss (active_ibss=1) in a loop?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ignacy Gawedzki <i@lri.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110606160115.GA31258@zenon.in.qult.net>
+References: <20110603201644.GA7836@zenon.in.qult.net>
+	 <20110603204939.GA12854@zenon.in.qult.net>
+	 <20110606110429.GA18775@zenon.in.qult.net>
+	 <1307370716.3894.10.camel@jlt3.sipsolutions.net>
+	 <20110606160115.GA31258@zenon.in.qult.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Jun 2011 18:11:32 +0200
+Message-ID: <1307376692.3894.12.camel@jlt3.sipsolutions.net> (sfid-20110606_181141_781519_E24D09EB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2011-06-06 at 18:01 +0200, Ignacy Gawedzki wrote:
 
+> > @@ -999,7 +1002,6 @@ int ieee80211_ibss_leave(struct ieee8021
+> >  	kfree_skb(skb);
+> >  
+> >  	skb_queue_purge(&sdata->skb_queue);
+> > -	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
+> >  	sdata->u.ibss.ssid_len = 0;
+> 
+> Shouldn't that second line also move up with the memset?
 
-On 06/17/2011 05:01 PM, Henry Ptasinski wrote:
-> On Thu, Jun 16, 2011 at 04:45:21PM -0700, Julian Calaby wrote:
->    
->> Henry,
->>
->> On Fri, Jun 17, 2011 at 09:37, Henry Ptasinski<henryp@broadcom.com>  wrote:
->>      
->>> How's this for a somewhat clearer implementation:
->>>
->>> static bool brcms_c_validboardtype(struct brcms_c_hw_info *wlc_hw)
->>> {
->>>         bool goodboard = true;
->>>         uint boardrev = wlc_hw->boardrev;
->>>
->>>         if (wlc_hw->sih->boardvendor == PCI_VENDOR_ID_BROADCOM) {
->>>        
->> You could reduce indentation by having this be:
->>
->> if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
->>      return true;
->>
->>      
->>>                 /* validate boardrev */
->>>                 if (boardrev == 0)
->>>                         goodboard = false;
->>>        
->> and remove the goodboard variable by having this return false immediately.
->>
->>      
->>>                 else if (boardrev>  0xff) {
->>>        
->> You could also drop the else and have this as
->>
->> if (boardrev<= 0xff)
->>      return true;
->>
->>      
->>>                         /* 4 bits each for board type, major, minor, and tiny
->>>                         version numbers */
->>>                         uint brt = (boardrev&  0xf000)>>  12;
->>>                         uint b0 = (boardrev&  0xf00)>>  8;
->>>                         uint b1 = (boardrev&  0xf0)>>  4;
->>>                         uint b2 = boardrev&  0xf;
->>>
->>>                         if ((brt>  2) || (brt == 0) || (b0>  9) || (b0 == 0)
->>>                                 || (b1>  9) || (b2>  9))
->>>                                 goodboard = false;
->>>        
->> and return false here too.
->>
->>      
->>>                 }
->>>         }
->>>
->>>         return goodboard;
->>>        
->> then just return true here.
->>
->>      
->>> }
->>>        
->> Thanks,
->>
->> -- 
->> Julian Calaby
->>      
-> Yea, it's a lot flatter with those changes.  Look for it in a patch set
-> relatively soon ...
->
-> - Henry
->
->
->    
+Not really necessary -- that's not used in the RX path. But yeah we can
+do that for consistency. Also maybe the skb queue purge.
 
-All good points above - also, I might add a short comment to explain why 
-the code checks the vendor id so it's clear to people who read the code 
-in the future too.
+> >  	del_timer_sync(&sdata->u.ibss.timer);
+> 
+> So this fix relies on the fact that reading sdata->i.ibss.state is an atomic
+> operation, right?
+> 
+> Thanks for the patch, I'll give it a try, though it may be some time until I
+> report further on this, since the problem is difficult to reproduce.
 
-Greg
+Oh ok. Well, I think we should put these changes in anyway since I see
+nothing preventing the race now.
+
+johannes
 
