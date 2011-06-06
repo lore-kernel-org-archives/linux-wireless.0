@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from void.printf.net ([89.145.121.20]:46012 "EHLO void.printf.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753165Ab1FZPJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2011 11:09:49 -0400
-From: Chris Ball <cjb@laptop.org>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mmc: sdio: fix runtime PM path during driver removal
-References: <1307662827-16618-1-git-send-email-ohad@wizery.com>
-	<BANLkTi=JcXG04coTJCA=fvwxXzuRsYzT4Q@mail.gmail.com>
-Date: Sun, 26 Jun 2011 11:09:43 -0400
-In-Reply-To: <BANLkTi=JcXG04coTJCA=fvwxXzuRsYzT4Q@mail.gmail.com> (Ohad
-	Ben-Cohen's message of "Sun, 26 Jun 2011 14:50:50 +0300")
-Message-ID: <m2tybceiiw.fsf@bob.laptop.org> (sfid-20110626_171306_454055_F7DA6E46)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35507 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133Ab1FFKCt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 06:02:49 -0400
+Received: by wwa36 with SMTP id 36so3616452wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:02:48 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: check the vif's operstate after join
+Date: Mon,  6 Jun 2011 13:03:12 +0300
+Message-Id: <1307354592-32685-1-git-send-email-eliad@wizery.com> (sfid-20110606_120252_585244_138CAD2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ohad,
+When resuming while connected (without wowlan), the interface
+is already IF_OPER_UP, so we won't get the notifier callback,
+and hence never complete the association (from wl12xx perspective)
 
-On Sun, Jun 26 2011, Ohad Ben-Cohen wrote:
-> On Fri, Jun 10, 2011 at 2:40 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> After commit e1866b3 "PM / Runtime: Rework runtime PM handling
->> during driver removal" was introduced, the driver core stopped
->> incrementing the runtime PM usage counter of the device during
->> the invocation of the ->remove() callback.
->>
->> This indirectly broke SDIO's runtime PM path during driver removal,
->> because no one calls _put_sync() anymore after ->remove() completes.
->>
->> This means that the power of runtime-PM-managed SDIO cards is kept
->> high after their driver is removed (even if it was powered down
->> beforehand).
->>
->> Fix that by directly calling _put_sync() when the last usage
->> counter is downref'ed by the SDIO bus.
->
-> Can you please take this 1-liner into 3.0-rc ?
->
-> It fixes SDIO runtime PM after a breakage was introduced in 3.0.
+This situation, among other potential problems, prevents the
+station from entering psm.
 
-Merged, thanks.  I'll be sending a pull request on my for-linus branch
-shortly:
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+(this patch depends on the "mac80211: add ieee80211_get_operstate() function"
+patch)
 
-http://git.kernel.org/?p=linux/kernel/git/cjb/mmc.git;a=shortlog;h=refs/heads/for-linus
+ drivers/net/wireless/wl12xx/main.c |   23 ++++++++++++++++++-----
+ 1 files changed, 18 insertions(+), 5 deletions(-)
 
-- Chris.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index fb0f764..546bcc2 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -393,6 +393,22 @@ static struct platform_device wl1271_device = {
+ static DEFINE_MUTEX(wl_list_mutex);
+ static LIST_HEAD(wl_list);
+ 
++static int wl1271_check_operstate(struct wl1271 *wl, unsigned char operstate)
++{
++	int ret;
++	if (operstate != IF_OPER_UP)
++		return 0;
++
++	if (test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags))
++		return 0;
++
++	ret = wl1271_cmd_set_sta_state(wl);
++	if (ret < 0)
++		return ret;
++
++	wl1271_info("Association completed.");
++	return 0;
++}
+ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 			     void *arg)
+ {
+@@ -442,11 +458,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if ((dev->operstate == IF_OPER_UP) &&
+-	    !test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags)) {
+-		wl1271_cmd_set_sta_state(wl);
+-		wl1271_info("Association completed.");
+-	}
++	wl1271_check_operstate(wl, dev->operstate);
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ 
+@@ -3178,6 +3190,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out;
+ 		}
++		wl1271_check_operstate(wl, ieee80211_get_operstate(vif));
+ 	}
+ 
+ out:
 -- 
-Chris Ball   <cjb@laptop.org>   <http://printf.net/>
-One Laptop Per Child
+1.7.0.4
+
