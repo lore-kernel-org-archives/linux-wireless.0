@@ -1,126 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:37131 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab1FJQF0 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:37140 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab1FFJVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 12:05:26 -0400
-Date: Fri, 10 Jun 2011 11:05:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: geert@linux-m68k.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix warnings on parisc arch
-Message-ID: <4df240c3.BgRQeXajX5EsNump%Larry.Finger@lwfinger.net> (sfid-20110610_180531_491323_FED6033A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 6 Jun 2011 05:21:39 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 36so3582178wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 02:21:38 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/4] wl12xx: enable/disable beacon filtering on ap suspend/resume
+Date: Mon,  6 Jun 2011 12:21:54 +0300
+Message-Id: <1307352115-28969-3-git-send-email-eliad@wizery.com> (sfid-20110606_112142_415996_5968AD30)
+In-Reply-To: <1307352115-28969-1-git-send-email-eliad@wizery.com>
+References: <1307352115-28969-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In "Build regressions/improvements in v3.0-rc2", Geert Uytterhoeven
-reports a number of warnings that occur for parisc builds of rtlwifi
-and dependents.
+Beacon filtering needs to be enabled so AP won't wake up by
+by every received beacon.
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/main.c |   49 +++++++++++++++++++++++++++++------
+ 1 files changed, 40 insertions(+), 9 deletions(-)
 
-John,
-
-This material is for 3.0, but it is not of high priority. None
-of these warnings are indications of an actual bug.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -516,7 +516,7 @@ static u8 _rtl92se_rf_onoff_detect(struc
- 	mdelay(10);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4f20711..97f565c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1467,13 +1467,10 @@ static struct notifier_block wl1271_dev_notifier = {
+ 	.notifier_call = wl1271_dev_notify,
+ };
  
- 	/* check GPIO3 */
--	u1tmp = rtl_read_byte(rtlpriv, GPIO_IN);
-+	u1tmp = rtl_read_byte(rtlpriv, GPIO_IN_SE);
- 	retval = (u1tmp & HAL_8192S_HW_GPIO_OFF_BIT) ? ERFON : ERFOFF;
- 
- 	return retval;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-@@ -248,12 +248,8 @@
- #define	PSTIME					0x02E0
- #define	TIMER0					0x02E4
- #define	TIMER1					0x02E8
--#define	GPIO_CTRL				0x02EC
--#define	GPIO_IN					0x02EC
--#define	GPIO_OUT				0x02ED
-+#define	GPIO_IN_SE				0x02EC
- #define	GPIO_IO_SEL				0x02EE
--#define	GPIO_MOD				0x02EF
--#define	GPIO_INTCTRL				0x02F0
- #define	MAC_PINMUX_CFG				0x02F1
- #define	LEDCFG					0x02F2
- #define	PHY_REG					0x02F3
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/core.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-@@ -650,7 +650,7 @@ static void rtl_op_bss_info_changed(stru
- 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
- 			 ("BSS_CHANGED_HT\n"));
- 		rcu_read_lock();
--		sta = get_sta(hw, vif, (u8 *)bss_conf->bssid);
-+		sta = get_sta(hw, vif, bss_conf->bssid);
- 		if (sta) {
- 			if (sta->ht_cap.ampdu_density >
- 			    mac->current_ampdu_density)
-@@ -685,7 +685,7 @@ static void rtl_op_bss_info_changed(stru
- 		rtlpriv->cfg->ops->set_network_type(hw, vif->type);
- 
- 		rcu_read_lock();
--		sta = get_sta(hw, vif, (u8 *)bss_conf->bssid);
-+		sta = get_sta(hw, vif, bss_conf->bssid);
- 		if (!sta) {
- 			rcu_read_unlock();
- 			goto out;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -670,7 +670,7 @@ static void rtl92c_dm_txpower_tracking_c
- 	u8 ofdm_index[2], cck_index = 0, ofdm_index_old[2], cck_index_old = 0;
- 	int i;
- 	bool is2t = IS_92C_SERIAL(rtlhal->version);
--	u8 txpwr_level[2] = {0, 0};
-+	s8 txpwr_level[2] = {0, 0};
- 	u8 ofdm_min_index = 6, rf;
- 
- 	rtlpriv->dm.txpower_trackinginit = true;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -225,7 +225,7 @@ static void _rtl92ce_query_rxphystatus(s
+-static int wl1271_configure_suspend(struct wl1271 *wl)
++static int wl1271_configure_suspend_sta(struct wl1271 *wl)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct phy_sts_cck_8192s_t *cck_buf;
--	s8 rx_pwr_all, rx_pwr[4];
-+	s8 rx_pwr_all = 0, rx_pwr[4];
- 	u8 evm, pwdb_all, rf_rx_num = 0;
- 	u8 i, max_spatial_stream;
- 	u32 rssi, total_rssi = 0;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1980,7 +1980,7 @@ static inline u16 rtl_get_tid(struct sk_
+ 	int ret;
  
- static inline struct ieee80211_sta *get_sta(struct ieee80211_hw *hw,
- 					    struct ieee80211_vif *vif,
--					    u8 *bssid)
-+					    const u8 *bssid)
- {
- 	return ieee80211_find_sta(vif, bssid);
+-	if (wl->bss_type != BSS_TYPE_STA_BSS)
+-		return 0;
+-
+ 	mutex_lock(&wl->mutex);
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+@@ -1518,11 +1515,41 @@ out:
+ 
  }
+ 
++static int wl1271_configure_suspend_ap(struct wl1271 *wl)
++{
++	int ret;
++
++	mutex_lock(&wl->mutex);
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
++	ret = wl1271_acx_set_ap_beacon_filter(wl, true);
++
++	wl1271_ps_elp_sleep(wl);
++out_unlock:
++	mutex_unlock(&wl->mutex);
++	return ret;
++
++}
++
++static int wl1271_configure_suspend(struct wl1271 *wl)
++{
++	if (wl->bss_type == BSS_TYPE_STA_BSS)
++		return wl1271_configure_suspend_sta(wl);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		return wl1271_configure_suspend_ap(wl);
++	return 0;
++}
++
+ static void wl1271_configure_resume(struct wl1271 *wl)
+ {
+ 	int ret;
++	bool is_sta = wl->bss_type == BSS_TYPE_STA_BSS;
++	bool is_ap = wl->bss_type == BSS_TYPE_AP_BSS;
+ 
+-	if (wl->bss_type != BSS_TYPE_STA_BSS)
++	if (!is_sta && !is_ap)
+ 		return;
+ 
+ 	mutex_lock(&wl->mutex);
+@@ -1530,10 +1557,14 @@ static void wl1271_configure_resume(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	/* exit psm if it wasn't configured */
+-	if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
+-		wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
+-				   wl->basic_rate, true);
++	if (is_sta) {
++		/* exit psm if it wasn't configured */
++		if (!test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags))
++			wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
++					   wl->basic_rate, true);
++	} else if (is_ap) {
++		wl1271_acx_set_ap_beacon_filter(wl, false);
++	}
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ out:
+-- 
+1.7.0.4
+
