@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:44843 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758334Ab1FAPm5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 11:42:57 -0400
-Received: by qwk3 with SMTP id 3so2646792qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 08:42:56 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:40663 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755115Ab1FFIBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 04:01:30 -0400
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	Waldemar.Rymarkiewicz@tieto.com
+Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
+References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+	<1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
+	<1307108661.3800.6.camel@jlt3.sipsolutions.net>
+	<BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 06 Jun 2011 11:01:23 +0300
+In-Reply-To: <BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com> (Lauro Ramos Venancio's message of "Fri\, 3 Jun 2011 17\:18\:26 -0300")
+Message-ID: <87ei378k30.fsf@purkki.adurom.net> (sfid-20110606_100134_106194_83AB0397)
 MIME-Version: 1.0
-In-Reply-To: <20110601160101.75e30b3d@boulder.homenet>
-References: <4CEAB969.20702@lwfinger.net>
-	<1290451982.20888.2.camel@maggie>
-	<4CEAC095.7020706@lwfinger.net>
-	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
-	<4DC9853A.1090508@lwfinger.net>
-	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
-	<20110601114839.433ae42d@boulder.homenet>
-	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
-	<20110601130842.077da1c3@boulder.homenet>
-	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
-	<20110601160101.75e30b3d@boulder.homenet>
-Date: Wed, 1 Jun 2011 17:42:55 +0200
-Message-ID: <BANLkTim9pQc+yxdQLSL1-6VNiyM6_tvJ6g@mail.gmail.com> (sfid-20110601_174302_255146_3C50F693)
-Subject: Re: b43 error under heavy load
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
-> On Wed, 1 Jun 2011 14:25:23 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->> I think you should easily get this error by transmitting. Streaming
->> some video is mostly receiving. Just putting some random
->> (ftp/sftp/iperf) server in the network would make the trick.
->
-> OK rather than recompile the kernel with debugfs enabled, as you
-> suggested I took the debugging call to b43dbg() out of the
-> B43_DBG_DMAVERBOSE if block (so it is entered whether or not verbose
-> debugging is set).
->
-> I transferred a 268MB file across the LAN in a little over 5 minutes
-> (so the transfer speed was a little under 10Mb/s).  During the course
-> of the transfer I got about 500 "b43-phy0 debug: Stopped TX ring 1"
-> statements logged.
->
-> However the interesting thing is that with this debugging statement
-> included, I got no messages about any out of order TX status; instead,
-> apart from the overrun messages to the debug log, the link performed
-> normally. The file transfer did not fail (I have checked that the file
-> received is identical to the file sent) nor was the link to the router
-> lost. Probably writing to the debug log has changed some timing race
-> somewhere to the benefit of link integrity.
->
-> However, as I said, I am not going to be in a position to do much
-> testing by way of transferring further files over the LAN for a period
-> of time, for unrelated reasons.
+Lauro Ramos Venancio <lauro.venancio@openbossa.org> writes:
 
-Well, it just seems that hitting full TX ring does not cause firmware
-problems and out of order issue. However I've no idea what else can
-cause it. We were also seeing this issue with free firmware on G-PHY
-cards.
+>> This is almost certainly not a good idea.
+>>
+>> Eventually, you will want to add more information about a target. I know
+>> NFC is a pretty limited protocol, but I wouldn't want to make this
+>> harder in the future than it must be. The way you're doing it, you're
+>> currently limiting yourself to about 100 targets. Each new target
+>> attribute that you might add in the future will reduce that number
+>> significantly.
+>
+> Actually, we don't expect more than a couple of targets because of
+> NFC short range.
 
-Maybe this is some hardware issue firmware has to workaround? Maybe
-updating firmware could help? My next idea is to try 508.1107
-firmware.
+This reminds me of Bill Gate's "640K ought to be enough for anybody"
+quote (or misattribution, based on wikipedia). Better not to make any
+assumptions based on the current state, instead make it extensible
+enough so that the interface doesn't need to be redesigned in the next
+few years.
 
 -- 
-Rafał
+Kalle Valo
