@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49251 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554Ab1FURnf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 13:43:35 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: add some debug options.
-Date: Tue, 21 Jun 2011 19:43:26 +0200
-Message-Id: <1308678206-12934-2-git-send-email-hauke@hauke-m.de> (sfid-20110621_194339_032082_907023BB)
-In-Reply-To: <1308678206-12934-1-git-send-email-hauke@hauke-m.de>
-References: <1308678206-12934-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-px0-f179.google.com ([209.85.212.179]:40227 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752036Ab1FFOMH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 10:12:07 -0400
+Received: by pxi2 with SMTP id 2so2837615pxi.10
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 07:12:06 -0700 (PDT)
+Message-ID: <4DECE01C.4020603@ring3k.org> (sfid-20110606_161211_838250_433210A2)
+Date: Mon, 06 Jun 2011 23:11:40 +0900
+From: Mike McCormack <mikem@ring3k.org>
+MIME-Version: 1.0
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] Refactor received packet processing
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These options are only needed for debugging so they are deactivated.
+Hi Larry,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+This patch series refactors the _rtl_pci_rx_interrupt function into two functions,
+and changes its behavior slightly by throwing away bad incoming packets and
+failing on SKB allocation earlier.
 
-diff --git a/config.mk b/config.mk
-index 4e5e08c..d0e93bf 100644
---- a/config.mk
-+++ b/config.mk
-@@ -221,6 +221,7 @@ CONFIG_MAC80211_HWSIM=m
- 
- CONFIG_ATH5K=m
- # CONFIG_ATH5K_DEBUG=y
-+# CONFIG_ATH5K_TRACER=y
- # CONFIG_ATH5K_AHB=y
- 
- CONFIG_ATH9K=m
-@@ -248,6 +249,7 @@ CONFIG_IWLAGN=m
- # CONFIG_IWLWIFI_DEBUG=y
- # CONFIG_IWLWIFI_DEBUGFS=y
- # CONFIG_IWLWIFI_DEVICE_TRACING=y
-+# CONFIG_IWLWIFI_DEVICE_SVTOOL=y
- # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
- CONFIG_IWL_P2P=y
- 
-@@ -560,6 +562,7 @@ endif #CONFIG_COMPAT_KERNEL_2_6_27
- 
- CONFIG_IWM=m
- # CONFIG_IWM_DEBUG=y
-+# CONFIG_IWM_TRACING=y
- 
- CONFIG_BT_HCIBTSDIO=m
- CONFIG_BT_MRVL_SDIO=m
+thanks,
+
+Mike
+
+
+Mike McCormack (5):
+  rtlwifi: Allocate new skb before modifying old
+  rtlwifi: Remove unnecessary indent
+  rtlwifi: Resubmit skbs with bad CRC early
+  rtlwifi: Free skb in one place
+  rtlwifi: Factor out code to receive one packet
+
+ drivers/net/wireless/rtlwifi/pci.c |  208 ++++++++++++++++-------------------
+ 1 files changed, 95 insertions(+), 113 deletions(-)
+
 -- 
 1.7.4.1
 
