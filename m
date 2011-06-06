@@ -1,119 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33823 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058Ab1FSJjK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 05:39:10 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 24so247938eyx.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 02:39:09 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: HT-PHY: add place for implementing channel switching
-Date: Sun, 19 Jun 2011 12:17:20 +0200
-Message-Id: <1308478641-6207-2-git-send-email-zajec5@gmail.com> (sfid-20110619_113923_143474_2BBB61B3)
-In-Reply-To: <1308478641-6207-1-git-send-email-zajec5@gmail.com>
-References: <1308478641-6207-1-git-send-email-zajec5@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60056 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756963Ab1FFWNH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 18:13:07 -0400
+Message-ID: <4DED50EC.3040401@hauke-m.de> (sfid-20110607_001311_554605_4E215766)
+Date: Tue, 07 Jun 2011 00:13:00 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
+Subject: Re: [RFC][PATCH 09/10] bcm47xx: add support for bcma bus
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>	<1307311658-15853-10-git-send-email-hauke@hauke-m.de> <BANLkTi=ybf59NR1NA3TOuamsWzey9zx19A@mail.gmail.com>
+In-Reply-To: <BANLkTi=ybf59NR1NA3TOuamsWzey9zx19A@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/06/2011 01:07 PM, Rafał Miłecki wrote:
+> 2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
+>> This patch add support for the bcma bus. Broadcom uses only Mips 74K
+>> CPUs on the new SoC and on the old ons using ssb bus there are no Mips
+>> 74K CPUs.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  arch/mips/Kconfig                            |    4 +++
+>>  arch/mips/bcm47xx/gpio.c                     |    9 ++++++++
+>>  arch/mips/bcm47xx/nvram.c                    |    6 +++++
+>>  arch/mips/bcm47xx/serial.c                   |   24 +++++++++++++++++++++++
+>>  arch/mips/bcm47xx/setup.c                    |   27 ++++++++++++++++++++++++-
+>>  arch/mips/bcm47xx/time.c                     |    3 ++
+>>  arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    3 ++
+>>  arch/mips/include/asm/mach-bcm47xx/gpio.h    |   18 +++++++++++++++++
+>>  drivers/watchdog/bcm47xx_wdt.c               |    6 +++++
+>>  9 files changed, 98 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+>> index 653da62..bdb0341 100644
+>> --- a/arch/mips/Kconfig
+>> +++ b/arch/mips/Kconfig
+>> @@ -100,6 +100,10 @@ config BCM47XX
+>>        select SSB_EMBEDDED
+>>        select SSB_B43_PCI_BRIDGE if PCI
+>>        select SSB_PCICORE_HOSTMODE if PCI
+>> +       select BCMA
+>> +       select BCMA_HOST_EMBEDDED
+>> +       select BCMA_DRIVER_MIPS
+>> +       select BCMA_PCICORE_HOSTMODE
+> 
+> I'm not involved in development for embedded devices but I believe
+> that space is quite important for them.
+> 
+> You force compiling both: ssb and bcma for every device using bcm47xx.
+> I think ppl may want to compile only one bus driver.
+> 
+Yes that has to be improved as there should also be an option to use the
+compiler optimazions for the new MIPS 74K CPU core.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   61 +++++++++++++++++++++++++++++++++++-
- 1 files changed, 59 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 763dbb0..12ad47f 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -27,6 +27,49 @@
- #include "radio_2059.h"
- #include "main.h"
- 
-+static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
-+			const struct b43_phy_ht_channeltab_e_radio2059 *e)
-+{
-+	/* TODO */
-+}
-+
-+static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
-+				const struct b43_phy_ht_channeltab_e_phy *e,
-+				struct ieee80211_channel *new_channel)
-+{
-+	/* TODO */
-+}
-+
-+static int b43_phy_ht_set_channel(struct b43_wldev *dev,
-+				  struct ieee80211_channel *channel,
-+				  enum nl80211_channel_type channel_type)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+
-+	const struct b43_phy_ht_channeltab_e_radio2059 *chent_r2059 = NULL;
-+
-+	if (phy->radio_ver == 0x2059) {
-+		chent_r2059 = b43_phy_ht_get_channeltab_e_r2059(dev,
-+							channel->center_freq);
-+		if (!chent_r2059)
-+			return -ESRCH;
-+	} else {
-+		return -ESRCH;
-+	}
-+
-+	/* TODO: In case of N-PHY some bandwidth switching goes here */
-+
-+	if (phy->radio_ver == 0x2059) {
-+		b43_radio_2059_channel_setup(dev, chent_r2059);
-+		b43_phy_ht_channel_setup(dev, &(chent_r2059->phy_regs),
-+					 channel);
-+	} else {
-+		return -ESRCH;
-+	}
-+
-+	return 0;
-+}
-+
- /**************************************************
-  * Basic PHY ops.
-  **************************************************/
-@@ -96,6 +139,22 @@ static void b43_phy_ht_op_switch_analog(struct b43_wldev *dev, bool on)
- 	}
- }
- 
-+static int b43_phy_ht_op_switch_channel(struct b43_wldev *dev,
-+					unsigned int new_channel)
-+{
-+	struct ieee80211_channel *channel = dev->wl->hw->conf.channel;
-+	enum nl80211_channel_type channel_type = dev->wl->hw->conf.channel_type;
-+
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		if ((new_channel < 1) || (new_channel > 14))
-+			return -EINVAL;
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+	return b43_phy_ht_set_channel(dev, channel, channel_type);
-+}
-+
- static unsigned int b43_phy_ht_op_get_default_chan(struct b43_wldev *dev)
- {
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-@@ -161,9 +220,7 @@ const struct b43_phy_operations b43_phyops_ht = {
- 	.radio_write		= b43_phy_ht_op_radio_write,
- 	.software_rfkill	= b43_phy_ht_op_software_rfkill,
- 	.switch_analog		= b43_phy_ht_op_switch_analog,
--	/*
- 	.switch_channel		= b43_phy_ht_op_switch_channel,
--	*/
- 	.get_default_chan	= b43_phy_ht_op_get_default_chan,
- 	/*
- 	.recalc_txpower		= b43_phy_ht_op_recalc_txpower,
--- 
-1.7.3.4
-
+Hauke
