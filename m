@@ -1,115 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab1FVHet (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47569 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755209Ab1FFJZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 03:34:49 -0400
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com
-In-Reply-To: <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110620_195221_616961_4428A127)
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
-	 <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
-	 (sfid-20110620_195221_616961_4428A127)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Jun 2011 09:34:44 +0200
-Message-ID: <1308728084.3883.9.camel@jlt3.sipsolutions.net> (sfid-20110622_093457_713194_96B09ADC)
-Mime-Version: 1.0
+	Mon, 6 Jun 2011 05:25:18 -0400
+Received: by wwa36 with SMTP id 36so3585239wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 02:25:17 -0700 (PDT)
+Message-ID: <4DEC9CC5.9010700@mvista.com> (sfid-20110606_112524_889108_91FAF135)
+Date: Mon, 06 Jun 2011 13:24:21 +0400
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com
+Subject: Re: [RFC][PATCH 10/10] bcm47xx: fix irq assignment for new SoCs.
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <1307311658-15853-11-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1307311658-15853-11-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello.
 
-> + * @NFC_ATTR_TARGET_SENS_RES: extra information for NFC-A targets
-> + * @NFC_ATTR_TARGET_SEL_RES: extra information for NFC-A targets
+On 06-06-2011 2:07, Hauke Mehrtens wrote:
 
-Those descriptions aren't very useful to me, but hopefully if I knew
-anything about NFC I'd understand :)
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
+> ---
+>   arch/mips/bcm47xx/irq.c |    8 ++++++++
+>   1 files changed, 8 insertions(+), 0 deletions(-)
 
-> +struct nfc_target {
-> +	u32 idx;
-> +	u32 supported_protocols;
-> +	u16 sens_res;
-> +	u8 sel_res;
-> +};
+> diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
+> index 325757a..3642cee 100644
+> --- a/arch/mips/bcm47xx/irq.c
+> +++ b/arch/mips/bcm47xx/irq.c
+[...]
+> @@ -51,5 +52,12 @@ void plat_irq_dispatch(void)
+>
+>   void __init arch_init_irq(void)
+>   {
+> +	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
+> +		bcma_write32(bcm47xx_bus.bcma.drv_mips.core,
+> +			     BCMA_MIPS_MIPS74K_INTMASK(5), 1<<  31);
+> +		/* the kernel reads the timer irq from some register and thinks
+> +		 * it's #5, but we offset it by 2 and route to #7 */
 
-There's no list_head here.
+    The preferred style for the multi-line comments is this:
 
->  struct nfc_dev {
->  	unsigned idx;
-> +	unsigned target_idx;
-> +	struct nfc_target *targets;
+/*
+  * bla
+  * bla
+  */
 
-And this looks like an array. Do you really want to do that? That means
-lots of reallocations.
-
-> +/**
-> + * nfc_targets_found - inform that targets were found
-> + *
-> + * @dev: The nfc device that found the targets
-> + * @targets: array of nfc targets found
-> + * @ntargets: targets array size
-> + *
-> + * The device driver must call this function when one or many nfc targets
-> + * are found. After calling this function, the device driver must stop
-> + * polling for targets.
-> + */
-> +int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
-> +							int n_targets)
-
-I haven't looked at the API users, but do you really expect them to
-build an array? That seems rather odd since I'd typically expect targets
-to be discovered one by one, not en bloc.
-
-> +	dev->targets_generation++;
-> +
-> +	kfree(dev->targets);
-> +	dev->targets = kzalloc(n_targets * sizeof(struct nfc_target),
-> +							GFP_ATOMIC);
-> +	if (!dev->targets) {
-> +		dev->n_targets = 0;
-> +		spin_unlock_bh(&dev->targets_lock);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	memcpy(dev->targets, targets, n_targets * sizeof(struct nfc_target));
-> +	dev->n_targets = n_targets;
-
-If you really want to keep the array thing at least you should use
-kmemdup(). I'd argue that the overhead won't be huge even if you don't,
-since as you said yourself you don't expect tons of targets (and if you
-do have tons of targets, this approach breaks down anyway).
-
-I'd really consider going with a linked list.
-
-> @@ -298,7 +353,10 @@ int nfc_register_device(struct nfc_dev *dev)
->  	rc = device_add(&dev->dev);
->  	mutex_unlock(&nfc_devlist_mutex);
->  
-> -	return rc;
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	return nfc_genl_device_added(dev);
-
-No rollback if nfc_genl_device_added() fails? Either you need to ignore
-the error or roll back I think.
-
-> +int nfc_genl_device_added(struct nfc_dev *dev)
-> +{
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +
-> +	pr_debug("%s\n", __func__);
-> +
-> +	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-> +	if (!msg)
-> +		return -ENOMEM;
-
-I'd probably ignore the errors since any error just means userspace
-wasn't notified, but it can still later look up the devices.
-
-johannes
-
+WBR, Sergei
