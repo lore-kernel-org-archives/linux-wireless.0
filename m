@@ -1,97 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:54602 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755212Ab1FMWfl (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:35980 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab1FFONO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:35:41 -0400
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh01-2.mail.saunalahti.fi (Postfix) with SMTP id 5BA008C527
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:35:40 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 4308C27D84
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:35:39 +0300 (EEST)
-Subject: [PATCH v2 08/27] mac80211: rename ieee80211_fragment_entry to
-	mac80211_fragment_entry
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Jun 2011 01:35:38 +0300
-Message-ID: <20110613223538.10517.64883.stgit@localhost6.localdomain6> (sfid-20110614_003544_258319_75140091)
-In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+	Mon, 6 Jun 2011 10:13:14 -0400
+Received: by mail-pz0-f46.google.com with SMTP id 9so1905470pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 07:13:14 -0700 (PDT)
+Message-ID: <4DECE065.1090202@ring3k.org> (sfid-20110606_161317_244165_C8184A60)
+Date: Mon, 06 Jun 2011 23:12:53 +0900
+From: Mike McCormack <mikem@ring3k.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/5] rtlwifi: Free skb in one place
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
 ---
- net/mac80211/mac80211_i.h |    4 ++--
- net/mac80211/rx.c         |   10 +++++-----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rtlwifi/pci.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index d35b195..fa766b2 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -62,7 +62,7 @@ struct mac80211_local;
- #define IEEE80211_DEFAULT_MAX_SP_LEN		\
- 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index c89d6d7..b60c1ab 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -727,11 +727,9 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 		    (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) &&
+ 		     (ieee80211_is_beacon(fc) ||
+ 		     ieee80211_is_probe_resp(fc))) {
+-			dev_kfree_skb_any(skb);
++			;
+ 		} else {
+-			if (unlikely(!rtl_action_proc(hw, skb, false))) {
+-				dev_kfree_skb_any(skb);
+-			} else {
++			if (likely(rtl_action_proc(hw, skb, false))) {
+ 				struct sk_buff *uskb = NULL;
+ 				u8 *pdata;
+ 				uskb = dev_alloc_skb(skb->len + 128);
+@@ -739,7 +737,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 				       &rx_status, sizeof(rx_status));
+ 				pdata = (u8 *)skb_put(uskb, skb->len);
+ 				memcpy(pdata, skb->data, skb->len);
+-				dev_kfree_skb_any(skb);
  
--struct ieee80211_fragment_entry {
-+struct mac80211_fragment_entry {
- 	unsigned long first_frag_time;
- 	unsigned int seq;
- 	unsigned int rx_queue;
-@@ -565,7 +565,7 @@ struct ieee80211_sub_if_data {
- 	bool old_idle;
+ 				ieee80211_rx_irqsafe(hw, uskb);
+ 			}
+@@ -751,6 +748,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 			tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
+ 		}
  
- 	/* Fragment table for host-based reassembly */
--	struct ieee80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
-+	struct mac80211_fragment_entry	fragments[IEEE80211_FRAGMENT_MAX];
- 	unsigned int fragment_next;
++		dev_kfree_skb_any(skb);
+ 		skb = new_skb;
  
- 	struct ieee80211_key __rcu *keys[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 22d066d..d49fa8b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1254,12 +1254,12 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	return RX_CONTINUE;
- } /* ieee80211_rx_h_sta_process */
- 
--static inline struct ieee80211_fragment_entry *
-+static inline struct mac80211_fragment_entry *
- ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
- 			 unsigned int frag, unsigned int seq, int rx_queue,
- 			 struct sk_buff **skb)
- {
--	struct ieee80211_fragment_entry *entry;
-+	struct mac80211_fragment_entry *entry;
- 	int idx;
- 
- 	idx = sdata->fragment_next;
-@@ -1293,12 +1293,12 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
- 	return entry;
- }
- 
--static inline struct ieee80211_fragment_entry *
-+static inline struct mac80211_fragment_entry *
- ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
- 			  unsigned int frag, unsigned int seq,
- 			  int rx_queue, struct ieee80211_hdr *hdr)
- {
--	struct ieee80211_fragment_entry *entry;
-+	struct mac80211_fragment_entry *entry;
- 	int i, idx;
- 
- 	idx = sdata->fragment_next;
-@@ -1343,7 +1343,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 	u16 sc;
- 	__le16 fc;
- 	unsigned int frag, seq;
--	struct ieee80211_fragment_entry *entry;
-+	struct mac80211_fragment_entry *entry;
- 	struct sk_buff *skb;
- 	struct ieee80211_rx_status *status;
- 
+ 		rtlpci->rx_ring[rx_queue_idx].rx_buf[index] = skb;
+-- 
+1.7.4.1
+
 
