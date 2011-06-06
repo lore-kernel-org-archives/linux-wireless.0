@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52233 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932112Ab1F2WMr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:47 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 13/13] bcm47xx: fix irq assignment for new SoCs.
-Date: Thu, 30 Jun 2011 00:11:58 +0200
-Message-Id: <1309385518-12097-14-git-send-email-hauke@hauke-m.de> (sfid-20110630_001249_706638_49B748F3)
-In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:34924 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756176Ab1FFNbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 09:31:46 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 06:31:12 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC] ath9k: Fix sending of PAPRD frames in HT40
+Date: Mon, 6 Jun 2011 19:01:21 +0530
+Message-ID: <1307367081-7841-1-git-send-email-mshajakhan@atheros.com> (sfid-20110606_153149_082381_1F0F3BAD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/bcm47xx/irq.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
-index 325757a..70bdcf0 100644
---- a/arch/mips/bcm47xx/irq.c
-+++ b/arch/mips/bcm47xx/irq.c
-@@ -26,6 +26,7 @@
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <asm/irq_cpu.h>
-+#include <bcm47xx.h>
+when the AP is configured with HT40 and when PAPRD is enabled in station
+we have PAPRD training frames never sent out because of the following
+failure "PAPRD target power delta out of range". This mainly happens in
+channel 10,11 in OTA testing and sometimes in channel 6 under wired setup.
+	the reason behind this issue is all the HT40 rates target power are 0
+as they seem to take this value from EEPROM template.
+	need to make further investigation to make sure this is the
+correct fix rather than a work around.
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ff8150e..2e370c6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -1461,7 +1461,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
  
- void plat_irq_dispatch(void)
- {
-@@ -51,5 +52,16 @@ void plat_irq_dispatch(void)
+-		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
  
- void __init arch_init_irq(void)
- {
-+#ifdef CONFIG_BCM47XX_BCMA
-+	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
-+		bcma_write32(bcm47xx_bus.bcma.bus.drv_mips.core,
-+			     BCMA_MIPS_MIPS74K_INTMASK(5), 1 << 31);
-+		/*
-+		 * the kernel reads the timer irq from some register and thinks
-+		 * it's #5, but we offset it by 2 and route to #7
-+		 */
-+		cp0_compare_irq = 7;
-+	}
-+#endif
- 	mips_cpu_irq_init();
- }
+@@ -2616,7 +2616,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
 -- 
-1.7.4.1
+1.7.0.4
 
