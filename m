@@ -1,87 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751663Ab1FRQFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:25 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/25] update for 3.1
-Date: Sat, 18 Jun 2011 08:34:06 -0700
-Message-Id: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180531_214732_60007197)
+Received: from he.sipsolutions.net ([78.46.109.217]:46535 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab1FFS5V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 14:57:21 -0400
+Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110606184447.GG2604@tuxdriver.com>
+References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+	 <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
+	 <1306823717.9366.3.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC88012CC51B@nasanexd02b.na.qualcomm.com>
+	 <20110606184447.GG2604@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Jun 2011 20:57:14 +0200
+Message-ID: <1307386634.3894.14.camel@jlt3.sipsolutions.net> (sfid-20110606_205725_143382_8804AF71)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We introduce the PCI bus encapsulation layer, which is the fundation to
-support different bus interface.
-We also add few more module parameters to control power management
+On Mon, 2011-06-06 at 14:44 -0400, John W. Linville wrote:
 
-Emmanuel Grumbach (15):
-  iwlagn: don't disable interrupts after the NIC has been reset
-  iwlagn: add a iwl_pci.[ch] files that will contain all PCI specific
-    code
-  iwlagn: remove uneeded include to pci.h and dma_mapping.h from a few
-    files
-  iwlagn: introduce iwl_bus and iwl_bus_ops
-  iwlagn: add get_dev to iwl_bus_ops
-  iwlagn: move PCI related operations from probe and remove to PCI
-    layer
-  iwlagn: don't use the PCI wrappers for DMA operation
-  iwlagn: add a method to get the HW ID description as a string to
-    iwl_bus_ops
-  iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
-  iwlagn: add a get_irq method to iwl_bus_ops and use it
-  iwlagn: finally kill the pointer to pci_dev from iwl-dev.h
-  iwlagn: waterfall the bus level if prepare card failed
-  iwlagn: fix misplaced bracket
-  iwlagn: warn about nested SYNC commands
-  iwlagn: store the irq number to iwl_bus just like dev
+> > During the channel type change, the pending tx frames in hw queues are dropped by hw config.
+> > But before updating rate control, the packets can be queued again with older HT rates.
+> > This contradicts with hw config mode and sometimes is causing baseband issues. This issue
+> > was observed only on flooding uplink traffic. To ensure that the frames are always xmitted with
+> > updated rates, the queues are stopped before hw config and waken up after rc updation.
+> 
+> Johannes, do you find this explanation satisfactory (perhaps with
+> some new queue stop reason definition)?
 
-Wey-Yi Guy (10):
-  iwlagn: Remove un-necessary indirect call
-  iwlagn: add PAN to tx flush
-  iwlagn: Support flush queues for specified interface
-  iwlagn: move PCI power related functions to the PCI layer
-  iwlagn: add power_save module parameter
-  iwlagn: Add power_level module parameter
-  iwlagn: add offset define for subsystem id
-  iwlagn: code alignment
-  iwlagn: merge duplicate code into single function
-  iwlagn: remove incorrect define
+No, it doesn't address the fact that any packet that is pending will
+still be processed -- as I said before, the stop doesn't include a
+flush.
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/Makefile       |    1 +
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    4 -
- drivers/net/wireless/iwlwifi/iwl-2000.c     |   20 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   23 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   22 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h   |    7 -
- drivers/net/wireless/iwlwifi/iwl-agn-ict.c  |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   35 ++-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |   30 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |  441 ++++-----------------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    6 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |   23 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   54 +---
- drivers/net/wireless/iwlwifi/iwl-core.h     |   37 +--
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    8 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    5 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   48 ++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   25 ++
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    3 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |   11 +-
- drivers/net/wireless/iwlwifi/iwl-io.h       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-led.c      |    5 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c      |  571 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-pci.h      |   69 ++++
- drivers/net/wireless/iwlwifi/iwl-power.c    |   22 +-
- drivers/net/wireless/iwlwifi/iwl-power.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-sv-open.c  |    4 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   33 +-
- 29 files changed, 927 insertions(+), 596 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
+johannes
 
