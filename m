@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2969 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753163Ab1FNHTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 03:19:24 -0400
-Subject: Re: [PATCH net-next 1/2] wireless: Remove casts of void *
-From: Joe Perches <joe@perches.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: netdev@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <BANLkTik4fWbCc8pRZfKCzvKD2f6sK9QCEw@mail.gmail.com>
-References: <cover.1308024069.git.joe@perches.com>
-	 <337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
-	 <BANLkTi=i30Rn7gpCDbn9KKJucq8CB=hssA@mail.gmail.com>
-	 <1308029532.26699.68.camel@Joe-Laptop>
-	 <BANLkTik4fWbCc8pRZfKCzvKD2f6sK9QCEw@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:52701 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558Ab1FFKde (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 06:33:34 -0400
+Subject: Re: [PATCH v3] 802.11n frame injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTikxkvpuDLEsf8Q5b3RZ4PuXYOLGbQ@mail.gmail.com> (sfid-20110606_122947_463950_90061CB8)
+References: <BANLkTim_YzVXG5g+92AkvJhhQ4OkeW4wMw@mail.gmail.com>
+	 <1307352901.3894.2.camel@jlt3.sipsolutions.net>
+	 <BANLkTikxkvpuDLEsf8Q5b3RZ4PuXYOLGbQ@mail.gmail.com>
+	 (sfid-20110606_122947_463950_90061CB8)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Jun 2011 00:19:21 -0700
-Message-ID: <1308035961.32499.3.camel@Joe-Laptop> (sfid-20110614_091945_612513_1D7D1BD2)
+Date: Mon, 06 Jun 2011 12:33:32 +0200
+Message-ID: <1307356412.3894.5.camel@jlt3.sipsolutions.net> (sfid-20110606_123337_670091_A0390FCF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-14 at 15:39 +1000, Julian Calaby wrote:
-> My issue here is that you mention in the commit log that this relates
-> to the removal of netdev_priv and dev_priv, but the casts removed
-> (mostly) don't.
+On Mon, 2011-06-06 at 12:28 +0200, Matteo Croce wrote:
 
-Sorry if that was unclear to you.
+> > Also, have you actually _tested_ this patch? I see nothing that would
+> > cause rate control to be skipped, so rate control should always override
+> > the data you set up here.
 
-None of these patches remove casts of netdev_priv.
+> Actually I use this patch on many devices.
+> The rate control is not an issue as this patch is intended for
+> injecting in monitor mode
 
-What I meant to say was that net and drivers/net have
-had many patches that remove casts of void * like the
-patches that removed casts of netdev_priv.
+Even monitor mode frames still go through rate control handling.
 
-These patches remove the last casts of void * types
-in net and drivers/net.
-
-cheers, Joe
+johannes
 
