@@ -1,201 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4633 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590Ab1FIOpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:19 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/21] staging: brcm80211: cleaned brcmu_utils.h
-Date: Thu, 9 Jun 2011 16:44:42 +0200
-Message-ID: <1307630701-9170-3-git-send-email-rvossen@broadcom.com> (sfid-20110609_164603_675223_44CB5FC5)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40750 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752569Ab1FFVjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 17:39:02 -0400
+Message-ID: <4DED48EA.7070001@hauke-m.de> (sfid-20110606_233906_628247_CF37E131)
+Date: Mon, 06 Jun 2011 23:38:50 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arnd Bergmann <arnd@arndb.de>
+CC: George Kashperko <george@znau.edu.ua>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, mb@bu3sch.de, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
+Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <201106061332.51661.arnd@arndb.de> <1307363399.28734.25.camel@dev.znau.edu.ua> <201106061503.14852.arnd@arndb.de>
+In-Reply-To: <201106061503.14852.arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. Moved softmac specific definitions into brcmsmac/types.h
-Removed unused definitions.
+On 06/06/2011 03:03 PM, Arnd Bergmann wrote:
+> On Monday 06 June 2011, George Kashperko wrote:
+>>> For an interrupt controller, it should be ok to have it initialized
+>>> late, as long as it's only responsible for the devices on the same
+>>> bus and not for instance for IPI interrupts. Just make sure that you
+>>> do the bus scan and the initialization of the IRQ driver before you
+>>> initialize any drivers that rely in on the interrupts to be working.
+>>
+>> Without proper timer init (which requires both the chipcommon and mips
+>> cores knowledge) kernel will get hung somewhere inside calibrate_delay.
+>> It could get addressed if get bus scan called in arch_init_irq or
+>> plat_time_init - both are executed before calibrate_delay and with slab
+>> available.
+> 
+> Ok, so you need the interrupt controller to be working for the timer tick,
+> right? I think another option (if that's not what you mean already) would
+> be to have a simpler way to find a device on the bus that can be called
+> before doing a full scan.
+> 
+> Early drivers would then have to know what is there and call a function
+> like "bcma_find_device(BCMA_DEV_ID_IRQ)", while drivers that are not
+> required to be up just register a regular device driver with a probe
+> function that gets called after the bus scan creates device structures.
+> 
+> 	Arnd
+Accessing chip common should be possible without scanning the hole bus
+as it is at the first position and initializing most things just needs
+chip common. For initializing the interrupts scanning is needed as we do
+not know where the mips core is located.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/types.h      |    6 ++
- drivers/staging/brcm80211/include/brcmu_utils.h |  110 +++++------------------
- 2 files changed, 29 insertions(+), 87 deletions(-)
+As we can not use kalloc on early boot we could use a function which
+uses kalloc under normal conditions and when on early boot the
+architecture code which starts the bcma code should also provide a
+function which returns a pointer to some memory in its text segment to
+use. We need space for 16 cores in the architecture code.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index 0de99d5..dd0bcf9 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -343,6 +343,12 @@ do {						\
- #define SET_REG(r, mask, val) \
- 		W_REG((r), ((R_REG(r) & ~(mask)) | (val)))
- 
-+/* multi-bool data type: set of bools, mbool is true if any is set */
-+typedef u32 mbool;
-+#define mboolset(mb, bit)		((mb) |= (bit))	/* set one bool */
-+#define mboolclr(mb, bit)		((mb) &= ~(bit))	/* clear one bool */
-+#define mboolisset(mb, bit)		(((mb) & (bit)) != 0)	/* true if one bool is set */
-+#define	mboolmaskset(mb, mask, val)	((mb) = (((mb) & ~(mask)) | (val)))
- 
- /* forward declarations */
- struct sk_buff;
-diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
-index a4b52cf..e3308e8 100644
---- a/drivers/staging/brcm80211/include/brcmu_utils.h
-+++ b/drivers/staging/brcm80211/include/brcmu_utils.h
-@@ -22,16 +22,12 @@
- * Use brcmu_binit() to initialize before use
- */
- 
--	struct brcmu_strbuf {
--		char *buf;	/* pointer to current position in origbuf */
--		unsigned int size;	/* current (residual) size in bytes */
--		char *origbuf;	/* unmodified pointer to orignal buffer */
--		unsigned int origsize;	/* unmodified orignal buffer size in bytes */
--	};
--
--/* ** driver-only section ** */
--
--#define GPIO_PIN_NOTDEFINED 	0x20	/* Pin not defined */
-+struct brcmu_strbuf {
-+	char *buf;	/* pointer to current position in origbuf */
-+	unsigned int size;	/* current (residual) size in bytes */
-+	char *origbuf;	/* unmodified pointer to orignal buffer */
-+	unsigned int origsize;	/* unmodified orignal buffer size in bytes */
-+};
- 
- /*
-  * Spin at most 'us' microseconds while 'exp' is true.
-@@ -54,24 +50,25 @@
- #define PKTQ_MAX_PREC           16	/* Maximum precedence levels */
- #endif
- 
--	struct pktq_prec {
--		struct sk_buff *head;	/* first packet to dequeue */
--		struct sk_buff *tail;	/* last packet to dequeue */
--		u16 len;		/* number of queued packets */
--		u16 max;		/* maximum number of queued packets */
--	};
-+struct pktq_prec {
-+	struct sk_buff *head;	/* first packet to dequeue */
-+	struct sk_buff *tail;	/* last packet to dequeue */
-+	u16 len;		/* number of queued packets */
-+	u16 max;		/* maximum number of queued packets */
-+};
- 
- /* multi-priority pkt queue */
--	struct pktq {
--		u16 num_prec;	/* number of precedences in use */
--		u16 hi_prec;	/* rapid dequeue hint (>= highest non-empty prec) */
--		u16 max;	/* total max packets */
--		u16 len;	/* total number of packets */
--		/* q array must be last since # of elements can be either PKTQ_MAX_PREC or 1 */
--		struct pktq_prec q[PKTQ_MAX_PREC];
--	};
--
--#define PKTQ_PREC_ITER(pq, prec)        for (prec = (pq)->num_prec - 1; prec >= 0; prec--)
-+struct pktq {
-+	u16 num_prec;	/* number of precedences in use */
-+	u16 hi_prec;	/* rapid dequeue hint (>= highest non-empty prec) */
-+	u16 max;	/* total max packets */
-+	u16 len;	/* total number of packets */
-+	/*
-+	 * q array must be last since # of elements can be either
-+	 * PKTQ_MAX_PREC or 1
-+	 */
-+	struct pktq_prec q[PKTQ_MAX_PREC];
-+};
- 
- /* fn(pkt, arg).  return true if pkt belongs to if */
- typedef bool(*ifpkt_cb_t) (struct sk_buff *, void *);
-@@ -194,28 +191,6 @@ extern int brcmu_iovar_lencheck(const struct brcmu_iovar *table, void *arg,
- #define IOVT_BUFFER	8	/* buffer is size-checked as per minlen */
- #define BCM_IOVT_VALID(type) (((unsigned int)(type)) <= IOVT_BUFFER)
- 
--/* Initializer for IOV type strings */
--#define BCM_IOV_TYPE_INIT { \
--	"void", \
--	"bool", \
--	"s8", \
--	"u8", \
--	"s16", \
--	"u16", \
--	"s32", \
--	"u32", \
--	"buffer", \
--	"" }
--
--#define BCM_IOVT_IS_INT(type) (\
--	(type == IOVT_BOOL) || \
--	(type == IOVT_INT8) || \
--	(type == IOVT_UINT8) || \
--	(type == IOVT_INT16) || \
--	(type == IOVT_UINT16) || \
--	(type == IOVT_INT32) || \
--	(type == IOVT_UINT32))
--
- /* ** driver/apps-shared section ** */
- 
- #define BCME_STRLEN 		64	/* Max string length for BCM errors */
-@@ -298,38 +273,6 @@ struct brcmu_tlv {
- 
- #define ETHER_ADDR_STR_LEN	18	/* 18-bytes of Ethernet address buffer length */
- 
--/* crypto utility function */
--/* 128-bit xor: *dst = *src1 xor *src2. dst1, src1 and src2 may have any alignment */
--	static inline void
--	 xor_128bit_block(const u8 *src1, const u8 *src2, u8 *dst) {
--		if (
--#ifdef __i386__
--			   1 ||
--#endif
--			   (((unsigned long) src1 | (unsigned long) src2 | (unsigned long) dst) &
--			    3) == 0) {
--			/* ARM CM3 rel time: 1229 (727 if alignment check could be omitted) */
--			/* x86 supports unaligned.  This version runs 6x-9x faster on x86. */
--			((u32 *) dst)[0] =
--			    ((const u32 *)src1)[0] ^ ((const u32 *)
--							 src2)[0];
--			((u32 *) dst)[1] =
--			    ((const u32 *)src1)[1] ^ ((const u32 *)
--							 src2)[1];
--			((u32 *) dst)[2] =
--			    ((const u32 *)src1)[2] ^ ((const u32 *)
--							 src2)[2];
--			((u32 *) dst)[3] =
--			    ((const u32 *)src1)[3] ^ ((const u32 *)
--							 src2)[3];
--		} else {
--			/* ARM CM3 rel time: 4668 (4191 if alignment check could be omitted) */
--			int k;
--			for (k = 0; k < 16; k++)
--				dst[k] = src1[k] ^ src2[k];
--		}
--	}
--
- /* externs */
- /* crc */
- extern u8 brcmu_crc8(u8 *p, uint nbytes, u8 crc);
-@@ -346,13 +289,6 @@ extern char *brcmu_chipname(uint chipid, char *buf, uint len);
- extern struct brcmu_tlv *brcmu_parse_tlvs(void *buf, int buflen,
- 					  uint key);
- 
--/* multi-bool data type: set of bools, mbool is true if any is set */
--	typedef u32 mbool;
--#define mboolset(mb, bit)		((mb) |= (bit))	/* set one bool */
--#define mboolclr(mb, bit)		((mb) &= ~(bit))	/* clear one bool */
--#define mboolisset(mb, bit)		(((mb) & (bit)) != 0)	/* true if one bool is set */
--#define	mboolmaskset(mb, mask, val)	((mb) = (((mb) & ~(mask)) | (val)))
--
- /* power conversion */
- extern u16 brcmu_qdbm_to_mw(u8 qdbm);
- extern u8 brcmu_mw_to_qdbm(u16 mw);
--- 
-1.7.4.1
+In addition bcma_bus_register(struct bcma_bus *bus) has to be divided
+into two parts. The first part will scan the bus and initialize chip
+common and mips core. The second part will initialize pci core and
+register the devices in the system. When using this under normal
+conditions they will be called directly after each other.
 
-
+Hauke
