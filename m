@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2083 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758193Ab1F2XtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:49:22 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 023/119] staging: brcm80211: corrected tx status
- feedback for non AMPDU packets
-Date: Wed, 29 Jun 2011 16:46:47 -0700
-Message-ID: <1309391303-22741-24-git-send-email-frankyl@broadcom.com> (sfid-20110630_015236_333809_663C9450)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:33989 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757782Ab1FFTff (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2011 15:35:35 -0400
+Received: by mail-ew0-f50.google.com with SMTP id 10so1556521ewy.9
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 12:35:33 -0700 (PDT)
+Subject: Re: [PATCH stable] nl80211: fix check for valid SSID size in scan
+ operations
+From: Luciano Coelho <coelho@ti.com>
+To: stable@kernel.org
+Cc: gregkh@suse.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1307388656-19240-1-git-send-email-coelho@ti.com>
+References: <13073811693022@kroah.org>
+	 <1307388656-19240-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Jun 2011 22:35:30 +0300
+Message-ID: <1307388930.23002.422.camel@cumari> (sfid-20110606_213538_511314_C13088DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Mon, 2011-06-06 at 22:30 +0300, Luciano Coelho wrote: 
+> In both trigger_scan and sched_scan operations, we were checking for
+> the SSID length before assigning the value correctly.  Since the
+> memory was just kzalloc'ed, the check was always failing and SSID with
+> over 32 characters were allowed to go through.
+> 
+> This was causing a buffer overflow when copying the actual SSID to the
+> proper place.
+> 
+> This bug has been there since 2.6.29-rc4.
+> 
+> Backported from commit 208c72f4fe44fe09577e7975ba0e7fa0278f3d03.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
 
-Code still contained a 'FIXME' label that said tx status feedback (consumed by
-the rate control algorithm) was not yet taking RTS/CTS into account.
+FWIW, this patch applies cleanly on all stable kernels at least as far
+back as 2.6.35, probably even earlier.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |   30 ++++++++++++++++++++++------
- 1 files changed, 23 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 9aa74df..64f4fe7 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -4371,8 +4371,18 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, tx_status_t *txs, u32 frm_tx2)
- 	if (!lastframe) {
- 		wiphy_err(wlc->wiphy, "Not last frame!\n");
- 	} else {
--		u16 sfbl, lfbl;
--		ieee80211_tx_info_clear_status(tx_info);
-+		/*
-+		 * Set information to be consumed by Minstrel ht.
-+		 *
-+		 * The "fallback limit" is the number of tx attempts a given
-+		 * MPDU is sent at the "primary" rate. Tx attempts beyond that
-+		 * limit are sent at the "secondary" rate.
-+		 * A 'short frame' does not exceed RTS treshold.
-+		 */
-+		u16 sfbl,	/* Short Frame Rate Fallback Limit */
-+		    lfbl,	/* Long Frame Rate Fallback Limit */
-+		    fbl;
-+
- 		if (queue < AC_COUNT) {
- 			sfbl = WLC_WME_RETRY_SFB_GET(wlc, wme_fifo2ac[queue]);
- 			lfbl = WLC_WME_RETRY_LFB_GET(wlc, wme_fifo2ac[queue]);
-@@ -4382,14 +4392,20 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, tx_status_t *txs, u32 frm_tx2)
- 		}
- 
- 		txrate = tx_info->status.rates;
--		/* FIXME: this should use a combination of sfbl, lfbl depending on frame length and RTS setting */
--		if ((tx_frame_count > sfbl) && (txrate[1].idx >= 0)) {
-+		if (txrate[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
-+			fbl = lfbl;
-+		else
-+			fbl = sfbl;
-+
-+		ieee80211_tx_info_clear_status(tx_info);
-+
-+		if ((tx_frame_count > fbl) && (txrate[1].idx >= 0)) {
- 			/* rate selection requested a fallback rate and we used it */
--			txrate->count = lfbl;
--			txrate[1].count = tx_frame_count - lfbl;
-+			txrate[0].count = fbl;
-+			txrate[1].count = tx_frame_count - fbl;
- 		} else {
- 			/* rate selection did not request fallback rate, or we didn't need it */
--			txrate->count = tx_frame_count;
-+			txrate[0].count = tx_frame_count;
- 			/* rc80211_minstrel.c:minstrel_tx_status() expects unused rates to be marked with idx = -1 */
- 			txrate[1].idx = -1;
- 			txrate[1].count = 0;
 -- 
-1.7.1
-
+Cheers,
+Luca.
 
