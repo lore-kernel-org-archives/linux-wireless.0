@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41762 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821Ab1FUJY6 (ORCPT
+Received: from smtp-out2.tiscali.nl ([195.241.79.177]:50193 "EHLO
+	smtp-out2.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab1FGTXI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:24:58 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 20/32] ath9k: set NF limits for AR9330
-Date: Tue, 21 Jun 2011 11:23:40 +0200
-Message-Id: <1308648232-9906-21-git-send-email-juhosg@openwrt.org> (sfid-20110621_112549_167533_DEE27DA5)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+	Tue, 7 Jun 2011 15:23:08 -0400
+Subject: Re: [iwl4965] Microcode SW error detected
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110607145435.GA5179@redhat.com>
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+	 <201106070832.49048.bschmidt@freebsd.org>
+	 <20110607145435.GA5179@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Jun 2011 21:23:00 +0200
+Message-ID: <1307474580.2342.7.camel@x61.thuisdomein> (sfid-20110607_212312_266667_F692B693)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-Changes since RFC:
-  - fix a typo in the SREV check
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 ++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+On Tue, 2011-06-07 at 16:54 +0200, Stanislaw Gruszka wrote:
+> That could be useful hint, we do not scan chan by chan, but we
+> have thing called "plcp check health", which "restart radio"
+> by requesting one channel scan. So perhaps disabling that could
+> help.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index a0ca1eb..5e987c7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1089,7 +1089,10 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
- {
- 	ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
- 	ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
--	ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
-+	if (AR_SREV_9330(ah))
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
-+	else
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
- 	ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_9300_5GHZ;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 443090d..d259278 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -332,6 +332,8 @@
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
- 
-+#define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
-+
- /*
-  * AGC Field Definitions
-  */
--- 
-1.7.2.1
+At this moment I'm interested in something (a script, some sequence of
+actions, whatever) that (somewhat) reliably triggers this error. Because
+right now I have no clue what triggers it.
+
+Is your patch in that category or is it a (crude) fix? If it's a fix,
+I'm not sure it is of much help at this stage.
+
+
+
+Paul Bolle
 
