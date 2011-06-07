@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from georges.telenet-ops.be ([195.130.137.68]:47115 "EHLO
-	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab1FZITq convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45844 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936Ab1FGSQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2011 04:19:46 -0400
-Date: Sun, 26 Jun 2011 10:19:44 +0200 (CEST)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-Subject: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-Message-ID: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg> (sfid-20110626_102025_347141_7241FFC9)
+	Tue, 7 Jun 2011 14:16:24 -0400
+Date: Tue, 7 Jun 2011 14:05:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
+Message-ID: <20110607180552.GF9320@tuxdriver.com> (sfid-20110607_201627_681498_BD86CFE6)
+References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
+ <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
+ <1306823717.9366.3.camel@jlt3.sipsolutions.net>
+ <8F3AF1C9F856774F8C8D67AA7EDFEC88012CC51B@nasanexd02b.na.qualcomm.com>
+ <20110606184447.GG2604@tuxdriver.com>
+ <1307386634.3894.14.camel@jlt3.sipsolutions.net>
+ <8F3AF1C9F856774F8C8D67AA7EDFEC88012CE709@nasanexd02d.na.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-7
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8F3AF1C9F856774F8C8D67AA7EDFEC88012CE709@nasanexd02d.na.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-m68k allmodconfig:
+On Tue, Jun 07, 2011 at 08:39:57AM +0000, Manoharan, Rajkumar wrote:
+> > > On Mon, 2011-06-06 at 14:44 -0400, John W. Linville wrote:
+> > 
+> > > > During the channel type change, the pending tx frames in hw queues are dropped by hw config.
+> > > > But before updating rate control, the packets can be queued again with older HT rates.
+> > > > This contradicts with hw config mode and sometimes is causing baseband issues. This issue
+> > > > was observed only on flooding uplink traffic. To ensure that the frames are always xmitted with
+> > > > updated rates, the queues are stopped before hw config and waken up after rc updation.
+> >> 
+> > > Johannes, do you find this explanation satisfactory (perhaps with
+> > > some new queue stop reason definition)?
+> > 
+> > No, it doesn't address the fact that any packet that is pending will
+> > still be processed -- as I said before, the stop doesn't include a
+> > flush.
+> 
+> Yes. I agree. Without flushing, still the packets can choose wrong rates. I missed that.
+> But I assumed that it would be better to stop queues before rc update. Thus we can avoid revisiting
+> the queued frames chosen with older (this case ht40) rate after rc changes. And fixing at mac80211 would help
+> to other rate controls too.
 
-drivers/bcma/main.c: In function ¡bcma_release_core_dev¢:
-drivers/bcma/main.c:68: error: implicit declaration of function ¡kfree¢
+OK, it seems like this isn't getting resolved quickly.  I'm going to
+revert it for now, and hope for a more widely acceptable solution soon.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
---
-http://kisskb.ellerman.id.au/kisskb/buildresult/4243344/
-
- drivers/bcma/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index ba15105..08a14a3 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -7,6 +7,7 @@
- 
- #include "bcma_private.h"
- #include <linux/bcma/bcma.h>
-+#include <linux/slab.h>
- 
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
+John
 -- 
-1.7.0.4
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
