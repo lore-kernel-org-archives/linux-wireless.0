@@ -1,124 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:49059 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab1F2DhP convert rfc822-to-8bit (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:3519 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932269Ab1FGWY0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 23:37:15 -0400
-Received: by fxd18 with SMTP id 18so803016fxd.11
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 20:37:13 -0700 (PDT)
+	Tue, 7 Jun 2011 18:24:26 -0400
+Message-ID: <4DEEA506.4070309@broadcom.com> (sfid-20110608_002430_280742_052D33C1)
+Date: Tue, 7 Jun 2011 15:24:06 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com>
-References: <BANLkTimfrcrqVxNXj_5qDYYJoz6Exnzw+w@mail.gmail.com>
-	<1309009093.4317.9.camel@jlt3.sipsolutions.net>
-	<BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
-	<BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com>
-Date: Tue, 28 Jun 2011 23:37:13 -0400
-Message-ID: <BANLkTi=_zXSdO20Q3ZhRJ_XDLkWbo6G6+w@mail.gmail.com> (sfid-20110629_053721_483230_70DE3251)
-Subject: Re: [PATCH] chan.c: fix chan.c to return channel number when in
- monitor mode and on a fixed channel.
-From: Nicholas Hockey <nhockey@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Viral Mehta" <Viral.Mehta@lntinfotech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcm4329 background scanning
+References: <D69C90565D53114396BF743585AF5A0912A8674CC4@VSHINMSMBX01.vshodc.lntinfotech.com>
+ <BANLkTikMW7H=NYqX0N-TbhpBd61SSK9ayA@mail.gmail.com>
+In-Reply-To: <BANLkTikMW7H=NYqX0N-TbhpBd61SSK9ayA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-thank you very much, that is very helpful information. im sure it will
-be a resource for not only me, but a host of others frustrated by the
-current state. in order that they will/should be able to research and
-modify their software accordingly. i originally wrote my software in
-the madwifi days, and didnt pay enough attention to the changes, all i
-knew was that the patch i posted solved my problem. i still dont see
-whats wrong with my method, but im hoping the direction you have
-pointed me in will help answer that,
-
-On Tue, Jun 28, 2011 at 10:53 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Take a look at how monitor mode is used by other bits of software, eg
-> I think hostapd in Linux uses a monitor mode interface.
+On 06/07/2011 02:51 PM, Rafał Miłecki wrote:
+> 2011/6/7 Viral Mehta<Viral.Mehta@lntinfotech.com>:
+>> I was looking at bcm4329 driver to understand how scanning is happening ?
+>>
+>> I have two questions,
+>> 1. Does bcm4329 supports background scanning ?
+>>
+>> from looking at the code, it looks like NO
 >
-> If I understand the Linux wifi stack use of monitor mode correctly,
-> it's not designed like the "classic" monitor mode from days gone by
-> (eg madwifi) (And this is what BSD still does..); it's a slave device
-> to a currently configured, non-monitor interface. The normal interface
-> gets the 'normal' traffic; the slave monitor mode interface sees the
-> management traffic so hostapd can do MLME, etc.
+> I think bcm4329 barely maintained and noone really work on it.
 >
-> So you likely need to look at what hostapd does and create/use a
-> monitor mode interface in the same way. Ie, as a slave to a normal
-> interface, rather than a stand-alone interface.
->
-> Adrian
->
-> On 29 June 2011 00:12, Nicholas Hockey <nhockey@gmail.com> wrote:
->> If this has been discussed before, could you please point me to a
->> resource? if this solution is not correct, then id like to read why
->> its not correct, and formulate another solution for the problem. i am
->> an amateur radio tech and i have to apply this patch every single
->> build in order to use some custom software i have developed over the
->> years.
->>
->> On Sat, Jun 25, 2011 at 9:38 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Thu, 2011-06-23 at 16:49 -0400, Nicholas Hockey wrote:
->>>> (sorry if this is not right, its been nearly 10 years since i
->>>> submitted a kernel patch)
->>>
->>> Listing cfg80211 isntead of "chan.c" would have been useful :-)
->>>
->>>> Fixes: When monitoring a fixed channel, chan.c does not report what
->>>> channel it is on.
->>>>
->>>> Signed-off-by: Nicholas Hockey <nhockey@gmail.com>
->>>> ---
->>>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
->>>> index 17cd0c0..261ee32 100644
->>>> --- a/net/wireless/chan.c
->>>> +++ b/net/wireless/chan.c
->>>> @@ -82,10 +82,12 @@ int cfg80211_set_freq(struct
->>>> cfg80211_registered_device *rdev,
->>>>  {
->>>>         struct ieee80211_channel *chan;
->>>>         int result;
->>>> +    struct wireless_dev *mon_dev = NULL;
->>>>
->>>> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
->>>> +       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
->>>> +        mon_dev = wdev;
->>>>                 wdev = NULL;
->>>> -
->>>> +    }
->>>>         if (wdev) {
->>>>                 ASSERT_WDEV_LOCK(wdev);
->>>>
->>>> @@ -131,5 +133,8 @@ int cfg80211_set_freq(struct
->>>> cfg80211_registered_device *rdev,
->>>>         if (wdev)
->>>>                 wdev->channel = chan;
->>>>
->>>> +    if (mon_dev)
->>>> +        mon_dev->channel = chan;
->>>> +
->>>
->>> This has been discussed numerous times, this change still isn't right
->>> because monitors are slaved to others.
->>>
->>> johannes
->>>
->>>
->>
->>
->>
->> --
->> Nicholas (Tilt) Hockey
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+> Did you think about switching to brcmfmac? It receives some love from
+> Broadcom and it's more probably you will get some help with this one.
 >
 
 
+bcm4329 is supported and maintained.  brcmfmac came from the same 
+codebase, and can be considered the evolution of bcm4329 for longer-term 
+usage (eventually ...)
 
--- 
-Nicholas (Tilt) Hockey
+bcm4329 questions should probably go to the appropriate android list vs. 
+linux-wireless, but I'll forward them and see if I can get some answers.
+
+- Henry
+
+
+
