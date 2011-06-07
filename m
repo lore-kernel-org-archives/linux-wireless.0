@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33697 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753534Ab1FFLgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 07:36:43 -0400
-Date: Mon, 6 Jun 2011 13:36:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [iwl4965] Microcode SW error detected
-Message-ID: <20110606113611.GB2530@redhat.com> (sfid-20110606_133646_706094_DC0D314F)
-References: <1306151106.2066.60.camel@x61.thuisdomein>
- <20110524070941.GA2189@redhat.com>
- <1306255853.12267.14.camel@x61.thuisdomein>
- <20110525131130.GA3260@redhat.com>
- <1306330313.2119.4.camel@x61.thuisdomein>
- <20110531133736.GA2935@redhat.com>
- <1307350722.10094.29.camel@x61.thuisdomein>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46160 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932518Ab1FGVow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2011 17:44:52 -0400
+Message-ID: <4DEE9BCD.1030304@hauke-m.de> (sfid-20110607_234459_897364_393A9FEC)
+Date: Tue, 07 Jun 2011 23:44:45 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1307350722.10094.29.camel@x61.thuisdomein>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	George Kashperko <george@znau.edu.ua>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Greg KH <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"mb@bu3sch.de" <mb@bu3sch.de>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"bernhardloos@googlemail.com" <bernhardloos@googlemail.com>
+Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <201106061503.14852.arnd@arndb.de> <4DED48EA.7070001@hauke-m.de> <201106062353.40470.arnd@arndb.de> <4DEDF98C.6020905@broadcom.com>
+In-Reply-To: <4DEDF98C.6020905@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 06, 2011 at 10:58:42AM +0200, Paul Bolle wrote:
-> On Tue, 2011-05-31 at 15:37 +0200, Stanislaw Gruszka wrote:
-> > My all attempts of reproduce the problem was unsuccessful. Please
-> > send me (off list since this could be quite big) dmesg output from 
-> > loading module to first microcode error, when using verbose debug eg:
-> > 
-> > $ modprobe -r iwl4965
-> > $ modprobe iwl4965 debug=0x47ffffff  
-> > 
-> > Note: driver have to be compiled with CONFIG_IWLWIFI_LEGACY_DEBUG.
-> > Also dmesg circular buffer can be too small to contain all requested
-> > messages. In such case, you will have to configure syslog like described
-> > here:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=35932#c2
+On 06/07/2011 12:12 PM, Arend van Spriel wrote:
+> On 06/06/2011 11:53 PM, Arnd Bergmann wrote:
+>> On Monday 06 June 2011 23:38:50 Hauke Mehrtens wrote:
+>>> Accessing chip common should be possible without scanning the hole bus
+>>> as it is at the first position and initializing most things just needs
+>>> chip common. For initializing the interrupts scanning is needed as we do
+>>> not know where the mips core is located.
+>>>
+>>> As we can not use kalloc on early boot we could use a function which
+>>> uses kalloc under normal conditions and when on early boot the
+>>> architecture code which starts the bcma code should also provide a
+>>> function which returns a pointer to some memory in its text segment to
+>>> use. We need space for 16 cores in the architecture code.
+>>>
+>>> In addition bcma_bus_register(struct bcma_bus *bus) has to be divided
+>>> into two parts. The first part will scan the bus and initialize chip
+>>> common and mips core. The second part will initialize pci core and
+>>> register the devices in the system. When using this under normal
+>>> conditions they will be called directly after each other.
+>> Just split out the minimal low-level function from the bcma_bus_scan
+>> then, to locate a single device based on some identifier. The
+>> bcma_bus_scan() function can then repeatedly allocate one device
+>> and pass it to the low-level function when doing the proper scan,
+>> while the arch code calls the low-level function directly with static
+>> data.
 > 
-> 0) I have not yet done that, but I do hope to do it shortly.
+> If going for this we should pass struct bcma_device_id as match
+> parameter as that identifies the core appropriately although you
+> probably only want to match manufacturer and core identifiers.
 > 
-> 1) This Microcode SW error pops up only every now and then, so I'm
-> afraid I might find myself logging debug messages for quite some time.
+> Gr. AvS
+> 
 
-Hmm, perhaps there is some way to reproduce a error?
+What is the problem with scanning the full bus? Scanning in general
+works for embedded devices, just allocating memory with kalloc does not
+work at that time, but the architecture code (something in
+arch/mips/bcm47xx/) could provide some memory to store the struct
+bcma_core, like it does for struct bcma_bus. We could just provide
+memory for chipcommon and mips core or memory for all possible 16 cores,
+the maximum number, as most embedded devices have ~9 cores providing
+memory for 16 cores is not a big vast of memory and then we could use
+the normal scan function.
 
-> What is the average volume of those messages? If it's no more than, say,
-> 10 MB/min I can still run in verbose debug mode for hours on end without
-> worrying about running out of disk space.  
+A special scan function would just skip the wrong cores so I do not see
+any advantage in that.
 
-I don't know how fast verbose logging will eat disk space, perhaps
-you can check that? :-) Maybe logger could be configured to do not
-log date, hostname and component, that would decrease size of logs
-vastly. If not, less verbose logging could be used, let say
-debug=0x00375fff, that will miss some information, but maybe would be
-enough to figure out where the bug is.
+We could build a scan function which searches for one core and uses a
+struct bcma_core stored on the stack and returns the struct bcma_core if
+it found the wanted one. Then we could search for chipcommon and mips
+and store then in arch code in arch/mips/bcm47xx and use them. When boot
+is ready and we are searching the complete bus there is probably
+something differences in the init process from normal init as we already
+initialized chipcommon sometime earlier. I Would prefer to scan the bus
+completely and initialize chipcommon and mips in early boot.
 
-Thanks
-Stanislaw
+Hauke
