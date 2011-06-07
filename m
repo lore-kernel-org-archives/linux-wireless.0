@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50816 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752277Ab1F2TQo (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:34937 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722Ab1FGHkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 15:16:44 -0400
-Date: Wed, 29 Jun 2011 15:02:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jon Mason <jdmason@kudzu.us>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 18/19] iwlwifi: remove unnecessary read of PCI_CAP_ID_EXP
-Message-ID: <20110629190209.GB14425@tuxdriver.com> (sfid-20110629_211648_440092_A16C7E96)
-References: <1309196969-16348-1-git-send-email-jdmason@kudzu.us>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1309196969-16348-1-git-send-email-jdmason@kudzu.us>
+	Tue, 7 Jun 2011 03:40:13 -0400
+Received: by wwa36 with SMTP id 36so4621097wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2011 00:40:12 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: use _ni version of ieee80211_tx_status
+Date: Tue,  7 Jun 2011 10:40:39 +0300
+Message-Id: <1307432439-1752-1-git-send-email-eliad@wizery.com> (sfid-20110607_094017_613549_620E0041)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 27, 2011 at 12:49:29PM -0500, Jon Mason wrote:
-> The PCIE capability offset is saved during PCI bus walking.  It will
-> remove an unnecessary search in the PCI configuration space if this
-> value is referenced instead of reacquiring it.
-> 
-> Signed-off-by: Jon Mason <jdmason@kudzu.us>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> index 7328fbf..60d9140 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> @@ -93,7 +93,7 @@ static u16 iwl_pciexp_link_ctrl(struct iwl_bus *bus)
->  	u16 pci_lnk_ctl;
->  	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
->  
-> -	pos = pci_find_capability(pci_dev, PCI_CAP_ID_EXP);
-> +	pos = pci_pcie_cap(priv->pci_dev);
->  	pci_read_config_word(pci_dev, pos + PCI_EXP_LNKCTL, &pci_lnk_ctl);
->  	return pci_lnk_ctl;
->  }
-> -- 
-> 1.7.5.4
+wl1271_flush_deferred_work(), which calls ieee80211_rx() and
+ieee80211_tx_status(), is called from a process context.
+hence, use ieee80211_tx_status_ni() instead of ieee80211_tx_status().
 
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-pci.o
-drivers/net/wireless/iwlwifi/iwl-pci.c: In function ‘iwl_pciexp_link_ctrl’:
-drivers/net/wireless/iwlwifi/iwl-pci.c:96:21: error: ‘priv’ undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-pci.c:96:21: note: each undeclared identifier is reported only once for each function it appears in
-make[2]: *** [drivers/net/wireless/iwlwifi/iwl-pci.o] Error 1
-make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
-make: *** [drivers/net/wireless/] Error 2
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ drivers/net/wireless/wl12xx/ps.c   |    2 +-
+ drivers/net/wireless/wl12xx/tx.c   |    6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Please do make sure to compile patches before sending them to the list.
-
-JOhn
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index fb0f764..11e3701 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -857,7 +857,7 @@ static void wl1271_flush_deferred_work(struct wl1271 *wl)
+ 
+ 	/* Return sent skbs to the network stack */
+ 	while ((skb = skb_dequeue(&wl->deferred_tx_queue)))
+-		ieee80211_tx_status(wl->hw, skb);
++		ieee80211_tx_status_ni(wl->hw, skb);
+ }
+ 
+ static void wl1271_netstack_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index d3e377d..5116db0 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -204,7 +204,7 @@ static void wl1271_ps_filter_frames(struct wl1271 *wl, u8 hlid)
+ 			info = IEEE80211_SKB_CB(skb);
+ 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ 			info->status.rates[0].idx = -1;
+-			ieee80211_tx_status(wl->hw, skb);
++			ieee80211_tx_status_ni(wl->hw, skb);
+ 			filtered++;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 6603e60..b2635c7 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -782,7 +782,7 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
+ 			info = IEEE80211_SKB_CB(skb);
+ 			info->status.rates[0].idx = -1;
+ 			info->status.rates[0].count = 0;
+-			ieee80211_tx_status(wl->hw, skb);
++			ieee80211_tx_status_ni(wl->hw, skb);
+ 			total++;
+ 		}
+ 	}
+@@ -820,7 +820,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 					info = IEEE80211_SKB_CB(skb);
+ 					info->status.rates[0].idx = -1;
+ 					info->status.rates[0].count = 0;
+-					ieee80211_tx_status(wl->hw, skb);
++					ieee80211_tx_status_ni(wl->hw, skb);
+ 				}
+ 			}
+ 		}
+@@ -863,7 +863,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 			info->status.rates[0].idx = -1;
+ 			info->status.rates[0].count = 0;
+ 
+-			ieee80211_tx_status(wl->hw, skb);
++			ieee80211_tx_status_ni(wl->hw, skb);
+ 		}
+ 	}
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
