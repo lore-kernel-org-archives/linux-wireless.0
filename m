@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2830 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16161 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753444Ab1FQGiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 02:38:23 -0400
-Message-ID: <4DFAF645.5030303@broadcom.com> (sfid-20110617_083827_844704_2E30857D)
-Date: Fri, 17 Jun 2011 08:37:57 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1755103Ab1FGOyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2011 10:54:47 -0400
+Date: Tue, 7 Jun 2011 16:54:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Bernhard Schmidt <bschmidt@freebsd.org>
+Cc: Paul Bolle <pebolle@tiscali.nl>, linux-wireless@vger.kernel.org
+Subject: Re: [iwl4965] Microcode SW error detected
+Message-ID: <20110607145435.GA5179@redhat.com> (sfid-20110607_165454_365732_61364772)
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+ <201106070832.49048.bschmidt@freebsd.org>
 MIME-Version: 1.0
-To: "Pavel Roskin" <proski@gnu.org>
-cc: "Stanislaw Gruszka" <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if
- rate_lowest_index() fails
-References: <20110615220252.1918.73638.stgit@mj.roinet.com>
- <20110616102224.GB2178@redhat.com> <4DFA7EDF.70608@gnu.org>
-In-Reply-To: <4DFA7EDF.70608@gnu.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201106070832.49048.bschmidt@freebsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2011 12:08 AM, Pavel Roskin wrote:
-> On 06/16/2011 06:22 AM, Stanislaw Gruszka wrote:
->> Hi Pavel
->>
->> On Wed, Jun 15, 2011 at 06:02:52PM -0400, Pavel Roskin wrote:
->>> WARN_ON is not enough, as we cannot return a valid index, and the
->>> callers will use whatever we return, causing a cascade of oopses and
->>> eventually a panic.
->> We have fedora bug (https://bugzilla.redhat.com/show_bug.cgi?id=702627)
->> where only that warning is generated, and system works further (at least
->> bug reporter did not mention about it's hang). When moving to BUG(),
->> system from user perspective will simply hang, what is much worse.
->> I think, we should rather fix callers to be prepared and recover itself
->> when rate_lowest_index fail. Of course fixing real bug(s) that cause
->> rate index is not found would be best.
-> In my case, I was able to restart the system by sysrq when using BUG_ON,
-> but the system would hang hard with WARN_ON.  I think continuing after
-> returning an invalid index is wrong.  It will lead to memory corruption
-> that could in turn lead to corruption of the filesystem.
+On Tue, Jun 07, 2011 at 08:32:48AM +0200, Bernhard Schmidt wrote:
+> On Monday, May 23, 2011 13:45:06 Paul Bolle wrote:
+> > 0) Since I started running (release candidates of) kernel v2.6.39 errors
+> > like these show up in my log, every now and then:
+> > 
+> > iwl4965 0000:03:00.0: Microcode SW error detected.  Restarting 0x82000000.
+> > iwl4965 0000:03:00.0: Loaded firmware version: 228.61.2.24
+> > iwl4965 0000:03:00.0: Start IWL Error Log Dump:
+> > iwl4965 0000:03:00.0: Status: 0x000213E4, count: 5
+> > iwl4965 0000:03:00.0: Desc                                  Time       data1      data2      line
+> > iwl4965 0000:03:00.0: FH_ERROR                     (0x000C) 1821446380 0x00000008 0x03130000 208 
+> 
+> On a unrelated site note, I have a case where I can trigger a
+> FH_ERROR at this line 100% reliably. Not on Linux though..
+> While being associated to a 5GHz BSS doing a scan chan by chan
+> (instead of all at once) is enough to trigger it.
+That could be useful hint, we do not scan chan by chan, but we
+have thing called "plcp check health", which "restart radio"
+by requesting one channel scan. So perhaps disabling that could
+help.
 
-I think it is generally a bad idea to use BUG_ON as a solution. As 
-Stanislaw indicated there are platforms which can continue without a 
-hang so you are regressing those. Regarding your patch I think the 
--EINVAL is good to have, but leave the WARN_ON.
+> A workaround
+> is too not send probe requests for 2GHz channels at 1Mbps (CCK
+> flag) but at 6Mbps instead.
+> 
+> Maybe this bug report [1] is related too?
+> 
+> [1] http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1965
 
-Gr. AvS
+Hard to tell.
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+Thanks
+Stanislaw
 
-
+diff --git a/drivers/net/wireless/iwlegacy/iwl-rx.c b/drivers/net/wireless/iwlegacy/iwl-rx.c
+index 654cf23..6062da0 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-rx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-rx.c
+@@ -230,6 +230,8 @@ EXPORT_SYMBOL(iwl_legacy_rx_spectrum_measure_notif);
+ void iwl_legacy_recover_from_statistics(struct iwl_priv *priv,
+ 				struct iwl_rx_packet *pkt)
+ {
++	return;
++
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 	if (iwl_legacy_is_any_associated(priv)) {
