@@ -1,88 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:32854 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145Ab1F0UQi (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63134 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498Ab1FGJuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 16:16:38 -0400
-Date: Mon, 27 Jun 2011 16:02:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com
-Subject: Re: [PATCH] iwlagn: use PCI_DMA_* for pci_* operations
-Message-ID: <20110627200213.GD9166@tuxdriver.com> (sfid-20110627_221707_145393_4D84079F)
-References: <1309204219-9579-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1309204219-9579-1-git-send-email-linville@tuxdriver.com>
+	Tue, 7 Jun 2011 05:50:20 -0400
+Received: by wwa36 with SMTP id 36so4731860wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2011 02:50:19 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: use freezable workqueue for netstack_work
+Date: Tue,  7 Jun 2011 12:50:46 +0300
+Message-Id: <1307440246-22062-1-git-send-email-eliad@wizery.com> (sfid-20110607_115025_479683_BDDFCCAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would only be for 3.0, obviously.  It isn't really necessary,
-since the values are equal.  But, it seems wrong to misuse the API.
+When resuming (after wowlan), we want the rx packets (which is
+usually the wake-up packet itself) to be passed to mac80211 only
+after the resume notifier was completed, and mac80211 is up and
+running (otherwise, the packets will be dropped).
 
-John
+By enqueueing the netstack_work to a freezable workqueue, we can
+guarantee the rx processing to occur only after mac80211 was resumed.
 
-On Mon, Jun 27, 2011 at 03:50:19PM -0400, John W. Linville wrote:
-> "iwlagn: map command buffers BIDI" uses the DMA_* enumerations for DMA
-> directions, even though the pci_* DMA API is still in use.  That patch
-> was undoubtedly developed on top of "iwlagn: don't use the PCI wrappers
-> for DMA operation", which is due in the next release.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 4707431..9eee978 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -168,7 +168,7 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
->  	int index = txq->q.read_ptr;
->  
->  	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
-> -			 DMA_TO_DEVICE);
-> +			 PCI_DMA_TODEVICE);
->  
->  	/* free SKB */
->  	if (txq->txb) {
-> @@ -312,7 +312,7 @@ void iwl_cmd_queue_unmap(struct iwl_priv *priv)
->  
->  		if (txq->meta[i].flags & CMD_MAPPED) {
->  			iwlagn_unmap_tfd(priv, &txq->meta[i], &txq->tfds[i],
-> -					 DMA_BIDIRECTIONAL);
-> +					 PCI_DMA_BIDIRECTIONAL);
->  			txq->meta[i].flags = 0;
->  		}
->  
-> @@ -694,11 +694,11 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
->  		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
->  			continue;
->  		phys_addr = pci_map_single(priv->pci_dev, (void *)cmd->data[i],
-> -					   cmd->len[i], DMA_BIDIRECTIONAL);
-> +					   cmd->len[i], PCI_DMA_BIDIRECTIONAL);
->  		if (pci_dma_mapping_error(priv->pci_dev, phys_addr)) {
->  			iwlagn_unmap_tfd(priv, out_meta,
->  					 &txq->tfds[q->write_ptr],
-> -					 DMA_BIDIRECTIONAL);
-> +					 PCI_DMA_BIDIRECTIONAL);
->  			idx = -ENOMEM;
->  			goto out;
->  		}
-> @@ -802,7 +802,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
->  	cmd = txq->cmd[cmd_index];
->  	meta = &txq->meta[cmd_index];
->  
-> -	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], DMA_BIDIRECTIONAL);
-> +	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], PCI_DMA_BIDIRECTIONAL);
->  
->  	/* Input error checking is done when commands are added to queue. */
->  	if (meta->flags & CMD_WANT_SKB) {
-> -- 
-> 1.7.4.4
-> 
-> 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   12 +++++++++++-
+ drivers/net/wireless/wl12xx/rx.c     |    2 +-
+ drivers/net/wireless/wl12xx/tx.c     |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 4 files changed, 14 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9ee2411..1e2f76b 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4112,6 +4112,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	INIT_WORK(&wl->rx_streaming_disable_work,
+ 		  wl1271_rx_streaming_disable_work);
+ 
++	wl->freezable_wq = create_freezable_workqueue("wl12xx_wq");
++	if (!wl->freezable_wq) {
++		ret = -ENOMEM;
++		goto err_hw;
++	}
++
+ 	wl->channel = WL1271_DEFAULT_CHANNEL;
+ 	wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
+ 	wl->default_key = 0;
+@@ -4156,7 +4162,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->aggr_buf = (u8 *)__get_free_pages(GFP_KERNEL, order);
+ 	if (!wl->aggr_buf) {
+ 		ret = -ENOMEM;
+-		goto err_hw;
++		goto err_wq;
+ 	}
+ 
+ 	wl->dummy_packet = wl12xx_alloc_dummy_packet(wl);
+@@ -4201,6 +4207,9 @@ err_dummy_packet:
+ err_aggr:
+ 	free_pages((unsigned long)wl->aggr_buf, order);
+ 
++err_wq:
++	destroy_workqueue(wl->freezable_wq);
++
+ err_hw:
+ 	wl1271_debugfs_exit(wl);
+ 	kfree(plat_dev);
+@@ -4231,6 +4240,7 @@ int wl1271_free_hw(struct wl1271 *wl)
+ 
+ 	kfree(wl->fw_status);
+ 	kfree(wl->tx_res_if);
++	destroy_workqueue(wl->freezable_wq);
+ 
+ 	ieee80211_free_hw(wl->hw);
+ 
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index db230a5..9357695 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -150,7 +150,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ 	skb_trim(skb, skb->len - desc->pad_len);
+ 
+ 	skb_queue_tail(&wl->deferred_rx_queue, skb);
+-	ieee80211_queue_work(wl->hw, &wl->netstack_work);
++	queue_work(wl->freezable_wq, &wl->netstack_work);
+ 
+ 	return is_data;
+ }
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index b2635c7..200590c 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -727,7 +727,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 
+ 	/* return the packet to the stack */
+ 	skb_queue_tail(&wl->deferred_tx_queue, skb);
+-	ieee80211_queue_work(wl->hw, &wl->netstack_work);
++	queue_work(wl->freezable_wq, &wl->netstack_work);
+ 	wl1271_free_tx_id(wl, result->id);
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 06785db..8d6d039 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -445,6 +445,7 @@ struct wl1271 {
+ 	struct sk_buff_head deferred_tx_queue;
+ 
+ 	struct work_struct tx_work;
++	struct workqueue_struct *freezable_wq;
+ 
+ 	/* Pending TX frames */
+ 	unsigned long tx_frames_map[BITS_TO_LONGS(ACX_TX_DESCRIPTORS)];
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
