@@ -1,39 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62198 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799Ab1FNVVd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50865 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061Ab1FHOxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 17:21:33 -0400
-Received: by iyb14 with SMTP id 14so5024028iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 14:21:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTi=P4B-BogYqTQ7GwFsJkpAAs5c8nQ@mail.gmail.com>
-References: <1308078449.13553.14.camel@thonov-ubuntu> <BANLkTikb9NKWEaJ2-C2DYpUpp0Rm9iEkvQ@mail.gmail.com>
- <BANLkTi=P4B-BogYqTQ7GwFsJkpAAs5c8nQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 14 Jun 2011 14:21:11 -0700
-Message-ID: <BANLkTimNHoUDnSQFysOPOz20_y3pKYywBw@mail.gmail.com> (sfid-20110614_232136_747396_26C6C4AC)
-Subject: Re: Bad instructions on linuxwireless.org?
-To: Thomas Novin <thomas@xyz.pp.se>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 8 Jun 2011 10:53:12 -0400
+Subject: Re: iwlagn aggregation problem when stations are removed/re-added
+ quickly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1307543824.5115.10.camel@wwguy-ubuntu>
+References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
+	 (sfid-20110514_005657_579238_E23F3390)  <1307531276.3961.8.camel@jlt3.sipsolutions.net>
+	 <1307543824.5115.10.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Jun 2011 16:53:01 +0200
+Message-ID: <1307544781.30277.6.camel@jlt3.sipsolutions.net> (sfid-20110608_165316_129197_1CBF944A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 14, 2011 at 1:11 PM, Thomas Novin <thomas@xyz.pp.se> wrote:
-> On Tue, Jun 14, 2011 at 9:11 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>
->> Try again, a new tarball just baked.
->>
->
-> That worked, the previous one was baked 2011-06-13 so why was my
-> directory named 2011-06-01 instead of that? I downloaded it just 15
-> minutes before sending that first email.
->
-> But OK, maybe a temporary problem.
+On Wed, 2011-06-08 at 07:37 -0700, wwguy wrote:
+> On Wed, 2011-06-08 at 04:07 -0700, Johannes Berg wrote:
+> > On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
+> > 
+> > > I'm running an experiment where a client connects to the AP (both HT
+> > > iwlagn devices), starts a large transfer that gets aggregation going,
+> > > disassociates, and then reassociates and restarts the transfer.
+> > > 
+> > > When mac80211 stops the queue (as part of the client's disassocation
+> > > process), it goes into the following code:
+> > > 
+> > >                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
+> > >                 priv->stations[sta_id].tid[tid].agg.state =
+> > >                                 IWL_EMPTYING_HW_QUEUE_DELBA;
+> > >                 spin_unlock_irqrestore(&priv->sta_lock, flags);
+> > > 
+> > > but if the station is removed right away the packets stay in the
+> > > queue. Indeed, when the client reconnects, the packets are then
+> > > delivered! But then the queue gets stuck and the AP issues a firmware
+> > > reset, which doesn't actually get traffic flowing again. Below,
+> > > there's a log with IWL_DL_HT set. It may be something racy; adding
+> > > DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
+> > > in a few tries.
+> > > 
+> > > I suspect this will also be a problem with P2P, and not just my klugey
+> > > use of AP mode. Any suggestions as to how to fix?
+> > 
+> > Sorry I'm replying this late. I'm not sure what the best way to fix it
+> > would be, but it makes sense that this would happen. Maybe we can flush
+> > the aggregation queue (asking the ucode to drop all frames) when the
+> > station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
+> > know if that's possible?
+> > 
+> flush the queue might be a good solution, I was being told (I don't
+> remember who and when which is bad), the "tx flush" command is needed
+> especially for P2P
+> 
+> btw, there are 2 type of "tx flush", flush all the frames in uCode, or
+> just flush the frames in specified queue.
 
-When compat-wireless cannot run ./scripts/admin-update.sh it barfs and
-does not make a tarball. After I applied Hauke's new patches it was
-able to run that fine and we get a tarball out.
+Right, but the flush seems to be implemented per FIFO and queue, so it's
+a bit confusing. In this case we should drop all frames out of the
+aggretgaiton queue.
 
-  Luis
+johannes
+
