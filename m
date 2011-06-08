@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43060 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065Ab1FHL1a (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:43310 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755697Ab1FHLy0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 07:27:30 -0400
-Subject: [PATCH v2] mac80211: fix IBSS teardown race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ignacy Gawedzki <i@lri.fr>
-In-Reply-To: <1307532343.3961.9.camel@jlt3.sipsolutions.net> (sfid-20110608_132549_830215_50FA69C7)
-References: <1307532343.3961.9.camel@jlt3.sipsolutions.net>
-	 (sfid-20110608_132549_830215_50FA69C7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 13:27:29 +0200
-Message-ID: <1307532449.3961.12.camel@jlt3.sipsolutions.net> (sfid-20110608_132732_995888_E86E799F)
-Mime-Version: 1.0
+	Wed, 8 Jun 2011 07:54:26 -0400
+Subject: [PATCH 1/5] ath6kl: export firmware version to user space
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Wed, 08 Jun 2011 14:54:19 +0300
+Message-ID: <20110608115419.32208.98879.stgit@localhost6.localdomain6> (sfid-20110608_135428_798824_6A2AC4A0)
+In-Reply-To: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Kalle Valo <kalle.valo@atheros.com>
 
-Ignacy reports that sometimes after leaving an IBSS
-joining a new one didn't work because there still
-were stations on the list. He fixed it by flushing
-stations when attempting to join a new IBSS, but
-this shouldn't be happening in the first case. When
-I looked into it I saw a race condition in teardown
-that could cause stations to be added after flush,
-and thus cause this situation. Ignacy confirms that
-after applying my patch he hasn't seen this happen
-again.
+cfg80211 exports wiphy->fw_version to user space via ethtool interface.
 
-Reported-by: Ignacy Gawedzki <i@lri.fr>
-Debugged-by: Ignacy Gawedzki <i@lri.fr>
-Tested-by: Ignacy Gawedzki <i@lri.fr>
-Cc: stable@kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The obligatory screenshot:
+
+$ sudo ethtool -i wlan0
+driver: ath6kl_hifdev
+version: 2.6.39-rc4+
+firmware-version: 3:1:1:149
+bus-info: mmc0:0001:1
+$
+
+Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
 ---
-v2: cc stable
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
- net/mac80211/ibss.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
---- a/net/mac80211/ibss.c	2011-06-08 07:55:21.000000000 +0200
-+++ b/net/mac80211/ibss.c	2011-06-08 13:16:20.000000000 +0200
-@@ -965,6 +965,10 @@ int ieee80211_ibss_leave(struct ieee8021
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index 48dd9e3..30ae63b 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -4114,6 +4114,13 @@ ar6000_ready_event(void *devt, u8 *datap, u8 phyCap, u32 sw_ver, u32 abi_ver)
+     ar->arVersion.wlan_ver = sw_ver;
+     ar->arVersion.abi_ver = abi_ver;
  
- 	mutex_lock(&sdata->u.ibss.mtx);
- 
-+	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
-+	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
-+	sdata->u.ibss.ssid_len = 0;
++    snprintf(ar->wdev->wiphy->fw_version, sizeof(ar->wdev->wiphy->fw_version),
++	     "%u:%u:%u:%u",
++	     (ar->arVersion.wlan_ver & 0xf0000000) >> 28,
++	     (ar->arVersion.wlan_ver & 0x0f000000) >> 24,
++	     (ar->arVersion.wlan_ver & 0x00ff0000) >> 16,
++	     (ar->arVersion.wlan_ver & 0x0000ffff));
 +
- 	active_ibss = ieee80211_sta_active_ibss(sdata);
- 
- 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-@@ -999,8 +1003,6 @@ int ieee80211_ibss_leave(struct ieee8021
- 	kfree_skb(skb);
- 
- 	skb_queue_purge(&sdata->skb_queue);
--	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
--	sdata->u.ibss.ssid_len = 0;
- 
- 	del_timer_sync(&sdata->u.ibss.timer);
- 
-
+     /* Indicate to the waiting thread that the ready event was received */
+     ar->arWmiReady = true;
+     wake_up(&arEvent);
 
