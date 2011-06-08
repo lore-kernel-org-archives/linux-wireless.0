@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:57889 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337Ab1FOMnc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 08:43:32 -0400
-Received: by yxi11 with SMTP id 11so191212yxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 05:43:32 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 15 Jun 2011 20:43:31 +0800
-Message-ID: <BANLkTi=AM=mqmz7+hYGMwmVhFTHHd0o3Ug@mail.gmail.com> (sfid-20110615_144335_938466_44053B48)
-Subject: can mesh(802.11s) be supported in 802.11n?
-From: b z <zb80211@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:19997 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753628Ab1FHOe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 10:34:59 -0400
+Subject: Re: bt coex active on iwlegacy?
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110608140524.GB2283@redhat.com>
+References: <20110608140524.GB2283@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Jun 2011 07:31:24 -0700
+Message-ID: <1307543484.5115.6.camel@wwguy-ubuntu> (sfid-20110608_163502_653117_CDB4DA50)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have got 2 802.11n wireless routers using ralink rt3052f soc chip,mimo 2x2
-burned with openwrt (kernel 2.6.37.6, compat-wireless-2011-05-27)
+On Wed, 2011-06-08 at 07:05 -0700, Stanislaw Gruszka wrote:
+> Is bt_coex_active=true useful on iwlegacy? Or could be removed,
+> or assigned to false by default? I'm asking regarding random, rare
+> connections hangs and microcode errors that some people have on 4965.
+> 
+Back in 6000 time (2 years ago), we encounter problem on some of the
+OEM's system has one of the pin raise high(I don't remember which pin)
+all the time which cause our WiFi device believe there were BT traffic,
+since BT traffic has higher priority then WiFi traffic, so the WiFi can
+not establish connection. that is the main reason behind this module
+parameter which used to disable bt coex. By default, the flag should set
+to "true" unless the problem is being seen.
 
-I configured them as mesh point respectively,  then
-#iw dev wlan0 station dump
+We continue to see this problem from time to time even it is not so
+often. 
 
-but the tx rate and rx rate still not exceed 54mbps, that is mean the
-ht mode(300mbps) is not been actived
+Thanks
+Wey
 
-can anyone tell me how to active the 802.11n ht mode in mesh?
-it is the problem with mac80211 or rt2800pci driver?
-or mesh using 802.11n is not implemented in the current kernel?
+ 
 
-will it be implemented in the future?
-thank!
+
