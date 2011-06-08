@@ -1,82 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46160 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932518Ab1FGVow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 17:44:52 -0400
-Message-ID: <4DEE9BCD.1030304@hauke-m.de> (sfid-20110607_234459_897364_393A9FEC)
-Date: Tue, 07 Jun 2011 23:44:45 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:53553 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab1FHToc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 15:44:32 -0400
+Received: by pzk9 with SMTP id 9so400397pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2011 12:44:32 -0700 (PDT)
+Date: Wed, 8 Jun 2011 22:44:04 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] ath6kl: cache firmware
+Message-ID: <20110608194031.GA4069@shale.localdomain> (sfid-20110608_214436_876468_D25823BA)
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+ <20110608115440.32208.75072.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	George Kashperko <george@znau.edu.ua>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Greg KH <greg@kroah.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"mb@bu3sch.de" <mb@bu3sch.de>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"bernhardloos@googlemail.com" <bernhardloos@googlemail.com>
-Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <201106061503.14852.arnd@arndb.de> <4DED48EA.7070001@hauke-m.de> <201106062353.40470.arnd@arndb.de> <4DEDF98C.6020905@broadcom.com>
-In-Reply-To: <4DEDF98C.6020905@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110608115440.32208.75072.stgit@localhost6.localdomain6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2011 12:12 PM, Arend van Spriel wrote:
-> On 06/06/2011 11:53 PM, Arnd Bergmann wrote:
->> On Monday 06 June 2011 23:38:50 Hauke Mehrtens wrote:
->>> Accessing chip common should be possible without scanning the hole bus
->>> as it is at the first position and initializing most things just needs
->>> chip common. For initializing the interrupts scanning is needed as we do
->>> not know where the mips core is located.
->>>
->>> As we can not use kalloc on early boot we could use a function which
->>> uses kalloc under normal conditions and when on early boot the
->>> architecture code which starts the bcma code should also provide a
->>> function which returns a pointer to some memory in its text segment to
->>> use. We need space for 16 cores in the architecture code.
->>>
->>> In addition bcma_bus_register(struct bcma_bus *bus) has to be divided
->>> into two parts. The first part will scan the bus and initialize chip
->>> common and mips core. The second part will initialize pci core and
->>> register the devices in the system. When using this under normal
->>> conditions they will be called directly after each other.
->> Just split out the minimal low-level function from the bcma_bus_scan
->> then, to locate a single device based on some identifier. The
->> bcma_bus_scan() function can then repeatedly allocate one device
->> and pass it to the low-level function when doing the proper scan,
->> while the arch code calls the low-level function directly with static
->> data.
+On Wed, Jun 08, 2011 at 02:54:40PM +0300, Kalle Valo wrote:
+> From: Kalle Valo <kalle.valo@atheros.com>
 > 
-> If going for this we should pass struct bcma_device_id as match
-> parameter as that identifies the core appropriately although you
-> probably only want to match manufacturer and core identifiers.
+> Drivers should not request firmware during resume. Fix ath6kl to
+> cache the firmware instead.
 > 
-> Gr. AvS
+> Signed-off-by: Kalle Valo <kalle.valo@atheros.com>
+> ---
+>  drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   53 ++++++++++++++------
+>  .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    9 +++
+>  2 files changed, 47 insertions(+), 15 deletions(-)
 > 
+> diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> index 30ae63b..74aa343 100644
+> --- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> +++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> @@ -954,9 +954,13 @@ ar6000_transfer_bin_file(struct ar6_softc *ar, AR6K_BIN_FILE file, u32 address,
+>      const char *filename;
+>      const struct firmware *fw_entry;
+>      u32 fw_entry_size;
+> +    u8 **buf;
+> +    size_t *buf_len;
 
-What is the problem with scanning the full bus? Scanning in general
-works for embedded devices, just allocating memory with kalloc does not
-work at that time, but the architecture code (something in
-arch/mips/bcm47xx/) could provide some memory to store the struct
-bcma_core, like it does for struct bcma_bus. We could just provide
-memory for chipcommon and mips core or memory for all possible 16 cores,
-the maximum number, as most embedded devices have ~9 cores providing
-memory for 16 cores is not a big vast of memory and then we could use
-the normal scan function.
+Don't make buf_len a pointer that just makes the code messier.
 
-A special scan function would just skip the wrong cores so I do not see
-any advantage in that.
+[snip]
 
-We could build a scan function which searches for one core and uses a
-struct bcma_core stored on the stack and returns the struct bcma_core if
-it found the wanted one. Then we could search for chipcommon and mips
-and store then in arch code in arch/mips/bcm47xx and use them. When boot
-is ready and we are searching the complete bus there is probably
-something differences in the init process from normal init as we already
-initialized chipcommon sometime earlier. I Would prefer to scan the bus
-completely and initialize chipcommon and mips in early boot.
+> +
+> +    if (WARN_ON((buf == NULL) || (buf_len == NULL)))
+> +	    return A_ERROR;
 
-Hauke
+This test is a nonsense.  "buf" and buf_len are always valid
+pointers here.  Generally, I'd almost prefer a oops with a stack
+trace instead of adding in bogus error handling code for stuff that
+can't happen.
+
+Also "buf" is never initialized to NULL, so if there were a
+programming bug introduced, it would generate an uninitialized
+variable warning even without the superflous test.  So lets remove
+it.
+
+> +
+> +    if (*buf == NULL) {
+> +	    if ((A_REQUEST_FIRMWARE(&fw_entry, filename, ((struct device *)ar->osDevInfo.pOSDevice))) != 0)
+> +	    {
+            ^
+
+This is on the wrong line.
+
+> +		    AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Failed to get %s\n", filename));
+> +		    return A_ENOENT;
+> +	    }
+> +
+> +	    *buf = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+> +	    *buf_len = fw_entry->size;
+> +	    A_RELEASE_FIRMWARE(fw_entry);
+>      }
+>  
+>  #ifdef SOFTMAC_FILE_USED
+> -    if (file==AR6K_BOARD_DATA_FILE && fw_entry->data) {
+> -        ar6000_softmac_update(ar, (u8 *)fw_entry->data, fw_entry->size);
+> +    if (file==AR6K_BOARD_DATA_FILE && *buf_len) {
+              ^^^^
+White space.
+
+> +        ar6000_softmac_update(ar, *buf, *buf_len);
+>      }
+>  #endif 
+>  
+>  
+> -    fw_entry_size = fw_entry->size;
+> +    fw_entry_size = *buf_len;
+>  
+>      /* Load extended board data for AR6003 */
+> -    if ((file==AR6K_BOARD_DATA_FILE) && (fw_entry->data)) {
+> +    if ((file==AR6K_BOARD_DATA_FILE) && *buf) {
+               ^^^^
+White space is wrong here.
+
+>          u32 board_ext_address;
+>          u32 board_ext_data_size;
+>          u32 board_data_size;
+> @@ -1089,14 +1109,13 @@ ar6000_transfer_bin_file(struct ar6_softc *ar, AR6K_BIN_FILE file, u32 address,
+>          AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("Board extended Data download address: 0x%x\n", board_ext_address));
+>  
+>          /* check whether the target has allocated memory for extended board data and file contains extended board data */
+> -        if ((board_ext_address) && (fw_entry->size == (board_data_size + board_ext_data_size))) {
+> +        if ((board_ext_address) && (*buf_len == (board_data_size + board_ext_data_size))) {
+               ^                 ^
+
+Those parenthesis are not needed.
+
+>              u32 param;
+>  
+> -            status = BMIWriteMemory(ar->arHifDevice, board_ext_address, (u8 *)(fw_entry->data + board_data_size), board_ext_data_size);
+> +            status = BMIWriteMemory(ar->arHifDevice, board_ext_address, (u8 *)(*buf + board_data_size), board_ext_data_size);
+                                                                           ^^^^^^
+This cast isn't needed by the way.
+
+regards,
+dan carpenter
