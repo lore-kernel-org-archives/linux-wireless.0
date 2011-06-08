@@ -1,169 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46617 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875Ab1FTLku (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 07:40:50 -0400
-Subject: [PATCH] netlink: advertise incomplete dumps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>,
+Received: from mga11.intel.com ([192.55.52.93]:21354 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753518Ab1FHPO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 11:14:58 -0400
+Subject: Re: iwlagn aggregation problem when stations are removed/re-added
+ quickly
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	"aloisio.almeida" <aloisio.almeida@openbossa.org>,
-	John Linville <linville@tuxdriver.com>,
-	Thomas Graf <tgraf@suug.ch>
+In-Reply-To: <1307544781.30277.6.camel@jlt3.sipsolutions.net>
+References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
+	 (sfid-20110514_005657_579238_E23F3390) <1307531276.3961.8.camel@jlt3.sipsolutions.net>
+	 <1307543824.5115.10.camel@wwguy-ubuntu>
+	 <1307544781.30277.6.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Jun 2011 13:40:46 +0200
-Message-ID: <1308570046.4322.5.camel@jlt3.sipsolutions.net> (sfid-20110620_134105_286141_FBFB4948)
+Date: Wed, 08 Jun 2011 08:11:23 -0700
+Message-ID: <1307545883.5115.23.camel@wwguy-ubuntu> (sfid-20110608_171503_866259_C63D1E95)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2011-06-08 at 07:53 -0700, Johannes Berg wrote:
+> On Wed, 2011-06-08 at 07:37 -0700, wwguy wrote:
+> > On Wed, 2011-06-08 at 04:07 -0700, Johannes Berg wrote:
+> > > On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
+> > > 
+> > > > I'm running an experiment where a client connects to the AP (both HT
+> > > > iwlagn devices), starts a large transfer that gets aggregation going,
+> > > > disassociates, and then reassociates and restarts the transfer.
+> > > > 
+> > > > When mac80211 stops the queue (as part of the client's disassocation
+> > > > process), it goes into the following code:
+> > > > 
+> > > >                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
+> > > >                 priv->stations[sta_id].tid[tid].agg.state =
+> > > >                                 IWL_EMPTYING_HW_QUEUE_DELBA;
+> > > >                 spin_unlock_irqrestore(&priv->sta_lock, flags);
+> > > > 
+> > > > but if the station is removed right away the packets stay in the
+> > > > queue. Indeed, when the client reconnects, the packets are then
+> > > > delivered! But then the queue gets stuck and the AP issues a firmware
+> > > > reset, which doesn't actually get traffic flowing again. Below,
+> > > > there's a log with IWL_DL_HT set. It may be something racy; adding
+> > > > DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
+> > > > in a few tries.
+> > > > 
+> > > > I suspect this will also be a problem with P2P, and not just my klugey
+> > > > use of AP mode. Any suggestions as to how to fix?
+> > > 
+> > > Sorry I'm replying this late. I'm not sure what the best way to fix it
+> > > would be, but it makes sense that this would happen. Maybe we can flush
+> > > the aggregation queue (asking the ucode to drop all frames) when the
+> > > station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
+> > > know if that's possible?
+> > > 
+> > flush the queue might be a good solution, I was being told (I don't
+> > remember who and when which is bad), the "tx flush" command is needed
+> > especially for P2P
+> > 
+> > btw, there are 2 type of "tx flush", flush all the frames in uCode, or
+> > just flush the frames in specified queue.
+> 
+> Right, but the flush seems to be implemented per FIFO and queue, so it's
+> a bit confusing. In this case we should drop all frames out of the
+> aggretgaiton queue.
+> 
 
-Consider the following situation:
- * a dump that would show 8 entries, four in the first
-   round, and four in the second
- * between the first and second rounds, 6 entries are
-   removed
- * now the second round will not show any entry, and
-   even if there is a sequence/generation counter the
-   application will not know
+It is confuse, it will drop all the frames on the request queues 
 
-To solve this problem, add a new flag NLM_F_DUMP_INTR
-to the netlink header that indicates the dump wasn't
-consistent, this flag can also be set on the MSG_DONE
-message that terminates the dump, and as such above
-situation can be detected.
+flush_cmd.fifo_control = IWL_TX_FIFO_VO_MSK | IWL_TX_FIFO_VI_MSK |
+			 IWL_TX_FIFO_BE_MSK | IWL_TX_FIFO_BK_MSK;
+if (priv->cfg->sku & EEPROM_SKU_CAP_11N_ENABLE)
+		flush_cmd.fifo_control |= IWL_AGG_TX_QUEUE_MSK;
 
-To achieve this, add a sequence counter to the netlink
-callback struct. Of course, netlink code still needs
-to use this new functionality. The correct way to do
-that is to always set cb->seq when a dumpit callback
-is invoked and call nl_dump_check_consistent() for
-each new message. The core code will also call this
-function for the final MSG_DONE message.
+But it did not consider different context, I will submit a separate
+patch to fix it
 
-To make it usable with generic netlink, a new function
-genlmsg_nlhdr() is needed to obtain the netlink header
-from the genetlink user header.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-Should we merge this through wireless? From wireless-next it'll go into
-net-next quickly, but the converse isn't true, so using it in wireless
-would be harder if it was merged through net-next I think? Or John can
-cherry-pick into wireless-testing?
-
-
- include/linux/netlink.h  |    2 ++
- include/net/genetlink.h  |   32 ++++++++++++++++++++++++++++++++
- include/net/netlink.h    |   24 ++++++++++++++++++++++++
- net/netlink/af_netlink.c |    2 ++
- 4 files changed, 60 insertions(+)
-
---- a/include/linux/netlink.h	2011-06-20 08:42:41.000000000 +0200
-+++ b/include/linux/netlink.h	2011-06-20 09:39:19.000000000 +0200
-@@ -49,6 +49,7 @@ struct nlmsghdr {
- #define NLM_F_MULTI		2	/* Multipart message, terminated by NLMSG_DONE */
- #define NLM_F_ACK		4	/* Reply with ack, with zero or error code */
- #define NLM_F_ECHO		8	/* Echo this request 		*/
-+#define NLM_F_DUMP_INTR		16	/* Dump was inconsistent due to sequence change */
+Wey
  
- /* Modifiers to GET request */
- #define NLM_F_ROOT	0x100	/* specify tree	root	*/
-@@ -222,6 +223,7 @@ struct netlink_callback {
- 					struct netlink_callback *cb);
- 	int			(*done)(struct netlink_callback *cb);
- 	int			family;
-+	unsigned int		prev_seq, seq;
- 	long			args[6];
- };
- 
---- a/net/netlink/af_netlink.c	2011-06-20 08:42:41.000000000 +0200
-+++ b/net/netlink/af_netlink.c	2011-06-20 09:39:19.000000000 +0200
-@@ -1693,6 +1693,8 @@ static int netlink_dump(struct sock *sk)
- 	if (!nlh)
- 		goto errout_skb;
- 
-+	nl_dump_check_consistent(cb, nlh);
-+
- 	memcpy(nlmsg_data(nlh), &len, sizeof(len));
- 
- 	if (sk_filter(sk, skb))
---- a/include/net/genetlink.h	2011-06-20 08:42:41.000000000 +0200
-+++ b/include/net/genetlink.h	2011-06-20 13:36:54.000000000 +0200
-@@ -160,6 +160,38 @@ static inline void *genlmsg_put(struct s
- }
- 
- /**
-+ * genlmsg_nlhdr - Obtain netlink header from user specified header
-+ * @user_hdr: user header as returned from genlmsg_put()
-+ * @family: generic netlink family
-+ *
-+ * Returns pointer to netlink header.
-+ */
-+static inline struct nlmsghdr *genlmsg_nlhdr(void *user_hdr,
-+					     struct genl_family *family)
-+{
-+	return (struct nlmsghdr *)((char *)user_hdr -
-+				   family->hdrsize -
-+				   GENL_HDRLEN -
-+				   NLMSG_HDRLEN);
-+}
-+
-+/**
-+ * genl_dump_check_consistent - check if sequence is consistent and advertise if not
-+ * @cb: netlink callback structure that stores the sequence number
-+ * @user_hdr: user header as returned from genlmsg_put()
-+ * @family: generic netlink family
-+ *
-+ * Cf. nl_dump_check_consistent(), this just provides a wrapper to make it
-+ * simpler to use with generic netlink.
-+ */
-+static inline void genl_dump_check_consistent(struct netlink_callback *cb,
-+					      void *user_hdr,
-+					      struct genl_family *family)
-+{
-+	nl_dump_check_consistent(cb, genlmsg_nlhdr(user_hdr, family));
-+}
-+
-+/**
-  * genlmsg_put_reply - Add generic netlink header to a reply message
-  * @skb: socket buffer holding the message
-  * @info: receiver info
---- a/include/net/netlink.h	2011-06-20 08:42:41.000000000 +0200
-+++ b/include/net/netlink.h	2011-06-20 09:39:19.000000000 +0200
-@@ -638,6 +638,30 @@ static inline int nlmsg_unicast(struct s
- 	     nlmsg_ok(pos, rem); \
- 	     pos = nlmsg_next(pos, &(rem)))
- 
-+/**
-+ * nl_dump_check_consistent - check if sequence is consistent and advertise if not
-+ * @cb: netlink callback structure that stores the sequence number
-+ * @nlh: netlink message header to write the flag to
-+ *
-+ * This function checks if the sequence (generation) number changed during dump
-+ * and if it did, advertises it in the netlink message header.
-+ *
-+ * The correct way to use it is to set cb->seq to the generation counter when
-+ * all locks for dumping have been acquired, and then call this function for
-+ * each message that is generated.
-+ *
-+ * Note that due to initialisation concerns, 0 is an invalid sequence number
-+ * and must not be used by code that uses this functionality.
-+ */
-+static inline void
-+nl_dump_check_consistent(struct netlink_callback *cb,
-+			 struct nlmsghdr *nlh)
-+{
-+	if (cb->prev_seq && cb->seq != cb->prev_seq)
-+		nlh->nlmsg_flags |= NLM_F_DUMP_INTR;
-+	cb->prev_seq = cb->seq;
-+}
-+
- /**************************************************************************
-  * Netlink Attributes
-  **************************************************************************/
 
 
