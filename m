@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41818 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900Ab1FUJZA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:25:00 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44116 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755006Ab1FHN2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 09:28:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 27/32] ath9k: set diversity group for AR9330
-Date: Tue, 21 Jun 2011 11:23:47 +0200
-Message-Id: <1308648232-9906-28-git-send-email-juhosg@openwrt.org> (sfid-20110621_112532_042677_6CA9E10B)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/6] iwlegacy: remove unused power commands defines
+Date: Wed,  8 Jun 2011 15:28:24 +0200
+Message-Id: <1307539709-11320-1-git-send-email-sgruszka@redhat.com> (sfid-20110608_152843_215067_F971526D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-commands.h |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index e788fa0..1baca8e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1215,7 +1215,10 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
- 				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-commands.h b/drivers/net/wireless/iwlegacy/iwl-commands.h
+index 17a1d50..ee21210 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-commands.h
++++ b/drivers/net/wireless/iwlegacy/iwl-commands.h
+@@ -2297,14 +2297,7 @@ struct iwl_spectrum_notification {
+ #define IWL_POWER_VEC_SIZE 5
  
--	if (AR_SREV_9485(ah)) {
-+	if (AR_SREV_9330_11(ah)) {
-+		antconf->lna1_lna2_delta = -9;
-+		antconf->div_group = 1;
-+	} else if (AR_SREV_9485(ah)) {
- 		antconf->lna1_lna2_delta = -9;
- 		antconf->div_group = 2;
- 	} else {
+ #define IWL_POWER_DRIVER_ALLOW_SLEEP_MSK	cpu_to_le16(BIT(0))
+-#define IWL_POWER_POWER_SAVE_ENA_MSK		cpu_to_le16(BIT(0))
+-#define IWL_POWER_POWER_MANAGEMENT_ENA_MSK	cpu_to_le16(BIT(1))
+-#define IWL_POWER_SLEEP_OVER_DTIM_MSK		cpu_to_le16(BIT(2))
+ #define IWL_POWER_PCI_PM_MSK			cpu_to_le16(BIT(3))
+-#define IWL_POWER_FAST_PD			cpu_to_le16(BIT(4))
+-#define IWL_POWER_BEACON_FILTERING		cpu_to_le16(BIT(5))
+-#define IWL_POWER_SHADOW_REG_ENA		cpu_to_le16(BIT(6))
+-#define IWL_POWER_CT_KILL_SET			cpu_to_le16(BIT(7))
+ 
+ struct iwl3945_powertable_cmd {
+ 	__le16 flags;
 -- 
-1.7.2.1
+1.7.1
 
