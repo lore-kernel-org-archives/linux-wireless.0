@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48259 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758730Ab1FVTGO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab1FHLIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 15:06:14 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0776D540157
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 15:13:25 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-22 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110622190612.B3EBF40EC8@repository3.orbit-lab.org> (sfid-20110622_210616_981816_C9AAF90B)
-Date: Wed, 22 Jun 2011 15:06:12 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 8 Jun 2011 07:08:05 -0400
+Subject: Re: iwlagn aggregation problem when stations are removed/re-added
+ quickly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: ipw3945-devel@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+In-Reply-To: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com> (sfid-20110514_005657_579238_E23F3390)
+References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
+	 (sfid-20110514_005657_579238_E23F3390)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Jun 2011 13:07:56 +0200
+Message-ID: <1307531276.3961.8.camel@jlt3.sipsolutions.net> (sfid-20110608_130809_625668_38B83AD2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 0ea2a56...a86aade akpm-end   -> origin/akpm-end  (forced update)
-   ef46222..e08f6d4  akpm-start -> origin/akpm-start
-   0cb9206..65e7d23  history    -> origin/history
- + 775ad65...a0b885f master     -> origin/master  (forced update)
-   ef46222..e08f6d4  stable     -> origin/stable
- * [new tag]         next-20110622 -> next-20110622
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- * [new tag]         v3.0-rc4   -> v3.0-rc4
+On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
 
-compat-wireless code metrics
+> I'm running an experiment where a client connects to the AP (both HT
+> iwlagn devices), starts a large transfer that gets aggregation going,
+> disassociates, and then reassociates and restarts the transfer.
+> 
+> When mac80211 stops the queue (as part of the client's disassocation
+> process), it goes into the following code:
+> 
+>                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
+>                 priv->stations[sta_id].tid[tid].agg.state =
+>                                 IWL_EMPTYING_HW_QUEUE_DELBA;
+>                 spin_unlock_irqrestore(&priv->sta_lock, flags);
+> 
+> but if the station is removed right away the packets stay in the
+> queue. Indeed, when the client reconnects, the packets are then
+> delivered! But then the queue gets stuck and the AP issues a firmware
+> reset, which doesn't actually get traffic flowing again. Below,
+> there's a log with IWL_DL_HT set. It may be something racy; adding
+> DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
+> in a few tries.
+> 
+> I suspect this will also be a problem with P2P, and not just my klugey
+> use of AP mode. Any suggestions as to how to fix?
 
-    820371 - Total upstream lines of code being pulled
-      2385 - backport code changes
-      2078 - backport code additions
-       307 - backport code deletions
-      8123 - backport from compat module
-     10508 - total backport code
-    1.2809 - % of code consists of backport work
+Sorry I'm replying this late. I'm not sure what the best way to fix it
+would be, but it makes sense that this would happen. Maybe we can flush
+the aggregation queue (asking the ucode to drop all frames) when the
+station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
+know if that's possible?
+
+johannes
+
