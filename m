@@ -1,99 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2196 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18140 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541Ab1FCREx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 13:04:53 -0400
-Message-ID: <4DE91429.9090903@broadcom.com> (sfid-20110603_190500_472211_0651CEC1)
-Date: Fri, 3 Jun 2011 10:04:41 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
+	id S1755860Ab1FHNr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 09:47:26 -0400
+Date: Wed, 8 Jun 2011 15:47:22 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [iwl4965] Microcode SW error detected
+Message-ID: <20110608134721.GA2283@redhat.com> (sfid-20110608_154729_691770_37BCA87B)
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+ <201106070832.49048.bschmidt@freebsd.org>
+ <20110607145435.GA5179@redhat.com>
+ <1307474580.2342.7.camel@x61.thuisdomein>
 MIME-Version: 1.0
-To: "Julian Calaby" <julian.calaby@gmail.com>
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
- specific ioctls codes
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
- <BANLkTi=Mwbm_yrtL1u8mNboXdYYQz2HbDQ@mail.gmail.com>
-In-Reply-To: <BANLkTi=Mwbm_yrtL1u8mNboXdYYQz2HbDQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1307474580.2342.7.camel@x61.thuisdomein>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/01/2011 08:06 PM, Julian Calaby wrote:
-> Roland,
->
-> I've passed an eye over the entire patch set.
+On Tue, Jun 07, 2011 at 09:23:00PM +0200, Paul Bolle wrote:
+> On Tue, 2011-06-07 at 16:54 +0200, Stanislaw Gruszka wrote:
+> > That could be useful hint, we do not scan chan by chan, but we
+> > have thing called "plcp check health", which "restart radio"
+> > by requesting one channel scan. So perhaps disabling that could
+> > help.
+> 
+> At this moment I'm interested in something (a script, some sequence of
+> actions, whatever) that (somewhat) reliably triggers this error. Because
+> right now I have no clue what triggers it.
 
-Thanks for taking the time and putting in the effort to reveiw them all.
+Having reliable reproducer will be definitely something that is
+nice to have. But bug could be some kind of race condition that happen
+in code flow  once per 10000000000 cases ...  
 
-> My comments are pretty minor, but I've replied to the patches that I
-> have concerns for. Please note that I'm not really a developer, and my
-> comments are mostly style issues, not actual functional issues. Oh,
-> and also, I read most of the patches out of order, so some of the
-> comments may not make complete sense.
->
-> Overall, my comments are these:
-> 1. If you're doing typedef removals in a patch, mention it in the summary.
+> Is your patch in that category or is it a (crude) fix? If it's a fix,
+> I'm not sure it is of much help at this stage.
 
-Will do.
+It could be possible fix. Why you can not simply patch and see if errors
+are still there? If after a week or so there will be no errors, we could
+consider bug fixed, otherwise well ... still will need looking around
+for fix.
 
-> 2. Work on your summaries, there are a few cases where I think they're
-> a little too terse.
+I just posted patch that remove these "plcp health check" and related
+code on -next anyway, because I don't think this is something that we
+need.
 
-Ditto.
-
-> 3. Good work!
-
-Thanks!
-
-> 4. Keep going =)
-
-We definitely will.
-
-> A couple of items you might want to add to your TODO list:
-> 1. Replace the REG_[RW] macros with inline functions or equivalent
-> because they're ugly.
-
-Agree that they're ugly.  Still working on how exactly to clean them up, 
-but we'll get there eventually.
-
-> 2. You shouldn't need to #ifdef on BIG_ENDIAN - there are a set of
-> macros to help with working with different endian systems.
-
-Any specific ones we should be looking at?
-
-> 3. Do a typedef removal sweep over the code because typedefs are ugly =)
-
-Definitely on the list of cleanup.
-
-> 4. I had a glance at /Documentation/CodingStyle and saw that there
-> were some issues mentioned in there that could be fixed in your code.
-> You might also want to play with checkpatch.
-
-A few of the patches have complaints from checkpatch, but I believe that 
-in all cases the complaints are on existing code that's being moved from 
-one file to another to help consolidate things.  We'll keep working on 
-cleaning up those issues as we go along.
-
-Any specific checkpatch issues in this series that we should take a 
-second look at?
-
-> 5. Personally, I'd avoid void pointers, but I'm not sure of the exact
-> rules. Could someone else weigh in on this?
->
-> I'm probably missing a whole lot of other, much more important, stuff,
-> but this is what I saw.
-
-Thanks again for all the effort.
-
-At this point, should we regenerate the whole series to try and address 
-your concerns, or should we do the additional cleanup as followup patches?
-
-Thanks,
-- Henry
-
+Stanislaw
