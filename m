@@ -1,106 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49766 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753841Ab1F0TGl (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:57202 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755776Ab1FHLy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 15:06:41 -0400
-Received: by wwe5 with SMTP id 5so5058241wwe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 12:06:40 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/2] wl12xx: initialize max_power levels for 11a channels
-Date: Mon, 27 Jun 2011 22:06:33 +0300
-Message-Id: <1309201594-12582-1-git-send-email-arik@wizery.com> (sfid-20110627_210655_474822_0A2E20E0)
+	Wed, 8 Jun 2011 07:54:57 -0400
+Subject: [PATCH 4/5] ath6kl: Fix a kernel panic furing suspend/resume
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Wed, 08 Jun 2011 14:54:50 +0300
+Message-ID: <20110608115450.32208.58066.stgit@localhost6.localdomain6> (sfid-20110608_135500_035241_28DBB81F)
+In-Reply-To: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the maximum FW supported power levels for 11a channels.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+The kernel panic happens when we try to complete a pending
+scan request while going to suspend state. The cause for this
+kernel panic is accessing a freed memory (ar->arWmin). This
+is freed before ar6k_cfg80211_scanComplete_event() getting
+called where it is dereferenced.
+
+RIP: 0010:[<ffffffffa042e726>]  [<ffffffffa042e726>] wlan_iterate_nodes+0x16/0xc0 [ath6kl]
+RSP: 0018:ffff8800719fbce8  EFLAGS: 00010296
+RAX: ffff880071bbcc00 RBX: ffff880037b22520 RCX: ffff880077413c80
+RDX: ffff880037b221c0 RSI: ffffffffa041ef10 RDI: 0000000000000020
+RBP: ffff8800719fbd18 R08: 0000000000000001 R09: 0000000000000001
+R10: 0000000000000400 R11: 0000000000000000 R12: 0000000000000010
+R13: ffff8800719fbdd8 R14: 00007fff83a84b60 R15: 0000000000000001
+FS:  00007fdccb8a7700(0000) GS:ffff880077400000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000148 CR3: 0000000070604000 CR4: 00000000000006f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+	DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process rmmod (pid: 1998, threadinfo ffff8800719fa000, task ffff880066712d80)
+	Stack:
+	0000000000000000 ffff880037b22520 0000000000000010 ffff8800719fbdd8
+	00007fff83a84b60 0000000000000001 ffff8800719fbd28 ffffffffa0429fe2
+	ffff8800719fbd58 ffffffffa041ee5f ffff8800719fbd58 ffff880037b22520
+	Call Trace:
+	[<ffffffffa0429fe2>] wmi_iterate_nodes+0x12/0x20 [ath6kl]
+	[<ffffffffa041ee5f>] ar6k_cfg80211_scanComplete_event+0x3f/0xf0 [ath6kl]
+	[<ffffffffa04245f1>] ar6000_close+0x61/0x100 [ath6kl]
+	[<ffffffff814d6736>] __dev_close_many+0x96/0x100
+	[<ffffffff814d688d>] dev_close_many+0x9d/0x120
+	[<ffffffff814d6a48>] rollback_registered_many+0xe8/0x290
+	[<ffffffff814d6d16>] unregister_netdevice_queue+0x96/0x100
+	[<ffffffff814d6ea0>] unregister_netdev+0x20/0x30
+	[<ffffffffa0420259>] ar6000_destroy+0x119/0x180 [ath6kl]
+	[<ffffffffa043182a>] ar6k_cleanup_module+0x2a/0x33 [ath6kl]
+	[<ffffffff81098fde>] sys_delete_module+0x19e/0x270
+	[<ffffffff815d7542>] system_call_fastpath+0x16/0x1b
+	Code: c3 0f 1f 40 00 48 89 df e8 68 ff ff ff eb df 66 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 83 ec 08 0f 1f 44 00 00
+	8b af 28 01 00 00 4c 8d 7f 08 49 89 fc 48 89 f3 49 89 d6 41
+	RIP  [<ffffffffa042e726>] wlan_iterate_nodes+0x16/0xc0 [ath6kl]
+	RSP <ffff8800719fbce8>
+
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   68 ++++++++++++++++++------------------
- 1 files changed, 34 insertions(+), 34 deletions(-)
+ drivers/staging/ath6kl/os/linux/cfg80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fb0f764..effde53 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3686,40 +3686,40 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index a0c0819..07e6f55 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -871,7 +871,8 @@ ar6k_cfg80211_scanComplete_event(struct ar6_softc *ar, int status)
+     if(ar->scan_request)
+     {
+         /* Translate data to cfg80211 mgmt format */
+-        wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
++	if (ar->arWmi)
++		wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
  
- /* 5 GHz band channels for WL1273 */
- static struct ieee80211_channel wl1271_channels_5ghz[] = {
--	{ .hw_value = 7, .center_freq = 5035},
--	{ .hw_value = 8, .center_freq = 5040},
--	{ .hw_value = 9, .center_freq = 5045},
--	{ .hw_value = 11, .center_freq = 5055},
--	{ .hw_value = 12, .center_freq = 5060},
--	{ .hw_value = 16, .center_freq = 5080},
--	{ .hw_value = 34, .center_freq = 5170},
--	{ .hw_value = 36, .center_freq = 5180},
--	{ .hw_value = 38, .center_freq = 5190},
--	{ .hw_value = 40, .center_freq = 5200},
--	{ .hw_value = 42, .center_freq = 5210},
--	{ .hw_value = 44, .center_freq = 5220},
--	{ .hw_value = 46, .center_freq = 5230},
--	{ .hw_value = 48, .center_freq = 5240},
--	{ .hw_value = 52, .center_freq = 5260},
--	{ .hw_value = 56, .center_freq = 5280},
--	{ .hw_value = 60, .center_freq = 5300},
--	{ .hw_value = 64, .center_freq = 5320},
--	{ .hw_value = 100, .center_freq = 5500},
--	{ .hw_value = 104, .center_freq = 5520},
--	{ .hw_value = 108, .center_freq = 5540},
--	{ .hw_value = 112, .center_freq = 5560},
--	{ .hw_value = 116, .center_freq = 5580},
--	{ .hw_value = 120, .center_freq = 5600},
--	{ .hw_value = 124, .center_freq = 5620},
--	{ .hw_value = 128, .center_freq = 5640},
--	{ .hw_value = 132, .center_freq = 5660},
--	{ .hw_value = 136, .center_freq = 5680},
--	{ .hw_value = 140, .center_freq = 5700},
--	{ .hw_value = 149, .center_freq = 5745},
--	{ .hw_value = 153, .center_freq = 5765},
--	{ .hw_value = 157, .center_freq = 5785},
--	{ .hw_value = 161, .center_freq = 5805},
--	{ .hw_value = 165, .center_freq = 5825},
-+	{ .hw_value = 7, .center_freq = 5035, .max_power = 25 },
-+	{ .hw_value = 8, .center_freq = 5040, .max_power = 25 },
-+	{ .hw_value = 9, .center_freq = 5045, .max_power = 25 },
-+	{ .hw_value = 11, .center_freq = 5055, .max_power = 25 },
-+	{ .hw_value = 12, .center_freq = 5060, .max_power = 25 },
-+	{ .hw_value = 16, .center_freq = 5080, .max_power = 25 },
-+	{ .hw_value = 34, .center_freq = 5170, .max_power = 25 },
-+	{ .hw_value = 36, .center_freq = 5180, .max_power = 25 },
-+	{ .hw_value = 38, .center_freq = 5190, .max_power = 25 },
-+	{ .hw_value = 40, .center_freq = 5200, .max_power = 25 },
-+	{ .hw_value = 42, .center_freq = 5210, .max_power = 25 },
-+	{ .hw_value = 44, .center_freq = 5220, .max_power = 25 },
-+	{ .hw_value = 46, .center_freq = 5230, .max_power = 25 },
-+	{ .hw_value = 48, .center_freq = 5240, .max_power = 25 },
-+	{ .hw_value = 52, .center_freq = 5260, .max_power = 25 },
-+	{ .hw_value = 56, .center_freq = 5280, .max_power = 25 },
-+	{ .hw_value = 60, .center_freq = 5300, .max_power = 25 },
-+	{ .hw_value = 64, .center_freq = 5320, .max_power = 25 },
-+	{ .hw_value = 100, .center_freq = 5500, .max_power = 25 },
-+	{ .hw_value = 104, .center_freq = 5520, .max_power = 25 },
-+	{ .hw_value = 108, .center_freq = 5540, .max_power = 25 },
-+	{ .hw_value = 112, .center_freq = 5560, .max_power = 25 },
-+	{ .hw_value = 116, .center_freq = 5580, .max_power = 25 },
-+	{ .hw_value = 120, .center_freq = 5600, .max_power = 25 },
-+	{ .hw_value = 124, .center_freq = 5620, .max_power = 25 },
-+	{ .hw_value = 128, .center_freq = 5640, .max_power = 25 },
-+	{ .hw_value = 132, .center_freq = 5660, .max_power = 25 },
-+	{ .hw_value = 136, .center_freq = 5680, .max_power = 25 },
-+	{ .hw_value = 140, .center_freq = 5700, .max_power = 25 },
-+	{ .hw_value = 149, .center_freq = 5745, .max_power = 25 },
-+	{ .hw_value = 153, .center_freq = 5765, .max_power = 25 },
-+	{ .hw_value = 157, .center_freq = 5785, .max_power = 25 },
-+	{ .hw_value = 161, .center_freq = 5805, .max_power = 25 },
-+	{ .hw_value = 165, .center_freq = 5825, .max_power = 25 },
- };
- 
- /* mapping to indexes for wl1271_rates_5ghz */
--- 
-1.7.4.1
+         cfg80211_scan_done(ar->scan_request,
+             ((status & A_ECANCELED) || (status & A_EBUSY)) ? true : false);
 
