@@ -1,90 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3784 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161136Ab1FALqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:20 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 13/83] staging: brcm80211: remove iovars IOV_DMA
-Date: Wed, 1 Jun 2011 13:44:58 +0200
-Message-ID: <1306928768-7501-13-git-send-email-rvossen@broadcom.com> (sfid-20110601_134624_244294_718333EC)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:58524 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab1FHTEv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 15:04:51 -0400
+Received: by pvg12 with SMTP id 12so383760pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2011 12:04:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Jim Cromie <jim.cromie@gmail.com>
+Date: Wed, 8 Jun 2011 13:04:21 -0600
+Message-ID: <BANLkTikQwGCYOdtqFiMBbO85oWgJ-r_MOg@mail.gmail.com> (sfid-20110608_210453_896126_8287B900)
+Subject: extending support in drivers/net/wireless/mwl8k.c
+To: linux-wireless@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+I recently got a mini-pci card out of an old/dead Netgear router,
+and would like to add support for it in  drivers/net/wireless/mwl8k.c
 
-Remove unused sdio related iovars IOV_DMA for fullmac driver
+Ive hacked the PCI-ID into the driver
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   12 ------------
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h |    1 -
- 2 files changed, 0 insertions(+), 13 deletions(-)
+@@ -5160,6 +5160,7 @@ MODULE_FIRMWARE("mwl8k/fmimage_8366.fw");
+ MODULE_FIRMWARE(MWL8K_8366_AP_FW(MWL8K_8366_AP_FW_API));
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 4b13f42..a0f2463 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -54,7 +54,6 @@ uint sd_power = 1;		/* Default to SD Slot powered ON */
- uint sd_clock = 1;		/* Default to SD Clock turned ON */
- uint sd_hiok = false;		/* Don't use hi-speed mode by default */
- uint sd_msglevel = 0x01;
--uint sd_use_dma = true;
- DHD_PM_RESUME_WAIT_INIT(sdioh_request_byte_wait);
- DHD_PM_RESUME_WAIT_INIT(sdioh_request_word_wait);
- DHD_PM_RESUME_WAIT_INIT(sdioh_request_packet_wait);
-@@ -352,7 +351,6 @@ uint sdioh_query_iofnum(sdioh_info_t *sd)
- enum {
- 	IOV_MSGLEVEL = 1,
- 	IOV_BLOCKSIZE,
--	IOV_DMA,
- 	IOV_USEINTS,
- 	IOV_NUMINTS,
- 	IOV_NUMLOCALINTS,
-@@ -371,7 +369,6 @@ const bcm_iovar_t sdioh_iovars[] = {
- 	{"sd_msglevel", IOV_MSGLEVEL, 0, IOVT_UINT32, 0},
- 	{"sd_blocksize", IOV_BLOCKSIZE, 0, IOVT_UINT32, 0},/* ((fn << 16) |
- 								 size) */
--	{"sd_dma", IOV_DMA, 0, IOVT_BOOL, 0},
- 	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
- 	{"sd_numlocalints", IOV_NUMLOCALINTS, 0, IOVT_UINT32, 0},
-@@ -505,15 +502,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
- 		memcpy(arg, &int_val, val_size);
- 		break;
- 
--	case IOV_GVAL(IOV_DMA):
--		int_val = (s32) si->sd_use_dma;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_DMA):
--		si->sd_use_dma = (bool) int_val;
--		break;
--
- 	case IOV_GVAL(IOV_USEINTS):
- 		int_val = (s32) si->use_client_ints;
- 		memcpy(arg, &int_val, val_size);
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-index 3ef42b3..86f88bf 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-@@ -85,7 +85,6 @@ struct sdioh_info {
- 
- 	uint irq;		/* Client irq */
- 	int intrcount;		/* Client interrupts */
--	bool sd_use_dma;	/* DMA on CMD53 */
- 	bool sd_blockmode;	/* sd_blockmode == false => 64 Byte Cmd 53s. */
- 	/*  Must be on for sd_multiblock to be effective */
- 	bool use_client_ints;	/* If this is false, make sure to restore */
--- 
-1.7.4.1
+ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
++       { PCI_VDEVICE(MARVELL, 0x2a02), .driver_data = MWL8363, },
+        { PCI_VDEVICE(MARVELL, 0x2a0a), .driver_data = MWL8363, },
+        { PCI_VDEVICE(MARVELL, 0x2a0c), .driver_data = MWL8363, },
+        { PCI_VDEVICE(MARVELL, 0x2a24), .driver_data = MWL8363, },
+
+such that it registers,
+
+00:0e.0 Ethernet controller: Marvell Technology Group Ltd. 88W8361
+[TopDog] 802.11n )
+	Subsystem: Marvell Technology Group Ltd. 88W8361 [TopDog] 802.11n Wireless
+	Flags: 66MHz, medium devsel, IRQ 5
+	Memory at a0010000 (32-bit, non-prefetchable) [size=64K]
+	Memory at a0020000 (32-bit, non-prefetchable) [size=64K]
+	Capabilities: [40] Power Management version 2
+	Kernel modules: mwl8k
+
+but this only gets me an  error loading firmware.
+Ive been unable to locate any firmware so far.
+I did pull the GPL tarball from netgear; its a 2.4.27
+kernel, with 1 firmware mentioned in the -readme:
+
+[jimc@groucho marvell_WNR854T]$ grep 11 WNR854T_README.txt
+        This package contains Marvell 11n-draft wireless driver v.2.1.11.p0
+
+but the apparently mentioned file is an ARM executable,
+which is quite different from the firmwares that the driver uses.
+
+[jimc@groucho marvell_WNR854T]$ file romfs.src/etc/ap8x-2.1.11.p0.o
+romfs.src/etc/ap8x-2.1.11.p0.o: ELF 32-bit LSB relocatable, ARM,
+version 1, not stripped
+
+vs
+
+[jimc@groucho marvell_WNR854T]$ file /lib/firmware/mwl8k/*
+/lib/firmware/mwl8k/fmimage_8366_ap-1.fw: data
+/lib/firmware/mwl8k/fmimage_8366.fw:      data
+/lib/firmware/mwl8k/fmimage_8687.fw:      data
+/lib/firmware/mwl8k/helper_8366.fw:       DBase 3 data file (5 records)
+/lib/firmware/mwl8k/helper_8687.fw:       DBase 3 data file (5 records)
+
+Could someone explain that arm object to me ?
+Does this wifi chip have an ARM core in it, and this is the "firmware" ?
+
+fwiw, I get errors when trying to read those dbase 3 files:
+[jimc@groucho netgear]$ dumprecs helper_8366.fw
+Could not open file helper_8366.fw
+Database or Index Open Error
 
 
+Ive signed up to Marvell extra-net, but havent heard back
+re NDA, or any of the technical info I would need.
