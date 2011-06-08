@@ -1,62 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:50888 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794Ab1FFLdC (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:5842 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755380Ab1FHLsy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 07:33:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
-Date: Mon, 6 Jun 2011 13:32:51 +0200
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Greg KH <greg@kroah.com>,
-	linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <1307311658-15853-2-git-send-email-hauke@hauke-m.de> <BANLkTimAPHPcqKKJ+Rphef_+1RB0aHR4ug@mail.gmail.com>
-In-Reply-To: <BANLkTimAPHPcqKKJ+Rphef_+1RB0aHR4ug@mail.gmail.com>
+	Wed, 8 Jun 2011 07:48:54 -0400
+Received: from wpaz37.hot.corp.google.com (wpaz37.hot.corp.google.com [172.24.198.101])
+	by smtp-out.google.com with ESMTP id p58BmqGn001219
+	for <linux-wireless@vger.kernel.org>; Wed, 8 Jun 2011 04:48:52 -0700
+Received: from yxd5 (yxd5.prod.google.com [10.190.1.197])
+	by wpaz37.hot.corp.google.com with ESMTP id p58BmI0S018394
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 8 Jun 2011 04:48:51 -0700
+Received: by yxd5 with SMTP id 5so188717yxd.21
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2011 04:48:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201106061332.51661.arnd@arndb.de> (sfid-20110606_133306_701799_5F911EB4)
+In-Reply-To: <1307533479.3961.13.camel@jlt3.sipsolutions.net>
+References: <a194a41b3f1376f035113d4f443038eb2e64264f.1307403076.git.pstew@chromium.org>
+	<1307530922.3961.4.camel@jlt3.sipsolutions.net>
+	<BANLkTimdAHt9VUUmNB2uzgm8ymeo6J+EeA@mail.gmail.com>
+	<1307533479.3961.13.camel@jlt3.sipsolutions.net>
+Date: Wed, 8 Jun 2011 04:48:51 -0700
+Message-ID: <BANLkTikc-6hwZwT4Qt-dB-qBkwxEWLwrkg@mail.gmail.com> (sfid-20110608_134857_853461_6D682793)
+Subject: Re: [RFC] cfg80211: Fix handling of previous_auth deauth
+From: Paul Stewart <pstew@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 June 2011, RafaÅ‚ MiÅ‚ecki wrote:
-> Greg, Arnd: could you take a look at this patch, please?
-> 
-> With proposed patch we are going back to this ugly array and wrappers hacks.
-> 
-> I was really happy with our final solution, but it seems it's not
-> doable for embedded systems...? Is there something better we can do
-> about this?
-> 
-> 2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
-> > When using bcma on a embedded device it is initialized very early at
-> > boot. We have to do so as the cpu and interrupt management and all
-> > other devices are attached to this bus and it has to be initialized so
-> > early. In that stage we can not allocate memory or sleep, just use the
-> > memory on the stack and in the text segment as the kernel is not
-> > initialized far enough. This patch removed the kzallocs from the scan
-> > code. Some earlier version of the bcma implementation and the normal
-> > ssb implementation are doing it like this.
-> > The __bcma_dev_wrapper struct is used as the container for the device
-> > struct as bcma_device will be too big if it includes struct device.
-> >
-> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Wed, Jun 8, 2011 at 4:44 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> [you should send as text, the list won't accept html]
+>
+>>         Maybe I'm confused -- what's "this issue"?
+>
+>> Sorry.  I covered the issue in a previous post but it wasn't threaded
+>> in.   Here's a summary:
+>>
+>>
+>> If you read the IEEE docs just right, they say that if an AP believes
+>> a STA is authenticated, but it receives an AUTH request, it should
+>> send a DEAUTH downstream with PREV_AUTH_NOT_VALID.  Some APs actually
+>> do this.  The STA and AP can fall out of sync, eg, if the STA reboots
+>> unexpectedly.  What happens then is that the a mac80211 STA will send
+>> an AUTH, and get a DEAUTH  which will clear authtry_bssess[].
+>>  mac80211 keeps retrying, though, and the second time the AP sends a
+>> successful AUTH response and marks the STA authenticated again.
+>>  Meanwhile cfg80211 doesn't have any state in authtry_bsses[] for the
+>> AP so it drops the successful reply on the floor.  Thus the state
+>> mismatch perpetuates.
+>
+>
+> Right, makes sense.
+>
+>>         It seems mac80211 shouldn't pass such up since it isn't
+>>         actually
+>>         connected. But then we just pass them up and rely on cfg80211
+>>         to sort it
+>>         out. Why do we even attempt to remove something from
+>>         authtry_bsses when
+>>         receiving a deauth frame? This only makes sense when we sent
+>>         it
+>>         ourselves and want to abort the authentication that way I
+>>         guess?
+>>
+>> It's a little confusing to me that the same function is in charge of
+>> outgoing and incoming packets, but yes, I see no point in removing
+>> anything from authtry_bsses[] for a received DEAUTH since it is not
+>> applicable.
+>
+> Yeah, indeed. Would not modifying authtry_bsses for a _received_ DEAUTH
+> fix it?
 
-If you rely on device scan to find your CPUs and interrupt controllers,
-you are screwed already, this won't work.
+Sure, it would.  How do I differentiate between received and
+transmitted DEAUTH?  They seem to go through the same function, or
+maybe I'm wrong.  Do I check the MAC in the mgmt header? :-)
 
-In that case, it's better to have a few "early" drivers, as few as
-possible, that don't go through the bus scan at all but have their
-own ways of bootstrapping themselves. I don't know what you mean by
-"CPU management", but I can only assume that it's not doing that much,
-and you can just put the register values into the device tree.
 
-For an interrupt controller, it should be ok to have it initialized
-late, as long as it's only responsible for the devices on the same
-bus and not for instance for IPI interrupts. Just make sure that you
-do the bus scan and the initialization of the IRQ driver before you
-initialize any drivers that rely in on the interrupts to be working.
-
-	Arnd
+> johannes
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
