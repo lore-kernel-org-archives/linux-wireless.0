@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41063 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753437Ab1FJHsn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 03:48:43 -0400
-Received: by wwa36 with SMTP id 36so2492123wwa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 00:48:42 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] wl12xx: configure suspend/resume only if associated/started
-Date: Fri, 10 Jun 2011 10:49:17 +0300
-Message-Id: <1307692159-11055-1-git-send-email-eliad@wizery.com> (sfid-20110610_094847_146804_4D473AE1)
+Received: from defaultvalue.org ([70.85.129.156]:46186 "EHLO defaultvalue.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751321Ab1FHCjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2011 22:39:01 -0400
+From: Rob Browning <rlb@defaultvalue.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
+References: <87pqnl5i81.fsf@raven.defaultvalue.org>
+	<4DD074E3.3090502@lwfinger.net>
+	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
+	<4DD09C78.2010304@lwfinger.net>
+	<8762pbkytq.fsf@trouble.defaultvalue.org>
+	<4DD13EF0.2070803@lwfinger.net>
+	<87iptaj8nf.fsf@trouble.defaultvalue.org>
+	<87fwoehtd7.fsf@trouble.defaultvalue.org>
+	<874o45z6b8.fsf@raven.defaultvalue.org>
+Date: Tue, 07 Jun 2011 21:38:59 -0500
+In-Reply-To: <874o45z6b8.fsf@raven.defaultvalue.org> (Rob Browning's message
+	of "Sat, 04 Jun 2011 15:32:11 -0500")
+Message-ID: <874o41rqrg.fsf@trouble.defaultvalue.org> (sfid-20110608_043906_878635_D4E3E3E3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the device (to wowlan) only if the sta/ap
-is associated/started.
+Rob Browning <rlb@defaultvalue.org> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+> As another data point, I just tested the same device on a second machine
+> (a desktop), and saw the same behavior -- initially high transfer rates
+> trailing off to about 60K/s.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2c2251a..7017c23 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1469,10 +1469,13 @@ static struct notifier_block wl1271_dev_notifier = {
- 
- static int wl1271_configure_suspend_sta(struct wl1271 *wl)
- {
--	int ret;
-+	int ret = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+		goto out_unlock;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out_unlock;
-@@ -1517,10 +1520,13 @@ out:
- 
- static int wl1271_configure_suspend_ap(struct wl1271 *wl)
- {
--	int ret;
-+	int ret = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
-+		goto out_unlock;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out_unlock;
+...and another data point.  Just to be sure it wasn't that particular
+usb device, I got another that I think is the same hardware (this time
+the Airlink 101), and I see exactly the same behavior.
+
+Next I'll try a different access point -- I'll let you know what I find.
+And if there's anything else I can do to help test, please let me know.
+
+Thanks
 -- 
-1.7.0.4
-
+Rob Browning
+rlb @defaultvalue.org and @debian.org
+GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
