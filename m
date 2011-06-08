@@ -1,36 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61251 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943Ab1FFKau convert rfc822-to-8bit (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:43563 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755776Ab1FHLzH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 06:30:50 -0400
-Received: by mail-qw0-f46.google.com with SMTP id 3so1575796qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:30:49 -0700 (PDT)
+	Wed, 8 Jun 2011 07:55:07 -0400
+Subject: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan is
+	ongoing
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Wed, 08 Jun 2011 14:55:01 +0300
+Message-ID: <20110608115501.32208.82264.stgit@localhost6.localdomain6> (sfid-20110608_135509_927775_17557DA9)
+In-Reply-To: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <1307311658-15853-6-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-	<1307311658-15853-6-git-send-email-hauke@hauke-m.de>
-Date: Mon, 6 Jun 2011 12:30:49 +0200
-Message-ID: <BANLkTik9u5QhxdeaGMUyYYK-W8hSkQb-Wg@mail.gmail.com> (sfid-20110606_123053_186964_C3490A56)
-Subject: Re: [RFC][PATCH 05/10] bcma: add serial console support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
-> +       if ((ccrev >= 11) && (ccrev != 15) && (ccrev != 20)) {
-> +       ....
-> +       } else
-> +               pr_err("serial not supported on this device ccrev: 0x%x\n",
-> +                      ccrev);
+When ath6kl module was resumed while a scan was ongoing, for example during
+suspend, the driver would crash in ar6k_cfg80211_scanComplete_event():
 
-Please use scripts/checkpatch* for your patches. I believe it will
-alert you about lacking brackets for "else" (kernel coding style).
+[26581.586440] Call Trace:
+[26581.586440]  [<f99ffeda>] ? ar6k_cfg80211_scanComplete_event+0xaa/0xaa [ath6kl]
+[26581.586440]  [<f9a0a020>] wmi_iterate_nodes+0xb/0xd [ath6kl]
+[26581.586440]  [<f99ffe78>] ar6k_cfg80211_scanComplete_event+0x48/0xaa [ath6kl]
+[26581.586440]  [<f9a038ae>] ar6000_close+0x77/0x7e [ath6kl]
+[26581.586440]  [<c139c25d>] __dev_close_many+0x87/0xab
+[26581.586440]  [<c139c30a>] dev_close_many+0x54/0xab
+[26581.586440]  [<c139c437>] rollback_registered_many+0xa5/0x19e
+[26581.586440]  [<c139c595>] rollback_registered+0x23/0x2f
+[26581.586440]  [<c139c5ed>] unregister_netdevice_queue+0x4c/0x69
+[26581.586440]  [<c139c6b2>] unregister_netdev+0x18/0x1f
+[26581.586440]  [<f9a00d4c>] ar6000_destroy+0xf8/0x115 [ath6kl]
+[26581.586440]  [<f9a0c765>] ar6k_cleanup_module+0x20/0x29 [ath6kl]
+[26581.586440]  [<c1062843>] sys_delete_module+0x181/0x1d9
+[26581.586440]  [<c105876b>] ? lock_release_holdtime+0x2b/0xcd
+[26581.586440]  [<c10b55dc>] ? sys_munmap+0x3b/0x42
+[26581.586440]  [<c14a99dc>] ? restore_all+0xf/0xf
+[26581.586440]  [<c14aeb6c>] sysenter_do_call+0x12/0x32
+[26581.586440] Code: 89 53 6c 75 07 89 d8 e8 c0 ff ff ff 89 f0 e8 2c f2 a9 c7 5b 5e 5d c3 55 89 e5 57 56 53 89 c3 83 ec 08 89 55 f0 8d 78 04 89 4d ec <8b> b0 b8 00 00 00 46 89 b0 b8 00 00 00 89 f8 e8 ae ed a9 c7 8b
 
--- 
-Rafał
+Fix the function not to iterate nodes when the scan is aborted. The nodes
+are already freed when the module is being unloaded. Patch "ath6kl: Fix a
+kernel panic furing suspend/resume" tried to fix this already but it wasn't
+enough.
+
+Also fix a bug where the status was checked as a bitfield with '&' operator.
+But it's not a bitfield, just a regular (enum like) value.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/staging/ath6kl/os/linux/cfg80211.c |   31 ++++++++++++++++------------
+ 1 files changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index 07e6f55..b098c22 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -868,26 +868,31 @@ ar6k_cfg80211_scanComplete_event(struct ar6_softc *ar, int status)
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: status %d\n", __func__, status));
+ 
+-    if(ar->scan_request)
+-    {
+-        /* Translate data to cfg80211 mgmt format */
+-	if (ar->arWmi)
+-		wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
++    if (!ar->scan_request)
++	    return;
++
++    if ((status == A_ECANCELED) || (status == A_EBUSY)) {
++	    cfg80211_scan_done(ar->scan_request, true);
++	    goto out;
++    }
++
++    /* Translate data to cfg80211 mgmt format */
++    wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
+ 
+-        cfg80211_scan_done(ar->scan_request,
+-            ((status & A_ECANCELED) || (status & A_EBUSY)) ? true : false);
++    cfg80211_scan_done(ar->scan_request, false);
+ 
+-        if(ar->scan_request->n_ssids &&
+-           ar->scan_request->ssids[0].ssid_len) {
++    if(ar->scan_request->n_ssids &&
++       ar->scan_request->ssids[0].ssid_len) {
+             u8 i;
+ 
+             for (i = 0; i < ar->scan_request->n_ssids; i++) {
+-                wmi_probedSsid_cmd(ar->arWmi, i+1, DISABLE_SSID_FLAG,
+-                                   0, NULL);
++		    wmi_probedSsid_cmd(ar->arWmi, i+1, DISABLE_SSID_FLAG,
++				       0, NULL);
+             }
+-        }
+-        ar->scan_request = NULL;
+     }
++
++out:
++    ar->scan_request = NULL;
+ }
+ 
+ static int
+
