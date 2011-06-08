@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756768Ab1FUQCh (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:33539 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104Ab1FHWnP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 12:02:37 -0400
-Subject: Re: [RFC v3 1/3] mac80211: add some helper functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1308671129.2656.4.camel@alex-2> (sfid-20110621_174753_258660_B2E3ED7C)
-References: <1308671129.2656.4.camel@alex-2>
-	 (sfid-20110621_174753_258660_B2E3ED7C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Jun 2011 18:02:33 +0200
-Message-ID: <1308672153.4276.9.camel@jlt3.sipsolutions.net> (sfid-20110621_180240_721946_D4747411)
+	Wed, 8 Jun 2011 18:43:15 -0400
+Date: Wed, 08 Jun 2011 15:42:06 -0700 (PDT)
+Message-Id: <20110608.154206.659954143604324997.davem@davemloft.net> (sfid-20110609_004512_114861_56457D5F)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-06-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110608191246.GD27028@tuxdriver.com>
+References: <20110608191246.GD27028@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-21 at 17:45 +0200, Alexander Simon wrote:
-> Add helper functions cfg80211_get_bss_ht, ieee80211_ie_build_ht_cap
-> and ieee80211_ie_build_ht_info.
-> These are needed for my IBSS HT patch but are also used to clean up some
-> multiple code.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 8 Jun 2011 15:12:47 -0400
 
-I'll review in the next couple of days, but we have a holiday on
-Thursday and I'll take Friday off so it might be next week.
+> Dave,
+> 
+> Here is the first big wireless pull request for the 3.1 cycle.
+> As usual, this covers a lot of ground -- mostly driver updates.
+> 
+> Some highlights include some math algorithm additions to lib/ from
+> the Broadcom team, sizeable update series for rt2x00 and rtlwifi,
+> the usual iwlagn and ath9k updates from the Intel and Atheros teams
+> (and a few other folks), some more mwifiex updates from the Marvell
+> folks, and a bunch of bcma, ssb and b43 updates from Rafa©© Mi©©ecki.
+ ...
+> The following changes since commit ffbc03bc75b39c7bd412e7cc6d2185c11b0ffedd:
+> 
+>   net: add needed interrupt.h (2011-06-08 00:15:34 -0700)
+> 
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
 
-johannes
-
+Pulled, thanks!
