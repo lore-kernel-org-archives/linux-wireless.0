@@ -1,21 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56673 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751216Ab1FDTCb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280Ab1FHLZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2011 15:02:31 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id EF51A54004E
-	for <linux-wireless@vger.kernel.org>; Sat,  4 Jun 2011 15:09:03 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110604190229.CF13C40EC4@repository3.orbit-lab.org> (sfid-20110604_210238_245889_00B096CD)
-Date: Sat,  4 Jun 2011 15:02:29 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 8 Jun 2011 07:25:46 -0400
+Subject: [PATCH] mac80211: fix IBSS teardown race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ignacy Gawedzki <i@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Jun 2011 13:25:43 +0200
+Message-ID: <1307532343.3961.9.camel@jlt3.sipsolutions.net> (sfid-20110608_132549_830215_50FA69C7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-compat-wireless code metrics
+Ignacy reports that sometimes after leaving an IBSS
+joining a new one didn't work because there still
+were stations on the list. He fixed it by flushing
+stations when attempting to join a new IBSS, but
+this shouldn't be happening in the first case. When
+I looked into it I saw a race condition in teardown
+that could cause stations to be added after flush,
+and thus cause this situation. Ignacy confirms that
+after applying my patch he hasn't seen this happen
+again.
 
-    824413 - Total upstream lines of code being pulled
+Reported-by: Ignacy Gawedzki <i@lri.fr>
+Debugged-by: Ignacy Gawedzki <i@lri.fr>
+Tested-by: Ignacy Gawedzki <i@lri.fr>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+--- a/net/mac80211/ibss.c	2011-06-08 07:55:21.000000000 +0200
++++ b/net/mac80211/ibss.c	2011-06-08 13:16:20.000000000 +0200
+@@ -965,6 +965,10 @@ int ieee80211_ibss_leave(struct ieee8021
+ 
+ 	mutex_lock(&sdata->u.ibss.mtx);
+ 
++	sdata->u.ibss.state = IEEE80211_IBSS_MLME_SEARCH;
++	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
++	sdata->u.ibss.ssid_len = 0;
++
+ 	active_ibss = ieee80211_sta_active_ibss(sdata);
+ 
+ 	if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+@@ -999,8 +1003,6 @@ int ieee80211_ibss_leave(struct ieee8021
+ 	kfree_skb(skb);
+ 
+ 	skb_queue_purge(&sdata->skb_queue);
+-	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
+-	sdata->u.ibss.ssid_len = 0;
+ 
+ 	del_timer_sync(&sdata->u.ibss.timer);
+ 
+
+
