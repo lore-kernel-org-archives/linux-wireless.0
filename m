@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757846Ab1FKOzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 10:55:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/18]  update for 3.1
-Date: Sat, 11 Jun 2011 07:25:34 -0700
-Message-Id: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165546_827426_08226C95)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58960 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab1FHUD4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2011 16:03:56 -0400
+Received: by pzk9 with SMTP id 9so408027pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2011 13:03:56 -0700 (PDT)
+Date: Wed, 8 Jun 2011 23:03:32 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan
+ is ongoing
+Message-ID: <20110608200332.GC4069@shale.localdomain> (sfid-20110608_220401_921660_9A883FF4)
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+ <20110608115501.32208.82264.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110608115501.32208.82264.stgit@localhost6.localdomain6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is another batch of cleanup works for iwlagn driver
-We also add testmode dumpit support in iwlagn
+On Wed, Jun 08, 2011 at 02:55:01PM +0300, Kalle Valo wrote:
+> -        /* Translate data to cfg80211 mgmt format */
+> -	if (ar->arWmi)
+            ^^^^^^^^^
+	You removed this check on purpose?  Is this only NULL when
+	the scan is canceled?
 
-Johannes Berg (1):
-  iwlagn: don't check ucode subtype
+> -		wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
+> +    if (!ar->scan_request)
+> +	    return;
+> +
+> +    if ((status == A_ECANCELED) || (status == A_EBUSY)) {
+> +	    cfg80211_scan_done(ar->scan_request, true);
+> +	    goto out;
+> +    }
+> +
+> +    /* Translate data to cfg80211 mgmt format */
+> +    wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
 
-Wey-Yi Guy (17):
-  iwlagn: usersapce application decide the size of trace buffer
-  iwlagn: add dumpit support for testmode trace function
-  iwlagn: move bt_coex_active as part of iwlagn_mod_params
-  iwlagn: move led_mode as part of iwlagn_mod_params
-  iwlagn: move no_sleep_autoadjust as part of iwlagn_mod_params
-  iwlagn: Band capabilities in EEPROM
-  iwlagn: use sku capabilities information from EEPROM
-  iwlagn: add coex debug flag
-  iwlagn: add debug message for coex related activities
-  iwlagn: use IWL_DEBUG_TEMP for temperature related debug
-  iwlagn: use IWL_DEBUG_FW for firmware related debug msg
-  iwlagn: remove unused debug flag
-  iwlagn: generic temperature location in EEPROM
-  iwlagn: group similar defines together
-  iwlagn: merge duplicated code into single place
-  iwlagn: Sanity check for 11n capability
-  iwlagn: Sanity check for valid context
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |   14 +--
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c   |   12 +--
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c    |   40 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c     |   38 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c  |   45 +++------
- drivers/net/wireless/iwlwifi/iwl-agn.c        |  112 ++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.h        |   20 ++++-
- drivers/net/wireless/iwlwifi/iwl-commands.h   |   12 --
- drivers/net/wireless/iwlwifi/iwl-core.c       |   31 +-----
- drivers/net/wireless/iwlwifi/iwl-core.h       |   10 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h      |   10 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h        |   12 ++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h     |   22 ++--
- drivers/net/wireless/iwlwifi/iwl-led.c        |    9 +--
- drivers/net/wireless/iwlwifi/iwl-power.c      |   13 +--
- drivers/net/wireless/iwlwifi/iwl-sv-open.c    |  135 +++++++++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-testmode.h   |    9 +-
- 19 files changed, 313 insertions(+), 235 deletions(-)
-
+regards,
+dan carpenter
