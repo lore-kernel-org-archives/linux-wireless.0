@@ -1,1038 +1,317 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38369 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934008Ab1FWSpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 14:45:09 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 11:44:33 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <hostap@lists.shmoo.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 4/4] hostapd: add Automatic Channel Selection (ACS) support
-Date: Thu, 23 Jun 2011 11:44:51 -0700
-Message-ID: <1308854691-5958-5-git-send-email-lrodriguez@atheros.com> (sfid-20110623_204519_651038_A4F82FAC)
-In-Reply-To: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com>
-References: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33035 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756519Ab1FIWD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 18:03:57 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 02/11] compat-wireless: rename CONFIG_COMPAT_KERNEL_
+Date: Fri, 10 Jun 2011 00:03:33 +0200
+Message-Id: <1307657022-23808-3-git-send-email-hauke@hauke-m.de> (sfid-20110610_000401_624340_C6802F25)
+In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds Automatic Channel Selection (ACS) support to hostapd
-using the Survery based ACS algorithm [1]. You can enable this
-with CONFIG_ACS and can use it by setting the channel to "0" or
-"acs_survey". Other configurable parameters are:
+Rename CONFIG_COMPAT_KERNEL_XX to CONFIG_COMPAT_KERNEL_2_6_XX.
+This is needed to support kernel version 3.XX. It will get
+CONFIG_COMPAT_KERNEL_3_XX. This patch needs a additional change in
+compat.git.
 
-  * acs_num_req_surveys - must be > 1
-  * acs_roc_duration_ms - 1..5000
+Add to compat-3.0-stable
 
-TODO:
-
-- The current algorithm is heavily based on the amount of time
-  we are willing to spend offchannel configurable via acs_roc_duration_ms,
-  and acs_num_req_surveys, this will work for the period of time we do
-  the analysis, so if these values are too low you'd use an ideal channel
-  only based on the short bursts of traffic on the channel. We can also take
-  into consideration other data to help us further make a better analysis and
-  speed out our decision:
-
-    * Do a scan and count the number of BSSes on each channel:
-      * Assign an HT40 primary channel a high interference aggregate value
-      * Assign an HT40 secondary channel a lower interference aggregate value
-    * Use a frequency broker to collect other PHY RF interference:
-      * BT devices, etc, assign interference value aggregates to these
-
-- An ideal result would continue surveying the channels and collect a
-  histogram, the ideal channel then will remain ideal for most of the
-  collected history.
-
-- Add wpa_supplicant support for ACS, ideal for P2P
-
-- Randomize channel study
-
-- Enable the use passive scan instead of offchannel operation to enable
-  drivers that do not support offchannel support
-
-- Get more drivers / firmware to implement / export survey dump
-
-- Any other OSes interested?
-
-[1] http://wireless.kernel.org/en/users/Documentation/acs#Survey_based_algorithm
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- hostapd/Makefile       |    5 +
- hostapd/config_file.c  |   47 +++++-
- hostapd/defconfig      |   25 +++
- hostapd/hostapd.conf   |   17 ++
- src/ap/acs.c           |  464 ++++++++++++++++++++++++++++++++++++++++++++++++
- src/ap/acs.h           |   40 ++++
- src/ap/ap_config.c     |   15 ++
- src/ap/ap_config.h     |    4 +
- src/ap/ap_drv_ops.h    |    1 +
- src/ap/drv_callbacks.c |    5 +-
- src/ap/hostapd.c       |    2 +
- src/ap/hostapd.h       |    6 +
- src/ap/hw_features.c   |   48 +++++-
- src/drivers/driver.h   |   82 +++++++++
- 14 files changed, 754 insertions(+), 7 deletions(-)
- create mode 100644 src/ap/acs.c
- create mode 100644 src/ap/acs.h
+ config.mk                      |   86 ++++++++++++++++++++--------------------
+ scripts/gen-compat-autoconf.sh |    4 +-
+ 2 files changed, 45 insertions(+), 45 deletions(-)
 
-diff --git a/hostapd/Makefile b/hostapd/Makefile
-index d05975b..5ff51be 100644
---- a/hostapd/Makefile
-+++ b/hostapd/Makefile
-@@ -736,6 +736,11 @@ CFLAGS += -DCONFIG_P2P_MANAGER
- OBJS += ../src/ap/p2p_hostapd.o
+diff --git a/config.mk b/config.mk
+index 9a18441..58747ba 100644
+--- a/config.mk
++++ b/config.mk
+@@ -18,11 +18,11 @@ ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
+ COMPAT_LATEST_VERSION = 39
+ KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
+ COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
+-$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
++$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_2_6_$(ver)=y))
+ 
+-ifdef CONFIG_COMPAT_KERNEL_24
++ifdef CONFIG_COMPAT_KERNEL_2_6_24
+ $(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
+-endif #CONFIG_COMPAT_KERNEL_24
++endif #CONFIG_COMPAT_KERNEL_2_6_24
+ 
+ ifeq ($(CONFIG_CFG80211),y)
+ $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
+@@ -92,20 +92,20 @@ else
  endif
  
-+ifdef CONFIG_ACS
-+CFLAGS += -DCONFIG_ACS
-+OBJS += ../src/ap/acs.o
-+endif
-+
- ifdef CONFIG_NO_STDOUT_DEBUG
- CFLAGS += -DCONFIG_NO_STDOUT_DEBUG
+ # The Bluetooth compatibility only builds on kernels >= 2.6.27 for now
+-ifndef CONFIG_COMPAT_KERNEL_27
++ifndef CONFIG_COMPAT_KERNEL_2_6_27
+ ifeq ($(CONFIG_BT),y)
+ # we'll ignore compiling bluetooth
+ else
+  CONFIG_COMPAT_BLUETOOTH=y
+  CONFIG_COMPAT_BLUETOOTH_MODULES=m
  endif
-diff --git a/hostapd/config_file.c b/hostapd/config_file.c
-index 835f050..6294e53 100644
---- a/hostapd/config_file.c
-+++ b/hostapd/config_file.c
-@@ -1736,7 +1736,18 @@ struct hostapd_config * hostapd_config_read(const char *fname)
- 				errors++;
- 			}
- 		} else if (os_strcmp(buf, "channel") == 0) {
--			conf->channel = atoi(pos);
-+			if (os_strcmp(pos, "acs_survey") == 0) {
-+				conf->channel = 0;
-+			} else
-+				conf->channel = atoi(pos);
-+#ifndef CONFIG_ACS
-+			if (!conf->channel) {
-+				wpa_printf(MSG_ERROR, "Line %d: set as '%s' "
-+					   "tries to enable ACS but "
-+					   "CONFIG_ACS disabled", line, pos);
-+				errors++;
-+			}
-+#endif
- 		} else if (os_strcmp(buf, "beacon_int") == 0) {
- 			int val = atoi(pos);
- 			/* MIB defines range as 1..65535, but very small values
-@@ -1751,6 +1762,40 @@ struct hostapd_config * hostapd_config_read(const char *fname)
- 				errors++;
- 			} else
- 				conf->beacon_int = val;
-+#ifdef CONFIG_ACS
-+		} else if (os_strcmp(buf, "acs_num_req_surveys") == 0) {
-+			int val = atoi(pos);
-+			if (val <= 0) {
-+				wpa_printf(MSG_ERROR, "Line %d: invalid "
-+					   "acs_num_req_surveys %d (expected > 1)",
-+					   line, val);
-+				errors++;
-+			} else
-+				conf->acs_num_req_surveys = val;
-+		} else if (os_strcmp(buf, "acs_roc_duration_ms") == 0) {
-+			int val = atoi(pos);
-+			/* Well only Linux supports offchannel ops right now ;) */
-+			if (val <= 0 || val > 5000) {
-+				errors++;
-+				wpa_printf(MSG_ERROR, "Line %d: invalid "
-+					   "acs_roc_duration_ms %d (expected "
-+					   "1..5000)", line, val);
-+			} else
-+				conf->acs_roc_duration_ms = val;
-+#else
-+		} else if (os_strcmp(buf, "acs_num_req_surveys") == 0) {
-+			int val = atoi(pos);
-+			wpa_printf(MSG_ERROR, "Line %d: invalid "
-+				   "acs_num_req_surveys %d (CONFIG_ACS disabled)",
-+				   line, val);
-+			errors++;
-+		} else if (os_strcmp(buf, "acs_roc_duration_ms") == 0) {
-+			int val = atoi(pos);
-+			wpa_printf(MSG_ERROR, "Line %d: invalid "
-+				   "acs_roc_duration_ms %d (CONFIG_ACS disabled)"
-+				   "1..5000)", line, val);
-+			errors++;
-+#endif /* CONFIG_ACS */
- 		} else if (os_strcmp(buf, "dtim_period") == 0) {
- 			bss->dtim_period = atoi(pos);
- 			if (bss->dtim_period < 1 || bss->dtim_period > 255) {
-diff --git a/hostapd/defconfig b/hostapd/defconfig
-index 26be2a8..4e2ec1b 100644
---- a/hostapd/defconfig
-+++ b/hostapd/defconfig
-@@ -208,3 +208,28 @@ CONFIG_IPV6=y
- # considered for builds that are known to be used on devices that meet the
- # requirements described above.
- #CONFIG_NO_RANDOM_POOL=y
-+
-+# Enable this to get Automatic Channel Selection support. This will allow
-+# hostapd to pick the channel automatically for you when you see the channel to
-+# "acs_survey" or "0". Eventually other ACS algorithms can be added in similar way.
-+# Automatic selection is currently only done through initialization, later on we
-+# hope to do background checks to keep us moving to more ideal channels as time
-+# goes by. ACS is currently only supported through the nl80211 driver, and
-+# your 802.11 driver must support offchannel TX support and survey dump
-+# capablities.
-+#
-+# You can customize the ACS survey algorithm with the hostapd.conf variables:
-+#
-+# acs_num_req_surveys requirement is > 1 - number of surverys required per channel
-+# acs_roc_duration_ms requirement is 1..5000 - offchannel time
-+#
-+# Supported ACS drivers:
-+#
-+# * ath9k
-+# * ath5k
-+#
-+# For more details refer to:
-+#
-+# http://wireless.kernel.org/en/users/Documentation/acs
-+#
-+#CONFIG_ACS=y
-diff --git a/hostapd/hostapd.conf b/hostapd/hostapd.conf
-index e0525e4..cfdbc8e 100644
---- a/hostapd/hostapd.conf
-+++ b/hostapd/hostapd.conf
-@@ -106,8 +106,25 @@ hw_mode=a
- # Please note that some drivers (e.g., madwifi) do not use this value from
- # hostapd and the channel will need to be configuration separately with
- # iwconfig.
-+#
-+# If you enable CONFIG_ACS you can automatically get an ideal channel
-+# by setting channel=acs_survey or channel=0, both of these options will
-+# trigger the ACS survey based algorithm.
- channel=60
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
  
-+# ACS tuning - Automatic Channel Selection
-+# See: http://wireless.kernel.org/en/users/Documentation/acs
-+#
-+# You can customize the ACS survey algorithm with the hostapd.conf variables:
-+#
-+# acs_num_req_surveys requirement is > 1 - number of surverys required per channel
-+# acs_roc_duration_ms requirement is 1..5000 - offchannel time
-+#
-+# Defaults:
-+#
-+#acs_num_req_surveys=10
-+#acs_roc_duration_ms=5
-+
- # Beacon interval in kus (1.024 ms) (default: 100; range 15..65535)
- beacon_int=100
+-ifdef CONFIG_COMPAT_KERNEL_33
++ifdef CONFIG_COMPAT_KERNEL_2_6_33
+ ifdef CONFIG_FW_LOADER
+  CONFIG_COMPAT_FIRMWARE_CLASS=m
+ endif #CONFIG_FW_LOADER
+-endif #CONFIG_COMPAT_KERNEL_33
++endif #CONFIG_COMPAT_KERNEL_2_6_33
  
-diff --git a/src/ap/acs.c b/src/ap/acs.c
-new file mode 100644
-index 0000000..ffd5f04
---- /dev/null
-+++ b/src/ap/acs.c
-@@ -0,0 +1,464 @@
-+/*
-+ * Copyright (C) 2011 Qualcomm Atheros
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+/*
-+ * ACS Maintainer: Luis R. Rodriguez <mcgrof@kernel.org>
-+ */
-+
-+#include "includes.h"
-+#include "acs.h"
-+#include "drivers/driver.h"
-+#include "ap/ap_drv_ops.h"
-+#include "ap/ap_config.h"
-+#include "ap/hw_features.h"
-+
-+/*
-+ * Until we get really bored and implement OS support for
-+ * others on os.[ch]
-+ */
-+#include <math.h>
-+
-+/*
-+ * Automatic Channel Selection
-+ *
-+ * http://wireless.kernel.org/en/users/Documentation/acs
-+ *
-+ * This is the hostapd AP ACS implementation
-+ *
-+ * You get automatic channel selection when you configure hostapd
-+ * with a channel=acs_survey or channel=0 on the hostapd.conf file.
-+ *
-+ * TODO:
-+ *
-+ * - The current algorithm is heavily based on the amount of time
-+ *   we are willing to spend offchannel configurable via acs_roc_duration_ms,
-+ *   and acs_num_req_surveys, this will work for the period of time we do
-+ *   the analysis, so if these values are too low you'd use an ideal channel
-+ *   only based on the short bursts of traffic on the channel. We can also take
-+ *   into consideration other data to help us further make a better analysis and
-+ *   speed out our decision:
-+ *
-+ *	* Do a scan and count the number of BSSes on each channel:
-+ * 	  * Assign an HT40 primary channel a high interference aggregate value
-+ *	  * Assign an HT40 secondary channel a lower interference aggregate value
-+ *	* Use a frequency broker to collect other PHY RF interference:
-+ *	  * BT devices, etc, assign interference value aggregates to these
-+ *
-+ * - An ideal result would continue surveying the channels and collect a
-+ *   histogram, the ideal channel then will remain ideal for most of the
-+ *   collected history.
-+ *
-+ * - Add wpa_supplicant support for ACS, ideal for P2P
-+ *
-+ * - Randomize channel study
-+ *
-+ * - Enable the use passive scan instead of offchannel operation to enable
-+ *   drivers that do not support offchannel support
-+ *
-+ * - Get more drivers / firmware to implement / export survey dump
-+ *
-+ * - Any other OSes interested?
-+ */
-+
-+static void acs_clean_chan_surveys(struct hostapd_channel_data *chan)
-+{
-+	struct freq_survey *survey, *tmp;
-+
-+	if (dl_list_empty(&chan->survey_list))
-+		return;
-+
-+	dl_list_for_each_safe(survey, tmp, &chan->survey_list, struct freq_survey, list_member) {
-+		dl_list_del(&survey->list_member);
-+		os_free(survey);
-+	}
-+}
-+
-+static void acs_cleanup(struct hostapd_iface *iface)
-+{
-+	unsigned int i;
-+	struct hostapd_channel_data *chan;
-+
-+	for (i = 0; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+
-+		if (chan->survey_count)
-+			acs_clean_chan_surveys(chan);
-+
-+		dl_list_init(&chan->survey_list);
-+		chan->min_nf = 0;
-+		chan->survey_count = 0;
-+	}
-+
-+	iface->chans_surveyed = 0;
-+	iface->off_channel_freq_idx = 0;
-+	iface->acs_num_completed_surveys = 0;
-+}
-+
-+void acs_fail(struct hostapd_iface *iface)
-+{
-+	wpa_printf(MSG_ERROR, "ACS: failed to start");
-+	acs_cleanup(iface);
-+}
-+
-+/*
-+ * XXX: Use libm's pow thingy? If we can implement our own log2() then
-+ * we can keep this here and remove libm support from hostapd, not
-+ * sure if its worth it.
-+ */
-+static u64 base_to_power(u64 base, u64 pow)
-+{
-+	u64 result = base;
-+
-+	if (pow == 0)
-+		return 1;
-+
-+	pow--;
-+	while (pow--)
-+		result *= base;
-+
-+	return result;
-+}
-+
-+static long double acs_survey_interference_factor(struct freq_survey *survey, s8 min_nf)
-+{
-+	long double factor;
-+
-+	factor = survey->channel_time_busy - survey->channel_time_tx;
-+	factor /= (survey->channel_time - survey->channel_time_tx);
-+	factor *= (base_to_power(2, survey->nf - min_nf));
-+	factor = log2(factor);
-+
-+	return factor;
-+}
-+
-+static void acs_chan_interference_factor(struct hostapd_iface *iface,
-+					 struct hostapd_channel_data *chan)
-+{
-+	struct freq_survey *survey;
-+	unsigned int i = 0;
-+	long double int_factor = 0;
-+
-+	if (dl_list_empty(&chan->survey_list) || chan->flag & HOSTAPD_CHAN_DISABLED)
-+		return;
-+
-+	dl_list_for_each(survey, &chan->survey_list, struct freq_survey, list_member) {
-+		int_factor = acs_survey_interference_factor(survey, iface->lowest_nf);
-+		chan->survey_interference_factor += int_factor;
-+		wpa_printf(MSG_DEBUG, "\tsurvey_id: %d"
-+			   "\tchan_min_nf: %d\tsurvey_interference_factor: %Lf",
-+			   ++i, chan->min_nf, int_factor);
-+	}
-+
-+	/* XXX: remove survey count */
-+
-+	chan->survey_interference_factor = chan->survey_interference_factor / chan->survey_count;
-+}
-+
-+static int acs_usable_chan(struct hostapd_channel_data *chan)
-+{
-+	if (!chan->survey_count)
-+		return 0;
-+	if (dl_list_empty(&chan->survey_list))
-+		return 0;
-+	if (chan->flag & HOSTAPD_CHAN_DISABLED)
-+		return 0;
-+	return 1;
-+}
-+
-+/*
-+ * At this point its assumed we have the iface->lowest_nf
-+ * and all chan->min_nf values
-+ */
-+struct hostapd_channel_data *acs_find_ideal_chan(struct hostapd_iface *iface)
-+{
-+	unsigned int i;
-+	struct hostapd_channel_data *chan, *ideal_chan = NULL;
-+
-+	for (i = 0; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+
-+		if (!acs_usable_chan(chan))
-+			continue;
-+
-+		wpa_printf(MSG_DEBUG, "------------------------- "
-+			   "Survey analysis for channel %d (%d MHz) "
-+			   "--------------------------------",
-+			    chan->chan,
-+			    chan->freq);
-+
-+		acs_chan_interference_factor(iface, chan);
-+
-+		wpa_printf(MSG_DEBUG, "\tChannel survey interference factor average: %Lf",
-+			   chan->survey_interference_factor);
-+
-+		if (!ideal_chan)
-+			ideal_chan = chan;
-+		else {
-+			if (chan->survey_interference_factor < ideal_chan->survey_interference_factor)
-+				ideal_chan = chan;
-+		}
-+	}
-+
-+	return ideal_chan;
-+}
-+
-+static enum hostapd_chan_status acs_study_next_freq(struct hostapd_iface *iface)
-+{
-+	int err;
-+	unsigned int i;
-+	struct hostapd_channel_data *chan;
-+	struct hostapd_data *hapd = iface->bss[0];
-+
-+	if (iface->off_channel_freq_idx > iface->current_mode->num_channels) {
-+		wpa_printf(MSG_ERROR, "ACS: channel index out of bounds");
-+		return HOSTAPD_CHAN_INVALID;
-+	}
-+
-+	for (i = iface->off_channel_freq_idx; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+		if (chan->flag & HOSTAPD_CHAN_DISABLED)
-+			continue;
-+
-+		err = hostapd_drv_remain_on_channel(hapd, chan->freq, iface->conf->acs_roc_duration_ms);
-+		if (err < 0) {
-+			wpa_printf(MSG_ERROR, "ACS: request to go offchannel "
-+				   "on freq %d MHz failed",
-+				   chan->freq);
-+			return HOSTAPD_CHAN_INVALID;
-+		}
-+
-+		iface->off_channel_freq_idx = i;
-+
-+		return HOSTAPD_CHAN_ACS;
-+	}
-+
-+	if (!iface->chans_surveyed) {
-+		wpa_printf(MSG_ERROR, "ACS: unable to survey any channel");
-+		return HOSTAPD_CHAN_INVALID;
-+	}
-+
-+	return HOSTAPD_CHAN_VALID;
-+}
-+
-+static void acs_study_complete(struct hostapd_iface *iface)
-+{
-+	struct hostapd_channel_data *ideal_chan;
-+
-+	iface->acs_num_completed_surveys++;
-+
-+	if (iface->acs_num_completed_surveys < iface->conf->acs_num_req_surveys) {
-+		iface->off_channel_freq_idx = 0;
-+
-+		switch (acs_study_next_freq(iface)) {
-+		case HOSTAPD_CHAN_ACS:
-+			return;
-+		case HOSTAPD_CHAN_VALID:
-+			/*
-+			 * Bullshit, we were expected to do some more bg work
-+			 * due to the acs_num_req_surveys.
-+			 */
-+			wpa_printf(MSG_ERROR, "ACS: odd loop bug, report this...");
-+		case HOSTAPD_CHAN_INVALID:
-+		default:
-+			goto fail;
-+		}
-+	}
-+
-+	if (!iface->chans_surveyed) {
-+		wpa_printf(MSG_ERROR, "ACS: unable to collect any "
-+			   "useful survey data");
-+		goto fail;
-+	}
-+
-+	ideal_chan = acs_find_ideal_chan(iface);
-+	if (!ideal_chan) {
-+		wpa_printf(MSG_ERROR, "ACS: although survey data was collected we "
-+			   "were unable to compute an ideal channel");
-+		goto fail;
-+	}
-+
-+	wpa_printf(MSG_DEBUG, "-------------------------------------------------------------------------");
-+	wpa_printf(MSG_INFO, "ACS: Ideal chan: %d (%d MHz) Average interference factor: %Lf",
-+		   ideal_chan->chan,
-+		   ideal_chan->freq,
-+		   ideal_chan->survey_interference_factor);
-+	wpa_printf(MSG_DEBUG, "-------------------------------------------------------------------------");
-+
-+	iface->conf->channel = ideal_chan->chan;
-+	/*
-+	 * Note that iface->conf->secondary_channel will be left as
-+	 * per your preference for enabling HT40+, HT40- or not using
-+	 * HT40 at all.
-+	 */
-+
-+	/*
-+	 * hostapd_setup_interface_complete() will return -1 on failure,
-+	 * 0 on success and 0 is HOSTAPD_CHAN_VALID :)
-+	 */
-+	switch (hostapd_acs_completed(iface)) {
-+	case HOSTAPD_CHAN_VALID:
-+		acs_cleanup(iface);
-+		return;
-+	case HOSTAPD_CHAN_INVALID:
-+	case HOSTAPD_CHAN_ACS:
-+	default:
-+		wpa_printf(MSG_ERROR, "ACS: although things seemed "
-+			   "fine we failed in the end");
-+		goto fail;
-+	}
-+
-+fail:
-+	acs_fail(iface);
-+}
-+
-+
-+static void acs_roc_next(struct hostapd_iface *iface,
-+			 unsigned int freq,
-+			 unsigned int duration)
-+{
-+	struct hostapd_channel_data *chan;
-+	struct hostapd_data *hapd = iface->bss[0];
-+	int err;
-+
-+	chan = &iface->current_mode->channels[iface->off_channel_freq_idx];
-+
-+	wpa_printf(MSG_EXCESSIVE, "ACS: offchannel on freq %d MHz", freq);
-+
-+	err = hostapd_drv_survey_freq(hapd, freq);
-+	if (err) {
-+		/* XXX: figure out why we are not getting out of here */
-+		wpa_printf(MSG_ERROR, "ACS: failed to get any survey "
-+			   "data for freq %d MHz", freq);
-+		goto fail;
-+	}
-+
-+	wpa_printf(MSG_EXCESSIVE, "ACS: going to next channel...");
-+
-+	iface->off_channel_freq_idx++;
-+
-+	switch (acs_study_next_freq(iface)) {
-+	case HOSTAPD_CHAN_VALID:
-+		acs_study_complete(iface);
-+		return;
-+	case HOSTAPD_CHAN_ACS:
-+		return;
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		goto fail;
-+	}
-+
-+fail:
-+	acs_fail(iface);
-+}
-+
-+void hostapd_notify_acs_roc(struct hostapd_iface *iface,
-+			    unsigned int freq,
-+			    unsigned int duration,
-+			    int roc_status)
-+{
-+	if (roc_status) {
-+		acs_fail(iface);
-+		return;
-+	}
-+
-+	/* We'll get an event once completed or cancelled */
-+}
-+
-+void hostapd_notify_acs_roc_cancel(struct hostapd_iface *iface,
-+				   unsigned int freq,
-+				   unsigned int duration,
-+				   int roc_status)
-+{
-+	if (roc_status) {
-+		acs_fail(iface);
-+		return;
-+	}
-+
-+	acs_roc_next(iface, freq, duration);
-+}
-+
-+static void acs_init_scan_complete(struct hostapd_iface *iface)
-+{
-+	wpa_printf(MSG_DEBUG, "ACS: using survey based algorithm "
-+		   "(acs_num_req_surveys=%d acs_roc_duration_ms=%d)",
-+		   iface->conf->acs_num_req_surveys,
-+		   iface->conf->acs_roc_duration_ms);
-+
-+	acs_cleanup(iface);
-+
-+	iface->acs_num_completed_surveys = 0;
-+
-+	switch (acs_study_next_freq(iface)) {
-+	case HOSTAPD_CHAN_ACS:
-+		return;
-+	case HOSTAPD_CHAN_VALID:
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		acs_fail(iface);
-+	}
-+}
-+
-+static int acs_init_scan(struct hostapd_iface *iface)
-+{
-+	struct wpa_driver_scan_params params;
-+
-+	wpa_printf(MSG_DEBUG, "ACS: initial scan just to kick off the hw a bit...");
-+	os_memset(&params, 0, sizeof(params));
-+
-+	if (hostapd_driver_scan(iface->bss[0], &params) < 0) {
-+		wpa_printf(MSG_ERROR, "ACS: Failed to request initial scan");
-+		return -1;
-+	}
-+
-+	iface->scan_cb = acs_init_scan_complete;
-+	return 1;
-+}
-+
-+static int acs_sanity_check(struct hostapd_iface *iface)
-+{
-+
-+	/* Meh? */
-+	if (iface->chans_surveyed) {
-+		wpa_printf(MSG_ERROR, "ACS: no usable channels found");
-+		return -1;
-+        }
-+
-+	if (!(iface->drv_flags & WPA_DRIVER_FLAGS_OFFCHANNEL_TX)) {
-+		wpa_printf(MSG_ERROR, "ACS: offchannel TX support required");
-+		return -1;
-+        }
-+
-+	return 0;
-+}
-+
-+enum hostapd_chan_status acs_init(struct hostapd_iface *iface)
-+{
-+	int err;
-+
-+	wpa_printf(MSG_INFO, "ACS: automatic channel selection started, this may take a bit");
-+
-+	err = acs_sanity_check(iface);
-+	if (err < 0)
-+		return HOSTAPD_CHAN_INVALID;
-+
-+	err = acs_init_scan(iface);
-+	if (err < 0)
-+		return HOSTAPD_CHAN_INVALID;
-+	else if (err == 1)
-+		return HOSTAPD_CHAN_ACS;
-+	else
-+		return HOSTAPD_CHAN_INVALID;
-+}
-diff --git a/src/ap/acs.h b/src/ap/acs.h
-new file mode 100644
-index 0000000..1397160
---- /dev/null
-+++ b/src/ap/acs.h
-@@ -0,0 +1,40 @@
-+#ifndef __ACS_H
-+#define __ACS_H
-+
-+#include "utils/common.h"
-+#include "ap/hostapd.h"
-+#include "list.h"
-+
-+#ifdef CONFIG_ACS
-+enum hostapd_chan_status acs_init(struct hostapd_iface *iface);
-+void hostapd_notify_acs_roc(struct hostapd_iface *iface,
-+			    unsigned int freq,
-+			    unsigned int duration,
-+			    int roc_status);
-+void hostapd_notify_acs_roc_cancel(struct hostapd_iface *iface,
-+				   unsigned int freq,
-+				   unsigned int duration,
-+				   int roc_status);
-+int hostapd_acs_completed(struct hostapd_iface *iface);
-+#else
-+static inline enum hostapd_chan_status acs_init(struct hostapd_iface *iface)
-+{
-+	wpa_printf(MSG_ERROR, "ACS was disabled on your build, "
-+		   "rebuild hostapd with CONFIG_ACS=1");
-+	return HOSTAPD_CHAN_INVALID;
-+}
-+static inline void hostapd_notify_acs_roc(struct hostapd_iface *iface,
-+					  unsigned int freq,
-+					  unsigned int duration,
-+					  int roc_status)
-+{
-+}
-+static inline void hostapd_notify_acs_roc_cancel(struct hostapd_iface *iface,
-+						 unsigned int freq,
-+						 unsigned int duration,
-+						 int roc_status)
-+{
-+}
-+#endif /* CONFIG_ACS */
-+
-+#endif /* __ACS_H */
-diff --git a/src/ap/ap_config.c b/src/ap/ap_config.c
-index e77716b..10751d3 100644
---- a/src/ap/ap_config.c
-+++ b/src/ap/ap_config.c
-@@ -96,6 +96,19 @@ void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
- }
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
+@@ -165,9 +165,9 @@ CONFIG_BT_BNEP_PROTO_FILTER=y
+ ifdef CONFIG_ISDN_CAPI
+ CONFIG_BT_CMTP=m
+ endif #CONFIG_ISDN_CAPI
+-ifndef CONFIG_COMPAT_KERNEL_28
++ifndef CONFIG_COMPAT_KERNEL_2_6_28
+ CONFIG_COMPAT_BT_HIDP=m
+-endif #CONFIG_COMPAT_KERNEL_28
++endif #CONFIG_COMPAT_KERNEL_2_6_28
+ 
+ CONFIG_BT_HCIUART=M
+ CONFIG_BT_HCIUART_H4=y
+@@ -345,11 +345,11 @@ CONFIG_MWL8K=m
+ CONFIG_ATL1=m
+ CONFIG_ATL2=m
+ CONFIG_ATL1E=m
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_ATL1C=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_ATL1C=m
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+ ifdef CONFIG_WIRELESS_EXT
+ CONFIG_HERMES=m
+@@ -379,13 +379,13 @@ endif #CONFIG_PCI
+ 
+ ifdef CONFIG_PCMCIA
+ 
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS=n
+ CONFIG_LIBERTAS_CS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_CS=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+ endif #CONFIG_PCMCIA
+ ## end of PCMCIA
+@@ -395,10 +395,10 @@ CONFIG_EEPROM_93CX6=m
+ 
+ # USB Drivers
+ ifdef CONFIG_USB
+-ifndef CONFIG_COMPAT_KERNEL_29
++ifndef CONFIG_COMPAT_KERNEL_2_6_29
+ CONFIG_COMPAT_ZD1211RW=m
+ # CONFIG_ZD1211RW_DEBUG=y
+-endif #CONFIG_COMPAT_KERNEL_29
++endif #CONFIG_COMPAT_KERNEL_2_6_29
+ 
+ # Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
+ 
+@@ -407,12 +407,12 @@ endif #CONFIG_COMPAT_KERNEL_29
+ # is only wireless RNDIS chip known to date.
+ # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
+ # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
+-ifdef CONFIG_COMPAT_KERNEL_29
++ifdef CONFIG_COMPAT_KERNEL_2_6_29
+ CONFIG_USB_COMPAT_USBNET=n
+ CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
+ CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
+ CONFIG_USB_NET_COMPAT_CDCETHER=n
+-else #CONFIG_COMPAT_KERNEL_29
++else #CONFIG_COMPAT_KERNEL_2_6_29
+ CONFIG_USB_COMPAT_USBNET=m
+ ifdef CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+@@ -423,7 +423,7 @@ CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+ CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
+ endif #CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_CDCETHER=m
+-endif #CONFIG_COMPAT_KERNEL_29
++endif #CONFIG_COMPAT_KERNEL_2_6_29
  
  
-+#ifdef CONFIG_ACS
-+static void hostapd_config_acs_defaults(struct hostapd_config *conf)
-+{
-+	conf->acs_num_req_surveys = 10;
-+	conf->acs_roc_duration_ms = 5;
-+}
-+#else
-+static void hostapd_config_acs_defaults(struct hostapd_config *conf)
-+{
-+}
-+#endif
-+
-+
- struct hostapd_config * hostapd_config_defaults(void)
- {
- #define ecw2cw(ecw) ((1 << (ecw)) - 1)
-@@ -162,6 +175,8 @@ struct hostapd_config * hostapd_config_defaults(void)
+ CONFIG_P54_USB=m
+@@ -434,14 +434,14 @@ endif #CONFIG_MAC80211_LEDS
  
- 	conf->ht_capab = HT_CAP_INFO_SMPS_DISABLED;
+ CONFIG_AT76C50X_USB=m
  
-+	hostapd_config_acs_defaults(conf);
-+
- 	return conf;
- }
+-ifndef CONFIG_COMPAT_KERNEL_29
++ifndef CONFIG_COMPAT_KERNEL_2_6_29
+ CONFIG_CARL9170=m
+ ifdef CONFIG_MAC80211_LEDS
+ CONFIG_CARL9170_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ # CONFIG_CARL9170_DEBUGFS=y
+ # CONFIG_CARL9170_WPC=y
+-endif #CONFIG_COMPAT_KERNEL_29
++endif #CONFIG_COMPAT_KERNEL_2_6_29
  
-diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
-index 0a3e76e..30babdf 100644
---- a/src/ap/ap_config.h
-+++ b/src/ap/ap_config.h
-@@ -393,6 +393,10 @@ struct hostapd_config {
- 	int ieee80211n;
- 	int secondary_channel;
- 	int require_ht;
-+#ifdef CONFIG_ACS
-+	unsigned int acs_num_req_surveys;
-+	unsigned int acs_roc_duration_ms;
-+#endif
- };
+ # This activates a threading fix for usb urb.
+ # this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
+@@ -467,15 +467,15 @@ ifdef CONFIG_CRC_ITU_T
+ CONFIG_RT73USB=m
+ endif #CONFIG_CRC_ITU_T
  
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_THINFIRM_USB=n
+ CONFIG_LIBERTAS_USB=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_THINFIRM_USB=m
+ CONFIG_LIBERTAS_USB=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
  
-diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
-index 24c7e95..c9ff723 100644
---- a/src/ap/ap_drv_ops.h
-+++ b/src/ap/ap_drv_ops.h
-@@ -228,4 +228,5 @@ static inline int hostapd_drv_survey(struct hostapd_data *hapd)
- 	return hostapd_drv_survey_freq(hapd, 0);
- }
+ CONFIG_ORINOCO_USB=m
  
-+
- #endif /* AP_DRV_OPS */
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index 6953b71..d94ac62 100644
---- a/src/ap/drv_callbacks.c
-+++ b/src/ap/drv_callbacks.c
-@@ -35,6 +35,7 @@
- #include "wps_hostapd.h"
- #include "ap_drv_ops.h"
- #include "ap_config.h"
-+#include "acs.h"
+@@ -490,7 +490,7 @@ CONFIG_RTL8192CU=m
+ endif #CONFIG_USB end of USB driver list
  
+ ifdef CONFIG_SPI_MASTER
+-ifndef CONFIG_COMPAT_KERNEL_25
++ifndef CONFIG_COMPAT_KERNEL_2_6_25
  
- int hostapd_notif_assoc(struct hostapd_data *hapd, const u8 *addr,
-@@ -531,7 +532,7 @@ static void hostapd_event_roc(struct hostapd_data *hapd,
- 	int err;
+ ifdef CONFIG_CRC7
+ CONFIG_WL1251_SPI=m
+@@ -498,15 +498,15 @@ CONFIG_WL12XX_SPI=m
+ endif #CONFIG_CRC7
+ CONFIG_P54_SPI=m
  
- 	err = hostapd_roc_channel_check(iface);
--	/* XXX: pass err to listeners, no one yet */
-+	hostapd_notify_acs_roc(iface, freq, duration, err);
- }
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_SPI=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_SPI=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
  
- static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
-@@ -542,7 +543,7 @@ static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
- 	int err;
+-endif #CONFIG_COMPAT_KERNEL_25
++endif #CONFIG_COMPAT_KERNEL_2_6_25
+ endif #CONFIG_SPI_MASTER end of SPI driver list
  
- 	err = hostapd_roc_channel_check(iface);
--	/* XXX: pass err to listeners, no one yet */
-+	hostapd_notify_acs_roc_cancel(iface, freq, duration, err);
- }
+ ifdef CONFIG_MMC
+@@ -519,23 +519,23 @@ ifdef CONFIG_WL12XX_PLATFORM_DATA
+ CONFIG_COMPAT_WL1251_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
  
- struct hostapd_channel_data *hostapd_get_mode_channel(struct hostapd_iface *iface,
-diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
-index d8af571..79f9b66 100644
---- a/src/ap/hostapd.c
-+++ b/src/ap/hostapd.c
-@@ -700,6 +700,8 @@ static int setup_interface(struct hostapd_iface *iface)
- 				   "channel. (%d)", ret);
- 			return -1;
- 		}
-+		if (ret == 1)
-+			return 0;
- 		ret = hostapd_check_ht_capab(iface);
- 		if (ret < 0)
- 			return -1;
-diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
-index 1095d2b..184e221 100644
---- a/src/ap/hostapd.h
-+++ b/src/ap/hostapd.h
-@@ -239,6 +239,12 @@ struct hostapd_iface {
- 	/* lowest observed noise floor in dBm */
- 	s8 lowest_nf;
+-ifndef CONFIG_COMPAT_KERNEL_32
++ifndef CONFIG_COMPAT_KERNEL_2_6_32
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
+ CONFIG_COMPAT_WL12XX_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
+-endif #CONFIG_COMPAT_KERNEL_32
++endif #CONFIG_COMPAT_KERNEL_2_6_32
  
-+#ifdef CONFIG_ACS
-+	/* ACS helpers */
-+	unsigned int acs_num_completed_surveys;
-+	unsigned int acs_num_req_surveys;
-+#endif
-+
- 	void (*scan_cb)(struct hostapd_iface *iface);
+ endif #CONFIG_CRC7
  
- 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index 887744b..4596681 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -25,6 +25,7 @@
- #include "ap_config.h"
- #include "ap_drv_ops.h"
- #include "hw_features.h"
-+#include "acs.h"
+ CONFIG_MWIFIEX_SDIO=m
  
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_SDIO=n
+ NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS_SDIO=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
  
- void hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
-@@ -648,10 +649,18 @@ static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
- 	}
+ CONFIG_IWM=m
+ # CONFIG_IWM_DEBUG=y
+@@ -574,13 +574,13 @@ CONFIG_RT2800_LIB=m
+ CONFIG_RT2X00_LIB_FIRMWARE=y
+ CONFIG_RT2X00_LIB_CRYPTO=y
+ # CONFIG_RT2X00_LIB_SOC=y
+-ifdef CONFIG_COMPAT_KERNEL_25
++ifdef CONFIG_COMPAT_KERNEL_2_6_25
+ CONFIG_RT2X00_LIB_LEDS=n
+-else #CONFIG_COMPAT_KERNEL_25
++else #CONFIG_COMPAT_KERNEL_2_6_25
+ ifdef CONFIG_LEDS_CLASS
+ CONFIG_RT2X00_LIB_LEDS=y
+ endif #CONFIG_LEDS_CLASS
+-endif #CONFIG_COMPAT_KERNEL_25
++endif #CONFIG_COMPAT_KERNEL_2_6_25
+ # CONFIG_RT2X00_DEBUG=y
+ # CONFIG_RT2X00_LIB_DEBUGFS
+ endif
+@@ -608,24 +608,24 @@ endif #CONFIG_CRC7
  
- 	/*
--	 * The user set channel=0 which is used to trigger ACS,
--	 * which we do not yet support.
-+	 * The user set channel=0 or channel=acs_survey
-+	 * which is used to trigger ACS.
- 	 */
--	return HOSTAPD_CHAN_INVALID;
-+
-+	switch (acs_init(iface)) {
-+	case HOSTAPD_CHAN_ACS:
-+		return HOSTAPD_CHAN_ACS;
-+	case HOSTAPD_CHAN_VALID:
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		return HOSTAPD_CHAN_INVALID;
-+	}
- }
+ CONFIG_MWIFIEX=m
  
- static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
-@@ -671,6 +680,36 @@ static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
- 		       "Hardware does not support configured channel");
- }
+-ifdef CONFIG_COMPAT_KERNEL_27
++ifdef CONFIG_COMPAT_KERNEL_2_6_27
+ CONFIG_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_27
++else #CONFIG_COMPAT_KERNEL_2_6_27
+ ifeq ($(NEED_LIBERTAS),y)
+ CONFIG_LIBERTAS_THINFIRM=m
+ CONFIG_LIBERTAS=m
+ CONFIG_LIBERTAS_MESH=y
+ # CONFIG_LIBERTAS_DEBUG=y
+ endif
+-endif #CONFIG_COMPAT_KERNEL_27
++endif #CONFIG_COMPAT_KERNEL_2_6_27
  
-+int hostapd_acs_completed(struct hostapd_iface *iface)
-+{
-+	int ret;
-+
-+	switch (hostapd_check_chans(iface)) {
-+	case HOSTAPD_CHAN_VALID:
-+		break;
-+	case HOSTAPD_CHAN_ACS: /* WTF */
-+		wpa_printf(MSG_ERROR, "ACS complete but not.. odd report this..");
-+		hostapd_notify_bad_chans(iface);
-+		return -1;
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		wpa_printf(MSG_ERROR, "ACS picked unusable channels");
-+		hostapd_notify_bad_chans(iface);
-+		return -1;
-+	}
-+
-+	ret = hostapd_check_ht_capab(iface);
-+	if (ret < 0)
-+		return -1;
-+	if (ret == 1) {
-+		wpa_printf(MSG_DEBUG, "Interface initialization will "
-+			   "be completed in a callback");
-+		return 0;
-+	}
-+
-+	return hostapd_setup_interface_complete(iface, 0);
-+}
-+
- /**
-  * hostapd_select_hw_mode - Select the hardware mode
-  * @iface: Pointer to interface data.
-@@ -708,7 +747,8 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
- 	switch (hostapd_check_chans(iface)) {
- 	case HOSTAPD_CHAN_VALID:
- 		return 0;
--	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
-+	case HOSTAPD_CHAN_ACS: /* ACS will run and later complete */
-+		return 1;
- 	case HOSTAPD_CHAN_INVALID:
- 	default:
- 		hostapd_notify_bad_chans(iface);
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 0e1c5c1..fd55f11 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -75,6 +75,88 @@ struct hostapd_channel_data {
- 	 */
- 	s8 min_nf;
+ # We need the backported rfkill module on kernel < 2.6.31.
+ # In more recent kernel versions use the in kernel rfkill module.
+-ifdef CONFIG_COMPAT_KERNEL_31
++ifdef CONFIG_COMPAT_KERNEL_2_6_31
+ CONFIG_RFKILL_BACKPORT=m
+ ifdef CONFIG_LEDS_TRIGGERS
+ CONFIG_RFKILL_BACKPORT_LEDS=y
+ endif #CONFIG_LEDS_TRIGGERS
+ CONFIG_RFKILL_BACKPORT_INPUT=y
+-endif #CONFIG_COMPAT_KERNEL_31
++endif #CONFIG_COMPAT_KERNEL_2_6_31
  
-+#ifdef CONFIG_ACS
-+	/**
-+	 * survey_interference_factor - computed interference factor on this channel
-+	 * The survey interference factor is defined as the ratio of the observed busy time
-+	 * over the time we spent on the channel, this value is then amplified by the observed
-+	 * noise floor on the channel in comparison to the lowest noise floor observed on the
-+	 * entire band.
-+	 *
-+	 * This corresponds to:
-+	 * ---
-+	 * (busy time - tx time) / (active time - tx time) * 2^(chan_nf + band_min_nf)
-+	 * ---
-+	 *
-+	 * The coefficient of of 2 reflects the way power in "far-field"
-+	 * radiation decreases as the square of distance from the antenna [1].
-+	 * What this does is it decreases the observed busy time ratio if the
-+	 * noise observed was low but increases it if the noise was high,
-+	 * proportionally to the way "far field" radiation changes over
-+	 * distance. Since the values obtained here can vary from fractional to
-+	 * millions the sane thing to do here is to use log2() to reflect the
-+	 * observed interference factor. log2() values less than 0 then
-+	 * represent fractional results, while > 1 values non-fractional
-+	 * results. The computation of the interference factor then becomes:
-+	 *
-+	 * ---
-+	 * log2( (busy time - tx time) / (active time - tx time) * 2^(chan_nf + band_min_nf))
-+	 * --- or due to logarithm identities:
-+	 * log2(busy time - tx time) - log2(active time - tx time) + log2(2^(chan_nf + band_min_nf))
-+	 * ---
-+	 *
-+	 * All this is "interference factor" is purely subjective and ony time
-+	 * will tell how usable this is. By using the minimum noise floor we
-+	 * remove any possible issues due to card calibration. The computation
-+	 * of the interference factor then is dependent on what the card itself
-+	 * picks up as the minimum noise, not an actual real possible card
-+	 * noise value.
-+	 *
-+	 * Example values:
-+	 *
-+	 * 2412 MHz: 7.429173
-+	 * 2417 MHz: 10.460830
-+	 * 2422 MHz: 12.671070
-+	 * 2427 MHz: 13.583892
-+	 * 2432 MHz: 13.405357
-+	 * 2442 MHz: 13.566887
-+	 * 2447 MHz: 15.630824
-+	 * 2452 MHz: 14.639748
-+	 * 2457 MHz: 14.139193
-+	 * 2467 MHz: 11.914643
-+	 * 2472 MHz: 16.996074
-+	 * 2484 MHz: 15.175455
-+	 * 5180 MHz: -0.218548
-+	 * 5200 MHz: -2.204059
-+	 * 5220 MHz: -1.762898
-+	 * 5240 MHz: -1.314665
-+	 * 5260 MHz: -3.100989
-+	 * 5280 MHz: -2.157037
-+	 * 5300 MHz: -1.842629
-+	 * 5320 MHz: -1.498928
-+	 * 5500 MHz: 3.304770
-+	 * 5520 MHz: 2.345992
-+	 * 5540 MHz: 2.749775
-+	 * 5560 MHz: 2.390887
-+	 * 5580 MHz: 2.592958
-+	 * 5600 MHz: 2.420149
-+	 * 5620 MHz: 2.650282
-+	 * 5640 MHz: 2.954027
-+	 * 5660 MHz: 2.991007
-+	 * 5680 MHz: 2.955472
-+	 * 5700 MHz: 2.280499
-+	 * 5745 MHz: 2.388630
-+	 * 5765 MHz: 2.332542
-+	 * 5785 MHz: 0.955708
-+	 * 5805 MHz: 1.025377
-+	 * 5825 MHz: 0.843392
-+	 *
-+	 * In this example the ideal channel then is 5260 MHz
-+	 *
-+	 * [1] http://en.wikipedia.org/wiki/Near_and_far_field
-+	 */
-+	long double survey_interference_factor;
-+#endif
- };
- 
- /**
+diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+index 9f6e6d2..827e1ec 100755
+--- a/scripts/gen-compat-autoconf.sh
++++ b/scripts/gen-compat-autoconf.sh
+@@ -148,11 +148,11 @@ kernel_version_req $OLDEST_KERNEL_SUPPORTED
+ for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG | sed 's/ /+/'); do
+ 	case $i in
+ 	'ifdef+CONFIG_'* )
+-		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
++		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
+ 		continue
+ 		;;
+ 	'ifndef+CONFIG_'* )
+-		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
++		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
+ 		continue
+ 		;;
+ 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
 -- 
-1.7.4.15.g7811d
+1.7.4.1
 
