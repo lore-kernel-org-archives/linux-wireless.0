@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout03.t-online.de ([194.25.134.81]:37289 "EHLO
-	mailout03.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755904Ab1FJSY7 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50196 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595Ab1FIPeb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 14:24:59 -0400
-Message-ID: <4DF26175.2010506@t-online.de> (sfid-20110610_202502_139360_FEB5B52B)
-Date: Fri, 10 Jun 2011 20:24:53 +0200
-From: =?UTF-8?B?UmljaGFyZCBTY2jDvHR6?= <r.schtz@t-online.de>
-MIME-Version: 1.0
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: Stevie Trujillo <stevie.trujillo@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware
- limit?
-References: <201105251813.36804.stevie.trujillo@gmail.com>	 <1306352560.20732.0.camel@wwguy-ubuntu>	 <201105252154.06204.stevie.trujillo@gmail.com>	 <1306376938.20732.2.camel@wwguy-ubuntu>  <4DDE1458.9090004@t-online.de>	 <1306419109.20732.6.camel@wwguy-ubuntu>  <4DF246D1.9000107@t-online.de> <1307727083.13397.57.camel@wwguy-huron>
-In-Reply-To: <1307727083.13397.57.camel@wwguy-huron>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 9 Jun 2011 11:34:31 -0400
+Received: by wya21 with SMTP id 21so1213895wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 08:34:30 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat: define create_freezable_workqueue
+Date: Thu,  9 Jun 2011 18:35:03 +0300
+Message-Id: <1307633703-1279-1-git-send-email-eliad@wizery.com> (sfid-20110609_173435_867300_A7A19C94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 10.06.2011 19:31, schrieb Guy, Wey-Yi:
-> On Fri, 2011-06-10 at 09:31 -0700, Richard Schütz wrote:
->> On 26.05.2011 16:11, wwguy wrote:
->>> On Thu, 2011-05-26 at 01:50 -0700, Richard Schütz wrote:
->>>>> On Wed, 2011-05-25 at 12:54 -0700, Stevie Trujillo wrote:
->>>>>> On Wednesday 25 May 2011 21:42:40 wwguy wrote:
->>>>>>> On Wed, 2011-05-25 at 09:13 -0700, Stevie Trujillo wrote:
->>>>>>>> Hello,
->>>>>>>>
->>>>>>>> I have a "Intel(R) Centrino(R) 1030 BGN" card. tx_power_device_lmt is 15
->>>>>>>> and I was wondering if the card could do more than that.
->>>>>>>
->>>>>>> the card should not and will not do more than what required by
->>>>>>> regulatory
->>>>>>
->>>>>> I'm allowed to do 20dBm here and was wondering if I could make the card do
->>>>>> that.
->>>>>>
->>>>> the tx power in Intel WiFi device is regulated by uCode to make sure we
->>>>> are within regulatory limits. What country you are in?
->>>>>
->>>>> Thanks
->>>>> Wey
->>>>
->>>> I am also having the same issue with my Intel PRO/Wireless 5100 AGN.
->>>> Here in Germany I'm allowed to use 20 dBm (in the 2.4 GHz band), but the
->>>> card is limited to 15 dBm. So in some situations other cards are working
->>>> fine (as they use 20 dBm) and the Intel can't establish a connection.
->>>>
->>> We do not have different SKUs for different regions of the world. Now I
->>> understand your problem. Thank you very much for reporting. I will raise
->>> the issue and see how we should fix it.
->>>
->>> Sorry, I don't have a solution for you today. But it is very important
->>> for us and we need to result it.
->>>
->>> Thanks
->>> Wey
->>
->> Is there any news?
->>
-> Hi, I talk to the marketing and since we are providing single SKU
-> solution, the maximum allowed tx power is programmed in EEPROM, so
-> currently there is no method to allow use the higher limitation.
->
-> Thanks
-> Wey
+create_freezeable_workqueue() was renamed to
+create_freezable_workqueue().
 
-According to [1] there are no countries that forbid tx power values 
-lower than 20dBm in the 2.4 GHz band. The lowest value for the 5 GHz 
-band listed is 17 dBm. So why are the Intel cards limited to 15dBm then 
-for both bands? This value absolutely makes no sense in my view.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/linux/compat-2.6.38.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-[1] 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=blob;f=db.txt;hb=HEAD
-
+diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
+index 004fe27..2dd1910 100644
+--- a/include/linux/compat-2.6.38.h
++++ b/include/linux/compat-2.6.38.h
+@@ -39,6 +39,7 @@ static inline unsigned long ewma_read(const struct ewma *avg)
+ }
+ 
+ #define pr_warn pr_warning
++#define create_freezable_workqueue create_freezeable_workqueue
+ 
+ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
+ {
 -- 
-Regards,
-Richard Schütz
+1.7.0.4
+
