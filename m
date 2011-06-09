@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37421 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752682Ab1FJTiQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 15:38:16 -0400
-Received: by iwn34 with SMTP id 34so2419891iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 12:38:16 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:34120 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757823Ab1FINOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 09:14:37 -0400
+To: Dan Carpenter <error27@gmail.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] ath6kl: cache firmware
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+	<20110608115440.32208.75072.stgit@localhost6.localdomain6>
+	<20110608194031.GA4069@shale.localdomain>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 09 Jun 2011 16:14:34 +0300
+In-Reply-To: <20110608194031.GA4069@shale.localdomain> (Dan Carpenter's message of "Wed\, 8 Jun 2011 22\:44\:04 +0300")
+Message-ID: <871uz387ut.fsf@purkki.adurom.net> (sfid-20110609_151452_408242_D3FFCC76)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com>
-References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
- <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
- <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
- <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
- <1296633772.3624.2.camel@jlt3.sipsolutions.net> <20110202113052.GA14126@jm.kir.nu>
- <1296646434.5671.1.camel@jlt3.sipsolutions.net> <20110202133839.GA14904@jm.kir.nu>
- <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com> <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 10 Jun 2011 12:37:56 -0700
-Message-ID: <BANLkTinPxjBsFQ5n4smD4NwYHikD0kXVNw@mail.gmail.com> (sfid-20110610_213820_007278_54C46623)
-Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
-To: hedwin <hedwin.koning@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 10, 2011 at 12:28 PM, hedwin <hedwin.koning@gmail.com> wrote:
-> The problem with nl80211 and wpa_supplicant in android is that afaik
-> libnl is needed, correct?
-> Only problem with libnl is that it is LGPL which doesn't fit into the
-> android license policy.
-> Although this is a mailing list about wireless drivers this also needs
-> to be addressed
-> because it is part of the problem to get wireless support working in android.
+Dan Carpenter <error27@gmail.com> writes:
 
-Oh wow, so you mean you won't use libnl for any other things in
-android either? Shit out of luck.
+>> --- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+>> +++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+>> @@ -954,9 +954,13 @@ ar6000_transfer_bin_file(struct ar6_softc *ar, AR6K_BIN_FILE file, u32 address,
+>>      const char *filename;
+>>      const struct firmware *fw_entry;
+>>      u32 fw_entry_size;
+>> +    u8 **buf;
+>> +    size_t *buf_len;
+>
+> Don't make buf_len a pointer that just makes the code messier.
 
-  Luis
+I need the pointer later so that I can store the length:
+
+            *buf_len = fw_entry->size;
+
+>> +    if (WARN_ON((buf == NULL) || (buf_len == NULL)))
+>> +	    return A_ERROR;
+>
+> This test is a nonsense.  "buf" and buf_len are always valid
+> pointers here.
+
+Yeah, I tried to be extra careful here, but it looks stupid now.
+
+> Generally, I'd almost prefer a oops with a stack trace instead of
+> adding in bogus error handling code for stuff that can't happen.
+
+Depends on the case. In devices where ar6003 is usually is used there
+are no serial consoles nor any other way to debug the crash.
+
+> Also "buf" is never initialized to NULL, so if there were a
+> programming bug introduced, it would generate an uninitialized
+> variable warning even without the superflous test.  So lets remove
+> it.
+
+You have a point, I'll remove the test. I'll send v2.
+
+>> +    if (*buf == NULL) {
+>> +	    if ((A_REQUEST_FIRMWARE(&fw_entry, filename, ((struct device *)ar->osDevInfo.pOSDevice))) != 0)
+>> +	    {
+>             ^
+>
+> This is on the wrong line.
+
+I'll answer this and all the other style comments in one go:
+
+All the style issues are from the original code. I want to separate
+functional and cleanup patches so I didn't do any cleanup in this
+patch. But as we are doing the cleanup in a different tree anyway I
+didn't see the point of sending a separate cleanup patch.
+
+-- 
+Kalle Valo
