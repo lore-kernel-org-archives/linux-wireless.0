@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12746 "EHLO c60.cesmail.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:2496 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932201Ab1FQOqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 10:46:21 -0400
-Message-ID: <4DFB68BB.5070902@gnu.org> (sfid-20110617_164624_771340_163FB158)
-Date: Fri, 17 Jun 2011 10:46:19 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1752360Ab1FIOpR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:17 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/21] staging: brcm80211: remove unused fields from
+ struct si_info
+Date: Thu, 9 Jun 2011 16:44:49 +0200
+Message-ID: <1307630701-9170-10-git-send-email-rvossen@broadcom.com> (sfid-20110609_164545_685256_0C69E1AF)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: George Chriss <GChriss@openvideo.pro>
-CC: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: libertas on ETRAX FS / Elphel 353?
-References: <40525.74.64.51.206.1308265716.squirrel@openvideo.pro>
-In-Reply-To: <40525.74.64.51.206.1308265716.squirrel@openvideo.pro>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/16/2011 07:08 PM, George Chriss wrote:
+From: Arend van Spriel <arend@broadcom.com>
 
-> Is libertas support for this embedded system feasible?  I attempted to
-> build compat-wireless against the Elphel kernel sources and successfully
-> generated a long list of errors with 'make --keep-going' after commenting
-> out unnecessary parts of the Makefile.  The build log may be found at [4].
+Two fields were not used in the driver code so they have been removed
+from struct si_info definition.
 
-If it's a one-off effort for one driver, I think it should be possible. 
-  MadWifi (current snapshots) supports kernels from 2.4.22 to 3.0, and 
-the compatibility layer is not very thick.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-Many errors in that log come from the compatibility code you are not 
-going to need, such as MSI support.
-
-INIT_WORK changes are tricky, but it should be easier to backport the 
-code than it was to forward port it.  MadWifi could be used as a reference.
-
-You probably don't want mesh support.  Try disabling as all the code 
-that can be disabled.
-
-I don't know how intrusive USB changes have been.  Basically, until you 
-try, there is no way to tell how hard it might be.
-
-compat-wireless didn't go to older kernels because it needs to be 
-constantly maintained and because it supports multiple drivers.
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index 2b124c1..66d9471 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -470,10 +470,6 @@ struct si_info {
+ 
+ 	void *pch;		/* PCI/E core handle */
+ 
+-	gpioh_item_t *gpioh_head;	/* GPIO event handlers list */
+-
+-	bool memseg;		/* flag to toggle MEM_SEG register */
+-
+ 	char *vars;
+ 	uint varsz;
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.4.1
+
+
