@@ -1,228 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33095 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756335Ab1FEWIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2011 18:08:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org
-Cc: zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC][PATCH 06/10] bcma: get CPU clock
-Date: Mon,  6 Jun 2011 00:07:34 +0200
-Message-Id: <1307311658-15853-7-git-send-email-hauke@hauke-m.de> (sfid-20110606_000841_347721_6E7F102E)
-In-Reply-To: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:4678 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752601Ab1FIOpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:19 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 15/21] staging: brcm80211: removed superfluous forward
+ struct declarations
+Date: Thu, 9 Jun 2011 16:44:55 +0200
+Message-ID: <1307630701-9170-16-git-send-email-rvossen@broadcom.com> (sfid-20110609_164550_192173_AD0D3E95)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add method to return the clock of the CPU. This is needed by the arch 
-code to calculate the mips_hpt_frequency.
+Code cleanup.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reported-by: Julian Calaby <julian.calaby@gmail.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/bcma/bcma_private.h                 |    3 +
- drivers/bcma/driver_chipcommon_pmu.c        |   86 +++++++++++++++++++++++++++
- drivers/bcma/driver_mips.c                  |   12 ++++
- include/linux/bcma/bcma_driver_chipcommon.h |   35 +++++++++++
- include/linux/bcma/bcma_driver_mips.h       |    1 +
- 5 files changed, 137 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c       |    2 --
+ drivers/staging/brcm80211/brcmsmac/channel.h     |    2 --
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    4 ----
+ drivers/staging/brcm80211/brcmsmac/nicpci.h      |    2 --
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h |    4 ----
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |    4 ----
+ drivers/staging/brcm80211/brcmsmac/phy_shim.h    |    4 ----
+ drivers/staging/brcm80211/brcmsmac/pub.h         |   14 --------------
+ drivers/staging/brcm80211/brcmsmac/rate.h        |    2 --
+ drivers/staging/brcm80211/brcmsmac/types.h       |    2 ++
+ drivers/staging/brcm80211/include/brcmu_utils.h  |    2 +-
+ 11 files changed, 3 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index c65a6e2..fbabe19 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -22,6 +22,9 @@ int bcma_bus_scan(struct bcma_bus *bus);
- /* driver_mips.c */
- extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index 14b2e1b..cb8d614 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -28,8 +28,6 @@
+ #include "dngl_stats.h"
+ #include "dhd.h"
  
-+/* driver_chipcommon_pmu.c */
-+extern u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
-+
- /* driver_chipcommon.c */
- extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
- 				   struct bcma_drv_mips_serial_port *ports);
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index f44177a..4a700f8 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -11,6 +11,13 @@
- #include "bcma_private.h"
- #include <linux/bcma/bcma.h>
+-struct si_pub;
+-
+ #define WPA_OUI			"\x00\x50\xF2"
+ #define DOT11_MNG_RSN_ID			48
+ #define DOT11_MNG_WPA_ID			221
+diff --git a/drivers/staging/brcm80211/brcmsmac/channel.h b/drivers/staging/brcm80211/brcmsmac/channel.h
+index e743392..5ab1032 100644
+--- a/drivers/staging/brcm80211/brcmsmac/channel.h
++++ b/drivers/staging/brcm80211/brcmsmac/channel.h
+@@ -20,8 +20,6 @@
+ #define WLC_TXPWR_DB_FACTOR 4	/* conversion for phy txpwr cacluations that use .25 dB units */
  
-+static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
-+{
-+	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
-+	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
-+	return bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
-+}
-+
- static void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
- 					u32 offset, u32 mask, u32 set)
- {
-@@ -132,3 +139,82 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
- 	bcma_pmu_swreg_init(cc);
- 	bcma_pmu_workarounds(cc);
- }
-+
-+static u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	switch (bus->chipinfo.id) {
-+	case 0x4716:
-+	case 0x4748:
-+	case 47162:
-+		/* always 20Mhz */
-+		return 20000 * 1000;
-+	default:
-+		pr_warn("No ALP clock specified for %04X device, "
-+			"pmu rev. %d, using default %d Hz\n",
-+			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
-+	}
-+	return BCMA_CC_PMU_ALP_CLOCK;
-+}
-+
-+/* Find the output of the "m" pll divider given pll controls that start with
-+ * pllreg "pll0" i.e. 12 for main 6 for phy, 0 for misc.
-+ */
-+static u32 bcma_pmu_clock(struct bcma_drv_cc *cc, u32 pll0, u32 m)
-+{
-+	u32 tmp, div, ndiv, p1, p2, fc;
-+
-+	BUG_ON(!m || m > 4);
-+
-+	BUG_ON((pll0 & 3) || (pll0 > BCMA_CC_PMU4716_MAINPLL_PLL0));
-+
-+	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_P1P2_OFF);
-+	p1 = (tmp & BCMA_CC_PPL_P1_MASK) >> BCMA_CC_PPL_P1_SHIFT;
-+	p2 = (tmp & BCMA_CC_PPL_P2_MASK) >> BCMA_CC_PPL_P2_SHIFT;
-+
-+	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_M14_OFF);
-+	div = (tmp >> ((m - 1) * BCMA_CC_PPL_MDIV_WIDTH)) & BCMA_CC_PPL_MDIV_MASK;
-+
-+	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_NM5_OFF);
-+	ndiv = (tmp & BCMA_CC_PPL_NDIV_MASK) >> BCMA_CC_PPL_NDIV_SHIFT;
-+
-+	/* Do calculation in Mhz */
-+	fc = bcma_pmu_alp_clock(cc) / 1000000;
-+	fc = (p1 * ndiv * fc) / p2;
-+
-+	/* Return clock in Hertz */
-+	return (fc / div) * 1000000;
-+}
-+
-+/* query bus clock frequency for PMU-enabled chipcommon */
-+u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	switch (bus->chipinfo.id) {
-+	case 0x4716:
-+	case 0x4748:
-+	case 47162:
-+		return bcma_pmu_clock(cc, BCMA_CC_PMU4716_MAINPLL_PLL0,
-+				      BCMA_CC_PMU5_MAINPLL_SSB);
-+	default:
-+		pr_warn("No backplane clock specified for %04X device, "
-+			"pmu rev. %d, using default %d Hz\n",
-+			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_HT_CLOCK);
-+	}
-+	return BCMA_CC_PMU_HT_CLOCK;
-+}
-+
-+/* query cpu clock frequency for PMU-enabled chipcommon */
-+u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	if ((cc->pmu.rev == 5 || cc->pmu.rev == 6 || cc->pmu.rev == 7) &&
-+	    (bus->chipinfo.id != 0x4319))
-+		return bcma_pmu_clock(cc, BCMA_CC_PMU4716_MAINPLL_PLL0,
-+				      BCMA_CC_PMU5_MAINPLL_CPU);
-+
-+	return bcma_pmu_get_clockcontrol(cc);
-+}
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 40e4a6d..faaa232 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -155,6 +155,18 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
- 	}
- }
  
-+u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
-+{
-+	struct bcma_bus *bus = mcore->core->bus;
-+
-+	if (bus->drv_cc.capabilities & BCMA_CC_CAP_PMU)
-+		return bcma_pmu_get_clockcpu(&bus->drv_cc);
-+
-+	pr_err("No PMU available, need this to get the cpu clock\n");
-+	return 0;
-+}
-+EXPORT_SYMBOL(bcma_cpu_clock);
-+
- static void bcma_core_mips_serial_init(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus = mcore->core->bus;
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 083c3b6..77dc08c 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -245,6 +245,41 @@
- #define BCMA_CC_PLLCTL_ADDR		0x0660
- #define BCMA_CC_PLLCTL_DATA		0x0664
- 
-+/* Divider allocation in 4716/47162/5356 */
-+#define BCMA_CC_PMU5_MAINPLL_CPU	1
-+#define BCMA_CC_PMU5_MAINPLL_MEM	2
-+#define BCMA_CC_PMU5_MAINPLL_SSB	3
-+
-+/* PLL usage in 4716/47162 */
-+#define BCMA_CC_PMU4716_MAINPLL_PLL0	12
-+
-+/* ALP clock on pre-PMU chips */
-+#define BCMA_CC_PMU_ALP_CLOCK		20000000
-+/* HT clock for systems with PMU-enabled chipcommon */
-+#define BCMA_CC_PMU_HT_CLOCK		80000000
-+
-+/* PMU rev 5 (& 6) */
-+#define	BCMA_CC_PPL_P1P2_OFF		0
-+#define	BCMA_CC_PPL_P1_MASK		0x0f000000
-+#define	BCMA_CC_PPL_P1_SHIFT		24
-+#define	BCMA_CC_PPL_P2_MASK		0x00f00000
-+#define	BCMA_CC_PPL_P2_SHIFT		20
-+#define	BCMA_CC_PPL_M14_OFF		1
-+#define	BCMA_CC_PPL_MDIV_MASK		0x000000ff
-+#define	BCMA_CC_PPL_MDIV_WIDTH		8
-+#define	BCMA_CC_PPL_NM5_OFF		2
-+#define	BCMA_CC_PPL_NDIV_MASK		0xfff00000
-+#define	BCMA_CC_PPL_NDIV_SHIFT		20
-+#define	BCMA_CC_PPL_FMAB_OFF		3
-+#define	BCMA_CC_PPL_MRAT_MASK		0xf0000000
-+#define	BCMA_CC_PPL_MRAT_SHIFT		28
-+#define	BCMA_CC_PPL_ABRAT_MASK		0x08000000
-+#define	BCMA_CC_PPL_ABRAT_SHIFT		27
-+#define	BCMA_CC_PPL_FDIV_MASK		0x07ffffff
-+#define	BCMA_CC_PPL_PLLCTL_OFF		4
-+#define	BCMA_CC_PPL_PCHI_OFF		5
-+#define	BCMA_CC_PPL_PCHI_MASK		0x0000003f
-+
- /* Data for the PMU, if available.
-  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
-  */
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index 6584e7d..8346fde 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -47,5 +47,6 @@ struct bcma_drv_mips {
+-struct brcms_c_info;
+-
+ /* maxpwr mapping to 5GHz band channels:
+  * maxpwr[0] - channels [34-48]
+  * maxpwr[1] - channels [52-60]
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+index 71526b2..26a0a30 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+@@ -83,9 +83,6 @@ struct brcms_info {
  };
  
- extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
-+extern u32 bcma_cpu_clock(struct bcma_drv_mips *mcore);
+ /* misc callbacks */
+-struct brcms_info;
+-struct brcms_if;
+-struct brcms_c_if;
+ extern void brcms_init(struct brcms_info *wl);
+ extern uint brcms_reset(struct brcms_info *wl);
+ extern void brcms_intrson(struct brcms_info *wl);
+@@ -99,7 +96,6 @@ extern bool wl_alloc_dma_resources(struct brcms_info *wl, uint dmaddrwidth);
+ extern bool brcms_rfkill_set_hw_state(struct brcms_info *wl);
  
- #endif /* LINUX_BCMA_DRIVER_MIPS_H_ */
+ /* timer functions */
+-struct brcms_timer;
+ extern struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+ 				      void (*fn) (void *arg), void *arg,
+ 				      const char *name);
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+index 826c162..f71f842 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+@@ -70,8 +70,6 @@
+ #define SRSH_PI_MASK	0xf000	/* bit 15:12 */
+ #define SRSH_PI_SHIFT	12	/* bit 15:12 */
+ 
+-struct si_pub;
+-
+ extern void *pcicore_init(struct si_pub *sih, void *pdev, void *regs);
+ extern void pcicore_deinit(void *pch);
+ extern void pcicore_attach(void *pch, char *pvars, int state);
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
+index db99440..756ad71 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
+@@ -154,10 +154,6 @@ struct chanvec {
+ 	u8 vec[MAXCHANNEL / NBBY];
+ };
+ 
+-struct rpc_info;
+-
+-struct phy_pub;
+-
+ struct shared_phy_params {
+ 	struct si_pub *sih;
+ 	void *physhim;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+index fa0ff3f..9506da5 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+@@ -49,7 +49,6 @@ struct wlc_phy_srom_fem {
+ 	u8 antswctrllut;	/* antswctrl lookup table configuration: 32 possible choices */
+ };
+ 
+-struct brcms_c_hw_info;
+ typedef void (*initfn_t) (phy_info_t *);
+ typedef void (*chansetfn_t) (phy_info_t *, chanspec_t);
+ typedef int (*longtrnfn_t) (phy_info_t *, int);
+@@ -579,9 +578,6 @@ struct phy_pub {
+ 	bool abgphy_encore;
+ };
+ 
+-struct phy_info_nphy;
+-struct phy_info_lcnphy;
+-
+ struct phy_func_ptr {
+ 	initfn_t init;
+ 	initfn_t calinit;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.h b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
+index 4b45b2c..413d5db 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy_shim.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
+@@ -108,15 +108,11 @@
+ #define WLC_N_TXRX_CHAIN0		0
+ #define WLC_N_TXRX_CHAIN1		1
+ 
+-/* Forward declarations */
+-struct brcms_c_hw_info;
+-
+ extern wlc_phy_shim_info_t *wlc_phy_shim_attach(struct brcms_c_hw_info *wlc_hw,
+ 						void *wl, void *wlc);
+ extern void wlc_phy_shim_detach(wlc_phy_shim_info_t *physhim);
+ 
+ /* PHY to WL utility functions */
+-struct wlapi_timer;
+ extern struct wlapi_timer *wlapi_init_timer(wlc_phy_shim_info_t *physhim,
+ 					    void (*fn) (void *arg), void *arg,
+ 					    const char *name);
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index 25c65e8..2ec3ba9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -106,8 +106,6 @@
+ #define	WL_SPURAVOID_ON1	1
+ #define	WL_SPURAVOID_ON2	2
+ 
+-struct ieee80211_tx_queue_params;
+-
+ struct wlc_tunables {
+ 	int ntxd;		/* size of tx descriptor table */
+ 	int nrxd;		/* size of rx descriptor table */
+@@ -187,9 +185,6 @@ struct wlc_bss_info {
+ 	u8 wpacfg;		/* wpa config index */
+ };
+ 
+-/* forward declarations */
+-struct brcms_c_if;
+-
+ /* brcms_c_ioctl error codes */
+ #define WLC_ENOIOCTL	1	/* No such Ioctl */
+ #define WLC_EINVAL	2	/* Invalid value */
+@@ -384,14 +379,6 @@ enum wlc_par_id {
+ 	IOV_BCN_LI_BCN		/* Beacon listen interval in # of beacons */
+ };
+ 
+-/* forward declare and use the struct notation so we don't have to
+- * have it defined if not necessary.
+- */
+-struct brcms_c_info;
+-struct brcms_c_hw_info;
+-struct brcms_c_bsscfg;
+-struct brcms_c_if;
+-
+ /***********************************************
+  * Feature-related macros to optimize out code *
+  * *********************************************
+@@ -637,7 +624,6 @@ extern void wlc_rate_lookup_init(struct brcms_c_info *wlc,
+ 				 wlc_rateset_t *rateset);
+ extern void brcms_default_rateset(struct brcms_c_info *wlc, wlc_rateset_t *rs);
+ 
+-struct ieee80211_sta;
+ extern void wlc_ampdu_flush(struct brcms_c_info *wlc,
+ 			    struct ieee80211_sta *sta, u16 tid);
+ extern int brcms_c_set_par(struct brcms_c_info *wlc, enum wlc_par_id par_id,
+diff --git a/drivers/staging/brcm80211/brcmsmac/rate.h b/drivers/staging/brcm80211/brcmsmac/rate.h
+index 36cb91b..28ba4d6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/rate.h
++++ b/drivers/staging/brcm80211/brcmsmac/rate.h
+@@ -138,8 +138,6 @@ extern const u8 ofdm_rate_lookup[];
+ #define WLC_RATES_CCK		1
+ #define WLC_RATES_OFDM		2
+ 
+-struct wlc_rateset;
+-
+ /* sanitize, and sort a rateset with the basic bit(s) preserved, validate rateset */
+ extern bool wlc_rate_hwrs_filter_sort_validate(struct wlc_rateset *rs,
+ 					       const struct wlc_rateset *hw_rs,
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index 3f53e8c..163973d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -371,6 +371,8 @@ struct wiphy;
+ struct brcmu_iovar;
+ struct brcms_c_txq_info;
+ struct brcms_c_band;
++struct ieee80211_tx_queue_params;
++struct ieee80211_sta;
+ 
+ typedef struct gpioh_item gpioh_item_t;
+ typedef struct si_info si_info_t;
+diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
+index 863b3c7..78c84e2 100644
+--- a/drivers/staging/brcm80211/include/brcmu_utils.h
++++ b/drivers/staging/brcm80211/include/brcmu_utils.h
+@@ -139,7 +139,7 @@ extern uint brcmu_pkttotlen(struct sk_buff *p);
+ extern int brcmu_ether_atoe(char *p, u8 *ea);
+ 
+ /* ip address */
+-	struct ipv4_addr;
++struct ipv4_addr;
+ 
+ #ifdef BCMDBG
+ extern void brcmu_prpkt(const char *msg, struct sk_buff *p0);
 -- 
 1.7.4.1
+
 
