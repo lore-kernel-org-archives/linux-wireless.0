@@ -1,108 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:49927 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005Ab1FUQmz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 12:42:55 -0400
-Date: Tue, 21 Jun 2011 22:03:52 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-Message-ID: <20110621163351.GD32464@hertz.marvell.com> (sfid-20110621_184258_838222_01D3DCDE)
-References: <20110617132527.GA27436@hertz.marvell.com>
- <1308331485.7329.2.camel@Nokia-N900-51-1>
- <20110620143051.GA31035@hertz.marvell.com>
- <1308583799.4322.9.camel@jlt3.sipsolutions.net>
- <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
- <1308590980.4322.19.camel@jlt3.sipsolutions.net>
- <20110621130305.GB32464@hertz.marvell.com>
- <1308663814.4276.3.camel@jlt3.sipsolutions.net>
- <20110621141017.GC32464@hertz.marvell.com>
- <1308667215.4276.7.camel@jlt3.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2520 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646Ab1FIOpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:18 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 20/21] staging: brcm80211: fix checkpatch errors in
+ brcmsmac driver
+Date: Thu, 9 Jun 2011 16:45:00 +0200
+Message-ID: <1307630701-9170-21-git-send-email-rvossen@broadcom.com> (sfid-20110609_164604_223092_5474DC7B)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308667215.4276.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 07:40:15AM -0700, Johannes Berg wrote:
-> On Tue, 2011-06-21 at 19:40 +0530, Yogesh Ashok Powar wrote:
-> 
-> > @@ -455,6 +496,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
-> >  	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
-> >  	__ieee80211_key_destroy(old_key);
-> >  
-> > +	increment_tailroom_need_count(key->local);
-> > +
-> 
-> This doesn't seem right -- it links the key in first and then does the
-> update, the mechanism I described relies on doing it the other way
-> around.
-In that case we should have something like this
+From: Arend van Spriel <arend@broadcom.com>
 
-@@ -493,11 +493,11 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	else
- 		old_key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
- 
-+	increment_tailroom_need_count(key->local);
-+
- 	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
- 	__ieee80211_key_destroy(old_key);
- 
--	increment_tailroom_need_count(key->local);
--
- 	ieee80211_debugfs_key_add(key);
- 
- 	ret = ieee80211_key_enable_hw_accel(key);
+Several source files in brcmsmac driver have checkpatch errors that
+have been removed (see below).
 
-> 
-> > @@ -498,8 +541,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
-> >  
-> >  	mutex_lock(&sdata->local->key_mtx);
-> >  
-> > -	list_for_each_entry(key, &sdata->key_list, list)
-> > +	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
-> > +
-> 
-> That doesn't seem right either -- only if you have a single sdata that
-> will work, I think?
-Right. For multiple sdata count will be over written to 0.
+ERROR: spaces required around that ':' (ctx:VxV)
++           (u8)NPHY_RSSI_SEL_TSSI_5G:(u8)NPHY_RSSI_SEL_TSSI_2G;
+--
+ERROR: code indent should use tabs where possible
++ ^Ierr = initvars_table(base, vp, vars, count);$
+--
 
-I think, following should fix this
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c |    2 +-
+ drivers/staging/brcm80211/brcmsmac/srom.c      |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks
-Yogesh
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index edf9f40..0bf450d 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -541,8 +541,6 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index bc5da60..696825f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -23456,7 +23456,7 @@ wlc_phy_est_tonepwr_nphy(phy_info_t *pi, s32 *qdBm_pwrbuf, u8 num_samps)
  
- 	mutex_lock(&sdata->local->key_mtx);
+ 	tssi_type =
+ 	    CHSPEC_IS5G(pi->radio_chanspec) ?
+-	    (u8)NPHY_RSSI_SEL_TSSI_5G:(u8)NPHY_RSSI_SEL_TSSI_2G;
++	    (u8)NPHY_RSSI_SEL_TSSI_5G : (u8)NPHY_RSSI_SEL_TSSI_2G;
  
--	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
--
- 	list_for_each_entry(key, &sdata->key_list, list) {
- 		increment_tailroom_need_count(sdata->local);
- 		ieee80211_key_enable_hw_accel(key);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 05e3fb8..bef3bdd 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1271,6 +1271,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_unlock(&local->sta_mtx);
- 	}
+ 	wlc_phy_poll_rssi_nphy(pi, tssi_type, rssi_buf, num_samps);
  
-+	/* Reset tailroom skip count */
-+	local->crypto_tx_tailroom_needed_cnt = 0;
-+
- 	/* add back keys */
- 	list_for_each_entry(sdata, &local->interfaces, list)
- 		if (ieee80211_sdata_running(sdata))
+diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
+index 8aa6d01..1117f91 100644
+--- a/drivers/staging/brcm80211/brcmsmac/srom.c
++++ b/drivers/staging/brcm80211/brcmsmac/srom.c
+@@ -1318,9 +1318,9 @@ static int initvars_srom_pci(struct si_pub *sih, void *curmap, char **vars,
+ 	vp = b.buf;
+ 	*vp++ = '\0';
+ 
+- 	err = initvars_table(base, vp, vars, count);
++	err = initvars_table(base, vp, vars, count);
+ 
+- errout:
++errout:
+ 	if (base)
+ 		kfree(base);
+ 
+-- 
+1.7.4.1
 
 
