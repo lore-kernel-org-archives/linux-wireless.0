@@ -1,107 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:32990 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390Ab1F2CxH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 22:53:07 -0400
-Received: by gwaa18 with SMTP id a18so322315gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 19:53:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
-References: <BANLkTimfrcrqVxNXj_5qDYYJoz6Exnzw+w@mail.gmail.com>
-	<1309009093.4317.9.camel@jlt3.sipsolutions.net>
-	<BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
-Date: Wed, 29 Jun 2011 10:53:06 +0800
-Message-ID: <BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com> (sfid-20110629_045348_978140_F9DF3E62)
-Subject: Re: [PATCH] chan.c: fix chan.c to return channel number when in
- monitor mode and on a fixed channel.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Nicholas Hockey <nhockey@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33091 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756547Ab1FIWEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 18:04:22 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 10/11] compat-wireless: add missing bluetooth header
+Date: Fri, 10 Jun 2011 00:03:41 +0200
+Message-Id: <1307657022-23808-11-git-send-email-hauke@hauke-m.de> (sfid-20110610_000438_761911_8BDA727C)
+In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take a look at how monitor mode is used by other bits of software, eg
-I think hostapd in Linux uses a monitor mode interface.
 
-If I understand the Linux wifi stack use of monitor mode correctly,
-it's not designed like the "classic" monitor mode from days gone by
-(eg madwifi) (And this is what BSD still does..); it's a slave device
-to a currently configured, non-monitor interface. The normal interface
-gets the 'normal' traffic; the slave monitor mode interface sees the
-management traffic so hostapd can do MLME, etc.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-So you likely need to look at what hostapd does and create/use a
-monitor mode interface in the same way. Ie, as a slave to a normal
-interface, rather than a stand-alone interface.
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index de810b5..df7056e 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -18,7 +18,7 @@
+ GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+ GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
+ 
+-INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h mgmt.h"
++INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h mgmt.h smp.h"
+ NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
+ 
+ INCLUDE_LINUX="ieee80211.h nl80211.h"
+-- 
+1.7.4.1
 
-Adrian
-
-On 29 June 2011 00:12, Nicholas Hockey <nhockey@gmail.com> wrote:
-> If this has been discussed before, could you please point me to a
-> resource? if this solution is not correct, then id like to read why
-> its not correct, and formulate another solution for the problem. i am
-> an amateur radio tech and i have to apply this patch every single
-> build in order to use some custom software i have developed over the
-> years.
->
-> On Sat, Jun 25, 2011 at 9:38 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2011-06-23 at 16:49 -0400, Nicholas Hockey wrote:
->>> (sorry if this is not right, its been nearly 10 years since i
->>> submitted a kernel patch)
->>
->> Listing cfg80211 isntead of "chan.c" would have been useful :-)
->>
->>> Fixes: When monitoring a fixed channel, chan.c does not report what
->>> channel it is on.
->>>
->>> Signed-off-by: Nicholas Hockey <nhockey@gmail.com>
->>> ---
->>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
->>> index 17cd0c0..261ee32 100644
->>> --- a/net/wireless/chan.c
->>> +++ b/net/wireless/chan.c
->>> @@ -82,10 +82,12 @@ int cfg80211_set_freq(struct
->>> cfg80211_registered_device *rdev,
->>>  {
->>>         struct ieee80211_channel *chan;
->>>         int result;
->>> +    struct wireless_dev *mon_dev = NULL;
->>>
->>> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
->>> +       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
->>> +        mon_dev = wdev;
->>>                 wdev = NULL;
->>> -
->>> +    }
->>>         if (wdev) {
->>>                 ASSERT_WDEV_LOCK(wdev);
->>>
->>> @@ -131,5 +133,8 @@ int cfg80211_set_freq(struct
->>> cfg80211_registered_device *rdev,
->>>         if (wdev)
->>>                 wdev->channel = chan;
->>>
->>> +    if (mon_dev)
->>> +        mon_dev->channel = chan;
->>> +
->>
->> This has been discussed numerous times, this change still isn't right
->> because monitors are slaved to others.
->>
->> johannes
->>
->>
->
->
->
-> --
-> Nicholas (Tilt) Hockey
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
