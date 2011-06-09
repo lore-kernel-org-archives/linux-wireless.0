@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44872 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117Ab1F1Tvy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 15:51:54 -0400
-Message-ID: <4E0A30CD.9030006@candelatech.com> (sfid-20110628_215157_847934_593775FA)
-Date: Tue, 28 Jun 2011 12:51:41 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michel Alexandre Salim <salimma@fedoraproject.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: [PATCH] ath9k: add module option for disabling 11n functionality
-References: <4E0A2F8A.8010102@fedoraproject.org>
-In-Reply-To: <4E0A2F8A.8010102@fedoraproject.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from lo.gmane.org ([80.91.229.12]:36864 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754311Ab1FIUkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 16:40:10 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QUm1O-00063T-Pg
+	for linux-wireless@vger.kernel.org; Thu, 09 Jun 2011 22:40:07 +0200
+Received: from 208-46-143-172.dia.static.qwest.net ([208.46.143.172])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 22:40:06 +0200
+Received: from flamorce by 208-46-143-172.dia.static.qwest.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 22:40:06 +0200
+To: linux-wireless@vger.kernel.org
+From: Frederic <flamorce@calamp.com>
+Subject: Problem with dhcp client *only* with encryption...
+Date: Thu, 9 Jun 2011 20:36:59 +0000 (UTC)
+Message-ID: <loom.20110609T223528-612@post.gmane.org> (sfid-20110609_224019_912793_6C2F196B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2011 12:46 PM, Michel Alexandre Salim wrote:
-> Some wireless base stations implement 802.11n mode in ways that
-> open-source drivers cannot handle properly, resulting in very unstable
-> connections. This patch introduces an '11n_disable' option to the ath9k
-> driver, similar to the same option for the iwlagn driver.
->
-> Tested at the internal wireless network of www.cs.fau.de, where 802.11n
-> currently only works reliably with Windows clients.
+My setup:
 
-Would be lovely if this could be per VIF, and settable through something
-dynamic, even if just debugfs or similar....
+An ARM board running 2.6.27.9 kernel, compat-wireless-2011-05-24, iw-0.9.22,
+libnl-1.1
 
-Ben
+If I set my AP with no encryption, I can connect with "iw wlan0 connect
+wireless" fine then use "udhcpc -i wlan0" to grab an IP address and ping the AP,
+it works.
 
+If I set the AP with WEP, it seems that "iw wlan0 connect wireless keys 0:abcde
+d:1:0011223344" works, I can see the MAC address in the AP device list, but
+udhcpc is unable to take an IP address, it only sends “discover” packets but
+never see an answer. I run tcpdump on the AP and I do not see the DHCP request
+AFAIK.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I then compiled openssl-1.0.0d and wpa_supplicant-0.7.3 and set the AP in
+WPA-TKIP and WPA2-AES ; connections, again, seem to work RF wise, but udhcpc
+still does not work and I cannot have an IP address.
+
+Setting a static IP address does not make ping work too.
+
+Anyone has a clue as to why dhcp request, or it seems, any traffic, fail only
+when using encryption?
+
+Thanks in advance, Frédéric.
+
 
