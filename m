@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.3eti.com ([65.220.88.139]:58559 "EHLO 3eSpam.3eti.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757942Ab1FVN4k convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:65359 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972Ab1FIMEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 09:56:40 -0400
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: 'Emmanuel Grumbach' <egrumbach@gmail.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Help on AMPDU stuck in transmit queue
-Date: Wed, 22 Jun 2011 13:56:32 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D058350CB@RockMX01.rock.corp> (sfid-20110622_155645_552178_DA183BF3)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
-	<4DFA2989.10503@candelatech.com>
-	<BD54DDEB2546894FAB0731EA7B0EDF8D05833EC1@RockMX01.rock.corp>
- <BANLkTikK2Ju4cCzs5Y5scfGVRyu+ZRs63g@mail.gmail.com>
-In-Reply-To: <BANLkTikK2Ju4cCzs5Y5scfGVRyu+ZRs63g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 9 Jun 2011 08:04:12 -0400
+Received: by ywe9 with SMTP id 9so726062ywe.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 05:04:11 -0700 (PDT)
 MIME-Version: 1.0
+Date: Thu, 9 Jun 2011 13:04:11 +0100
+Message-ID: <BANLkTik=TGub=tEFC01bTrF_Erp5FT8C5w@mail.gmail.com> (sfid-20110609_140415_837344_C9F6ED6D)
+Subject: Query regarding features and intel wireless NICs supported
+From: "M. A." <jdiq123@googlemail.com>
+To: ipw3945-devel@lists.sourceforge.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Emmanuel
+Hi all,
 
-Yes. The problem here seems to be the same as you saw.
-There is no ping packet loss when I use AC==BK.
+I would be very grateful if people can advise on the features present
+in Intels 3x3 MIMO (450Mbps) chipsets, namely (Ultimate N WiFi Link
+5300 and 6300 NICs) and the features that are currently supported by
+the iwlwifi/iwlang Linux driver.
 
-Would you please point me to the code, e.g file/function, etc
-I would like to fix this problem (if I can).
+e.g. the output of "iw list" command of the cards would be very helpful.
 
-Thanks again
+For example does it support:
 
+1) Configuring as an AP (via hostapd or otherwise).
+2) STBC, 3) Greenfield, 4) Short gaurd interval, 4) Low-density parity
+check (LDPC) encoding, 5) Maximum likelihood demodulation (MLD) and
+MRC, 6) Transmit beamforming (TxBF), 7) Ability to control antenna-
+power/chain mask etc,
+8) Support for HT IBSS/ad hoc speeds (Alexander's patch).
+9) Per-Packet. Information (PPI) capturing
 
------Original Message-----
-From: Emmanuel Grumbach [mailto:egrumbach@gmail.com] 
-Sent: Tuesday, June 21, 2011 4:11 PM
-To: Chaoxing Lin
-Cc: Ben Greear; ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
-Subject: Re: Help on AMPDU stuck in transmit queue
+Also to those who have tested these intel NICs, can you please provide
+a purchase recommendation as I intend to use it to run parameter
+specific tests (one at a time) via install these on around 5 laptops
+and similar platforms.
 
-On Tue, Jun 21, 2011 at 19:16, Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com> wrote:
->
-> Anybody,any ideas/comments?
->
-> Here is my update.
->
-> I tried 2.6.39.1. The situation gets better, but not fixed completely. The ping packets still lose (about 62 seconds) once a while.
-> I say "gets better" because it recovers.
->
-> The ping session recovers after about 62 seconds which matches to 2 NULL data packet interval. I sniffed the air, it looks like every 31 seconds, a NULL data packet is sent out from client.
->
->
-> Again, the symptom does not happen when 802.11n is disabled on AP.
->
-> Can anyone explain or help?
->
-> Below is my ping session info (message on console)
->
-
-Can you please try to send the pings with AC != BE. I saw once a bug
-related to ampdu reordering buffer. NULL packets would enter the
-reordering buffer and mess up the counters there. Since the reordering
-buffer is tid-wise, trying with another AC may help to understand. I
-assume that QoS NULL data packets are sent as BE. The fact that the
-ping recovers after a while may be explained by the wrap around of the
-sequence.
-This is a really wild guess... but sometimes it can hit....
+Thank you all very much
