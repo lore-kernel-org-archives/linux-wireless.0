@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49791 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354Ab1FUQVj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 12:21:39 -0400
-Received: by iyb12 with SMTP id 12so2976892iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 09:21:39 -0700 (PDT)
-Message-ID: <4E00C50F.6030708@lwfinger.net> (sfid-20110621_182143_577994_A20770C3)
-Date: Tue, 21 Jun 2011 11:21:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Fred Plissonneau <cohomewp4@gmail.com>
-CC: ali@internetdog.org, linux-wireless@vger.kernel.org
-Subject: Re: Makefile deletes previous driver install when two WiFi interfaces
- are from the same chip vendor
-References: <BANLkTimvMcb5yRHSE91VPTLdy7k5WEDo0Q@mail.gmail.com>	<20110621130752.GB8462@internetdog.org> <BANLkTi=EygUbm5VB+H-mm+ofpbuaK8xafA@mail.gmail.com>
-In-Reply-To: <BANLkTi=EygUbm5VB+H-mm+ofpbuaK8xafA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33154 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756591Ab1FIWFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 18:05:08 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>, Ignacy Gawedzki <i@lri.fr>
+Subject: [PATCH 2/5] compat: add device name in register_netdevice(dev)
+Date: Fri, 10 Jun 2011 00:04:44 +0200
+Message-Id: <1307657087-23900-2-git-send-email-hauke@hauke-m.de> (sfid-20110610_000517_510103_CC077FED)
+In-Reply-To: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
+References: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2011 10:02 AM, Fred Plissonneau wrote:
->
-> No, no it is not after the power-cycle. I just mention here that after
-> power-on, my first installed
-> driver as disappeared and I suspect the Makefile to contain "rm"
-> command which does too much cleaning
-> in my particular case.
->
-> I am following the README information here (or may I've made a
-> mistake, let me know).
-> ./scripts/driver-select ath9k
-> make
-> sudo make install (I'm running UBUNTU)
-> sudo modprode ath9k
->
-> ./scripts/driver-select carl9170
-> make
-> sudo make install
-> sudo modprode carl9170
->
-> If I don't switch off, everything works fine (just because both
-> modules are loaded into the memory).
->
->
-> -->>  Last minute (4:30PM today !-) :
-> I've found the lines causing the problem. There located just after the
-> "uninstall:" tag which is also built during "make install".
-> If I delete lines #318 to #326 in the Makefile (right after the "make"
-> command and before "make install") it works fine now.
-> That is to say, the ath9k.ko file is not deleted anymore during the
-> installation of the second driver.
-> This workaround is working fine. I am not sure my specific problem is
-> relevant in the normal use case .
+dev_alloc_name() is not called explicitly in the driver code any more,
+but it is done in register_netdevice(). This causes devices getting
+wrong names like "wlan%d". With this patch they get names like wlan0
+again.
 
-Your problem is that you are using the driver-select script wrong. It has 
-nothing to do with your interfaces having the same chip vendor. In addition, 
-your "workaround" is likely to cause many problems with dead modules not being 
-removed.
+Add to compat-3.0-stable
 
-You need to select ALL the modules you will ever need before you do the make 
-step. By deleting ath9k from the configuration when you select carl9170 and 
-vice-versa, you tell the system that you no longer want the other one. Strangely 
-enough, but that is exactly what it does.
+CC: Ignacy Gawedzki <i@lri.fr>
+---
+ include/linux/compat-2.6.h |    1 +
+ include/linux/compat-3.0.h |   31 +++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/compat-3.0.h
 
-You need to use
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index 893a159..e4ca6aa 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -32,6 +32,7 @@
+ #include <linux/compat-2.6.37.h>
+ #include <linux/compat-2.6.38.h>
+ #include <linux/compat-2.6.39.h>
++#include <linux/compat-3.0.h>
+ #include <linux/compat-3.1.h>
+ 
+ #endif /* LINUX_26_COMPAT_H */
+diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+new file mode 100644
+index 0000000..5d05093
+--- /dev/null
++++ b/include/linux/compat-3.0.h
+@@ -0,0 +1,31 @@
++#ifndef LINUX_3_0_COMPAT_H
++#define LINUX_3_0_COMPAT_H
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
++
++/*
++ * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
++ * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
++ * called automatically. This is not implemented in older kernel
++ * versions so it will result in device wrong names.
++ */
++static inline int register_netdevice_name(struct net_device *dev)
++{
++	int err;
++
++	if (strchr(dev->name, '%')) {
++		err = dev_alloc_name(dev, dev->name);
++		if (err < 0)
++			return err;
++	}
++
++	return register_netdevice(dev);
++}
++
++#define register_netdevice(dev) register_netdevice_name(dev)
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
++
++#endif /* LINUX_3_0_COMPAT_H */
+-- 
+1.7.4.1
 
-./scripts/driver-select ath
-
-That will build ath5k, which you do not need; however, the other two will be 
-available. In you want, you could always edit config.mk and remove the line with 
-"CONFIG_ATH5K=m".
-
-Larry
