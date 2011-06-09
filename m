@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4359 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756191Ab1FARR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 13:17:27 -0400
-Message-ID: <4DE67418.7060006@broadcom.com> (sfid-20110601_191731_009339_8FD1BF2F)
-Date: Wed, 1 Jun 2011 19:17:12 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:53946 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757271Ab1FIXxe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 19:53:34 -0400
+Received: by qyk7 with SMTP id 7so2782067qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 16:53:34 -0700 (PDT)
 MIME-Version: 1.0
-To: "Jonas Gorski" <jonas.gorski@gmail.com>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 08/83] staging: brcm80211: replaced #ifdef __mips__
- sections by W_REG_FLUSH
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
- <1306928768-7501-8-git-send-email-rvossen@broadcom.com>
- <BANLkTimhuScx64utGbS_g0OU-S8B5G2MXQ@mail.gmail.com>
-In-Reply-To: <BANLkTimhuScx64utGbS_g0OU-S8B5G2MXQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <1307630701-9170-13-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com> <1307630701-9170-13-git-send-email-rvossen@broadcom.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Fri, 10 Jun 2011 01:53:14 +0200
+Message-ID: <BANLkTi=GGsW4eja0QunMAc5vqqFkmvNxNA@mail.gmail.com> (sfid-20110610_015338_791860_053D3A36)
+Subject: Re: [PATCH 12/21] staging: brcm80211: use __BIG_ENDIAN macro in dma.c
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jonas,
+On 9 June 2011 16:44, Roland Vossen <rvossen@broadcom.com> wrote:
+> From: Arend van Spriel <arend@broadcom.com>
+>
+> The source file dma.c used a macro definition that indicated a big endian
+> platform. The linux tree has its own macro determined by architecture and/or
+> kernel configuration. This byteorder macro is __BIG_ENDIAN. This is now used
+> in dma.c.
 
-> Checking for CONFIG_BCM47XX instead of __mips__ would be a bit cleaner
-> and less broad. Although the bcm47x6s are not supported by BCM47XX
-> yet, when the support gets added they will be caught by this without
-> affecting other mips platforms.
-> Perhaps a clean solution would be to introduce a quirk option/value in
-> the pci_bus or pci_dev the driver can use to decide at runtime whether
-> it needs this workaround or not. This would also allow other drivers
-> to check for it if they are also affected by it (even if the
-> probability of this is rather low - at least I haven't seen a bcm47x6
-> yet with anything other than a broadcom wifi connected to its pcie
-> ;-).
+While this replacement is technically correct, the check itself is
+wrong and should be fixed instead. Currently it assumes that __mips__
+means Broadcom MIPS; but if it isn't, then there's likely no
+SI_SDRAM_SWAPPED and any access there will in best case do nothing
+(but more like hang the system).
 
-Further mips cleanup is in the pipeline, your suggestion is certainly a 
-good one. A similar suggestion has been made by GregKH in the past.
+Use either CONFIG_BCM47XX or CONFIG_BCM63XX to check for the BMIPS
+platforms this is probably intended for (I'm not 100% sure if BCM63XX
+has the swapped memory space - better check with your xDSL people ;-).
 
-However, the focus of the patch set is on code cleanup. So my intention 
-is to rewrite code to make it cleaner, without changing existing behavior.
 
-Your (and Gregs) suggestion have been noted down and will get a 
-follow-up in the future.
-
-Thanks for the feedback,
-
-Roland.
-
+Jonas
