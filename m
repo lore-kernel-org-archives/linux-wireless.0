@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:34509 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752588Ab1FGRmg (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:53495 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753574Ab1FIUrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 13:42:36 -0400
-Received: by eyh6 with SMTP id 6so2445155eyh.22
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2011 10:42:33 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ido@wizery.com,
-	johannes@sipsolutions.net
-Subject: [PATCH 3.0] nl80211: fix overflow in ssid_len
-Date: Tue,  7 Jun 2011 20:42:26 +0300
-Message-Id: <1307468546-16915-1-git-send-email-coelho@ti.com> (sfid-20110607_194239_505993_63EF6A86)
+	Thu, 9 Jun 2011 16:47:20 -0400
+Received: by pwi15 with SMTP id 15so922265pwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 13:47:18 -0700 (PDT)
+Date: Thu, 9 Jun 2011 23:46:53 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] ath6kl: cache firmware
+Message-ID: <20110609204653.GL4069@shale.localdomain> (sfid-20110609_224723_308828_4539941D)
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+ <20110608115440.32208.75072.stgit@localhost6.localdomain6>
+ <20110608194031.GA4069@shale.localdomain>
+ <871uz387ut.fsf@purkki.adurom.net>
+ <20110609154241.GI4069@shale.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110609154241.GI4069@shale.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When one of the SSID's length passed in a scan or sched_scan request
-is larger than 255, there will be an overflow in the u8 that is used
-to store the length before checking.  This causes the check to fail
-and we overrun the buffer when copying the SSID.
+On Thu, Jun 09, 2011 at 06:42:41PM +0300, Dan Carpenter wrote:
+> On Thu, Jun 09, 2011 at 04:14:34PM +0300, Kalle Valo wrote:
+> > Dan Carpenter <error27@gmail.com> writes:
+> > 
+> > >> --- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> > >> +++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> > >> @@ -954,9 +954,13 @@ ar6000_transfer_bin_file(struct ar6_softc *ar, AR6K_BIN_FILE file, u32 address,
+> > >>      const char *filename;
+> > >>      const struct firmware *fw_entry;
+> > >>      u32 fw_entry_size;
+> > >> +    u8 **buf;
+> > >> +    size_t *buf_len;
+> > >
+> > > Don't make buf_len a pointer that just makes the code messier.
+> > 
+> > I need the pointer later so that I can store the length:
+> > 
+> >             *buf_len = fw_entry->size;
+> 
+> No.  The normal way to store an int is to do it like this:
+> 
+> 		buf_len = fw_entry->size;
 
-Fix this by checking the nl80211 attribute length before copying it to
-the struct.
+I miss read what you were doing here.  You code is correct here.  I
+appologize for that.
 
-This is a follow up for the previous commit
-208c72f4fe44fe09577e7975ba0e7fa0278f3d03, which didn't fix the problem
-entirely.
-
-Reported-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- net/wireless/nl80211.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1c57036..c859f50 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3412,11 +3412,11 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	i = 0;
- 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
--			request->ssids[i].ssid_len = nla_len(attr);
--			if (request->ssids[i].ssid_len > IEEE80211_MAX_SSID_LEN) {
-+			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
- 				err = -EINVAL;
- 				goto out_free;
- 			}
-+			request->ssids[i].ssid_len = nla_len(attr);
- 			memcpy(request->ssids[i].ssid, nla_data(attr), nla_len(attr));
- 			i++;
- 		}
-@@ -3578,12 +3578,11 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS],
- 				    tmp) {
--			request->ssids[i].ssid_len = nla_len(attr);
--			if (request->ssids[i].ssid_len >
--			    IEEE80211_MAX_SSID_LEN) {
-+			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
- 				err = -EINVAL;
- 				goto out_free;
- 			}
-+			request->ssids[i].ssid_len = nla_len(attr);
- 			memcpy(request->ssids[i].ssid, nla_data(attr),
- 			       nla_len(attr));
- 			i++;
--- 
-1.7.1
+regards,
+dan carpenter
 
