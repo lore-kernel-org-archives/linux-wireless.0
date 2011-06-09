@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37953 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab1FTBq4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 21:46:56 -0400
-Received: by pzk9 with SMTP id 9so3105289pzk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 18:46:56 -0700 (PDT)
-Message-ID: <4DFEA61A.8060805@ring3k.org> (sfid-20110620_034700_580656_3ACADA53)
-Date: Mon, 20 Jun 2011 10:44:58 +0900
-From: Mike McCormack <mikem@ring3k.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2043 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751372Ab1FIOpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:15 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/21] staging: brcm80211: remove 'used' keyword from
+ function ai_ispcie()
+Date: Thu, 9 Jun 2011 16:44:45 +0200
+Message-ID: <1307630701-9170-6-git-send-email-rvossen@broadcom.com> (sfid-20110609_164606_145619_BE4EB6EE)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] rtlwifi: Fix typo in variable name
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-offchan_deley should be offchan_delay
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+The function ai_ispcie() is a static function that is currently being
+called from the c sources in the driver. Side-effect of the keyword
+is that warning will suppressed when this function is no longer used.
+As there is no assembly code using this function, the keyword is removed.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
 ---
- drivers/net/wireless/rtlwifi/core.c |    4 ++--
- drivers/net/wireless/rtlwifi/pci.c  |    3 +--
- drivers/net/wireless/rtlwifi/wifi.h |    2 +-
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 605514b..3313ce6 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -335,8 +335,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * before going offchannel, or dis-association or delete BA will
- 		 * happen by AP
- 		 */
--		if (rtlpriv->mac80211.offchan_deley) {
--			rtlpriv->mac80211.offchan_deley = false;
-+		if (rtlpriv->mac80211.offchan_delay) {
-+			rtlpriv->mac80211.offchan_delay = false;
- 			mdelay(50);
- 		}
- 		rtlphy->current_channel = wide_chan;
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index cb4e5e8..e6d0263 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -581,7 +581,7 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
- 		fc = rtl_get_fc(skb);
- 		if (ieee80211_is_nullfunc(fc)) {
- 			if (ieee80211_has_pm(fc)) {
--				rtlpriv->mac80211.offchan_deley = true;
-+				rtlpriv->mac80211.offchan_delay = true;
- 				rtlpriv->psc.state_inap = 1;
- 			} else {
- 				rtlpriv->psc.state_inap = 0;
-@@ -788,7 +788,6 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 4b908f7..7907b15 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -2028,7 +2028,7 @@ static char *ai_devpathvar(struct si_pub *sih, char *var, int len,
+ }
+ 
+ /* return true if PCIE capability exists in the pci config space */
+-static __used bool ai_ispcie(si_info_t *sii)
++static bool ai_ispcie(si_info_t *sii)
  {
- 	struct ieee80211_hw *hw = dev_id;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	unsigned long flags;
- 	u32 inta = 0;
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index fcf2c9f..c54cda5 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -938,7 +938,7 @@ struct rtl_mac {
- 	int n_channels;
- 	int n_bitrates;
+ 	u8 cap_ptr;
  
--	bool offchan_deley;
-+	bool offchan_delay;
- 
- 	/*filters */
- 	u32 rx_conf;
 -- 
 1.7.4.1
 
