@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1909 "EHLO mms1.broadcom.com"
+Received: from purkki.adurom.net ([80.68.90.206]:37635 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757399Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:42 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 031/119] staging: brcm80211: remove unnecessary null
- check
-Date: Wed, 29 Jun 2011 16:46:55 -0700
-Message-ID: <1309391303-22741-32-git-send-email-frankyl@broadcom.com> (sfid-20110630_014907_422964_A1B46003)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+	id S1757849Ab1FINXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 09:23:37 -0400
+To: Dan Carpenter <error27@gmail.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan is ongoing
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+	<20110608115501.32208.82264.stgit@localhost6.localdomain6>
+	<20110608200332.GC4069@shale.localdomain>
+	<20110608201458.GD4069@shale.localdomain>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 09 Jun 2011 16:23:36 +0300
+In-Reply-To: <20110608201458.GD4069@shale.localdomain> (Dan Carpenter's message of "Wed\, 8 Jun 2011 23\:14\:58 +0300")
+Message-ID: <87sjrj6svb.fsf@purkki.adurom.net> (sfid-20110609_152347_576090_401D2A3E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
+Dan Carpenter <error27@gmail.com> writes:
 
-kfree(NULL) is safe, and the rest of the cleanup should be done regardless
-to make sure the state is consistent.
+> On Wed, Jun 08, 2011 at 11:03:32PM +0300, Dan Carpenter wrote:
+>> On Wed, Jun 08, 2011 at 02:55:01PM +0300, Kalle Valo wrote:
+>> > -        /* Translate data to cfg80211 mgmt format */
+>> > -	if (ar->arWmi)
+>>             ^^^^^^^^^
+>> 	You removed this check on purpose?  Is this only NULL when
+>> 	the scan is canceled?
+>
+> Grr...  That's the check that was just added in [PATCH 4/4] of this
+> exact same series!  Seriously?  Why are we submitting known wrong
+> patches???
 
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+I only combined the pending ath6kl patches, I did not edit them.
+Vasanth sent patch 4 few days earlier and that's why you see the
+change here. But if greg wants, I can drop patch 4 and resend the
+series.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 48550f3..0fae0b1 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -5567,11 +5567,9 @@ static void dhdsdio_release_malloc(dhd_bus_t *bus)
- 	if (bus->dhd && bus->dhd->dongle_reset)
- 		return;
- 
--	if (bus->rxbuf) {
--		kfree(bus->rxbuf);
--		bus->rxctl = bus->rxbuf = NULL;
--		bus->rxlen = 0;
--	}
-+	kfree(bus->rxbuf);
-+	bus->rxctl = bus->rxbuf = NULL;
-+	bus->rxlen = 0;
- 
- 	kfree(bus->databuf);
- 	bus->databuf = NULL;
+But now that you mention this, I realise that my sob line is missing
+from patch 4 as well.
+
 -- 
-1.7.1
-
-
+Kalle Valo
