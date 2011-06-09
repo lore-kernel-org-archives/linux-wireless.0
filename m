@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:33585 "EHLO bues.ch"
+Received: from mms2.broadcom.com ([216.31.210.18]:2232 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751415Ab1FLStF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 14:49:05 -0400
-Date: Sun, 12 Jun 2011 20:48:59 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	francesco.gringoli@ing.unibs.it
-Subject: Re: [RFC][PATCH] b43: do not try sending packets when ring can be
- full
-Message-ID: <20110612204859.37e7aed5@maggie> (sfid-20110612_204913_070515_A004ABDC)
-In-Reply-To: <BANLkTikVLH8xApD4e5uNW-3Eg6kaMXipBg@mail.gmail.com>
-References: <1307891513-6812-1-git-send-email-zajec5@gmail.com>
-	<20110612182916.6afc781a@maggie>
-	<BANLkTikVLH8xApD4e5uNW-3Eg6kaMXipBg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	id S1752953Ab1FIOp3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:29 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 06/21] staging: brcm80211: remove regs variable from
+ brcms_ioctl function
+Date: Thu, 9 Jun 2011 16:44:46 +0200
+Message-ID: <1307630701-9170-7-git-send-email-rvossen@broadcom.com> (sfid-20110609_164534_384336_3ADCA5B9)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 12 Jun 2011 20:15:53 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
-> Well, as I said, we may be unable to transmit the first element of the
-> queue, but 2nd/3rd/... may be for different ring (qos) (we can
-> transmit).
-> 
-> Looping through the whole queue every time, just to find packets we
-> may transmit, sounds surely as a bad idea.
+From: Arend van Spriel <arend@broadcom.com>
 
-I don't think so. It's not that this is an actual queue anyway. It just acts
-as a buffer to queue up one or two packets in the small race window of
-actually filling up the DMA rings and stopping the mac80211 queue.
-(It also acts as a context dispatcher in the first place, though).
+This variable was declared and initialized but never used so it has
+been removed.
 
-So the "looping through the queue" just means checking if one or two packets
-can be transmitted now.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index c8d6679..28ae741 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -2515,7 +2515,6 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 	int val, *pval;
+ 	bool bool_val;
+ 	int bcmerror;
+-	d11regs_t *regs;
+ 	struct scb *nextscb;
+ 	bool ta_ok;
+ 	uint band;
+@@ -2551,7 +2550,6 @@ _wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len,
+ 	/* bool conversion to avoid duplication below */
+ 	bool_val = val != 0;
+ 	bcmerror = 0;
+-	regs = wlc->regs;
+ 
+ 	if ((arg == NULL) || (len <= 0)) {
+ 		wiphy_err(wlc->wiphy, "wl%d: %s: Command %d needs arguments\n",
+-- 
+1.7.4.1
+
+
