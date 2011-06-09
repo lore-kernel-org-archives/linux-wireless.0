@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:60221 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756024Ab1FJLkU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 07:40:20 -0400
-Received: by qwk3 with SMTP id 3so1172977qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 04:40:19 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:36610 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757242Ab1FINC3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 09:02:29 -0400
+To: Dan Carpenter <error27@gmail.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/5] ath6kl: testmode support
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+	<20110608115430.32208.81891.stgit@localhost6.localdomain6>
+	<20110608194618.GB4069@shale.localdomain>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 09 Jun 2011 16:02:25 +0300
+In-Reply-To: <20110608194618.GB4069@shale.localdomain> (Dan Carpenter's message of "Wed\, 8 Jun 2011 22\:46\:18 +0300")
+Message-ID: <8762of88f2.fsf@purkki.adurom.net> (sfid-20110609_150232_619204_640035A7)
 MIME-Version: 1.0
-In-Reply-To: <1307642840-3043-1-git-send-email-arend@broadcom.com>
-References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
-Date: Fri, 10 Jun 2011 13:40:19 +0200
-Message-ID: <BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com> (sfid-20110610_134046_864464_4D77D913)
-Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/9 Arend van Spriel <arend@broadcom.com>:
-> In the brcm80211 driver we disable the 80211 core when the driver is
-> 'down'. The bcma_core_disable() function exactly does the same as
-> our implementation so exporting this function makes sense.
+Dan Carpenter <error27@gmail.com> writes:
 
-Michael said we should not do do such a exporting without getting
-users within the same patch serie.
+> On Wed, Jun 08, 2011 at 02:54:30PM +0300, Kalle Valo wrote:
+>> Add testmode support for running low level hardware tests. The testmode
+>> is enabled by setting testmode module parameter to 1.
+>> 
+>> For now only a simple command passing is supported. More advanced
+>> support will be implemented later.
+>> 
+>
+> It's Greg's call, but probably it's late in the release cycle to add
+> this feature.
+
+Do you mean for 3.0? I was thinking of getting this into 3.1, didn't
+even consider 3.0.
+
+> Also are we even still developing this driver? I thought the real
+> driver was moved to a different tree?
+
+We are maintaining still maintaining the staging driver and fixing the
+critical issues until the cleaned up driver is merged.
+
+The testmode support got broke when the private ioctl interfaces were
+removed from the driver. I had people asking me how to use testmode
+and when I started implementing it through nl80211 testmode interface.
+So this was a feature regression.
+
+The cleanup of the driver is happening here:
+
+http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary
 
 -- 
-Rafał
+Kalle Valo
