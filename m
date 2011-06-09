@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:43319 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758429Ab1FPOq4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 10:46:56 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:2044 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751595Ab1FIOpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 10:45:15 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/21] staging: brcm80211: Remove flags from
+ wl_is_nonetwork
+Date: Thu, 9 Jun 2011 16:44:44 +0200
+Message-ID: <1307630701-9170-5-git-send-email-rvossen@broadcom.com> (sfid-20110609_164523_776452_C52684CD)
+In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Date: Thu, 16 Jun 2011 16:44:57 +0200
-Message-ID: <BANLkTikXUd8uorD+juMDvFubr3cz+OZnaQ@mail.gmail.com> (sfid-20110616_164711_973544_238988E0)
-Subject: Faking MMIO ops? Fooling a driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I analyze MMIO dumps of closed source driver and found such a place:
-W 2 3855.911536 9 0xb06003fc 0x810 0x0 0
-R 2 3855.911540 9 0xb06003fe 0x0 0x0 0
-W 2 3855.911541 9 0xb06003fe 0x0 0x0 0
+From: Franky Lin <frankyl@broadcom.com>
 
-After translation:
- phy_read(0x0810) -> 0x0000
-phy_write(0x0810) <- 0x0000
+Remove this debug only variable in fullmace driver to avoid compile
+warning when BCMDBG is off
 
-So it's quite obvious, the driver is reading PHY register, masking it
-and writing masked value. Unfortunately from just looking at such
-place we can not guess the mask driver uses.
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I'd like to fake value read from 0xb06003fe to be 0xFFFF.
-Is there some ready method for doing such a trick?
-
-Dump comes from Kernel hacking → Tracers → MMIO and ndiswrapper.
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 0a7a9b2..457f5b1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2588,11 +2588,11 @@ static bool wl_is_nonetwork(struct wl_priv *wl, const wl_event_msg_t *e)
+ {
+ 	u32 event = be32_to_cpu(e->event_type);
+ 	u32 status = be32_to_cpu(e->status);
+-	u16 flags = be16_to_cpu(e->flags);
+ 
+ 	if (event == WLC_E_LINK && status == WLC_E_STATUS_NO_NETWORKS) {
+ 		WL_CONN("Processing Link %s & no network found\n",
+-				flags & WLC_EVENT_MSG_LINK ? "up" : "down");
++				be16_to_cpu(e->flags) & WLC_EVENT_MSG_LINK ?
++				"up" : "down");
+ 		return true;
+ 	}
+ 
 -- 
-Rafał
+1.7.4.1
+
+
