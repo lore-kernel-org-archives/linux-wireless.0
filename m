@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32918 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756538Ab1F1MrE (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47242 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929Ab1FIH6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 08:47:04 -0400
-Subject: Re: [PATCH] mac80211: Skip tailroom reservation for full HW-crypto
- devices with race fix
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-In-Reply-To: <20110628122810.GA15464@hertz.marvell.com>
-References: <20110628122810.GA15464@hertz.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Jun 2011 14:46:57 +0200
-Message-ID: <1309265217.3929.6.camel@jlt3.sipsolutions.net> (sfid-20110628_145239_588814_43825C56)
-Mime-Version: 1.0
+	Thu, 9 Jun 2011 03:58:50 -0400
+Date: Thu, 9 Jun 2011 10:58:23 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	kernel-janitors@vger.kernel.org,
+	"open list:B43 WIRELESS DRIVER" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [patch] b43: check for allocation failures
+Message-ID: <20110609075813.GG4069@shale.localdomain> (sfid-20110609_095855_264085_7FA700D0)
+References: <20110609070934.GE4069@shale.localdomain>
+ <BANLkTim3zJNJfGHcaeY+PQN3wm1m20Qzjw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BANLkTim3zJNJfGHcaeY+PQN3wm1m20Qzjw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-28 at 17:58 +0530, Yogesh Ashok Powar wrote:
-> Based on inputs from Johannes Berg <johannes@sipsolutions.net>
-> from http://markmail.org/thread/t4acssvlgb5gamt2 and
-> http://markmail.org/thread/mydlihrhvfvevuim
+On Thu, Jun 09, 2011 at 09:43:44AM +0200, Rafał Miłecki wrote:
+> >        dev = b43_bus_dev_ssb_init(sdev);
+> > +       if (!dev)
+> > +               return -ENOMEM;
 > 
-> In xmit path, devices that do full hardware crypto (including
-> MMIC and ICV) need no tailroom. For such devices, tailroom
-> reservation can be skipped if all the keys are programmed into
-> the hardware (i.e software crypto is not used for any of the
-> keys) and none of the keys wants software to generate Michael
-> MIC and IV.
-> 
-> v2: Added check for IV along with MMIC to avoid
-> >WARNING: at net/mac80211/wep.c:101 ieee80211_wep_add_iv+0x56/0xf3()
-> Reported-by: Fabio Rossi <rossi.f@inwind.it>
-> Tested-by: Fabio Rossi <rossi.f@inwind.it>
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> v3: Fixing races to avoid
-> >WARNING: at net/mac80211/wpa.c:397 ccmp_encrypt_skb+0xc4/0x1f0
-> Reported-by: Andreas Hartmann <andihartmann@01019freenet.de>
-> Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
-> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> I'm not sure if you should be aware of the reason here. What about returning
+> error code by b43_bus_dev..., reporting it here with b43err and returning
+> ENODEV or sth?
 
-This changelog entry is kinda messed up.
+The kmalloc failure prints out a whole lot of crap.  Surely we don't
+need to add more code in every function for an error that is almost
+certainly not going to happen in real life.
 
-> +	 * Solution has been explained at
-> +	 * http://markmail.org/message/c3ykchyv6azzmdum
+If we were really worried about returning the right error code, then
+we'd return an ERR_PTR() from the lower levels etc.  I don't think
+it's worth it though.
 
-Nothing against markmail, but I prefer links that contain a message ID
-so if the link ever goes dead, you can google for the message ID. Maybe
-use
-http://mid.gmane.org/1308590980.4322.19.camel@jlt3.sipsolutions.net
-
-johannes
-
+regards,
+dan carpenter
