@@ -1,112 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:49223 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab1FFQJ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 12:09:28 -0400
-Subject: [PATCH] ath6kl: testmode support
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Mon, 06 Jun 2011 19:01:32 +0300
-Message-ID: <20110606160132.9596.80633.stgit@localhost6.localdomain6> (sfid-20110606_180932_417531_8BB34BF4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33100 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756751Ab1FIWEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2011 18:04:24 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 11/11] compat-wireless: add bcma
+Date: Fri, 10 Jun 2011 00:03:42 +0200
+Message-Id: <1307657022-23808-12-git-send-email-hauke@hauke-m.de> (sfid-20110610_000438_212324_52959788)
+In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add testmode support for running low level hardware tests. The testmode
-is enabled by setting testmode module parameter to 1.
 
-For now only a simple command passing is supported. More advanced
-support will be implemented later.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/ath6kl/os/linux/cfg80211.c |   58 ++++++++++++++++++++++++++++
- 1 files changed, 58 insertions(+), 0 deletions(-)
+ Makefile                    |    2 +-
+ config.mk                   |    5 +++++
+ defconfigs/atheros-debug.mk |    5 +++++
+ scripts/admin-update.sh     |    3 +++
+ 4 files changed, 14 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index 31d7ba8..75a797e 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -24,6 +24,7 @@
- #include <linux/wireless.h>
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
-+#include <net/netlink.h>
+diff --git a/Makefile b/Makefile
+index 9e97b50..9c95292 100644
+--- a/Makefile
++++ b/Makefile
+@@ -30,7 +30,7 @@ obj-$(CONFIG_COMPAT_WIRELESS_MODULES) += drivers/net/wireless/
+ obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
  
- #include "ar6000_drv.h"
+ obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
+-obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/misc/eeprom/
++obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/bcma/ drivers/misc/eeprom/
  
-@@ -1452,6 +1453,62 @@ ar6k_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-     return 0;
- }
+ ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
+ obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
+diff --git a/config.mk b/config.mk
+index da1ebeb..0692c6e 100644
+--- a/config.mk
++++ b/config.mk
+@@ -325,6 +325,11 @@ endif #CONFIG_PCMCIA
+ CONFIG_SSB_DRIVER_PCICORE=y
+ endif #CONFIG_SSB
  
-+#ifdef CONFIG_NL80211_TESTMODE
-+enum ar6k_testmode_attr {
-+	__AR6K_TM_ATTR_INVALID	= 0,
-+	AR6K_TM_ATTR_CMD	= 1,
-+	AR6K_TM_ATTR_DATA	= 2,
++CONFIG_BCMA=m
++CONFIG_BCMA_BLOCKIO=y
++CONFIG_BCMA_HOST_PCI=y
++# CONFIG_BCMA_DEBUG=y
 +
-+	/* keep last */
-+	__AR6K_TM_ATTR_AFTER_LAST,
-+	AR6K_TM_ATTR_MAX	= __AR6K_TM_ATTR_AFTER_LAST - 1
-+};
-+
-+enum ar6k_testmode_cmd {
-+	AR6K_TM_CMD_TCMD		= 0,
-+};
-+
-+#define AR6K_TM_DATA_MAX_LEN 5000
-+
-+static const struct nla_policy ar6k_testmode_policy[AR6K_TM_ATTR_MAX + 1] = {
-+	[AR6K_TM_ATTR_CMD] = { .type = NLA_U32 },
-+	[AR6K_TM_ATTR_DATA] = { .type = NLA_BINARY,
-+				.len = AR6K_TM_DATA_MAX_LEN },
-+};
-+
-+static int ar6k_testmode_cmd(struct wiphy *wiphy, void *data, int len)
-+{
-+	struct ar6_softc *ar = wiphy_priv(wiphy);
-+	struct nlattr *tb[AR6K_TM_ATTR_MAX + 1];
-+	int err, buf_len;
-+	void *buf;
-+
-+	err = nla_parse(tb, AR6K_TM_ATTR_MAX, data, len,
-+			ar6k_testmode_policy);
-+	if (err)
-+		return err;
-+
-+	if (!tb[AR6K_TM_ATTR_CMD])
-+		return -EINVAL;
-+
-+	switch (nla_get_u32(tb[AR6K_TM_ATTR_CMD])) {
-+	case AR6K_TM_CMD_TCMD:
-+		if (!tb[AR6K_TM_ATTR_DATA])
-+			return -EINVAL;
-+
-+		buf = nla_data(tb[AR6K_TM_ATTR_DATA]);
-+		buf_len = nla_len(tb[AR6K_TM_ATTR_DATA]);
-+
-+		wmi_test_cmd(ar->arWmi, buf, buf_len);
-+
-+		return 0;
-+
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+#endif
+ CONFIG_P54_PCI=m
  
- static const
- u32 cipher_suites[] = {
-@@ -1627,6 +1684,7 @@ cfg80211_ops ar6k_cfg80211_ops = {
-     .join_ibss = ar6k_cfg80211_join_ibss,
-     .leave_ibss = ar6k_cfg80211_leave_ibss,
-     .get_station = ar6k_get_station,
-+    CFG80211_TESTMODE_CMD(ar6k_testmode_cmd)
- };
+ CONFIG_B44=m
+diff --git a/defconfigs/atheros-debug.mk b/defconfigs/atheros-debug.mk
+index fb884aa..285b231 100644
+--- a/defconfigs/atheros-debug.mk
++++ b/defconfigs/atheros-debug.mk
+@@ -325,6 +325,11 @@ endif #CONFIG_PCMCIA
+ CONFIG_SSB_DRIVER_PCICORE=y
+ endif #CONFIG_SSB
  
- struct wireless_dev *
++CONFIG_BCMA=m
++CONFIG_BCMA_BLOCKIO=y
++CONFIG_BCMA_HOST_PCI=y
++# CONFIG_BCMA_DEBUG=y
++
+ CONFIG_P54_PCI=m
+ 
+ CONFIG_B44=m
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index df7056e..7b2d1f8 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -220,6 +220,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
+ DRIVERS="$DRIVERS drivers/ssb"
++DRIVERS="$DRIVERS drivers/bcma"
+ DRIVERS="$DRIVERS drivers/net/wireless/b43"
+ DRIVERS="$DRIVERS drivers/net/wireless/b43legacy"
+ DRIVERS="$DRIVERS drivers/net/wireless/iwlegacy"
+@@ -273,6 +274,7 @@ mkdir -p include/linux/ include/net/ include/linux/usb \
+ 	net/mac80211/ net/wireless/ \
+ 	net/rfkill/ \
+ 	drivers/ssb/ \
++	drivers/bcma/ \
+ 	drivers/net/usb/ \
+ 	drivers/net/wireless/
+ mkdir -p include/net/bluetooth/
+@@ -285,6 +287,7 @@ for i in $INCLUDE_LINUX; do
+ done
+ 
+ cp -a $GIT_TREE/include/linux/ssb include/linux/
++cp -a $GIT_TREE/include/linux/bcma include/linux/
+ cp -a $GIT_TREE/include/linux/rfkill.h include/linux/rfkill_backport.h
+ 
+ # include/net
+-- 
+1.7.4.1
 
