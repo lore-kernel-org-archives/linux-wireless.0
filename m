@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm16-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.253]:29075 "HELO
-	nm16-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752948Ab1FXMe4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 08:34:56 -0400
-References: <loom.20110624T123237-71@post.gmane.org> <201106241307.44609.chunkeey@googlemail.com>
-Message-ID: <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com> (sfid-20110624_143459_921009_FF987A39)
-Date: Fri, 24 Jun 2011 05:34:55 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: Configuring the multicast data rate with iw/nl80211
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201106241307.44609.chunkeey@googlemail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50003 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754736Ab1FJT2N convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 15:28:13 -0400
+Received: by iwn34 with SMTP id 34so2412406iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 12:28:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+	<AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+	<AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+	<AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+	<1296633772.3624.2.camel@jlt3.sipsolutions.net>
+	<20110202113052.GA14126@jm.kir.nu>
+	<1296646434.5671.1.camel@jlt3.sipsolutions.net>
+	<20110202133839.GA14904@jm.kir.nu>
+	<AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
+Date: Fri, 10 Jun 2011 21:28:12 +0200
+Message-ID: <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com> (sfid-20110610_212817_283562_DDBD8530)
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+From: hedwin <hedwin.koning@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The problem with nl80211 and wpa_supplicant in android is that afaik
+libnl is needed, correct?
+Only problem with libnl is that it is LGPL which doesn't fit into the
+android license policy.
+Although this is a mailing list about wireless drivers this also needs
+to be addressed
+because it is part of the problem to get wireless support working in android.
 
->Not a good idea... I tried it too, but as soon as a STA goes into PSM [or does 
-a
->background scan], it'll affect the stream badly [So, you'll probably need a
->dedicated AP just for your video clients]. The reason is that the AP
->[in my case it was mac80211] will now buffer the transmissions, so you only get
->about 128 frames every 300ms until the STA comes back or disappears.
+Hedwin
 
-An interesting and good point. However, I'm in full control of the clients
-so I can actually disable PS-Mode. So, while your note of caution is 
-appreciated,
-it doesn't get me off the hook. As I wrote earlier I'm evaluating a transition
-from Madwifi to ath5k. Madwifi with net80211 had an iwpriv call to configure the 
-
-multicast data rate. I'm looking for an equivalent solution with ath5k/mac80211.
-
->As an alternative, It's worth a try to look into multicast-to-unicast proxies
->such as http://sourceforge.net/projects/udpxy/ .
-
-But then you duplicate the multicast traffic for every STA, no?
-
-Regards
-  Joerg
-
+On Wed, Feb 2, 2011 at 5:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Feb 2, 2011 at 5:38 AM, Jouni Malinen <j@w1.fi> wrote:
+>> On Wed, Feb 02, 2011 at 12:33:54PM +0100, Johannes Berg wrote:
+>>> What's the driver_cmd things they use? If we they add support for
+>>> whatever it is to nl80211, why can those not be normal supplicant
+>>> interfaces?
+>>
+>> I have not reviewed what exactly gets used and how, so this is only
+>> based on what the modification for wpa_supplicant are exposing.
+>>
+>> There seems to be some kind of mechanism for stopping/starting/reloading
+>> the driver which I do not fully understand. It includes some kind of
+>> driver hang detection and maybe recovery from that etc..
+>>
+>> Then there is a very generic mechanism of passing any command from user
+>> space (i.e., command string to a SIOCSIWPRIV) and that goes
+>> transparently through wpa_supplicant.. The response comes back as a
+>> string. In other words, you could implement pretty much anything in a
+>> driver specific way with that.. At least following commands are used or
+>> have used with that: RSSI, LINKSPEED, MACADDR, GETPOWER, GETBAND.
+>>
+>> Since it is difficult to tell just from wpa_supplicant changes what
+>> exactly is done with these interfaces, the answer to the question of
+>> why these could not be normal supplicant interfaces is not immediately
+>> clear to me. I would assume that some of this functionality could
+>> certainly be added once identified clearly what is needed. Some may
+>> already be available (like MACADDR; assuming it is used to fetch local
+>> MAC address).
+>
+> Sounds like Android kernel guys need to get their shit together. Why
+> is this so hard?
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
