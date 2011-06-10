@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:47366 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255Ab1FOHf2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 03:35:28 -0400
-Received: by wya21 with SMTP id 21so90775wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 00:35:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <19c91580a532e641b4817ec6b3191d84.squirrel@mail.errtech.com>
-References: <580b0ce8e524bbdee36d8d713e32c97a.squirrel@mail.errtech.com>
-	<BANLkTi==q4BFtRVRXOW8fcp+4vbctNzQEg@mail.gmail.com>
-	<BANLkTimcxD-xgKXCJY3YGrWsDm9gDo5=0Q@mail.gmail.com>
-	<6180c38b62596f43ad139fa4a0d6ef24.squirrel@mail.errtech.com>
-	<BANLkTimHjs2EV808kEY9S54FgNYTcOmFEA@mail.gmail.com>
-	<19c91580a532e641b4817ec6b3191d84.squirrel@mail.errtech.com>
-Date: Wed, 15 Jun 2011 13:05:27 +0530
-Message-ID: <BANLkTik8NHM=ZZTePZ3Z2ZbvBmr+uSJZ=Q@mail.gmail.com> (sfid-20110615_093532_147610_DA54D3DC)
-Subject: Re: GPL firmware for AR9002 chipsets
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: tmail133@kglug.org
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:14917 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932167Ab1FJP3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 11:29:17 -0400
+Subject: Re: iwlagn module ignores parameter "led_mode=1" under certain
+ conditions
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <201106100937.23295.toralf.foerster@gmx.de>
+References: <201106100937.23295.toralf.foerster@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 10 Jun 2011 08:25:40 -0700
+Message-ID: <1307719540.5115.25.camel@wwguy-ubuntu> (sfid-20110610_172920_786395_9BBC4048)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 1:01 PM, chris <tmail133@kglug.org> wrote:
->
->
->
->> On Wed, Jun 15, 2011 at 12:39 PM, chris <tmail133@kglug.org> wrote:
->>>> On Wed, Jun 15, 2011 at 12:35 PM, Mohammed Shafi
->>>> <shafi.wireless@gmail.com> wrote:
->>>>> On Wed, Jun 15, 2011 at 12:31 PM, chris <tmail133@kglug.org> wrote:
->>>>>> I was reading on the mailing list that the AR9002 chipset supposedly
->>>>>> has
->>>>>> GPL firmware somewhere. Does anybody know where? And is it free
->>>>>> software
->>>>>> compliant or are they including the bad stuff within the GPL
->>>>>> firmware'd.
->>>>>
->>>>> only for USB based AR9002 devices firmware required
->>>>
->>>>>>
->>>>>> http://linuxwireless.org/en/users/Drivers/ath9k_htc
->>>
->>> I don't see license or source there. Is there some place I can get that?
->>
->>  the source for the firmware is internally maintained and you can only
->> get the updated binary there.
->> sorry I am not aware of the license thing.
->>
->
-> If anybody else is aware of where the source code is and if it is/is not
-> in fact under a free software license it would be much appreciated.
+On Fri, 2011-06-10 at 00:37 -0700, Toralf FÃ¶rster wrote:
+> Hello,
+> 
+> Since years this worked at my Gentoo system :
+> 
+> $ cat /etc/modprobe.d/iwlagn.conf 
+> options iwlcore led_mode=1
+> 
+> However nowadays this doesn't work when I do the following :
+> 
+> 1. dock the ThinkPad T400 (no WLAN, only DSL)
+> 2. boot it
+> 3. s2ram it
+> 4. undock it
+> 5. go into the office
+> 6. resume the undocked notebook (WLAN, no DSL)
+> 
+> The led is blinking ...
+> 
+> Putting however this line into the config file :
+> $ options iwlagn  led_mode=1
+> 
+> works always.
 
-the source code is maintained internally in Atheros by Sujith
+what kernel version you are using?
+the newer kernel (after .38), the iwlwifi driver split into 2 separate
+driver (iwlagn and iwlegacy). so there is no longer using iwlcore.ko
 
->
->
->
->
+putting options "iwlagn led_mode=1" in config file should do the job.
+
+Thanks
+Wey
 
 
-
--- 
-shafi
