@@ -1,272 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:43279 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829Ab1F3T0h (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:49368 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab1FJUJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 15:26:37 -0400
-Received: by fxd18 with SMTP id 18so2559984fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 12:26:36 -0700 (PDT)
-Message-Id: <48506f4c6ef4578f748a77e2c7bca7374cf1a187.1309459253.git.chunkeey@googlemail.com> (sfid-20110630_212647_301138_E332DAFC)
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Thu, 30 Jun 2011 20:27:47 +0200
-Subject: [PATCH 1/3] carl9170: import 1.9.4 firmware headers
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Fri, 10 Jun 2011 16:09:11 -0400
+Date: Fri, 10 Jun 2011 15:09:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 01/13] rtlwifi: rtl8192de: Merge def.h
+Message-ID: <4df279e5.L7vwsfbxexoCKJIf%Larry.Finger@lwfinger.net> (sfid-20110610_220915_860909_1758E6B2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch imports all shared header changes
-from carl9170fw.git.
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
- * update copyright boilerplate
+Introduce routine def.h for rtl8192de.
 
- * add some more strategic __aligned(4).
-
- * WoWLAN
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |    2 ++
- drivers/net/wireless/ath/carl9170/fwcmd.h    |   19 ++++++++++++++++++-
- drivers/net/wireless/ath/carl9170/fwdesc.h   |   18 ++++++++++++++++--
- drivers/net/wireless/ath/carl9170/hw.h       |   15 +++++++++++++--
- drivers/net/wireless/ath/carl9170/version.h  |    6 +++---
- drivers/net/wireless/ath/carl9170/wlan.h     |   25 +++++++++++--------------
- 6 files changed, 63 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 4da01a9..d96d03f 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -67,6 +67,8 @@
- 
- #define PAYLOAD_MAX	(CARL9170_MAX_CMD_LEN / 4 - 1)
- 
-+static const u8 ar9170_qmap[__AR9170_NUM_TXQ] = { 3, 2, 1, 0 };
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+===================================================================
+--- /dev/null
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+@@ -0,0 +1,269 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
- enum carl9170_rf_init_mode {
- 	CARL9170_RFI_NONE,
- 	CARL9170_RFI_WARM,
-diff --git a/drivers/net/wireless/ath/carl9170/fwcmd.h b/drivers/net/wireless/ath/carl9170/fwcmd.h
-index 30449d2..8fea629 100644
---- a/drivers/net/wireless/ath/carl9170/fwcmd.h
-+++ b/drivers/net/wireless/ath/carl9170/fwcmd.h
-@@ -4,7 +4,7 @@
-  * Firmware command interface definitions
-  *
-  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-- * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
-+ * Copyright 2009-2011 Christian Lamparter <chunkeey@googlemail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -54,6 +54,7 @@ enum carl9170_cmd_oids {
- 	CARL9170_CMD_BCN_CTRL		= 0x05,
- 	CARL9170_CMD_READ_TSF		= 0x06,
- 	CARL9170_CMD_RX_FILTER		= 0x07,
-+	CARL9170_CMD_WOL		= 0x08,
- 
- 	/* CAM */
- 	CARL9170_CMD_EKEY		= 0x10,
-@@ -180,6 +181,21 @@ struct carl9170_bcn_ctrl_cmd {
- #define CARL9170_BCN_CTRL_DRAIN	0
- #define CARL9170_BCN_CTRL_CAB_TRIGGER	1
- 
-+struct carl9170_wol_cmd {
-+	__le32		flags;
-+	u8		mac[6];
-+	u8		bssid[6];
-+	__le32		null_interval;
-+	__le32		free_for_use2;
-+	__le32		mask;
-+	u8		pattern[32];
-+} __packed;
++#ifndef __RTL92D_DEF_H__
++#define __RTL92D_DEF_H__
 +
-+#define CARL9170_WOL_CMD_SIZE		60
++/* Min Spacing related settings. */
++#define	MAX_MSS_DENSITY_2T				0x13
++#define	MAX_MSS_DENSITY_1T				0x0A
 +
-+#define CARL9170_WOL_DISCONNECT		1
-+#define CARL9170_WOL_MAGIC_PKT		2
++#define RF6052_MAX_TX_PWR				0x3F
++#define RF6052_MAX_REG					0x3F
++#define RF6052_MAX_PATH					2
 +
- struct carl9170_cmd_head {
- 	union {
- 		struct {
-@@ -203,6 +219,7 @@ struct carl9170_cmd {
- 		struct carl9170_write_reg	wreg;
- 		struct carl9170_rf_init		rf_init;
- 		struct carl9170_psm		psm;
-+		struct carl9170_wol_cmd		wol;
- 		struct carl9170_bcn_ctrl_cmd	bcn_ctrl;
- 		struct carl9170_rx_filter_cmd	rx_filter;
- 		u8 data[CARL9170_MAX_CMD_PAYLOAD_LEN];
-diff --git a/drivers/net/wireless/ath/carl9170/fwdesc.h b/drivers/net/wireless/ath/carl9170/fwdesc.h
-index 9210668..7ba62bb 100644
---- a/drivers/net/wireless/ath/carl9170/fwdesc.h
-+++ b/drivers/net/wireless/ath/carl9170/fwdesc.h
-@@ -3,7 +3,7 @@
-  *
-  * Firmware descriptor format
-  *
-- * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
-+ * Copyright 2009-2011 Christian Lamparter <chunkeey@googlemail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -72,6 +72,9 @@ enum carl9170fw_feature_list {
- 	/* Wake up on WLAN */
- 	CARL9170FW_WOL,
- 
-+	/* Firmware supports PSM in the 5GHZ Band */
-+	CARL9170FW_FIXED_5GHZ_PSM,
++#define HAL_RETRY_LIMIT_INFRA				48
++#define HAL_RETRY_LIMIT_AP_ADHOC			7
 +
- 	/* KEEP LAST */
- 	__CARL9170FW_FEATURE_NUM
- };
-@@ -82,6 +85,7 @@ enum carl9170fw_feature_list {
- #define DBG_MAGIC	"DBG\0"
- #define CHK_MAGIC	"CHK\0"
- #define TXSQ_MAGIC	"TXSQ"
-+#define WOL_MAGIC	"WOL\0"
- #define LAST_MAGIC	"LAST"
- 
- #define CARL9170FW_SET_DAY(d) (((d) - 1) % 31)
-@@ -104,7 +108,7 @@ struct carl9170fw_desc_head {
- 	(sizeof(struct carl9170fw_desc_head))
- 
- #define CARL9170FW_OTUS_DESC_MIN_VER		6
--#define CARL9170FW_OTUS_DESC_CUR_VER		6
-+#define CARL9170FW_OTUS_DESC_CUR_VER		7
- struct carl9170fw_otus_desc {
- 	struct carl9170fw_desc_head head;
- 	__le32 feature_set;
-@@ -186,6 +190,16 @@ struct carl9170fw_txsq_desc {
- #define CARL9170FW_TXSQ_DESC_SIZE			\
- 	(sizeof(struct carl9170fw_txsq_desc))
- 
-+#define CARL9170FW_WOL_DESC_MIN_VER			1
-+#define CARL9170FW_WOL_DESC_CUR_VER			1
-+struct carl9170fw_wol_desc {
-+	struct carl9170fw_desc_head head;
++#define	PHY_RSSI_SLID_WIN_MAX				100
++#define	PHY_LINKQUALITY_SLID_WIN_MAX			20
++#define	PHY_BEACON_RSSI_SLID_WIN_MAX			10
 +
-+	__le32 supported_triggers;	/* CARL9170_WOL_ */
-+} __packed;
-+#define CARL9170FW_WOL_DESC_SIZE			\
-+	(sizeof(struct carl9170fw_wol_desc))
++#define RESET_DELAY_8185				20
 +
- #define CARL9170FW_LAST_DESC_MIN_VER			1
- #define CARL9170FW_LAST_DESC_CUR_VER			2
- struct carl9170fw_last_desc {
-diff --git a/drivers/net/wireless/ath/carl9170/hw.h b/drivers/net/wireless/ath/carl9170/hw.h
-index 4e30762..261f893 100644
---- a/drivers/net/wireless/ath/carl9170/hw.h
-+++ b/drivers/net/wireless/ath/carl9170/hw.h
-@@ -4,7 +4,7 @@
-  * Register map, hardware-specific definitions
-  *
-  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-- * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
-+ * Copyright 2009-2011 Christian Lamparter <chunkeey@googlemail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -357,7 +357,18 @@
- 
- #define AR9170_MAC_REG_DMA_WLAN_STATUS		(AR9170_MAC_REG_BASE + 0xd38)
- #define	AR9170_MAC_REG_DMA_STATUS		(AR9170_MAC_REG_BASE + 0xd3c)
--
-+#define AR9170_MAC_REG_DMA_TXQ_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd40)
-+#define	AR9170_MAC_REG_DMA_TXQ0_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd40)
-+#define	AR9170_MAC_REG_DMA_TXQ1_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd44)
-+#define	AR9170_MAC_REG_DMA_TXQ2_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd48)
-+#define	AR9170_MAC_REG_DMA_TXQ3_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd4c)
-+#define	AR9170_MAC_REG_DMA_TXQ4_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd50)
-+#define	AR9170_MAC_REG_DMA_TXQ0Q1_LEN		(AR9170_MAC_REG_BASE + 0xd54)
-+#define	AR9170_MAC_REG_DMA_TXQ2Q3_LEN		(AR9170_MAC_REG_BASE + 0xd58)
-+#define	AR9170_MAC_REG_DMA_TXQ4_LEN		(AR9170_MAC_REG_BASE + 0xd5c)
++#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
++#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
 +
-+#define AR9170_MAC_REG_DMA_TXQX_LAST_ADDR	(AR9170_MAC_REG_BASE + 0xd74)
-+#define AR9170_MAC_REG_DMA_TXQX_FAIL_ADDR	(AR9170_MAC_REG_BASE + 0xd78)
- #define	AR9170_MAC_REG_TXRX_MPI			(AR9170_MAC_REG_BASE + 0xd7c)
- #define		AR9170_MAC_TXRX_MPI_TX_MPI_MASK		0x0000000f
- #define		AR9170_MAC_TXRX_MPI_TX_TO_MASK		0x0000fff0
-diff --git a/drivers/net/wireless/ath/carl9170/version.h b/drivers/net/wireless/ath/carl9170/version.h
-index 15095c0..6470377 100644
---- a/drivers/net/wireless/ath/carl9170/version.h
-+++ b/drivers/net/wireless/ath/carl9170/version.h
-@@ -1,7 +1,7 @@
- #ifndef __CARL9170_SHARED_VERSION_H
- #define __CARL9170_SHARED_VERSION_H
- #define CARL9170FW_VERSION_YEAR 11
--#define CARL9170FW_VERSION_MONTH 1
--#define CARL9170FW_VERSION_DAY 22
--#define CARL9170FW_VERSION_GIT "1.9.2"
-+#define CARL9170FW_VERSION_MONTH 6
-+#define CARL9170FW_VERSION_DAY 30
-+#define CARL9170FW_VERSION_GIT "1.9.4"
- #endif /* __CARL9170_SHARED_VERSION_H */
-diff --git a/drivers/net/wireless/ath/carl9170/wlan.h b/drivers/net/wireless/ath/carl9170/wlan.h
-index 9e1324b..ea17995 100644
---- a/drivers/net/wireless/ath/carl9170/wlan.h
-+++ b/drivers/net/wireless/ath/carl9170/wlan.h
-@@ -4,7 +4,7 @@
-  * RX/TX meta descriptor format
-  *
-  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-- * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
-+ * Copyright 2009-2011 Christian Lamparter <chunkeey@googlemail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -278,7 +278,7 @@ struct ar9170_tx_frame {
- struct carl9170_tx_superframe {
- 	struct carl9170_tx_superdesc s;
- 	struct ar9170_tx_frame f;
--} __packed;
-+} __packed __aligned(4);
- 
- #endif /* __CARL9170FW__ */
- 
-@@ -328,7 +328,7 @@ struct _carl9170_tx_superframe {
- 	struct _carl9170_tx_superdesc s;
- 	struct _ar9170_tx_hwdesc f;
- 	u8 frame_data[0];
--} __packed;
-+} __packed __aligned(4);
- 
- #define	CARL9170_TX_SUPERDESC_LEN		24
- #define	AR9170_TX_HWDESC_LEN			8
-@@ -404,16 +404,6 @@ static inline u8 ar9170_get_decrypt_type(struct ar9170_rx_macstatus *t)
- 	       (t->DAidx & 0xc0) >> 6;
- }
- 
--enum ar9170_txq {
--	AR9170_TXQ_BE,
--
--	AR9170_TXQ_VI,
--	AR9170_TXQ_VO,
--	AR9170_TXQ_BK,
--
--	__AR9170_NUM_TXQ,
--};
--
- /*
-  * This is an workaround for several undocumented bugs.
-  * Don't mess with the QoS/AC <-> HW Queue map, if you don't
-@@ -431,7 +421,14 @@ enum ar9170_txq {
-  * result, this makes the device pretty much useless
-  * for any serious 802.11n setup.
-  */
--static const u8 ar9170_qmap[__AR9170_NUM_TXQ] = { 2, 1, 0, 3 };
-+enum ar9170_txq {
-+	AR9170_TXQ_BK = 0,	/* TXQ0 */
-+	AR9170_TXQ_BE,		/* TXQ1	*/
-+	AR9170_TXQ_VI,		/* TXQ2	*/
-+	AR9170_TXQ_VO,		/* TXQ3 */
++#define NUM_OF_FIRMWARE_QUEUE				10
++#define NUM_OF_PAGES_IN_FW				0x100
++#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
++#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
++#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
++#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
++#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
++#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
++#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
++#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
++#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
++#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
 +
-+	__AR9170_NUM_TXQ,
++#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
++#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
++#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
++#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
++#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
++
++#define MAX_LINES_HWCONFIG_TXT				1000
++#define MAX_BYTES_LINE_HWCONFIG_TXT			256
++
++#define SW_THREE_WIRE					0
++#define HW_THREE_WIRE					2
++
++#define BT_DEMO_BOARD					0
++#define BT_QA_BOARD					1
++#define BT_FPGA						2
++
++#define RX_SMOOTH_FACTOR				20
++
++#define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
++#define HAL_PRIME_CHNL_OFFSET_LOWER			1
++#define HAL_PRIME_CHNL_OFFSET_UPPER			2
++
++#define MAX_H2C_QUEUE_NUM				10
++
++#define RX_MPDU_QUEUE					0
++#define RX_CMD_QUEUE					1
++#define RX_MAX_QUEUE					2
++
++#define	C2H_RX_CMD_HDR_LEN				8
++#define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
++	LE_BITS_TO_4BYTE((__prxhdr), 0, 16)
++#define	GET_C2H_CMD_ELEMENT_ID(__prxhdr)		\
++	LE_BITS_TO_4BYTE((__prxhdr), 16, 8)
++#define	GET_C2H_CMD_CMD_SEQ(__prxhdr)			\
++	LE_BITS_TO_4BYTE((__prxhdr), 24, 7)
++#define	GET_C2H_CMD_CONTINUE(__prxhdr)			\
++	LE_BITS_TO_4BYTE((__prxhdr), 31, 1)
++#define	GET_C2H_CMD_CONTENT(__prxhdr)			\
++	((u8 *)(__prxhdr) + C2H_RX_CMD_HDR_LEN)
++
++#define	GET_C2H_CMD_FEEDBACK_ELEMENT_ID(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE((__pcmdfbhdr), 0, 8)
++#define	GET_C2H_CMD_FEEDBACK_CCX_LEN(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE((__pcmdfbhdr), 8, 8)
++#define	GET_C2H_CMD_FEEDBACK_CCX_CMD_CNT(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE((__pcmdfbhdr), 16, 16)
++#define	GET_C2H_CMD_FEEDBACK_CCX_MAC_ID(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 0, 5)
++#define	GET_C2H_CMD_FEEDBACK_CCX_VALID(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 7, 1)
++#define	GET_C2H_CMD_FEEDBACK_CCX_RETRY_CNT(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 8, 5)
++#define	GET_C2H_CMD_FEEDBACK_CCX_TOK(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 15, 1)
++#define	GET_C2H_CMD_FEEDBACK_CCX_QSEL(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 16, 4)
++#define	GET_C2H_CMD_FEEDBACK_CCX_SEQ(__pcmdfbhdr)	\
++	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
++
++/*
++ * 92D chip ver:
++ * BIT8: IS 92D
++ * BIT9: single phy
++ * BIT10: C-cut
++ * BIT11: D-cut
++ */
++
++/* Chip specific */
++#define CHIP_92C			BIT(0)
++#define CHIP_92C_1T2R			BIT(1)
++#define CHIP_8723			BIT(2) /* RTL8723 With BT feature */
++#define CHIP_8723_DRV_REV		BIT(3) /* RTL8723 Driver Revised */
++#define NORMAL_CHIP			BIT(4)
++#define CHIP_VENDOR_UMC			BIT(5)
++#define CHIP_VENDOR_UMC_B_CUT		BIT(6) /* Chip version for ECO */
++
++/* for 92D */
++#define CHIP_92D			BIT(8)
++#define CHIP_92D_SINGLEPHY		BIT(9)
++#define CHIP_92D_C_CUT			BIT(10)
++#define CHIP_92D_D_CUT			BIT(11)
++
++enum version_8192d {
++	VERSION_TEST_CHIP_88C = 0x00,
++	VERSION_TEST_CHIP_92C = 0x01,
++	VERSION_NORMAL_TSMC_CHIP_88C = 0x10,
++	VERSION_NORMAL_TSMC_CHIP_92C = 0x11,
++	VERSION_NORMAL_TSMC_CHIP_92C_1T2R = 0x13,
++	VERSION_NORMAL_UMC_CHIP_88C_A_CUT = 0x30,
++	VERSION_NORMAL_UMC_CHIP_92C_A_CUT = 0x31,
++	VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT = 0x33,
++	VERSION_NORMA_UMC_CHIP_8723_1T1R_A_CUT = 0x34,
++	VERSION_NORMA_UMC_CHIP_8723_1T1R_B_CUT = 0x3c,
++	VERSION_NORMAL_UMC_CHIP_88C_B_CUT = 0x70,
++	VERSION_NORMAL_UMC_CHIP_92C_B_CUT = 0x71,
++	VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT = 0x73,
++	VERSION_TEST_CHIP_92D_SINGLEPHY = 0x300,
++	VERSION_TEST_CHIP_92D_DUALPHY = 0x100,
++	VERSION_NORMAL_CHIP_92D_SINGLEPHY = 0x310,
++	VERSION_NORMAL_CHIP_92D_DUALPHY = 0x110,
++	VERSION_NORMAL_CHIP_92D_C_CUT_SINGLEPHY = 0x710,
++	VERSION_NORMAL_CHIP_92D_C_CUT_DUALPHY = 0x510,
++	VERSION_NORMAL_CHIP_92D_D_CUT_SINGLEPHY = 0xB10,
++	VERSION_NORMAL_CHIP_92D_D_CUT_DUALPHY = 0x910,
 +};
- 
- #define	AR9170_TXQ_DEPTH			32
- 
--- 
-1.7.5.4
-
++
++#define IS_92D_SINGLEPHY(version)		\
++	((version & CHIP_92D_SINGLEPHY) ? true : false)
++#define IS_92D_C_CUT(version)			\
++	((version & CHIP_92D_C_CUT) ? true : false)
++#define IS_92D_D_CUT(version)			\
++	((version & CHIP_92D_D_CUT) ? true : false)
++
++enum rf_optype {
++	RF_OP_BY_SW_3WIRE = 0,
++	RF_OP_BY_FW,
++	RF_OP_MAX
++};
++
++enum rtl_desc_qsel {
++	QSLT_BK = 0x2,
++	QSLT_BE = 0x0,
++	QSLT_VI = 0x5,
++	QSLT_VO = 0x7,
++	QSLT_BEACON = 0x10,
++	QSLT_HIGH = 0x11,
++	QSLT_MGNT = 0x12,
++	QSLT_CMD = 0x13,
++};
++
++enum rtl_desc92d_rate {
++	DESC92D_RATE1M = 0x00,
++	DESC92D_RATE2M = 0x01,
++	DESC92D_RATE5_5M = 0x02,
++	DESC92D_RATE11M = 0x03,
++
++	DESC92D_RATE6M = 0x04,
++	DESC92D_RATE9M = 0x05,
++	DESC92D_RATE12M = 0x06,
++	DESC92D_RATE18M = 0x07,
++	DESC92D_RATE24M = 0x08,
++	DESC92D_RATE36M = 0x09,
++	DESC92D_RATE48M = 0x0a,
++	DESC92D_RATE54M = 0x0b,
++
++	DESC92D_RATEMCS0 = 0x0c,
++	DESC92D_RATEMCS1 = 0x0d,
++	DESC92D_RATEMCS2 = 0x0e,
++	DESC92D_RATEMCS3 = 0x0f,
++	DESC92D_RATEMCS4 = 0x10,
++	DESC92D_RATEMCS5 = 0x11,
++	DESC92D_RATEMCS6 = 0x12,
++	DESC92D_RATEMCS7 = 0x13,
++	DESC92D_RATEMCS8 = 0x14,
++	DESC92D_RATEMCS9 = 0x15,
++	DESC92D_RATEMCS10 = 0x16,
++	DESC92D_RATEMCS11 = 0x17,
++	DESC92D_RATEMCS12 = 0x18,
++	DESC92D_RATEMCS13 = 0x19,
++	DESC92D_RATEMCS14 = 0x1a,
++	DESC92D_RATEMCS15 = 0x1b,
++	DESC92D_RATEMCS15_SG = 0x1c,
++	DESC92D_RATEMCS32 = 0x20,
++};
++
++enum channel_plan {
++	CHPL_FCC	= 0,
++	CHPL_IC		= 1,
++	CHPL_ETSI	= 2,
++	CHPL_SPAIN	= 3,
++	CHPL_FRANCE	= 4,
++	CHPL_MKK	= 5,
++	CHPL_MKK1	= 6,
++	CHPL_ISRAEL	= 7,
++	CHPL_TELEC	= 8,
++	CHPL_GLOBAL	= 9,
++	CHPL_WORLD	= 10,
++};
++
++struct phy_sts_cck_8192d {
++	u8 adc_pwdb_X[4];
++	u8 sq_rpt;
++	u8 cck_agc_rpt;
++};
++
++struct h2c_cmd_8192c {
++	u8 element_id;
++	u32 cmd_len;
++	u8 *p_cmdbuffer;
++};
++
++struct txpower_info {
++	u8 cck_index[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ht40_1sindex[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ht40_2sindexdiff[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ht20indexdiff[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ofdmindexdiff[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ht40maxoffset[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 ht20maxoffset[RF6052_MAX_PATH][CHANNEL_GROUP_MAX];
++	u8 tssi_a[3];		/* 5GL/5GM/5GH */
++	u8 tssi_b[3];
++};
++
++#endif
