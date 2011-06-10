@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47569 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755209Ab1FFJZS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 05:25:18 -0400
-Received: by wwa36 with SMTP id 36so3585239wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 02:25:17 -0700 (PDT)
-Message-ID: <4DEC9CC5.9010700@mvista.com> (sfid-20110606_112524_889108_91FAF135)
-Date: Mon, 06 Jun 2011 13:24:21 +0400
-From: Sergei Shtylyov <sshtylyov@mvista.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3817 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754119Ab1FJIHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 04:07:17 -0400
+Message-ID: <4DF1D0A5.8080300@broadcom.com> (sfid-20110610_100724_735013_22F65E11)
+Date: Fri, 10 Jun 2011 10:07:01 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com
-Subject: Re: [RFC][PATCH 10/10] bcm47xx: fix irq assignment for new SoCs.
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <1307311658-15853-11-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1307311658-15853-11-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "julie Sullivan" <kernelmail.jms@gmail.com>
+cc: "Dan Carpenter" <error27@gmail.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/21] staging: brcm80211: code cleanup and fullmac
+ bugfix
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+ <20110609185420.GK4069@shale.localdomain>
+ <BANLkTi=FuX0H3UOi6M_LL5t5hdDen77WcQ@mail.gmail.com>
+In-Reply-To: <BANLkTi=FuX0H3UOi6M_LL5t5hdDen77WcQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Hi Julie,
 
-On 06-06-2011 2:07, Hauke Mehrtens wrote:
+> I'm happy to compile test this change (I don't have the hardware on a
+> working machine) but I can't get this series to apply again, what tree
+> are you using?
 
-> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
-> ---
->   arch/mips/bcm47xx/irq.c |    8 ++++++++
->   1 files changed, 8 insertions(+), 0 deletions(-)
+I am using GregKH's staging-next repo: 
+git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
 
-> diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
-> index 325757a..3642cee 100644
-> --- a/arch/mips/bcm47xx/irq.c
-> +++ b/arch/mips/bcm47xx/irq.c
-[...]
-> @@ -51,5 +52,12 @@ void plat_irq_dispatch(void)
->
->   void __init arch_init_irq(void)
->   {
-> +	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
-> +		bcma_write32(bcm47xx_bus.bcma.drv_mips.core,
-> +			     BCMA_MIPS_MIPS74K_INTMASK(5), 1<<  31);
-> +		/* the kernel reads the timer irq from some register and thinks
-> +		 * it's #5, but we offset it by 2 and route to #7 */
+> If it's -next a tag reference would be helpful, it could be that my
+> version is too recent. :-)
 
-    The preferred style for the multi-line comments is this:
+The patch applies on top of 5ad7b85b90e30eb5af4fbf6ce21907a2bd8934df.
 
-/*
-  * bla
-  * bla
-  */
+Bye, Roland.
 
-WBR, Sergei
+
+
