@@ -1,228 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:18045 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932668Ab1FWSpC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 14:45:02 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 11:44:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <hostap@lists.shmoo.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 1/4] hostapd: split up channel checking into helpers
-Date: Thu, 23 Jun 2011 11:44:48 -0700
-Message-ID: <1308854691-5958-2-git-send-email-lrodriguez@atheros.com> (sfid-20110623_204509_594355_79A480B6)
-In-Reply-To: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com>
-References: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com>
+Received: from mailout-de.gmx.net ([213.165.64.23]:33046 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751803Ab1FJHh1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 03:37:27 -0400
+From: Toralf =?utf-8?q?F=C3=B6rster?= <toralf.foerster@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn module ignores parameter "led_mode=1" under certain conditions
+Date: Fri, 10 Jun 2011 09:37:22 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201106100937.23295.toralf.foerster@gmx.de> (sfid-20110610_093738_848115_CB8A146C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This splits up the channel checking upon initialization
-into a few helpers. This should make this a bit easier
-to follow. This also paves the way for some initial
-ACS entry code.
+Hello,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- src/ap/hostapd.h     |    6 ++
- src/ap/hw_features.c |  148 +++++++++++++++++++++++++++-----------------------
- 2 files changed, 86 insertions(+), 68 deletions(-)
+Since years this worked at my Gentoo system :
 
-diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
-index d4501a1..6e4cc4f 100644
---- a/src/ap/hostapd.h
-+++ b/src/ap/hostapd.h
-@@ -30,6 +30,12 @@ struct full_dynamic_vlan;
- enum wps_event;
- union wps_event_data;
- 
-+enum hostapd_chan_status {
-+	HOSTAPD_CHAN_VALID = 0, /* channel is ready */
-+	HOSTAPD_CHAN_INVALID = 1, /* no usable channel found */
-+	HOSTAPD_CHAN_ACS = 2, /* ACS work being performed */
-+};
-+
- struct hostapd_probereq_cb {
- 	int (*cb)(void *ctx, const u8 *sa, const u8 *ie, size_t ie_len);
- 	void *ctx;
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index 86f6811..887744b 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -599,6 +599,77 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
- 	return 0;
- }
- 
-+static int hostapd_is_usable_chan(struct hostapd_iface *iface,
-+				  int channel,
-+				  int primary)
-+{
-+	unsigned int i;
-+	struct hostapd_channel_data *chan;
-+
-+	for (i = 0; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+		if (chan->chan == channel) {
-+			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
-+				wpa_printf(MSG_ERROR,
-+					   "%schannel [%i] (%i) is disabled for "
-+					   "use in AP mode, flags: 0x%x",
-+					   primary ? "" : "Configured HT40 secondary ",
-+					   i, chan->chan, chan->flag);
-+			} else {
-+				return 1;
-+			}
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int hostapd_is_usable_chans(struct hostapd_iface *iface)
-+{
-+	if (!hostapd_is_usable_chan(iface, iface->conf->channel, 1))
-+		return 0;
-+
-+	if (!iface->conf->secondary_channel)
-+		return 1;
-+
-+	if (!hostapd_is_usable_chan(iface, iface->conf->secondary_channel, 0))
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
-+{
-+	if (iface->conf->channel) {
-+		if (hostapd_is_usable_chans(iface))
-+			return HOSTAPD_CHAN_VALID;
-+		else
-+			return HOSTAPD_CHAN_INVALID;
-+	}
-+
-+	/*
-+	 * The user set channel=0 which is used to trigger ACS,
-+	 * which we do not yet support.
-+	 */
-+	return HOSTAPD_CHAN_INVALID;
-+}
-+
-+static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
-+{
-+	iface->current_mode = NULL;
-+
-+	hostapd_logger(iface->bss[0], NULL,
-+		       HOSTAPD_MODULE_IEEE80211,
-+		       HOSTAPD_LEVEL_WARNING,
-+		       "Configured channel (%d) not found from the "
-+		       "channel list of current mode (%d) %s",
-+		       iface->conf->channel,
-+		       iface->current_mode->mode,
-+		       hostapd_hw_mode_txt(iface->current_mode->mode));
-+	hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
-+		       HOSTAPD_LEVEL_WARNING,
-+		       "Hardware does not support configured channel");
-+}
- 
- /**
-  * hostapd_select_hw_mode - Select the hardware mode
-@@ -610,7 +681,7 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
-  */
- int hostapd_select_hw_mode(struct hostapd_iface *iface)
- {
--	int i, j, ok;
-+	int i;
- 
- 	if (iface->num_hw_features < 1)
- 		return -1;
-@@ -634,75 +705,16 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
- 		return -2;
- 	}
- 
--	ok = 0;
--	for (j = 0; j < iface->current_mode->num_channels; j++) {
--		struct hostapd_channel_data *chan =
--			&iface->current_mode->channels[j];
--		if (chan->chan == iface->conf->channel) {
--			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
--				wpa_printf(MSG_ERROR,
--					   "channel [%i] (%i) is disabled for "
--					   "use in AP mode, flags: 0x%x",
--					   j, chan->chan, chan->flag);
--			} else {
--				ok = 1;
--				break;
--			}
--		}
--	}
--	if (ok && iface->conf->secondary_channel) {
--		int sec_ok = 0;
--		int sec_chan = iface->conf->channel +
--			iface->conf->secondary_channel * 4;
--		for (j = 0; j < iface->current_mode->num_channels; j++) {
--			struct hostapd_channel_data *chan =
--				&iface->current_mode->channels[j];
--			if (!(chan->flag & HOSTAPD_CHAN_DISABLED) &&
--			    (chan->chan == sec_chan)) {
--				sec_ok = 1;
--				break;
--			}
--		}
--		if (!sec_ok) {
--			hostapd_logger(iface->bss[0], NULL,
--				       HOSTAPD_MODULE_IEEE80211,
--				       HOSTAPD_LEVEL_WARNING,
--				       "Configured HT40 secondary channel "
--				       "(%d) not found from the channel list "
--				       "of current mode (%d) %s",
--				       sec_chan, iface->current_mode->mode,
--				       hostapd_hw_mode_txt(
--					       iface->current_mode->mode));
--			ok = 0;
--		}
--	}
--	if (iface->conf->channel == 0) {
--		/* TODO: could request a scan of neighboring BSSes and select
--		 * the channel automatically */
--		wpa_printf(MSG_ERROR, "Channel not configured "
--			   "(hw_mode/channel in hostapd.conf)");
--		return -3;
--	}
--	if (ok == 0 && iface->conf->channel != 0) {
--		hostapd_logger(iface->bss[0], NULL,
--			       HOSTAPD_MODULE_IEEE80211,
--			       HOSTAPD_LEVEL_WARNING,
--			       "Configured channel (%d) not found from the "
--			       "channel list of current mode (%d) %s",
--			       iface->conf->channel,
--			       iface->current_mode->mode,
--			       hostapd_hw_mode_txt(iface->current_mode->mode));
--		iface->current_mode = NULL;
--	}
--
--	if (iface->current_mode == NULL) {
--		hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
--			       HOSTAPD_LEVEL_WARNING,
--			       "Hardware does not support configured channel");
-+	switch (hostapd_check_chans(iface)) {
-+	case HOSTAPD_CHAN_VALID:
-+		return 0;
-+	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		hostapd_notify_bad_chans(iface);
- 		return -4;
-+		return HOSTAPD_CHAN_INVALID;
- 	}
--
--	return 0;
- }
- 
- 
+$ cat /etc/modprobe.d/iwlagn.conf 
+options iwlcore led_mode=1
+
+However nowadays this doesn't work when I do the following :
+
+1. dock the ThinkPad T400 (no WLAN, only DSL)
+2. boot it
+3. s2ram it
+4. undock it
+5. go into the office
+6. resume the undocked notebook (WLAN, no DSL)
+
+The led is blinking ...
+
+Putting however this line into the config file :
+$ options iwlagn  led_mode=1
+
+works always.
+
+?
+
 -- 
-1.7.4.15.g7811d
-
+MfG/Sincerely
+Toralf Förster
+pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
