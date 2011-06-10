@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:52943 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897Ab1F0N7x convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:33114 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab1FJUI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 09:59:53 -0400
+	Fri, 10 Jun 2011 16:08:56 -0400
+Date: Fri, 10 Jun 2011 15:08:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/13] Initial submission of driver rtl8192de
+Message-ID: <4df279d6.s0xm0gXgTtCYGr4l%Larry.Finger@lwfinger.net> (sfid-20110610_220859_776247_BB310ED9)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-Date: Mon, 27 Jun 2011 15:59:53 +0200
-Message-ID: <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com> (sfid-20110627_155959_690183_2ACF08D1)
-Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/26 Geert Uytterhoeven <geert@linux-m68k.org>:
-> m68k allmodconfig:
->
-> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
-> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
+This series of patches adds a new driver for the Realtek RTL8192DE family
+of devices. The driver is intended to be included in kernel 3.1.
 
-We already include slab.h in:
-host_pci.c
-scan.c
-sprom.c
+Included are the following:
 
-Maybe we can just include this in bcma.h as a better solution? We
-could drop other includes then.
-Can you submit patch for this?
+01/13: rtlwifi: rtl8192de: Merge def.h
+02/13: rtlwifi: rtl8192de: Merge dynamic management routines
+03/13: rtlwifi: rtl8192de: Merge firmware routines
+04/13: rtlwifi: rtl8192de: Merge hardware routines
+05/13: rtlwifi: rtl8192de: Merge led routines
+06/13: rtlwifi: rtl8192de: Merge phy routines
+07/13: rtlwifi: rtl8192de: Merge register definitions
+08/13: rtlwifi: rtl8192de: Merge rf routines
+09/13: rtlwifi: rtl8192de: Merge main (sw) routines
+10/13: rtlwifi: rtl8192de: Merge table routines
+11/13: rtlwifi: rtl8192de: Merge TX and RX routines
+12/13: rtlwifi: Fix build problems introduced by merging rtl8192de
+13/13: rtlwifi: rtl8192de: Modify Kconfig and Makefile routines for new driver
 
--- 
-Rafał
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
