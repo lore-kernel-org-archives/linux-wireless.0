@@ -1,37 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58724 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754274Ab1FXQDn (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37258 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489Ab1FJHsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 12:03:43 -0400
-Received: by fxm17 with SMTP id 17so1966268fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 09:03:42 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: AW: Configuring the multicast data rate with iw/nl80211
-Date: Fri, 24 Jun 2011 18:04:48 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <loom.20110624T123237-71@post.gmane.org> <201106241307.44609.chunkeey@googlemail.com> <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com>
-In-Reply-To: <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201106241804.49749.chunkeey@googlemail.com> (sfid-20110624_180347_090563_298B094B)
+	Fri, 10 Jun 2011 03:48:45 -0400
+Received: by wya21 with SMTP id 21so1661509wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 00:48:43 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] wl12xx: add stop_scan command
+Date: Fri, 10 Jun 2011 10:49:18 +0300
+Message-Id: <1307692159-11055-2-git-send-email-eliad@wizery.com> (sfid-20110610_094849_060204_21ADE78A)
+In-Reply-To: <1307692159-11055-1-git-send-email-eliad@wizery.com>
+References: <1307692159-11055-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 24 June 2011 14:34:55 Joerg Pommnitz wrote:
-> >As an alternative, It's worth a try to look into multicast-to-unicast proxies
-> >such as http://sourceforge.net/projects/udpxy/ .
-> 
-> But then you duplicate the multicast traffic for every STA, no?
-Not every STA, only those which subscribed to udpxy at the time.
+define wl1271_scan_stop() to cancel an ongoing hw scan.
 
-But there's more, I found it very difficult to "fine-tune" the multicast
-setup properly, since there's no automatic feedback for
-multicast link quality. Either the rate I picked was too low, or the
-signal was too weak, in both cases the video stream as pretty
-pretty poor at best.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/scan.c |   27 +++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/scan.h |    1 +
+ 2 files changed, 28 insertions(+), 0 deletions(-)
 
-So I went with the proxy, which as it turns out is a much better
-option once you go for 11n. However, the decision is truly yours :D
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index f37e5a3..e5e5c35 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -321,6 +321,33 @@ int wl1271_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+ 	return 0;
+ }
+ 
++int wl1271_scan_stop(struct wl1271 *wl)
++{
++	struct wl1271_cmd_header *cmd = NULL;
++	int ret = 0;
++
++	if (WARN_ON(wl->scan.state == WL1271_SCAN_STATE_IDLE))
++		return -EINVAL;
++
++	wl1271_debug(DEBUG_CMD, "cmd scan stop");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = wl1271_cmd_send(wl, CMD_STOP_SCAN, cmd,
++			      sizeof(*cmd), 0);
++	if (ret < 0) {
++		wl1271_error("cmd stop_scan failed");
++		goto out;
++	}
++out:
++	kfree(cmd);
++	return ret;
++}
++
+ static int
+ wl1271_scan_get_sched_scan_channels(struct wl1271 *wl,
+ 				    struct cfg80211_sched_scan_request *req,
+diff --git a/drivers/net/wireless/wl12xx/scan.h b/drivers/net/wireless/wl12xx/scan.h
+index c833195..b13f297 100644
+--- a/drivers/net/wireless/wl12xx/scan.h
++++ b/drivers/net/wireless/wl12xx/scan.h
+@@ -28,6 +28,7 @@
+ 
+ int wl1271_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+ 		struct cfg80211_scan_request *req);
++int wl1271_scan_stop(struct wl1271 *wl);
+ int wl1271_scan_build_probe_req(struct wl1271 *wl,
+ 				const u8 *ssid, size_t ssid_len,
+ 				const u8 *ie, size_t ie_len, u8 band);
+-- 
+1.7.0.4
+
