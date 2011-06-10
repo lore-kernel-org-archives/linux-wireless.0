@@ -1,471 +1,495 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46223 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752366Ab1FSVwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 17:52:30 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v2 10/12] bcm47xx: prepare to support different buses
-Date: Sun, 19 Jun 2011 23:50:07 +0200
-Message-Id: <1308520209-668-11-git-send-email-hauke@hauke-m.de> (sfid-20110619_235233_582536_96128A3C)
-In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
-References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:50691 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758032Ab1FJULL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 16:11:11 -0400
+Date: Fri, 10 Jun 2011 15:11:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/13] rtlwifi: rtl8192de: Merge main (sw) routines
+Message-ID: <4df27a5e.GhH/9eqDXwhqkqV4%Larry.Finger@lwfinger.net> (sfid-20110610_221115_124406_B43C48AD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ssb bus is not hod directly any more. there is now a union which
-contains all the supported buses, now just ssb. As just one system bus
-can be used at a time the union does not cause any problems.
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Merge routines sw.c and sw.h for RTL8192SE.
+
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- arch/mips/bcm47xx/gpio.c                     |   56 ++++++++++++++++----------
- arch/mips/bcm47xx/nvram.c                    |   15 +++++--
- arch/mips/bcm47xx/serial.c                   |   13 +++++-
- arch/mips/bcm47xx/setup.c                    |   32 +++++++++++---
- arch/mips/bcm47xx/time.c                     |    9 +++-
- arch/mips/bcm47xx/wgt634u.c                  |   13 ++++--
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |   14 ++++++-
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |   55 ++++++++++++++++++-------
- drivers/watchdog/bcm47xx_wdt.c               |   12 +++++-
- 9 files changed, 158 insertions(+), 61 deletions(-)
 
-diff --git a/arch/mips/bcm47xx/gpio.c b/arch/mips/bcm47xx/gpio.c
-index e4a5ee9..2f6d2df 100644
---- a/arch/mips/bcm47xx/gpio.c
-+++ b/arch/mips/bcm47xx/gpio.c
-@@ -20,42 +20,54 @@ static DECLARE_BITMAP(gpio_in_use, BCM47XX_EXTIF_GPIO_LINES);
- 
- int gpio_request(unsigned gpio, const char *tag)
- {
--	if (ssb_chipco_available(&ssb_bcm47xx.chipco) &&
--	    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
--		return -EINVAL;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
-+		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-+			return -EINVAL;
- 
--	if (ssb_extif_available(&ssb_bcm47xx.extif) &&
--	    ((unsigned)gpio >= BCM47XX_EXTIF_GPIO_LINES))
--		return -EINVAL;
-+		if (ssb_extif_available(&bcm47xx_bus.ssb.extif) &&
-+		    ((unsigned)gpio >= BCM47XX_EXTIF_GPIO_LINES))
-+			return -EINVAL;
- 
--	if (test_and_set_bit(gpio, gpio_in_use))
--		return -EBUSY;
-+		if (test_and_set_bit(gpio, gpio_in_use))
-+			return -EBUSY;
- 
--	return 0;
-+		return 0;
-+	}
-+	return -EINVAL;
- }
- EXPORT_SYMBOL(gpio_request);
- 
- void gpio_free(unsigned gpio)
- {
--	if (ssb_chipco_available(&ssb_bcm47xx.chipco) &&
--	    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
--		return;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
-+		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-+			return;
- 
--	if (ssb_extif_available(&ssb_bcm47xx.extif) &&
--	    ((unsigned)gpio >= BCM47XX_EXTIF_GPIO_LINES))
--		return;
-+		if (ssb_extif_available(&bcm47xx_bus.ssb.extif) &&
-+		    ((unsigned)gpio >= BCM47XX_EXTIF_GPIO_LINES))
-+			return;
- 
--	clear_bit(gpio, gpio_in_use);
-+		clear_bit(gpio, gpio_in_use);
-+		return;
-+	}
- }
- EXPORT_SYMBOL(gpio_free);
- 
- int gpio_to_irq(unsigned gpio)
- {
--	if (ssb_chipco_available(&ssb_bcm47xx.chipco))
--		return ssb_mips_irq(ssb_bcm47xx.chipco.dev) + 2;
--	else if (ssb_extif_available(&ssb_bcm47xx.extif))
--		return ssb_mips_irq(ssb_bcm47xx.extif.dev) + 2;
--	else
--		return -EINVAL;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco))
-+			return ssb_mips_irq(bcm47xx_bus.ssb.chipco.dev) + 2;
-+		else if (ssb_extif_available(&bcm47xx_bus.ssb.extif))
-+			return ssb_mips_irq(bcm47xx_bus.ssb.extif.dev) + 2;
-+		else
-+			return -EINVAL;
-+	}
-+	return -EINVAL;
- }
- EXPORT_SYMBOL_GPL(gpio_to_irq);
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index 54db815..d2304d0 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -26,14 +26,21 @@ static char nvram_buf[NVRAM_SPACE];
- /* Probe for NVRAM header */
- static void early_nvram_init(void)
- {
--	struct ssb_mipscore *mcore = &ssb_bcm47xx.mipscore;
-+	struct ssb_mipscore *mcore_ssb;
- 	struct nvram_header *header;
- 	int i;
--	u32 base, lim, off;
-+	u32 base = 0;
-+	u32 lim = 0;
-+	u32 off;
- 	u32 *src, *dst;
- 
--	base = mcore->flash_window;
--	lim = mcore->flash_window_size;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		mcore_ssb = &bcm47xx_bus.ssb.mipscore;
-+		base = mcore_ssb->flash_window;
-+		lim = mcore_ssb->flash_window_size;
-+		break;
-+	}
- 
- 	off = FLASH_MIN;
- 	while (off <= lim) {
-diff --git a/arch/mips/bcm47xx/serial.c b/arch/mips/bcm47xx/serial.c
-index 59c11af..87c2c5e 100644
---- a/arch/mips/bcm47xx/serial.c
-+++ b/arch/mips/bcm47xx/serial.c
-@@ -23,10 +23,10 @@ static struct platform_device uart8250_device = {
- 	},
- };
- 
--static int __init uart8250_init(void)
-+static int __init uart8250_init_ssb(void)
- {
- 	int i;
--	struct ssb_mipscore *mcore = &(ssb_bcm47xx.mipscore);
-+	struct ssb_mipscore *mcore = &(bcm47xx_bus.ssb.mipscore);
- 
- 	memset(&uart8250_data, 0,  sizeof(uart8250_data));
- 
-@@ -45,6 +45,15 @@ static int __init uart8250_init(void)
- 	return platform_device_register(&uart8250_device);
- }
- 
-+static int __init uart8250_init(void)
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+===================================================================
+--- /dev/null
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -0,0 +1,423 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include <linux/vmalloc.h>
++
++#include "../wifi.h"
++#include "../core.h"
++#include "../pci.h"
++#include "reg.h"
++#include "def.h"
++#include "phy.h"
++#include "dm.h"
++#include "hw.h"
++#include "sw.h"
++#include "trx.h"
++#include "led.h"
++
++static void rtl92d_init_aspm_vars(struct ieee80211_hw *hw)
 +{
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		return uart8250_init_ssb();
-+	}
-+	return -EINVAL;
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++
++	/*close ASPM for AMD defaultly */
++	rtlpci->const_amdpci_aspm = 0;
++
++	/*
++	 * ASPM PS mode.
++	 * 0 - Disable ASPM,
++	 * 1 - Enable ASPM without Clock Req,
++	 * 2 - Enable ASPM with Clock Req,
++	 * 3 - Alwyas Enable ASPM with Clock Req,
++	 * 4 - Always Enable ASPM without Clock Req.
++	 * set defult to RTL8192CE:3 RTL8192E:2
++	 * */
++	rtlpci->const_pci_aspm = 3;
++
++	/*Setting for PCI-E device */
++	rtlpci->const_devicepci_aspm_setting = 0x03;
++
++	/*Setting for PCI-E bridge */
++	rtlpci->const_hostpci_aspm_setting = 0x02;
++
++	/*
++	 * In Hw/Sw Radio Off situation.
++	 * 0 - Default,
++	 * 1 - From ASPM setting without low Mac Pwr,
++	 * 2 - From ASPM setting with low Mac Pwr,
++	 * 3 - Bus D3
++	 * set default to RTL8192CE:0 RTL8192SE:2
++	 */
++	rtlpci->const_hwsw_rfoff_d3 = 0;
++
++	/*
++	 * This setting works for those device with
++	 * backdoor ASPM setting such as EPHY setting.
++	 * 0 - Not support ASPM,
++	 * 1 - Support ASPM,
++	 * 2 - According to chipset.
++	 */
++	rtlpci->const_support_pciaspm = 1;
 +}
 +
- module_init(uart8250_init);
- 
- MODULE_AUTHOR("Aurelien Jarno <aurelien@aurel32.net>");
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index 73b529b..c64b76d 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -35,15 +35,21 @@
- #include <bcm47xx.h>
- #include <asm/mach-bcm47xx/nvram.h>
- 
--struct ssb_bus ssb_bcm47xx;
--EXPORT_SYMBOL(ssb_bcm47xx);
-+union bcm47xx_bus bcm47xx_bus;
-+EXPORT_SYMBOL(bcm47xx_bus);
++static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
++{
++	int err;
++	u8 tid;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	const struct firmware *firmware;
++	static int header_print;
 +
-+enum bcm47xx_bus_type bcm47xx_active_bus_type;
- 
- static void bcm47xx_machine_restart(char *command)
- {
- 	printk(KERN_ALERT "Please stand by while rebooting the system...\n");
- 	local_irq_disable();
- 	/* Set the watchdog timer to reset immediately */
--	ssb_watchdog_timer_set(&ssb_bcm47xx, 1);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 1);
-+		break;
++	rtlpriv->dm.dm_initialgain_enable = true;
++	rtlpriv->dm.dm_flag = 0;
++	rtlpriv->dm.disable_framebursting = 0;
++	rtlpriv->dm.thermalvalue = 0;
++	rtlpriv->dm.useramask = 1;
++
++	/* dual mac */
++	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G)
++		rtlpriv->phy.current_channel = 36;
++	else
++		rtlpriv->phy.current_channel = 1;
++
++	if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
++		rtlpriv->rtlhal.disable_amsdu_8k = true;
++		/* No long RX - reduce fragmentation */
++		rtlpci->rxbuffersize = 4096;
 +	}
- 	while (1)
- 		cpu_relax();
- }
-@@ -52,7 +58,11 @@ static void bcm47xx_machine_halt(void)
- {
- 	/* Disable interrupts and watchdog and spin forever */
- 	local_irq_disable();
--	ssb_watchdog_timer_set(&ssb_bcm47xx, 0);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
-+		break;
++
++	rtlpci->transmit_config = CFENDFORM | BIT(12) | BIT(13);
++
++	rtlpci->receive_config = (
++			RCR_APPFCS
++			| RCR_AMF
++			| RCR_ADF
++			| RCR_APP_MIC
++			| RCR_APP_ICV
++			| RCR_AICV
++			| RCR_ACRC32
++			| RCR_AB
++			| RCR_AM
++			| RCR_APM
++			| RCR_APP_PHYST_RXFF
++			| RCR_HTC_LOC_CTRL
++	);
++
++	rtlpci->irq_mask[0] = (u32) (
++			IMR_ROK
++			| IMR_VODOK
++			| IMR_VIDOK
++			| IMR_BEDOK
++			| IMR_BKDOK
++			| IMR_MGNTDOK
++			| IMR_HIGHDOK
++			| IMR_BDOK
++			| IMR_RDU
++			| IMR_RXFOVW
++	);
++
++	rtlpci->irq_mask[1] = (u32) (IMR_CPWM | IMR_C2HCMD);
++
++	/* for LPS & IPS */
++	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
++	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
++	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
++	rtlpriv->psc.reg_fwctrl_lps = 3;
++	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
++	/* for ASPM, you can close aspm through
++	 * set const_support_pciaspm = 0 */
++	rtl92d_init_aspm_vars(hw);
++
++	if (rtlpriv->psc.reg_fwctrl_lps == 1)
++		rtlpriv->psc.fwctrl_psmode = FW_PS_MIN_MODE;
++	else if (rtlpriv->psc.reg_fwctrl_lps == 2)
++		rtlpriv->psc.fwctrl_psmode = FW_PS_MAX_MODE;
++	else if (rtlpriv->psc.reg_fwctrl_lps == 3)
++		rtlpriv->psc.fwctrl_psmode = FW_PS_DTIM_MODE;
++
++	/* for firmware buf */
++	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
++	if (!rtlpriv->rtlhal.pfirmware) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Can't alloc buffer for fw.\n"));
++		return 1;
 +	}
- 	while (1)
- 		cpu_relax();
- }
-@@ -247,7 +257,7 @@ static int bcm47xx_get_invariants(struct ssb_bus *bus,
- 	return 0;
- }
- 
--void __init plat_mem_setup(void)
-+static void __init bcm47xx_register_ssb(void)
- {
- 	int err;
- 	char buf[100];
-@@ -258,12 +268,12 @@ void __init plat_mem_setup(void)
- 		printk(KERN_WARNING "bcm47xx: someone else already registered"
- 			" a ssb SPROM callback handler (err %d)\n", err);
- 
--	err = ssb_bus_ssbbus_register(&ssb_bcm47xx, SSB_ENUM_BASE,
-+	err = ssb_bus_ssbbus_register(&(bcm47xx_bus.ssb), SSB_ENUM_BASE,
- 				      bcm47xx_get_invariants);
- 	if (err)
- 		panic("Failed to initialize SSB bus (err %d)\n", err);
- 
--	mcore = &ssb_bcm47xx.mipscore;
-+	mcore = &bcm47xx_bus.ssb.mipscore;
- 	if (nvram_getenv("kernel_args", buf, sizeof(buf)) >= 0) {
- 		if (strstr(buf, "console=ttyS1")) {
- 			struct ssb_serial_port port;
-@@ -276,6 +286,14 @@ void __init plat_mem_setup(void)
- 			memcpy(&mcore->serial_ports[1], &port, sizeof(port));
- 		}
- 	}
++
++	if (!header_print) {
++		printk(KERN_INFO "rtl8192de: Driver for Realtek RTL8192DE"
++		       " WLAN interface");
++		printk(KERN_INFO "rtl8192de: Loading firmware file %s\n",
++		       rtlpriv->cfg->fw_name);
++		header_print++;
++	}
++	/* request fw */
++	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
++			       rtlpriv->io.dev);
++	if (err) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Failed to request firmware!\n"));
++		return 1;
++	}
++	if (firmware->size > 0x8000) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Firmware is too big!\n"));
++		release_firmware(firmware);
++		return 1;
++	}
++	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
++	rtlpriv->rtlhal.fwsize = firmware->size;
++	release_firmware(firmware);
++
++	/* for early mode */
++	rtlpriv->rtlhal.earlymode_enable = true;
++	for (tid = 0; tid < 8; tid++)
++		skb_queue_head_init(&rtlpriv->mac80211.skb_waitq[tid]);
++	return 0;
 +}
 +
-+void __init plat_mem_setup(void)
++static void rtl92d_deinit_sw_vars(struct ieee80211_hw *hw)
 +{
-+	struct cpuinfo_mips *c = &current_cpu_data;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 tid;
 +
-+	bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_SSB;
-+	bcm47xx_register_ssb();
- 
- 	_machine_restart = bcm47xx_machine_restart;
- 	_machine_halt = bcm47xx_machine_halt;
-diff --git a/arch/mips/bcm47xx/time.c b/arch/mips/bcm47xx/time.c
-index 0c6f47b..a7be993 100644
---- a/arch/mips/bcm47xx/time.c
-+++ b/arch/mips/bcm47xx/time.c
-@@ -30,7 +30,7 @@
- 
- void __init plat_time_init(void)
- {
--	unsigned long hz;
-+	unsigned long hz = 0;
- 
- 	/*
- 	 * Use deterministic values for initial counter interrupt
-@@ -39,7 +39,12 @@ void __init plat_time_init(void)
- 	write_c0_count(0);
- 	write_c0_compare(0xffff);
- 
--	hz = ssb_cpu_clock(&ssb_bcm47xx.mipscore) / 2;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		hz = ssb_cpu_clock(&bcm47xx_bus.ssb.mipscore) / 2;
-+		break;
++	if (rtlpriv->rtlhal.pfirmware) {
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
 +	}
++	for (tid = 0; tid < 8; tid++)
++		skb_queue_purge(&rtlpriv->mac80211.skb_waitq[tid]);
++}
 +
- 	if (!hz)
- 		hz = 100000000;
- 
-diff --git a/arch/mips/bcm47xx/wgt634u.c b/arch/mips/bcm47xx/wgt634u.c
-index 74d0696..79ecd0a 100644
---- a/arch/mips/bcm47xx/wgt634u.c
-+++ b/arch/mips/bcm47xx/wgt634u.c
-@@ -108,7 +108,7 @@ static irqreturn_t gpio_interrupt(int irq, void *ignored)
- 
- 	/* Interrupts are shared, check if the current one is
- 	   a GPIO interrupt. */
--	if (!ssb_chipco_irq_status(&ssb_bcm47xx.chipco,
-+	if (!ssb_chipco_irq_status(&bcm47xx_bus.ssb.chipco,
- 				   SSB_CHIPCO_IRQ_GPIO))
- 		return IRQ_NONE;
- 
-@@ -133,21 +133,24 @@ static int __init wgt634u_init(void)
- 	 * been allocated ranges 00:09:5b:xx:xx:xx and 00:0f:b5:xx:xx:xx.
- 	 */
- 
--	u8 *et0mac = ssb_bcm47xx.sprom.et0mac;
-+	if (bcm47xx_active_bus_type != BCM47XX_BUS_TYPE_SSB)
-+		return -ENODEV;
-+
-+	u8 *et0mac = bcm47xx_bus.ssb.sprom.et0mac;
- 
- 	if (et0mac[0] == 0x00 &&
- 	    ((et0mac[1] == 0x09 && et0mac[2] == 0x5b) ||
- 	     (et0mac[1] == 0x0f && et0mac[2] == 0xb5))) {
--		struct ssb_mipscore *mcore = &ssb_bcm47xx.mipscore;
-+		struct ssb_mipscore *mcore = &bcm47xx_bus.ssb.mipscore;
- 
- 		printk(KERN_INFO "WGT634U machine detected.\n");
- 
- 		if (!request_irq(gpio_to_irq(WGT634U_GPIO_RESET),
- 				 gpio_interrupt, IRQF_SHARED,
--				 "WGT634U GPIO", &ssb_bcm47xx.chipco)) {
-+				 "WGT634U GPIO", &bcm47xx_bus.ssb.chipco)) {
- 			gpio_direction_input(WGT634U_GPIO_RESET);
- 			gpio_intmask(WGT634U_GPIO_RESET, 1);
--			ssb_chipco_irq_mask(&ssb_bcm47xx.chipco,
-+			ssb_chipco_irq_mask(&bcm47xx_bus.ssb.chipco,
- 					    SSB_CHIPCO_IRQ_GPIO,
- 					    SSB_CHIPCO_IRQ_GPIO);
- 		}
-diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-index d008f47..4be8b95 100644
---- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-@@ -19,7 +19,17 @@
- #ifndef __ASM_BCM47XX_H
- #define __ASM_BCM47XX_H
- 
--/* SSB bus */
--extern struct ssb_bus ssb_bcm47xx;
-+#include <linux/ssb/ssb.h>
-+
-+enum bcm47xx_bus_type {
-+	BCM47XX_BUS_TYPE_SSB,
++static struct rtl_hal_ops rtl8192de_hal_ops = {
++	.init_sw_vars = rtl92d_init_sw_vars,
++	.deinit_sw_vars = rtl92d_deinit_sw_vars,
++	.read_eeprom_info = rtl92de_read_eeprom_info,
++	.interrupt_recognized = rtl92de_interrupt_recognized,
++	.hw_init = rtl92de_hw_init,
++	.hw_disable = rtl92de_card_disable,
++	.hw_suspend = rtl92de_suspend,
++	.hw_resume = rtl92de_resume,
++	.enable_interrupt = rtl92de_enable_interrupt,
++	.disable_interrupt = rtl92de_disable_interrupt,
++	.set_network_type = rtl92de_set_network_type,
++	.set_chk_bssid = rtl92de_set_check_bssid,
++	.set_qos = rtl92de_set_qos,
++	.set_bcn_reg = rtl92de_set_beacon_related_registers,
++	.set_bcn_intv = rtl92de_set_beacon_interval,
++	.update_interrupt_mask = rtl92de_update_interrupt_mask,
++	.get_hw_reg = rtl92de_get_hw_reg,
++	.set_hw_reg = rtl92de_set_hw_reg,
++	.update_rate_tbl = rtl92de_update_hal_rate_tbl,
++	.fill_tx_desc = rtl92de_tx_fill_desc,
++	.fill_tx_cmddesc = rtl92de_tx_fill_cmddesc,
++	.query_rx_desc = rtl92de_rx_query_desc,
++	.set_channel_access = rtl92de_update_channel_access_setting,
++	.radio_onoff_checking = rtl92de_gpio_radio_on_off_checking,
++	.set_bw_mode = rtl92d_phy_set_bw_mode,
++	.switch_channel = rtl92d_phy_sw_chnl,
++	.dm_watchdog = rtl92d_dm_watchdog,
++	.scan_operation_backup = rtl92d_phy_scan_operation_backup,
++	.set_rf_power_state = rtl92d_phy_set_rf_power_state,
++	.led_control = rtl92de_led_control,
++	.set_desc = rtl92de_set_desc,
++	.get_desc = rtl92de_get_desc,
++	.tx_polling = rtl92de_tx_polling,
++	.enable_hw_sec = rtl92de_enable_hw_security_config,
++	.set_key = rtl92de_set_key,
++	.init_sw_leds = rtl92de_init_sw_leds,
++	.get_bbreg = rtl92d_phy_query_bb_reg,
++	.set_bbreg = rtl92d_phy_set_bb_reg,
++	.get_rfreg = rtl92d_phy_query_rf_reg,
++	.set_rfreg = rtl92d_phy_set_rf_reg,
++	.linked_set_reg = rtl92d_linked_set_reg,
 +};
 +
-+union bcm47xx_bus {
-+	struct ssb_bus ssb;
++static struct rtl_mod_params rtl92de_mod_params = {
++	.sw_crypto = false,
++	.inactiveps = true,
++	.swctrl_lps = true,
++	.fwctrl_lps = false,
 +};
 +
-+extern union bcm47xx_bus bcm47xx_bus;
-+extern enum bcm47xx_bus_type bcm47xx_active_bus_type;
- 
- #endif /* __ASM_BCM47XX_H */
-diff --git a/arch/mips/include/asm/mach-bcm47xx/gpio.h b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-index 9850414..976b8aa 100644
---- a/arch/mips/include/asm/mach-bcm47xx/gpio.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-@@ -21,41 +21,66 @@ extern int gpio_to_irq(unsigned gpio);
- 
- static inline int gpio_get_value(unsigned gpio)
- {
--	return ssb_gpio_in(&ssb_bcm47xx, 1 << gpio);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		return ssb_gpio_in(&bcm47xx_bus.ssb, 1 << gpio);
-+	}
-+	return -EINVAL;
- }
- 
- static inline void gpio_set_value(unsigned gpio, int value)
- {
--	ssb_gpio_out(&ssb_bcm47xx, 1 << gpio, value ? 1 << gpio : 0);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
-+			     value ? 1 << gpio : 0);
-+	}
- }
- 
- static inline int gpio_direction_input(unsigned gpio)
- {
--	ssb_gpio_outen(&ssb_bcm47xx, 1 << gpio, 0);
--	return 0;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 0);
-+		return 0;
-+	}
-+	return -EINVAL;
- }
- 
- static inline int gpio_direction_output(unsigned gpio, int value)
- {
--	/* first set the gpio out value */
--	ssb_gpio_out(&ssb_bcm47xx, 1 << gpio, value ? 1 << gpio : 0);
--	/* then set the gpio mode */
--	ssb_gpio_outen(&ssb_bcm47xx, 1 << gpio, 1 << gpio);
--	return 0;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		/* first set the gpio out value */
-+		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
-+			     value ? 1 << gpio : 0);
-+		/* then set the gpio mode */
-+		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 1 << gpio);
-+		return 0;
-+	}
-+	return -EINVAL;
- }
- 
- static inline int gpio_intmask(unsigned gpio, int value)
- {
--	ssb_gpio_intmask(&ssb_bcm47xx, 1 << gpio,
--			 value ? 1 << gpio : 0);
--	return 0;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_gpio_intmask(&bcm47xx_bus.ssb, 1 << gpio,
-+				 value ? 1 << gpio : 0);
-+		return 0;
-+	}
-+	return -EINVAL;
- }
- 
- static inline int gpio_polarity(unsigned gpio, int value)
- {
--	ssb_gpio_polarity(&ssb_bcm47xx, 1 << gpio,
--			  value ? 1 << gpio : 0);
--	return 0;
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_gpio_polarity(&bcm47xx_bus.ssb, 1 << gpio,
-+				  value ? 1 << gpio : 0);
-+		return 0;
-+	}
-+	return -EINVAL;
- }
- 
- 
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index bd44417..7e4e063 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -54,12 +54,20 @@ static atomic_t ticks;
- static inline void bcm47xx_wdt_hw_start(void)
- {
- 	/* this is 2,5s on 100Mhz clock  and 2s on 133 Mhz */
--	ssb_watchdog_timer_set(&ssb_bcm47xx, 0xfffffff);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
-+		break;
-+	}
- }
- 
- static inline int bcm47xx_wdt_hw_stop(void)
- {
--	return ssb_watchdog_timer_set(&ssb_bcm47xx, 0);
-+	switch (bcm47xx_active_bus_type) {
-+	case BCM47XX_BUS_TYPE_SSB:
-+		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
-+	}
-+	return -EINVAL;
- }
- 
- static void bcm47xx_timer_tick(unsigned long unused)
--- 
-1.7.4.1
-
++static struct rtl_hal_cfg rtl92de_hal_cfg = {
++	.bar_id = 2,
++	.write_readback = true,
++	.name = "rtl8192de",
++	.fw_name = "rtlwifi/rtl8192defw.bin",
++	.ops = &rtl8192de_hal_ops,
++	.mod_params = &rtl92de_mod_params,
++
++	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
++	.maps[SYS_FUNC_EN] = REG_SYS_FUNC_EN,
++	.maps[SYS_CLK] = REG_SYS_CLKR,
++	.maps[MAC_RCR_AM] = RCR_AM,
++	.maps[MAC_RCR_AB] = RCR_AB,
++	.maps[MAC_RCR_ACRC32] = RCR_ACRC32,
++	.maps[MAC_RCR_ACF] = RCR_ACF,
++	.maps[MAC_RCR_AAP] = RCR_AAP,
++
++	.maps[EFUSE_TEST] = REG_EFUSE_TEST,
++	.maps[EFUSE_CTRL] = REG_EFUSE_CTRL,
++	.maps[EFUSE_CLK] = 0,	/* just for 92se */
++	.maps[EFUSE_CLK_CTRL] = REG_EFUSE_CTRL,
++	.maps[EFUSE_PWC_EV12V] = PWC_EV12V,
++	.maps[EFUSE_FEN_ELDR] = FEN_ELDR,
++	.maps[EFUSE_LOADER_CLK_EN] = LOADER_CLK_EN,
++	.maps[EFUSE_ANA8M] = 0,	/* just for 92se */
++	.maps[EFUSE_HWSET_MAX_SIZE] = HWSET_MAX_SIZE,
++	.maps[EFUSE_MAX_SECTION_MAP] = EFUSE_MAX_SECTION,
++	.maps[EFUSE_REAL_CONTENT_SIZE] = EFUSE_REAL_CONTENT_LEN,
++
++	.maps[RWCAM] = REG_CAMCMD,
++	.maps[WCAMI] = REG_CAMWRITE,
++	.maps[RCAMO] = REG_CAMREAD,
++	.maps[CAMDBG] = REG_CAMDBG,
++	.maps[SECR] = REG_SECCFG,
++	.maps[SEC_CAM_NONE] = CAM_NONE,
++	.maps[SEC_CAM_WEP40] = CAM_WEP40,
++	.maps[SEC_CAM_TKIP] = CAM_TKIP,
++	.maps[SEC_CAM_AES] = CAM_AES,
++	.maps[SEC_CAM_WEP104] = CAM_WEP104,
++
++	.maps[RTL_IMR_BCNDMAINT6] = IMR_BCNDMAINT6,
++	.maps[RTL_IMR_BCNDMAINT5] = IMR_BCNDMAINT5,
++	.maps[RTL_IMR_BCNDMAINT4] = IMR_BCNDMAINT4,
++	.maps[RTL_IMR_BCNDMAINT3] = IMR_BCNDMAINT3,
++	.maps[RTL_IMR_BCNDMAINT2] = IMR_BCNDMAINT2,
++	.maps[RTL_IMR_BCNDMAINT1] = IMR_BCNDMAINT1,
++	.maps[RTL_IMR_BCNDOK8] = IMR_BCNDOK8,
++	.maps[RTL_IMR_BCNDOK7] = IMR_BCNDOK7,
++	.maps[RTL_IMR_BCNDOK6] = IMR_BCNDOK6,
++	.maps[RTL_IMR_BCNDOK5] = IMR_BCNDOK5,
++	.maps[RTL_IMR_BCNDOK4] = IMR_BCNDOK4,
++	.maps[RTL_IMR_BCNDOK3] = IMR_BCNDOK3,
++	.maps[RTL_IMR_BCNDOK2] = IMR_BCNDOK2,
++	.maps[RTL_IMR_BCNDOK1] = IMR_BCNDOK1,
++	.maps[RTL_IMR_TIMEOUT2] = IMR_TIMEOUT2,
++	.maps[RTL_IMR_TIMEOUT1] = IMR_TIMEOUT1,
++
++	.maps[RTL_IMR_TXFOVW] = IMR_TXFOVW,
++	.maps[RTL_IMR_PSTIMEOUT] = IMR_PSTIMEOUT,
++	.maps[RTL_IMR_BcnInt] = IMR_BcnInt,
++	.maps[RTL_IMR_RXFOVW] = IMR_RXFOVW,
++	.maps[RTL_IMR_RDU] = IMR_RDU,
++	.maps[RTL_IMR_ATIMEND] = IMR_ATIMEND,
++	.maps[RTL_IMR_BDOK] = IMR_BDOK,
++	.maps[RTL_IMR_MGNTDOK] = IMR_MGNTDOK,
++	.maps[RTL_IMR_TBDER] = IMR_TBDER,
++	.maps[RTL_IMR_HIGHDOK] = IMR_HIGHDOK,
++	.maps[RTL_IMR_TBDOK] = IMR_TBDOK,
++	.maps[RTL_IMR_BKDOK] = IMR_BKDOK,
++	.maps[RTL_IMR_BEDOK] = IMR_BEDOK,
++	.maps[RTL_IMR_VIDOK] = IMR_VIDOK,
++	.maps[RTL_IMR_VODOK] = IMR_VODOK,
++	.maps[RTL_IMR_ROK] = IMR_ROK,
++	.maps[RTL_IBSS_INT_MASKS] = (IMR_BcnInt | IMR_TBDOK | IMR_TBDER),
++
++	.maps[RTL_RC_CCK_RATE1M] = DESC92D_RATE1M,
++	.maps[RTL_RC_CCK_RATE2M] = DESC92D_RATE2M,
++	.maps[RTL_RC_CCK_RATE5_5M] = DESC92D_RATE5_5M,
++	.maps[RTL_RC_CCK_RATE11M] = DESC92D_RATE11M,
++	.maps[RTL_RC_OFDM_RATE6M] = DESC92D_RATE6M,
++	.maps[RTL_RC_OFDM_RATE9M] = DESC92D_RATE9M,
++	.maps[RTL_RC_OFDM_RATE12M] = DESC92D_RATE12M,
++	.maps[RTL_RC_OFDM_RATE18M] = DESC92D_RATE18M,
++	.maps[RTL_RC_OFDM_RATE24M] = DESC92D_RATE24M,
++	.maps[RTL_RC_OFDM_RATE36M] = DESC92D_RATE36M,
++	.maps[RTL_RC_OFDM_RATE48M] = DESC92D_RATE48M,
++	.maps[RTL_RC_OFDM_RATE54M] = DESC92D_RATE54M,
++
++	.maps[RTL_RC_HT_RATEMCS7] = DESC92D_RATEMCS7,
++	.maps[RTL_RC_HT_RATEMCS15] = DESC92D_RATEMCS15,
++};
++
++static struct pci_device_id rtl92de_pci_ids[] __devinitdata = {
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8193, rtl92de_hal_cfg)},
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x002B, rtl92de_hal_cfg)},
++	{},
++};
++
++MODULE_DEVICE_TABLE(pci, rtl92de_pci_ids);
++
++MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
++MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
++MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Realtek 8192DE 802.11n Dual Mac PCI wireless");
++MODULE_FIRMWARE("rtlwifi/rtl8192defw.bin");
++
++module_param_named(swenc, rtl92de_mod_params.sw_crypto, bool, 0444);
++module_param_named(ips, rtl92de_mod_params.inactiveps, bool, 0444);
++module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
++module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
++MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
++MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
++MODULE_PARM_DESC(swlps, "using linked sw control power save (default 1"
++		 " is open)\n");
++
++static struct pci_driver rtl92de_driver = {
++	.name = KBUILD_MODNAME,
++	.id_table = rtl92de_pci_ids,
++	.probe = rtl_pci_probe,
++	.remove = rtl_pci_disconnect,
++
++#ifdef CONFIG_PM
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++#endif
++
++};
++
++/* add global spin lock to solve the problem that
++ * Dul mac register operation on the same time */
++spinlock_t globalmutex_power;
++spinlock_t globalmutex_for_fwdownload;
++spinlock_t globalmutex_for_power_and_efuse;
++
++static int __init rtl92de_module_init(void)
++{
++	int ret = 0;
++
++	spin_lock_init(&globalmutex_power);
++	spin_lock_init(&globalmutex_for_fwdownload);
++	spin_lock_init(&globalmutex_for_power_and_efuse);
++
++	ret = pci_register_driver(&rtl92de_driver);
++	if (ret)
++		RT_ASSERT(false, (": No device found\n"));
++	return ret;
++}
++
++static void __exit rtl92de_module_exit(void)
++{
++	pci_unregister_driver(&rtl92de_driver);
++}
++
++module_init(rtl92de_module_init);
++module_exit(rtl92de_module_exit);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.h
+===================================================================
+--- /dev/null
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.h
+@@ -0,0 +1,37 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92DE_SW_H__
++#define __RTL92DE_SW_H__
++
++extern spinlock_t globalmutex_power;
++extern spinlock_t globalmutex_for_fwdownload;
++extern spinlock_t globalmutex_for_power_and_efuse;
++
++#endif
