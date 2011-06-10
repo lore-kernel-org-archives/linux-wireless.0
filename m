@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:36986 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757529Ab1F3Cgv (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:61227 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab1FJGsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 22:36:51 -0400
-Received: by bwd5 with SMTP id 5so1472969bwd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 19:36:50 -0700 (PDT)
+	Fri, 10 Jun 2011 02:48:01 -0400
+Received: by gxk21 with SMTP id 21so1446888gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 23:48:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=3imkrK7Chzb5_-c2GT5omo0Ae=g@mail.gmail.com>
-References: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl> <BANLkTinhc2QAgWTk9tur9Y-m2i3tDhvXOQ@mail.gmail.com>
- <BANLkTi=3imkrK7Chzb5_-c2GT5omo0Ae=g@mail.gmail.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Wed, 29 Jun 2011 19:36:30 -0700
-Message-ID: <BANLkTinQOWiddbSiyCDMhwu78fFUkw+seA@mail.gmail.com> (sfid-20110630_043655_000444_1E41E810)
-Subject: Re: [ath9k-devel] STBC functionality details request
-To: Fred Matthews <fredmm@hotmail.co.uk>
-Cc: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <20110224200203.GB17412@elie>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+Date: Fri, 10 Jun 2011 14:48:00 +0800
+Message-ID: <BANLkTik-DQxb8Ca698BeizRVyB71bWBndQ@mail.gmail.com> (sfid-20110610_084805_989496_24A65D93)
+Subject: Re: ath9k causes lockups since kernel 2.6.35
+From: Adrian Chadd <adrian@freebsd.org>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, Tony Houghton <h@realh.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 29, 2011 at 6:17 PM, Fred Matthews <fredmm@hotmail.co.uk> wrote:
->
-> Hi,
-> Thanks for replying Adrian,
->
-> OK, just for clarity, you are saying for 1-stream STBC NICs
-> (AR9380/9280), when I enable STBC from hostapd, the driver only
-> transmits in STBC (transmits multiple copies of data to each antenna)
-> if it sending at MCSs 0-7 (1 stream rates), due to low signal quality
-> or via fixing the MCS to those values. For all other MCSs STBC is
-> disabled.
->
-> Does the rate adaptation (minstrel/ath9k) tell the driver to use STBC,
-> or is this done at automatically at a lower level?
->
-> Any other information about STBC would be appreciated.
->
-You should really look at the 802.11n standard to understand how they
-implement STBC. From the driver side, from what I can tell, there is
-never a downside (rate-wise) to enabling STBC for transmissions at
-MCS0--MCS7. Thus, minstrel_ht turns it on by default.
+Hi all,
 
-Dan
+This patch against the current wireless-testing tree restores bit 6/7
+being set for the AR9285.
+
+Tony, would you please test this out and see if this works? This is
+against the latest wireless-testing.
+
+Thanks,
+
+
+Adrian
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index f344cc2..5e4e37f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -384,6 +384,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+                        }
+                }
+
++#if 0
+                if (AR_SREV_9280(ah) || AR_SREV_9285(ah) || AR_SREV_9287(ah)) {
+                        /*
+                         * Disable bit 6 and 7 before entering D3 to
+@@ -391,6 +392,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+                         */
+                        val &= ~(AR_WA_BIT6 | AR_WA_BIT7);
+                }
++#endif
+
+                if (AR_SREV_9280(ah))
+                        val |= AR_WA_BIT22;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h
+b/drivers/net/wireless/ath/ath9k/reg.h
+index c18ee99..a3c893d 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -704,7 +704,7 @@
+ #define AR_WA_ANALOG_SHIFT              (1 << 20)
+ #define AR_WA_POR_SHORT                 (1 << 21) /* PCI-E Phy reset control */
+ #define AR_WA_BIT22                    (1 << 22)
+-#define AR9285_WA_DEFAULT              0x004a050b
++#define AR9285_WA_DEFAULT              0x004a05cb
+ #define AR9280_WA_DEFAULT              0x0040073b
+ #define AR_WA_DEFAULT                  0x0000073f
