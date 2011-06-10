@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42804 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512Ab1FQKva (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 06:51:30 -0400
-Received: by fxm17 with SMTP id 17so1665780fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 03:51:29 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Thomas Novin <thomas@xyz.pp.se>
-Subject: Re: Status of carl9170
-Date: Fri, 17 Jun 2011 12:52:19 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1308255196.4264.7.camel@thnov-desktop.xyz.lan> <201106162249.14480.chunkeey@googlemail.com> <1308306023.7789.9.camel@thnov-desktop.xyz.lan>
-In-Reply-To: <1308306023.7789.9.camel@thnov-desktop.xyz.lan>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201106171252.19937.chunkeey@googlemail.com> (sfid-20110617_125135_216466_CF2B053D)
+Received: from bues.ch ([80.190.117.144]:33273 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756444Ab1FJNg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 09:36:59 -0400
+Date: Fri, 10 Jun 2011 13:39:11 +0000
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
+Message-ID: <20110610133911.36f9f8b2@Nokia-N900> (sfid-20110610_153703_169769_31B20E76)
+In-Reply-To: <4DF2042C.6060605@broadcom.com>
+References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
+	<BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com>
+	<4DF2042C.6060605@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 17 June 2011 12:20:23 Thomas Novin wrote:
-> On tor, 2011-06-16 at 22:49 +0200, Christian Lamparter wrote:
-> > But at least, you could try to disable the 11n cap by loading the module
-> > with noht=1 and the hwcrypt by nohwcrypt=1.
-> > 
-> > Btw, do you have anything in your dmesg from the driver?
-> 
-> Serious difference! Transferring files both tx/rx with scp at full speed
-> while doing ping results in decent transfer speeds and no packet loss.
-> 
-> From dmesg: http://paste.ubuntu.com/628344/
-Ok, can you please tell which option helped? If it was noht, then
-you should check if there is a newer firmware for your router.
+On Fri, 10 Jun 2011 13:46:52 +0200
+"Arend van Spriel" <arend@broadcom.com> wrote:
+> > Michael said we should not do do such a exporting without getting
+> > users within the same patch serie.
+> That is going to be hard for me despite my willingness to comply. Our 
+> driver is still in staging so we submit our brcm80211 patches to Greg 
+> KH. I figured it would be better to do submit patches for bcma on 
+> wireless repository.
 
-Regards,
-	Chr
+There are no rules without exceptions ;-)
+
+
