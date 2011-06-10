@@ -1,157 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4683 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757608Ab1F2XtP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:49:15 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 099/119] staging: brcm80211: removed file sdiovar.h
-Date: Wed, 29 Jun 2011 16:48:03 -0700
-Message-ID: <1309391303-22741-100-git-send-email-frankyl@broadcom.com> (sfid-20110630_015202_839926_A79AF3C0)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:51088 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1FJHpS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 03:45:18 -0400
+Received: by wwk4 with SMTP id 4so498117wwk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 00:45:17 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: add cancel_hw_scan() callback
+Date: Fri, 10 Jun 2011 10:45:52 +0300
+Message-Id: <1307691952-10980-1-git-send-email-eliad@wizery.com> (sfid-20110610_094522_790829_9093B713)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+When suspending, __ieee80211_suspend() calls ieee80211_scan_cancel(),
+which will only cancel sw scan. In order to cancel hw scan, the
+low-level driver has to cancel it in the suspend() callback. however,
+this is too late, as a new scan_work will be enqueued (while the driver
+is going into suspend).
 
-Code cleanup. Contents merged into other files.
+Add a new cancel_hw_scan() callback, asking the driver to cancel an
+active hw scan, and call it in ieee80211_scan_cancel().
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdbus.h      |    6 +++
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |    1 -
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h  |   10 +++++
- .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    1 -
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    1 -
- drivers/staging/brcm80211/brcmfmac/sdiovar.h       |   38 --------------------
- 6 files changed, 16 insertions(+), 41 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmfmac/sdiovar.h
+ include/net/mac80211.h      |   10 ++++++++++
+ net/mac80211/driver-ops.h   |   13 +++++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ net/mac80211/scan.c         |   33 +++++++++++++++++++--------------
+ 4 files changed, 48 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-index 761ec20..3ba3c3f 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-@@ -32,6 +32,12 @@
- #define SDIOH_DATA_PIO          0	/* PIO mode */
- #define SDIOH_DATA_DMA          1	/* DMA mode */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8c7189c..91c42c6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1708,6 +1708,14 @@ enum ieee80211_ampdu_mlme_action {
+  *	any error unless this callback returned a negative error code.
+  *	The callback can sleep.
+  *
++ * @cancel_hw_scan: Ask the low-level tp cancel the active hw scan.
++ *	The driver should ask the hardware to cancel the scan (if possible),
++ *	but the scan will be completed only after the driver will call
++ *	ieee80211_scan_completed().
++ *	This callback is needed for wowlan, to prevent enqueueing a new
++ *	scan_work after the low-level driver was already suspended.
++ *	The callback can sleep.
++ *
+  * @sched_scan_start: Ask the hardware to start scanning repeatedly at
+  *	specific intervals.  The driver must call the
+  *	ieee80211_sched_scan_results() function whenever it finds results.
+@@ -1899,6 +1907,8 @@ struct ieee80211_ops {
+ 				u32 iv32, u16 *phase1key);
+ 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       struct cfg80211_scan_request *req);
++	int (*cancel_hw_scan)(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif);
+ 	int (*sched_scan_start)(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct cfg80211_sched_scan_request *req,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index eebf7a6..7b94058 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -218,6 +218,19 @@ static inline int drv_hw_scan(struct ieee80211_local *local,
+ 	return ret;
+ }
  
-+struct brcmf_sdreg {
-+	int func;
-+	int offset;
-+	int value;
-+};
++static inline int drv_cancel_hw_scan(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata)
++{
++	int ret;
 +
- /* callback function, taking one arg */
- typedef void (*sdioh_cb_fn_t) (void *);
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 7da200f..7bc9d02 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -28,7 +28,6 @@
- #include <brcmu_wifi.h>
- #include "sdio_host.h"
- #include "bcmsdbus.h"
--#include "sdiovar.h"		/* ioctl/iovars */
- #include "dngl_stats.h"
- #include "dhd.h"
- #include "bcmsdh_sdmmc.h"
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-index 5eb4c65..962fa4b 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-@@ -21,6 +21,16 @@
- #ifndef __BCMSDH_SDMMC_H__
- #define __BCMSDH_SDMMC_H__
- 
-+/* Common msglevel constants */
-+#define SDH_ERROR_VAL		0x0001	/* Error */
-+#define SDH_TRACE_VAL		0x0002	/* Trace */
-+#define SDH_INFO_VAL		0x0004	/* Info */
-+#define SDH_DEBUG_VAL		0x0008	/* Debug */
-+#define SDH_DATA_VAL		0x0010	/* Data */
-+#define SDH_CTRL_VAL		0x0020	/* Control Regs */
-+#define SDH_LOG_VAL		0x0040	/* Enable bcmlog */
-+#define SDH_DMA_VAL		0x0080	/* DMA */
++	might_sleep();
 +
- #ifdef BCMDBG
- #define sd_err(x)	\
- 	do { \
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-index 9d00c49..b8ab242 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-@@ -28,7 +28,6 @@
- #include <brcmu_wifi.h>
- #include "sdio_host.h"
- #include "bcmsdbus.h"
--#include "sdiovar.h"		/* to get msglevel bit values */
- #include "dngl_stats.h"
- #include "dhd.h"
++	trace_drv_cancel_hw_scan(local, sdata);
++	ret = local->ops->cancel_hw_scan(&local->hw, &sdata->vif);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index ed9edcb..3cb6795 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -460,6 +460,12 @@ DEFINE_EVENT(local_sdata_evt, drv_hw_scan,
+ 	TP_ARGS(local, sdata)
+ );
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 4b0352f..6a53ac8 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -176,7 +176,6 @@ struct rte_console {
- #include "dhd_bus.h"
- #include "dhd_proto.h"
- #include "dhd_dbg.h"
--#include <sdiovar.h>
- #include <bcmchip.h>
++DEFINE_EVENT(local_sdata_evt, drv_cancel_hw_scan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 27af672..65eaae0 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -822,8 +822,6 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+  */
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+-	bool abortscan;
+-
+ 	/*
+ 	 * We are only canceling software scan, or deferred scan that was not
+ 	 * yet really started (see __ieee80211_start_scan ).
+@@ -841,19 +839,26 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 	 */
  
- #ifndef DHDSDIO_MEM_DUMP_FNAME
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdiovar.h b/drivers/staging/brcm80211/brcmfmac/sdiovar.h
-deleted file mode 100644
-index 35e913b..0000000
---- a/drivers/staging/brcm80211/brcmfmac/sdiovar.h
-+++ /dev/null
-@@ -1,38 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef _sdiovar_h_
--#define _sdiovar_h_
--
--struct brcmf_sdreg {
--	int func;
--	int offset;
--	int value;
--};
--
--/* Common msglevel constants */
--#define SDH_ERROR_VAL		0x0001	/* Error */
--#define SDH_TRACE_VAL		0x0002	/* Trace */
--#define SDH_INFO_VAL		0x0004	/* Info */
--#define SDH_DEBUG_VAL		0x0008	/* Debug */
--#define SDH_DATA_VAL		0x0010	/* Data */
--#define SDH_CTRL_VAL		0x0020	/* Control Regs */
--#define SDH_LOG_VAL		0x0040	/* Enable bcmlog */
--#define SDH_DMA_VAL		0x0080	/* DMA */
--
--#define NUM_PREV_TRANSACTIONS	16
--
--#endif				/* _sdiovar_h_ */
+ 	mutex_lock(&local->mtx);
+-	abortscan = local->scan_req && !test_bit(SCAN_HW_SCANNING, &local->scanning);
+-	if (abortscan) {
+-		/*
+-		 * The scan is canceled, but stop work from being pending.
+-		 *
+-		 * If the work is currently running, it must be blocked on
+-		 * the mutex, but we'll set scan_sdata = NULL and it'll
+-		 * simply exit once it acquires the mutex.
+-		 */
+-		cancel_delayed_work(&local->scan_work);
+-		/* and clean up */
+-		__ieee80211_scan_completed(&local->hw, true, false);
++	if (!local->scan_req)
++		goto out;
++
++	if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
++		if (local->ops->cancel_hw_scan)
++			drv_cancel_hw_scan(local, local->scan_sdata);
++		goto out;
+ 	}
++
++	/*
++	 * The scan is canceled, but stop work from being pending.
++	 *
++	 * If the work is currently running, it must be blocked on
++	 * the mutex, but we'll set scan_sdata = NULL and it'll
++	 * simply exit once it acquires the mutex.
++	 */
++	cancel_delayed_work(&local->scan_work);
++	/* and clean up */
++	__ieee80211_scan_completed(&local->hw, true, false);
++out:
+ 	mutex_unlock(&local->mtx);
+ }
+ 
 -- 
-1.7.1
-
+1.7.0.4
 
