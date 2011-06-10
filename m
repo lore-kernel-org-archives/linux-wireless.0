@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48048 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933112Ab1FQUnW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 16:43:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: tsyvarev@ispras.ru, me@bobcopeland.com, mickflemm@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] ath5k: free sc->ah in ath5k_deinit_softc
-Date: Fri, 17 Jun 2011 16:41:30 -0400
-Message-Id: <1308343290-13875-1-git-send-email-linville@tuxdriver.com> (sfid-20110617_224326_613088_9C7D9428)
-In-Reply-To: <1308343066-13770-1-git-send-email-linville@tuxdriver.com>
-References: <1308343066-13770-1-git-send-email-linville@tuxdriver.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1786 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752866Ab1FJJxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2011 05:53:03 -0400
+Message-ID: <4DF1E973.1030709@broadcom.com> (sfid-20110610_115308_959221_38BDE1D7)
+Date: Fri, 10 Jun 2011 11:52:51 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Jonas Gorski" <jonas.gorski@gmail.com>
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 12/21] staging: brcm80211: use __BIG_ENDIAN macro in
+ dma.c
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+ <1307630701-9170-13-git-send-email-rvossen@broadcom.com>
+ <BANLkTi=GGsW4eja0QunMAc5vqqFkmvNxNA@mail.gmail.com>
+In-Reply-To: <BANLkTi=GGsW4eja0QunMAc5vqqFkmvNxNA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nothing else is freeing it, and this mirrors the error handling patch
-already in ath5k_init_softc.
+On 06/10/2011 01:53 AM, Jonas Gorski wrote:
+> On 9 June 2011 16:44, Roland Vossen<rvossen@broadcom.com>  wrote:
+>> From: Arend van Spriel<arend@broadcom.com>
+>>
+>> The source file dma.c used a macro definition that indicated a big endian
+>> platform. The linux tree has its own macro determined by architecture and/or
+>> kernel configuration. This byteorder macro is __BIG_ENDIAN. This is now used
+>> in dma.c.
+> While this replacement is technically correct, the check itself is
+> wrong and should be fixed instead. Currently it assumes that __mips__
+> means Broadcom MIPS; but if it isn't, then there's likely no
+> SI_SDRAM_SWAPPED and any access there will in best case do nothing
+> (but more like hang the system).
+>
+> Use either CONFIG_BCM47XX or CONFIG_BCM63XX to check for the BMIPS
+> platforms this is probably intended for (I'm not 100% sure if BCM63XX
+> has the swapped memory space - better check with your xDSL people ;-).
 
-https://bugzilla.kernel.org/show_bug.cgi?id=37592
+Hi Jonas,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Reported-by: Tsyvarev Andrey <tsyvarev@ispras.ru>
----
-v2 -- cite bugzilla report
+You are right as with previous mips related patches. Consider this a 
+first step which does not change functionality but aims to use the 
+proper linux provided macros instead of our own incarnations. You can be 
+assured that your feedback is on our work list.
 
- drivers/net/wireless/ath/ath5k/base.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Gr. AvS
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3e70b14..a6623dd 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2960,6 +2960,7 @@ ath5k_deinit_softc(struct ath5k_softc *sc)
- 	 * state and potentially want to use them.
- 	 */
- 	ath5k_hw_deinit(sc->ah);
-+	kfree(sc->ah);
- 	free_irq(sc->irq, sc);
- }
- 
 -- 
-1.7.4.4
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
