@@ -1,114 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37988 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755160Ab1FMJIo (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60221 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756024Ab1FJLkU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 05:08:44 -0400
-Subject: [PATCH 2/2] ath6kl: testmode support
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Mon, 13 Jun 2011 12:08:39 +0300
-Message-ID: <20110613090839.15210.92307.stgit@localhost6.localdomain6> (sfid-20110613_110847_597008_0C31F92C)
-In-Reply-To: <20110613090350.15210.74545.stgit@localhost6.localdomain6>
-References: <20110613090350.15210.74545.stgit@localhost6.localdomain6>
+	Fri, 10 Jun 2011 07:40:20 -0400
+Received: by qwk3 with SMTP id 3so1172977qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 04:40:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1307642840-3043-1-git-send-email-arend@broadcom.com>
+References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
+Date: Fri, 10 Jun 2011 13:40:19 +0200
+Message-ID: <BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com> (sfid-20110610_134046_864464_4D77D913)
+Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add testmode support for running low level hardware tests. The testmode
-is enabled by setting testmode module parameter to 1.
+2011/6/9 Arend van Spriel <arend@broadcom.com>:
+> In the brcm80211 driver we disable the 80211 core when the driver is
+> 'down'. The bcma_core_disable() function exactly does the same as
+> our implementation so exporting this function makes sense.
 
-For now only a simple command passing is supported. More advanced
-support will be implemented later.
+Michael said we should not do do such a exporting without getting
+users within the same patch serie.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/staging/ath6kl/os/linux/cfg80211.c |   58 ++++++++++++++++++++++++++++
- 1 files changed, 58 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index 32e3197..b098c22 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -24,6 +24,7 @@
- #include <linux/wireless.h>
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
-+#include <net/netlink.h>
- 
- #include "ar6000_drv.h"
- 
-@@ -1458,6 +1459,62 @@ ar6k_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-     return 0;
- }
- 
-+#ifdef CONFIG_NL80211_TESTMODE
-+enum ar6k_testmode_attr {
-+	__AR6K_TM_ATTR_INVALID	= 0,
-+	AR6K_TM_ATTR_CMD	= 1,
-+	AR6K_TM_ATTR_DATA	= 2,
-+
-+	/* keep last */
-+	__AR6K_TM_ATTR_AFTER_LAST,
-+	AR6K_TM_ATTR_MAX	= __AR6K_TM_ATTR_AFTER_LAST - 1
-+};
-+
-+enum ar6k_testmode_cmd {
-+	AR6K_TM_CMD_TCMD		= 0,
-+};
-+
-+#define AR6K_TM_DATA_MAX_LEN 5000
-+
-+static const struct nla_policy ar6k_testmode_policy[AR6K_TM_ATTR_MAX + 1] = {
-+	[AR6K_TM_ATTR_CMD] = { .type = NLA_U32 },
-+	[AR6K_TM_ATTR_DATA] = { .type = NLA_BINARY,
-+				.len = AR6K_TM_DATA_MAX_LEN },
-+};
-+
-+static int ar6k_testmode_cmd(struct wiphy *wiphy, void *data, int len)
-+{
-+	struct ar6_softc *ar = wiphy_priv(wiphy);
-+	struct nlattr *tb[AR6K_TM_ATTR_MAX + 1];
-+	int err, buf_len;
-+	void *buf;
-+
-+	err = nla_parse(tb, AR6K_TM_ATTR_MAX, data, len,
-+			ar6k_testmode_policy);
-+	if (err)
-+		return err;
-+
-+	if (!tb[AR6K_TM_ATTR_CMD])
-+		return -EINVAL;
-+
-+	switch (nla_get_u32(tb[AR6K_TM_ATTR_CMD])) {
-+	case AR6K_TM_CMD_TCMD:
-+		if (!tb[AR6K_TM_ATTR_DATA])
-+			return -EINVAL;
-+
-+		buf = nla_data(tb[AR6K_TM_ATTR_DATA]);
-+		buf_len = nla_len(tb[AR6K_TM_ATTR_DATA]);
-+
-+		wmi_test_cmd(ar->arWmi, buf, buf_len);
-+
-+		return 0;
-+
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+#endif
- 
- static const
- u32 cipher_suites[] = {
-@@ -1633,6 +1690,7 @@ cfg80211_ops ar6k_cfg80211_ops = {
-     .join_ibss = ar6k_cfg80211_join_ibss,
-     .leave_ibss = ar6k_cfg80211_leave_ibss,
-     .get_station = ar6k_get_station,
-+    CFG80211_TESTMODE_CMD(ar6k_testmode_cmd)
- };
- 
- struct wireless_dev *
-
+-- 
+Rafał
