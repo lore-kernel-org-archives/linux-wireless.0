@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:44434 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792Ab1FUWPo convert rfc822-to-8bit (ORCPT
+Received: from mailout01.t-online.de ([194.25.134.80]:60721 "EHLO
+	mailout01.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324Ab1FJTT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 18:15:44 -0400
-Received: by ywe9 with SMTP id 9so99367ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 15:15:43 -0700 (PDT)
+	Fri, 10 Jun 2011 15:19:27 -0400
+Message-ID: <4DF26E39.80701@t-online.de> (sfid-20110610_211937_551945_546761FA)
+Date: Fri, 10 Jun 2011 21:19:21 +0200
+From: =?ISO-8859-1?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
 MIME-Version: 1.0
-In-Reply-To: <20110621220510.GG2628@joana>
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
-	<1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
-	<20110621220510.GG2628@joana>
-Date: Wed, 22 Jun 2011 01:15:42 +0300
-Message-ID: <BANLkTikdLv6JuNRd1qL-_Jje_4GFDT4tOQ@mail.gmail.com> (sfid-20110622_001547_668787_15DF2817)
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-From: Eliad Peller <eliad@wizery.com>
-To: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	sameo@linux.intel.com, johannes@sipsolutions.net,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: linux-wireless@vger.kernel.org, wwguy <wey-yi.w.guy@intel.com>,
+	Stevie Trujillo <stevie.trujillo@gmail.com>
+Subject: Re: Fwd: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware
+ limit?
+References: <201105251813.36804.stevie.trujillo@gmail.com> <1306352560.20732.0.camel@wwguy-ubuntu> <201105252154.06204.stevie.trujillo@gmail.com> <1306376938.20732.2.camel@wwguy-ubuntu> <4DDE1458.9090004@t-online.de> <1306419109.20732.6.camel@wwguy-ubuntu> <4DF246D1.9000107@t-online.de> <1307727083.13397.57.camel@wwguy-huron> <4DF26175.2010506@t-online.de> <BANLkTimjLdr2Qb+yfUx84p4k2Oq8iumDhg@mail.gmail.com> <BANLkTimwn=sXSofPdQGg49Wsn6CxUbrOyw@mail.gmail.com>
+In-Reply-To: <BANLkTimwn=sXSofPdQGg49Wsn6CxUbrOyw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 1:05 AM, Gustavo F. Padovan
-<padovan@profusion.mobi> wrote:
->> +static int nfc_genl_send_target(struct sk_buff *msg, struct nfc_target *target,
->> +                                     struct netlink_callback *cb, int flags)
->> +{
->> +     void *hdr;
->> +
->> +     pr_debug("%s\n", __func__);
->> +
->> +     hdr = genlmsg_put(msg, NETLINK_CB(cb->skb).pid, cb->nlh->nlmsg_seq,
->> +                             &nfc_genl_family, flags, NFC_CMD_GET_TARGET);
->> +     if (!hdr)
->> +             return -EMSGSIZE;
->> +
->> +     genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
->> +
->> +     NLA_PUT_U32(msg, NFC_ATTR_TARGET_INDEX, target->idx);
->> +     NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS,
->> +                             target->supported_protocols);
->> +     NLA_PUT_U16(msg, NFC_ATTR_TARGET_SENS_RES, target->sens_res);
->> +     NLA_PUT_U8(msg, NFC_ATTR_TARGET_SEL_RES, target->sel_res);
->> +
->> +     return genlmsg_end(msg, hdr);
->> +
->> +nla_put_failure:
+Am 10.06.2011 20:42, schrieb Daniel Halperin:
+> On Fri, Jun 10, 2011 at 11:24 AM, Richard Schütz<r.schtz@t-online.de>  wrote:
+>>
+>> According to [1] there are no countries that forbid tx power values lower than 20dBm in the 2.4 GHz band. The lowest value for the 5 GHz band listed is 17 dBm. So why are the Intel cards limited to 15dBm then for both bands? This value absolutely makes no sense in my view.
+>>
+>> [1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=blob;f=db.txt;hb=HEAD
+>>
 >
-> There is no use for this macro in all function that have a label with this
-> name.
+> Are you forgetting to account for the 3 dBi--7 dBi antenna gain?
+> Dan
 
-the NLA_PUT_* macros use this label:
+We are talking about wireless devices that are primarily used in 
+portable computers. These do not have directional antennas usually. So 
+there should be almost no antenna gain in most cases.
 
-#define NLA_PUT(skb, attrtype, attrlen, data) \
-	do { \
-		if (unlikely(nla_put(skb, attrtype, attrlen, data) < 0)) \
-			goto nla_put_failure; \
-	} while(0)
-
-Eliad.
+-- 
+Regards,
+Richard Schütz
