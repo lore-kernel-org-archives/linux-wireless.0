@@ -1,498 +1,707 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38443 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932408Ab1F1SVy (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:34762 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758034Ab1FJUK4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 14:21:54 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 9so191290ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 11:21:53 -0700 (PDT)
-From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
-	padovan@profusion.mobi, rdunlap@xenotime.net,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: [PATCH v4 4/6] NFC: add the NFC socket raw protocol
-Date: Tue, 28 Jun 2011 15:20:44 -0300
-Message-Id: <1309285246-8495-5-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110628_203943_626656_3F807F8B)
-In-Reply-To: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
-References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+	Fri, 10 Jun 2011 16:10:56 -0400
+Date: Fri, 10 Jun 2011 15:10:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/13] rtlwifi: rtl8192de: Merge rf routines
+Message-ID: <4df27a4f.u+O/e8JT4BFTloew%Larry.Finger@lwfinger.net> (sfid-20110610_221059_910586_A13BA2C0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-This socket protocol is used to perform data exchange with NFC
-targets.
+Merge routines rf.c and rf.h for RTL8192DE.
 
-Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/linux/nfc.h |   13 ++-
- net/nfc/Makefile    |    2 +-
- net/nfc/core.c      |    7 +
- net/nfc/nfc.h       |   14 ++
- net/nfc/rawsock.c   |  351 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 385 insertions(+), 2 deletions(-)
- create mode 100644 net/nfc/rawsock.c
 
-diff --git a/include/linux/nfc.h b/include/linux/nfc.h
-index 15f8cb3..330a4c5 100644
---- a/include/linux/nfc.h
-+++ b/include/linux/nfc.h
-@@ -24,6 +24,9 @@
- #ifndef __LINUX_NFC_H
- #define __LINUX_NFC_H
- 
-+#include <linux/types.h>
-+#include <linux/socket.h>
-+
- #define NFC_GENL_NAME "nfc"
- #define NFC_GENL_VERSION 1
- 
-@@ -109,7 +112,15 @@ enum nfc_attrs {
- #define NFC_PROTO_ISO14443_MASK	(1 << NFC_PROTO_ISO14443)
- #define NFC_PROTO_NFC_DEP_MASK	(1 << NFC_PROTO_NFC_DEP)
- 
-+struct sockaddr_nfc {
-+	sa_family_t sa_family;
-+	__u32 dev_idx;
-+	__u32 target_idx;
-+	__u32 nfc_protocol;
-+};
-+
- /* NFC socket protocols */
--#define NFC_SOCKPROTO_MAX	0
-+#define NFC_SOCKPROTO_RAW	0
-+#define NFC_SOCKPROTO_MAX	1
- 
- #endif /*__LINUX_NFC_H */
-diff --git a/net/nfc/Makefile b/net/nfc/Makefile
-index e081fdb..16250c3 100644
---- a/net/nfc/Makefile
-+++ b/net/nfc/Makefile
-@@ -4,4 +4,4 @@
- 
- obj-$(CONFIG_NFC) += nfc.o
- 
--nfc-objs := core.o netlink.o af_nfc.o
-+nfc-objs := core.o netlink.o af_nfc.o rawsock.o
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 23e7ed7..259dd43 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -409,6 +409,10 @@ static int __init nfc_init(void)
- 	/* the first generation must not be 0 */
- 	nfc_devlist_generation = 1;
- 
-+	rc = rawsock_init();
-+	if (rc)
-+		goto err_rawsock;
-+
- 	rc = af_nfc_init();
- 	if (rc)
- 		goto err_af_nfc;
-@@ -416,6 +420,8 @@ static int __init nfc_init(void)
- 	return 0;
- 
- err_af_nfc:
-+	rawsock_exit();
-+err_rawsock:
- 	nfc_genl_exit();
- err_genl:
- 	class_unregister(&nfc_class);
-@@ -425,6 +431,7 @@ err_genl:
- static void __exit nfc_exit(void)
- {
- 	af_nfc_exit();
-+	rawsock_exit();
- 	nfc_genl_exit();
- 	class_unregister(&nfc_class);
- }
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index 70a1c3a..66c520e 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -39,6 +39,20 @@ struct nfc_protocol {
- 			const struct nfc_protocol *nfc_proto);
- };
- 
-+struct nfc_rawsock {
-+	struct sock sk;
-+	struct nfc_dev *dev;
-+	u32 target_idx;
-+	struct work_struct tx_work;
-+	bool tx_work_scheduled;
-+};
-+#define nfc_rawsock(sk) ((struct nfc_rawsock *) sk)
-+#define to_rawsock_sk(_tx_work) \
-+	((struct sock *) container_of(_tx_work, struct nfc_rawsock, tx_work))
-+
-+int __init rawsock_init(void);
-+void rawsock_exit(void);
-+
- int __init af_nfc_init(void);
- void af_nfc_exit(void);
- int nfc_proto_register(const struct nfc_protocol *nfc_proto);
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-new file mode 100644
-index 0000000..e588e04
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/rf.c
+===================================================================
 --- /dev/null
-+++ b/net/nfc/rawsock.c
-@@ -0,0 +1,351 @@
-+/*
-+ * Copyright (C) 2011 Instituto Nokia de Tecnologia
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/rf.c
+@@ -0,0 +1,628 @@
++/******************************************************************************
 + *
-+ * Authors:
-+ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-+ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
++ * Copyright(c) 2009-2010  Realtek Corporation.
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
 + *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
 + *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the
-+ * Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
-+#include <net/tcp_states.h>
-+#include <linux/nfc.h>
++#include "../wifi.h"
++#include "reg.h"
++#include "def.h"
++#include "phy.h"
++#include "rf.h"
++#include "dm.h"
++#include "hw.h"
 +
-+#include "nfc.h"
-+
-+static void rawsock_write_queue_purge(struct sock *sk)
++void rtl92d_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
 +{
-+	NFC_DBG("");
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	u8 rfpath;
 +
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	__skb_queue_purge(&sk->sk_write_queue);
-+	nfc_rawsock(sk)->tx_work_scheduled = false;
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
++	switch (bandwidth) {
++	case HT_CHANNEL_WIDTH_20:
++		for (rfpath = 0; rfpath < rtlphy->num_total_rfpath; rfpath++) {
++			rtlphy->rfreg_chnlval[rfpath] = ((rtlphy->rfreg_chnlval
++					[rfpath] & 0xfffff3ff) | 0x0400);
++			rtl_set_rfreg(hw, rfpath, RF_CHNLBW, BIT(10) |
++				      BIT(11), 0x01);
++
++			RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD,
++				 ("20M RF 0x18 = 0x%x\n",
++				 rtlphy->rfreg_chnlval[rfpath]));
++		}
++
++		break;
++	case HT_CHANNEL_WIDTH_20_40:
++		for (rfpath = 0; rfpath < rtlphy->num_total_rfpath; rfpath++) {
++			rtlphy->rfreg_chnlval[rfpath] =
++			    ((rtlphy->rfreg_chnlval[rfpath] & 0xfffff3ff));
++			rtl_set_rfreg(hw, rfpath, RF_CHNLBW, BIT(10) | BIT(11),
++				      0x00);
++			RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD,
++				 ("40M RF 0x18 = 0x%x\n",
++				 rtlphy->rfreg_chnlval[rfpath]));
++		}
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("unknown bandwidth: %#X\n", bandwidth));
++		break;
++	}
 +}
 +
-+static void rawsock_report_error(struct sock *sk, int err)
++void rtl92d_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
++				       u8 *ppowerlevel)
 +{
-+	NFC_DBG("");
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
++	u32 tx_agc[2] = {0, 0}, tmpval;
++	bool turbo_scanoff = false;
++	u8 idx1, idx2;
++	u8 *ptr;
 +
-+	sk->sk_shutdown = SHUTDOWN_MASK;
-+	sk->sk_err = -err;
-+	sk->sk_error_report(sk);
-+
-+	rawsock_write_queue_purge(sk);
-+}
-+
-+static int rawsock_release(struct socket *sock)
-+{
-+	struct sock *sk = sock->sk;
-+
-+	NFC_DBG("");
-+
-+	sock_orphan(sk);
-+	sock_put(sk);
-+
-+	return 0;
-+}
-+
-+static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
-+							int len, int flags)
-+{
-+	struct sock *sk = sock->sk;
-+	struct sockaddr_nfc *addr = (struct sockaddr_nfc *)_addr;
-+	struct nfc_dev *dev;
-+	int rc = 0;
-+
-+	NFC_DBG("");
-+
-+	if (!addr || len < sizeof(struct sockaddr_nfc) ||
-+		addr->sa_family != AF_NFC)
-+		return -EINVAL;
-+
-+	lock_sock(sk);
-+
-+	if (sock->state == SS_CONNECTED) {
-+		rc = -EISCONN;
-+		goto error;
++	if (rtlefuse->eeprom_regulatory != 0)
++		turbo_scanoff = true;
++	if (mac->act_scanning == true) {
++		tx_agc[RF90_PATH_A] = 0x3f3f3f3f;
++		tx_agc[RF90_PATH_B] = 0x3f3f3f3f;
++		if (turbo_scanoff) {
++			for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
++				tx_agc[idx1] = ppowerlevel[idx1] |
++				    (ppowerlevel[idx1] << 8) |
++				    (ppowerlevel[idx1] << 16) |
++				    (ppowerlevel[idx1] << 24);
++			}
++		}
++	} else {
++		for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
++			tx_agc[idx1] = ppowerlevel[idx1] |
++			    (ppowerlevel[idx1] << 8) |
++			    (ppowerlevel[idx1] << 16) |
++			    (ppowerlevel[idx1] << 24);
++		}
++		if (rtlefuse->eeprom_regulatory == 0) {
++			tmpval = (rtlphy->mcs_txpwrlevel_origoffset[0][6]) +
++			    (rtlphy->mcs_txpwrlevel_origoffset[0][7] << 8);
++			tx_agc[RF90_PATH_A] += tmpval;
++			tmpval = (rtlphy->mcs_txpwrlevel_origoffset[0][14]) +
++			    (rtlphy->mcs_txpwrlevel_origoffset[0][15] << 24);
++			tx_agc[RF90_PATH_B] += tmpval;
++		}
 +	}
 +
-+	dev = nfc_get_device(addr->dev_idx);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto error;
++	for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
++		ptr = (u8 *) (&(tx_agc[idx1]));
++		for (idx2 = 0; idx2 < 4; idx2++) {
++			if (*ptr > RF6052_MAX_TX_PWR)
++				*ptr = RF6052_MAX_TX_PWR;
++			ptr++;
++		}
 +	}
 +
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+		addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+		addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
-+	if (rc)
-+		goto put_dev;
-+
-+	nfc_rawsock(sk)->dev = dev;
-+	nfc_rawsock(sk)->target_idx = addr->target_idx;
-+	sock->state = SS_CONNECTED;
-+	sk->sk_state = TCP_ESTABLISHED;
-+	sk->sk_state_change(sk);
-+
-+	release_sock(sk);
-+	return 0;
-+
-+put_dev:
-+	nfc_put_device(dev);
-+error:
-+	release_sock(sk);
-+	return rc;
++	tmpval = tx_agc[RF90_PATH_A] & 0xff;
++	rtl_set_bbreg(hw, RTXAGC_A_CCK1_MCS32, BMASKBYTE1, tmpval);
++	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++		("CCK PWR 1M (rf-A) = 0x%x (reg 0x%x)\n", tmpval,
++		RTXAGC_A_CCK1_MCS32));
++	tmpval = tx_agc[RF90_PATH_A] >> 8;
++	rtl_set_bbreg(hw, RTXAGC_B_CCK11_A_CCK2_11, 0xffffff00, tmpval);
++	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++		("CCK PWR 2~11M (rf-A) = 0x%x (reg 0x%x)\n", tmpval,
++		RTXAGC_B_CCK11_A_CCK2_11));
++	tmpval = tx_agc[RF90_PATH_B] >> 24;
++	rtl_set_bbreg(hw, RTXAGC_B_CCK11_A_CCK2_11, BMASKBYTE0, tmpval);
++	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++		("CCK PWR 11M (rf-B) = 0x%x (reg 0x%x)\n", tmpval,
++		RTXAGC_B_CCK11_A_CCK2_11));
++	tmpval = tx_agc[RF90_PATH_B] & 0x00ffffff;
++	rtl_set_bbreg(hw, RTXAGC_B_CCK1_55_MCS32, 0xffffff00, tmpval);
++	RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++		("CCK PWR 1~5.5M (rf-B) = 0x%x (reg 0x%x)\n", tmpval,
++		RTXAGC_B_CCK1_55_MCS32));
 +}
 +
-+static int rawsock_add_header(struct sk_buff *skb)
++static void _rtl92d_phy_get_power_base(struct ieee80211_hw *hw,
++				       u8 *ppowerlevel, u8 channel,
++				       u32 *ofdmbase, u32 *mcsbase)
 +{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
++	u32 powerbase0, powerbase1;
++	u8 legacy_pwrdiff, ht20_pwrdiff;
++	u8 i, powerlevel[2];
 +
-+	if (skb_cow_head(skb, 1))
-+		return -ENOMEM;
++	for (i = 0; i < 2; i++) {
++		powerlevel[i] = ppowerlevel[i];
++		legacy_pwrdiff = rtlefuse->txpwr_legacyhtdiff[i][channel - 1];
++		powerbase0 = powerlevel[i] + legacy_pwrdiff;
++		powerbase0 = (powerbase0 << 24) | (powerbase0 << 16) |
++		    (powerbase0 << 8) | powerbase0;
++		*(ofdmbase + i) = powerbase0;
++		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++			(" [OFDM power base index rf(%c) = 0x%x]\n",
++			((i == 0) ? 'A' : 'B'), *(ofdmbase + i)));
++	}
 +
-+	*skb_push(skb, 1) = 0;
-+
-+	return 0;
++	for (i = 0; i < 2; i++) {
++		if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20) {
++			ht20_pwrdiff = rtlefuse->txpwr_ht20diff[i][channel - 1];
++			powerlevel[i] += ht20_pwrdiff;
++		}
++		powerbase1 = powerlevel[i];
++		powerbase1 = (powerbase1 << 24) | (powerbase1 << 16) |
++			     (powerbase1 << 8) | powerbase1;
++		*(mcsbase + i) = powerbase1;
++		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++			(" [MCS power base index rf(%c) = 0x%x]\n",
++			((i == 0) ? 'A' : 'B'), *(mcsbase + i)));
++	}
 +}
 +
-+static void rawsock_data_exchange_complete(void *context, struct sk_buff *skb,
-+								int err)
++static u8 _rtl92d_phy_get_chnlgroup_bypg(u8 chnlindex)
 +{
-+	struct sock *sk = (struct sock *) context;
++	u8 group;
++	u8 channel_info[59] = {
++		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
++		36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
++		60, 62, 64, 100, 102, 104, 106, 108, 110, 112,
++		114, 116, 118, 120, 122, 124, 126, 128,	130, 132,
++		134, 136, 138, 140, 149, 151, 153, 155, 157, 159,
++		161, 163, 165
++	};
 +
-+	BUG_ON(in_irq());
-+
-+	if (err)
-+		goto error;
-+
-+	err = rawsock_add_header(skb);
-+	if (err)
-+		goto error;
-+
-+	err = sock_queue_rcv_skb(sk, skb);
-+	if (err)
-+		goto error;
-+
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	if (!skb_queue_empty(&sk->sk_write_queue))
-+		schedule_work(&nfc_rawsock(sk)->tx_work);
++	if (channel_info[chnlindex] <= 3)	/* Chanel 1-3 */
++		group = 0;
++	else if (channel_info[chnlindex] <= 9)	/* Channel 4-9 */
++		group = 1;
++	else if (channel_info[chnlindex] <= 14)	/* Channel 10-14 */
++		group = 2;
++	else if (channel_info[chnlindex] <= 64)
++		group = 6;
++	else if (channel_info[chnlindex] <= 140)
++		group = 7;
 +	else
-+		nfc_rawsock(sk)->tx_work_scheduled = false;
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
-+
-+	sock_put(sk);
-+	return;
-+
-+error:
-+	rawsock_report_error(sk, err);
-+	sock_put(sk);
++		group = 8;
++	return group;
 +}
 +
-+static void rawsock_tx_work(struct work_struct *work)
++static void _rtl92d_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
++						       u8 channel, u8 index,
++						       u32 *powerbase0,
++						       u32 *powerbase1,
++						       u32 *p_outwriteval)
 +{
-+	struct sock *sk = to_rawsock_sk(work);
-+	struct nfc_dev *dev = nfc_rawsock(sk)->dev;
-+	u32 target_idx = nfc_rawsock(sk)->target_idx;
-+	struct sk_buff *skb;
-+	int rc;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
++	u8 i, chnlgroup = 0, pwr_diff_limit[4];
++	u32 writeval = 0, customer_limit, rf;
 +
-+	if (sk->sk_shutdown & SEND_SHUTDOWN) {
-+		rawsock_write_queue_purge(sk);
-+		return;
-+	}
-+
-+	skb = skb_dequeue(&sk->sk_write_queue);
-+
-+	sock_hold(sk);
-+	rc = nfc_data_exchange(dev, target_idx, skb,
-+				rawsock_data_exchange_complete, sk);
-+	if (rc) {
-+		rawsock_report_error(sk, rc);
-+		sock_put(sk);
-+	}
-+}
-+
-+static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
-+					struct msghdr *msg, size_t len)
-+{
-+	struct sock *sk = sock->sk;
-+	struct sk_buff *skb;
-+	int rc;
-+
-+	NFC_DBG("");
-+
-+	if (msg->msg_namelen)
-+		return -EOPNOTSUPP;
-+
-+	if (sock->state != SS_CONNECTED)
-+		return -ENOTCONN;
-+
-+	skb = sock_alloc_send_skb(sk, len, msg->msg_flags & MSG_DONTWAIT,
-+									&rc);
-+	if (!skb)
-+		return rc;
-+
-+	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
-+	if (rc < 0) {
-+		kfree_skb(skb);
-+		return rc;
-+	}
-+
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	__skb_queue_tail(&sk->sk_write_queue, skb);
-+	if (!nfc_rawsock(sk)->tx_work_scheduled) {
-+		schedule_work(&nfc_rawsock(sk)->tx_work);
-+		nfc_rawsock(sk)->tx_work_scheduled = true;
-+	}
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
-+
-+	return len;
-+}
-+
-+static int rawsock_recvmsg(struct kiocb *iocb, struct socket *sock,
-+				struct msghdr *msg, size_t len, int flags)
-+{
-+	int noblock = flags & MSG_DONTWAIT;
-+	struct sock *sk = sock->sk;
-+	struct sk_buff *skb;
-+	int copied;
-+	int rc;
-+
-+	NFC_DBG("");
-+
-+	skb = skb_recv_datagram(sk, flags, noblock, &rc);
-+	if (!skb)
-+		return rc;
-+
-+	msg->msg_namelen = 0;
-+
-+	copied = skb->len;
-+	if (len < copied) {
-+		msg->msg_flags |= MSG_TRUNC;
-+		copied = len;
-+	}
-+
-+	rc = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-+
-+	skb_free_datagram(sk, skb);
-+
-+	return rc ? : copied;
-+}
-+
-+
-+static const struct proto_ops rawsock_ops = {
-+	.family         = PF_NFC,
-+	.owner          = THIS_MODULE,
-+	.release        = rawsock_release,
-+	.bind           = sock_no_bind,
-+	.connect        = rawsock_connect,
-+	.socketpair     = sock_no_socketpair,
-+	.accept         = sock_no_accept,
-+	.getname        = sock_no_getname,
-+	.poll           = datagram_poll,
-+	.ioctl          = sock_no_ioctl,
-+	.listen         = sock_no_listen,
-+	.shutdown       = sock_no_shutdown,
-+	.setsockopt     = sock_no_setsockopt,
-+	.getsockopt     = sock_no_getsockopt,
-+	.sendmsg        = rawsock_sendmsg,
-+	.recvmsg        = rawsock_recvmsg,
-+	.mmap           = sock_no_mmap,
-+};
-+
-+static void rawsock_destruct(struct sock *sk)
-+{
-+	NFC_DBG("");
-+
-+	if (sk->sk_state == TCP_ESTABLISHED) {
-+		nfc_deactivate_target(nfc_rawsock(sk)->dev,
-+					nfc_rawsock(sk)->target_idx);
-+		nfc_put_device(nfc_rawsock(sk)->dev);
-+	}
-+
-+	skb_queue_purge(&sk->sk_receive_queue);
-+
-+	if (!sock_flag(sk, SOCK_DEAD)) {
-+		NFC_ERR("Freeing alive NFC raw socket %p", sk);
-+		return;
++	for (rf = 0; rf < 2; rf++) {
++		switch (rtlefuse->eeprom_regulatory) {
++		case 0:
++			chnlgroup = 0;
++			writeval = rtlphy->mcs_txpwrlevel_origoffset
++					[chnlgroup][index +
++					(rf ? 8 : 0)] + ((index < 2) ?
++					powerbase0[rf] :
++					powerbase1[rf]);
++			RTPRINT(rtlpriv, FPHY, PHY_TXPWR, ("RTK better "
++				"performance, writeval(%c) = 0x%x\n",
++				((rf == 0) ? 'A' : 'B'), writeval));
++			break;
++		case 1:
++			if (rtlphy->pwrgroup_cnt == 1)
++				chnlgroup = 0;
++			if (rtlphy->pwrgroup_cnt >= MAX_PG_GROUP) {
++				chnlgroup = _rtl92d_phy_get_chnlgroup_bypg(
++								channel - 1);
++				if (rtlphy->current_chan_bw ==
++				    HT_CHANNEL_WIDTH_20)
++					chnlgroup++;
++				else
++					chnlgroup += 4;
++				writeval = rtlphy->mcs_txpwrlevel_origoffset
++						[chnlgroup][index +
++						(rf ? 8 : 0)] + ((index < 2) ?
++						powerbase0[rf] :
++						powerbase1[rf]);
++				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++					("Realtek regulatory, "
++					"20MHz, writeval(%c) = 0x%x\n",
++					((rf == 0) ? 'A' : 'B'),
++					writeval));
++			}
++			break;
++		case 2:
++			writeval = ((index < 2) ? powerbase0[rf] :
++				   powerbase1[rf]);
++			RTPRINT(rtlpriv, FPHY, PHY_TXPWR, ("Better regulatory, "
++				"writeval(%c) = 0x%x\n",
++				((rf == 0) ? 'A' : 'B'), writeval));
++			break;
++		case 3:
++			chnlgroup = 0;
++			if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40) {
++				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++					("customer's limit, 40MHz rf(%c) = "
++					"0x%x\n", ((rf == 0) ? 'A' : 'B'),
++					rtlefuse->pwrgroup_ht40[rf]
++					[channel - 1]));
++			} else {
++				RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++					("customer's limit, 20MHz rf(%c) = "
++					"0x%x\n", ((rf == 0) ? 'A' : 'B'),
++					rtlefuse->pwrgroup_ht20[rf]
++					[channel - 1]));
++			}
++			for (i = 0; i < 4; i++) {
++				pwr_diff_limit[i] =
++					(u8)((rtlphy->mcs_txpwrlevel_origoffset
++					[chnlgroup][index + (rf ? 8 : 0)] &
++					(0x7f << (i * 8))) >> (i * 8));
++				if (rtlphy->current_chan_bw ==
++				    HT_CHANNEL_WIDTH_20_40) {
++					if (pwr_diff_limit[i] >
++					    rtlefuse->pwrgroup_ht40[rf]
++					   [channel - 1])
++						pwr_diff_limit[i] =
++							rtlefuse->pwrgroup_ht40
++							[rf][channel - 1];
++				} else {
++					if (pwr_diff_limit[i] >
++					    rtlefuse->pwrgroup_ht20[rf][
++						channel - 1])
++						pwr_diff_limit[i] =
++						   rtlefuse->pwrgroup_ht20[rf]
++						   [channel - 1];
++				}
++			}
++			customer_limit = (pwr_diff_limit[3] << 24) |
++					 (pwr_diff_limit[2] << 16) |
++					 (pwr_diff_limit[1] << 8) |
++					 (pwr_diff_limit[0]);
++			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++				("Customer's limit rf(%c) = 0x%x\n",
++				((rf == 0) ? 'A' : 'B'), customer_limit));
++			writeval = customer_limit + ((index < 2) ?
++				   powerbase0[rf] : powerbase1[rf]);
++			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++				("Customer, writeval rf(%c)= 0x%x\n",
++				((rf == 0) ? 'A' : 'B'), writeval));
++			break;
++		default:
++			chnlgroup = 0;
++			writeval = rtlphy->mcs_txpwrlevel_origoffset
++				   [chnlgroup][index +
++				   (rf ? 8 : 0)] + ((index < 2) ?
++				   powerbase0[rf] : powerbase1[rf]);
++			RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++				("RTK better performance, writeval "
++				"rf(%c) = 0x%x\n",
++				((rf == 0) ? 'A' : 'B'), writeval));
++			break;
++		}
++		*(p_outwriteval + rf) = writeval;
 +	}
 +}
 +
-+static int rawsock_create(struct net *net, struct socket *sock,
-+				const struct nfc_protocol *nfc_proto)
++static void _rtl92d_write_ofdm_power_reg(struct ieee80211_hw *hw,
++					 u8 index, u32 *pvalue)
 +{
-+	struct sock *sk;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	static u16 regoffset_a[6] = {
++		RTXAGC_A_RATE18_06, RTXAGC_A_RATE54_24,
++		RTXAGC_A_MCS03_MCS00, RTXAGC_A_MCS07_MCS04,
++		RTXAGC_A_MCS11_MCS08, RTXAGC_A_MCS15_MCS12
++	};
++	static u16 regoffset_b[6] = {
++		RTXAGC_B_RATE18_06, RTXAGC_B_RATE54_24,
++		RTXAGC_B_MCS03_MCS00, RTXAGC_B_MCS07_MCS04,
++		RTXAGC_B_MCS11_MCS08, RTXAGC_B_MCS15_MCS12
++	};
++	u8 i, rf, pwr_val[4];
++	u32 writeval;
++	u16 regoffset;
 +
-+	NFC_DBG("");
-+
-+	if (sock->type != SOCK_SEQPACKET)
-+		return -ESOCKTNOSUPPORT;
-+
-+	sock->ops = &rawsock_ops;
-+
-+	sk = sk_alloc(net, PF_NFC, GFP_KERNEL, nfc_proto->proto);
-+	if (!sk)
-+		return -ENOMEM;
-+
-+	sock_init_data(sock, sk);
-+	sk->sk_protocol = nfc_proto->id;
-+	sk->sk_destruct = rawsock_destruct;
-+	sock->state = SS_UNCONNECTED;
-+
-+	INIT_WORK(&nfc_rawsock(sk)->tx_work, rawsock_tx_work);
-+	nfc_rawsock(sk)->tx_work_scheduled = false;
-+
-+	return 0;
++	for (rf = 0; rf < 2; rf++) {
++		writeval = pvalue[rf];
++		for (i = 0; i < 4; i++) {
++			pwr_val[i] = (u8) ((writeval & (0x7f <<
++				     (i * 8))) >> (i * 8));
++			if (pwr_val[i] > RF6052_MAX_TX_PWR)
++				pwr_val[i] = RF6052_MAX_TX_PWR;
++		}
++		writeval = (pwr_val[3] << 24) | (pwr_val[2] << 16) |
++			   (pwr_val[1] << 8) | pwr_val[0];
++		if (rf == 0)
++			regoffset = regoffset_a[index];
++		else
++			regoffset = regoffset_b[index];
++		rtl_set_bbreg(hw, regoffset, BMASKDWORD, writeval);
++		RTPRINT(rtlpriv, FPHY, PHY_TXPWR,
++			("Set 0x%x = %08x\n", regoffset, writeval));
++		if (((get_rf_type(rtlphy) == RF_2T2R) &&
++		    (regoffset == RTXAGC_A_MCS15_MCS12 ||
++		    regoffset == RTXAGC_B_MCS15_MCS12)) ||
++		    ((get_rf_type(rtlphy) != RF_2T2R) &&
++		    (regoffset == RTXAGC_A_MCS07_MCS04 ||
++		    regoffset == RTXAGC_B_MCS07_MCS04))) {
++			writeval = pwr_val[3];
++			if (regoffset == RTXAGC_A_MCS15_MCS12 ||
++			    regoffset == RTXAGC_A_MCS07_MCS04)
++				regoffset = 0xc90;
++			if (regoffset == RTXAGC_B_MCS15_MCS12 ||
++			    regoffset == RTXAGC_B_MCS07_MCS04)
++				regoffset = 0xc98;
++			for (i = 0; i < 3; i++) {
++				if (i != 2)
++					writeval = (writeval > 8) ?
++						   (writeval - 8) : 0;
++				else
++					writeval = (writeval > 6) ?
++						   (writeval - 6) : 0;
++				rtl_write_byte(rtlpriv, (u32) (regoffset + i),
++					       (u8) writeval);
++			}
++		}
++	}
 +}
 +
-+static struct proto rawsock_proto = {
-+	.name     = "NFC_RAW",
-+	.owner    = THIS_MODULE,
-+	.obj_size = sizeof(struct nfc_rawsock),
-+};
-+
-+static const struct nfc_protocol rawsock_nfc_proto = {
-+	.id	  = NFC_SOCKPROTO_RAW,
-+	.proto    = &rawsock_proto,
-+	.owner    = THIS_MODULE,
-+	.create   = rawsock_create
-+};
-+
-+int __init rawsock_init(void)
++void rtl92d_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
++					u8 *ppowerlevel, u8 channel)
 +{
-+	int rc;
++	u32 writeval[2], powerbase0[2], powerbase1[2];
++	u8 index;
 +
-+	NFC_DBG("");
-+
-+	rc = nfc_proto_register(&rawsock_nfc_proto);
-+
-+	return rc;
++	_rtl92d_phy_get_power_base(hw, ppowerlevel, channel,
++			&powerbase0[0],	&powerbase1[0]);
++	for (index = 0; index < 6; index++) {
++		_rtl92d_get_txpower_writeval_by_regulatory(hw,
++				channel, index,	&powerbase0[0],
++				&powerbase1[0],	&writeval[0]);
++		_rtl92d_write_ofdm_power_reg(hw, index, &writeval[0]);
++	}
 +}
 +
-+void rawsock_exit(void)
++bool rtl92d_phy_enable_anotherphy(struct ieee80211_hw *hw, bool bmac0)
 +{
-+	NFC_DBG("");
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = &(rtlpriv->rtlhal);
++	u8 u1btmp;
++	u8 direct = bmac0 == true ? BIT(3) | BIT(2) : BIT(3);
++	u8 mac_reg = bmac0 == true ? REG_MAC1 : REG_MAC0;
++	u8 mac_on_bit = bmac0 == true ? MAC1_ON : MAC0_ON;
++	bool bresult = true; /* true: need to enable BB/RF power */
 +
-+	nfc_proto_unregister(&rawsock_nfc_proto);
++	rtlhal->during_mac0init_radiob = false;
++	rtlhal->during_mac1init_radioa = false;
++	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, ("===>\n"));
++	/* MAC0 Need PHY1 load radio_b.txt . Driver use DBI to write. */
++	u1btmp = rtl_read_byte(rtlpriv, mac_reg);
++	if (!(u1btmp & mac_on_bit)) {
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("enable BB & RF\n"));
++		/* Enable BB and RF power */
++		rtl92de_write_dword_dbi(hw, REG_SYS_ISO_CTRL,
++			rtl92de_read_dword_dbi(hw, REG_SYS_ISO_CTRL, direct) |
++				BIT(29) | BIT(16) | BIT(17), direct);
++	} else {
++		/* We think if MAC1 is ON,then radio_a.txt
++		 * and radio_b.txt has been load. */
++		bresult = false;
++	}
++	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, ("<===\n"));
++	return bresult;
++
 +}
--- 
-1.7.5.4
-
++
++void rtl92d_phy_powerdown_anotherphy(struct ieee80211_hw *hw, bool bmac0)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = &(rtlpriv->rtlhal);
++	u8 u1btmp;
++	u8 direct = bmac0 == true ? BIT(3) | BIT(2) : BIT(3);
++	u8 mac_reg = bmac0 == true ? REG_MAC1 : REG_MAC0;
++	u8 mac_on_bit = bmac0 == true ? MAC1_ON : MAC0_ON;
++
++	rtlhal->during_mac0init_radiob = false;
++	rtlhal->during_mac1init_radioa = false;
++	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, ("====>\n"));
++	/* check MAC0 enable or not again now, if
++	 * enabled, not power down radio A. */
++	u1btmp = rtl_read_byte(rtlpriv, mac_reg);
++	if (!(u1btmp & mac_on_bit)) {
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("power down\n"));
++		/* power down RF radio A according to YuNan's advice. */
++		rtl92de_write_dword_dbi(hw, RFPGA0_XA_LSSIPARAMETER,
++					0x00000000, direct);
++	}
++	RT_TRACE(rtlpriv, COMP_RF, DBG_LOUD, ("<====\n"));
++}
++
++bool rtl92d_phy_rf6052_config(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	bool rtstatus = true;
++	struct rtl_hal *rtlhal = &(rtlpriv->rtlhal);
++	u32 u4_regvalue = 0;
++	u8 rfpath;
++	struct bb_reg_def *pphyreg;
++	bool mac1_initradioa_first = false, mac0_initradiob_first = false;
++	bool need_pwrdown_radioa = false, need_pwrdown_radiob = false;
++	bool true_bpath = false;
++
++	if (rtlphy->rf_type == RF_1T1R)
++		rtlphy->num_total_rfpath = 1;
++	else
++		rtlphy->num_total_rfpath = 2;
++
++	/* Single phy mode: use radio_a radio_b config path_A path_B */
++	/* seperately by MAC0, and MAC1 needn't configure RF; */
++	/* Dual PHY mode:MAC0 use radio_a config 1st phy path_A, */
++	/* MAC1 use radio_b config 2nd PHY path_A. */
++	/* DMDP,MAC0 on G band,MAC1 on A band. */
++	if (rtlhal->macphymode == DUALMAC_DUALPHY) {
++		if (rtlhal->current_bandtype == BAND_ON_2_4G &&
++		    rtlhal->interfaceindex == 0) {
++			/* MAC0 needs PHY1 load radio_b.txt.
++			 * Driver use DBI to write. */
++			if (rtl92d_phy_enable_anotherphy(hw, true)) {
++				rtlphy->num_total_rfpath = 2;
++				mac0_initradiob_first = true;
++			} else {
++				/* We think if MAC1 is ON,then radio_a.txt and
++				 * radio_b.txt has been load. */
++				return rtstatus;
++			}
++		} else if (rtlhal->current_bandtype == BAND_ON_5G &&
++			   rtlhal->interfaceindex == 1) {
++			/* MAC1 needs PHY0 load radio_a.txt.
++			 * Driver use DBI to write. */
++			if (rtl92d_phy_enable_anotherphy(hw, false)) {
++				rtlphy->num_total_rfpath = 2;
++				mac1_initradioa_first = true;
++			} else {
++				/* We think if MAC0 is ON,then radio_a.txt and
++				 * radio_b.txt has been load. */
++				return rtstatus;
++			}
++		} else if (rtlhal->interfaceindex == 1) {
++			/* MAC0 enabled, only init radia B.   */
++			true_bpath = true;
++		}
++	}
++
++	for (rfpath = 0; rfpath < rtlphy->num_total_rfpath; rfpath++) {
++		/* Mac1 use PHY0 write */
++		if (mac1_initradioa_first) {
++			if (rfpath == RF90_PATH_A) {
++				rtlhal->during_mac1init_radioa = true;
++				need_pwrdown_radioa = true;
++			} else if (rfpath == RF90_PATH_B) {
++				rtlhal->during_mac1init_radioa = false;
++				mac1_initradioa_first = false;
++				rfpath = RF90_PATH_A;
++				true_bpath = true;
++				rtlphy->num_total_rfpath = 1;
++			}
++		} else if (mac0_initradiob_first) {
++			/* Mac0 use PHY1 write */
++			if (rfpath == RF90_PATH_A)
++				rtlhal->during_mac0init_radiob = false;
++			if (rfpath == RF90_PATH_B) {
++				rtlhal->during_mac0init_radiob = true;
++				mac0_initradiob_first = false;
++				need_pwrdown_radiob = true;
++				rfpath = RF90_PATH_A;
++				true_bpath = true;
++				rtlphy->num_total_rfpath = 1;
++			}
++		}
++		pphyreg = &rtlphy->phyreg_def[rfpath];
++		switch (rfpath) {
++		case RF90_PATH_A:
++		case RF90_PATH_C:
++			u4_regvalue = rtl_get_bbreg(hw, pphyreg->rfintfs,
++						    BRFSI_RFENV);
++			break;
++		case RF90_PATH_B:
++		case RF90_PATH_D:
++			u4_regvalue = rtl_get_bbreg(hw, pphyreg->rfintfs,
++				BRFSI_RFENV << 16);
++			break;
++		}
++		rtl_set_bbreg(hw, pphyreg->rfintfe, BRFSI_RFENV << 16, 0x1);
++		udelay(1);
++		rtl_set_bbreg(hw, pphyreg->rfintfo, BRFSI_RFENV, 0x1);
++		udelay(1);
++		/* Set bit number of Address and Data for RF register */
++		/* Set 1 to 4 bits for 8255 */
++		rtl_set_bbreg(hw, pphyreg->rfhssi_para2,
++			      B3WIREADDRESSLENGTH, 0x0);
++		udelay(1);
++		/* Set 0 to 12  bits for 8255 */
++		rtl_set_bbreg(hw, pphyreg->rfhssi_para2, B3WIREDATALENGTH, 0x0);
++		udelay(1);
++		switch (rfpath) {
++		case RF90_PATH_A:
++			if (true_bpath == true)
++				rtstatus = rtl92d_phy_config_rf_with_headerfile(
++						hw, radiob_txt,
++						(enum radio_path)rfpath);
++			else
++				rtstatus = rtl92d_phy_config_rf_with_headerfile(
++					     hw, radioa_txt,
++					     (enum radio_path)rfpath);
++			break;
++		case RF90_PATH_B:
++			rtstatus =
++			    rtl92d_phy_config_rf_with_headerfile(hw, radiob_txt,
++						(enum radio_path) rfpath);
++			break;
++		case RF90_PATH_C:
++			break;
++		case RF90_PATH_D:
++			break;
++		}
++		switch (rfpath) {
++		case RF90_PATH_A:
++		case RF90_PATH_C:
++			rtl_set_bbreg(hw, pphyreg->rfintfs, BRFSI_RFENV,
++				      u4_regvalue);
++			break;
++		case RF90_PATH_B:
++		case RF90_PATH_D:
++			rtl_set_bbreg(hw, pphyreg->rfintfs, BRFSI_RFENV << 16,
++				      u4_regvalue);
++			break;
++		}
++		if (rtstatus != true) {
++			RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
++				("Radio[%d] Fail!!", rfpath));
++			goto phy_rf_cfg_fail;
++		}
++
++	}
++
++	/* check MAC0 enable or not again, if enabled,
++	 * not power down radio A. */
++	/* check MAC1 enable or not again, if enabled,
++	 * not power down radio B. */
++	if (need_pwrdown_radioa)
++		rtl92d_phy_powerdown_anotherphy(hw, false);
++	else if (need_pwrdown_radiob)
++		rtl92d_phy_powerdown_anotherphy(hw, true);
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE, ("<---\n"));
++	return rtstatus;
++
++phy_rf_cfg_fail:
++	return rtstatus;
++}
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/rf.h
+===================================================================
+--- /dev/null
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/rf.h
+@@ -0,0 +1,44 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92D_RF_H__
++#define __RTL92D_RF_H__
++
++extern void rtl92d_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
++					    u8 bandwidth);
++extern void rtl92d_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
++					      u8 *ppowerlevel);
++extern void rtl92d_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
++					       u8 *ppowerlevel, u8 channel);
++extern bool rtl92d_phy_rf6052_config(struct ieee80211_hw *hw);
++extern bool rtl92d_phy_enable_anotherphy(struct ieee80211_hw *hw, bool bmac0);
++extern void rtl92d_phy_powerdown_anotherphy(struct ieee80211_hw *hw,
++					    bool bmac0);
++
++#endif
