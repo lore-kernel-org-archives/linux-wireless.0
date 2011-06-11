@@ -1,222 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1909 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753072Ab1F2Xsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:33 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 007/119] staging: brcm80211: remove empty sdrxqlock from
- fullmac
-Date: Wed, 29 Jun 2011 16:46:31 -0700
-Message-ID: <1309391303-22741-8-git-send-email-frankyl@broadcom.com> (sfid-20110630_014839_159937_12B5697E)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56298 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751546Ab1FKWdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 18:33:42 -0400
+Message-ID: <4DF3ED3D.6060003@hauke-m.de> (sfid-20110612_003346_910922_6F3F0531)
+Date: Sun, 12 Jun 2011 00:33:33 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	George Kashperko <george@znau.edu.ua>,
+	Greg KH <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"mb@bu3sch.de" <mb@bu3sch.de>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"bernhardloos@googlemail.com" <bernhardloos@googlemail.com>
+Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
+References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>	<201106061503.14852.arnd@arndb.de>	<4DED48EA.7070001@hauke-m.de>	<201106062353.40470.arnd@arndb.de>	<4DEDF98C.6020905@broadcom.com>	<4DEE9BCD.1030304@hauke-m.de>	<BANLkTikUqj-R72XaOXnifhKv-n1ZSJMxDQ@mail.gmail.com> <20110608102001.294a4ff2@maggie>
+In-Reply-To: <20110608102001.294a4ff2@maggie>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove empty lock functions for sdio rx queue
+On 06/08/2011 10:20 AM, Michael Büsch wrote:
+> On Wed, 8 Jun 2011 02:06:11 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+> 
+>> Because full scanning needs one of the following:
+>> 1) Working alloc - not possible for SoCs
+> 
+> Isn't there a bootmem allocator available on MIPS?
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h       |    2 -
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    8 ------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   28 ------------------------
- 3 files changed, 0 insertions(+), 38 deletions(-)
+The bootmem allocator is working on mips, but it is initialized after
+plat_mem_setup() was called. To use it we have to move the start of bcma
+to some other place in the bcm47xx code.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 4d92d69..01bacdb 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -974,8 +974,6 @@ extern void dhd_os_sdlock(dhd_pub_t *pub);
- extern void dhd_os_sdunlock(dhd_pub_t *pub);
- extern void dhd_os_sdlock_txq(dhd_pub_t *pub);
- extern void dhd_os_sdunlock_txq(dhd_pub_t *pub);
--extern void dhd_os_sdlock_rxq(dhd_pub_t *pub);
--extern void dhd_os_sdunlock_rxq(dhd_pub_t *pub);
- extern void dhd_os_sdlock_sndup_rxq(dhd_pub_t *pub);
- extern void dhd_customer_gpio_wlan_ctrl(int onoff);
- extern int dhd_custom_get_mac_address(unsigned char *buf);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index d7f7449..4811d7a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -2595,14 +2595,6 @@ void dhd_os_sdunlock_txq(dhd_pub_t *pub)
- 	spin_unlock_bh(&dhd->txqlock);
- }
- 
--void dhd_os_sdlock_rxq(dhd_pub_t *pub)
--{
--}
--
--void dhd_os_sdunlock_rxq(dhd_pub_t *pub)
--{
--}
--
- static int
- dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
- 		  wl_event_msg_t *event, void **data)
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index a803848..dcfebac 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -796,10 +796,8 @@ static void dhdsdio_chip_detach(struct dhd_bus *bus);
-  */
- static void dhdsdio_pktfree2(dhd_bus_t *bus, struct sk_buff *pkt)
- {
--	dhd_os_sdlock_rxq(bus->dhd);
- 	if ((bus->bus != SPI_BUS) || bus->usebufpool)
- 		brcmu_pkt_buf_free_skb(pkt);
--	dhd_os_sdunlock_rxq(bus->dhd);
- }
- 
- static void dhd_dongle_setmemsize(struct dhd_bus *bus, int mem_size)
-@@ -3379,8 +3377,6 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 
- 	/* If there's a descriptor, generate the packet chain */
- 	if (bus->glomd) {
--		dhd_os_sdlock_rxq(bus->dhd);
--
- 		pfirst = plast = pnext = NULL;
- 		dlen = (u16) (bus->glomd->len);
- 		dptr = bus->glomd->data;
-@@ -3464,8 +3460,6 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 		brcmu_pkt_buf_free_skb(bus->glomd);
- 		bus->glomd = NULL;
- 		bus->nextlen = 0;
--
--		dhd_os_sdunlock_rxq(bus->dhd);
- 	}
- 
- 	/* Ok -- either we just generated a packet chain,
-@@ -3525,9 +3519,7 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 			} else {
- 				bus->glomerr = 0;
- 				dhdsdio_rxfail(bus, true, false);
--				dhd_os_sdlock_rxq(bus->dhd);
- 				brcmu_pkt_buf_free_skb(bus->glom);
--				dhd_os_sdunlock_rxq(bus->dhd);
- 				bus->rxglomfail++;
- 				bus->glom = NULL;
- 			}
-@@ -3658,9 +3650,7 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 			} else {
- 				bus->glomerr = 0;
- 				dhdsdio_rxfail(bus, true, false);
--				dhd_os_sdlock_rxq(bus->dhd);
- 				brcmu_pkt_buf_free_skb(bus->glom);
--				dhd_os_sdunlock_rxq(bus->dhd);
- 				bus->rxglomfail++;
- 				bus->glom = NULL;
- 			}
-@@ -3673,7 +3663,6 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 		bus->glom = NULL;
- 		plast = NULL;
- 
--		dhd_os_sdlock_rxq(bus->dhd);
- 		for (num = 0; pfirst; rxseq++, pfirst = pnext) {
- 			pnext = pfirst->next;
- 			pfirst->next = NULL;
-@@ -3752,7 +3741,6 @@ static u8 dhdsdio_rxglom(dhd_bus_t *bus, u8 rxseq)
- 			}
- #endif				/* DHD_DEBUG */
- 		}
--		dhd_os_sdunlock_rxq(bus->dhd);
- 		if (num) {
- 			dhd_os_sdunlock(bus->dhd);
- 			dhd_rx_frame(bus->dhd, ifidx, save_pfirst, num);
-@@ -3860,7 +3848,6 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 			 * or non-data frame.
- 			 */
- 			/* Allocate a packet buffer */
--			dhd_os_sdlock_rxq(bus->dhd);
- 			pkt = brcmu_pkt_buf_get_skb(rdlen + DHD_SDALIGN);
- 			if (!pkt) {
- 				if (bus->bus == SPI_BUS) {
-@@ -3894,7 +3881,6 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 							rdlen, sdret));
- 						/* dhd.rx_ctlerrs is higher */
- 						bus->rxc_errors++;
--						dhd_os_sdunlock_rxq(bus->dhd);
- 						dhdsdio_rxfail(bus, true,
- 						       (bus->bus ==
- 							SPI_BUS) ? false
-@@ -3910,9 +3896,6 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 						   " len %d rdlen %d expected"
- 						   " rxseq %d\n", __func__,
- 						   len, rdlen, rxseq));
--					/* Just go try again w/normal
--					header read */
--					dhd_os_sdunlock_rxq(bus->dhd);
- 					continue;
- 				}
- 			} else {
-@@ -3936,7 +3919,6 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 						__func__, rdlen, sdret));
- 					brcmu_pkt_buf_free_skb(pkt);
- 					bus->dhd->rx_errors++;
--					dhd_os_sdunlock_rxq(bus->dhd);
- 					/* Force retry w/normal header read.
- 					 * Don't attempt NAK for
- 					 * gSPI
-@@ -3948,7 +3930,6 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 					continue;
- 				}
- 			}
--			dhd_os_sdunlock_rxq(bus->dhd);
- 
- 			/* Now check the header */
- 			memcpy(bus->rxhdr, rxbuf, SDPCM_HDRLEN);
-@@ -4246,18 +4227,15 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 			continue;
- 		}
- 
--		dhd_os_sdlock_rxq(bus->dhd);
- 		pkt = brcmu_pkt_buf_get_skb(rdlen + firstread + DHD_SDALIGN);
- 		if (!pkt) {
- 			/* Give up on data, request rtx of events */
- 			DHD_ERROR(("%s: brcmu_pkt_buf_get_skb failed: rdlen %d"
- 				   " chan %d\n", __func__, rdlen, chan));
- 			bus->dhd->rx_dropped++;
--			dhd_os_sdunlock_rxq(bus->dhd);
- 			dhdsdio_rxfail(bus, false, RETRYCHAN(chan));
- 			continue;
- 		}
--		dhd_os_sdunlock_rxq(bus->dhd);
- 
- 		ASSERT(!(pkt->prev));
- 
-@@ -4281,9 +4259,7 @@ static uint dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
- 					SDPCM_DATA_CHANNEL)
- 				       ? "data" : "test")),
- 				   sdret));
--			dhd_os_sdlock_rxq(bus->dhd);
- 			brcmu_pkt_buf_free_skb(pkt);
--			dhd_os_sdunlock_rxq(bus->dhd);
- 			bus->dhd->rx_errors++;
- 			dhdsdio_rxfail(bus, true, RETRYCHAN(chan));
- 			continue;
-@@ -4340,15 +4316,11 @@ deliver:
- #endif				/* SDTEST */
- 
- 		if (pkt->len == 0) {
--			dhd_os_sdlock_rxq(bus->dhd);
- 			brcmu_pkt_buf_free_skb(pkt);
--			dhd_os_sdunlock_rxq(bus->dhd);
- 			continue;
- 		} else if (dhd_prot_hdrpull(bus->dhd, &ifidx, pkt) != 0) {
- 			DHD_ERROR(("%s: rx protocol error\n", __func__));
--			dhd_os_sdlock_rxq(bus->dhd);
- 			brcmu_pkt_buf_free_skb(pkt);
--			dhd_os_sdunlock_rxq(bus->dhd);
- 			bus->dhd->rx_errors++;
- 			continue;
- 		}
--- 
-1.7.1
+We need access to the common and mips core for different functions in
+the bcm47xx code and these functions are getting called by the mips
+code, so we can not store these struct bcma_devices on the stack.
 
+I would use this struct on the embedded device and use it in the text
+segment of the bcm47xx code.
 
+In include/linux/bcma/bcma.h:
+struct bcma_soc {
+	struct bcma_bus bus;
+	struct bcma_device core_cc;
+	struct bcma_device core_mips;
+};
+
+In arch/mips/bcm47xx/setup.c
+struct bcma_soc bus;
+
+The chipcommon and mips core can be initilized early without the need
+use of any alloc. The bcm47xx code will call
+bcma_bus_early_register(struct bcma_soc *soc) and this code will find
+these two cores, add then to the list of cores in bcma_bus and run the
+init code for them. After that we have all we need to boot up the
+device. After the kernel page allocator is fully set up we would search
+for all the other cores and add them to the list of cores and do the
+initialization for them. The two cores in struct bcma_soc will never be
+accessed directly but only through struct bcma_bus so that there is no
+difference from early boot and normal mode.
+
+Hauke
