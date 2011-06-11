@@ -1,294 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59046 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754721Ab1F2WMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:13 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 01/13] bcma: move parsing of EEPROM into own function.
-Date: Thu, 30 Jun 2011 00:11:46 +0200
-Message-Id: <1309385518-12097-2-git-send-email-hauke@hauke-m.de> (sfid-20110630_001226_144645_1FB877EB)
-In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+Received: from mga09.intel.com ([134.134.136.24]:1999 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758610Ab1FKOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 17/18] iwlagn: Sanity check for 11n capability
+Date: Sat, 11 Jun 2011 07:25:51 -0700
+Message-Id: <1307802352-16398-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165609_232607_5B8B9B90)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the parsing of the EEPROM data in scan function for one core into
-an own function. Now we are able to use it in some other scan function
-as well.
+Make sure when we say 11n enable, we really support it.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/bcma/scan.c |  230 ++++++++++++++++++++++++++-------------------------
- 1 files changed, 118 insertions(+), 112 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 40d7dcc..4012d8d 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -200,16 +200,124 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
- 	return addrl;
- }
- 
-+static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
-+			      struct bcma_device *core)
-+{
-+	s32 tmp;
-+	u8 i, j;
-+	s32 cia, cib;
-+	u8 ports[2], wrappers[2];
-+
-+	/* get CIs */
-+	cia = bcma_erom_get_ci(bus, eromptr);
-+	if (cia < 0) {
-+		bcma_erom_push_ent(eromptr);
-+		if (bcma_erom_is_end(bus, eromptr))
-+			return -ESPIPE;
-+		return -EILSEQ;
-+	}
-+	cib = bcma_erom_get_ci(bus, eromptr);
-+	if (cib < 0)
-+		return -EILSEQ;
-+
-+	/* parse CIs */
-+	core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
-+	core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
-+	core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
-+	ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
-+	ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
-+	wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
-+	wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
-+	core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
-+
-+	if (((core->id.manuf == BCMA_MANUF_ARM) &&
-+	     (core->id.id == 0xFFF)) ||
-+	    (ports[1] == 0)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* check if component is a core at all */
-+	if (wrappers[0] + wrappers[1] == 0) {
-+		/* we could save addrl of the router
-+		if (cid == BCMA_CORE_OOB_ROUTER)
-+		 */
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	if (bcma_erom_is_bridge(bus, eromptr)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* get & parse master ports */
-+	for (i = 0; i < ports[0]; i++) {
-+		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
-+		if (mst_port_d < 0)
-+			return -EILSEQ;
-+	}
-+
-+	/* get & parse slave ports */
-+	for (i = 0; i < ports[1]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SLAVE, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: slave port %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->addr = tmp;
-+			}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+index 512d8be..7745816 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+@@ -113,6 +113,11 @@ int iwl_eeprom_check_sku(struct iwl_priv *priv)
+ 	if (!priv->cfg->sku) {
+ 		/* not using sku overwrite */
+ 		priv->cfg->sku = iwl_eeprom_query16(priv, EEPROM_SKU_CAP);
++		if (priv->cfg->sku & EEPROM_SKU_CAP_11N_ENABLE &&
++		    !priv->cfg->ht_params) {
++			IWL_ERR(priv, "Invalid 11n configuration\n");
++			return -EINVAL;
 +		}
-+	}
-+
-+	/* get & parse master wrappers */
-+	for (i = 0; i < wrappers[0]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_MWRAP, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+
-+	/* get & parse slave wrappers */
-+	for (i = 0; i < wrappers[1]; i++) {
-+		u8 hack = (ports[1] == 1) ? 0 : 1;
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SWRAP, i + hack);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (wrappers[0] == 0 && !i && !j)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+	return 0;
-+}
-+
- int bcma_bus_scan(struct bcma_bus *bus)
- {
- 	u32 erombase;
- 	u32 __iomem *eromptr, *eromend;
- 
--	s32 cia, cib;
--	u8 ports[2], wrappers[2];
--
- 	s32 tmp;
--	u8 i, j;
- 
- 	int err;
- 
-@@ -236,112 +344,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		INIT_LIST_HEAD(&core->list);
- 		core->bus = bus;
- 
--		/* get CIs */
--		cia = bcma_erom_get_ci(bus, &eromptr);
--		if (cia < 0) {
--			bcma_erom_push_ent(&eromptr);
--			if (bcma_erom_is_end(bus, &eromptr))
--				break;
--			err= -EILSEQ;
--			goto out;
--		}
--		cib = bcma_erom_get_ci(bus, &eromptr);
--		if (cib < 0) {
--			err= -EILSEQ;
--			goto out;
--		}
--
--		/* parse CIs */
--		core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
--		core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
--		core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
--		ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
--		ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
--		wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
--		wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
--		core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
--
--		if (((core->id.manuf == BCMA_MANUF_ARM) &&
--		     (core->id.id == 0xFFF)) ||
--		    (ports[1] == 0)) {
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		/* check if component is a core at all */
--		if (wrappers[0] + wrappers[1] == 0) {
--			/* we could save addrl of the router
--			if (cid == BCMA_CORE_OOB_ROUTER)
--			 */
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		if (bcma_erom_is_bridge(bus, &eromptr)) {
--			bcma_erom_skip_component(bus, &eromptr);
-+		err = bcma_get_next_core(bus, &eromptr, core);
-+		if (err == -ENXIO)
- 			continue;
--		}
--
--		/* get & parse master ports */
--		for (i = 0; i < ports[0]; i++) {
--			u32 mst_port_d = bcma_erom_get_mst_port(bus, &eromptr);
--			if (mst_port_d < 0) {
--				err= -EILSEQ;
--				goto out;
--			}
--		}
--
--		/* get & parse slave ports */
--		for (i = 0; i < ports[1]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SLAVE, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: slave port %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->addr = tmp;
--				}
--			}
--		}
--
--		/* get & parse master wrappers */
--		for (i = 0; i < wrappers[0]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_MWRAP, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->wrap = tmp;
--				}
--			}
--		}
--
--		/* get & parse slave wrappers */
--		for (i = 0; i < wrappers[1]; i++) {
--			u8 hack = (ports[1] == 1) ? 0 : 1;
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SWRAP, i + hack);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (wrappers[0] == 0 && !i && !j)
--						core->wrap = tmp;
--				}
--			}
--		}
-+		else if (err == -ESPIPE)
-+			break;
-+		else if (err < 0)
-+			return err;
- 
- 		pr_info("Core %d found: %s "
- 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
-@@ -351,9 +360,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 
- 		core->core_index = bus->nr_cores++;
- 		list_add(&core->list, &bus->cores);
--		continue;
--out:
--		return err;
  	}
- 
- 	return 0;
+ 	if (!priv->cfg->sku) {
+ 		IWL_ERR(priv, "Invalid device sku\n");
 -- 
-1.7.4.1
+1.7.0.4
 
