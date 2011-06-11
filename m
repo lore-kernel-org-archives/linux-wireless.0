@@ -1,41 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54977 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755153Ab1FUSxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 14:53:46 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mb@bu3sch.de, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] ssb: fix ssb clock rate according to broadcom source
-Date: Tue, 21 Jun 2011 20:53:20 +0200
-Message-Id: <1308682400-25953-1-git-send-email-hauke@hauke-m.de> (sfid-20110621_205349_005261_D03FE1FE)
-In-Reply-To: <1308681113-4706-1-git-send-email-hauke@hauke-m.de>
-References: <1308681113-4706-1-git-send-email-hauke@hauke-m.de>
+Received: from mga09.intel.com ([134.134.136.24]:20096 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758608Ab1FKOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/18] iwlagn: merge duplicated code into single place
+Date: Sat, 11 Jun 2011 07:25:50 -0700
+Message-Id: <1307802352-16398-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165603_233922_EDE5398C)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix was done according to si_clock_rate function in broadcom siutils.c
+Multiple places have similar code to construct calib header. Merge into
+single inline function.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/ssb/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |   12 ++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   14 +++++---------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    8 ++++++++
+ 3 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index e568664..57b7b64 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1002,8 +1002,8 @@ u32 ssb_calc_clock_rate(u32 plltype, u32 n, u32 m)
- 	switch (plltype) {
- 	case SSB_PLLTYPE_6: /* 100/200 or 120/240 only */
- 		if (m & SSB_CHIPCO_CLK_T6_MMASK)
--			return SSB_CHIPCO_CLK_T6_M0;
--		return SSB_CHIPCO_CLK_T6_M1;
-+			return SSB_CHIPCO_CLK_T6_M1;
-+		return SSB_CHIPCO_CLK_T6_M0;
- 	case SSB_PLLTYPE_1: /* 48Mhz base, 3 dividers */
- 	case SSB_PLLTYPE_3: /* 25Mhz, 2 dividers */
- 	case SSB_PLLTYPE_4: /* 48Mhz, 4 dividers */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index 23eee0c..ba7ed91 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -111,10 +111,8 @@ static void iwlagn_gain_computation(struct iwl_priv *priv,
+ 
+ 		memset(&cmd, 0, sizeof(cmd));
+ 
+-		cmd.hdr.op_code = priv->_agn.phy_calib_chain_noise_gain_cmd;
+-		cmd.hdr.first_group = 0;
+-		cmd.hdr.groups_num = 1;
+-		cmd.hdr.data_valid = 1;
++		iwl_set_calib_hdr(&cmd.hdr,
++			priv->_agn.phy_calib_chain_noise_gain_cmd);
+ 		cmd.delta_gain_1 = data->delta_gain_code[1];
+ 		cmd.delta_gain_2 = data->delta_gain_code[2];
+ 		iwl_send_cmd_pdu_async(priv, REPLY_PHY_CALIBRATION_CMD,
+@@ -144,10 +142,8 @@ static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
+ 		data->beacon_count = 0;
+ 
+ 		memset(&cmd, 0, sizeof(cmd));
+-		cmd.hdr.op_code = priv->_agn.phy_calib_chain_noise_reset_cmd;
+-		cmd.hdr.first_group = 0;
+-		cmd.hdr.groups_num = 1;
+-		cmd.hdr.data_valid = 1;
++		iwl_set_calib_hdr(&cmd.hdr,
++			priv->_agn.phy_calib_chain_noise_reset_cmd);
+ 		ret = iwl_send_cmd_pdu(priv, REPLY_PHY_CALIBRATION_CMD,
+ 					sizeof(cmd), &cmd);
+ 		if (ret)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 4be7a0f..de8277e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -183,10 +183,7 @@ static int iwlagn_set_Xtal_calib(struct iwl_priv *priv)
+ 	__le16 *xtal_calib =
+ 		(__le16 *)iwl_eeprom_query_addr(priv, EEPROM_XTAL);
+ 
+-	cmd.hdr.op_code = IWL_PHY_CALIBRATE_CRYSTAL_FRQ_CMD;
+-	cmd.hdr.first_group = 0;
+-	cmd.hdr.groups_num = 1;
+-	cmd.hdr.data_valid = 1;
++	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_CRYSTAL_FRQ_CMD);
+ 	cmd.cap_pin1 = le16_to_cpu(xtal_calib[0]);
+ 	cmd.cap_pin2 = le16_to_cpu(xtal_calib[1]);
+ 	return iwl_calib_set(&priv->calib_results[IWL_CALIB_XTAL],
+@@ -198,14 +195,13 @@ static int iwlagn_set_temperature_offset_calib(struct iwl_priv *priv)
+ 	struct iwl_calib_temperature_offset_cmd cmd;
+ 	__le16 *offset_calib =
+ 		(__le16 *)iwl_eeprom_query_addr(priv, EEPROM_TEMPERATURE);
+-	cmd.hdr.op_code = IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD;
+-	cmd.hdr.first_group = 0;
+-	cmd.hdr.groups_num = 1;
+-	cmd.hdr.data_valid = 1;
++
++	memset(&cmd, 0, sizeof(cmd));
++	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
+ 	cmd.radio_sensor_offset = le16_to_cpu(offset_calib[1]);
+ 	if (!(cmd.radio_sensor_offset))
+ 		cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
+-	cmd.reserved = 0;
++
+ 	IWL_DEBUG_CALIB(priv, "Radio sensor offset: %d\n",
+ 			cmd.radio_sensor_offset);
+ 	return iwl_calib_set(&priv->calib_results[IWL_CALIB_TEMP_OFFSET],
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 94ee141..5d8b2db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -129,6 +129,14 @@ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
+ 	tasklet_kill(&priv->irq_tasklet);
+ }
+ 
++static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
++{
++	hdr->op_code = cmd;
++	hdr->first_group = 0;
++	hdr->groups_num = 1;
++	hdr->data_valid = 1;
++}
++
+ int iwl_prepare_card_hw(struct iwl_priv *priv);
+ 
+ int iwlagn_start_device(struct iwl_priv *priv);
 -- 
-1.7.4.1
+1.7.0.4
 
