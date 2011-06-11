@@ -1,58 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49014 "EHLO bues.ch"
+Received: from mga09.intel.com ([134.134.136.24]:1999 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119Ab1FKS7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 14:59:37 -0400
-Date: Sat, 11 Jun 2011 20:59:30 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Connor Hansen <cmdkhh@gmail.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH] drivers/ssb/driver_chipcommon_pmu.c: uninitilized warning
-Message-ID: <20110611205930.28418623@maggie> (sfid-20110611_205944_631879_48E8D517)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1757955Ab1FKOzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/18] iwlagn: move no_sleep_autoadjust as part of iwlagn_mod_params
+Date: Sat, 11 Jun 2011 07:25:39 -0700
+Message-Id: <1307802352-16398-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165550_581861_A129CD62)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Connor Hansen <cmdkhh@gmail.com>
+Move no_sleep_autoadjust module parameter into iwlagn_mod_params structure
+along with all the other iwlagn module parameters
 
-warning message
-drivers/ssb/driver_chipcommon_pmu.c: In function ssb_pmu_resources_init
-drivers/ssb/driver_chipcommon_pmu.c:420:15: warning: updown_tab_size may
-be used uninitilized in this function.
-
-updown_tab_size and depend_tab_size may not be set in the bus->chip_id
-switch statement, so set to 0 by default to avoid using uninitialized
-stack space.
-
-Signed-off-by: Connor Hansen <cmdkhh@gmail.com>
-Signed-off-by: Michael Buesch <m@bues.ch>
-
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c   |   13 ++-----------
+ 4 files changed, 14 insertions(+), 11 deletions(-)
 
-John, can you take care of this one, please? It's purely cosmetical, so not CCing stable.
-
-
- drivers/ssb/driver_chipcommon_pmu.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
-index 305ade7..a7aef47 100644
---- a/drivers/ssb/driver_chipcommon_pmu.c
-+++ b/drivers/ssb/driver_chipcommon_pmu.c
-@@ -417,9 +417,9 @@ static void ssb_pmu_resources_init(struct ssb_chipcommon *cc)
- 	u32 min_msk = 0, max_msk = 0;
- 	unsigned int i;
- 	const struct pmu_res_updown_tab_entry *updown_tab = NULL;
--	unsigned int updown_tab_size;
-+	unsigned int updown_tab_size = 0;
- 	const struct pmu_res_depend_tab_entry *depend_tab = NULL;
--	unsigned int depend_tab_size;
-+	unsigned int depend_tab_size = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index f0dacfb..58f6da0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -623,6 +623,7 @@ struct iwl_mod_params iwlagn_mod_params = {
+ 	.restart_fw = 1,
+ 	.plcp_check = true,
+ 	.bt_coex_active = true,
++	.no_sleep_autoadjust = true,
+ 	/* the rest are 0 by default */
+ };
  
- 	switch (bus->chip_id) {
- 	case 0x4312:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3268356..8bed315 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4099,3 +4099,13 @@ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bt co-exist (default: enable)");
+ module_param_named(led_mode, iwlagn_mod_params.led_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(led_mode, "0=system default, "
+ 		"1=On(RF On)/Off(RF Off), 2=blinking (default: 0)");
++
++/*
++ * For now, keep using power level 1 instead of automatically
++ * adjusting ...
++ */
++module_param_named(no_sleep_autoadjust, iwlagn_mod_params.no_sleep_autoadjust,
++		bool, S_IRUGO);
++MODULE_PARM_DESC(no_sleep_autoadjust,
++		 "don't automatically adjust sleep level "
++		 "according to maximum network latency (default: true)");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index f950da0..a16daf7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -175,6 +175,7 @@ struct iwl_mod_params {
+ 	bool ack_check;		/* def: false = disable ack health check */
+ 	bool bt_coex_active;	/* def: true = enable bt coex */
+ 	int led_mode;		/* def: 0 = system default */
++	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 595c930..a69b551 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -36,6 +36,7 @@
+ 
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
++#include "iwl-agn.h"
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-commands.h"
+@@ -51,16 +52,6 @@
+  */
+ 
+ /*
+- * For now, keep using power level 1 instead of automatically
+- * adjusting ...
+- */
+-bool no_sleep_autoadjust = true;
+-module_param(no_sleep_autoadjust, bool, S_IRUGO);
+-MODULE_PARM_DESC(no_sleep_autoadjust,
+-		 "don't automatically adjust sleep level "
+-		 "according to maximum network latency");
+-
+-/*
+  * This defines the old power levels. They are still used by default
+  * (level 1) and for thermal throttle (levels 3 through 5)
+  */
+@@ -367,7 +358,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 		iwl_static_sleep_cmd(priv, cmd,
+ 				     priv->power_data.debug_sleep_level_override,
+ 				     dtimper);
+-	else if (no_sleep_autoadjust)
++	else if (iwlagn_mod_params.no_sleep_autoadjust)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_1, dtimper);
+ 	else
+ 		iwl_power_fill_sleep_cmd(priv, cmd,
 -- 
-1.7.4.4
-
+1.7.0.4
 
