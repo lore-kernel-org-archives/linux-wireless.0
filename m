@@ -1,69 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44769 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757514Ab1FGVXt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 17:23:49 -0400
-Message-ID: <4DEE96DD.2020609@hauke-m.de> (sfid-20110607_232352_334129_90C194ED)
-Date: Tue, 07 Jun 2011 23:23:41 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"mb@bu3sch.de" <mb@bu3sch.de>,
-	"george@znau.edu.ua" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"bernhardloos@googlemail.com" <bernhardloos@googlemail.com>
-Subject: Re: [RFC][PATCH 03/10] bcma: add embedded bus
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de> <1307311658-15853-4-git-send-email-hauke@hauke-m.de> <BANLkTi=T6xO9q+vOCk5Fu+2J_nUTwX3dcg@mail.gmail.com> <4DED4DEB.5030802@hauke-m.de> <BANLkTikATEB7zoDPBcc4Ubh7ONyHXWBW+w@mail.gmail.com> <4DEDFDC8.50005@broadcom.com>
-In-Reply-To: <4DEDFDC8.50005@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:20096 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758589Ab1FKOzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/18] iwlagn: add debug message for coex related activities
+Date: Sat, 11 Jun 2011 07:25:44 -0700
+Message-Id: <1307802352-16398-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165554_242697_124AAE06)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/2011 12:30 PM, Arend van Spriel wrote:
-> On 06/07/2011 02:33 AM, Rafał Miłecki wrote:
->> W dniu 7 czerwca 2011 00:00 użytkownik Hauke Mehrtens
->> <hauke@hauke-m.de>  napisał:
->>> On 06/06/2011 12:22 PM, Rafał Miłecki wrote:
->>>>> +       if (bus->hosttype == BCMA_HOSTTYPE_EMBEDDED) {
->>>>> +               iounmap(bus->mmio);
->>>>> +               mmio = ioremap(BCMA_ADDR_BASE, BCMA_CORE_SIZE *
->>>>> bus->nr_cores);
->>>>> +               if (!mmio)
->>>>> +                       return -ENOMEM;
->>>>> +               bus->mmio = mmio;
->>>>> +
->>>>> +               mmio = ioremap(BCMA_WRAP_BASE, BCMA_CORE_SIZE *
->>>>> bus->nr_cores);
->>>>> +               if (!mmio)
->>>>> +                       return -ENOMEM;
->>>>> +               bus->host_embedded = mmio;
->>>> Do we really need both? mmio and host_embedded? What about keeping
->>>> mmio only and using it in calculation for read/write[8,16,32]?
->>> These are two different memory regions, it should be possible to
->>> calculate the other address, but I do not like that. As host_embedded is
->>> in a union this does not waste any memory.
->> Ah, OK, I can see what does happen here. You are using:
->> 1) bus->mmio for first core
->> 2) bus->host_embedded for first agent/wrapper
->>
->> I'm not sure if this is a correct approach. Doing "core_index *
->> BCMA_CORE_SIZE" comes from ssb, where it was the way to calculate
->> offset. In case of BCMA we are reading all the info from (E)EPROM,
->> which also includes addresses of the cores.
->>
->> IMO you should use core->addr and core->wrap for read/write ops. I
->> believe this is approach Broadcom decided to use for BCMA, when
->> designing (E)EPROM.
-> 
-> Agree. There is no guarantee for the core index to relate to the
-> physical address. Chip designer may be systematic in this and the
-> index*size method may work, but not by design.
-> 
-> Gr. AvS
-> 
-Ok I will use these addresses.
+Adding dedicated debug message for coex related activities
 
-Hauke
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   30 ++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 90cd647..a8c1e24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -438,7 +438,7 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
+ 		if (tx_resp->bt_kill_count && tx_resp->frame_count == 1 &&
+ 		    priv->cfg->bt_params &&
+ 		    priv->cfg->bt_params->advanced_bt_coexist) {
+-			IWL_WARN(priv, "receive reply tx with bt_kill\n");
++			IWL_DEBUG_COEX(priv, "receive reply tx with bt_kill\n");
+ 		}
+ 		iwlagn_tx_status_reply_tx(priv, agg, tx_resp, txq_id, index);
+ 
+@@ -1713,7 +1713,7 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
+ 
+ 		if (priv->bt_ch_announce)
+ 			basic.flags |= IWLAGN_BT_FLAG_CHANNEL_INHIBITION;
+-		IWL_DEBUG_INFO(priv, "BT coex flag: 0X%x\n", basic.flags);
++		IWL_DEBUG_COEX(priv, "BT coex flag: 0X%x\n", basic.flags);
+ 	}
+ 	priv->bt_enable_flag = basic.flags;
+ 	if (priv->bt_full_concurrent)
+@@ -1723,7 +1723,7 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
+ 		memcpy(basic.bt3_lookup_table, iwlagn_def_3w_lookup,
+ 			sizeof(iwlagn_def_3w_lookup));
+ 
+-	IWL_DEBUG_INFO(priv, "BT coex %s in %s mode\n",
++	IWL_DEBUG_COEX(priv, "BT coex %s in %s mode\n",
+ 		       basic.flags ? "active" : "disabled",
+ 		       priv->bt_full_concurrent ?
+ 		       "full concurrency" : "3-wire");
+@@ -1761,7 +1761,7 @@ static void iwlagn_bt_traffic_change_work(struct work_struct *work)
+ 	 * coex profile notifications. Ignore that since only bad consequence
+ 	 * can be not matching debug print with actual state.
+ 	 */
+-	IWL_DEBUG_INFO(priv, "BT traffic load changes: %d\n",
++	IWL_DEBUG_COEX(priv, "BT traffic load changes: %d\n",
+ 		       priv->bt_traffic_load);
+ 
+ 	switch (priv->bt_traffic_load) {
+@@ -1813,7 +1813,7 @@ out:
+ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 				struct iwl_bt_uart_msg *uart_msg)
+ {
+-	IWL_DEBUG_NOTIF(priv, "Message Type = 0x%X, SSN = 0x%X, "
++	IWL_DEBUG_COEX(priv, "Message Type = 0x%X, SSN = 0x%X, "
+ 			"Update Req = 0x%X",
+ 		(BT_UART_MSG_FRAME1MSGTYPE_MSK & uart_msg->frame1) >>
+ 			BT_UART_MSG_FRAME1MSGTYPE_POS,
+@@ -1822,7 +1822,7 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME1UPDATEREQ_MSK & uart_msg->frame1) >>
+ 			BT_UART_MSG_FRAME1UPDATEREQ_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Open connections = 0x%X, Traffic load = 0x%X, "
++	IWL_DEBUG_COEX(priv, "Open connections = 0x%X, Traffic load = 0x%X, "
+ 			"Chl_SeqN = 0x%X, In band = 0x%X",
+ 		(BT_UART_MSG_FRAME2OPENCONNECTIONS_MSK & uart_msg->frame2) >>
+ 			BT_UART_MSG_FRAME2OPENCONNECTIONS_POS,
+@@ -1833,7 +1833,7 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME2INBAND_MSK & uart_msg->frame2) >>
+ 			BT_UART_MSG_FRAME2INBAND_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "SCO/eSCO = 0x%X, Sniff = 0x%X, A2DP = 0x%X, "
++	IWL_DEBUG_COEX(priv, "SCO/eSCO = 0x%X, Sniff = 0x%X, A2DP = 0x%X, "
+ 			"ACL = 0x%X, Master = 0x%X, OBEX = 0x%X",
+ 		(BT_UART_MSG_FRAME3SCOESCO_MSK & uart_msg->frame3) >>
+ 			BT_UART_MSG_FRAME3SCOESCO_POS,
+@@ -1848,11 +1848,11 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME3OBEX_MSK & uart_msg->frame3) >>
+ 			BT_UART_MSG_FRAME3OBEX_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Idle duration = 0x%X",
++	IWL_DEBUG_COEX(priv, "Idle duration = 0x%X",
+ 		(BT_UART_MSG_FRAME4IDLEDURATION_MSK & uart_msg->frame4) >>
+ 			BT_UART_MSG_FRAME4IDLEDURATION_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Tx Activity = 0x%X, Rx Activity = 0x%X, "
++	IWL_DEBUG_COEX(priv, "Tx Activity = 0x%X, Rx Activity = 0x%X, "
+ 			"eSCO Retransmissions = 0x%X",
+ 		(BT_UART_MSG_FRAME5TXACTIVITY_MSK & uart_msg->frame5) >>
+ 			BT_UART_MSG_FRAME5TXACTIVITY_POS,
+@@ -1861,13 +1861,13 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME5ESCORETRANSMIT_MSK & uart_msg->frame5) >>
+ 			BT_UART_MSG_FRAME5ESCORETRANSMIT_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X",
++	IWL_DEBUG_COEX(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X",
+ 		(BT_UART_MSG_FRAME6SNIFFINTERVAL_MSK & uart_msg->frame6) >>
+ 			BT_UART_MSG_FRAME6SNIFFINTERVAL_POS,
+ 		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
+ 			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Page = "
++	IWL_DEBUG_COEX(priv, "Sniff Activity = 0x%X, Page = "
+ 			"0x%X, Inquiry = 0x%X, Connectable = 0x%X",
+ 		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
+ 			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
+@@ -1917,10 +1917,10 @@ void iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
+-	IWL_DEBUG_NOTIF(priv, "BT Coex notification:\n");
+-	IWL_DEBUG_NOTIF(priv, "    status: %d\n", coex->bt_status);
+-	IWL_DEBUG_NOTIF(priv, "    traffic load: %d\n", coex->bt_traffic_load);
+-	IWL_DEBUG_NOTIF(priv, "    CI compliance: %d\n",
++	IWL_DEBUG_COEX(priv, "BT Coex notification:\n");
++	IWL_DEBUG_COEX(priv, "    status: %d\n", coex->bt_status);
++	IWL_DEBUG_COEX(priv, "    traffic load: %d\n", coex->bt_traffic_load);
++	IWL_DEBUG_COEX(priv, "    CI compliance: %d\n",
+ 			coex->bt_ci_compliance);
+ 	iwlagn_print_uartmsg(priv, uart_msg);
+ 
+-- 
+1.7.0.4
+
