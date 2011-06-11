@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:48044 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758127Ab1FVWPd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 18:15:33 -0400
-Received: by wyb38 with SMTP id 38so889109wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 15:15:31 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: reestablish mis-configured existing Rx BA sessions
-Date: Thu, 23 Jun 2011 01:15:27 +0300
-Message-Id: <1308780927-20987-1-git-send-email-arik@wizery.com> (sfid-20110623_001536_206292_3B0DFE44)
+Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758571Ab1FKOzk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/18] iwlagn: move led_mode as part of iwlagn_mod_params
+Date: Sat, 11 Jun 2011 07:25:38 -0700
+Message-Id: <1307802352-16398-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165603_784097_D1E07E74)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When forming a Rx BA session, sometimes the ADDBA response gets lost.
-This leads to a situation where the session is configured locally, but
-doesn't exist on the remote side. Subsequent ADDBA requests are declined
-by mac80211.
+Move led_mode module parameter into iwlagn_mod_params structure
+along with all the other iwlagn module parameters
 
-Fix this by assuming the session state of the initiator is the correct
-one. When receiving an unexpected ADDBA request on a TID with an active
-Rx BA session, delete the existing one and establish a new session.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/agg-rx.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-led.c  |    9 ++-------
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 9c0d76c..f0a4d90 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -247,7 +247,11 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- 				"%pM on tid %u\n",
- 				mgmt->sa, tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
--		goto end;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6ecee3c..3268356 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4095,3 +4095,7 @@ MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
+ module_param_named(bt_coex_active, iwlagn_mod_params.bt_coex_active,
+ 		bool, S_IRUGO);
+ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bt co-exist (default: enable)");
 +
-+		/* delete existing Rx BA session on the same tid */
-+		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
-+						WLAN_STATUS_UNSPECIFIED_QOS,
-+						false);
- 	}
++module_param_named(led_mode, iwlagn_mod_params.led_mode, int, S_IRUGO);
++MODULE_PARM_DESC(led_mode, "0=system default, "
++		"1=On(RF On)/Off(RF Off), 2=blinking (default: 0)");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 1a43a62..f950da0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -174,6 +174,7 @@ struct iwl_mod_params {
+ 	bool plcp_check;	/* def: true = enable plcp health check */
+ 	bool ack_check;		/* def: false = disable ack health check */
+ 	bool bt_coex_active;	/* def: true = enable bt coex */
++	int led_mode;		/* def: 0 = system default */
+ };
  
- 	/* prepare A-MPDU MLME for Rx aggregation */
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index 7c23beb..1a8ce4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -40,14 +40,9 @@
+ 
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
++#include "iwl-agn.h"
+ #include "iwl-io.h"
+ 
+-/* default: IWL_LED_BLINK(0) using blinking index table */
+-static int led_mode;
+-module_param(led_mode, int, S_IRUGO);
+-MODULE_PARM_DESC(led_mode, "0=system default, "
+-		"1=On(RF On)/Off(RF Off), 2=blinking");
+-
+ /* Throughput		OFF time(ms)	ON time (ms)
+  *	>300			25		25
+  *	>200 to 300		40		40
+@@ -181,7 +176,7 @@ static int iwl_led_blink_set(struct led_classdev *led_cdev,
+ 
+ void iwl_leds_init(struct iwl_priv *priv)
+ {
+-	int mode = led_mode;
++	int mode = iwlagn_mod_params.led_mode;
+ 	int ret;
+ 
+ 	if (mode == IWL_LED_DEFAULT)
 -- 
-1.7.4.1
+1.7.0.4
 
