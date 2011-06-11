@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46567 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751740Ab1FYObL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2011 10:31:11 -0400
-Message-ID: <4E05F12B.4020302@openwrt.org> (sfid-20110625_163123_122941_AED3FB88)
-Date: Sat, 25 Jun 2011 16:31:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Misha Shnurapet <shnurapet@fedoraproject.org>
-CC: Community support for Fedora users
-	<users@lists.fedoraproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: AR9280 won't initialize
-References: <152381309010939@web35.yandex.ru>
-In-Reply-To: <152381309010939@web35.yandex.ru>
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+	id S1758604Ab1FKOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/18] iwlagn: group similar defines together
+Date: Sat, 11 Jun 2011 07:25:49 -0700
+Message-Id: <1307802352-16398-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165557_973496_EF05B2DB)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-06-25 4:08 PM, Misha Shnurapet wrote:
-> Hi.
->
-> I have a little problem. I replaced the old BCM4312 card on my Dell mini 1011 (10v) with:
-> 03:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
->
-> But it won't work.
->
-> First it crashed Linux:
-> http://pastebin.com/YmEGcPK8
->
-> Then I installed a system update:
-> http://funkyimg.com/u2/879/849/2.png
-> http://pastebin.com/hWG6u7VJ
->
-> And now it is:
->
-> [   30.589243] ath9k 0000:03:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
-> [   30.589269] ath9k 0000:03:00.0: setting latency timer to 64
-> [   30.594884] ath: address test failed addr: 0x00008000 - wr:0xaaaaaaaa != rd:0xaaaa2aaa
-> [   30.594898] ath: Unable to initialize hardware; initialization status: -19
-> [   30.594913] ath9k 0000:03:00.0: Failed to initialize device
-> [   30.594991] ath9k 0000:03:00.0: PCI INT A disabled
->
-> lsusb:
-> http://pastebin.com/JHYZiDhr
->
-> Installing the latest stable compat-wireless from source didn't help (bleeding edge won't build).
->
-> I would appreciate if you help me.
-Looks like a hardware issue to me. Try removing the card and plugging it 
-back in.
+No functional changes, just group similar defines together
 
-- Felix
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 3dcb0a0..19058a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -162,10 +162,6 @@ struct iwl_eeprom_enhanced_txpwr {
+ 	s8 mimo3_max;
+ } __packed;
+ 
+-/* 5000 Specific */
+-#define EEPROM_5000_TX_POWER_VERSION    (4)
+-#define EEPROM_5000_EEPROM_VERSION	(0x11A)
+-
+ /* calibration */
+ #define EEPROM_CALIB_ALL	(INDIRECT_ADDRESS | INDIRECT_CALIBRATION)
+ #define EEPROM_XTAL		((2*0x128) | EEPROM_CALIB_ALL)
+@@ -203,6 +199,10 @@ struct iwl_eeprom_enhanced_txpwr {
+ #define EEPROM_6000_REG_BAND_24_HT40_CHANNELS  ((0x80)\
+ 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 14  bytes */
+ 
++/* 5000 Specific */
++#define EEPROM_5000_TX_POWER_VERSION    (4)
++#define EEPROM_5000_EEPROM_VERSION	(0x11A)
++
+ /* 5050 Specific */
+ #define EEPROM_5050_TX_POWER_VERSION    (4)
+ #define EEPROM_5050_EEPROM_VERSION	(0x21E)
+-- 
+1.7.0.4
+
