@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53903 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757318Ab1F0MqJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 08:46:09 -0400
-Subject: Re: [RFC v3 1/3] mac80211: add some helper functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1308671129.2656.4.camel@alex-2> (sfid-20110621_174753_258660_B2E3ED7C)
-References: <1308671129.2656.4.camel@alex-2>
-	 (sfid-20110621_174753_258660_B2E3ED7C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Jun 2011 14:46:13 +0200
-Message-ID: <1309178773.3911.18.camel@jlt3.sipsolutions.net> (sfid-20110627_144742_621475_5E3D074E)
+Received: from bues.ch ([80.190.117.144]:49014 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751119Ab1FKS7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 14:59:37 -0400
+Date: Sat, 11 Jun 2011 20:59:30 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Connor Hansen <cmdkhh@gmail.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH] drivers/ssb/driver_chipcommon_pmu.c: uninitilized warning
+Message-ID: <20110611205930.28418623@maggie> (sfid-20110611_205944_631879_48E8D517)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-21 at 17:45 +0200, Alexander Simon wrote:
+From: Connor Hansen <cmdkhh@gmail.com>
 
-> +struct cfg80211_bss *cfg80211_get_bss_ht(struct wiphy *wiphy,
-> +					  struct ieee80211_channel *channel,
-> +					  const u8 *bssid,
-> +					  const u8 *ssid, size_t ssid_len,
-> +					  u16 capa_mask, u16 capa_val,
-> +				       enum nl80211_channel_type channel_type);
+warning message
+drivers/ssb/driver_chipcommon_pmu.c: In function ssb_pmu_resources_init
+drivers/ssb/driver_chipcommon_pmu.c:420:15: warning: updown_tab_size may
+be used uninitilized in this function.
 
-indentation confusion?
+updown_tab_size and depend_tab_size may not be set in the bus->chip_id
+switch statement, so set to 0 by default to avoid using uninitialized
+stack space.
 
-Also, this definitely doesn't belong into a mac80211 patch. Please split
-into mac80211/cfg80211.
+Signed-off-by: Connor Hansen <cmdkhh@gmail.com>
+Signed-off-by: Michael Buesch <m@bues.ch>
 
-> --- a/net/wireless/scan.c	2011-06-01 21:04:32.000000000 +0200
-> +++ b/net/wireless/scan.c	2011-06-21 13:21:38.000000000 +0200
-> @@ -343,6 +343,18 @@ struct cfg80211_bss *cfg80211_get_bss(st
->  				      const u8 *ssid, size_t ssid_len,
->  				      u16 capa_mask, u16 capa_val)
->  {
-> +	return cfg80211_get_bss_ht(wiphy, channel, bssid, ssid, ssid_len,
-> +				   capa_mask, capa_val, NL80211_CHAN_NO_HT);
-> +}
-> +EXPORT_SYMBOL(cfg80211_get_bss);
+---
 
-This is misleading/confusing. You're passing NO_HT in order to ignore
-the channel bandwidth, but you make it seem like it's a filter. Also,
-you didn't update _any_ documentation at all!
+John, can you take care of this one, please? It's purely cosmetical, so not CCing stable.
 
-johannes
+
+ drivers/ssb/driver_chipcommon_pmu.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
+index 305ade7..a7aef47 100644
+--- a/drivers/ssb/driver_chipcommon_pmu.c
++++ b/drivers/ssb/driver_chipcommon_pmu.c
+@@ -417,9 +417,9 @@ static void ssb_pmu_resources_init(struct ssb_chipcommon *cc)
+ 	u32 min_msk = 0, max_msk = 0;
+ 	unsigned int i;
+ 	const struct pmu_res_updown_tab_entry *updown_tab = NULL;
+-	unsigned int updown_tab_size;
++	unsigned int updown_tab_size = 0;
+ 	const struct pmu_res_depend_tab_entry *depend_tab = NULL;
+-	unsigned int depend_tab_size;
++	unsigned int depend_tab_size = 0;
+ 
+ 	switch (bus->chip_id) {
+ 	case 0x4312:
+-- 
+1.7.4.4
+
 
