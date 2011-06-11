@@ -1,126 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48379 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965Ab1FCUS3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 16:18:29 -0400
-Received: by eyx24 with SMTP id 24so794843eyx.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 13:18:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1307108661.3800.6.camel@jlt3.sipsolutions.net>
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
-	<1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
-	<1307108661.3800.6.camel@jlt3.sipsolutions.net>
-Date: Fri, 3 Jun 2011 17:18:26 -0300
-Message-ID: <BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com> (sfid-20110603_221831_180194_84D18426)
-Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	Waldemar.Rymarkiewicz@tieto.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758591Ab1FKOzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/18] iwlagn: use IWL_DEBUG_FW for firmware related debug msg
+Date: Sat, 11 Jun 2011 07:25:46 -0700
+Message-Id: <1307802352-16398-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165612_507367_7634A9C3)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Instead use generic IWL_DEBUG_INFO, use IWL_DEBUG_FW for uCode related stuffs.
 
-2011/6/3 Johannes Berg <johannes@sipsolutions.net>:
-> On Thu, 2011-06-02 at 18:46 -0300, Lauro Ramos Venancio wrote:
->
->> + * @NFC_ATTR_TARGETS: array of targets (see enum nfc_target_attr)
->
->
->> +static int nfc_genl_msg_put_target(struct sk_buff *msg,
->> +                             struct nfc_target *target)
->> +{
->> +     NLA_PUT_U32(msg, NFC_TARGET_ATTR_TARGET_INDEX, target->idx);
->> +     NLA_PUT_U32(msg, NFC_TARGET_ATTR_SUPPORTED_PROTOCOLS,
->> +                             target->supported_protocols);
->> +     NLA_PUT_U8(msg, NFC_TARGET_ATTR_SENS_RES, target->sens_res);
->> +     NLA_PUT_U8(msg, NFC_TARGET_ATTR_SEL_RES, target->sel_res);
->> +
->> +     return 0;
->> +
->> +nla_put_failure:
->> +     return -EMSGSIZE;
->> +}
->> +
->> +int nfc_genl_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
->> +                                                             int ntargets)
->> +{
->> +     struct sk_buff *msg;
->> +     void *hdr;
->> +     struct nlattr *targets_attr;
->> +     int i;
->> +
->> +     pr_debug("%s\n", __func__);
->> +
->> +     dev->genl_data.poll_req_pid = 0;
->> +
->> +     msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
->> +     if (!msg)
->> +             return -ENOMEM;
->> +
->> +     hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
->> +                             NFC_EVENT_TARGETS_FOUND);
->> +     if (!hdr)
->> +             goto free_msg;
->> +
->> +     NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
->> +
->> +     targets_attr = nla_nest_start(msg, NFC_ATTR_TARGETS);
->> +
->> +     for (i = 0; i < ntargets; i++) {
->> +             struct nlattr *target = nla_nest_start(msg, i);
->> +
->> +             if (nfc_genl_msg_put_target(msg, &targets[i]))
->> +                     goto nla_put_failure;
->> +
->> +             nla_nest_end(msg, target);
->> +     }
->> +
->> +     nla_nest_end(msg, targets_attr);
->> +     genlmsg_end(msg, hdr);
->> +
->> +     return genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_ATOMIC);
->
-> This is almost certainly not a good idea.
->
-> Eventually, you will want to add more information about a target. I know
-> NFC is a pretty limited protocol, but I wouldn't want to make this
-> harder in the future than it must be. The way you're doing it, you're
-> currently limiting yourself to about 100 targets. Each new target
-> attribute that you might add in the future will reduce that number
-> significantly.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Actually, we don't expect more than a couple of targets because of NFC
-short range.
-I agree that this can be a problem if we start supporting vicinity cards.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index a5cb1f6..e916157 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -143,7 +143,7 @@ static int iwlagn_load_section(struct iwl_priv *priv, const char *name,
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	|
+ 		FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
+ 
+-	IWL_DEBUG_INFO(priv, "%s uCode section being loaded...\n", name);
++	IWL_DEBUG_FW(priv, "%s uCode section being loaded...\n", name);
+ 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
+ 					priv->ucode_write_complete, 5 * HZ);
+ 	if (ret == -ERESTARTSYS) {
+@@ -508,7 +508,7 @@ static int iwlcore_verify_inst_sparse(struct iwl_priv *priv,
+ 	u32 val;
+ 	u32 i;
+ 
+-	IWL_DEBUG_INFO(priv, "ucode inst image size is %u\n", len);
++	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
+ 
+ 	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
+ 		/* read data comes through single port, auto-incr addr */
+@@ -533,7 +533,7 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+ 	u32 offs;
+ 	int errors = 0;
+ 
+-	IWL_DEBUG_INFO(priv, "ucode inst image size is %u\n", len);
++	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
+ 
+ 	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR,
+ 			   IWLAGN_RTC_INST_LOWER_BOUND);
+@@ -559,7 +559,7 @@ static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+ static int iwl_verify_ucode(struct iwl_priv *priv, struct fw_img *img)
+ {
+ 	if (!iwlcore_verify_inst_sparse(priv, &img->code)) {
+-		IWL_DEBUG_INFO(priv, "uCode is good in inst SRAM\n");
++		IWL_DEBUG_FW(priv, "uCode is good in inst SRAM\n");
+ 		return 0;
+ 	}
+ 
+@@ -583,7 +583,7 @@ static void iwlagn_alive_fn(struct iwl_priv *priv,
+ 
+ 	palive = &pkt->u.alive_frame;
+ 
+-	IWL_DEBUG_INFO(priv, "Alive ucode status 0x%08X revision "
++	IWL_DEBUG_FW(priv, "Alive ucode status 0x%08X revision "
+ 		       "0x%01X 0x%01X\n",
+ 		       palive->is_valid, palive->ver_type,
+ 		       palive->ver_subtype);
+-- 
+1.7.0.4
 
-> IMHO, the better way to structure this would be to create an event that
-> contains no information, and then allow a dump of the targets (with a
-> generation counter). That way, there are no such artificial limits due
-> to message sizes.
-
-I agree that this is a better solution. But I think we don't need a
-generation counter because only a new polling operation (start_poll
-call) can change the targets list (i.e. there is no passive polling).
-
->> +static int nfc_genl_dump_devices(struct sk_buff *skb,
->> +                               struct netlink_callback *cb)
->
-> You should have a generation counter here so that applications getting a
-> dump can know whether their dump was a complete and consistent snapshot.
-> Otherwise, if devices are added or removed during the dump applications
-> will not be able to know that their dump wasn't right.
->
-
-We don't need a generation counter here because we have the events
-NFC_EVENT_DEVICE_ADDED and NFC_EVENT_DEVICE_REMOVED. So, it is
-possible to keep the device list consistency listening for these
-events.
-
-
-Lauro
