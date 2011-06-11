@@ -1,216 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2083 "EHLO mms1.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757985Ab1F2Xss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:48 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 080/119] staging: brcm80211: move debug console related
- code to dhd_sdio.c
-Date: Wed, 29 Jun 2011 16:47:44 -0700
-Message-ID: <1309391303-22741-81-git-send-email-frankyl@broadcom.com> (sfid-20110630_015031_646811_D653C62D)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1758552Ab1FKOzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2011 10:55:39 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/18] iwlagn: add dumpit support for testmode trace function
+Date: Sat, 11 Jun 2011 07:25:36 -0700
+Message-Id: <1307802352-16398-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165548_015741_7586CC39)
+In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debug console functionality is provided by dhd_sdio.c. So the related
-variables and iovars should go there as well.
+For testmode trace function, huge amout of data need to pass to userspace.
+Use the build-in nl80211 dumpt it function
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Require nl80211 testmode dumpit support patch.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h        |    5 ---
- drivers/staging/brcm80211/brcmfmac/dhd_bus.h    |    6 ----
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |   27 --------------------
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    6 ----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c   |   31 ++++++++++++++++++++++-
- 5 files changed, 30 insertions(+), 45 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |   10 +++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c  |  106 +++++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |    4 +-
+ 5 files changed, 96 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 2c67df0..e7746f7 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -773,11 +773,6 @@ extern atomic_t brcmf_mmc_suspend;
-  * Insmod parameters for debug/test
-  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 099c279..6f1edb4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3352,6 +3352,7 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.offchannel_tx = iwl_mac_offchannel_tx,
+ 	.offchannel_tx_cancel_wait = iwl_mac_offchannel_tx_cancel_wait,
+ 	CFG80211_TESTMODE_CMD(iwl_testmode_cmd)
++	CFG80211_TESTMODE_DUMP(iwl_testmode_dump)
+ };
  
--#if defined(BCMDBG)
--/* Console output poll interval */
--extern uint brcmf_console_ms;
--#endif				/* defined(BCMDBG) */
--
- /* Use interrupts */
- extern uint brcmf_intr;
+ static u32 iwl_hw_detect(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index d171684..d074e6c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -343,6 +343,9 @@ extern int iwl_alive_start(struct iwl_priv *priv);
+ /* svtool */
+ #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ extern int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len);
++extern int iwl_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *skb,
++			     struct netlink_callback *cb,
++			     void *data, int len);
+ extern void iwl_testmode_init(struct iwl_priv *priv);
+ extern void iwl_testmode_cleanup(struct iwl_priv *priv);
+ #else
+@@ -352,6 +355,13 @@ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 	return -ENOSYS;
+ }
+ static inline
++int iwl_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *skb,
++		      struct netlink_callback *cb,
++		      void *data, int len)
++{
++	return -ENOSYS;
++}
++static inline
+ void iwl_testmode_init(struct iwl_priv *priv)
+ {
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a7d2159..d23430e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1172,6 +1172,7 @@ enum iwl_scan_type {
+ struct iwl_testmode_trace {
+ 	u32 buff_size;
+ 	u32 total_size;
++	u32 num_chunks;
+ 	u8 *cpu_addr;
+ 	u8 *trace_addr;
+ 	dma_addr_t dma_addr;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index 135c1b5..038c696 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -100,7 +100,7 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+ 	[IWL_TM_ATTR_EEPROM] = { .type = NLA_UNSPEC, },
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-index 5bbe09d..eab5cdd 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-@@ -58,12 +58,6 @@ brcmf_sdbrcm_bus_txctl(struct dhd_bus *bus, unsigned char *msg, uint msglen);
- extern int
- brcmf_sdbrcm_bus_rxctl(struct dhd_bus *bus, unsigned char *msg, uint msglen);
+ 	[IWL_TM_ATTR_TRACE_ADDR] = { .type = NLA_UNSPEC, },
+-	[IWL_TM_ATTR_TRACE_DATA] = { .type = NLA_UNSPEC, },
++	[IWL_TM_ATTR_TRACE_DUMP] = { .type = NLA_UNSPEC, },
+ 	[IWL_TM_ATTR_TRACE_SIZE] = { .type = NLA_U32, },
  
--#ifdef BCMDBG
--/* Device console input function */
--extern int
--brcmf_sdbrcm_bus_console_in(dhd_pub_t *dhd, unsigned char *msg, uint msglen);
--#endif				/* BCMDBG */
--
- /* Deferred processing for the bus, return true requests reschedule */
- extern bool dhd_bus_dpc(struct dhd_bus *bus);
- extern void dhd_bus_isr(bool *InterruptRecognized,
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 38a3502..8a32e88 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -53,10 +53,6 @@ enum {
- 	IOV_BCMERRORSTR,
- 	IOV_BCMERROR,
- 	IOV_DUMP,
--#ifdef BCMDBG
--	IOV_CONS,
--	IOV_DCONSOLE_POLL,
--#endif
- 	IOV_CLEARCOUNTS,
- 	IOV_LOGDUMP,
- 	IOV_LOGCAL,
-@@ -79,12 +75,6 @@ const struct brcmu_iovar brcmf_iovars[] = {
- 	,
- 	{"dump", IOV_DUMP, 0, IOVT_BUFFER, DHD_IOCTL_MAXLEN}
- 	,
--#ifdef BCMDBG
--	{"dconpoll", IOV_DCONSOLE_POLL, 0, IOVT_UINT32, 0}
--	,
--	{"cons", IOV_CONS, 0, IOVT_BUFFER, 0}
--	,
--#endif
- 	{"clearcounts", IOV_CLEARCOUNTS, 0, IOVT_VOID, 0}
- 	,
- 	{"gpioob", IOV_GPIOOB, 0, IOVT_UINT32, 0}
-@@ -238,23 +228,6 @@ brcmf_c_doiovar(dhd_pub_t *dhd_pub, const struct brcmu_iovar *vi, u32 actionid,
- 		bcmerror = brcmf_c_dump(dhd_pub, arg, len);
+ 	[IWL_TM_ATTR_FIXRATE] = { .type = NLA_U32, },
+@@ -534,34 +534,14 @@ static int iwl_testmode_trace(struct ieee80211_hw *hw, struct nlattr **tb)
+ 				       "Error sending msg : %d\n",
+ 				       status);
+ 		}
++		priv->testmode_trace.num_chunks =
++			DIV_ROUND_UP(priv->testmode_trace.buff_size,
++				     TRACE_CHUNK_SIZE);
  		break;
  
--#ifdef BCMDBG
--	case IOV_GVAL(IOV_DCONSOLE_POLL):
--		int_val = (s32) brcmf_console_ms;
--		memcpy(arg, &int_val, val_size);
+ 	case IWL_TM_CMD_APP2DEV_END_TRACE:
+ 		iwl_trace_cleanup(priv);
+ 		break;
+-
+-	case IWL_TM_CMD_APP2DEV_READ_TRACE:
+-		if (priv->testmode_trace.trace_enabled &&
+-		    priv->testmode_trace.trace_addr) {
+-			skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
+-				20 + priv->testmode_trace.buff_size);
+-			if (skb == NULL) {
+-				IWL_DEBUG_INFO(priv,
+-					"Error allocating memory\n");
+-				return -ENOMEM;
+-			}
+-			NLA_PUT(skb, IWL_TM_ATTR_TRACE_DATA,
+-				priv->testmode_trace.buff_size,
+-				priv->testmode_trace.trace_addr);
+-			status = cfg80211_testmode_reply(skb);
+-			if (status < 0) {
+-				IWL_DEBUG_INFO(priv,
+-				       "Error sending msg : %d\n", status);
+-			}
+-		} else
+-			return -EFAULT;
 -		break;
 -
--	case IOV_SVAL(IOV_DCONSOLE_POLL):
--		brcmf_console_ms = (uint) int_val;
--		break;
--
--	case IOV_SVAL(IOV_CONS):
--		if (len > 0)
--			bcmerror = brcmf_sdbrcm_bus_console_in(dhd_pub, arg,
--							       len - 1);
--		break;
--#endif
--
- 	case IOV_SVAL(IOV_CLEARCOUNTS):
- 		dhd_pub->tx_packets = dhd_pub->rx_packets = 0;
- 		dhd_pub->tx_errors = dhd_pub->rx_errors = 0;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index abd829d..8491b4e 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -124,12 +124,6 @@ module_param(brcmf_msg_level, int, 0);
- uint brcmf_sysioc = true;
- module_param(brcmf_sysioc, uint, 0);
- 
--#ifdef BCMDBG
--/* Console poll interval */
--uint brcmf_console_ms;
--module_param(brcmf_console_ms, uint, 0);
--#endif				/* BCMDBG */
--
- /* ARP offload agent mode : Enable ARP Host Auto-Reply
- and ARP Peer Auto-Reply */
- uint brcmf_arp_mode = 0xb;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index aeef2dc..b79e5cd 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -659,6 +659,12 @@ module_param(brcmf_watchdog_prio, int, 0);
- uint brcmf_watchdog_ms = 10;
- module_param(brcmf_watchdog_ms, uint, 0);
- 
-+#ifdef BCMDBG
-+/* Console poll interval */
-+uint brcmf_console_ms;
-+module_param(brcmf_console_ms, uint, 0);
-+#endif		/* DHD_DEBUG */
-+
- /* Tx/Rx bounds */
- uint brcmf_txbound;
- uint brcmf_rxbound;
-@@ -757,6 +763,8 @@ static void brcmf_sdbrcm_sdtest_set(dhd_bus_t *bus, bool start);
- #endif
- 
- #ifdef BCMDBG
-+static int brcmf_sdbrcm_bus_console_in(dhd_pub_t *dhdp, unsigned char *msg,
-+				       uint msglen);
- static int brcmf_sdbrcm_checkdied(dhd_bus_t *bus, u8 *data, uint size);
- static int brcmf_sdbrcm_mem_dump(dhd_bus_t *bus);
- #endif				/* BCMDBG  */
-@@ -1665,6 +1673,8 @@ enum {
- 	IOV_MEMSIZE,
- #ifdef BCMDBG
- 	IOV_CHECKDIED,
-+	IOV_CONS,
-+	IOV_DCONSOLE_POLL,
- #endif
- 	IOV_DOWNLOAD,
- 	IOV_FORCEEVEN,
-@@ -1710,6 +1720,10 @@ const struct brcmu_iovar dhdsdio_iovars[] = {
- 	{"devreset", IOV_DEVRESET, 0, IOVT_BOOL, 0},
- 	{"wdtick", IOV_WDTICK, 0, IOVT_UINT32, 0},
- #ifdef BCMDBG
-+	{"cons", IOV_CONS, 0, IOVT_BUFFER, 0}
-+	,
-+	{"dconpoll", IOV_DCONSOLE_POLL, 0, IOVT_UINT32, 0}
-+	,
- 	{"sdreg", IOV_SDREG, 0, IOVT_BUFFER, sizeof(struct brcmf_sdreg)}
- 	,
- 	{"sbreg", IOV_SBREG, 0, IOVT_BUFFER, sizeof(struct brcmf_sdreg)}
-@@ -2559,6 +2573,21 @@ brcmf_sdbrcm_doiovar(dhd_bus_t *bus, const struct brcmu_iovar *vi, u32 actionid,
- #endif				/* BCMDBG */
- 
- #ifdef BCMDBG
-+	case IOV_GVAL(IOV_DCONSOLE_POLL):
-+		int_val = (s32) brcmf_console_ms;
-+		memcpy(arg, &int_val, val_size);
-+		break;
-+
-+	case IOV_SVAL(IOV_DCONSOLE_POLL):
-+		brcmf_console_ms = (uint) int_val;
-+		break;
-+
-+	case IOV_SVAL(IOV_CONS):
-+		if (len > 0)
-+			bcmerror = brcmf_sdbrcm_bus_console_in(bus->dhd,
-+							       arg, len - 1);
-+		break;
-+
- 	case IOV_GVAL(IOV_SDREG):
- 		{
- 			struct brcmf_sdreg *sd_ptr;
-@@ -5100,7 +5129,7 @@ extern bool brcmf_sdbrcm_bus_watchdog(dhd_pub_t *dhdp)
+ 	default:
+ 		IWL_DEBUG_INFO(priv, "Unknown testmode mem command ID\n");
+ 		return -ENOSYS;
+@@ -576,6 +556,37 @@ nla_put_failure:
+ 	return -EMSGSIZE;
  }
  
- #ifdef BCMDBG
--extern int brcmf_sdbrcm_bus_console_in(dhd_pub_t *dhdp, unsigned char *msg,
-+static int brcmf_sdbrcm_bus_console_in(dhd_pub_t *dhdp, unsigned char *msg,
- 				       uint msglen)
- {
- 	dhd_bus_t *bus = dhdp->bus;
++static int iwl_testmode_trace_dump(struct ieee80211_hw *hw, struct nlattr **tb,
++				   struct sk_buff *skb,
++				   struct netlink_callback *cb)
++{
++	struct iwl_priv *priv = hw->priv;
++	int idx, length;
++
++	if (priv->testmode_trace.trace_enabled &&
++	    priv->testmode_trace.trace_addr) {
++		idx = cb->args[4];
++		if (idx >= priv->testmode_trace.num_chunks)
++			return -ENOENT;
++		length = TRACE_CHUNK_SIZE;
++		if (((idx + 1) == priv->testmode_trace.num_chunks) &&
++		    (priv->testmode_trace.buff_size % TRACE_CHUNK_SIZE))
++			length = priv->testmode_trace.buff_size %
++				TRACE_CHUNK_SIZE;
++
++		NLA_PUT(skb, IWL_TM_ATTR_TRACE_DUMP, length,
++			priv->testmode_trace.trace_addr +
++			(TRACE_CHUNK_SIZE * idx));
++		idx++;
++		cb->args[4] = idx;
++		return 0;
++	} else
++		return -EFAULT;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
+ /* The testmode gnl message handler that takes the gnl message from the
+  * user space and parses it per the policy iwl_testmode_gnl_msg_policy, then
+  * invoke the corresponding handlers.
+@@ -654,3 +665,50 @@ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 	mutex_unlock(&priv->mutex);
+ 	return result;
+ }
++
++int iwl_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *skb,
++		      struct netlink_callback *cb,
++		      void *data, int len)
++{
++	struct nlattr *tb[IWL_TM_ATTR_MAX];
++	struct iwl_priv *priv = hw->priv;
++	int result;
++	u32 cmd;
++
++	if (cb->args[3]) {
++		/* offset by 1 since commands start at 0 */
++		cmd = cb->args[3] - 1;
++	} else {
++		result = nla_parse(tb, IWL_TM_ATTR_MAX - 1, data, len,
++				iwl_testmode_gnl_msg_policy);
++		if (result) {
++			IWL_DEBUG_INFO(priv,
++			       "Error parsing the gnl message : %d\n", result);
++			return result;
++		}
++
++		/* IWL_TM_ATTR_COMMAND is absolutely mandatory */
++		if (!tb[IWL_TM_ATTR_COMMAND]) {
++			IWL_DEBUG_INFO(priv,
++				"Error finding testmode command type\n");
++			return -ENOMSG;
++		}
++		cmd = nla_get_u32(tb[IWL_TM_ATTR_COMMAND]);
++		cb->args[3] = cmd + 1;
++	}
++
++	/* in case multiple accesses to the device happens */
++	mutex_lock(&priv->mutex);
++	switch (cmd) {
++	case IWL_TM_CMD_APP2DEV_READ_TRACE:
++		IWL_DEBUG_INFO(priv, "uCode trace cmd to driver\n");
++		result = iwl_testmode_trace_dump(hw, tb, skb, cb);
++		break;
++	default:
++		result = -EINVAL;
++		break;
++	}
++
++	mutex_unlock(&priv->mutex);
++	return result;
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index f3f406e..160911a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -166,8 +166,8 @@ enum iwl_tm_attr_t {
+ 	 * IWL_TM_ATTR_MEM_TRACE_ADDR for the trace address
+ 	 */
+ 	IWL_TM_ATTR_TRACE_ADDR,
+-	IWL_TM_ATTR_TRACE_DATA,
+ 	IWL_TM_ATTR_TRACE_SIZE,
++	IWL_TM_ATTR_TRACE_DUMP,
+ 
+ 	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_FIXRATE_REQ,
+ 	 * The mandatory fields are:
+@@ -182,7 +182,7 @@ enum iwl_tm_attr_t {
+ #define TRACE_BUFF_SIZE_MAX	0x200000
+ #define TRACE_BUFF_SIZE_MIN	0x20000
+ #define TRACE_BUFF_SIZE_DEF	TRACE_BUFF_SIZE_MIN
+-
+ #define TRACE_BUFF_PADD		0x2000
++#define TRACE_CHUNK_SIZE	(PAGE_SIZE - 1024)
+ 
+ #endif
 -- 
-1.7.1
-
+1.7.0.4
 
