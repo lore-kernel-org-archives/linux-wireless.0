@@ -1,208 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4919 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758908Ab1FALrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:47:03 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/83] staging: brcm80211: remove iovars IOV_SDMODE
-Date: Wed, 1 Jun 2011 13:45:04 +0200
-Message-ID: <1306928768-7501-19-git-send-email-rvossen@broadcom.com> (sfid-20110601_134754_878382_1C1139D3)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:46825 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751775Ab1FLHeu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jun 2011 03:34:50 -0400
+Received: by wwf26 with SMTP id 26so3552015wwf.8
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 00:34:48 -0700 (PDT)
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH v2] wl12xx: Add Support for Low Power DRPw (LPD) Mode
+Date: Sun, 12 Jun 2011 10:34:43 +0300
+Message-Id: <1307864083-32551-1-git-send-email-shahar_levi@ti.com> (sfid-20110612_093457_690389_FB654684)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+The Low Power DRPw (LPD) mode contains several optimizations
+that designed to reduce power consumption. The purpose
+is to save current consumption in RX and Listen mode.
 
-Remove unused sdio related iovars IOV_SDMODE for fullmac driver
+LPD setting apply only for wl127x AP mode (not wl128x)
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    3 -
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   13 ----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h |    1 -
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   65 +--------------------
- 4 files changed, 2 insertions(+), 80 deletions(-)
+Changes from v1:
+- Remove from configuration parameters and set it as a quirk flag
+- DRPW_SET_INI_FILE & DRPW_SET_SCRATCH to
+  GENERAL_SETTINGS_DRPW_LPD&SCRATCH_ENABLE_LPD
+- Move defines to ini.h
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index 3755774..789922b 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -365,9 +365,6 @@ void bcmsdh_unregister_oob_intr(void)
- extern uint sd_msglevel;	/* Debug message level */
- module_param(sd_msglevel, uint, 0);
+ drivers/net/wireless/wl12xx/boot.c   |    3 +++
+ drivers/net/wireless/wl12xx/cmd.c    |    5 +++++
+ drivers/net/wireless/wl12xx/ini.h    |    3 +++
+ drivers/net/wireless/wl12xx/main.c   |    9 +++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 ++++++
+ 5 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index b07f8b7..fd35c21 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -748,6 +748,9 @@ int wl1271_load_firmware(struct wl1271 *wl)label:mcs.pst-utiles-cisco
+ 		clk |= (wl->ref_clock << 1) << 4;
+ 	}
  
--extern uint sd_sdmode;		/* Default is SD4, 0=SPI, 1=SD1, 2=SD4 */
--module_param(sd_sdmode, uint, 0);
--
- extern uint sd_hiok;		/* Ok to use hi-speed mode */
- module_param(sd_hiok, uint, 0);
++	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
++		clk |= SCRATCH_ENABLE_LPD;
++
+ 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index c817e5e..2422890 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -45,7 +45,6 @@ extern int sdio_reset_comm(struct mmc_card *card);
+ 	wl1271_set_partition(wl, &part_table[PART_WORK]);
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index b3a4f58..cdcb324 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -134,6 +134,11 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
+ 	/* Override the REF CLK from the NVS with the one from platform data */
+ 	gen_parms->general_params.ref_clock = wl->ref_clock;
  
- extern PBCMSDH_SDMMC_INSTANCE gInstance;
++	/* LPD mode enable (bits 6-7) in WL1271 AP mode only */
++	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
++		gen_parms->general_params.general_settings |=
++			GENERAL_SETTINGS_DRPW_LPD;
++
+ 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
+ 	if (ret < 0) {
+ 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
+diff --git a/drivers/net/wireless/wl12xx/ini.h b/drivers/net/wireless/wl12xx/ini.h
+index 1420c84..4cf9ecc 100644
+--- a/drivers/net/wireless/wl12xx/ini.h
++++ b/drivers/net/wireless/wl12xx/ini.h
+@@ -24,6 +24,9 @@
+ #ifndef __INI_H__
+ #define __INI_H__
  
--uint sd_sdmode = SDIOH_MODE_SD4;	/* Use SD4 mode by default */
- uint sd_f2_blocksize = 512;	/* Default blocksize */
++#define GENERAL_SETTINGS_DRPW_LPD 0xc0
++#define SCRATCH_ENABLE_LPD        BIT(25)
++
+ #define WL1271_INI_MAX_SMART_REFLEX_PARAM 16
  
- uint sd_hiok = false;		/* Don't use hi-speed mode by default */
-@@ -350,7 +349,6 @@ enum {
- 	IOV_USEINTS,
- 	IOV_NUMINTS,
- 	IOV_DEVREG,
--	IOV_SDMODE,
- 	IOV_HISPEED,
- 	IOV_HCIREGS,
- 	IOV_RXCHAIN
-@@ -364,8 +362,6 @@ const bcm_iovar_t sdioh_iovars[] = {
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
- 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
- 	,
--	{"sd_mode", IOV_SDMODE, 0, IOVT_UINT32, 100}
--	,
- 	{"sd_highspeed", IOV_HISPEED, 0, IOVT_UINT32, 0}
- 	,
- 	{"sd_rxchain", IOV_RXCHAIN, 0, IOVT_BOOL, 0}
-@@ -498,15 +494,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ struct wl1271_ini_general_params {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index fb0f764..4897191 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1190,9 +1190,13 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
+ 			     wl->chip.id);
  
+-		/* end-of-transaction flag should be set in wl127x AP mode */
++		/*
++		 * 'end-of-transaction flag' and 'LPD mode flag'
++		 * should be set in wl127x AP mode only
++		 */
+ 		if (wl->bss_type == BSS_TYPE_AP_BSS)
+-			wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
++			wl->quirks |= (WL12XX_QUIRK_END_OF_TRANSACTION |
++				       WL12XX_QUIRK_LPD_MODE);
+ 
+ 		ret = wl1271_setup(wl);
+ 		if (ret < 0)
+@@ -1205,6 +1209,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		ret = wl1271_setup(wl);
+ 		if (ret < 0)
+ 			goto out;
++
+ 		if (wl1271_set_block_size(wl))
+ 			wl->quirks |= WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT;
  		break;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 1cafb08..bb59cf8 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -644,4 +644,10 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl);
+ /* WL128X requires aggregated packets to be aligned to the SDIO block size */
+ #define WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT	BIT(2)
  
--	case IOV_GVAL(IOV_SDMODE):
--		int_val = (u32) sd_sdmode;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_SDMODE):
--		sd_sdmode = int_val;
--		break;
--
- 	case IOV_GVAL(IOV_HISPEED):
- 		int_val = (u32) sd_hiok;
- 		memcpy(arg, &int_val, val_size);
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-index 86f88bf..42c71a8 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
-@@ -88,7 +88,6 @@ struct sdioh_info {
- 	bool sd_blockmode;	/* sd_blockmode == false => 64 Byte Cmd 53s. */
- 	/*  Must be on for sd_multiblock to be effective */
- 	bool use_client_ints;	/* If this is false, make sure to restore */
--	int sd_mode;		/* SD1/SD4/SPI */
- 	int client_block_size[SDIOD_MAX_IOFUNCS];	/* Blocksize */
- 	u8 num_funcs;	/* Supported funcs on client */
- 	u32 com_cis_ptr;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index d2c4301..7b94613 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -252,7 +252,6 @@ typedef struct dhd_bus {
- 	s32 idletime;		/* Control for activity timeout */
- 	s32 idlecount;	/* Activity timeout counter */
- 	s32 idleclock;	/* How to set bus driver when idle */
--	s32 sd_mode;		/* Mode control to bus driver */
- 	s32 sd_rxchain;	/* If bcmsdh api accepts PKT chains */
- 	bool use_rxchain;	/* If dhd should use PKT chains */
- 	bool sleeping;		/* Is SDIO bus sleeping? */
-@@ -658,47 +657,12 @@ static int dhdsdio_htclk(dhd_bus_t *bus, bool on, bool pendok)
- /* Change idle/active SD state */
- static int dhdsdio_sdclk(dhd_bus_t *bus, bool on)
- {
--	int err;
--	s32 iovalue;
--
- 	DHD_TRACE(("%s: Enter\n", __func__));
- 
--	if (on) {
--		if (bus->idleclock == DHD_IDLE_STOP) {
--			iovalue = bus->sd_mode;
--			err = bcmsdh_iovar_op(bus->sdh, "sd_mode", NULL, 0,
--					      &iovalue, sizeof(iovalue), true);
--			if (err) {
--				DHD_ERROR(("%s: error changing sd_mode: %d\n",
--					   __func__, err));
--				return -EBADE;
--			}
--		}
-+	if (on)
- 		bus->clkstate = CLK_SDONLY;
--	} else {
--		/* Stop or slow the SD clock itself */
--		if (bus->sd_mode == -1) {
--			DHD_TRACE(("%s: can't idle clock, mode %d\n",
--				   __func__, bus->sd_mode));
--			return -EBADE;
--		}
--		if (bus->idleclock == DHD_IDLE_STOP) {
--			if (sd1idle) {
--				/* Change to SD1 mode and turn off clock */
--				iovalue = 1;
--				err =
--				    bcmsdh_iovar_op(bus->sdh, "sd_mode", NULL,
--						    0, &iovalue,
--						    sizeof(iovalue), true);
--				if (err) {
--					DHD_ERROR(("%s: error changing sd_clock: %d\n",
--						__func__, err));
--					return -EBADE;
--				}
--			}
--		}
-+	else
- 		bus->clkstate = CLK_NONE;
--	}
- 
- 	return 0;
- }
-@@ -2669,21 +2633,6 @@ dhd_bus_iovar_op(dhd_pub_t *dhdp, const char *name,
- 		    bcmsdh_iovar_op(bus->sdh, name, params, plen, arg, len,
- 				    set);
- 
--		/* Check for bus configuration changes of interest */
--
--		/* If it was a mode change, read the new one */
--		if (set && strcmp(name, "sd_mode") == 0) {
--			if (bcmsdh_iovar_op(bus->sdh, "sd_mode", NULL, 0,
--					    &bus->sd_mode, sizeof(s32),
--					    false) != 0) {
--				bus->sd_mode = -1;
--				DHD_ERROR(("%s: fail on %s get\n", __func__,
--					   name));
--			} else {
--				DHD_INFO(("%s: noted %s update, value now %d\n",
--					  __func__, name, bus->sd_mode));
--			}
--		}
- 		/* Similar check for blocksize change */
- 		if (set && strcmp(name, "sd_blocksize") == 0) {
- 			s32 fnum = 2;
-@@ -5314,16 +5263,6 @@ static bool dhdsdio_probe_init(dhd_bus_t *bus, void *sdh)
- 	bus->idletime = (s32) dhd_idletime;
- 	bus->idleclock = DHD_IDLE_ACTIVE;
- 
--	/* Query the SD bus mode */
--	if (bcmsdh_iovar_op(sdh, "sd_mode", NULL, 0,
--			    &bus->sd_mode, sizeof(s32), false) != 0) {
--		DHD_ERROR(("%s: fail on %s get\n", __func__, "sd_mode"));
--		bus->sd_mode = -1;
--	} else {
--		DHD_INFO(("%s: Initial value for %s is %d\n",
--			  __func__, "sd_mode", bus->sd_mode));
--	}
--
- 	/* Query the F2 block size, set roundup accordingly */
- 	fnum = 2;
- 	if (bcmsdh_iovar_op(sdh, "sd_blocksize", &fnum, sizeof(s32),
++/*
++ * WL127X AP mode requires Low Power DRPw (LPD) enable to reduce power
++ * consumption
++ */
++#define WL12XX_QUIRK_LPD_MODE                   BIT(3)
++
+ #endif
 -- 
-1.7.4.1
-
+1.7.1
 
