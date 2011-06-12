@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4840 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161304Ab1FALq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:27 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 35/83] staging: brcm80211: moved header files to more
- specific directory
-Date: Wed, 1 Jun 2011 13:45:20 +0200
-Message-ID: <1306928768-7501-35-git-send-email-rvossen@broadcom.com> (sfid-20110601_134656_356797_E98ED3B0)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from w1.fi ([128.177.27.249]:58315 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751160Ab1FLRSu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jun 2011 13:18:50 -0400
+Date: Sun, 12 Jun 2011 10:18:43 -0700
+From: Jouni Malinen <j@w1.fi>
+To: hedwin <hedwin.koning@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+Message-ID: <20110612171843.GA20860@jm.kir.nu> (sfid-20110612_191855_933304_FA66E283)
+References: <1296633772.3624.2.camel@jlt3.sipsolutions.net>
+ <20110202113052.GA14126@jm.kir.nu>
+ <1296646434.5671.1.camel@jlt3.sipsolutions.net>
+ <20110202133839.GA14904@jm.kir.nu>
+ <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
+ <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com>
+ <BANLkTinPxjBsFQ5n4smD4NwYHikD0kXVNw@mail.gmail.com>
+ <BANLkTi=O4CSp7EyQSj0_09AE4O+5WGfvLw@mail.gmail.com>
+ <20110610200900.GE2665@tuxdriver.com>
+ <BANLkTimnDDhqD4D+xoKwfETz=szgOTAK7w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTimnDDhqD4D+xoKwfETz=szgOTAK7w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. Header files only used by the softmac were moved to the
-brcmsmac dir, same approach for fullmac header files.
+On Fri, Jun 10, 2011 at 10:25:17PM +0200, hedwin wrote:
+> If I want to use wpa_supplicant it seems that I need to use libnl. If
+> not how does wpa_supplicant connect to mac80211?
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |    1 -
- .../brcm80211/{include => brcmfmac}/bcmsdpcm.h     |    0
- .../brcm80211/{include => brcmsmac}/bcmnvram.h     |    0
- .../brcm80211/{include => brcmsmac}/bcmotp.h       |    0
- drivers/staging/brcm80211/brcmsmac/bcmsrom.c       |    3 +++
- drivers/staging/brcm80211/util/bcmutils.c          |    1 -
- 6 files changed, 3 insertions(+), 2 deletions(-)
- rename drivers/staging/brcm80211/{include => brcmfmac}/bcmsdpcm.h (100%)
- rename drivers/staging/brcm80211/{include => brcmsmac}/bcmnvram.h (100%)
- rename drivers/staging/brcm80211/{include => brcmsmac}/bcmotp.h (100%)
+wpa_supplicant uses libnl for accessing nl80211. If libnl is not
+acceptable for whatever reason, I see two options: 1) re-implement libnl
+replacement that provides identical API or 2) modify wpa_supplicant
+src/drivers/driver_nl80211.c to process nl80211/netlink messages with
+internal implementation instead of libnl. I don't care particularly how
+that would be done, but trying to use WEXT is not really a reasonable
+approach here.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index e57dd00..d441500 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -24,7 +24,6 @@
- #include <linux/pci.h>
- #include <linux/completion.h>
- 
--#include <pcicfg.h>
- #include <bcmdefs.h>
- #include <bcmdevs.h>
- #include <bcmutils.h>
-diff --git a/drivers/staging/brcm80211/include/bcmsdpcm.h b/drivers/staging/brcm80211/brcmfmac/bcmsdpcm.h
-similarity index 100%
-rename from drivers/staging/brcm80211/include/bcmsdpcm.h
-rename to drivers/staging/brcm80211/brcmfmac/bcmsdpcm.h
-diff --git a/drivers/staging/brcm80211/include/bcmnvram.h b/drivers/staging/brcm80211/brcmsmac/bcmnvram.h
-similarity index 100%
-rename from drivers/staging/brcm80211/include/bcmnvram.h
-rename to drivers/staging/brcm80211/brcmsmac/bcmnvram.h
-diff --git a/drivers/staging/brcm80211/include/bcmotp.h b/drivers/staging/brcm80211/brcmsmac/bcmotp.h
-similarity index 100%
-rename from drivers/staging/brcm80211/include/bcmotp.h
-rename to drivers/staging/brcm80211/brcmsmac/bcmotp.h
-diff --git a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-index d374673..311bc0c 100644
---- a/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-+++ b/drivers/staging/brcm80211/brcmsmac/bcmsrom.c
-@@ -362,6 +362,9 @@
- #define SRFL_LEDDC	0x40	/* value is an LED duty cycle */
- #define SRFL_NOVAR	0x80	/* do not generate a nvram param, entry is for mfgc */
- 
-+/* Max. nvram variable table size */
-+#define	MAXSZ_NVRAM_VARS	4096
-+
- typedef struct {
- 	const char *name;
- 	u32 revmask;
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index 63843bc..c23e9b5 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -24,7 +24,6 @@
- #include <bcmdefs.h>
- #include <stdarg.h>
- #include <bcmutils.h>
--#include <bcmnvram.h>
- #include <bcmdevs.h>
- 
- MODULE_AUTHOR("Broadcom Corporation");
+> Well if it is google's problem to solve it, this discussion about
+> wireless support in android is on hold until they've done so. right?
+
+I have no reason to believe that Android support could not be discussed
+even if some Android distributions do not like libnl. People seem to be
+perfectly fine in using libnl on Android. Sure, some cases may not be
+able to include libnl, but that should not stop this discussion or
+implementation work and there are clear options described above on how
+to address the license concern.
+
 -- 
-1.7.4.1
-
-
+Jouni Malinen                                            PGP id EFC895FA
