@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4607 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752035Ab1FPBg1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 21:36:27 -0400
-Date: Wed, 15 Jun 2011 18:36:16 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Greg Dietsche" <Gregory.Dietsche@cuw.edu>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Dowan Kim" <dowan@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH] staging: brcm80211: return false if not a broadcom
- board
-Message-ID: <20110616013615.GA14700@broadcom.com> (sfid-20110616_033646_826536_E46396B0)
-References: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu>
-MIME-Version: 1.0
-In-Reply-To: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu>
-Content-Type: text/plain;
- charset=us-ascii
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51747 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973Ab1FLOdo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jun 2011 10:33:44 -0400
+Received: by fxm17 with SMTP id 17so2301587fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 07:33:43 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Cc: francesco.gringoli@ing.unibs.it,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC][PATCH] b43: do not try sending packets when ring can be full
+Date: Sun, 12 Jun 2011 17:11:53 +0200
+Message-Id: <1307891513-6812-1-git-send-email-zajec5@gmail.com> (sfid-20110612_163353_594450_5A459432)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 03:25:09PM -0700, Greg Dietsche wrote:
-> This code looks wrong to me. I think it meant to return false
-> if the board's vendor id isn't Broadcom's.
-> 
-> Compile tested only.
-> 
-> Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-> ---
->  drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> index 4534926..ee13238 100644
-> --- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> +++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> @@ -1943,7 +1943,7 @@ static bool wlc_validboardtype(struct wlc_hw_info *wlc_hw)
->  	}
->  
->  	if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
-> -		return goodboard;
-> +		goodboard = false; 
->  
->  	return goodboard;
->  }
+---
+This prevents us from hitting "Packet after queue stopped", but still
+is not an optimal solution. We stop sending packets from queue to
+hardware if just a one ring is full. It may happen there are packets on
+the queue that want to be send to different ring (qos).
+---
+ drivers/net/wireless/b43/b43.h  |    2 ++
+ drivers/net/wireless/b43/dma.c  |    5 +++++
+ drivers/net/wireless/b43/main.c |    5 +++++
+ 3 files changed, 12 insertions(+), 0 deletions(-)
 
-Actually, the original code is correct.
-
-For boards with the Broadcom ID, this function checks that the boardrev is
-sane. Dev boards that aren't properly configured may have invalid info, so this
-check is mainly to catch that problem.
-
-For boards with any other vendor, we don't have any sanity checks that we know
-should be done, so the board info is always considered good.
-
-The device ID is of course always checked.
-
-- Henry
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 1cb2dde..8d4bb28 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -582,6 +582,8 @@ struct b43_dma {
+ 	struct b43_dmaring *rx_ring;
+ 
+ 	u32 translation; /* Routing bits */
++
++	u8 stopped_rings; /* Amount of stopped rings */
+ };
+ 
+ struct b43_pio_txqueue;
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index d02cf83..a501992 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1056,6 +1056,7 @@ int b43_dma_init(struct b43_wldev *dev)
+ 	if (err)
+ 		return err;
+ 	dma->translation = ssb_dma_translation(dev->sdev);
++	dma->stopped_rings = 0;
+ 
+ 	err = -ENOMEM;
+ 	/* setup TX DMA channels. */
+@@ -1374,6 +1375,8 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
+ 		/* This TX ring is full. */
+ 		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
+ 		ring->stopped = 1;
++		dev->dma.stopped_rings++;
++
+ 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+ 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+ 		}
+@@ -1493,9 +1496,11 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 		B43_WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME);
+ 		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
+ 		ring->stopped = 0;
++		dev->dma.stopped_rings--;
+ 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+ 			b43dbg(dev->wl, "Woke up TX ring %d\n", ring->index);
+ 		}
++		ieee80211_queue_work(dev->wl->hw, &dev->wl->tx_work);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 1d8d983..2260b36 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3219,6 +3219,11 @@ static void b43_tx_work(struct work_struct *work)
+ 	}
+ 
+ 	while (skb_queue_len(&wl->tx_queue)) {
++		if (!b43_using_pio_transfers(dev) && dev->dma.stopped_rings) {
++			mutex_unlock(&wl->mutex);
++			return;
++		}
++
+ 		skb = skb_dequeue(&wl->tx_queue);
+ 
+ 		if (b43_using_pio_transfers(dev))
+-- 
+1.7.3.4
 
