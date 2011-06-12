@@ -1,154 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:37706 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500Ab1FAW3t (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:50054 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751208Ab1FLVYt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 18:29:49 -0400
-Received: by ewy4 with SMTP id 4so91128ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 15:29:48 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: do not use SSB specific flags when calling core reset function
-Date: Thu,  2 Jun 2011 01:07:12 +0200
-Message-Id: <1306969632-8451-1-git-send-email-zajec5@gmail.com> (sfid-20110602_002953_019169_D8BD6505)
+	Sun, 12 Jun 2011 17:24:49 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.0-rc2: Reported regressions 2.6.38 -> 2.6.39
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <9NVbY1BZ_5D.A.2lE.jzS9NB@chimera> (sfid-20110612_232529_635831_8A54A293)
+Date: Sun, 12 Jun 2011 23:06:41 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luckily the only flag we use when calling core reset is GMODE one.
-Thanks to that we can just switch to single bool and make function calls
-bus generic.
+This message contains a list of some post-2.6.38 regressions introduced before
+2.6.39, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Tested on my BCM4312 (LP-PHY) and early tested with BCM43224.
+If you know of any other unresolved post-2.6.38 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c  |   25 +++++++++++--------------
- drivers/net/wireless/b43/main.h  |    2 +-
- drivers/net/wireless/b43/phy_g.c |    2 +-
- 3 files changed, 13 insertions(+), 16 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 659bc31..1b9d3cc 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1144,11 +1144,14 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
- 	}
- }
- 
--static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, u32 flags)
-+static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- {
- 	struct ssb_device *sdev = dev->dev->sdev;
- 	u32 tmslow;
-+	u32 flags = 0;
- 
-+	if (gmode)
-+		flags |= B43_TMSLOW_GMODE;
- 	flags |= B43_TMSLOW_PHYCLKEN;
- 	flags |= B43_TMSLOW_PHYRESET;
- 	if (dev->phy.type == B43_PHYTYPE_N)
-@@ -1169,11 +1172,11 @@ static void b43_ssb_wireless_core_reset(struct b43_wldev *dev, u32 flags)
- 	msleep(1);
- }
- 
--void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
-+void b43_wireless_core_reset(struct b43_wldev *dev, bool gmode)
- {
- 	u32 macctl;
- 
--	b43_ssb_wireless_core_reset(dev, flags);
-+	b43_ssb_wireless_core_reset(dev, gmode);
- 
- 	/* Turn Analog ON, but only if we already know the PHY-type.
- 	 * This protects against very early setup where we don't know the
-@@ -1184,7 +1187,7 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
- 
- 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
- 	macctl &= ~B43_MACCTL_GMODE;
--	if (flags & B43_TMSLOW_GMODE)
-+	if (gmode)
- 		macctl |= B43_MACCTL_GMODE;
- 	macctl |= B43_MACCTL_IHR_ENABLED;
- 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
-@@ -4328,17 +4331,14 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	struct b43_phy *phy = &dev->phy;
- 	int err;
- 	u64 hf;
--	u32 tmp;
- 
- 	B43_WARN_ON(b43_status(dev) != B43_STAT_UNINIT);
- 
- 	err = b43_bus_powerup(dev, 0);
- 	if (err)
- 		goto out;
--	if (!b43_device_is_enabled(dev)) {
--		tmp = phy->gmode ? B43_TMSLOW_GMODE : 0;
--		b43_wireless_core_reset(dev, tmp);
--	}
-+	if (!b43_device_is_enabled(dev))
-+		b43_wireless_core_reset(dev, phy->gmode);
- 
- 	/* Reset all data structures. */
- 	setup_struct_wldev_for_init(dev);
-@@ -4747,7 +4747,6 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 	struct pci_dev *pdev = (bus->bustype == SSB_BUSTYPE_PCI) ? bus->host_pci : NULL;
- 	int err;
- 	bool have_2ghz_phy = 0, have_5ghz_phy = 0;
--	u32 tmp;
- 
- 	/* Do NOT do any device initialization here.
- 	 * Do it in wireless_core_init() instead.
-@@ -4773,8 +4772,7 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 
- 	dev->phy.gmode = have_2ghz_phy;
- 	dev->phy.radio_on = 1;
--	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
--	b43_wireless_core_reset(dev, tmp);
-+	b43_wireless_core_reset(dev, dev->phy.gmode);
- 
- 	err = b43_phy_versioning(dev);
- 	if (err)
-@@ -4822,8 +4820,7 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 		goto err_powerdown;
- 
- 	dev->phy.gmode = have_2ghz_phy;
--	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
--	b43_wireless_core_reset(dev, tmp);
-+	b43_wireless_core_reset(dev, dev->phy.gmode);
- 
- 	err = b43_validate_chipaccess(dev);
- 	if (err)
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index a0d327f..e4ebce9 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -121,7 +121,7 @@ void b43_hf_write(struct b43_wldev *dev, u64 value);
- 
- void b43_dummy_transmission(struct b43_wldev *dev, bool ofdm, bool pa_on);
- 
--void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags);
-+void b43_wireless_core_reset(struct b43_wldev *dev, bool gmode);
- 
- void b43_controller_restart(struct b43_wldev *dev, const char *reason);
- 
-diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-index 684be1f..83532d1 100644
---- a/drivers/net/wireless/b43/phy_g.c
-+++ b/drivers/net/wireless/b43/phy_g.c
-@@ -2535,7 +2535,7 @@ static int b43_gphy_op_prepare_hardware(struct b43_wldev *dev)
- 		b43_wireless_core_reset(dev, 0);
- 		b43_phy_initg(dev);
- 		phy->gmode = 1;
--		b43_wireless_core_reset(dev, B43_TMSLOW_GMODE);
-+		b43_wireless_core_reset(dev, 1);
- 	}
- 
- 	return 0;
--- 
-1.7.3.4
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-06-12       81       21          18
+  2011-05-15       50       12          11
+  2011-04-30       38       17          16
+  2011-04-17       17       11          10
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37132
+Subject		: Random crashes on resume from hibernate on ASUS F6A
+Submitter	: Dmitry Nezhevenko <dion@inhex.net>
+Date		: 2011-06-10 11:00 (3 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36962
+Subject		: [Regression 2.6.39][nouveau][bisected?] leaving fullscreen XV "crashes" with KDE desktop effects enabled
+Submitter	: Jan Seiffert <kaffeemonster@googlemail.com>
+Date		: 2011-05-25 2:32 (19 days old)
+Message-ID	: <BANLkTimd6nvXTbn2hM+cKDNKFpxzsQLHog@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130629073407685&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36952
+Subject		: [2.6.39] CIFS write failures where 2.6.38 works
+Submitter	: Helge Hafting <helge.hafting@hist.no>
+Date		: 2011-06-01 10:11 (12 days old)
+Message-ID	: <4DE6103E.6010100@hist.no>
+References	: http://marc.info/?l=linux-kernel&m=130692387613423&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36712
+Subject		: 2.6.39 - crash when plugging in a usb memory stick
+Submitter	: Chris Clayton <chris2553@googlemail.com>
+Date		: 2011-05-27 8:09 (17 days old)
+Message-ID	: <201105270909.00183.chris2553@googlemail.com>
+References	: http://marc.info/?l=linux-kernel&m=130648376531197&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36702
+Subject		: 2.6.39 kernel panic w/screenshots & kernel cfg link provided
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2011-05-28 12:01 (16 days old)
+Message-ID	: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+References	: http://marc.info/?l=linux-kernel&m=130658411008127&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36392
+Subject		: 2.6.39, 3.0-rc2 Intel DRI Regression: Black Screen after trying to play video
+Submitter	: Dennis Jansen <dennis.jansen@web.de>
+Date		: 2011-06-01 04:41 (12 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36332
+Subject		: Intel gpu turns external monitor off when X starts
+Submitter	: rocko <rockorequin@hotmail.com>
+Date		: 2011-05-31 02:53 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36182
+Subject		: Erroneous package power limit notification since kernel 2.6.39
+Submitter	: Olaf Freyer <aaron667@gmx.net>
+Date		: 2011-05-22 13:01 (22 days old)
+Message-ID	: <4DD9092A.4080507@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=130606930631131&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36092
+Subject		: Filesystem lockup on USB HDD plug-in
+Submitter	: Arno Wagner <arno@wagner.name>
+Date		: 2011-05-28 12:34 (16 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36012
+Subject		: Kernel oops in __pskb_pull_tail
+Submitter	: Steinar H. Gunderson <sgunderson@bigfoot.com>
+Date		: 2011-05-27 18:21 (17 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35922
+Subject		: SND_USB_AUDIO recording device not initializing correctly
+Submitter	:  <bjoern.online@gmail.com>
+Date		: 2011-05-26 10:30 (18 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35662
+Subject		: softlockup with kernel 2.6.39
+Submitter	: Hussam Al-Tayeb <hussam@visp.net.lb>
+Date		: 2011-05-23 08:13 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35642
+Subject		: On resume, I sometimes get a kernel oops with led_trigger_unregister_simple
+Submitter	: Sven-Hendrik Haase <sh@lutzhaase.com>
+Date		: 2011-05-23 00:15 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35242
+Subject		: NULL pointer dereference in intel_sdvo_write_cmd (was Black screen after boot)
+Submitter	: Ko Mi <chaostya.test@hotmail.com>
+Date		: 2011-05-17 10:27 (27 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35142
+Subject		: 2.6.39-rc7-git1 boot error message (no crash)
+Submitter	: werner <w.landgraf@ru.ru>
+Date		: 2011-05-11 4:58 (33 days old)
+Message-ID	: <web-520830057@zbackend1.aha.ru>
+References	: http://marc.info/?l=linux-kernel&m=130512952706444&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34942
+Subject		: [Bug] Kdump does not work when panic triggered due to MCE
+Submitter	: K.Prasad <prasad@linux.vnet.ibm.com>
+Date		: 2011-05-06 16:54 (38 days old)
+Message-ID	: <20110506165412.GB2719@in.ibm.com>
+References	: http://marc.info/?l=linux-kernel&m=130470087226270&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34002
+Subject		: [REGRESSION] [2.6.39-rc3] Wrong resolution in framebuffer and X Window
+Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
+Date		: 2011-04-17 16:04 (57 days old)
+Message-ID	: <201104171804.04664.maciej.rutecki@gmail.com>
+References	: http://marc.info/?l=linux-fbdev&m=130305625114863&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33842
+Subject		: NULL pointer dereference in ip_fragment
+Submitter	: Tomas Carnecky <tom@dbservice.com>
+Date		: 2011-04-23 07:51 (51 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35572
+Subject		: eeprom module: modprobing hangs
+Submitter	: Mark <markotahal@gmail.com>
+Date		: 2011-05-21 20:17 (23 days old)
+Handled-By	: Jean Delvare <khali@linux-fr.org>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=60812
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34662
+Subject		: Warning at block/genhd.c:1556 disk_clear_events
+Submitter	: Meelis Roos <mroos@linux.ee>
+Date		: 2011-05-02 9:59 (42 days old)
+Message-ID	: <alpine.SOC.1.00.1105021255400.6200@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=130433037002610&w=2
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=58262
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33242
+Subject		: Lockdep splat in autofs with 2.6.39-rc2
+Submitter	: Nick Bowler <nbowler@elliptictech.com>
+Date		: 2011-04-07 19:44 (67 days old)
+Message-ID	: <20110407194403.GA29404@elliptictech.com>
+References	: http://marc.info/?l=linux-kernel&m=130220545614682&w=2
+Patch		: http://marc.info/?l=linux-kernel&m=130342115008659&w=2
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.38 and 2.6.39, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=32012
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
