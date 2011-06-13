@@ -1,124 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2522 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595Ab1FIOpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:18 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/21] staging: brcm80211: Fix for suspend issue in
- brcmfmac driver
-Date: Thu, 9 Jun 2011 16:44:51 +0200
-Message-ID: <1307630701-9170-12-git-send-email-rvossen@broadcom.com> (sfid-20110609_164528_913658_54BBE12E)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56012 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755054Ab1FMWef (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 18:34:35 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id 8CD8C18D18B
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:34:33 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 6537527D84
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:34:31 +0300 (EEST)
+Subject: [PATCH v2 00/27] mac80211: create mac80211_ prefix
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 14 Jun 2011 01:34:28 +0300
+Message-ID: <20110613223029.10517.52197.stgit@localhost6.localdomain6> (sfid-20110614_003439_038660_03C7EB76)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+It has always annoyed me that mac80211 uses ieee80211_ prefix. For some time
+already I have been planning to try to do something about it and finally I
+started it. Here's my first shot at it. 
 
-Issue with disconnect at the time of suspend is fixed by properly setting
-connection status bits maintained by brcmfmac driver.
+In this patchset I first fix some issues I found from the drivers, then
+create mac80211-compat.h to make the transition as smooth as possible and
+then start changing mac80211 itself.
 
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
+I now changed only parts of mac80211_i.h, I anticipate there will be still
+three or four patchsets before mac80211 has been converted. Once that is done
+I'm planning to start converting the drivers, one at a time. Unless driver
+maintainers beat me to it, of course. I'm hoping that the conversion would be
+fast enough so that mac80211-compat.h would not be included in any of the
+official linux releases.
+
+v1 was RFC but I didn't get any comments. I'm now resending the series
+so that it could be considered for inclusion. Changes from v1 are rebase
+to latest wireless-testing and ack for the rtlwifi patch from Larry.
+
+Kalle
+
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   32 ++++++++++++++++-----
- 1 files changed, 24 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index e9d19c5..399d7a8 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2110,8 +2110,9 @@ static s32 wl_cfg80211_suspend(struct wiphy *wiphy)
- 	 * While going to suspend if associated with AP disassociate
- 	 * from AP to save power while system is in suspended state
- 	 */
--	if (test_bit(WL_STATUS_CONNECTED, &wl->status) &&
--		test_bit(WL_STATUS_READY, &wl->status)) {
-+	if ((test_bit(WL_STATUS_CONNECTED, &wl->status) ||
-+	     test_bit(WL_STATUS_CONNECTING, &wl->status)) &&
-+	     test_bit(WL_STATUS_READY, &wl->status)) {
- 		WL_INFO("Disassociating from AP"
- 			" while entering suspend state\n");
- 		wl_link_down(wl);
-@@ -2138,8 +2139,6 @@ static s32 wl_cfg80211_suspend(struct wiphy *wiphy)
- 	}
- 	clear_bit(WL_STATUS_SCANNING, &wl->status);
- 	clear_bit(WL_STATUS_SCAN_ABORTING, &wl->status);
--	clear_bit(WL_STATUS_CONNECTING, &wl->status);
--	clear_bit(WL_STATUS_CONNECTED, &wl->status);
- 
- 	/* Inform SDIO stack not to switch off power to the chip */
- 	sdioh_sdio_set_host_pm_flags(MMC_PM_KEEP_POWER);
-@@ -2620,10 +2619,12 @@ wl_notify_connect_status(struct wl_priv *wl, struct net_device *ndev,
- 	} else if (wl_is_linkdown(wl, e)) {
- 		WL_CONN("Linkdown\n");
- 		if (wl_is_ibssmode(wl)) {
-+			clear_bit(WL_STATUS_CONNECTING, &wl->status);
- 			if (test_and_clear_bit(WL_STATUS_CONNECTED,
- 				&wl->status))
- 				wl_link_down(wl);
- 		} else {
-+			wl_bss_connect_done(wl, ndev, e, data, false);
- 			if (test_and_clear_bit(WL_STATUS_CONNECTED,
- 				&wl->status)) {
- 				cfg80211_disconnected(ndev, 0, NULL, 0,
-@@ -4099,6 +4100,25 @@ static s32 __wl_cfg80211_up(struct wl_priv *wl)
- 
- static s32 __wl_cfg80211_down(struct wl_priv *wl)
- {
-+	/*
-+	 * While going down, if associated with AP disassociate
-+	 * from AP to save power
-+	 */
-+	if ((test_bit(WL_STATUS_CONNECTED, &wl->status) ||
-+	     test_bit(WL_STATUS_CONNECTING, &wl->status)) &&
-+	     test_bit(WL_STATUS_READY, &wl->status)) {
-+		WL_INFO("Disassociating from AP");
-+		wl_link_down(wl);
-+
-+		/* Make sure WPA_Supplicant receives all the event
-+		   generated due to DISASSOC call to the fw to keep
-+		   the state fw and WPA_Supplicant state consistent
-+		 */
-+		rtnl_unlock();
-+		wl_delay(500);
-+		rtnl_lock();
-+	}
-+
- 	set_bit(WL_STATUS_SCAN_ABORTING, &wl->status);
- 	wl_term_iscan(wl);
- 	if (wl->scan_request) {
-@@ -4110,8 +4130,6 @@ static s32 __wl_cfg80211_down(struct wl_priv *wl)
- 	clear_bit(WL_STATUS_READY, &wl->status);
- 	clear_bit(WL_STATUS_SCANNING, &wl->status);
- 	clear_bit(WL_STATUS_SCAN_ABORTING, &wl->status);
--	clear_bit(WL_STATUS_CONNECTING, &wl->status);
--	clear_bit(WL_STATUS_CONNECTED, &wl->status);
- 
- 	wl_debugfs_remove_netdev(wl);
- 
-@@ -4230,14 +4248,12 @@ static __used s32 wl_add_ie(struct wl_priv *wl, u8 t, u8 l, u8 *v)
- 	return err;
- }
- 
--
- static void wl_link_down(struct wl_priv *wl)
- {
- 	struct net_device *dev = NULL;
- 	s32 err = 0;
- 
- 	WL_TRACE("Enter\n");
--	clear_bit(WL_STATUS_CONNECTED, &wl->status);
- 
- 	if (wl->link_up) {
- 		dev = wl_to_ndev(wl);
--- 
-1.7.4.1
+Kalle Valo (27):
+      iwlegacy: fix stop/wake queue hacks
+      iwlwifi: fix stop/wake queue hacks
+      zd1211rw: include mac80211.h from zd_chip.h
+      rtlwifi: include mac80211.h from core.h
+      mac80211: switch mac80211.h to use mac80211 prefix
+      mac80211: rename ieee80211_i.h to mac80211_i.h
+      mac80211: rename ieee80211_local to mac80211_local
+      mac80211: rename ieee80211_fragment_entry to mac80211_fragment_entry
+      mac80211: rename ieee80211_bss to mac80211_bss
+      mac80211: rename ieee80211_tx_data to mac80211_tx_data
+      mac80211: rename ieee80211_packet_rx_flags to mac80211_packet_rx_flags
+      mac80211: rename ieee80211_rx_flags to mac80211_i_rx_flags
+      mac80211: rename ieee80211_rx_data to mac80211_rx_data
+      mac80211: rename ieee80211_if_ap to mac80211_if_ap
+      mac80211: change ieee80211_if_wds and _vlan to use mac80211 prefix
+      mac80211: rename ieee80211_work_type to mac80211_work_type
+      mac80211: rename ieee80211_work to mac80211_work
+      mac80211: rename ieee80211_sta_flags to mac80211_sta_flags
+      mac80211: rename ieee80211_if_managed to mac80211_if_managed
+      mac80211: rename ieee80211_if_ibss to mac80211_if_ibss
+      mac80211: rename ieee80211_if_mesh to mac80211_if_mesh
+      mac80211: rename ieee80211_sub_if_data_flags to mac80211_sub_if_data_flags
+      mac80211: rename ieee80211_sdata_state_bits to mac80211_sdata_state_bits
+      mac80211: ieee80211_sub_if_data to mac80211_sub_if_data
+      mac80211: use mac80211 prefix with rx and tx msg flags
+      mac80211: change queue stop reasons to use mac80211 prefix
+      mac80211: use mac80211_hw
 
+
+ drivers/net/wireless/iwlegacy/iwl-helpers.h |    9 
+ drivers/net/wireless/iwlwifi/iwl-helpers.h  |    9 
+ drivers/net/wireless/rtlwifi/core.h         |    2 
+ drivers/net/wireless/zd1211rw/zd_chip.h     |    2 
+ include/net/mac80211-compat.h               |  273 +++++
+ include/net/mac80211.h                      | 1430 ++++++++++++++-------------
+ net/mac80211/agg-rx.c                       |   12 
+ net/mac80211/agg-tx.c                       |   60 +
+ net/mac80211/cfg.c                          |  178 ++-
+ net/mac80211/chan.c                         |   18 
+ net/mac80211/debugfs.c                      |   32 -
+ net/mac80211/debugfs.h                      |    4 
+ net/mac80211/debugfs_key.c                  |    8 
+ net/mac80211/debugfs_key.h                  |   12 
+ net/mac80211/debugfs_netdev.c               |   56 +
+ net/mac80211/debugfs_netdev.h               |   12 
+ net/mac80211/debugfs_sta.c                  |    2 
+ net/mac80211/driver-ops.h                   |  122 +-
+ net/mac80211/driver-trace.h                 |  172 ++-
+ net/mac80211/event.c                        |    4 
+ net/mac80211/ht.c                           |   18 
+ net/mac80211/ibss.c                         |   94 +-
+ net/mac80211/ieee80211_i.h                  | 1406 ---------------------------
+ net/mac80211/iface.c                        |  106 +-
+ net/mac80211/key.c                          |   32 -
+ net/mac80211/key.h                          |   22 
+ net/mac80211/led.c                          |   44 -
+ net/mac80211/led.h                          |   38 -
+ net/mac80211/mac80211_i.h                   | 1406 +++++++++++++++++++++++++++
+ net/mac80211/main.c                         |   80 +-
+ net/mac80211/mesh.c                         |   92 +-
+ net/mac80211/mesh.h                         |   86 +-
+ net/mac80211/mesh_hwmp.c                    |   48 -
+ net/mac80211/mesh_pathtbl.c                 |   34 -
+ net/mac80211/mesh_plink.c                   |   32 -
+ net/mac80211/mlme.c                         |  428 ++++----
+ net/mac80211/offchannel.c                   |   44 -
+ net/mac80211/pm.c                           |   12 
+ net/mac80211/rate.c                         |   10 
+ net/mac80211/rate.h                         |   16 
+ net/mac80211/rc80211_minstrel.c             |    8 
+ net/mac80211/rc80211_minstrel.h             |    2 
+ net/mac80211/rc80211_minstrel_ht.c          |    6 
+ net/mac80211/rc80211_pid_algo.c             |    2 
+ net/mac80211/rx.c                           |  250 ++---
+ net/mac80211/scan.c                         |   86 +-
+ net/mac80211/spectmgmt.c                    |    8 
+ net/mac80211/sta_info.c                     |   88 +-
+ net/mac80211/sta_info.h                     |   28 -
+ net/mac80211/status.c                       |   26 
+ net/mac80211/tkip.c                         |    4 
+ net/mac80211/tx.c                           |  154 +--
+ net/mac80211/util.c                         |  172 ++-
+ net/mac80211/wep.c                          |   22 
+ net/mac80211/wep.h                          |   12 
+ net/mac80211/wme.c                          |   10 
+ net/mac80211/wme.h                          |    8 
+ net/mac80211/work.c                         |  142 +--
+ net/mac80211/wpa.c                          |   22 
+ net/mac80211/wpa.h                          |   18 
+ 60 files changed, 3918 insertions(+), 3615 deletions(-)
+ create mode 100644 include/net/mac80211-compat.h
+ delete mode 100644 net/mac80211/ieee80211_i.h
+ create mode 100644 net/mac80211/mac80211_i.h
 
