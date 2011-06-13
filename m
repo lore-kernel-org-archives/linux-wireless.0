@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4371 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40075 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753477Ab1F3Rmv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 13:42:51 -0400
-Message-ID: <4E0CB587.3000209@broadcom.com> (sfid-20110630_194254_806866_E555E59F)
-Date: Thu, 30 Jun 2011 10:42:31 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
+	id S1752002Ab1FMLLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 07:11:38 -0400
+Date: Mon, 13 Jun 2011 13:12:07 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: add cancel_hw_scan() callback
+Message-ID: <20110613111206.GA5316@redhat.com> (sfid-20110613_131201_213790_73E5C028)
+References: <1307958450-11500-1-git-send-email-eliad@wizery.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and
- bug fixed
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
- <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
-In-Reply-To: <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1307958450-11500-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/29/2011 11:29 PM, Rafał Miłecki wrote:
-> 2011/6/30 Franky Lin<frankyl@broadcom.com>:
->> Most of these patches are brcmfmac cleanup.
->
->
-> Hm, interesting improvement in your "Release early, release often" strategy.
->
+On Mon, Jun 13, 2011 at 12:47:30PM +0300, Eliad Peller wrote:
+> When suspending, __ieee80211_suspend() calls ieee80211_scan_cancel(),
+> which will only cancel sw scan. In order to cancel hw scan, the
+> low-level driver has to cancel it in the suspend() callback. however,
+> this is too late, as a new scan_work will be enqueued (while the driver
+> is going into suspend).
+> 
+> Add a new cancel_hw_scan() callback, asking the driver to cancel an
+> active hw scan, and call it in ieee80211_scan_cancel().
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-Yea, we were waiting for the previous series to get applied.  Not sure 
-how to make this work better.  Any process suggestions would be appreciated.
+Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-- Henry
-
+Thanks
