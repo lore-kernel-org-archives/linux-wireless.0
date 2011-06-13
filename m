@@ -1,1343 +1,4540 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65160 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758006Ab1FJUKl (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:36471 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755264Ab1FMWiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 16:10:41 -0400
-Date: Fri, 10 Jun 2011 15:10:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/13] rtlwifi: rtl8192de: Merge register definitions
-Message-ID: <4df27a40.3Uqg9mE29p4MLiOH%Larry.Finger@lwfinger.net> (sfid-20110610_221046_301888_CFEEC457)
+	Mon, 13 Jun 2011 18:38:16 -0400
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id 70891C7DBC
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:12 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh01.mail.saunalahti.fi (Postfix) with ESMTP id 1483A4030
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:09 +0300 (EEST)
+Subject: [PATCH v2 24/27] mac80211: ieee80211_sub_if_data to
+	mac80211_sub_if_data
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 14 Jun 2011 01:38:08 +0300
+Message-ID: <20110613223808.10517.9248.stgit@localhost6.localdomain6> (sfid-20110614_005723_141817_0101952D)
+In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming Li <chaoming_li@realsil.com.cn>
-
-Merge routines reg.h for RTL8192DE.
-
-Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
+ net/mac80211/agg-rx.c         |    4 +
+ net/mac80211/agg-tx.c         |   18 +++---
+ net/mac80211/cfg.c            |   90 ++++++++++++++--------------
+ net/mac80211/chan.c           |   10 ++-
+ net/mac80211/debugfs_key.c    |    6 +-
+ net/mac80211/debugfs_key.h    |   12 ++--
+ net/mac80211/debugfs_netdev.c |   50 ++++++++--------
+ net/mac80211/debugfs_netdev.h |   12 ++--
+ net/mac80211/driver-ops.h     |   24 ++++---
+ net/mac80211/driver-trace.h   |   44 +++++++-------
+ net/mac80211/event.c          |    2 -
+ net/mac80211/ht.c             |   12 ++--
+ net/mac80211/ibss.c           |   44 +++++++-------
+ net/mac80211/iface.c          |   48 +++++++--------
+ net/mac80211/key.c            |   26 ++++----
+ net/mac80211/key.h            |   16 ++---
+ net/mac80211/mac80211_i.h     |  132 +++++++++++++++++++++--------------------
+ net/mac80211/main.c           |    6 +-
+ net/mac80211/mesh.c           |   48 +++++++--------
+ net/mac80211/mesh.h           |   74 +++++++++++------------
+ net/mac80211/mesh_hwmp.c      |   26 ++++----
+ net/mac80211/mesh_pathtbl.c   |   24 ++++---
+ net/mac80211/mesh_plink.c     |   22 +++----
+ net/mac80211/mlme.c           |  124 +++++++++++++++++++--------------------
+ net/mac80211/offchannel.c     |   12 ++--
+ net/mac80211/pm.c             |    4 +
+ net/mac80211/rate.c           |    2 -
+ net/mac80211/rate.h           |    2 -
+ net/mac80211/rx.c             |   42 +++++++------
+ net/mac80211/scan.c           |   18 +++---
+ net/mac80211/spectmgmt.c      |    4 +
+ net/mac80211/sta_info.c       |   30 +++++----
+ net/mac80211/sta_info.h       |   18 +++---
+ net/mac80211/status.c         |    4 +
+ net/mac80211/tkip.c           |    4 +
+ net/mac80211/tx.c             |   32 +++++-----
+ net/mac80211/util.c           |   30 +++++----
+ net/mac80211/wme.c            |    2 -
+ net/mac80211/wme.h            |    2 -
+ net/mac80211/work.c           |   24 ++++---
+ 40 files changed, 552 insertions(+), 552 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-@@ -0,0 +1,1313 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL92D_REG_H__
-+#define __RTL92D_REG_H__
-+
-+/* ----------------------------------------------------- */
-+/* 0x0000h ~ 0x00FFh System Configuration */
-+/* ----------------------------------------------------- */
-+#define REG_SYS_ISO_CTRL		0x0000
-+#define REG_SYS_FUNC_EN			0x0002
-+#define REG_APS_FSMCO			0x0004
-+#define REG_SYS_CLKR			0x0008
-+#define REG_9346CR			0x000A
-+#define REG_EE_VPD			0x000C
-+#define REG_AFE_MISC			0x0010
-+#define REG_SPS0_CTRL			0x0011
-+#define REG_POWER_OFF_IN_PROCESS	0x0017
-+#define REG_SPS_OCP_CFG			0x0018
-+#define REG_RSV_CTRL			0x001C
-+#define REG_RF_CTRL			0x001F
-+#define REG_LDOA15_CTRL			0x0020
-+#define REG_LDOV12D_CTRL		0x0021
-+#define REG_LDOHCI12_CTRL		0x0022
-+#define REG_LPLDO_CTRL			0x0023
-+#define REG_AFE_XTAL_CTRL		0x0024
-+#define REG_AFE_PLL_CTRL		0x0028
-+/* for 92d, DMDP,SMSP,DMSP contrl */
-+#define REG_MAC_PHY_CTRL		0x002c
-+#define REG_EFUSE_CTRL			0x0030
-+#define REG_EFUSE_TEST			0x0034
-+#define REG_PWR_DATA			0x0038
-+#define REG_CAL_TIMER			0x003C
-+#define REG_ACLK_MON			0x003E
-+#define REG_GPIO_MUXCFG			0x0040
-+#define REG_GPIO_IO_SEL			0x0042
-+#define REG_MAC_PINMUX_CFG		0x0043
-+#define REG_GPIO_PIN_CTRL		0x0044
-+#define REG_GPIO_INTM			0x0048
-+#define REG_LEDCFG0			0x004C
-+#define REG_LEDCFG1			0x004D
-+#define REG_LEDCFG2			0x004E
-+#define REG_LEDCFG3			0x004F
-+#define REG_FSIMR			0x0050
-+#define REG_FSISR			0x0054
-+
-+#define REG_MCUFWDL			0x0080
-+
-+#define REG_HMEBOX_EXT_0		0x0088
-+#define REG_HMEBOX_EXT_1		0x008A
-+#define REG_HMEBOX_EXT_2		0x008C
-+#define REG_HMEBOX_EXT_3		0x008E
-+
-+#define REG_BIST_SCAN			0x00D0
-+#define REG_BIST_RPT			0x00D4
-+#define REG_BIST_ROM_RPT		0x00D8
-+#define REG_USB_SIE_INTF		0x00E0
-+#define REG_PCIE_MIO_INTF		0x00E4
-+#define REG_PCIE_MIO_INTD		0x00E8
-+#define REG_HPON_FSM			0x00EC
-+#define REG_SYS_CFG			0x00F0
-+#define REG_MAC_PHY_CTRL_NORMAL		0x00f8
-+
-+#define  REG_MAC0			0x0081
-+#define  REG_MAC1			0x0053
-+#define  FW_MAC0_READY			0x18
-+#define  FW_MAC1_READY			0x1A
-+#define  MAC0_ON			BIT(7)
-+#define  MAC1_ON			BIT(0)
-+#define  MAC0_READY			BIT(0)
-+#define  MAC1_READY			BIT(0)
-+
-+/* ----------------------------------------------------- */
-+/* 0x0100h ~ 0x01FFh	MACTOP General Configuration */
-+/* ----------------------------------------------------- */
-+#define REG_CR				0x0100
-+#define REG_PBP				0x0104
-+#define REG_TRXDMA_CTRL			0x010C
-+#define REG_TRXFF_BNDY			0x0114
-+#define REG_TRXFF_STATUS		0x0118
-+#define REG_RXFF_PTR			0x011C
-+#define REG_HIMR			0x0120
-+#define REG_HISR			0x0124
-+#define REG_HIMRE			0x0128
-+#define REG_HISRE			0x012C
-+#define REG_CPWM			0x012F
-+#define REG_FWIMR			0x0130
-+#define REG_FWISR			0x0134
-+#define REG_PKTBUF_DBG_CTRL		0x0140
-+#define REG_PKTBUF_DBG_DATA_L		0x0144
-+#define REG_PKTBUF_DBG_DATA_H		0x0148
-+
-+#define REG_TC0_CTRL			0x0150
-+#define REG_TC1_CTRL			0x0154
-+#define REG_TC2_CTRL			0x0158
-+#define REG_TC3_CTRL			0x015C
-+#define REG_TC4_CTRL			0x0160
-+#define REG_TCUNIT_BASE			0x0164
-+#define REG_MBIST_START			0x0174
-+#define REG_MBIST_DONE			0x0178
-+#define REG_MBIST_FAIL			0x017C
-+#define REG_C2HEVT_MSG_NORMAL		0x01A0
-+#define REG_C2HEVT_MSG_TEST		0x01B8
-+#define REG_C2HEVT_CLEAR		0x01BF
-+#define REG_MCUTST_1			0x01c0
-+#define REG_FMETHR			0x01C8
-+#define REG_HMETFR			0x01CC
-+#define REG_HMEBOX_0			0x01D0
-+#define REG_HMEBOX_1			0x01D4
-+#define REG_HMEBOX_2			0x01D8
-+#define REG_HMEBOX_3			0x01DC
-+
-+#define REG_LLT_INIT			0x01E0
-+#define REG_BB_ACCEESS_CTRL		0x01E8
-+#define REG_BB_ACCESS_DATA		0x01EC
-+
-+
-+/* ----------------------------------------------------- */
-+/*	0x0200h ~ 0x027Fh	TXDMA Configuration */
-+/* ----------------------------------------------------- */
-+#define REG_RQPN			0x0200
-+#define REG_FIFOPAGE			0x0204
-+#define REG_TDECTRL			0x0208
-+#define REG_TXDMA_OFFSET_CHK		0x020C
-+#define REG_TXDMA_STATUS		0x0210
-+#define REG_RQPN_NPQ			0x0214
-+
-+/* ----------------------------------------------------- */
-+/*	0x0280h ~ 0x02FFh	RXDMA Configuration */
-+/* ----------------------------------------------------- */
-+#define REG_RXDMA_AGG_PG_TH		0x0280
-+#define REG_RXPKT_NUM			0x0284
-+#define REG_RXDMA_STATUS		0x0288
-+
-+/* ----------------------------------------------------- */
-+/*	0x0300h ~ 0x03FFh	PCIe  */
-+/* ----------------------------------------------------- */
-+#define	REG_PCIE_CTRL_REG		0x0300
-+#define	REG_INT_MIG			0x0304
-+#define	REG_BCNQ_DESA			0x0308
-+#define	REG_HQ_DESA			0x0310
-+#define	REG_MGQ_DESA			0x0318
-+#define	REG_VOQ_DESA			0x0320
-+#define	REG_VIQ_DESA			0x0328
-+#define	REG_BEQ_DESA			0x0330
-+#define	REG_BKQ_DESA			0x0338
-+#define	REG_RX_DESA			0x0340
-+#define	REG_DBI				0x0348
-+#define	REG_DBI_WDATA			0x0348
-+#define REG_DBI_RDATA			0x034C
-+#define REG_DBI_CTRL			0x0350
-+#define REG_DBI_FLAG			0x0352
-+#define	REG_MDIO			0x0354
-+#define	REG_DBG_SEL			0x0360
-+#define	REG_PCIE_HRPWM			0x0361
-+#define	REG_PCIE_HCPWM			0x0363
-+#define	REG_UART_CTRL			0x0364
-+#define	REG_UART_TX_DESA		0x0370
-+#define	REG_UART_RX_DESA		0x0378
-+
-+/* ----------------------------------------------------- */
-+/*	0x0400h ~ 0x047Fh	Protocol Configuration  */
-+/* ----------------------------------------------------- */
-+#define REG_VOQ_INFORMATION		0x0400
-+#define REG_VIQ_INFORMATION		0x0404
-+#define REG_BEQ_INFORMATION		0x0408
-+#define REG_BKQ_INFORMATION		0x040C
-+#define REG_MGQ_INFORMATION		0x0410
-+#define REG_HGQ_INFORMATION		0x0414
-+#define REG_BCNQ_INFORMATION		0x0418
-+
-+
-+#define REG_CPU_MGQ_INFORMATION		0x041C
-+#define REG_FWHW_TXQ_CTRL		0x0420
-+#define REG_HWSEQ_CTRL			0x0423
-+#define REG_TXPKTBUF_BCNQ_BDNY		0x0424
-+#define REG_TXPKTBUF_MGQ_BDNY		0x0425
-+#define REG_MULTI_BCNQ_EN		0x0426
-+#define REG_MULTI_BCNQ_OFFSET		0x0427
-+#define REG_SPEC_SIFS			0x0428
-+#define REG_RL				0x042A
-+#define REG_DARFRC			0x0430
-+#define REG_RARFRC			0x0438
-+#define REG_RRSR			0x0440
-+#define REG_ARFR0			0x0444
-+#define REG_ARFR1			0x0448
-+#define REG_ARFR2			0x044C
-+#define REG_ARFR3			0x0450
-+#define REG_AGGLEN_LMT			0x0458
-+#define REG_AMPDU_MIN_SPACE		0x045C
-+#define REG_TXPKTBUF_WMAC_LBK_BF_HD	0x045D
-+#define REG_FAST_EDCA_CTRL		0x0460
-+#define REG_RD_RESP_PKT_TH		0x0463
-+#define REG_INIRTS_RATE_SEL		0x0480
-+#define REG_INIDATA_RATE_SEL		0x0484
-+#define REG_POWER_STATUS		0x04A4
-+#define REG_POWER_STAGE1		0x04B4
-+#define REG_POWER_STAGE2		0x04B8
-+#define REG_PKT_LIFE_TIME		0x04C0
-+#define REG_STBC_SETTING		0x04C4
-+#define REG_PROT_MODE_CTRL		0x04C8
-+#define REG_MAX_AGGR_NUM		0x04CA
-+#define REG_RTS_MAX_AGGR_NUM		0x04CB
-+#define REG_BAR_MODE_CTRL		0x04CC
-+#define REG_RA_TRY_RATE_AGG_LMT		0x04CF
-+#define REG_EARLY_MODE_CONTROL		0x4D0
-+#define REG_NQOS_SEQ			0x04DC
-+#define REG_QOS_SEQ			0x04DE
-+#define REG_NEED_CPU_HANDLE		0x04E0
-+#define REG_PKT_LOSE_RPT		0x04E1
-+#define REG_PTCL_ERR_STATUS		0x04E2
-+#define REG_DUMMY			0x04FC
-+
-+/* ----------------------------------------------------- */
-+/*	0x0500h ~ 0x05FFh	EDCA Configuration   */
-+/* ----------------------------------------------------- */
-+#define REG_EDCA_VO_PARAM		0x0500
-+#define REG_EDCA_VI_PARAM		0x0504
-+#define REG_EDCA_BE_PARAM		0x0508
-+#define REG_EDCA_BK_PARAM		0x050C
-+#define REG_BCNTCFG			0x0510
-+#define REG_PIFS			0x0512
-+#define REG_RDG_PIFS			0x0513
-+#define REG_SIFS_CTX			0x0514
-+#define REG_SIFS_TRX			0x0516
-+#define REG_AGGR_BREAK_TIME		0x051A
-+#define REG_SLOT			0x051B
-+#define REG_TX_PTCL_CTRL		0x0520
-+#define REG_TXPAUSE			0x0522
-+#define REG_DIS_TXREQ_CLR		0x0523
-+#define REG_RD_CTRL			0x0524
-+#define REG_TBTT_PROHIBIT		0x0540
-+#define REG_RD_NAV_NXT			0x0544
-+#define REG_NAV_PROT_LEN		0x0546
-+#define REG_BCN_CTRL			0x0550
-+#define REG_USTIME_TSF			0x0551
-+#define REG_MBID_NUM			0x0552
-+#define REG_DUAL_TSF_RST		0x0553
-+#define REG_BCN_INTERVAL		0x0554
-+#define REG_MBSSID_BCN_SPACE		0x0554
-+#define REG_DRVERLYINT			0x0558
-+#define REG_BCNDMATIM			0x0559
-+#define REG_ATIMWND			0x055A
-+#define REG_BCN_MAX_ERR			0x055D
-+#define REG_RXTSF_OFFSET_CCK		0x055E
-+#define REG_RXTSF_OFFSET_OFDM		0x055F
-+#define REG_TSFTR			0x0560
-+#define REG_INIT_TSFTR			0x0564
-+#define REG_PSTIMER			0x0580
-+#define REG_TIMER0			0x0584
-+#define REG_TIMER1			0x0588
-+#define REG_ACMHWCTRL			0x05C0
-+#define REG_ACMRSTCTRL			0x05C1
-+#define REG_ACMAVG			0x05C2
-+#define REG_VO_ADMTIME			0x05C4
-+#define REG_VI_ADMTIME			0x05C6
-+#define REG_BE_ADMTIME			0x05C8
-+#define REG_EDCA_RANDOM_GEN		0x05CC
-+#define REG_SCH_TXCMD			0x05D0
-+
-+/* Dual MAC Co-Existence Register  */
-+#define REG_DMC				0x05F0
-+
-+/* ----------------------------------------------------- */
-+/*	0x0600h ~ 0x07FFh	WMAC Configuration */
-+/* ----------------------------------------------------- */
-+#define REG_APSD_CTRL			0x0600
-+#define REG_BWOPMODE			0x0603
-+#define REG_TCR				0x0604
-+#define REG_RCR				0x0608
-+#define REG_RX_PKT_LIMIT		0x060C
-+#define REG_RX_DLK_TIME			0x060D
-+#define REG_RX_DRVINFO_SZ		0x060F
-+
-+#define REG_MACID			0x0610
-+#define REG_BSSID			0x0618
-+#define REG_MAR				0x0620
-+#define REG_MBIDCAMCFG			0x0628
-+
-+#define REG_USTIME_EDCA			0x0638
-+#define REG_MAC_SPEC_SIFS		0x063A
-+#define REG_RESP_SIFS_CCK		0x063C
-+#define REG_RESP_SIFS_OFDM		0x063E
-+#define REG_ACKTO			0x0640
-+#define REG_CTS2TO			0x0641
-+#define REG_EIFS			0x0642
-+
-+
-+/* WMA, BA, CCX */
-+#define REG_NAV_CTRL			0x0650
-+#define REG_BACAMCMD			0x0654
-+#define REG_BACAMCONTENT		0x0658
-+#define REG_LBDLY			0x0660
-+#define REG_FWDLY			0x0661
-+#define REG_RXERR_RPT			0x0664
-+#define REG_WMAC_TRXPTCL_CTL		0x0668
-+
-+
-+/* Security  */
-+#define REG_CAMCMD			0x0670
-+#define REG_CAMWRITE			0x0674
-+#define REG_CAMREAD			0x0678
-+#define REG_CAMDBG			0x067C
-+#define REG_SECCFG			0x0680
-+
-+/* Power  */
-+#define REG_WOW_CTRL			0x0690
-+#define REG_PSSTATUS			0x0691
-+#define REG_PS_RX_INFO			0x0692
-+#define REG_LPNAV_CTRL			0x0694
-+#define REG_WKFMCAM_CMD			0x0698
-+#define REG_WKFMCAM_RWD			0x069C
-+#define REG_RXFLTMAP0			0x06A0
-+#define REG_RXFLTMAP1			0x06A2
-+#define REG_RXFLTMAP2			0x06A4
-+#define REG_BCN_PSR_RPT			0x06A8
-+#define REG_CALB32K_CTRL		0x06AC
-+#define REG_PKT_MON_CTRL		0x06B4
-+#define REG_BT_COEX_TABLE		0x06C0
-+#define REG_WMAC_RESP_TXINFO		0x06D8
-+
-+
-+/* ----------------------------------------------------- */
-+/*	Redifine 8192C register definition for compatibility */
-+/* ----------------------------------------------------- */
-+#define	CR9346				REG_9346CR
-+#define	MSR				(REG_CR + 2)
-+#define	ISR				REG_HISR
-+#define	TSFR				REG_TSFTR
-+
-+#define	MACIDR0				REG_MACID
-+#define	MACIDR4				(REG_MACID + 4)
-+
-+#define PBP				REG_PBP
-+
-+#define	IDR0				MACIDR0
-+#define	IDR4				MACIDR4
-+
-+/* ----------------------------------------------------- */
-+/* 8192C (MSR) Media Status Register(Offset 0x4C, 8 bits)*/
-+/* ----------------------------------------------------- */
-+#define	MSR_NOLINK			0x00
-+#define	MSR_ADHOC			0x01
-+#define	MSR_INFRA			0x02
-+#define	MSR_AP				0x03
-+
-+/* 6. Adaptive Control Registers  (Offset: 0x0160 - 0x01CF) */
-+/* ----------------------------------------------------- */
-+/* 8192C Response Rate Set Register(offset 0x181, 24bits)*/
-+/* ----------------------------------------------------- */
-+#define	RRSR_RSC_OFFSET			21
-+#define	RRSR_SHORT_OFFSET		23
-+#define	RRSR_RSC_BW_40M			0x600000
-+#define	RRSR_RSC_UPSUBCHNL		0x400000
-+#define	RRSR_RSC_LOWSUBCHNL		0x200000
-+#define	RRSR_SHORT			0x800000
-+#define	RRSR_1M				BIT0
-+#define	RRSR_2M				BIT1
-+#define	RRSR_5_5M			BIT2
-+#define	RRSR_11M			BIT3
-+#define	RRSR_6M				BIT4
-+#define	RRSR_9M				BIT5
-+#define	RRSR_12M			BIT6
-+#define	RRSR_18M			BIT7
-+#define	RRSR_24M			BIT8
-+#define	RRSR_36M			BIT9
-+#define	RRSR_48M			BIT10
-+#define	RRSR_54M			BIT11
-+#define	RRSR_MCS0			BIT12
-+#define	RRSR_MCS1			BIT13
-+#define	RRSR_MCS2			BIT14
-+#define	RRSR_MCS3			BIT15
-+#define	RRSR_MCS4			BIT16
-+#define	RRSR_MCS5			BIT17
-+#define	RRSR_MCS6			BIT18
-+#define	RRSR_MCS7			BIT19
-+#define	BRSR_ACKSHORTPMB		BIT23
-+
-+/* ----------------------------------------------------- */
-+/*       8192C Rate Definition  */
-+/* ----------------------------------------------------- */
-+/* CCK */
-+#define	RATR_1M				0x00000001
-+#define	RATR_2M				0x00000002
-+#define	RATR_55M			0x00000004
-+#define	RATR_11M			0x00000008
-+/* OFDM */
-+#define	RATR_6M				0x00000010
-+#define	RATR_9M				0x00000020
-+#define	RATR_12M			0x00000040
-+#define	RATR_18M			0x00000080
-+#define	RATR_24M			0x00000100
-+#define	RATR_36M			0x00000200
-+#define	RATR_48M			0x00000400
-+#define	RATR_54M			0x00000800
-+/* MCS 1 Spatial Stream	*/
-+#define	RATR_MCS0			0x00001000
-+#define	RATR_MCS1			0x00002000
-+#define	RATR_MCS2			0x00004000
-+#define	RATR_MCS3			0x00008000
-+#define	RATR_MCS4			0x00010000
-+#define	RATR_MCS5			0x00020000
-+#define	RATR_MCS6			0x00040000
-+#define	RATR_MCS7			0x00080000
-+/* MCS 2 Spatial Stream */
-+#define	RATR_MCS8			0x00100000
-+#define	RATR_MCS9			0x00200000
-+#define	RATR_MCS10			0x00400000
-+#define	RATR_MCS11			0x00800000
-+#define	RATR_MCS12			0x01000000
-+#define	RATR_MCS13			0x02000000
-+#define	RATR_MCS14			0x04000000
-+#define	RATR_MCS15			0x08000000
-+
-+/* CCK */
-+#define RATE_1M				BIT(0)
-+#define RATE_2M				BIT(1)
-+#define RATE_5_5M			BIT(2)
-+#define RATE_11M			BIT(3)
-+/* OFDM  */
-+#define RATE_6M				BIT(4)
-+#define RATE_9M				BIT(5)
-+#define RATE_12M			BIT(6)
-+#define RATE_18M			BIT(7)
-+#define RATE_24M			BIT(8)
-+#define RATE_36M			BIT(9)
-+#define RATE_48M			BIT(10)
-+#define RATE_54M			BIT(11)
-+/* MCS 1 Spatial Stream */
-+#define RATE_MCS0			BIT(12)
-+#define RATE_MCS1			BIT(13)
-+#define RATE_MCS2			BIT(14)
-+#define RATE_MCS3			BIT(15)
-+#define RATE_MCS4			BIT(16)
-+#define RATE_MCS5			BIT(17)
-+#define RATE_MCS6			BIT(18)
-+#define RATE_MCS7			BIT(19)
-+/* MCS 2 Spatial Stream */
-+#define RATE_MCS8			BIT(20)
-+#define RATE_MCS9			BIT(21)
-+#define RATE_MCS10			BIT(22)
-+#define RATE_MCS11			BIT(23)
-+#define RATE_MCS12			BIT(24)
-+#define RATE_MCS13			BIT(25)
-+#define RATE_MCS14			BIT(26)
-+#define RATE_MCS15			BIT(27)
-+
-+/* ALL CCK Rate */
-+#define	RATE_ALL_CCK			(RATR_1M | RATR_2M | RATR_55M | \
-+					RATR_11M)
-+#define	RATE_ALL_OFDM_AG		(RATR_6M | RATR_9M | RATR_12M | \
-+					RATR_18M | RATR_24M | \
-+					RATR_36M | RATR_48M | RATR_54M)
-+#define	RATE_ALL_OFDM_1SS		(RATR_MCS0 | RATR_MCS1 | RATR_MCS2 | \
-+					RATR_MCS3 | RATR_MCS4 | RATR_MCS5 | \
-+					RATR_MCS6 | RATR_MCS7)
-+#define	RATE_ALL_OFDM_2SS		(RATR_MCS8 | RATR_MCS9 | RATR_MCS10 | \
-+					RATR_MCS11 | RATR_MCS12 | RATR_MCS13 | \
-+					RATR_MCS14 | RATR_MCS15)
-+
-+/* ----------------------------------------------------- */
-+/*    8192C BW_OPMODE bits		(Offset 0x203, 8bit)     */
-+/* ----------------------------------------------------- */
-+#define	BW_OPMODE_20MHZ			BIT(2)
-+#define	BW_OPMODE_5G			BIT(1)
-+#define	BW_OPMODE_11J			BIT(0)
-+
-+
-+/* ----------------------------------------------------- */
-+/*     8192C CAM Config Setting (offset 0x250, 1 byte)   */
-+/* ----------------------------------------------------- */
-+#define	CAM_VALID			BIT(15)
-+#define	CAM_NOTVALID			0x0000
-+#define	CAM_USEDK			BIT(5)
-+
-+#define	CAM_NONE			0x0
-+#define	CAM_WEP40			0x01
-+#define	CAM_TKIP			0x02
-+#define	CAM_AES				0x04
-+#define	CAM_WEP104			0x05
-+#define	CAM_SMS4			0x6
-+
-+
-+#define	TOTAL_CAM_ENTRY			32
-+#define	HALF_CAM_ENTRY			16
-+
-+#define	CAM_WRITE			BIT(16)
-+#define	CAM_READ			0x00000000
-+#define	CAM_POLLINIG			BIT(31)
-+
-+/* 10. Power Save Control Registers	 (Offset: 0x0260 - 0x02DF) */
-+#define	WOW_PMEN			BIT0 /* Power management Enable. */
-+#define	WOW_WOMEN			BIT1 /* WoW function on or off. */
-+#define	WOW_MAGIC			BIT2 /* Magic packet */
-+#define	WOW_UWF				BIT3 /* Unicast Wakeup frame. */
-+
-+/* 12. Host Interrupt Status Registers	 (Offset: 0x0300 - 0x030F) */
-+/* ----------------------------------------------------- */
-+/*      8190 IMR/ISR bits	(offset 0xfd,  8bits) */
-+/* ----------------------------------------------------- */
-+#define	IMR8190_DISABLED		0x0
-+#define	IMR_BCNDMAINT6			BIT(31)
-+#define	IMR_BCNDMAINT5			BIT(30)
-+#define	IMR_BCNDMAINT4			BIT(29)
-+#define	IMR_BCNDMAINT3			BIT(28)
-+#define	IMR_BCNDMAINT2			BIT(27)
-+#define	IMR_BCNDMAINT1			BIT(26)
-+#define	IMR_BCNDOK8			BIT(25)
-+#define	IMR_BCNDOK7			BIT(24)
-+#define	IMR_BCNDOK6			BIT(23)
-+#define	IMR_BCNDOK5			BIT(22)
-+#define	IMR_BCNDOK4			BIT(21)
-+#define	IMR_BCNDOK3			BIT(20)
-+#define	IMR_BCNDOK2			BIT(19)
-+#define	IMR_BCNDOK1			BIT(18)
-+#define	IMR_TIMEOUT2			BIT(17)
-+#define	IMR_TIMEOUT1			BIT(16)
-+#define	IMR_TXFOVW			BIT(15)
-+#define	IMR_PSTIMEOUT			BIT(14)
-+#define	IMR_BcnInt			BIT(13)
-+#define	IMR_RXFOVW			BIT(12)
-+#define	IMR_RDU				BIT(11)
-+#define	IMR_ATIMEND			BIT(10)
-+#define	IMR_BDOK			BIT(9)
-+#define	IMR_HIGHDOK			BIT(8)
-+#define	IMR_TBDOK			BIT(7)
-+#define	IMR_MGNTDOK			BIT(6)
-+#define	IMR_TBDER			BIT(5)
-+#define	IMR_BKDOK			BIT(4)
-+#define	IMR_BEDOK			BIT(3)
-+#define	IMR_VIDOK			BIT(2)
-+#define	IMR_VODOK			BIT(1)
-+#define	IMR_ROK				BIT(0)
-+
-+#define	IMR_TXERR			BIT(11)
-+#define	IMR_RXERR			BIT(10)
-+#define	IMR_C2HCMD			BIT(9)
-+#define	IMR_CPWM			BIT(8)
-+#define	IMR_OCPINT			BIT(1)
-+#define	IMR_WLANOFF			BIT(0)
-+
-+/* ----------------------------------------------------- */
-+/* 8192C EFUSE */
-+/* ----------------------------------------------------- */
-+#define	HWSET_MAX_SIZE			256
-+#define EFUSE_MAX_SECTION		32
-+#define EFUSE_REAL_CONTENT_LEN		512
-+
-+/* ----------------------------------------------------- */
-+/*     8192C EEPROM/EFUSE share register definition. */
-+/* ----------------------------------------------------- */
-+#define	EEPROM_DEFAULT_TSSI			0x0
-+#define EEPROM_DEFAULT_CRYSTALCAP		0x0
-+#define	EEPROM_DEFAULT_THERMALMETER		0x12
-+
-+#define	EEPROM_DEFAULT_TXPOWERLEVEL_2G		0x2C
-+#define	EEPROM_DEFAULT_TXPOWERLEVEL_5G		0x22
-+
-+#define	EEPROM_DEFAULT_HT40_2SDIFF		0x0
-+/* HT20<->40 default Tx Power Index Difference */
-+#define EEPROM_DEFAULT_HT20_DIFF		2
-+/* OFDM Tx Power index diff */
-+#define	EEPROM_DEFAULT_LEGACYHTTXPOWERDIFF	0x4
-+#define EEPROM_DEFAULT_HT40_PWRMAXOFFSET	0
-+#define EEPROM_DEFAULT_HT20_PWRMAXOFFSET	0
-+
-+#define	EEPROM_CHANNEL_PLAN_FCC			0x0
-+#define	EEPROM_CHANNEL_PLAN_IC			0x1
-+#define	EEPROM_CHANNEL_PLAN_ETSI		0x2
-+#define	EEPROM_CHANNEL_PLAN_SPAIN		0x3
-+#define	EEPROM_CHANNEL_PLAN_FRANCE		0x4
-+#define	EEPROM_CHANNEL_PLAN_MKK			0x5
-+#define	EEPROM_CHANNEL_PLAN_MKK1		0x6
-+#define	EEPROM_CHANNEL_PLAN_ISRAEL		0x7
-+#define	EEPROM_CHANNEL_PLAN_TELEC		0x8
-+#define	EEPROM_CHANNEL_PLAN_GLOBAL_DOMAIN	0x9
-+#define	EEPROM_CHANNEL_PLAN_WORLD_WIDE_13	0xA
-+#define	EEPROM_CHANNEL_PLAN_NCC			0xB
-+#define	EEPROM_CHANNEL_PLAN_BY_HW_MASK		0x80
-+
-+#define EEPROM_CID_DEFAULT			0x0
-+#define EEPROM_CID_TOSHIBA			0x4
-+#define	EEPROM_CID_CCX				0x10
-+#define	EEPROM_CID_QMI				0x0D
-+#define EEPROM_CID_WHQL				0xFE
-+
-+
-+#define	RTL8192_EEPROM_ID			0x8129
-+#define	EEPROM_WAPI_SUPPORT			0x78
-+
-+
-+#define RTL8190_EEPROM_ID		0x8129	/* 0-1 */
-+#define EEPROM_HPON			0x02 /* LDO settings.2-5 */
-+#define EEPROM_CLK			0x06 /* Clock settings.6-7 */
-+#define EEPROM_MAC_FUNCTION		0x08 /* SE Test mode.8 */
-+
-+#define EEPROM_VID			0x28 /* SE Vendor ID.A-B */
-+#define EEPROM_DID			0x2A /* SE Device ID. C-D */
-+#define EEPROM_SVID			0x2C /* SE Vendor ID.E-F */
-+#define EEPROM_SMID			0x2E /* SE PCI Subsystem ID. 10-11 */
-+
-+#define EEPROM_MAC_ADDR			0x16 /* SEMAC Address. 12-17 */
-+#define EEPROM_MAC_ADDR_MAC0_92D	0x55
-+#define EEPROM_MAC_ADDR_MAC1_92D	0x5B
-+
-+/* 2.4G band Tx power index setting */
-+#define EEPROM_CCK_TX_PWR_INX_2G	0x61
-+#define EEPROM_HT40_1S_TX_PWR_INX_2G	0x67
-+#define EEPROM_HT40_2S_TX_PWR_INX_DIFF_2G	0x6D
-+#define EEPROM_HT20_TX_PWR_INX_DIFF_2G		0x70
-+#define EEPROM_OFDM_TX_PWR_INX_DIFF_2G		0x73
-+#define EEPROM_HT40_MAX_PWR_OFFSET_2G		0x76
-+#define EEPROM_HT20_MAX_PWR_OFFSET_2G		0x79
-+
-+/*5GL channel 32-64 */
-+#define EEPROM_HT40_1S_TX_PWR_INX_5GL		0x7C
-+#define EEPROM_HT40_2S_TX_PWR_INX_DIFF_5GL	0x82
-+#define EEPROM_HT20_TX_PWR_INX_DIFF_5GL		0x85
-+#define EEPROM_OFDM_TX_PWR_INX_DIFF_5GL		0x88
-+#define EEPROM_HT40_MAX_PWR_OFFSET_5GL		0x8B
-+#define EEPROM_HT20_MAX_PWR_OFFSET_5GL		0x8E
-+
-+/* 5GM channel 100-140 */
-+#define EEPROM_HT40_1S_TX_PWR_INX_5GM		0x91
-+#define EEPROM_HT40_2S_TX_PWR_INX_DIFF_5GM	0x97
-+#define EEPROM_HT20_TX_PWR_INX_DIFF_5GM		0x9A
-+#define EEPROM_OFDM_TX_PWR_INX_DIFF_5GM		0x9D
-+#define EEPROM_HT40_MAX_PWR_OFFSET_5GM		0xA0
-+#define EEPROM_HT20_MAX_PWR_OFFSET_5GM		0xA3
-+
-+/* 5GH channel 149-165 */
-+#define EEPROM_HT40_1S_TX_PWR_INX_5GH		0xA6
-+#define EEPROM_HT40_2S_TX_PWR_INX_DIFF_5GH	0xAC
-+#define EEPROM_HT20_TX_PWR_INX_DIFF_5GH		0xAF
-+#define EEPROM_OFDM_TX_PWR_INX_DIFF_5GH		0xB2
-+#define EEPROM_HT40_MAX_PWR_OFFSET_5GH		0xB5
-+#define EEPROM_HT20_MAX_PWR_OFFSET_5GH		0xB8
-+
-+/* Map of supported channels. */
-+#define EEPROM_CHANNEL_PLAN			0xBB
-+#define EEPROM_IQK_DELTA			0xBC
-+#define EEPROM_LCK_DELTA			0xBC
-+#define EEPROM_XTAL_K				0xBD	/* [7:5] */
-+#define EEPROM_TSSI_A_5G			0xBE
-+#define EEPROM_TSSI_B_5G			0xBF
-+#define EEPROM_TSSI_AB_5G			0xC0
-+#define EEPROM_THERMAL_METER			0xC3	/* [4:0] */
-+#define EEPROM_RF_OPT1				0xC4
-+#define EEPROM_RF_OPT2				0xC5
-+#define EEPROM_RF_OPT3				0xC6
-+#define EEPROM_RF_OPT4				0xC7
-+#define EEPROM_RF_OPT5				0xC8
-+#define EEPROM_RF_OPT6				0xC9
-+#define EEPROM_VERSION				0xCA
-+#define EEPROM_CUSTOMER_ID			0xCB
-+#define EEPROM_RF_OPT7				0xCC
-+
-+#define EEPROM_DEF_PART_NO			0x3FD    /* Byte */
-+#define EEPROME_CHIP_VERSION_L			0x3FF
-+#define EEPROME_CHIP_VERSION_H			0x3FE
-+
-+/*
-+ * Current IOREG MAP
-+ * 0x0000h ~ 0x00FFh   System Configuration (256 Bytes)
-+ * 0x0100h ~ 0x01FFh   MACTOP General Configuration (256 Bytes)
-+ * 0x0200h ~ 0x027Fh   TXDMA Configuration (128 Bytes)
-+ * 0x0280h ~ 0x02FFh   RXDMA Configuration (128 Bytes)
-+ * 0x0300h ~ 0x03FFh   PCIE EMAC Reserved Region (256 Bytes)
-+ * 0x0400h ~ 0x04FFh   Protocol Configuration (256 Bytes)
-+ * 0x0500h ~ 0x05FFh   EDCA Configuration (256 Bytes)
-+ * 0x0600h ~ 0x07FFh   WMAC Configuration (512 Bytes)
-+ * 0x2000h ~ 0x3FFFh   8051 FW Download Region (8196 Bytes)
-+ */
-+
-+/* ----------------------------------------------------- */
-+/* 8192C (RCR)	(Offset 0x608, 32 bits) */
-+/* ----------------------------------------------------- */
-+#define	RCR_APPFCS				BIT(31)
-+#define	RCR_APP_MIC				BIT(30)
-+#define	RCR_APP_ICV				BIT(29)
-+#define	RCR_APP_PHYST_RXFF			BIT(28)
-+#define	RCR_APP_BA_SSN				BIT(27)
-+#define	RCR_ENMBID				BIT(24)
-+#define	RCR_LSIGEN				BIT(23)
-+#define	RCR_MFBEN				BIT(22)
-+#define	RCR_HTC_LOC_CTRL			BIT(14)
-+#define	RCR_AMF					BIT(13)
-+#define	RCR_ACF					BIT(12)
-+#define	RCR_ADF					BIT(11)
-+#define	RCR_AICV				BIT(9)
-+#define	RCR_ACRC32				BIT(8)
-+#define	RCR_CBSSID_BCN				BIT(7)
-+#define	RCR_CBSSID_DATA				BIT(6)
-+#define	RCR_APWRMGT				BIT(5)
-+#define	RCR_ADD3				BIT(4)
-+#define	RCR_AB					BIT(3)
-+#define	RCR_AM					BIT(2)
-+#define	RCR_APM					BIT(1)
-+#define	RCR_AAP					BIT(0)
-+#define	RCR_MXDMA_OFFSET			8
-+#define	RCR_FIFO_OFFSET				13
-+
-+/* ----------------------------------------------------- */
-+/*       8192C Regsiter Bit and Content definition	 */
-+/* ----------------------------------------------------- */
-+/* ----------------------------------------------------- */
-+/*	0x0000h ~ 0x00FFh	System Configuration */
-+/* ----------------------------------------------------- */
-+
-+/* SPS0_CTRL */
-+#define SW18_FPWM				BIT(3)
-+
-+
-+/* SYS_ISO_CTRL */
-+#define ISO_MD2PP				BIT(0)
-+#define ISO_UA2USB				BIT(1)
-+#define ISO_UD2CORE				BIT(2)
-+#define ISO_PA2PCIE				BIT(3)
-+#define ISO_PD2CORE				BIT(4)
-+#define ISO_IP2MAC				BIT(5)
-+#define ISO_DIOP				BIT(6)
-+#define ISO_DIOE				BIT(7)
-+#define ISO_EB2CORE				BIT(8)
-+#define ISO_DIOR				BIT(9)
-+
-+#define PWC_EV25V				BIT(14)
-+#define PWC_EV12V				BIT(15)
-+
-+
-+/* SYS_FUNC_EN */
-+#define FEN_BBRSTB				BIT(0)
-+#define FEN_BB_GLB_RSTn				BIT(1)
-+#define FEN_USBA				BIT(2)
-+#define FEN_UPLL				BIT(3)
-+#define FEN_USBD				BIT(4)
-+#define FEN_DIO_PCIE				BIT(5)
-+#define FEN_PCIEA				BIT(6)
-+#define FEN_PPLL				BIT(7)
-+#define FEN_PCIED				BIT(8)
-+#define FEN_DIOE				BIT(9)
-+#define FEN_CPUEN				BIT(10)
-+#define FEN_DCORE				BIT(11)
-+#define FEN_ELDR				BIT(12)
-+#define FEN_DIO_RF				BIT(13)
-+#define FEN_HWPDN				BIT(14)
-+#define FEN_MREGEN				BIT(15)
-+
-+/* APS_FSMCO */
-+#define PFM_LDALL				BIT(0)
-+#define PFM_ALDN				BIT(1)
-+#define PFM_LDKP				BIT(2)
-+#define PFM_WOWL				BIT(3)
-+#define EnPDN					BIT(4)
-+#define PDN_PL					BIT(5)
-+#define APFM_ONMAC				BIT(8)
-+#define APFM_OFF				BIT(9)
-+#define APFM_RSM				BIT(10)
-+#define AFSM_HSUS				BIT(11)
-+#define AFSM_PCIE				BIT(12)
-+#define APDM_MAC				BIT(13)
-+#define APDM_HOST				BIT(14)
-+#define APDM_HPDN				BIT(15)
-+#define RDY_MACON				BIT(16)
-+#define SUS_HOST				BIT(17)
-+#define ROP_ALD					BIT(20)
-+#define ROP_PWR					BIT(21)
-+#define ROP_SPS					BIT(22)
-+#define SOP_MRST				BIT(25)
-+#define SOP_FUSE				BIT(26)
-+#define SOP_ABG					BIT(27)
-+#define SOP_AMB					BIT(28)
-+#define SOP_RCK					BIT(29)
-+#define SOP_A8M					BIT(30)
-+#define XOP_BTCK				BIT(31)
-+
-+/* SYS_CLKR */
-+#define ANAD16V_EN				BIT(0)
-+#define ANA8M					BIT(1)
-+#define MACSLP					BIT(4)
-+#define LOADER_CLK_EN				BIT(5)
-+#define _80M_SSC_DIS				BIT(7)
-+#define _80M_SSC_EN_HO				BIT(8)
-+#define PHY_SSC_RSTB				BIT(9)
-+#define SEC_CLK_EN				BIT(10)
-+#define MAC_CLK_EN				BIT(11)
-+#define SYS_CLK_EN				BIT(12)
-+#define RING_CLK_EN				BIT(13)
-+
-+
-+/* 9346CR */
-+#define	BOOT_FROM_EEPROM			BIT(4)
-+#define	EEPROM_EN				BIT(5)
-+
-+/* AFE_MISC */
-+#define AFE_BGEN				BIT(0)
-+#define AFE_MBEN				BIT(1)
-+#define MAC_ID_EN				BIT(7)
-+
-+/* RSV_CTRL */
-+#define WLOCK_ALL				BIT(0)
-+#define WLOCK_00				BIT(1)
-+#define WLOCK_04				BIT(2)
-+#define WLOCK_08				BIT(3)
-+#define WLOCK_40				BIT(4)
-+#define R_DIS_PRST_0				BIT(5)
-+#define R_DIS_PRST_1				BIT(6)
-+#define LOCK_ALL_EN				BIT(7)
-+
-+/* RF_CTRL */
-+#define RF_EN					BIT(0)
-+#define RF_RSTB					BIT(1)
-+#define RF_SDMRSTB				BIT(2)
-+
-+
-+
-+/* LDOA15_CTRL */
-+#define LDA15_EN				BIT(0)
-+#define LDA15_STBY				BIT(1)
-+#define LDA15_OBUF				BIT(2)
-+#define LDA15_REG_VOS				BIT(3)
-+#define _LDA15_VOADJ(x)				(((x) & 0x7) << 4)
-+
-+
-+
-+/* LDOV12D_CTRL */
-+#define LDV12_EN				BIT(0)
-+#define LDV12_SDBY				BIT(1)
-+#define LPLDO_HSM				BIT(2)
-+#define LPLDO_LSM_DIS				BIT(3)
-+#define _LDV12_VADJ(x)				(((x) & 0xF) << 4)
-+
-+
-+/* AFE_XTAL_CTRL */
-+#define XTAL_EN					BIT(0)
-+#define XTAL_BSEL				BIT(1)
-+#define _XTAL_BOSC(x)				(((x) & 0x3) << 2)
-+#define _XTAL_CADJ(x)				(((x) & 0xF) << 4)
-+#define XTAL_GATE_USB				BIT(8)
-+#define _XTAL_USB_DRV(x)			(((x) & 0x3) << 9)
-+#define XTAL_GATE_AFE				BIT(11)
-+#define _XTAL_AFE_DRV(x)			(((x) & 0x3) << 12)
-+#define XTAL_RF_GATE				BIT(14)
-+#define _XTAL_RF_DRV(x)				(((x) & 0x3) << 15)
-+#define XTAL_GATE_DIG				BIT(17)
-+#define _XTAL_DIG_DRV(x)			(((x) & 0x3) << 18)
-+#define XTAL_BT_GATE				BIT(20)
-+#define _XTAL_BT_DRV(x)				(((x) & 0x3) << 21)
-+#define _XTAL_GPIO(x)				(((x) & 0x7) << 23)
-+
-+
-+#define CKDLY_AFE				BIT(26)
-+#define CKDLY_USB				BIT(27)
-+#define CKDLY_DIG				BIT(28)
-+#define CKDLY_BT				BIT(29)
-+
-+
-+/* AFE_PLL_CTRL */
-+#define APLL_EN					BIT(0)
-+#define APLL_320_EN				BIT(1)
-+#define APLL_FREF_SEL				BIT(2)
-+#define APLL_EDGE_SEL				BIT(3)
-+#define APLL_WDOGB				BIT(4)
-+#define APLL_LPFEN				BIT(5)
-+
-+#define APLL_REF_CLK_13MHZ			0x1
-+#define APLL_REF_CLK_19_2MHZ			0x2
-+#define APLL_REF_CLK_20MHZ			0x3
-+#define APLL_REF_CLK_25MHZ			0x4
-+#define APLL_REF_CLK_26MHZ			0x5
-+#define APLL_REF_CLK_38_4MHZ			0x6
-+#define APLL_REF_CLK_40MHZ			0x7
-+
-+#define APLL_320EN				BIT(14)
-+#define APLL_80EN				BIT(15)
-+#define APLL_1MEN				BIT(24)
-+
-+
-+/* EFUSE_CTRL */
-+#define ALD_EN					BIT(18)
-+#define EF_PD					BIT(19)
-+#define EF_FLAG					BIT(31)
-+
-+/* EFUSE_TEST  */
-+#define EF_TRPT					BIT(7)
-+#define LDOE25_EN				BIT(31)
-+
-+/* MCUFWDL  */
-+#define MCUFWDL_EN				BIT(0)
-+#define MCUFWDL_RDY				BIT(1)
-+#define FWDL_ChkSum_rpt				BIT(2)
-+#define MACINI_RDY				BIT(3)
-+#define BBINI_RDY				BIT(4)
-+#define RFINI_RDY				BIT(5)
-+#define WINTINI_RDY				BIT(6)
-+#define MAC1_WINTINI_RDY			BIT(11)
-+#define CPRST					BIT(23)
-+
-+/*  REG_SYS_CFG */
-+#define XCLK_VLD				BIT(0)
-+#define ACLK_VLD				BIT(1)
-+#define UCLK_VLD				BIT(2)
-+#define PCLK_VLD				BIT(3)
-+#define PCIRSTB					BIT(4)
-+#define V15_VLD					BIT(5)
-+#define TRP_B15V_EN				BIT(7)
-+#define SIC_IDLE				BIT(8)
-+#define BD_MAC2					BIT(9)
-+#define BD_MAC1					BIT(10)
-+#define IC_MACPHY_MODE				BIT(11)
-+#define PAD_HWPD_IDN				BIT(22)
-+#define TRP_VAUX_EN				BIT(23)
-+#define TRP_BT_EN				BIT(24)
-+#define BD_PKG_SEL				BIT(25)
-+#define BD_HCI_SEL				BIT(26)
-+#define TYPE_ID					BIT(27)
-+
-+/* LLT_INIT */
-+#define _LLT_NO_ACTIVE				0x0
-+#define _LLT_WRITE_ACCESS			0x1
-+#define _LLT_READ_ACCESS			0x2
-+
-+#define _LLT_INIT_DATA(x)			((x) & 0xFF)
-+#define _LLT_INIT_ADDR(x)			(((x) & 0xFF) << 8)
-+#define _LLT_OP(x)				(((x) & 0x3) << 30)
-+#define _LLT_OP_VALUE(x)			(((x) >> 30) & 0x3)
-+
-+
-+/* ----------------------------------------------------- */
-+/*	0x0400h ~ 0x047Fh	Protocol Configuration	 */
-+/* ----------------------------------------------------- */
-+#define	RETRY_LIMIT_SHORT_SHIFT			8
-+#define	RETRY_LIMIT_LONG_SHIFT			0
-+
-+
-+/* ----------------------------------------------------- */
-+/*	0x0500h ~ 0x05FFh	EDCA Configuration */
-+/* ----------------------------------------------------- */
-+/* EDCA setting */
-+#define AC_PARAM_TXOP_LIMIT_OFFSET		16
-+#define AC_PARAM_ECW_MAX_OFFSET			12
-+#define AC_PARAM_ECW_MIN_OFFSET			8
-+#define AC_PARAM_AIFS_OFFSET			0
-+
-+/* ACMHWCTRL */
-+#define	ACMHW_HWEN				BIT(0)
-+#define	ACMHW_BEQEN				BIT(1)
-+#define	ACMHW_VIQEN				BIT(2)
-+#define	ACMHW_VOQEN				BIT(3)
-+
-+/* ----------------------------------------------------- */
-+/*	0x0600h ~ 0x07FFh	WMAC Configuration */
-+/* ----------------------------------------------------- */
-+
-+/* TCR */
-+#define TSFRST					BIT(0)
-+#define DIS_GCLK				BIT(1)
-+#define PAD_SEL					BIT(2)
-+#define PWR_ST					BIT(6)
-+#define PWRBIT_OW_EN				BIT(7)
-+#define ACRC					BIT(8)
-+#define CFENDFORM				BIT(9)
-+#define ICV					BIT(10)
-+
-+/* SECCFG */
-+#define	SCR_TXUSEDK				BIT(0)
-+#define	SCR_RXUSEDK				BIT(1)
-+#define	SCR_TXENCENABLE				BIT(2)
-+#define	SCR_RXENCENABLE				BIT(3)
-+#define	SCR_SKBYA2				BIT(4)
-+#define	SCR_NOSKMC				BIT(5)
-+#define SCR_TXBCUSEDK				BIT(6)
-+#define SCR_RXBCUSEDK				BIT(7)
-+
-+/* General definitions */
-+#define MAC_ADDR_LEN				6
-+#define LAST_ENTRY_OF_TX_PKT_BUFFER		255
-+#define LAST_ENTRY_OF_TX_PKT_BUFFER_DUAL_MAC	127
-+
-+#define POLLING_LLT_THRESHOLD			20
-+#define POLLING_READY_TIMEOUT_COUNT		1000
-+
-+/* Min Spacing related settings. */
-+#define	MAX_MSS_DENSITY_2T			0x13
-+#define	MAX_MSS_DENSITY_1T			0x0A
-+
-+
-+/* BB-PHY register PMAC 0x100 PHY 0x800 - 0xEFF */
-+/* 1. PMAC duplicate register due to connection: */
-+/*    RF_Mode, TRxRN, NumOf L-STF */
-+/* 2. 0x800/0x900/0xA00/0xC00/0xD00/0xE00 */
-+/* 3. RF register 0x00-2E */
-+/* 4. Bit Mask for BB/RF register */
-+/* 5. Other defintion for BB/RF R/W */
-+
-+/* 3. Page8(0x800) */
-+#define	RFPGA0_RFMOD				0x800
-+
-+#define	RFPGA0_TXINFO				0x804
-+#define	RFPGA0_PSDFUNCTION			0x808
-+
-+#define	RFPGA0_TXGAINSTAGE			0x80c
-+
-+#define	RFPGA0_RFTIMING1			0x810
-+#define	RFPGA0_RFTIMING2			0x814
-+
-+#define	RFPGA0_XA_HSSIPARAMETER1		0x820
-+#define	RFPGA0_XA_HSSIPARAMETER2		0x824
-+#define	RFPGA0_XB_HSSIPARAMETER1		0x828
-+#define	RFPGA0_XB_HSSIPARAMETER2		0x82c
-+
-+#define	RFPGA0_XA_LSSIPARAMETER			0x840
-+#define	RFPGA0_XB_LSSIPARAMETER			0x844
-+
-+#define	RFPGA0_RFWAkEUPPARAMETER		0x850
-+#define	RFPGA0_RFSLEEPUPPARAMETER		0x854
-+
-+#define	RFPGA0_XAB_SWITCHCONTROL		0x858
-+#define	RFPGA0_XCD_SWITCHCONTROL		0x85c
-+
-+#define	RFPGA0_XA_RFINTERFACEOE			0x860
-+#define	RFPGA0_XB_RFINTERFACEOE			0x864
-+
-+#define	RFPGA0_XAB_RFINTERFACESW		0x870
-+#define	RFPGA0_XCD_RFINTERFACESW		0x874
-+
-+#define	RFPGA0_XAB_RFPARAMETER			0x878
-+#define	RFPGA0_XCD_RFPARAMETER			0x87c
-+
-+#define	RFPGA0_ANALOGPARAMETER1			0x880
-+#define	RFPGA0_ANALOGPARAMETER2			0x884
-+#define	RFPGA0_ANALOGPARAMETER3			0x888
-+#define	RFPGA0_ADDALLOCKEN			0x888
-+#define	RFPGA0_ANALOGPARAMETER4			0x88c
-+
-+#define	RFPGA0_XA_LSSIREADBACK			0x8a0
-+#define	RFPGA0_XB_LSSIREADBACK			0x8a4
-+#define	RFPGA0_XC_LSSIREADBACK			0x8a8
-+#define	RFPGA0_XD_LSSIREADBACK			0x8ac
-+
-+#define	RFPGA0_PSDREPORT			0x8b4
-+#define	TRANSCEIVERA_HSPI_READBACK		0x8b8
-+#define	TRANSCEIVERB_HSPI_READBACK		0x8bc
-+#define	RFPGA0_XAB_RFINTERFACERB		0x8e0
-+#define	RFPGA0_XCD_RFINTERFACERB		0x8e4
-+
-+/* 4. Page9(0x900) */
-+#define	RFPGA1_RFMOD				0x900
-+
-+#define	RFPGA1_TXBLOCK				0x904
-+#define	RFPGA1_DEBUGSELECT			0x908
-+#define	RFPGA1_TXINFO				0x90c
-+
-+/* 5. PageA(0xA00)  */
-+#define	RCCK0_SYSTEM				0xa00
-+
-+#define	RCCK0_AFESSTTING			0xa04
-+#define	RCCK0_CCA				0xa08
-+
-+#define	RCCK0_RXAGC1				0xa0c
-+#define	RCCK0_RXAGC2				0xa10
-+
-+#define	RCCK0_RXHP				0xa14
-+
-+#define	RCCK0_DSPPARAMETER1			0xa18
-+#define	RCCK0_DSPPARAMETER2			0xa1c
-+
-+#define	RCCK0_TXFILTER1				0xa20
-+#define	RCCK0_TXFILTER2				0xa24
-+#define	RCCK0_DEBUGPORT				0xa28
-+#define	RCCK0_FALSEALARMREPORT			0xa2c
-+#define	RCCK0_TRSSIREPORT			0xa50
-+#define	RCCK0_RXREPORT				0xa54
-+#define	RCCK0_FACOUNTERLOWER			0xa5c
-+#define	RCCK0_FACOUNTERUPPER			0xa58
-+
-+/* 6. PageC(0xC00) */
-+#define	ROFDM0_LSTF				0xc00
-+
-+#define	ROFDM0_TRXPATHENABLE			0xc04
-+#define	ROFDM0_TRMUXPAR				0xc08
-+#define	ROFDM0_TRSWISOLATION			0xc0c
-+
-+#define	ROFDM0_XARXAFE				0xc10
-+#define	ROFDM0_XARXIQIMBALANCE			0xc14
-+#define	ROFDM0_XBRXAFE				0xc18
-+#define	ROFDM0_XBRXIQIMBALANCE			0xc1c
-+#define	ROFDM0_XCRXAFE				0xc20
-+#define	ROFDM0_XCRXIQIMBALANCE			0xc24
-+#define	ROFDM0_XDRXAFE				0xc28
-+#define	ROFDM0_XDRXIQIMBALANCE			0xc2c
-+
-+#define	ROFDM0_RXDETECTOR1			0xc30
-+#define	ROFDM0_RXDETECTOR2			0xc34
-+#define	ROFDM0_RXDETECTOR3			0xc38
-+#define	ROFDM0_RXDETECTOR4			0xc3c
-+
-+#define	ROFDM0_RXDSP				0xc40
-+#define	ROFDM0_CFOANDDAGC			0xc44
-+#define	ROFDM0_CCADROPTHRESHOLD			0xc48
-+#define	ROFDM0_ECCATHRESHOLD			0xc4c
-+
-+#define	ROFDM0_XAAGCCORE1			0xc50
-+#define	ROFDM0_XAAGCCORE2			0xc54
-+#define	ROFDM0_XBAGCCORE1			0xc58
-+#define	ROFDM0_XBAGCCORE2			0xc5c
-+#define	ROFDM0_XCAGCCORE1			0xc60
-+#define	ROFDM0_XCAGCCORE2			0xc64
-+#define	ROFDM0_XDAGCCORE1			0xc68
-+#define	ROFDM0_XDAGCCORE2			0xc6c
-+
-+#define	ROFDM0_AGCPARAMETER1			0xc70
-+#define	ROFDM0_AGCPARAMETER2			0xc74
-+#define	ROFDM0_AGCRSSITABLE			0xc78
-+#define	ROFDM0_HTSTFAGC				0xc7c
-+
-+#define	ROFDM0_XATxIQIMBALANCE			0xc80
-+#define	ROFDM0_XATxAFE				0xc84
-+#define	ROFDM0_XBTxIQIMBALANCE			0xc88
-+#define	ROFDM0_XBTxAFE				0xc8c
-+#define	ROFDM0_XCTxIQIMBALANCE			0xc90
-+#define	ROFDM0_XCTxAFE				0xc94
-+#define	ROFDM0_XDTxIQIMBALANCE			0xc98
-+#define	ROFDM0_XDTxAFE				0xc9c
-+
-+#define	ROFDM0_RXHPPARAMETER			0xce0
-+#define	ROFDM0_TXPSEUDONOISEWGT			0xce4
-+#define	ROFDM0_FRAMESYNC			0xcf0
-+#define	ROFDM0_DFSREPORT			0xcf4
-+#define	ROFDM0_TXCOEFF1				0xca4
-+#define	ROFDM0_TXCOEFF2				0xca8
-+#define	ROFDM0_TXCOEFF3				0xcac
-+#define	ROFDM0_TXCOEFF4				0xcb0
-+#define	ROFDM0_TXCOEFF5				0xcb4
-+#define	ROFDM0_TXCOEFF6				0xcb8
-+
-+/* 7. PageD(0xD00) */
-+#define	ROFDM1_LSTF				0xd00
-+#define	ROFDM1_TRXPATHENABLE			0xd04
-+
-+#define	ROFDM1_CFO				0xd08
-+#define	ROFDM1_CSI1				0xd10
-+#define	ROFDM1_SBD				0xd14
-+#define	ROFDM1_CSI2				0xd18
-+#define	ROFDM1_CFOTRACKING			0xd2c
-+#define	ROFDM1_TRXMESAURE1			0xd34
-+#define	ROFDM1_INTFDET				0xd3c
-+#define	ROFDM1_PSEUDONOISESTATEAB		0xd50
-+#define	ROFDM1_PSEUDONOISESTATECD		0xd54
-+#define	ROFDM1_RXPSEUDONOISEWGT			0xd58
-+
-+#define	ROFDM_PHYCOUNTER1			0xda0
-+#define	ROFDM_PHYCOUNTER2			0xda4
-+#define	ROFDM_PHYCOUNTER3			0xda8
-+
-+#define	ROFDM_SHORTCFOAB			0xdac
-+#define	ROFDM_SHORTCFOCD			0xdb0
-+#define	ROFDM_LONGCFOAB				0xdb4
-+#define	ROFDM_LONGCFOCD				0xdb8
-+#define	ROFDM_TAILCFOAB				0xdbc
-+#define	ROFDM_TAILCFOCD				0xdc0
-+#define	ROFDM_PWMEASURE1			0xdc4
-+#define	ROFDM_PWMEASURE2			0xdc8
-+#define	ROFDM_BWREPORT				0xdcc
-+#define	ROFDM_AGCREPORT				0xdd0
-+#define	ROFDM_RXSNR				0xdd4
-+#define	ROFDM_RXEVMCSI				0xdd8
-+#define	ROFDM_SIGReport				0xddc
-+
-+/* 8. PageE(0xE00) */
-+#define	RTXAGC_A_RATE18_06			0xe00
-+#define	RTXAGC_A_RATE54_24			0xe04
-+#define	RTXAGC_A_CCK1_MCS32			0xe08
-+#define	RTXAGC_A_MCS03_MCS00			0xe10
-+#define	RTXAGC_A_MCS07_MCS04			0xe14
-+#define	RTXAGC_A_MCS11_MCS08			0xe18
-+#define	RTXAGC_A_MCS15_MCS12			0xe1c
-+
-+#define	RTXAGC_B_RATE18_06			0x830
-+#define	RTXAGC_B_RATE54_24			0x834
-+#define	RTXAGC_B_CCK1_55_MCS32			0x838
-+#define	RTXAGC_B_MCS03_MCS00			0x83c
-+#define	RTXAGC_B_MCS07_MCS04			0x848
-+#define	RTXAGC_B_MCS11_MCS08			0x84c
-+#define	RTXAGC_B_MCS15_MCS12			0x868
-+#define	RTXAGC_B_CCK11_A_CCK2_11		0x86c
-+
-+/* RL6052 Register definition */
-+#define	RF_AC					0x00
-+
-+#define	RF_IQADJ_G1				0x01
-+#define	RF_IQADJ_G2				0x02
-+#define	RF_POW_TRSW				0x05
-+
-+#define	RF_GAIN_RX				0x06
-+#define	RF_GAIN_TX				0x07
-+
-+#define	RF_TXM_IDAC				0x08
-+#define	RF_BS_IQGEN				0x0F
-+
-+#define	RF_MODE1				0x10
-+#define	RF_MODE2				0x11
-+
-+#define	RF_RX_AGC_HP				0x12
-+#define	RF_TX_AGC				0x13
-+#define	RF_BIAS					0x14
-+#define	RF_IPA					0x15
-+#define	RF_POW_ABILITY				0x17
-+#define	RF_MODE_AG				0x18
-+#define	rRfChannel				0x18
-+#define	RF_CHNLBW				0x18
-+#define	RF_TOP					0x19
-+
-+#define	RF_RX_G1				0x1A
-+#define	RF_RX_G2				0x1B
-+
-+#define	RF_RX_BB2				0x1C
-+#define	RF_RX_BB1				0x1D
-+
-+#define	RF_RCK1					0x1E
-+#define	RF_RCK2					0x1F
-+
-+#define	RF_TX_G1				0x20
-+#define	RF_TX_G2				0x21
-+#define	RF_TX_G3				0x22
-+
-+#define	RF_TX_BB1				0x23
-+
-+#define	RF_T_METER				0x42
-+
-+#define	RF_SYN_G1				0x25
-+#define	RF_SYN_G2				0x26
-+#define	RF_SYN_G3				0x27
-+#define	RF_SYN_G4				0x28
-+#define	RF_SYN_G5				0x29
-+#define	RF_SYN_G6				0x2A
-+#define	RF_SYN_G7				0x2B
-+#define	RF_SYN_G8				0x2C
-+
-+#define	RF_RCK_OS				0x30
-+
-+#define	RF_TXPA_G1				0x31
-+#define	RF_TXPA_G2				0x32
-+#define	RF_TXPA_G3				0x33
-+
-+/* Bit Mask */
-+
-+/* 2. Page8(0x800) */
-+#define	BRFMOD					0x1
-+#define	BCCKTXSC				0x30
-+#define	BCCKEN					0x1000000
-+#define	BOFDMEN					0x2000000
-+
-+#define	B3WIREDATALENGTH			0x800
-+#define	B3WIREADDRESSLENGTH			0x400
-+
-+#define	BRFSI_RFENV				0x10
-+
-+#define	BLSSIREADADDRESS			0x7f800000
-+#define	BLSSIREADEDGE				0x80000000
-+#define	BLSSIREADBACKDATA			0xfffff
-+/* 4. PageA(0xA00) */
-+#define BCCKSIDEBAND				0x10
-+
-+/* Other Definition */
-+#define	BBYTE0					0x1
-+#define	BBYTE1					0x2
-+#define	BBYTE2					0x4
-+#define	BBYTE3					0x8
-+#define	BWORD0					0x3
-+#define	BWORD1					0xc
-+#define	BDWORD					0xf
-+
-+#define	BMASKBYTE0				0xff
-+#define	BMASKBYTE1				0xff00
-+#define	BMASKBYTE2				0xff0000
-+#define	BMASKBYTE3				0xff000000
-+#define	BMASKHWORD				0xffff0000
-+#define	BMASKLWORD				0x0000ffff
-+#define	BMASKDWORD				0xffffffff
-+#define	BMASK12BITS				0xfff
-+#define	BMASKH4BITS				0xf0000000
-+#define BMASKOFDM_D				0xffc00000
-+#define	BMASKCCK				0x3f3f3f3f
-+
-+#define BRFREGOFFSETMASK			0xfffff
-+
-+#endif
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index bf234e5..8bce4b3 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -103,7 +103,7 @@ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
+ 				  const u8 *addr)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct sta_info *sta = sta_info_get(sdata, addr);
+ 	int i;
+ 
+@@ -149,7 +149,7 @@ static void sta_rx_agg_reorder_timer_expired(unsigned long data)
+ 	rcu_read_unlock();
+ }
+ 
+-static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
++static void ieee80211_send_addba_resp(struct mac80211_sub_if_data *sdata, u8 *da, u16 tid,
+ 				      u8 dialog_token, u16 status, u16 policy,
+ 				      u16 buf_size, u16 timeout)
+ {
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index d45743b..0d772a6 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -56,7 +56,7 @@
+  * and the driver must later call ieee80211_stop_tx_ba_cb_irqsafe().
+  */
+ 
+-static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_send_addba_request(struct mac80211_sub_if_data *sdata,
+ 					 const u8 *da, u16 tid,
+ 					 u8 dialog_token, u16 start_seq_num,
+ 					 u16 agg_size, u16 timeout)
+@@ -106,7 +106,7 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
++void ieee80211_send_bar(struct mac80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -288,7 +288,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
+ 	struct mac80211_local *local = sta->local;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	u16 start_seq_num;
+ 	int ret;
+ 
+@@ -353,7 +353,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 				  u16 timeout)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	int ret = 0;
+@@ -520,7 +520,7 @@ static void ieee80211_agg_tx_operational(struct mac80211_local *local,
+ 
+ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -569,7 +569,7 @@ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid)
+ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				      const u8 *ra, u16 tid)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_ra_tid *ra_tid;
+ 	struct sk_buff *skb = dev_alloc_skb(0);
+@@ -610,7 +610,7 @@ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	int ret = 0;
+@@ -648,7 +648,7 @@ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+ 
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -722,7 +722,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				     const u8 *ra, u16 tid)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_ra_tid *ra_tid;
+ 	struct sk_buff *skb = dev_alloc_skb(0);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 40ba6be..4d18db7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -26,7 +26,7 @@ static struct net_device *ieee80211_add_iface(struct wiphy *wiphy, char *name,
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+ 	struct net_device *dev;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	int err;
+ 
+ 	err = ieee80211_if_add(local, name, &dev, type, params);
+@@ -53,7 +53,7 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 				  enum nl80211_iftype type, u32 *flags,
+ 				  struct vif_params *params)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	int ret;
+ 
+ 	ret = ieee80211_if_change_type(sdata, type);
+@@ -105,7 +105,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta = NULL;
+ 	struct ieee80211_key *key;
+ 	int err;
+@@ -160,7 +160,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key = NULL;
+@@ -204,7 +204,7 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     void (*callback)(void *cookie,
+ 					      struct key_params *params))
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta = NULL;
+ 	u8 seq[6] = {0};
+ 	struct key_params params;
+@@ -293,7 +293,7 @@ static int ieee80211_config_default_key(struct wiphy *wiphy,
+ 					u8 key_idx, bool uni,
+ 					bool multi)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	ieee80211_set_default_key(sdata, key_idx, uni, multi);
+ 
+@@ -304,7 +304,7 @@ static int ieee80211_config_default_mgmt_key(struct wiphy *wiphy,
+ 					     struct net_device *dev,
+ 					     u8 key_idx)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	ieee80211_set_default_mgmt_key(sdata, key_idx);
+ 
+@@ -324,7 +324,7 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+ 
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct timespec uptime;
+ 
+ 	sinfo->generation = sdata->local->sta_generation;
+@@ -406,7 +406,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *mac, struct station_info *sinfo)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta;
+ 	int ret = -ENOENT;
+ 
+@@ -435,7 +435,7 @@ static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
+ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *mac, struct station_info *sinfo)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sta_info *sta;
+ 	int ret = -ENOENT;
+ 
+@@ -455,7 +455,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
+ /*
+  * This handles both adding a beacon and setting new beacon info
+  */
+-static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_config_beacon(struct mac80211_sub_if_data *sdata,
+ 				   struct beacon_parameters *params)
+ {
+ 	struct beacon_data *new, *old;
+@@ -553,7 +553,7 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ static int ieee80211_add_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 				struct beacon_parameters *params)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct beacon_data *old;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -568,7 +568,7 @@ static int ieee80211_add_beacon(struct wiphy *wiphy, struct net_device *dev,
+ static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 				struct beacon_parameters *params)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct beacon_data *old;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -582,7 +582,7 @@ static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static int ieee80211_del_beacon(struct wiphy *wiphy, struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct beacon_data *old;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -651,7 +651,7 @@ static void sta_apply_parameters(struct mac80211_local *local,
+ 	u32 rates;
+ 	int i, j;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	u32 mask, set;
+ 
+ 	sband = local->hw.wiphy->bands[local->oper_channel->band];
+@@ -757,7 +757,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	int err;
+ 	int layer2_update;
+ 
+@@ -807,7 +807,7 @@ static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *mac)
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -823,10 +823,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 				    u8 *mac,
+ 				    struct station_parameters *params)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *vlansdata;
++	struct mac80211_sub_if_data *vlansdata;
+ 
+ 	rcu_read_lock();
+ 
+@@ -873,7 +873,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *dst, u8 *next_hop)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mesh_path *mpath;
+ 	struct sta_info *sta;
+ 	int err;
+@@ -907,7 +907,7 @@ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
+ static int ieee80211_del_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *dst)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	if (dst)
+ 		return mesh_path_del(dst, sdata);
+@@ -920,7 +920,7 @@ static int ieee80211_change_mpath(struct wiphy *wiphy,
+ 				    struct net_device *dev,
+ 				    u8 *dst, u8 *next_hop)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mesh_path *mpath;
+ 	struct sta_info *sta;
+ 
+@@ -993,7 +993,7 @@ static int ieee80211_get_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 			       u8 *dst, u8 *next_hop, struct mpath_info *pinfo)
+ 
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mesh_path *mpath;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1014,7 +1014,7 @@ static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *dst, u8 *next_hop,
+ 				 struct mpath_info *pinfo)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mesh_path *mpath;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1035,7 +1035,7 @@ static int ieee80211_get_mesh_config(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct mesh_config *conf)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	memcpy(conf, &(sdata->u.mesh.mshcfg), sizeof(struct mesh_config));
+@@ -1086,7 +1086,7 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 					const struct mesh_config *nconf)
+ {
+ 	struct mesh_config *conf;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_if_mesh *ifmsh;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1138,7 +1138,7 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 			       const struct mesh_config *conf,
+ 			       const struct mesh_setup *setup)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	int err;
+ 
+@@ -1153,7 +1153,7 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	ieee80211_stop_mesh(sdata);
+ 
+@@ -1165,7 +1165,7 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct bss_parameters *params)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	u32 changed = 0;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -1265,7 +1265,7 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 				 enum nl80211_channel_type channel_type)
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+-	struct ieee80211_sub_if_data *sdata = NULL;
++	struct mac80211_sub_if_data *sdata = NULL;
+ 	struct ieee80211_channel *old_oper;
+ 	enum nl80211_channel_type old_oper_type;
+ 	enum nl80211_channel_type old_vif_oper_type= NL80211_CHAN_NO_HT;
+@@ -1328,7 +1328,7 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 			  struct net_device *dev,
+ 			  struct cfg80211_scan_request *req)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	switch (ieee80211_vif_type_p2p(&sdata->vif)) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -1360,7 +1360,7 @@ ieee80211_sched_scan_start(struct wiphy *wiphy,
+ 			   struct net_device *dev,
+ 			   struct cfg80211_sched_scan_request *req)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	if (!sdata->local->ops->sched_scan_start)
+ 		return -EOPNOTSUPP;
+@@ -1371,7 +1371,7 @@ ieee80211_sched_scan_start(struct wiphy *wiphy,
+ static int
+ ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	if (!sdata->local->ops->sched_scan_stop)
+ 		return -EOPNOTSUPP;
+@@ -1389,7 +1389,7 @@ static int ieee80211_assoc(struct wiphy *wiphy, struct net_device *dev,
+ 			   struct cfg80211_assoc_request *req)
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	switch (ieee80211_get_channel_mode(local, sdata)) {
+ 	case CHAN_MODE_HOPPING:
+@@ -1425,7 +1425,7 @@ static int ieee80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 			       struct cfg80211_ibss_params *params)
+ {
+ 	struct mac80211_local *local = wiphy_priv(wiphy);
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	switch (ieee80211_get_channel_mode(local, sdata)) {
+ 	case CHAN_MODE_HOPPING:
+@@ -1445,7 +1445,7 @@ static int ieee80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static int ieee80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	return ieee80211_ibss_leave(sdata);
+ }
+@@ -1530,7 +1530,7 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy, int *dbm)
+ static int ieee80211_set_wds_peer(struct wiphy *wiphy, struct net_device *dev,
+ 				  const u8 *addr)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	memcpy(&sdata->u.wds.remote_addr, addr, ETH_ALEN);
+ 
+@@ -1569,7 +1569,7 @@ static int ieee80211_testmode_dump(struct wiphy *wiphy,
+ }
+ #endif
+ 
+-int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
++int __ieee80211_request_smps(struct mac80211_sub_if_data *sdata,
+ 			     enum ieee80211_smps_mode smps_mode)
+ {
+ 	const u8 *ap;
+@@ -1618,7 +1618,7 @@ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 				    bool enabled, int timeout)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
+@@ -1651,7 +1651,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 s32 rssi_thold, u32 rssi_hyst)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_vif *vif = &sdata->vif;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+@@ -1681,7 +1681,7 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				      const u8 *addr,
+ 				      const struct cfg80211_bitrate_mask *mask)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	int i, ret;
+ 
+@@ -1735,7 +1735,7 @@ static int ieee80211_remain_on_channel(struct wiphy *wiphy,
+ 				       unsigned int duration,
+ 				       u64 *cookie)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	if (local->ops->remain_on_channel) {
+@@ -1781,7 +1781,7 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 					      struct net_device *dev,
+ 					      u64 cookie)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	if (local->ops->cancel_remain_on_channel) {
+@@ -1825,7 +1825,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 			     bool channel_type_valid, unsigned int wait,
+ 			     const u8 *buf, size_t len, u64 *cookie)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+@@ -1994,7 +1994,7 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 u64 cookie)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct mac80211_work *wk;
+ 	int ret = -ENOENT;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index d2fe20d..74b2760 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -7,9 +7,9 @@
+ 
+ static enum ieee80211_chan_mode
+ __ieee80211_get_channel_mode(struct mac80211_local *local,
+-			     struct ieee80211_sub_if_data *ignore)
++			     struct mac80211_sub_if_data *ignore)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	lockdep_assert_held(&local->iflist_mtx);
+ 
+@@ -46,7 +46,7 @@ __ieee80211_get_channel_mode(struct mac80211_local *local,
+ 
+ enum ieee80211_chan_mode
+ ieee80211_get_channel_mode(struct mac80211_local *local,
+-			   struct ieee80211_sub_if_data *ignore)
++			   struct mac80211_sub_if_data *ignore)
+ {
+ 	enum ieee80211_chan_mode mode;
+ 
+@@ -58,10 +58,10 @@ ieee80211_get_channel_mode(struct mac80211_local *local,
+ }
+ 
+ bool ieee80211_set_channel_type(struct mac80211_local *local,
+-				struct ieee80211_sub_if_data *sdata,
++				struct mac80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype)
+ {
+-	struct ieee80211_sub_if_data *tmp;
++	struct mac80211_sub_if_data *tmp;
+ 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
+ 	bool result;
+ 
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 958791f..acfe8f2 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -271,7 +271,7 @@ void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
+ 	key->debugfs.dir = NULL;
+ }
+ 
+-void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_key_update_default(struct mac80211_sub_if_data *sdata)
+ {
+ 	char buf[50];
+ 	struct ieee80211_key *key;
+@@ -306,7 +306,7 @@ void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-void ieee80211_debugfs_key_add_mgmt_default(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_key_add_mgmt_default(struct mac80211_sub_if_data *sdata)
+ {
+ 	char buf[50];
+ 	struct ieee80211_key *key;
+@@ -325,7 +325,7 @@ void ieee80211_debugfs_key_add_mgmt_default(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_debugfs_key_remove_mgmt_default(sdata);
+ }
+ 
+-void ieee80211_debugfs_key_remove_mgmt_default(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_key_remove_mgmt_default(struct mac80211_sub_if_data *sdata)
+ {
+ 	if (!sdata)
+ 		return;
+diff --git a/net/mac80211/debugfs_key.h b/net/mac80211/debugfs_key.h
+index 32adc77..2c543cc 100644
+--- a/net/mac80211/debugfs_key.h
++++ b/net/mac80211/debugfs_key.h
+@@ -4,11 +4,11 @@
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ void ieee80211_debugfs_key_add(struct ieee80211_key *key);
+ void ieee80211_debugfs_key_remove(struct ieee80211_key *key);
+-void ieee80211_debugfs_key_update_default(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_key_update_default(struct mac80211_sub_if_data *sdata);
+ void ieee80211_debugfs_key_add_mgmt_default(
+-	struct ieee80211_sub_if_data *sdata);
++	struct mac80211_sub_if_data *sdata);
+ void ieee80211_debugfs_key_remove_mgmt_default(
+-	struct ieee80211_sub_if_data *sdata);
++	struct mac80211_sub_if_data *sdata);
+ void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
+ 				   struct sta_info *sta);
+ #else
+@@ -17,13 +17,13 @@ static inline void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ static inline void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
+ {}
+ static inline void ieee80211_debugfs_key_update_default(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void ieee80211_debugfs_key_add_mgmt_default(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void ieee80211_debugfs_key_remove_mgmt_default(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
+ 						 struct sta_info *sta)
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index d2b6a87..bbd9e7c 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -23,10 +23,10 @@
+ #include "debugfs_netdev.h"
+ 
+ static ssize_t ieee80211_if_read(
+-	struct ieee80211_sub_if_data *sdata,
++	struct mac80211_sub_if_data *sdata,
+ 	char __user *userbuf,
+ 	size_t count, loff_t *ppos,
+-	ssize_t (*format)(const struct ieee80211_sub_if_data *, char *, int))
++	ssize_t (*format)(const struct mac80211_sub_if_data *, char *, int))
+ {
+ 	char buf[70];
+ 	ssize_t ret = -EINVAL;
+@@ -43,10 +43,10 @@ static ssize_t ieee80211_if_read(
+ }
+ 
+ static ssize_t ieee80211_if_write(
+-	struct ieee80211_sub_if_data *sdata,
++	struct mac80211_sub_if_data *sdata,
+ 	const char __user *userbuf,
+ 	size_t count, loff_t *ppos,
+-	ssize_t (*write)(struct ieee80211_sub_if_data *, const char *, int))
++	ssize_t (*write)(struct mac80211_sub_if_data *, const char *, int))
+ {
+ 	u8 *buf;
+ 	ssize_t ret;
+@@ -72,7 +72,7 @@ freebuf:
+ 
+ #define IEEE80211_IF_FMT(name, field, format_string)			\
+ static ssize_t ieee80211_if_fmt_##name(					\
+-	const struct ieee80211_sub_if_data *sdata, char *buf,		\
++	const struct mac80211_sub_if_data *sdata, char *buf,		\
+ 	int buflen)							\
+ {									\
+ 	return scnprintf(buf, buflen, format_string, sdata->field);	\
+@@ -88,7 +88,7 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 
+ #define IEEE80211_IF_FMT_ATOMIC(name, field)				\
+ static ssize_t ieee80211_if_fmt_##name(					\
+-	const struct ieee80211_sub_if_data *sdata,			\
++	const struct mac80211_sub_if_data *sdata,			\
+ 	char *buf, int buflen)						\
+ {									\
+ 	return scnprintf(buf, buflen, "%d\n", atomic_read(&sdata->field));\
+@@ -96,7 +96,7 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 
+ #define IEEE80211_IF_FMT_MAC(name, field)				\
+ static ssize_t ieee80211_if_fmt_##name(					\
+-	const struct ieee80211_sub_if_data *sdata, char *buf,		\
++	const struct mac80211_sub_if_data *sdata, char *buf,		\
+ 	int buflen)							\
+ {									\
+ 	return scnprintf(buf, buflen, "%pM\n", sdata->field);		\
+@@ -104,7 +104,7 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 
+ #define IEEE80211_IF_FMT_DEC_DIV_16(name, field)			\
+ static ssize_t ieee80211_if_fmt_##name(					\
+-	const struct ieee80211_sub_if_data *sdata,			\
++	const struct mac80211_sub_if_data *sdata,			\
+ 	char *buf, int buflen)						\
+ {									\
+ 	return scnprintf(buf, buflen, "%d\n", sdata->field / 16);	\
+@@ -157,7 +157,7 @@ IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
+ IEEE80211_IF_FILE(last_beacon, u.mgd.last_beacon_signal, DEC);
+ IEEE80211_IF_FILE(ave_beacon, u.mgd.ave_beacon_signal, DEC_DIV_16);
+ 
+-static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_set_smps(struct mac80211_sub_if_data *sdata,
+ 			      enum ieee80211_smps_mode smps_mode)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -191,7 +191,7 @@ static const char *smps_modes[IEEE80211_SMPS_NUM_MODES] = {
+ 	[IEEE80211_SMPS_DYNAMIC] = "dynamic",
+ };
+ 
+-static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
++static ssize_t ieee80211_if_fmt_smps(const struct mac80211_sub_if_data *sdata,
+ 				     char *buf, int buflen)
+ {
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
+@@ -202,7 +202,7 @@ static ssize_t ieee80211_if_fmt_smps(const struct ieee80211_sub_if_data *sdata,
+ 			smps_modes[sdata->u.mgd.ap_smps]);
+ }
+ 
+-static ssize_t ieee80211_if_parse_smps(struct ieee80211_sub_if_data *sdata,
++static ssize_t ieee80211_if_parse_smps(struct mac80211_sub_if_data *sdata,
+ 				       const char *buf, int buflen)
+ {
+ 	enum ieee80211_smps_mode mode;
+@@ -222,7 +222,7 @@ static ssize_t ieee80211_if_parse_smps(struct ieee80211_sub_if_data *sdata,
+ __IEEE80211_IF_FILE_W(smps);
+ 
+ static ssize_t ieee80211_if_fmt_tkip_mic_test(
+-	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++	const struct mac80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+ 	return -EOPNOTSUPP;
+ }
+@@ -249,7 +249,7 @@ static int hwaddr_aton(const char *txt, u8 *addr)
+ }
+ 
+ static ssize_t ieee80211_if_parse_tkip_mic_test(
+-	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
++	struct mac80211_sub_if_data *sdata, const char *buf, int buflen)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	u8 addr[ETH_ALEN];
+@@ -324,7 +324,7 @@ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+ 
+ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+-	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++	const struct mac80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+ 	return scnprintf(buf, buflen, "%u\n",
+ 			 skb_queue_len(&sdata->u.ap.ps_bc_buf));
+@@ -383,7 +383,7 @@ IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
+ 	debugfs_create_file(#name, mode, sdata->debugfs.dir, \
+ 			    sdata, &name##_ops);
+ 
+-static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++static void add_sta_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
+ 	DEBUGFS_ADD(flags);
+@@ -400,7 +400,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
+ }
+ 
+-static void add_ap_files(struct ieee80211_sub_if_data *sdata)
++static void add_ap_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
+ 	DEBUGFS_ADD(flags);
+@@ -415,7 +415,7 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
+ }
+ 
+-static void add_wds_files(struct ieee80211_sub_if_data *sdata)
++static void add_wds_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
+ 	DEBUGFS_ADD(flags);
+@@ -427,7 +427,7 @@ static void add_wds_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(peer);
+ }
+ 
+-static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
++static void add_vlan_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
+ 	DEBUGFS_ADD(flags);
+@@ -437,7 +437,7 @@ static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ }
+ 
+-static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
++static void add_monitor_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(flags);
+ 	DEBUGFS_ADD(state);
+@@ -446,7 +446,7 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ 
+-static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
++static void add_mesh_stats(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct dentry *dir = debugfs_create_dir("mesh_stats",
+ 						sdata->debugfs.dir);
+@@ -463,7 +463,7 @@ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+ #undef MESHSTATS_ADD
+ }
+ 
+-static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
++static void add_mesh_config(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct dentry *dir = debugfs_create_dir("mesh_config",
+ 						sdata->debugfs.dir);
+@@ -490,7 +490,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ }
+ #endif
+ 
+-static void add_files(struct ieee80211_sub_if_data *sdata)
++static void add_files(struct mac80211_sub_if_data *sdata)
+ {
+ 	if (!sdata->debugfs.dir)
+ 		return;
+@@ -525,7 +525,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_add_netdev(struct mac80211_sub_if_data *sdata)
+ {
+ 	char buf[10+IFNAMSIZ];
+ 
+@@ -538,7 +538,7 @@ void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata)
+ 	add_files(sdata);
+ }
+ 
+-void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_remove_netdev(struct mac80211_sub_if_data *sdata)
+ {
+ 	if (!sdata->debugfs.dir)
+ 		return;
+@@ -547,7 +547,7 @@ void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata)
+ 	sdata->debugfs.dir = NULL;
+ }
+ 
+-void ieee80211_debugfs_rename_netdev(struct ieee80211_sub_if_data *sdata)
++void ieee80211_debugfs_rename_netdev(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct dentry *dir;
+ 	char buf[10 + IFNAMSIZ];
+diff --git a/net/mac80211/debugfs_netdev.h b/net/mac80211/debugfs_netdev.h
+index 79025e7..9add699 100644
+--- a/net/mac80211/debugfs_netdev.h
++++ b/net/mac80211/debugfs_netdev.h
+@@ -4,18 +4,18 @@
+ #define __IEEE80211_DEBUGFS_NETDEV_H
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_debugfs_rename_netdev(struct ieee80211_sub_if_data *sdata);
++void ieee80211_debugfs_add_netdev(struct mac80211_sub_if_data *sdata);
++void ieee80211_debugfs_remove_netdev(struct mac80211_sub_if_data *sdata);
++void ieee80211_debugfs_rename_netdev(struct mac80211_sub_if_data *sdata);
+ #else
+ static inline void ieee80211_debugfs_add_netdev(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void ieee80211_debugfs_remove_netdev(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void ieee80211_debugfs_rename_netdev(
+-	struct ieee80211_sub_if_data *sdata)
++	struct mac80211_sub_if_data *sdata)
+ {}
+ #endif
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index f15f2ca..5242150 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -82,7 +82,7 @@ static inline int drv_add_interface(struct mac80211_local *local,
+ }
+ 
+ static inline int drv_change_interface(struct mac80211_local *local,
+-				       struct ieee80211_sub_if_data *sdata,
++				       struct mac80211_sub_if_data *sdata,
+ 				       enum nl80211_iftype type, bool p2p)
+ {
+ 	int ret;
+@@ -118,7 +118,7 @@ static inline int drv_config(struct mac80211_local *local, u32 changed)
+ }
+ 
+ static inline void drv_bss_info_changed(struct mac80211_local *local,
+-					struct ieee80211_sub_if_data *sdata,
++					struct mac80211_sub_if_data *sdata,
+ 					struct ieee80211_bss_conf *info,
+ 					u32 changed)
+ {
+@@ -172,7 +172,7 @@ static inline int drv_set_tim(struct mac80211_local *local,
+ 
+ static inline int drv_set_key(struct mac80211_local *local,
+ 			      enum set_key_cmd cmd,
+-			      struct ieee80211_sub_if_data *sdata,
++			      struct mac80211_sub_if_data *sdata,
+ 			      struct ieee80211_sta *sta,
+ 			      struct ieee80211_key_conf *key)
+ {
+@@ -187,7 +187,7 @@ static inline int drv_set_key(struct mac80211_local *local,
+ }
+ 
+ static inline void drv_update_tkip_key(struct mac80211_local *local,
+-				       struct ieee80211_sub_if_data *sdata,
++				       struct mac80211_sub_if_data *sdata,
+ 				       struct ieee80211_key_conf *conf,
+ 				       struct sta_info *sta, u32 iv32,
+ 				       u16 *phase1key)
+@@ -205,7 +205,7 @@ static inline void drv_update_tkip_key(struct mac80211_local *local,
+ }
+ 
+ static inline int drv_hw_scan(struct mac80211_local *local,
+-			      struct ieee80211_sub_if_data *sdata,
++			      struct mac80211_sub_if_data *sdata,
+ 			      struct cfg80211_scan_request *req)
+ {
+ 	int ret;
+@@ -220,7 +220,7 @@ static inline int drv_hw_scan(struct mac80211_local *local,
+ 
+ static inline int
+ drv_sched_scan_start(struct mac80211_local *local,
+-		     struct ieee80211_sub_if_data *sdata,
++		     struct mac80211_sub_if_data *sdata,
+ 		     struct cfg80211_sched_scan_request *req,
+ 		     struct ieee80211_sched_scan_ies *ies)
+ {
+@@ -236,7 +236,7 @@ drv_sched_scan_start(struct mac80211_local *local,
+ }
+ 
+ static inline void drv_sched_scan_stop(struct mac80211_local *local,
+-				       struct ieee80211_sub_if_data *sdata)
++				       struct mac80211_sub_if_data *sdata)
+ {
+ 	might_sleep();
+ 
+@@ -332,7 +332,7 @@ static inline int drv_set_coverage_class(struct mac80211_local *local,
+ }
+ 
+ static inline void drv_sta_notify(struct mac80211_local *local,
+-				  struct ieee80211_sub_if_data *sdata,
++				  struct mac80211_sub_if_data *sdata,
+ 				  enum sta_notify_cmd cmd,
+ 				  struct ieee80211_sta *sta)
+ {
+@@ -343,7 +343,7 @@ static inline void drv_sta_notify(struct mac80211_local *local,
+ }
+ 
+ static inline int drv_sta_add(struct mac80211_local *local,
+-			      struct ieee80211_sub_if_data *sdata,
++			      struct mac80211_sub_if_data *sdata,
+ 			      struct ieee80211_sta *sta)
+ {
+ 	int ret = 0;
+@@ -360,7 +360,7 @@ static inline int drv_sta_add(struct mac80211_local *local,
+ }
+ 
+ static inline void drv_sta_remove(struct mac80211_local *local,
+-				  struct ieee80211_sub_if_data *sdata,
++				  struct mac80211_sub_if_data *sdata,
+ 				  struct ieee80211_sta *sta)
+ {
+ 	might_sleep();
+@@ -433,7 +433,7 @@ static inline int drv_tx_last_beacon(struct mac80211_local *local)
+ }
+ 
+ static inline int drv_ampdu_action(struct mac80211_local *local,
+-				   struct ieee80211_sub_if_data *sdata,
++				   struct mac80211_sub_if_data *sdata,
+ 				   enum ieee80211_ampdu_mlme_action action,
+ 				   struct ieee80211_sta *sta, u16 tid,
+ 				   u16 *ssn, u8 buf_size)
+@@ -621,7 +621,7 @@ static inline bool drv_tx_frames_pending(struct mac80211_local *local)
+ }
+ 
+ static inline int drv_set_bitrate_mask(struct mac80211_local *local,
+-				       struct ieee80211_sub_if_data *sdata,
++				       struct mac80211_sub_if_data *sdata,
+ 				       const struct cfg80211_bitrate_mask *mask)
+ {
+ 	int ret = -EOPNOTSUPP;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index ffa02ac..d28aa5e 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -57,7 +57,7 @@ DECLARE_EVENT_CLASS(local_only_evt,
+ 
+ DECLARE_EVENT_CLASS(local_sdata_addr_evt,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata),
+ 
+ 	TP_STRUCT__entry(
+@@ -100,7 +100,7 @@ DECLARE_EVENT_CLASS(local_u32_evt,
+ 
+ DECLARE_EVENT_CLASS(local_sdata_evt,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata),
+ 
+ 	TP_STRUCT__entry(
+@@ -189,13 +189,13 @@ DEFINE_EVENT(local_only_evt, drv_stop,
+ 
+ DEFINE_EVENT(local_sdata_addr_evt, drv_add_interface,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata)
+ );
+ 
+ TRACE_EVENT(drv_change_interface,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 enum nl80211_iftype type, bool p2p),
+ 
+ 	TP_ARGS(local, sdata, type, p2p),
+@@ -223,7 +223,7 @@ TRACE_EVENT(drv_change_interface,
+ 
+ DEFINE_EVENT(local_sdata_addr_evt, drv_remove_interface,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata)
+ );
+ 
+@@ -271,7 +271,7 @@ TRACE_EVENT(drv_config,
+ 
+ TRACE_EVENT(drv_bss_info_changed,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 struct ieee80211_bss_conf *info,
+ 		 u32 changed),
+ 
+@@ -394,7 +394,7 @@ TRACE_EVENT(drv_set_tim,
+ 
+ TRACE_EVENT(drv_set_key,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 enum set_key_cmd cmd, struct ieee80211_sub_if_data *sdata,
++		 enum set_key_cmd cmd, struct mac80211_sub_if_data *sdata,
+ 		 struct ieee80211_sta *sta,
+ 		 struct ieee80211_key_conf *key),
+ 
+@@ -428,7 +428,7 @@ TRACE_EVENT(drv_set_key,
+ 
+ TRACE_EVENT(drv_update_tkip_key,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 struct ieee80211_key_conf *conf,
+ 		 struct ieee80211_sta *sta, u32 iv32),
+ 
+@@ -456,19 +456,19 @@ TRACE_EVENT(drv_update_tkip_key,
+ 
+ DEFINE_EVENT(local_sdata_evt, drv_hw_scan,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata)
+ );
+ 
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata)
+ );
+ 
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_stop,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata),
++		 struct mac80211_sub_if_data *sdata),
+ 	TP_ARGS(local, sdata)
+ );
+ 
+@@ -571,7 +571,7 @@ TRACE_EVENT(drv_set_coverage_class,
+ 
+ TRACE_EVENT(drv_sta_notify,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 enum sta_notify_cmd cmd,
+ 		 struct ieee80211_sta *sta),
+ 
+@@ -599,7 +599,7 @@ TRACE_EVENT(drv_sta_notify,
+ 
+ TRACE_EVENT(drv_sta_add,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 struct ieee80211_sta *sta),
+ 
+ 	TP_ARGS(local, sdata, sta),
+@@ -624,7 +624,7 @@ TRACE_EVENT(drv_sta_add,
+ 
+ TRACE_EVENT(drv_sta_remove,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 struct ieee80211_sta *sta),
+ 
+ 	TP_ARGS(local, sdata, sta),
+@@ -715,7 +715,7 @@ DEFINE_EVENT(local_only_evt, drv_tx_last_beacon,
+ 
+ TRACE_EVENT(drv_ampdu_action,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 enum ieee80211_ampdu_mlme_action action,
+ 		 struct ieee80211_sta *sta, u16 tid,
+ 		 u16 *ssn, u8 buf_size),
+@@ -993,7 +993,7 @@ DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
+ 
+ TRACE_EVENT(drv_set_bitrate_mask,
+ 	TP_PROTO(struct mac80211_local *local,
+-		 struct ieee80211_sub_if_data *sdata,
++		 struct mac80211_sub_if_data *sdata,
+ 		 const struct cfg80211_bitrate_mask *mask),
+ 
+ 	TP_ARGS(local, sdata, mask),
+@@ -1044,7 +1044,7 @@ TRACE_EVENT(api_start_tx_ba_session,
+ );
+ 
+ TRACE_EVENT(api_start_tx_ba_cb,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata, const u8 *ra, u16 tid),
++	TP_PROTO(struct mac80211_sub_if_data *sdata, const u8 *ra, u16 tid),
+ 
+ 	TP_ARGS(sdata, ra, tid),
+ 
+@@ -1088,7 +1088,7 @@ TRACE_EVENT(api_stop_tx_ba_session,
+ );
+ 
+ TRACE_EVENT(api_stop_tx_ba_cb,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata, const u8 *ra, u16 tid),
++	TP_PROTO(struct mac80211_sub_if_data *sdata, const u8 *ra, u16 tid),
+ 
+ 	TP_ARGS(sdata, ra, tid),
+ 
+@@ -1116,7 +1116,7 @@ DEFINE_EVENT(local_only_evt, api_restart_hw,
+ );
+ 
+ TRACE_EVENT(api_beacon_loss,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata),
++	TP_PROTO(struct mac80211_sub_if_data *sdata),
+ 
+ 	TP_ARGS(sdata),
+ 
+@@ -1135,7 +1135,7 @@ TRACE_EVENT(api_beacon_loss,
+ );
+ 
+ TRACE_EVENT(api_connection_loss,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata),
++	TP_PROTO(struct mac80211_sub_if_data *sdata),
+ 
+ 	TP_ARGS(sdata),
+ 
+@@ -1154,7 +1154,7 @@ TRACE_EVENT(api_connection_loss,
+ );
+ 
+ TRACE_EVENT(api_cqm_rssi_notify,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata,
++	TP_PROTO(struct mac80211_sub_if_data *sdata,
+ 		 enum nl80211_cqm_rssi_threshold_event rssi_event),
+ 
+ 	TP_ARGS(sdata, rssi_event),
+@@ -1257,7 +1257,7 @@ TRACE_EVENT(api_sta_block_awake,
+ );
+ 
+ TRACE_EVENT(api_chswitch_done,
+-	TP_PROTO(struct ieee80211_sub_if_data *sdata, bool success),
++	TP_PROTO(struct mac80211_sub_if_data *sdata, bool success),
+ 
+ 	TP_ARGS(sdata, success),
+ 
+diff --git a/net/mac80211/event.c b/net/mac80211/event.c
+index d888b5a..1e774e1 100644
+--- a/net/mac80211/event.c
++++ b/net/mac80211/event.c
+@@ -15,7 +15,7 @@
+  * the frame that generated the MIC failure (i.e., if it was provided by the
+  * driver or is still in the frame), it should provide that information.
+  */
+-void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
++void mac80211_ev_michael_mic_failure(struct mac80211_sub_if_data *sdata, int keyidx,
+ 				     struct ieee80211_hdr *hdr, const u8 *tsc,
+ 				     gfp_t gfp)
+ {
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index fc7c269..62ce6d1 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -176,7 +176,7 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+ }
+ 
+-void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
++void ieee80211_send_delba(struct mac80211_sub_if_data *sdata,
+ 			  const u8 *da, u16 tid,
+ 			  u16 initiator, u16 reason_code)
+ {
+@@ -220,7 +220,7 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
++void ieee80211_process_delba(struct mac80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct ieee80211_mgmt *mgmt, size_t len)
+ {
+@@ -246,7 +246,7 @@ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 					       true);
+ }
+ 
+-int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
++int ieee80211_send_smps_action(struct mac80211_sub_if_data *sdata,
+ 			       enum ieee80211_smps_mode smps, const u8 *da,
+ 			       const u8 *bssid)
+ {
+@@ -295,8 +295,8 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_request_smps_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
++	struct mac80211_sub_if_data *sdata =
++		container_of(work, struct mac80211_sub_if_data,
+ 			     u.mgd.request_smps_work);
+ 
+ 	mutex_lock(&sdata->u.mgd.mtx);
+@@ -307,7 +307,7 @@ void ieee80211_request_smps_work(struct work_struct *work)
+ void ieee80211_request_smps(struct ieee80211_vif *vif,
+ 			    enum ieee80211_smps_mode smps_mode)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+ 	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
+ 		return;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 9094687..9e9caeb 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -36,7 +36,7 @@
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
+ 
+-static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_auth_ibss(struct mac80211_sub_if_data *sdata,
+ 					struct ieee80211_mgmt *mgmt,
+ 					size_t len)
+ {
+@@ -61,7 +61,7 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 				    sdata->u.ibss.bssid, NULL, 0, 0);
+ }
+ 
+-static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
++static void __ieee80211_sta_join_ibss(struct mac80211_sub_if_data *sdata,
+ 				      const u8 *bssid, const int beacon_int,
+ 				      struct ieee80211_channel *chan,
+ 				      const u32 basic_rates,
+@@ -210,7 +210,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+ }
+ 
+-static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_sta_join_ibss(struct mac80211_sub_if_data *sdata,
+ 				    struct mac80211_bss *bss)
+ {
+ 	struct cfg80211_bss *cbss =
+@@ -250,7 +250,7 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  cbss->tsf);
+ }
+ 
+-static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_bss_info(struct mac80211_sub_if_data *sdata,
+ 				  struct ieee80211_mgmt *mgmt,
+ 				  size_t len,
+ 				  struct ieee80211_rx_status *rx_status,
+@@ -416,7 +416,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+  * in IBSS mode, receiving a frame from a yet-unknown station, hence
+  * must be callable in atomic context.
+  */
+-struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
++struct sta_info *ieee80211_ibss_add_sta(struct mac80211_sub_if_data *sdata,
+ 					u8 *bssid,u8 *addr, u32 supp_rates,
+ 					gfp_t gfp)
+ {
+@@ -466,7 +466,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	return sta;
+ }
+ 
+-static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
++static int ieee80211_sta_active_ibss(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	int active = 0;
+@@ -494,7 +494,7 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+  * This function is called with state == IEEE80211_IBSS_MLME_JOINED
+  */
+ 
+-static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_sta_merge_ibss(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+@@ -523,7 +523,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 			ifibss->fixed_channel ? ifibss->channel : NULL);
+ }
+ 
+-static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_sta_create_ibss(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	u8 bssid[ETH_ALEN];
+@@ -564,7 +564,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+  * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
+  */
+ 
+-static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_sta_find_ibss(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+@@ -653,7 +653,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_probe_req(struct mac80211_sub_if_data *sdata,
+ 					struct sk_buff *req)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *)req->data;
+@@ -723,7 +723,7 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_probe_resp(struct mac80211_sub_if_data *sdata,
+ 					 struct ieee80211_mgmt *mgmt,
+ 					 size_t len,
+ 					 struct ieee80211_rx_status *rx_status)
+@@ -744,7 +744,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
+ }
+ 
+-static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_beacon(struct mac80211_sub_if_data *sdata,
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len,
+ 				     struct ieee80211_rx_status *rx_status)
+@@ -762,7 +762,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
+ }
+ 
+-void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_ibss_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *rx_status;
+@@ -799,7 +799,7 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	mutex_unlock(&sdata->u.ibss.mtx);
+ }
+ 
+-void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
++void ieee80211_ibss_work(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+@@ -831,8 +831,8 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_ibss_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -845,7 +845,7 @@ static void ieee80211_ibss_timer(unsigned long data)
+ }
+ 
+ #ifdef CONFIG_PM
+-void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
++void ieee80211_ibss_quiesce(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+@@ -853,7 +853,7 @@ void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
+ 		ifibss->timer_running = true;
+ }
+ 
+-void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
++void ieee80211_ibss_restart(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+@@ -864,7 +864,7 @@ void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
+ }
+ #endif
+ 
+-void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
++void ieee80211_ibss_setup_sdata(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+@@ -876,7 +876,7 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ /* scan finished notification */
+ void ieee80211_ibss_notify_scan_completed(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -890,7 +890,7 @@ void ieee80211_ibss_notify_scan_completed(struct mac80211_local *local)
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
+-int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
++int ieee80211_ibss_join(struct mac80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params)
+ {
+ 	struct sk_buff *skb;
+@@ -954,7 +954,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
++int ieee80211_ibss_leave(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct sk_buff *skb;
+ 	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ccdc564..6eef3e5 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -46,7 +46,7 @@
+ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ {
+ 	int meshhdrlen;
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	meshhdrlen = (sdata->vif.type == NL80211_IFTYPE_MESH_POINT) ? 5 : 0;
+ 
+@@ -66,7 +66,7 @@ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ 
+ static int ieee80211_change_mac(struct net_device *dev, void *addr)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct sockaddr *sa = addr;
+ 	int ret;
+ 
+@@ -95,11 +95,11 @@ static inline int identical_mac_addr_allowed(int type1, int type2)
+ 			 type2 == NL80211_IFTYPE_AP_VLAN));
+ }
+ 
+-static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_check_concurrent_iface(struct mac80211_sub_if_data *sdata,
+ 					    enum nl80211_iftype iftype)
+ {
+ 	struct mac80211_local *local = sdata->local;
+-	struct ieee80211_sub_if_data *nsdata;
++	struct mac80211_sub_if_data *nsdata;
+ 	struct net_device *dev = sdata->dev;
+ 
+ 	ASSERT_RTNL();
+@@ -149,7 +149,7 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++void ieee80211_adjust_monitor_flags(struct mac80211_sub_if_data *sdata,
+ 				    const int offset)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -176,7 +176,7 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+  */
+ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	u32 changed = 0;
+@@ -359,7 +359,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 
+ static int ieee80211_open(struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	int err;
+ 
+ 	/* fail early if user set an invalid address */
+@@ -374,7 +374,7 @@ static int ieee80211_open(struct net_device *dev)
+ 	return ieee80211_do_open(dev, true);
+ }
+ 
+-static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_do_stop(struct mac80211_sub_if_data *sdata,
+ 			      bool going_down)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -448,7 +448,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* APs need special treatment */
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		struct ieee80211_sub_if_data *vlan, *tmpsdata;
++		struct mac80211_sub_if_data *vlan, *tmpsdata;
+ 		struct beacon_data *old_beacon =
+ 			rtnl_dereference(sdata->u.ap.beacon);
+ 
+@@ -569,7 +569,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ static int ieee80211_stop(struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+ 	ieee80211_do_stop(sdata, true);
+ 
+@@ -578,7 +578,7 @@ static int ieee80211_stop(struct net_device *dev)
+ 
+ static void ieee80211_set_multicast_list(struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	int allmulti, promisc, sdata_allmulti, sdata_promisc;
+ 
+@@ -614,7 +614,7 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
+  */
+ static void ieee80211_teardown_sdata(struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	int flushed;
+ 	int i;
+@@ -655,7 +655,7 @@ static const struct net_device_ops ieee80211_dataif_ops = {
+ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ 					  struct sk_buff *skb)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_radiotap_header *rtap = (void *)skb->data;
+@@ -705,8 +705,8 @@ static void ieee80211_if_setup(struct net_device *dev)
+ 
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data, work);
++	struct mac80211_sub_if_data *sdata =
++		container_of(work, struct mac80211_sub_if_data, work);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+@@ -837,7 +837,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ /*
+  * Helper function to initialise an interface to a specific type.
+  */
+-static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_setup_sdata(struct mac80211_sub_if_data *sdata,
+ 				  enum nl80211_iftype type)
+ {
+ 	/* clear type-dependent union */
+@@ -901,7 +901,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_debugfs_add_netdev(sdata);
+ }
+ 
+-static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_runtime_change_iftype(struct mac80211_sub_if_data *sdata,
+ 					   enum nl80211_iftype type)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -972,7 +972,7 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
+ 
+-int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++int ieee80211_if_change_type(struct mac80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type)
+ {
+ 	int ret;
+@@ -1012,7 +1012,7 @@ static void ieee80211_assign_perm_addr(struct mac80211_local *local,
+ 				       struct net_device *dev,
+ 				       enum nl80211_iftype type)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	u64 mask, start, addr, val, inc;
+ 	u8 *m;
+ 	u8 tmp_addr[ETH_ALEN];
+@@ -1125,7 +1125,7 @@ int ieee80211_if_add(struct mac80211_local *local, const char *name,
+ 		     struct vif_params *params)
+ {
+ 	struct net_device *ndev;
+-	struct ieee80211_sub_if_data *sdata = NULL;
++	struct mac80211_sub_if_data *sdata = NULL;
+ 	int ret, i;
+ 
+ 	ASSERT_RTNL();
+@@ -1206,7 +1206,7 @@ int ieee80211_if_add(struct mac80211_local *local, const char *name,
+ 	return ret;
+ }
+ 
+-void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
++void ieee80211_if_remove(struct mac80211_sub_if_data *sdata)
+ {
+ 	ASSERT_RTNL();
+ 
+@@ -1224,7 +1224,7 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+  */
+ void ieee80211_remove_interfaces(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata, *tmp;
++	struct mac80211_sub_if_data *sdata, *tmp;
+ 	LIST_HEAD(unreg_list);
+ 
+ 	ASSERT_RTNL();
+@@ -1271,7 +1271,7 @@ static u32 ieee80211_idle_on(struct mac80211_local *local)
+ 
+ u32 __ieee80211_recalc_idle(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	int count = 0;
+ 	bool working = false, scanning = false, hw_roc = false;
+ 	struct mac80211_work *wk;
+@@ -1370,7 +1370,7 @@ static int netdev_notify(struct notifier_block *nb,
+ 			 void *ndev)
+ {
+ 	struct net_device *dev = ndev;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	if (state != NETDEV_CHANGENAME)
+ 		return 0;
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index c7d0c81..55f67e5 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -63,7 +63,7 @@ static struct ieee80211_sta *get_sta_for_key(struct ieee80211_key *key)
+ 
+ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_sta *sta;
+ 	int ret;
+ 
+@@ -93,7 +93,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
+ 			goto out_unsupported;
+ 		sdata = container_of(sdata->bss,
+-				     struct ieee80211_sub_if_data,
++				     struct mac80211_sub_if_data,
+ 				     u.ap);
+ 	}
+ 
+@@ -125,7 +125,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 
+ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_sta *sta;
+ 	int ret;
+ 
+@@ -144,7 +144,7 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+-				     struct ieee80211_sub_if_data,
++				     struct mac80211_sub_if_data,
+ 				     u.ap);
+ 
+ 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+@@ -178,7 +178,7 @@ void ieee80211_key_removed(struct ieee80211_key_conf *key_conf)
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_key_removed);
+ 
+-static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
++static void __ieee80211_set_default_key(struct mac80211_sub_if_data *sdata,
+ 					int idx, bool uni, bool multi)
+ {
+ 	struct ieee80211_key *key = NULL;
+@@ -196,7 +196,7 @@ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_debugfs_key_update_default(sdata);
+ }
+ 
+-void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
++void ieee80211_set_default_key(struct mac80211_sub_if_data *sdata, int idx,
+ 			       bool uni, bool multi)
+ {
+ 	mutex_lock(&sdata->local->key_mtx);
+@@ -205,7 +205,7 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+ }
+ 
+ static void
+-__ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata, int idx)
++__ieee80211_set_default_mgmt_key(struct mac80211_sub_if_data *sdata, int idx)
+ {
+ 	struct ieee80211_key *key = NULL;
+ 
+@@ -220,7 +220,7 @@ __ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata, int idx)
+ 	ieee80211_debugfs_key_update_default(sdata);
+ }
+ 
+-void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
++void ieee80211_set_default_mgmt_key(struct mac80211_sub_if_data *sdata,
+ 				    int idx)
+ {
+ 	mutex_lock(&sdata->local->key_mtx);
+@@ -229,7 +229,7 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ 
+-static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
++static void __ieee80211_key_replace(struct mac80211_sub_if_data *sdata,
+ 				    struct sta_info *sta,
+ 				    bool pairwise,
+ 				    struct ieee80211_key *old,
+@@ -401,7 +401,7 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ }
+ 
+ int ieee80211_key_link(struct ieee80211_key *key,
+-		       struct ieee80211_sub_if_data *sdata,
++		       struct mac80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
+ 	struct ieee80211_key *old_key;
+@@ -487,7 +487,7 @@ void ieee80211_key_free(struct mac80211_local *local,
+ 	mutex_unlock(&local->key_mtx);
+ }
+ 
+-void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_enable_keys(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key;
+ 
+@@ -504,7 +504,7 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+ 
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_disable_keys(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key;
+ 
+@@ -518,7 +518,7 @@ void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+ 
+-void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
++void ieee80211_free_keys(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key, *tmp;
+ 
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 035fc31..9a930fd 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -32,7 +32,7 @@
+ #define NUM_RX_DATA_QUEUES	17
+ 
+ struct mac80211_local;
+-struct ieee80211_sub_if_data;
++struct mac80211_sub_if_data;
+ struct sta_info;
+ 
+ /**
+@@ -60,7 +60,7 @@ struct tkip_ctx {
+ 
+ struct ieee80211_key {
+ 	struct mac80211_local *local;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
+ 	/* for sdata list */
+@@ -133,18 +133,18 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+  * to make it used, free old key.
+  */
+ int __must_check ieee80211_key_link(struct ieee80211_key *key,
+-				    struct ieee80211_sub_if_data *sdata,
++				    struct mac80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ void __ieee80211_key_free(struct ieee80211_key *key);
+ void ieee80211_key_free(struct mac80211_local *local,
+ 			struct ieee80211_key *key);
+-void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
++void ieee80211_set_default_key(struct mac80211_sub_if_data *sdata, int idx,
+ 			       bool uni, bool multi);
+-void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
++void ieee80211_set_default_mgmt_key(struct mac80211_sub_if_data *sdata,
+ 				    int idx);
+-void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata);
++void ieee80211_free_keys(struct mac80211_sub_if_data *sdata);
++void ieee80211_enable_keys(struct mac80211_sub_if_data *sdata);
++void ieee80211_disable_keys(struct mac80211_sub_if_data *sdata);
+ 
+ #define key_mtx_dereference(local, ref) \
+ 	rcu_dereference_protected(ref, lockdep_is_held(&((local)->key_mtx)))
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index 3d1fe4f..f7d50d8 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -143,7 +143,7 @@ typedef unsigned __bitwise__ ieee80211_tx_result;
+ struct mac80211_tx_data {
+ 	struct sk_buff *skb;
+ 	struct mac80211_local *local;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+ 
+@@ -197,7 +197,7 @@ enum mac80211_i_rx_flags {
+ struct mac80211_rx_data {
+ 	struct sk_buff *skb;
+ 	struct mac80211_local *local;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
+ 
+@@ -284,7 +284,7 @@ struct mac80211_work {
+ 
+ 	struct rcu_head rcu_head;
+ 
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	enum work_done_result (*done)(struct mac80211_work *wk,
+ 				      struct sk_buff *skb);
+@@ -536,7 +536,7 @@ enum mac80211_sdata_state_bits {
+ 	SDATA_STATE_OFFCHANNEL,
+ };
+ 
+-struct ieee80211_sub_if_data {
++struct mac80211_sub_if_data {
+ 	struct list_head list;
+ 
+ 	struct wireless_dev wdev;
+@@ -616,9 +616,9 @@ struct ieee80211_sub_if_data {
+ };
+ 
+ static inline
+-struct ieee80211_sub_if_data *vif_to_sdata(struct ieee80211_vif *p)
++struct mac80211_sub_if_data *vif_to_sdata(struct ieee80211_vif *p)
+ {
+-	return container_of(p, struct ieee80211_sub_if_data, vif);
++	return container_of(p, struct mac80211_sub_if_data, vif);
+ }
+ 
+ enum sdata_queue_type {
+@@ -853,7 +853,7 @@ struct mac80211_local {
+ 	unsigned long leave_oper_channel_time;
+ 	enum mac80211_scan_state next_scan_state;
+ 	struct delayed_work scan_work;
+-	struct ieee80211_sub_if_data *scan_sdata;
++	struct mac80211_sub_if_data *scan_sdata;
+ 	enum nl80211_channel_type _oper_channel_type;
+ 	struct ieee80211_channel *oper_channel, *csa_channel;
+ 
+@@ -934,7 +934,7 @@ struct mac80211_local {
+ 	 * PS can only be enabled when we have exactly one managed
+ 	 * interface (and monitors) in PS, this then points there.
+ 	 */
+-	struct ieee80211_sub_if_data *ps_sdata;
++	struct mac80211_sub_if_data *ps_sdata;
+ 	struct work_struct dynamic_ps_enable_work;
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+@@ -979,7 +979,7 @@ struct mac80211_local {
+ 	struct napi_struct napi;
+ };
+ 
+-static inline struct ieee80211_sub_if_data *
++static inline struct mac80211_sub_if_data *
+ IEEE80211_DEV_TO_SUB_IF(struct net_device *dev)
+ {
+ 	return netdev_priv(dev);
+@@ -1076,71 +1076,71 @@ static inline int ieee80211_bssid_match(const u8 *raddr, const u8 *addr)
+ 
+ int ieee80211_hw_config(struct mac80211_local *local, u32 changed);
+ void ieee80211_tx_set_protected(struct mac80211_tx_data *tx);
+-void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_bss_info_change_notify(struct mac80211_sub_if_data *sdata,
+ 				      u32 changed);
+ void ieee80211_configure_filter(struct mac80211_local *local);
+-u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
++u32 ieee80211_reset_erp_info(struct mac80211_sub_if_data *sdata);
+ 
+ /* STA code */
+-void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
+-int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_setup_sdata(struct mac80211_sub_if_data *sdata);
++int ieee80211_mgd_auth(struct mac80211_sub_if_data *sdata,
+ 		       struct cfg80211_auth_request *req);
+-int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_assoc(struct mac80211_sub_if_data *sdata,
+ 			struct cfg80211_assoc_request *req);
+-int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_deauth(struct mac80211_sub_if_data *sdata,
+ 			 struct cfg80211_deauth_request *req,
+ 			 void *cookie);
+-int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_disassoc(struct mac80211_sub_if_data *sdata,
+ 			   struct cfg80211_disassoc_request *req,
+ 			   void *cookie);
+ void ieee80211_send_pspoll(struct mac80211_local *local,
+-			   struct ieee80211_sub_if_data *sdata);
++			   struct mac80211_sub_if_data *sdata);
+ void ieee80211_recalc_ps(struct mac80211_local *local, s32 latency);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
+-int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
++int ieee80211_set_arp_filter(struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_process_chanswitch(struct mac80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct mac80211_bss *bss,
+ 				      u64 timestamp);
+-void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_quiesce(struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_restart(struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_work(struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
+-void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
++void ieee80211_sta_reset_beacon_monitor(struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_reset_conn_monitor(struct mac80211_sub_if_data *sdata);
+ 
+ /* IBSS code */
+ void ieee80211_ibss_notify_scan_completed(struct mac80211_local *local);
+-void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata);
+-struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
++void ieee80211_ibss_setup_sdata(struct mac80211_sub_if_data *sdata);
++struct sta_info *ieee80211_ibss_add_sta(struct mac80211_sub_if_data *sdata,
+ 					u8 *bssid, u8 *addr, u32 supp_rates,
+ 					gfp_t gfp);
+-int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
++int ieee80211_ibss_join(struct mac80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params);
+-int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++int ieee80211_ibss_leave(struct mac80211_sub_if_data *sdata);
++void ieee80211_ibss_quiesce(struct mac80211_sub_if_data *sdata);
++void ieee80211_ibss_restart(struct mac80211_sub_if_data *sdata);
++void ieee80211_ibss_work(struct mac80211_sub_if_data *sdata);
++void ieee80211_ibss_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb);
+ 
+ /* mesh code */
+-void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_mesh_work(struct mac80211_sub_if_data *sdata);
++void ieee80211_mesh_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb);
+ 
+ /* scan/BSS handling */
+ void ieee80211_scan_work(struct work_struct *work);
+-int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_internal_scan(struct mac80211_sub_if_data *sdata,
+ 				    const u8 *ssid, u8 ssid_len,
+ 				    struct ieee80211_channel *chan);
+-int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_scan(struct mac80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+ void ieee80211_scan_cancel(struct mac80211_local *local);
+ ieee80211_rx_result
+-ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
++ieee80211_scan_rx(struct mac80211_sub_if_data *sdata, struct sk_buff *skb);
+ 
+ void ieee80211_mlme_notify_scan_completed(struct mac80211_local *local);
+ struct mac80211_bss *
+@@ -1158,9 +1158,9 @@ void ieee80211_rx_bss_put(struct mac80211_local *local,
+ 			  struct mac80211_bss *bss);
+ 
+ /* scheduled scan handling */
+-int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_sched_scan_start(struct mac80211_sub_if_data *sdata,
+ 				       struct cfg80211_sched_scan_request *req);
+-int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
++int ieee80211_request_sched_scan_stop(struct mac80211_sub_if_data *sdata);
+ void ieee80211_sched_scan_stopped_work(struct work_struct *work);
+ 
+ /* off-channel helpers */
+@@ -1180,16 +1180,16 @@ void ieee80211_iface_exit(void);
+ int ieee80211_if_add(struct mac80211_local *local, const char *name,
+ 		     struct net_device **new_dev, enum nl80211_iftype type,
+ 		     struct vif_params *params);
+-int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++int ieee80211_if_change_type(struct mac80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type);
+-void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
++void ieee80211_if_remove(struct mac80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct mac80211_local *local);
+ u32 __ieee80211_recalc_idle(struct mac80211_local *local);
+ void ieee80211_recalc_idle(struct mac80211_local *local);
+-void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++void ieee80211_adjust_monitor_flags(struct mac80211_sub_if_data *sdata,
+ 				    const int offset);
+ 
+-static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
++static inline bool ieee80211_sdata_running(struct mac80211_sub_if_data *sdata)
+ {
+ 	return test_bit(SDATA_STATE_RUNNING, &sdata->state);
+ }
+@@ -1218,11 +1218,11 @@ struct ieee80211_tx_status_rtap_hdr {
+ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 				       struct ieee80211_ht_cap *ht_cap_ie,
+ 				       struct ieee80211_sta_ht_cap *ht_cap);
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn);
+-void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
++void ieee80211_send_bar(struct mac80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn);
++void ieee80211_send_delba(struct mac80211_sub_if_data *sdata,
+ 			  const u8 *da, u16 tid,
+ 			  u16 initiator, u16 reason_code);
+-int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
++int ieee80211_send_smps_action(struct mac80211_sub_if_data *sdata,
+ 			       enum ieee80211_smps_mode smps, const u8 *da,
+ 			       const u8 *bssid);
+ void ieee80211_request_smps_work(struct work_struct *work);
+@@ -1232,7 +1232,7 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason, bool stop);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx);
+-void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
++void ieee80211_process_delba(struct mac80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct ieee80211_mgmt *mgmt, size_t len);
+ void ieee80211_process_addba_resp(struct mac80211_local *local,
+@@ -1257,7 +1257,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid);
+ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
+ 
+ /* Spectrum management */
+-void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
++void ieee80211_process_measurement_req(struct mac80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       size_t len);
+ 
+@@ -1298,11 +1298,11 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+ 			enum nl80211_iftype type);
+ int ieee80211_frame_duration(struct mac80211_local *local, size_t len,
+ 			     int rate, int erp, int short_preamble);
+-void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
++void mac80211_ev_michael_mic_failure(struct mac80211_sub_if_data *sdata, int keyidx,
+ 				     struct ieee80211_hdr *hdr, const u8 *tsc,
+ 				     gfp_t gfp);
+-void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
++void ieee80211_set_wmm_default(struct mac80211_sub_if_data *sdata);
++void ieee80211_tx_skb(struct mac80211_sub_if_data *sdata, struct sk_buff *skb);
+ void ieee802_11_parse_elems(u8 *start, size_t len,
+ 			    struct ieee802_11_elems *elems);
+ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+@@ -1315,11 +1315,11 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_timer(unsigned long data);
+ void ieee80211_send_nullfunc(struct mac80211_local *local,
+-			     struct ieee80211_sub_if_data *sdata,
++			     struct mac80211_sub_if_data *sdata,
+ 			     int powersave);
+-void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_rx_notify(struct mac80211_sub_if_data *sdata,
+ 			     struct ieee80211_hdr *hdr);
+-void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_tx_notify(struct mac80211_sub_if_data *sdata,
+ 			     struct ieee80211_hdr *hdr, bool ack);
+ void ieee80211_beacon_connection_loss_work(struct work_struct *work);
+ 
+@@ -1339,7 +1339,7 @@ int ieee80211_add_pending_skbs_fn(struct mac80211_local *local,
+ 				  struct sk_buff_head *skbs,
+ 				  void (*fn)(void *data), void *data);
+ 
+-void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
++void ieee80211_send_auth(struct mac80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+ 			 u8 *extra, size_t extra_len, const u8 *bssid,
+ 			 const u8 *key, u8 key_len, u8 key_idx);
+@@ -1347,21 +1347,21 @@ int ieee80211_build_preq_ies(struct mac80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
+ 			     u8 channel);
+-struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++struct sk_buff *ieee80211_build_probe_req(struct mac80211_sub_if_data *sdata,
+ 					  u8 *dst,
+ 					  const u8 *ssid, size_t ssid_len,
+ 					  const u8 *ie, size_t ie_len);
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
++void ieee80211_send_probe_req(struct mac80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len);
+ 
+-void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_def_wmm_params(struct mac80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+ 				  const u8 *supp_rates);
+ u32 ieee80211_sta_get_rates(struct mac80211_local *local,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum ieee80211_band band);
+-int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
++int __ieee80211_request_smps(struct mac80211_sub_if_data *sdata,
+ 			     enum ieee80211_smps_mode smps_mode);
+ void ieee80211_recalc_smps(struct mac80211_local *local);
+ 
+@@ -1373,15 +1373,15 @@ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
+ void ieee80211_work_init(struct mac80211_local *local);
+ void ieee80211_add_work(struct mac80211_work *wk);
+ void free_work(struct mac80211_work *wk);
+-void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata);
+-ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_work_purge(struct mac80211_sub_if_data *sdata);
++ieee80211_rx_result ieee80211_work_rx_mgmt(struct mac80211_sub_if_data *sdata,
+ 					   struct sk_buff *skb);
+-int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
++int ieee80211_wk_remain_on_channel(struct mac80211_sub_if_data *sdata,
+ 				   struct ieee80211_channel *chan,
+ 				   enum nl80211_channel_type channel_type,
+ 				   unsigned int duration, u64 *cookie);
+ int ieee80211_wk_cancel_remain_on_channel(
+-	struct ieee80211_sub_if_data *sdata, u64 cookie);
++	struct mac80211_sub_if_data *sdata, u64 cookie);
+ 
+ /* channel management */
+ enum ieee80211_chan_mode {
+@@ -1392,9 +1392,9 @@ enum ieee80211_chan_mode {
+ 
+ enum ieee80211_chan_mode
+ ieee80211_get_channel_mode(struct mac80211_local *local,
+-			   struct ieee80211_sub_if_data *ignore);
++			   struct mac80211_sub_if_data *ignore);
+ bool ieee80211_set_channel_type(struct mac80211_local *local,
+-				struct ieee80211_sub_if_data *sdata,
++				struct mac80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index bd8c543..fd1f83c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -231,7 +231,7 @@ int ieee80211_hw_config(struct mac80211_local *local, u32 changed)
+ 	return ret;
+ }
+ 
+-void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_bss_info_change_notify(struct mac80211_sub_if_data *sdata,
+ 				      u32 changed)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -312,7 +312,7 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+ 	drv_bss_info_changed(local, sdata, &sdata->vif.bss_conf, changed);
+ }
+ 
+-u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata)
++u32 ieee80211_reset_erp_info(struct mac80211_sub_if_data *sdata)
+ {
+ 	sdata->vif.bss_conf.use_cts_prot = false;
+ 	sdata->vif.bss_conf.use_short_preamble = false;
+@@ -407,7 +407,7 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+ 	struct net_device *ndev = ifa->ifa_dev->dev;
+ 	struct wireless_dev *wdev = ndev->ieee80211_ptr;
+ 	struct in_device *idev;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_bss_conf *bss_conf;
+ 	struct mac80211_if_managed *ifmgd;
+ 	int c = 0;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index b86f02e..12bfa03 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -43,7 +43,7 @@ void ieee80211s_stop(void)
+ 
+ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata = (void *) data;
++	struct mac80211_sub_if_data *sdata = (void *) data;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -66,7 +66,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+  * This function checks if the mesh configuration of a mesh point matches the
+  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
+  */
+-bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
++bool mesh_matches_local(struct ieee802_11_elems *ie, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -108,7 +108,7 @@ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie)
+  *
+  * @sdata: mesh interface in which mesh beacons are going to be updated
+  */
+-void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
++void mesh_accept_plinks_update(struct mac80211_sub_if_data *sdata)
+ {
+ 	bool free_plinks;
+ 
+@@ -124,7 +124,7 @@ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_mesh_housekeeping_timer((unsigned long) sdata);
+ }
+ 
+-int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
++int mesh_rmc_init(struct mac80211_sub_if_data *sdata)
+ {
+ 	int i;
+ 
+@@ -137,7 +137,7 @@ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+ 	return 0;
+ }
+ 
+-void mesh_rmc_free(struct ieee80211_sub_if_data *sdata)
++void mesh_rmc_free(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
+ 	struct rmc_entry *p, *n;
+@@ -169,7 +169,7 @@ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata)
+  * it.
+  */
+ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
+-		   struct ieee80211_sub_if_data *sdata)
++		   struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
+ 	u32 seqnum = 0;
+@@ -204,7 +204,7 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
+ 	return 0;
+ }
+ 
+-void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++void mesh_mgmt_ies_add(struct sk_buff *skb, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+@@ -290,8 +290,8 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_mesh_path_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -305,8 +305,8 @@ static void ieee80211_mesh_path_timer(unsigned long data)
+ 
+ static void ieee80211_mesh_path_root_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -376,7 +376,7 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+  * Return the header length.
+  */
+ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+-		struct ieee80211_sub_if_data *sdata, char *addr4or5,
++		struct mac80211_sub_if_data *sdata, char *addr4or5,
+ 		char *addr6)
+ {
+ 	int aelen = 0;
+@@ -398,7 +398,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+ 	return 6 + aelen;
+ }
+ 
+-static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_mesh_housekeeping(struct mac80211_sub_if_data *sdata,
+ 			   struct mac80211_if_mesh *ifmsh)
+ {
+ 	bool free_plinks;
+@@ -419,7 +419,7 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
+ 		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
+ }
+ 
+-static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_mesh_rootpath(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -429,7 +429,7 @@ static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
+ }
+ 
+ #ifdef CONFIG_PM
+-void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
++void ieee80211_mesh_quiesce(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -443,7 +443,7 @@ void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
+ 		set_bit(TMR_RUNNING_MPR, &ifmsh->timers_running);
+ }
+ 
+-void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
++void ieee80211_mesh_restart(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -457,7 +457,7 @@ void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
+ }
+ #endif
+ 
+-void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
++void ieee80211_start_mesh(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mac80211_local *local = sdata->local;
+@@ -479,7 +479,7 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 						BSS_CHANGED_BEACON_INT);
+ }
+ 
+-void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
++void ieee80211_stop_mesh(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+@@ -504,7 +504,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_configure_filter(local);
+ }
+ 
+-static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_mesh_rx_bcn_presp(struct mac80211_sub_if_data *sdata,
+ 					u16 stype,
+ 					struct ieee80211_mgmt *mgmt,
+ 					size_t len,
+@@ -551,7 +551,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
+-static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_mesh_rx_mgmt_action(struct mac80211_sub_if_data *sdata,
+ 					  struct ieee80211_mgmt *mgmt,
+ 					  size_t len,
+ 					  struct ieee80211_rx_status *rx_status)
+@@ -566,7 +566,7 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
+-void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_mesh_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *rx_status;
+@@ -589,7 +589,7 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
+-void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
++void ieee80211_mesh_work(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+@@ -613,7 +613,7 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_mesh_notify_scan_completed(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+@@ -622,7 +622,7 @@ void ieee80211_mesh_notify_scan_completed(struct mac80211_local *local)
+ 	rcu_read_unlock();
+ }
+ 
+-void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
++void ieee80211_mesh_init_sdata(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index db38d57..6be0fd1 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -91,7 +91,7 @@ enum mesh_deferred_task_flags {
+ struct mesh_path {
+ 	u8 dst[ETH_ALEN];
+ 	u8 mpp[ETH_ALEN];	/* used for MPP or MAP */
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info __rcu *next_hop;
+ 	struct timer_list timer;
+ 	struct sk_buff_head frame_queue;
+@@ -190,54 +190,54 @@ struct mesh_rmc {
+ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+ 				  const u8 *da, const u8 *sa);
+ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+-		struct ieee80211_sub_if_data *sdata, char *addr4or5,
++		struct mac80211_sub_if_data *sdata, char *addr4or5,
+ 		char *addr6);
+ int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
+-		struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
+ bool mesh_matches_local(struct ieee802_11_elems *ie,
+-		struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
+ void mesh_ids_set_default(struct mac80211_if_mesh *mesh);
+ void mesh_mgmt_ies_add(struct sk_buff *skb,
+-		struct ieee80211_sub_if_data *sdata);
+-void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+-int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
++void mesh_rmc_free(struct mac80211_sub_if_data *sdata);
++int mesh_rmc_init(struct mac80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+ void ieee80211s_update_metric(struct mac80211_local *local,
+ 		struct sta_info *stainfo, struct sk_buff *skb);
+ void ieee80211s_stop(void);
+-void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mesh_init_sdata(struct mac80211_sub_if_data *sdata);
++void ieee80211_start_mesh(struct mac80211_sub_if_data *sdata);
++void ieee80211_stop_mesh(struct mac80211_sub_if_data *sdata);
+ void ieee80211_mesh_root_setup(struct mac80211_if_mesh *ifmsh);
+ 
+ /* Mesh paths */
+ int mesh_nexthop_lookup(struct sk_buff *skb,
+-		struct ieee80211_sub_if_data *sdata);
+-void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
++void mesh_path_start_discovery(struct mac80211_sub_if_data *sdata);
+ struct mesh_path *mesh_path_lookup(u8 *dst,
+-		struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
+ struct mesh_path *mpp_path_lookup(u8 *dst,
+-				  struct ieee80211_sub_if_data *sdata);
+-int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata);
++				  struct mac80211_sub_if_data *sdata);
++int mpp_path_add(u8 *dst, u8 *mpp, struct mac80211_sub_if_data *sdata);
+ struct mesh_path *mesh_path_lookup_by_idx(int idx,
+-		struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
+ void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
+-void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
+-void mesh_path_flush(struct ieee80211_sub_if_data *sdata);
+-void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
++void mesh_path_expire(struct mac80211_sub_if_data *sdata);
++void mesh_path_flush(struct mac80211_sub_if_data *sdata);
++void mesh_rx_path_sel_frame(struct mac80211_sub_if_data *sdata,
+ 		struct ieee80211_mgmt *mgmt, size_t len);
+-int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata);
++int mesh_path_add(u8 *dst, struct mac80211_sub_if_data *sdata);
+ /* Mesh plinks */
+ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+-		struct ieee80211_sub_if_data *sdata,
++		struct mac80211_sub_if_data *sdata,
+ 		struct ieee802_11_elems *ie);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+-void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
++void mesh_accept_plinks_update(struct mac80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+ void mesh_plink_deactivate(struct sta_info *sta);
+ int mesh_plink_open(struct sta_info *sta);
+ void mesh_plink_block(struct sta_info *sta);
+-void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
++void mesh_rx_plink_frame(struct mac80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len,
+ 			 struct ieee80211_rx_status *rx_status);
+ 
+@@ -247,33 +247,33 @@ void mesh_mpath_table_grow(void);
+ void mesh_mpp_table_grow(void);
+ /* Mesh paths */
+ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn, __le16 target_rcode,
+-		       const u8 *ra, struct ieee80211_sub_if_data *sdata);
++		       const u8 *ra, struct mac80211_sub_if_data *sdata);
+ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta);
+ void mesh_path_flush_pending(struct mesh_path *mpath);
+ void mesh_path_tx_pending(struct mesh_path *mpath);
+ int mesh_pathtbl_init(void);
+ void mesh_pathtbl_unregister(void);
+-int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata);
++int mesh_path_del(u8 *addr, struct mac80211_sub_if_data *sdata);
+ void mesh_path_timer(unsigned long data);
+ void mesh_path_flush_by_nexthop(struct sta_info *sta);
+ void mesh_path_discard_frame(struct sk_buff *skb,
+-		struct ieee80211_sub_if_data *sdata);
+-void mesh_path_quiesce(struct ieee80211_sub_if_data *sdata);
+-void mesh_path_restart(struct ieee80211_sub_if_data *sdata);
+-void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
++		struct mac80211_sub_if_data *sdata);
++void mesh_path_quiesce(struct mac80211_sub_if_data *sdata);
++void mesh_path_restart(struct mac80211_sub_if_data *sdata);
++void mesh_path_tx_root_frame(struct mac80211_sub_if_data *sdata);
+ 
+ extern int mesh_paths_generation;
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ extern int mesh_allocated;
+ 
+-static inline int mesh_plink_free_count(struct ieee80211_sub_if_data *sdata)
++static inline int mesh_plink_free_count(struct mac80211_sub_if_data *sdata)
+ {
+ 	return sdata->u.mesh.mshcfg.dot11MeshMaxPeerLinks -
+ 	       atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
+ }
+ 
+-static inline bool mesh_plink_availables(struct ieee80211_sub_if_data *sdata)
++static inline bool mesh_plink_availables(struct mac80211_sub_if_data *sdata)
+ {
+ 	return (min_t(long, mesh_plink_free_count(sdata),
+ 		   MESH_MAX_PLINKS - sdata->local->num_sta)) > 0;
+@@ -284,28 +284,28 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
+ 	mpath->flags |= MESH_PATH_ACTIVE | MESH_PATH_RESOLVED;
+ }
+ 
+-static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
++static inline bool mesh_path_sel_is_hwmp(struct mac80211_sub_if_data *sdata)
+ {
+ 	return sdata->u.mesh.mesh_pp_id == IEEE80211_PATH_PROTOCOL_HWMP;
+ }
+ 
+ void ieee80211_mesh_notify_scan_completed(struct mac80211_local *local);
+ 
+-void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mesh_quiesce(struct mac80211_sub_if_data *sdata);
++void ieee80211_mesh_restart(struct mac80211_sub_if_data *sdata);
+ void mesh_plink_quiesce(struct sta_info *sta);
+ void mesh_plink_restart(struct sta_info *sta);
+ #else
+ #define mesh_allocated	0
+ static inline void
+ ieee80211_mesh_notify_scan_completed(struct mac80211_local *local) {}
+-static inline void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
++static inline void ieee80211_mesh_quiesce(struct mac80211_sub_if_data *sdata)
+ {}
+-static inline void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
++static inline void ieee80211_mesh_restart(struct mac80211_sub_if_data *sdata)
+ {}
+ static inline void mesh_plink_quiesce(struct sta_info *sta) {}
+ static inline void mesh_plink_restart(struct sta_info *sta) {}
+-static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
++static inline bool mesh_path_sel_is_hwmp(struct mac80211_sub_if_data *sdata)
+ { return false; }
+ #endif
+ 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 4eca250..017ec80 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -108,7 +108,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		u8 *orig_addr, __le32 orig_sn, u8 target_flags, u8 *target,
+ 		__le32 target_sn, const u8 *da, u8 hop_count, u8 ttl,
+ 		__le32 lifetime, __le32 metric, __le32 preq_id,
+-		struct ieee80211_sub_if_data *sdata)
++		struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+@@ -202,7 +202,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+  */
+ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ 		       __le16 target_rcode, const u8 *ra,
+-		       struct ieee80211_sub_if_data *sdata)
++		       struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+@@ -321,7 +321,7 @@ static u32 airtime_link_metric_get(struct mac80211_local *local,
+  * Notes: this function is the only place (besides user-provided info) where
+  * path routing information is updated.
+  */
+-static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
++static u32 hwmp_route_info_get(struct mac80211_sub_if_data *sdata,
+ 			    struct ieee80211_mgmt *mgmt,
+ 			    u8 *hwmp_ie, enum mpath_frame_type action)
+ {
+@@ -465,7 +465,7 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 	return process ? new_metric : 0;
+ }
+ 
+-static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
++static void hwmp_preq_frame_process(struct mac80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+ 				    u8 *preq_elem, u32 metric)
+ {
+@@ -568,7 +568,7 @@ next_hop_deref_protected(struct mesh_path *mpath)
+ }
+ 
+ 
+-static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
++static void hwmp_prep_frame_process(struct mac80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+ 				    u8 *prep_elem, u32 metric)
+ {
+@@ -633,7 +633,7 @@ fail:
+ 	sdata->u.mesh.mshstats.dropped_frames_no_route++;
+ }
+ 
+-static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
++static void hwmp_perr_frame_process(struct mac80211_sub_if_data *sdata,
+ 			     struct ieee80211_mgmt *mgmt, u8 *perr_elem)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+@@ -675,7 +675,7 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ }
+ 
+-static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
++static void hwmp_rann_frame_process(struct mac80211_sub_if_data *sdata,
+ 				struct ieee80211_mgmt *mgmt,
+ 				struct ieee80211_rann_ie *rann)
+ {
+@@ -725,7 +725,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ 
+-void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
++void mesh_rx_path_sel_frame(struct mac80211_sub_if_data *sdata,
+ 			    struct ieee80211_mgmt *mgmt,
+ 			    size_t len)
+ {
+@@ -782,7 +782,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+  */
+ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ {
+-	struct ieee80211_sub_if_data *sdata = mpath->sdata;
++	struct mac80211_sub_if_data *sdata = mpath->sdata;
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_preq_queue *preq_node;
+ 
+@@ -827,7 +827,7 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+  *
+  * @sdata: local mesh subif
+  */
+-void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
++void mesh_path_start_discovery(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_preq_queue *preq_node;
+@@ -918,7 +918,7 @@ enddiscovery:
+  * in this case.
+  */
+ int mesh_nexthop_lookup(struct sk_buff *skb,
+-			struct ieee80211_sub_if_data *sdata)
++			struct mac80211_sub_if_data *sdata)
+ {
+ 	struct sk_buff *skb_to_free = NULL;
+ 	struct mesh_path *mpath;
+@@ -981,7 +981,7 @@ endlookup:
+ void mesh_path_timer(unsigned long data)
+ {
+ 	struct mesh_path *mpath = (void *) data;
+-	struct ieee80211_sub_if_data *sdata = mpath->sdata;
++	struct mac80211_sub_if_data *sdata = mpath->sdata;
+ 
+ 	if (sdata->local->quiescing)
+ 		return;
+@@ -1004,7 +1004,7 @@ void mesh_path_timer(unsigned long data)
+ }
+ 
+ void
+-mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
++mesh_path_tx_root_frame(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index c52b981..9b9140e 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -164,7 +164,7 @@ errcopy:
+ 	return -ENOMEM;
+ }
+ 
+-static u32 mesh_table_hash(u8 *addr, struct ieee80211_sub_if_data *sdata,
++static u32 mesh_table_hash(u8 *addr, struct mac80211_sub_if_data *sdata,
+ 			   struct mesh_table *tbl)
+ {
+ 	/* Use last four bytes of hw addr and interface index as hash index */
+@@ -215,7 +215,7 @@ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
+  *
+  * Locking: must be called within a read rcu section.
+  */
+-struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
++struct mesh_path *mesh_path_lookup(u8 *dst, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_path *mpath;
+ 	struct hlist_node *n;
+@@ -242,7 +242,7 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ 	return NULL;
+ }
+ 
+-struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
++struct mesh_path *mpp_path_lookup(u8 *dst, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_path *mpath;
+ 	struct hlist_node *n;
+@@ -279,7 +279,7 @@ struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+  *
+  * Locking: must be called within a read rcu section.
+  */
+-struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data *sdata)
++struct mesh_path *mesh_path_lookup_by_idx(int idx, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl = rcu_dereference(mesh_paths);
+ 	struct mpath_node *node;
+@@ -313,7 +313,7 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
+  *
+  * State: the initial state of the new path is set to 0
+  */
+-int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
++int mesh_path_add(u8 *dst, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mac80211_local *local = sdata->local;
+@@ -445,7 +445,7 @@ void mesh_mpp_table_grow(void)
+ 	write_unlock_bh(&pathtbl_resize_lock);
+ }
+ 
+-int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
++int mpp_path_add(u8 *dst, u8 *mpp, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mac80211_local *local = sdata->local;
+@@ -537,7 +537,7 @@ void mesh_plink_broken(struct sta_info *sta)
+ 	struct mesh_path *mpath;
+ 	struct mpath_node *node;
+ 	struct hlist_node *p;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	int i;
+ 
+ 	rcu_read_lock();
+@@ -590,7 +590,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	rcu_read_unlock();
+ }
+ 
+-void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
++void mesh_path_flush(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+ 	struct mesh_path *mpath;
+@@ -611,7 +611,7 @@ void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+ static void mesh_path_node_reclaim(struct rcu_head *rp)
+ {
+ 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+-	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
++	struct mac80211_sub_if_data *sdata = node->mpath->sdata;
+ 
+ 	del_timer_sync(&node->mpath->timer);
+ 	atomic_dec(&sdata->u.mesh.mpaths);
+@@ -627,7 +627,7 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
+  *
+  * Returns: 0 if successful
+  */
+-int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
++int mesh_path_del(u8 *addr, struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+ 	struct mesh_path *mpath;
+@@ -694,7 +694,7 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
+  * Locking: the function must me called within a rcu_read_lock region
+  */
+ void mesh_path_discard_frame(struct sk_buff *skb,
+-			     struct ieee80211_sub_if_data *sdata)
++			     struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct mesh_path *mpath;
+@@ -814,7 +814,7 @@ int mesh_pathtbl_init(void)
+ 	return 0;
+ }
+ 
+-void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
++void mesh_path_expire(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+ 	struct mesh_path *mpath;
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index a4e2de0..4a40ada 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -61,14 +61,14 @@ enum plink_event {
+ };
+ 
+ static inline
+-void mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
++void mesh_plink_inc_estab_count(struct mac80211_sub_if_data *sdata)
+ {
+ 	atomic_inc(&sdata->u.mesh.mshstats.estab_plinks);
+ 	mesh_accept_plinks_update(sdata);
+ }
+ 
+ static inline
+-void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
++void mesh_plink_dec_estab_count(struct mac80211_sub_if_data *sdata)
+ {
+ 	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
+ 	mesh_accept_plinks_update(sdata);
+@@ -92,7 +92,7 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
+  * NOTE: This is just an alias for sta_info_alloc(), see notes
+  *       on it in the lifecycle management section!
+  */
+-static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
++static struct sta_info *mesh_plink_alloc(struct mac80211_sub_if_data *sdata,
+ 					 u8 *hw_addr, u32 rates)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -123,7 +123,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+  */
+ static bool __mesh_plink_deactivate(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	bool deactivated = false;
+ 
+ 	if (sta->plink_state == NL80211_PLINK_ESTAB) {
+@@ -145,7 +145,7 @@ static bool __mesh_plink_deactivate(struct sta_info *sta)
+  */
+ void mesh_plink_deactivate(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	bool deactivated;
+ 
+ 	spin_lock_bh(&sta->lock);
+@@ -156,7 +156,7 @@ void mesh_plink_deactivate(struct sta_info *sta)
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ }
+ 
+-static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
++static int mesh_plink_frame_tx(struct mac80211_sub_if_data *sdata,
+ 		enum plink_frame_type action, u8 *da, __le16 llid, __le16 plid,
+ 		__le16 reason) {
+ 	struct mac80211_local *local = sdata->local;
+@@ -238,7 +238,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+-		struct ieee80211_sub_if_data *sdata,
++		struct mac80211_sub_if_data *sdata,
+ 		struct ieee802_11_elems *elems)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -280,7 +280,7 @@ static void mesh_plink_timer(unsigned long data)
+ {
+ 	struct sta_info *sta;
+ 	__le16 llid, plid, reason;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	/*
+ 	 * This STA is valid because sta_info_destroy() will
+@@ -378,7 +378,7 @@ static inline void mesh_plink_timer_set(struct sta_info *sta, int timeout)
+ int mesh_plink_open(struct sta_info *sta)
+ {
+ 	__le16 llid;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	if (!test_sta_flags(sta, WLAN_STA_AUTH))
+ 		return -EPERM;
+@@ -402,7 +402,7 @@ int mesh_plink_open(struct sta_info *sta)
+ 
+ void mesh_plink_block(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	bool deactivated;
+ 
+ 	spin_lock_bh(&sta->lock);
+@@ -415,7 +415,7 @@ void mesh_plink_block(struct sta_info *sta)
+ }
+ 
+ 
+-void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_mgmt *mgmt,
++void mesh_rx_plink_frame(struct mac80211_sub_if_data *sdata, struct ieee80211_mgmt *mgmt,
+ 			 size_t len, struct ieee80211_rx_status *rx_status)
+ {
+ 	struct mac80211_local *local = sdata->local;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 77fe8a7..46bc4db 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -123,7 +123,7 @@ static void run_again(struct mac80211_if_managed *ifmgd,
+ 		mod_timer(&ifmgd->timer, timeout);
+ }
+ 
+-void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_reset_beacon_monitor(struct mac80211_sub_if_data *sdata)
+ {
+ 	if (sdata->local->hw.flags & IEEE80211_HW_BEACON_FILTER)
+ 		return;
+@@ -132,7 +132,7 @@ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
+ 		  round_jiffies_up(jiffies + sdata->u.mgd.beacon_timeout));
+ }
+ 
+-void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_reset_conn_monitor(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+@@ -158,7 +158,7 @@ static int ecw2cw(int ecw)
+  * has been determined as ht configuration depends on the hw's
+  * HT abilities for a specific band.
+  */
+-static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
++static u32 ieee80211_enable_ht(struct mac80211_sub_if_data *sdata,
+ 			       struct ieee80211_ht_info *hti,
+ 			       const u8 *bssid, u16 ap_ht_cap_flags)
+ {
+@@ -261,7 +261,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 
+ /* frame sending functions */
+ 
+-static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_send_deauth_disassoc(struct mac80211_sub_if_data *sdata,
+ 					   const u8 *bssid, u16 stype, u16 reason,
+ 					   void *cookie, bool send_frame)
+ {
+@@ -308,7 +308,7 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ void ieee80211_send_pspoll(struct mac80211_local *local,
+-			   struct ieee80211_sub_if_data *sdata)
++			   struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_pspoll *pspoll;
+ 	struct sk_buff *skb;
+@@ -325,7 +325,7 @@ void ieee80211_send_pspoll(struct mac80211_local *local,
+ }
+ 
+ void ieee80211_send_nullfunc(struct mac80211_local *local,
+-			     struct ieee80211_sub_if_data *sdata,
++			     struct mac80211_sub_if_data *sdata,
+ 			     int powersave)
+ {
+ 	struct sk_buff *skb;
+@@ -344,7 +344,7 @@ void ieee80211_send_nullfunc(struct mac80211_local *local,
+ }
+ 
+ static void ieee80211_send_4addr_nullfunc(struct mac80211_local *local,
+-					  struct ieee80211_sub_if_data *sdata)
++					  struct mac80211_sub_if_data *sdata)
+ {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_hdr *nullfunc;
+@@ -378,8 +378,8 @@ static void ieee80211_send_4addr_nullfunc(struct mac80211_local *local,
+ /* spectrum management related things */
+ static void ieee80211_chswitch_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data, u.mgd.chswitch_work);
++	struct mac80211_sub_if_data *sdata =
++		container_of(work, struct mac80211_sub_if_data, u.mgd.chswitch_work);
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+@@ -408,7 +408,7 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 
+ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_if_managed *ifmgd;
+ 
+ 	sdata = vif_to_sdata(vif);
+@@ -431,8 +431,8 @@ EXPORT_SYMBOL(ieee80211_chswitch_done);
+ 
+ static void ieee80211_chswitch_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	if (sdata->local->quiescing) {
+@@ -443,7 +443,7 @@ static void ieee80211_chswitch_timer(unsigned long data)
+ 	ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
+ }
+ 
+-void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_process_chanswitch(struct mac80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct mac80211_bss *bss,
+ 				      u64 timestamp)
+@@ -507,7 +507,7 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
+-static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_handle_pwr_constr(struct mac80211_sub_if_data *sdata,
+ 					u16 capab_info, u8 *pwr_constr_elem,
+ 					u8 pwr_constr_elem_len)
+ {
+@@ -529,7 +529,7 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 
+@@ -544,7 +544,7 @@ EXPORT_SYMBOL(ieee80211_enable_dyn_ps);
+ 
+ void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 
+@@ -562,7 +562,7 @@ EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
+ 
+ /* powersave */
+ static void ieee80211_enable_ps(struct mac80211_local *local,
+-				struct ieee80211_sub_if_data *sdata)
++				struct mac80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 
+@@ -604,7 +604,7 @@ static void ieee80211_change_ps(struct mac80211_local *local)
+ 	}
+ }
+ 
+-static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
++static bool ieee80211_powersave_allowed(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *mgd = &sdata->u.mgd;
+ 	struct sta_info *sta = NULL;
+@@ -638,7 +638,7 @@ static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
+ /* need to hold RTNL or interface lock */
+ void ieee80211_recalc_ps(struct mac80211_local *local, s32 latency)
+ {
+-	struct ieee80211_sub_if_data *sdata, *found = NULL;
++	struct mac80211_sub_if_data *sdata, *found = NULL;
+ 	int count = 0;
+ 	int timeout;
+ 
+@@ -748,7 +748,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	struct mac80211_local *local =
+ 		container_of(work, struct mac80211_local,
+ 			     dynamic_ps_enable_work);
+-	struct ieee80211_sub_if_data *sdata = local->ps_sdata;
++	struct mac80211_sub_if_data *sdata = local->ps_sdata;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	unsigned long flags;
+ 	int q;
+@@ -816,7 +816,7 @@ void ieee80211_dynamic_ps_timer(unsigned long data)
+ 
+ /* MLME */
+ static void ieee80211_sta_wmm_params(struct mac80211_local *local,
+-				     struct ieee80211_sub_if_data *sdata,
++				     struct mac80211_sub_if_data *sdata,
+ 				     u8 *wmm_param, size_t wmm_param_len)
+ {
+ 	struct ieee80211_tx_queue_params params;
+@@ -914,7 +914,7 @@ static void ieee80211_sta_wmm_params(struct mac80211_local *local,
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
+ }
+ 
+-static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
++static u32 ieee80211_handle_bss_capability(struct mac80211_sub_if_data *sdata,
+ 					   u16 capab, bool erp_valid, u8 erp)
+ {
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
+@@ -953,7 +953,7 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 	return changed;
+ }
+ 
+-static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_set_associated(struct mac80211_sub_if_data *sdata,
+ 				     struct cfg80211_bss *cbss,
+ 				     u32 bss_info_changed)
+ {
+@@ -1022,7 +1022,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	netif_carrier_on(sdata->dev);
+ }
+ 
+-static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_set_disassoc(struct mac80211_sub_if_data *sdata,
+ 				   bool remove_sta, bool tx)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -1112,7 +1112,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	del_timer_sync(&sdata->u.mgd.chswitch_timer);
+ }
+ 
+-void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_rx_notify(struct mac80211_sub_if_data *sdata,
+ 			     struct ieee80211_hdr *hdr)
+ {
+ 	/*
+@@ -1129,7 +1129,7 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_reset_conn_monitor(sdata);
+ }
+ 
+-static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_reset_ap_probe(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+@@ -1158,7 +1158,7 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ 				   IEEE80211_CONNECTION_IDLE_TIME));
+ }
+ 
+-void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_tx_notify(struct mac80211_sub_if_data *sdata,
+ 			     struct ieee80211_hdr *hdr, bool ack)
+ {
+ 	if (!ieee80211_is_data(hdr->frame_control))
+@@ -1177,7 +1177,7 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
+-static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_mgd_probe_ap_send(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	const u8 *ssid;
+@@ -1212,7 +1212,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	run_again(ifmgd, ifmgd->probe_timeout);
+ }
+ 
+-static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_mgd_probe_ap(struct mac80211_sub_if_data *sdata,
+ 				   bool beacon)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -1274,7 +1274,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ 					  struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct sk_buff *skb;
+ 	const u8 *ssid;
+@@ -1295,7 +1295,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_ap_probereq_get);
+ 
+-static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
++static void __ieee80211_connection_loss(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct mac80211_local *local = sdata->local;
+@@ -1330,8 +1330,8 @@ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
++	struct mac80211_sub_if_data *sdata =
++		container_of(work, struct mac80211_sub_if_data,
+ 			     u.mgd.beacon_connection_loss_work);
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+@@ -1342,7 +1342,7 @@ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 
+ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_hw *hw = &sdata->local->hw;
+ 
+ 	trace_api_beacon_loss(sdata);
+@@ -1354,7 +1354,7 @@ EXPORT_SYMBOL(ieee80211_beacon_loss);
+ 
+ void ieee80211_connection_loss(struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_hw *hw = &sdata->local->hw;
+ 
+ 	trace_api_connection_loss(sdata);
+@@ -1366,7 +1366,7 @@ EXPORT_SYMBOL(ieee80211_connection_loss);
+ 
+ 
+ static enum rx_mgmt_action __must_check
+-ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
++ieee80211_rx_mgmt_deauth(struct mac80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -1395,7 +1395,7 @@ ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 
+ 
+ static enum rx_mgmt_action __must_check
+-ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
++ieee80211_rx_mgmt_disassoc(struct mac80211_sub_if_data *sdata,
+ 			   struct ieee80211_mgmt *mgmt, size_t len)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -1428,7 +1428,7 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ static bool ieee80211_assoc_success(struct mac80211_work *wk,
+ 				    struct ieee80211_mgmt *mgmt, size_t len)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+@@ -1593,7 +1593,7 @@ static bool ieee80211_assoc_success(struct mac80211_work *wk,
+ }
+ 
+ 
+-static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_bss_info(struct mac80211_sub_if_data *sdata,
+ 				  struct ieee80211_mgmt *mgmt,
+ 				  size_t len,
+ 				  struct ieee80211_rx_status *rx_status,
+@@ -1648,7 +1648,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ 
+-static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_probe_resp(struct mac80211_sub_if_data *sdata,
+ 					 struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *)skb->data;
+@@ -1699,7 +1699,7 @@ static const u64 care_about_ies =
+ 	(1ULL << WLAN_EID_HT_CAPABILITY) |
+ 	(1ULL << WLAN_EID_HT_INFORMATION);
+ 
+-static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_rx_mgmt_beacon(struct mac80211_sub_if_data *sdata,
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len,
+ 				     struct ieee80211_rx_status *rx_status)
+@@ -1894,7 +1894,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+ 
+-void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_rx_queued_mgmt(struct mac80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -2000,8 +2000,8 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 
+ static void ieee80211_sta_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -2013,7 +2013,7 @@ static void ieee80211_sta_timer(unsigned long data)
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ }
+ 
+-static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_sta_connection_lost(struct mac80211_sub_if_data *sdata,
+ 					  u8 *bssid)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -2038,7 +2038,7 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 	mutex_lock(&ifmgd->mtx);
+ }
+ 
+-void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_work(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -2122,8 +2122,8 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	if (local->quiescing)
+@@ -2135,8 +2135,8 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 
+ static void ieee80211_sta_conn_mon_timer(unsigned long data)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		(struct ieee80211_sub_if_data *) data;
++	struct mac80211_sub_if_data *sdata =
++		(struct mac80211_sub_if_data *) data;
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -2148,14 +2148,14 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
+ 
+ static void ieee80211_sta_monitor_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
++	struct mac80211_sub_if_data *sdata =
++		container_of(work, struct mac80211_sub_if_data,
+ 			     u.mgd.monitor_work);
+ 
+ 	ieee80211_mgd_probe_ap(sdata, false);
+ }
+ 
+-static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_restart_sta_timer(struct mac80211_sub_if_data *sdata)
+ {
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		sdata->u.mgd.flags &= ~(MAC80211_STA_BEACON_POLL |
+@@ -2170,7 +2170,7 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ }
+ 
+ #ifdef CONFIG_PM
+-void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_quiesce(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+@@ -2196,7 +2196,7 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
+ 	del_timer_sync(&ifmgd->bcn_mon_timer);
+ }
+ 
+-void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_restart(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+@@ -2210,7 +2210,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+ #endif
+ 
+ /* interface setup */
+-void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_setup_sdata(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_if_managed *ifmgd;
+ 
+@@ -2242,7 +2242,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ /* scan finished notification */
+ void ieee80211_mlme_notify_scan_completed(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
++	struct mac80211_sub_if_data *sdata = local->scan_sdata;
+ 
+ 	/* Restart STA timers */
+ 	rcu_read_lock();
+@@ -2290,7 +2290,7 @@ ieee80211_probe_auth_done(struct mac80211_work *wk,
+ 	return WORK_DONE_REQUEUE;
+ }
+ 
+-int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_auth(struct mac80211_sub_if_data *sdata,
+ 		       struct cfg80211_auth_request *req)
+ {
+ 	const u8 *ssid;
+@@ -2403,7 +2403,7 @@ static enum work_done_result ieee80211_assoc_done(struct mac80211_work *wk,
+ 	return WORK_DONE_DESTROY;
+ }
+ 
+-int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_assoc(struct mac80211_sub_if_data *sdata,
+ 			struct cfg80211_assoc_request *req)
+ {
+ 	struct mac80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -2528,7 +2528,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_deauth(struct mac80211_sub_if_data *sdata,
+ 			 struct cfg80211_deauth_request *req,
+ 			 void *cookie)
+ {
+@@ -2601,7 +2601,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
++int ieee80211_mgd_disassoc(struct mac80211_sub_if_data *sdata,
+ 			   struct cfg80211_disassoc_request *req,
+ 			   void *cookie)
+ {
+@@ -2645,7 +2645,7 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			       gfp_t gfp)
+ {
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct mac80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+ 	trace_api_cqm_rssi_notify(sdata, rssi_event);
+ 
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 0c97ef7..5473d79 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -23,7 +23,7 @@
+  * because we *may* be doing work on-operating channel, and want our
+  * hardware unconditionally awake, but still let the AP send us normal frames.
+  */
+-static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_offchannel_ps_enable(struct mac80211_sub_if_data *sdata,
+ 					   bool tell_ap)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -61,7 +61,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ /* inform AP that we are awake again, unless power save is enabled */
+-static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_offchannel_ps_disable(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 
+@@ -105,7 +105,7 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+ void ieee80211_offchannel_stop_vifs(struct mac80211_local *local,
+ 				    bool offchannel_ps_enable)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	/*
+ 	 * notify the AP about us leaving the channel and stop all
+@@ -140,7 +140,7 @@ void ieee80211_offchannel_stop_vifs(struct mac80211_local *local,
+ void ieee80211_offchannel_enable_all_ps(struct mac80211_local *local,
+ 					bool tell_ap)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -158,7 +158,7 @@ void ieee80211_offchannel_return(struct mac80211_local *local,
+ 				 bool enable_beaconing,
+ 				 bool offchannel_ps_disable)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -202,7 +202,7 @@ static void ieee80211_hw_roc_start(struct work_struct *work)
+ {
+ 	struct mac80211_local *local =
+ 		container_of(work, struct mac80211_local, hw_roc_start);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->mtx);
+ 
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index bfc9cf3..47505f0 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -9,7 +9,7 @@
+ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
+ 	ieee80211_scan_cancel(local);
+@@ -68,7 +68,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			sdata = sta->sdata;
+ 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 				sdata = container_of(sdata->bss,
+-					     struct ieee80211_sub_if_data,
++					     struct mac80211_sub_if_data,
+ 					     u.ap);
+ 
+ 			drv_sta_remove(local, sdata, &sta->sta);
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 1b2eacf..5384bba 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -295,7 +295,7 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+ 	 */
+ }
+ 
+-void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
++void rate_control_get_rate(struct mac80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+ {
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 5693817..64399a7 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -26,7 +26,7 @@ struct rate_control_ref {
+ 	struct kref kref;
+ };
+ 
+-void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
++void rate_control_get_rate(struct mac80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_tx_rate_control *txrc);
+ struct rate_control_ref *rate_control_get(struct rate_control_ref *ref);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d4c83cb..be041e5 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -220,7 +220,7 @@ ieee80211_rx_monitor(struct mac80211_local *local, struct sk_buff *origskb,
+ 		     struct ieee80211_rate *rate)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(origskb);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	int needed_headroom = 0;
+ 	struct sk_buff *skb, *skb2;
+ 	struct net_device *prev_dev = NULL;
+@@ -936,7 +936,7 @@ ieee80211_rx_h_decrypt(struct mac80211_rx_data *rx)
+ 		 * have been expected.
+ 		 */
+ 		struct ieee80211_key *key = NULL;
+-		struct ieee80211_sub_if_data *sdata = rx->sdata;
++		struct mac80211_sub_if_data *sdata = rx->sdata;
+ 		int i;
+ 
+ 		if (ieee80211_is_mgmt(fc) &&
+@@ -1091,7 +1091,7 @@ ieee80211_rx_h_check_more_data(struct mac80211_rx_data *rx)
+ 
+ static void ap_sta_ps_start(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	atomic_inc(&sdata->bss->num_sta_ps);
+@@ -1106,7 +1106,7 @@ static void ap_sta_ps_start(struct sta_info *sta)
+ 
+ static void ap_sta_ps_end(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	atomic_dec(&sdata->bss->num_sta_ps);
+ 
+@@ -1255,7 +1255,7 @@ ieee80211_rx_h_sta_process(struct mac80211_rx_data *rx)
+ } /* ieee80211_rx_h_sta_process */
+ 
+ static inline struct mac80211_fragment_entry *
+-ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
++ieee80211_reassemble_add(struct mac80211_sub_if_data *sdata,
+ 			 unsigned int frag, unsigned int seq, int rx_queue,
+ 			 struct sk_buff **skb)
+ {
+@@ -1294,7 +1294,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static inline struct mac80211_fragment_entry *
+-ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
++ieee80211_reassemble_find(struct mac80211_sub_if_data *sdata,
+ 			  unsigned int frag, unsigned int seq,
+ 			  int rx_queue, struct ieee80211_hdr *hdr)
+ {
+@@ -1461,7 +1461,7 @@ ieee80211_rx_h_defragment(struct mac80211_rx_data *rx)
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ps_poll(struct mac80211_rx_data *rx)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	__le16 fc = ((struct ieee80211_hdr *)rx->skb->data)->frame_control;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 
+@@ -1594,7 +1594,7 @@ ieee80211_drop_unencrypted_mgmt(struct mac80211_rx_data *rx)
+ static int
+ __ieee80211_data_to_8023(struct mac80211_rx_data *rx, bool *port_control)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	bool check_port_control = false;
+ 	struct ethhdr *ehdr;
+@@ -1662,7 +1662,7 @@ static bool ieee80211_frame_allowed(struct mac80211_rx_data *rx, __le16 fc)
+ static void
+ ieee80211_deliver_skb(struct mac80211_rx_data *rx)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct net_device *dev = sdata->dev;
+ 	struct sk_buff *skb, *xmit_skb;
+ 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
+@@ -1810,7 +1810,7 @@ ieee80211_rx_h_mesh_fwding(struct mac80211_rx_data *rx)
+ 	unsigned int hdrlen;
+ 	struct sk_buff *skb = rx->skb, *fwd_skb;
+ 	struct mac80211_local *local = rx->local;
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+@@ -1921,7 +1921,7 @@ ieee80211_rx_h_mesh_fwding(struct mac80211_rx_data *rx)
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_data(struct mac80211_rx_data *rx)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct mac80211_local *local = rx->local;
+ 	struct net_device *dev = sdata->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+@@ -1952,7 +1952,7 @@ ieee80211_rx_h_data(struct mac80211_rx_data *rx)
+ 
+ 	if (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+ 	    unlikely(port_control) && sdata->bss) {
+-		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
++		sdata = container_of(sdata->bss, struct mac80211_sub_if_data,
+ 				     u.ap);
+ 		dev = sdata->dev;
+ 		rx->sdata = sdata;
+@@ -2033,7 +2033,7 @@ ieee80211_rx_h_ctrl(struct mac80211_rx_data *rx)
+ 	return RX_DROP_MONITOR;
+ }
+ 
+-static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_process_sa_query_req(struct mac80211_sub_if_data *sdata,
+ 					   struct ieee80211_mgmt *mgmt,
+ 					   size_t len)
+ {
+@@ -2109,7 +2109,7 @@ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_action(struct mac80211_rx_data *rx)
+ {
+ 	struct mac80211_local *local = rx->local;
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 	int len = rx->skb->len;
+@@ -2277,7 +2277,7 @@ ieee80211_rx_h_action_return(struct mac80211_rx_data *rx)
+ 	struct mac80211_local *local = rx->local;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
+ 	struct sk_buff *nskb;
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 
+ 	if (!ieee80211_is_action(mgmt->frame_control))
+@@ -2322,7 +2322,7 @@ ieee80211_rx_h_action_return(struct mac80211_rx_data *rx)
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_mgmt(struct mac80211_rx_data *rx)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	ieee80211_rx_result rxs;
+ 	struct ieee80211_mgmt *mgmt = (void *)rx->skb->data;
+ 	__le16 stype;
+@@ -2377,7 +2377,7 @@ ieee80211_rx_h_mgmt(struct mac80211_rx_data *rx)
+ static void ieee80211_rx_cooked_monitor(struct mac80211_rx_data *rx,
+ 					struct ieee80211_rate *rate)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_local *local = rx->local;
+ 	struct ieee80211_rtap_hdr {
+ 		struct ieee80211_radiotap_header hdr;
+@@ -2611,7 +2611,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ static int prepare_for_handlers(struct mac80211_rx_data *rx,
+ 				struct ieee80211_hdr *hdr)
+ {
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+@@ -2704,7 +2704,7 @@ static bool ieee80211_prepare_and_rx_handle(struct mac80211_rx_data *rx,
+ 					    struct sk_buff *skb, bool consume)
+ {
+ 	struct mac80211_local *local = rx->local;
+-	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct mac80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	int prepares;
+@@ -2742,11 +2742,11 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_hdr *hdr;
+ 	__le16 fc;
+ 	struct mac80211_rx_data rx;
+-	struct ieee80211_sub_if_data *prev;
++	struct mac80211_sub_if_data *prev;
+ 	struct sta_info *sta, *tmp, *prev_sta;
+ 	int err = 0;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 7c3d17b..284e0cb 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -147,7 +147,7 @@ ieee80211_bss_info_update(struct mac80211_local *local,
+ }
+ 
+ ieee80211_rx_result
+-ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++ieee80211_scan_rx(struct mac80211_sub_if_data *sdata, struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_mgmt *mgmt;
+@@ -378,7 +378,7 @@ static int ieee80211_start_sw_scan(struct mac80211_local *local)
+ }
+ 
+ 
+-static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
++static int __ieee80211_start_scan(struct mac80211_sub_if_data *sdata,
+ 				  struct cfg80211_scan_request *req)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -475,7 +475,7 @@ static void ieee80211_scan_state_decision(struct mac80211_local *local,
+ 	bool bad_latency;
+ 	bool listen_int_exceeded;
+ 	unsigned long min_beacon_int = 0;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
+ 
+ 	/*
+@@ -651,7 +651,7 @@ static void ieee80211_scan_state_send_probe(struct mac80211_local *local,
+ 					    unsigned long *next_delay)
+ {
+ 	int i;
+-	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
++	struct mac80211_sub_if_data *sdata = local->scan_sdata;
+ 
+ 	for (i = 0; i < local->scan_req->n_ssids; i++)
+ 		ieee80211_send_probe_req(
+@@ -672,7 +672,7 @@ void ieee80211_scan_work(struct work_struct *work)
+ {
+ 	struct mac80211_local *local =
+ 		container_of(work, struct mac80211_local, scan_work.work);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	unsigned long next_delay = 0;
+ 	bool aborted, hw_scan;
+ 
+@@ -757,7 +757,7 @@ out:
+ 	mutex_unlock(&local->mtx);
+ }
+ 
+-int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_scan(struct mac80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req)
+ {
+ 	int res;
+@@ -769,7 +769,7 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 	return res;
+ }
+ 
+-int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_internal_scan(struct mac80211_sub_if_data *sdata,
+ 				    const u8 *ssid, u8 ssid_len,
+ 				    struct ieee80211_channel *chan)
+ {
+@@ -856,7 +856,7 @@ void ieee80211_scan_cancel(struct mac80211_local *local)
+ 	mutex_unlock(&local->mtx);
+ }
+ 
+-int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
++int ieee80211_request_sched_scan_start(struct mac80211_sub_if_data *sdata,
+ 				       struct cfg80211_sched_scan_request *req)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -906,7 +906,7 @@ out:
+ 	return ret;
+ }
+ 
+-int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
++int ieee80211_request_sched_scan_stop(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	int ret = 0, i;
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index fe1e76d..0c9ad56 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -21,7 +21,7 @@
+ #include "sta_info.h"
+ #include "wme.h"
+ 
+-static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_send_refuse_measurement_request(struct mac80211_sub_if_data *sdata,
+ 					struct ieee80211_msrment_ie *request_ie,
+ 					const u8 *da, const u8 *bssid,
+ 					u8 dialog_token)
+@@ -68,7 +68,7 @@ static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_da
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
++void ieee80211_process_measurement_req(struct mac80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       size_t len)
+ {
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index d148159..a6b187d 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -90,7 +90,7 @@ static int sta_info_hash_del(struct mac80211_local *local,
+ }
+ 
+ /* protected by RCU */
+-struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get(struct mac80211_sub_if_data *sdata,
+ 			      const u8 *addr)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -116,7 +116,7 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+  * Get sta info either from the specified interface
+  * or from one of its vlans
+  */
+-struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get_bss(struct mac80211_sub_if_data *sdata,
+ 				  const u8 *addr)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -139,7 +139,7 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
+ 	return sta;
+ }
+ 
+-struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get_by_idx(struct mac80211_sub_if_data *sdata,
+ 				     int idx)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -226,7 +226,7 @@ static int sta_prepare_rate_control(struct mac80211_local *local,
+ 	return 0;
+ }
+ 
+-struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_alloc(struct mac80211_sub_if_data *sdata,
+ 				u8 *addr, gfp_t gfp)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -287,7 +287,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ static int sta_info_finish_insert(struct sta_info *sta, bool async)
+ {
+ 	struct mac80211_local *local = sta->local;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct station_info sinfo;
+ 	unsigned long flags;
+ 	int err = 0;
+@@ -297,7 +297,7 @@ static int sta_info_finish_insert(struct sta_info *sta, bool async)
+ 	/* notify driver */
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+-				     struct ieee80211_sub_if_data,
++				     struct mac80211_sub_if_data,
+ 				     u.ap);
+ 	err = drv_sta_add(local, sdata, &sta->sta);
+ 	if (err) {
+@@ -374,7 +374,7 @@ static void sta_info_finish_work(struct work_struct *work)
+ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
+ {
+ 	struct mac80211_local *local = sta->local;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	unsigned long flags;
+ 	int err = 0;
+ 
+@@ -624,7 +624,7 @@ static bool sta_info_cleanup_expire_buffered(struct mac80211_local *local,
+ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ {
+ 	struct mac80211_local *local;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	int ret, i;
+@@ -681,7 +681,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	if (sta->uploaded) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			sdata = container_of(sdata->bss,
+-					     struct ieee80211_sub_if_data,
++					     struct mac80211_sub_if_data,
+ 					     u.ap);
+ 		drv_sta_remove(local, sdata, &sta->sta);
+ 		sdata = sta->sdata;
+@@ -730,7 +730,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	return 0;
+ }
+ 
+-int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata, const u8 *addr)
++int sta_info_destroy_addr(struct mac80211_sub_if_data *sdata, const u8 *addr)
+ {
+ 	struct sta_info *sta;
+ 	int ret;
+@@ -743,7 +743,7 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ 	return ret;
+ }
+ 
+-int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
++int sta_info_destroy_addr_bss(struct mac80211_sub_if_data *sdata,
+ 			      const u8 *addr)
+ {
+ 	struct sta_info *sta;
+@@ -806,7 +806,7 @@ void sta_info_stop(struct mac80211_local *local)
+  * @sdata: matching rule for the net device (sta->dev) or %NULL to match all STAs
+  */
+ int sta_info_flush(struct mac80211_local *local,
+-		   struct ieee80211_sub_if_data *sdata)
++		   struct mac80211_sub_if_data *sdata)
+ {
+ 	struct sta_info *sta, *tmp;
+ 	int ret = 0;
+@@ -826,7 +826,7 @@ int sta_info_flush(struct mac80211_local *local,
+ 	return ret;
+ }
+ 
+-void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_expire(struct mac80211_sub_if_data *sdata,
+ 			  unsigned long exp_time)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -896,7 +896,7 @@ static void clear_sta_ps_flags(void *_sta)
+ /* powersave support code */
+ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	int sent, buffered;
+ 
+@@ -923,7 +923,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 
+ void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta)
+ {
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	int no_pending_pkts;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 3623a2d..16c54cc 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -248,7 +248,7 @@ struct sta_info {
+ 	struct list_head list;
+ 	struct sta_info __rcu *hnext;
+ 	struct mac80211_local *local;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
+ 	struct ieee80211_key __rcu *ptk;
+ 	struct rate_control_ref *rate_ctrl;
+@@ -432,10 +432,10 @@ rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
+ /*
+  * Get a STA info, must be under RCU read lock.
+  */
+-struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get(struct mac80211_sub_if_data *sdata,
+ 			      const u8 *addr);
+ 
+-struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get_bss(struct mac80211_sub_if_data *sdata,
+ 				  const u8 *addr);
+ 
+ static inline
+@@ -464,13 +464,13 @@ void for_each_sta_info_type_check(struct mac80211_local *local,
+ /*
+  * Get STA info by index, BROKEN!
+  */
+-struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_get_by_idx(struct mac80211_sub_if_data *sdata,
+ 				     int idx);
+ /*
+  * Create a new STA info, caller owns returned structure
+  * until sta_info_insert().
+  */
+-struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
++struct sta_info *sta_info_alloc(struct mac80211_sub_if_data *sdata,
+ 				u8 *addr, gfp_t gfp);
+ /*
+  * Insert STA info into hash table/list, returns zero or a
+@@ -484,9 +484,9 @@ int sta_info_insert(struct sta_info *sta);
+ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU);
+ int sta_info_insert_atomic(struct sta_info *sta);
+ 
+-int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata,
++int sta_info_destroy_addr(struct mac80211_sub_if_data *sdata,
+ 			  const u8 *addr);
+-int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
++int sta_info_destroy_addr_bss(struct mac80211_sub_if_data *sdata,
+ 			      const u8 *addr);
+ 
+ void sta_info_set_tim_bit(struct sta_info *sta);
+@@ -495,8 +495,8 @@ void sta_info_clear_tim_bit(struct sta_info *sta);
+ void sta_info_init(struct mac80211_local *local);
+ void sta_info_stop(struct mac80211_local *local);
+ int sta_info_flush(struct mac80211_local *local,
+-		   struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
++		   struct mac80211_sub_if_data *sdata);
++void ieee80211_sta_expire(struct mac80211_sub_if_data *sdata,
+ 			  unsigned long exp_time);
+ 
+ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 464cec7..41fe6ed 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -131,7 +131,7 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
+ 	struct mac80211_local *local = sta->local;
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct mac80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	if (ieee80211_is_action(mgmt->frame_control) &&
+ 	    sdata->vif.type == NL80211_IFTYPE_STATION &&
+@@ -180,7 +180,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	__le16 fc;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_tx_status_rtap_hdr *rthdr;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct net_device *prev_dev = NULL;
+ 	struct sta_info *sta, *tmp;
+ 	int retry_count = -1, i;
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 757e4eb..26f866e 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -304,11 +304,11 @@ int ieee80211_tkip_decrypt_data(struct crypto_cipher *tfm,
+ 	if (key->local->ops->update_tkip_key &&
+ 	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
+ 	    key->u.tkip.rx[queue].state != TKIP_STATE_PHASE1_HW_UPLOADED) {
+-		struct ieee80211_sub_if_data *sdata = key->sdata;
++		struct mac80211_sub_if_data *sdata = key->sdata;
+ 
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			sdata = container_of(key->sdata->bss,
+-					struct ieee80211_sub_if_data, u.ap);
++					struct mac80211_sub_if_data, u.ap);
+ 		drv_update_tkip_key(key->local, sdata, &key->conf, key->sta,
+ 				iv32, key->u.tkip.rx[queue].p1k);
+ 		key->u.tkip.rx[queue].state = TKIP_STATE_PHASE1_HW_UPLOADED;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ab8a71f..e43e34b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -322,7 +322,7 @@ static void purge_old_ps_buffers(struct mac80211_local *local)
+ {
+ 	int total = 0, purged = 0;
+ 	struct sk_buff *skb;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
+ 	/*
+@@ -1173,7 +1173,7 @@ static bool ieee80211_tx_prep_agg(struct mac80211_tx_data *tx,
+  * initialises @tx
+  */
+ static ieee80211_tx_result
+-ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
++ieee80211_tx_prepare(struct mac80211_sub_if_data *sdata,
+ 		     struct mac80211_tx_data *tx,
+ 		     struct sk_buff *skb)
+ {
+@@ -1290,7 +1290,7 @@ static bool __ieee80211_tx(struct mac80211_local *local, struct sk_buff **skbp,
+ {
+ 	struct sk_buff *skb = *skbp, *next;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	unsigned long flags;
+ 	int len;
+ 	bool fragm = false;
+@@ -1352,7 +1352,7 @@ static bool __ieee80211_tx(struct mac80211_local *local, struct sk_buff **skbp,
+ 			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 			info->control.vif = &container_of(sdata->bss,
+-				struct ieee80211_sub_if_data, u.ap)->vif;
++				struct mac80211_sub_if_data, u.ap)->vif;
+ 			break;
+ 		default:
+ 			/* keep */
+@@ -1436,7 +1436,7 @@ static int invoke_tx_handlers(struct mac80211_tx_data *tx)
+ /*
+  * Returns false if the frame couldn't be transmitted but was queued instead.
+  */
+-static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
++static bool ieee80211_tx(struct mac80211_sub_if_data *sdata,
+ 			 struct sk_buff *skb, bool txpending)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -1515,13 +1515,13 @@ static int ieee80211_skb_resize(struct mac80211_local *local,
+ 	return 0;
+ }
+ 
+-static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_xmit(struct mac80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_sub_if_data *tmp_sdata;
++	struct mac80211_sub_if_data *tmp_sdata;
+ 	int headroom;
+ 	bool may_encrypt;
+ 
+@@ -1691,7 +1691,7 @@ fail:
+ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				    struct net_device *dev)
+ {
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct mac80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_tx_info *info;
+ 	int ret = NETDEV_TX_BUSY, head_need;
+@@ -2026,7 +2026,7 @@ static bool ieee80211_tx_pending_skb(struct mac80211_local *local,
+ 				     struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	struct ieee80211_hdr *hdr;
+ 	bool result;
+@@ -2051,7 +2051,7 @@ static bool ieee80211_tx_pending_skb(struct mac80211_local *local,
+ void ieee80211_tx_pending(unsigned long data)
+ {
+ 	struct mac80211_local *local = (struct mac80211_local *)data;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	unsigned long flags;
+ 	int i;
+ 	bool txok;
+@@ -2169,7 +2169,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 	struct mac80211_local *local = hw_to_local(hw);
+ 	struct sk_buff *skb = NULL;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_sub_if_data *sdata = NULL;
++	struct mac80211_sub_if_data *sdata = NULL;
+ 	struct mac80211_if_ap *ap = NULL;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_supported_band *sband;
+@@ -2322,7 +2322,7 @@ EXPORT_SYMBOL(ieee80211_beacon_get_tim);
+ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_if_managed *ifmgd;
+ 	struct ieee80211_pspoll *pspoll;
+ 	struct mac80211_local *local;
+@@ -2363,7 +2363,7 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hdr_3addr *nullfunc;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_if_managed *ifmgd;
+ 	struct mac80211_local *local;
+ 	struct sk_buff *skb;
+@@ -2402,7 +2402,7 @@ struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
+ 				       const u8 *ssid, size_t ssid_len,
+ 				       const u8 *ie, size_t ie_len)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_local *local;
+ 	struct ieee80211_hdr_3addr *hdr;
+ 	struct sk_buff *skb;
+@@ -2485,7 +2485,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 	struct mac80211_local *local = hw_to_local(hw);
+ 	struct sk_buff *skb = NULL;
+ 	struct mac80211_tx_data tx;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct mac80211_if_ap *bss = NULL;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_tx_info *info;
+@@ -2538,7 +2538,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_get_buffered_bc);
+ 
+-void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++void ieee80211_tx_skb(struct mac80211_sub_if_data *sdata, struct sk_buff *skb)
+ {
+ 	skb_set_mac_header(skb, 0);
+ 	skb_set_network_header(skb, 0);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3766f2e..7e1514c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -165,7 +165,7 @@ __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
+ 					struct ieee80211_rate *rate)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	u16 dur;
+ 	int erp;
+ 	bool short_preamble = false;
+@@ -191,7 +191,7 @@ __le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	bool short_preamble;
+ 	int erp;
+ 	u16 dur;
+@@ -232,7 +232,7 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	bool short_preamble;
+ 	int erp;
+ 	u16 dur;
+@@ -268,7 +268,7 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+ 				   enum queue_stop_reason reason)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	trace_wake_queue(local, queue, reason);
+ 
+@@ -315,7 +315,7 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 				   enum queue_stop_reason reason)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	trace_stop_queue(local, queue, reason);
+ 
+@@ -478,7 +478,7 @@ void ieee80211_iterate_active_interfaces(
+ 	void *data)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 
+@@ -506,7 +506,7 @@ void ieee80211_iterate_active_interfaces_atomic(
+ 	void *data)
+ {
+ 	struct mac80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 
+ 	rcu_read_lock();
+ 
+@@ -739,7 +739,7 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 	return crc;
+ }
+ 
+-void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
++void ieee80211_set_wmm_default(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_tx_queue_params qparam;
+@@ -812,7 +812,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
++void ieee80211_sta_def_wmm_params(struct mac80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+ 				  const u8 *supp_rates)
+ {
+@@ -861,7 +861,7 @@ u32 ieee80211_mandatory_rates(struct mac80211_local *local,
+ 	return mandatory_rates;
+ }
+ 
+-void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
++void ieee80211_send_auth(struct mac80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+ 			 u8 *extra, size_t extra_len, const u8 *bssid,
+ 			 const u8 *key, u8 key_len, u8 key_idx)
+@@ -1015,7 +1015,7 @@ int ieee80211_build_preq_ies(struct mac80211_local *local, u8 *buffer,
+ 	return pos - buffer;
+ }
+ 
+-struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++struct sk_buff *ieee80211_build_probe_req(struct mac80211_sub_if_data *sdata,
+ 					  u8 *dst,
+ 					  const u8 *ssid, size_t ssid_len,
+ 					  const u8 *ie, size_t ie_len)
+@@ -1060,7 +1060,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	return skb;
+ }
+ 
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
++void ieee80211_send_probe_req(struct mac80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len)
+ {
+@@ -1121,7 +1121,7 @@ void ieee80211_stop_device(struct mac80211_local *local)
+ int ieee80211_reconfig(struct mac80211_local *local)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	int res;
+ 
+@@ -1182,7 +1182,7 @@ int ieee80211_reconfig(struct mac80211_local *local)
+ 			sdata = sta->sdata;
+ 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 				sdata = container_of(sdata->bss,
+-					     struct ieee80211_sub_if_data,
++					     struct mac80211_sub_if_data,
+ 					     u.ap);
+ 
+ 			WARN_ON(drv_sta_add(local, sdata, &sta->sta));
+@@ -1343,7 +1343,7 @@ static int check_mgd_smps(struct mac80211_if_managed *ifmgd,
+ /* must hold iflist_mtx */
+ void ieee80211_recalc_smps(struct mac80211_local *local)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct mac80211_sub_if_data *sdata;
+ 	enum ieee80211_smps_mode smps_mode = IEEE80211_SMPS_OFF;
+ 	int count = 0;
+ 
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index e20a843..4311c5d 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -54,7 +54,7 @@ static int wme_downgrade_ac(struct sk_buff *skb)
+ 
+ 
+ /* Indicate which queue to use. */
+-u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
++u16 ieee80211_select_queue(struct mac80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+ 	struct mac80211_local *local = sdata->local;
+diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
+index 77a8e8d..e2007e4 100644
+--- a/net/mac80211/wme.h
++++ b/net/mac80211/wme.h
+@@ -20,7 +20,7 @@
+ 
+ extern const int ieee802_1d_to_ac[8];
+ 
+-u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
++u16 ieee80211_select_queue(struct mac80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb);
+ void ieee80211_set_qos_hdr(struct mac80211_local *local, struct sk_buff *skb);
+ u16 ieee80211_downgrade_queue(struct mac80211_local *local,
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 197704a..4765329 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -183,7 +183,7 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ 	pos += sizeof(u8);
+ }
+ 
+-static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
++static void ieee80211_send_assoc(struct mac80211_sub_if_data *sdata,
+ 				 struct mac80211_work *wk)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -424,7 +424,7 @@ static void ieee80211_remove_auth_bss(struct mac80211_local *local,
+ static enum work_action __must_check
+ ieee80211_direct_probe(struct mac80211_work *wk)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	wk->probe_auth.tries++;
+@@ -462,7 +462,7 @@ ieee80211_direct_probe(struct mac80211_work *wk)
+ static enum work_action __must_check
+ ieee80211_authenticate(struct mac80211_work *wk)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	wk->probe_auth.tries++;
+@@ -495,7 +495,7 @@ ieee80211_authenticate(struct mac80211_work *wk)
+ static enum work_action __must_check
+ ieee80211_associate(struct mac80211_work *wk)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	wk->assoc.tries++;
+@@ -583,7 +583,7 @@ static void ieee80211_auth_challenge(struct mac80211_work *wk,
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	u8 *pos;
+ 	struct ieee802_11_elems elems;
+ 
+@@ -650,7 +650,7 @@ ieee80211_rx_mgmt_assoc_resp(struct mac80211_work *wk,
+ 			     struct ieee80211_mgmt *mgmt, size_t len,
+ 			     bool reassoc)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	u16 capab_info, status_code, aid;
+ 	struct ieee802_11_elems elems;
+@@ -708,7 +708,7 @@ ieee80211_rx_mgmt_probe_resp(struct mac80211_work *wk,
+ 			     struct ieee80211_mgmt *mgmt, size_t len,
+ 			     struct ieee80211_rx_status *rx_status)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 	size_t baselen;
+ 
+@@ -732,7 +732,7 @@ static enum work_action __must_check
+ ieee80211_rx_mgmt_beacon(struct mac80211_work *wk,
+ 			 struct ieee80211_mgmt *mgmt, size_t len)
+ {
+-	struct ieee80211_sub_if_data *sdata = wk->sdata;
++	struct mac80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	ASSERT_WORK_MTX(local);
+@@ -1144,7 +1144,7 @@ void ieee80211_work_init(struct mac80211_local *local)
+ 	skb_queue_head_init(&local->work_skb_queue);
+ }
+ 
+-void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
++void ieee80211_work_purge(struct mac80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct mac80211_work *wk;
+@@ -1175,7 +1175,7 @@ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&local->mtx);
+ }
+ 
+-ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
++ieee80211_rx_result ieee80211_work_rx_mgmt(struct mac80211_sub_if_data *sdata,
+ 					   struct sk_buff *skb)
+ {
+ 	struct mac80211_local *local = sdata->local;
+@@ -1225,7 +1225,7 @@ static enum work_done_result ieee80211_remain_done(struct mac80211_work *wk,
+ 	return WORK_DONE_DESTROY;
+ }
+ 
+-int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
++int ieee80211_wk_remain_on_channel(struct mac80211_sub_if_data *sdata,
+ 				   struct ieee80211_channel *chan,
+ 				   enum nl80211_channel_type channel_type,
+ 				   unsigned int duration, u64 *cookie)
+@@ -1251,7 +1251,7 @@ int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-int ieee80211_wk_cancel_remain_on_channel(struct ieee80211_sub_if_data *sdata,
++int ieee80211_wk_cancel_remain_on_channel(struct mac80211_sub_if_data *sdata,
+ 					  u64 cookie)
+ {
+ 	struct mac80211_local *local = sdata->local;
+
