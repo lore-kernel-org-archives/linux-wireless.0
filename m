@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s126.n241.n6.n64.static.myhostcenter.com ([64.6.241.126]:36910
-	"EHLO openvideo.pro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756792Ab1FPX4D (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:51178 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755101Ab1FMJIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 19:56:03 -0400
-Message-ID: <40525.74.64.51.206.1308265716.squirrel@openvideo.pro> (sfid-20110617_015607_443195_559955EC)
-Date: Thu, 16 Jun 2011 19:08:36 -0400 (EDT)
-Subject: libertas on ETRAX FS / Elphel 353?
-From: "George Chriss" <GChriss@openvideo.pro>
-To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+	Mon, 13 Jun 2011 05:08:24 -0400
+Subject: [PATCH 0/2] ath6kl: testmode and fw version for 3.1
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Mon, 13 Jun 2011 12:08:19 +0300
+Message-ID: <20110613090350.15210.74545.stgit@localhost6.localdomain6> (sfid-20110613_110828_357652_E7860734)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Greg,
 
-I'm interested in hacking the libertas driver to run on an Axis ETRAX FS
-with a heavily-patched 2.6.19 kernel.[1]
+here are two new ath6kl features for 3.1. Someone asked me to export
+firmware version to user space, thanks to cfg80211 that's easy to do. The
+testmode is a regression from older patches which removed all the ioctl
+interfaces. I decided to implement this properly using nl80211 testmode
+commands.
 
-It's a discontinued CPU and also a big jump from the >= 2.6.24 kernels
-supported by compat-wireless.  However, support for this target would mean
-that wireless CompactFlash cards[2] could be used to broadcast live
-audio/video wirelessly from Elphel cameras[3].  Current Elphel models are
-limited to USB 1.1 (too slow for video) and the only other option that
-comes to mind is attaching a wireless router to the Ethernet port.  Newer
-Elphel models are unlikely to be released in the near future and it would
-take a lot of development effort to update the kernel in current models.
+Please consider these patches to your staging-next branch and let me
+know if there are any problems.
 
-Is libertas support for this embedded system feasible?  I attempted to
-build compat-wireless against the Elphel kernel sources and successfully
-generated a long list of errors with 'make --keep-going' after commenting
-out unnecessary parts of the Makefile.  The build log may be found at [4].
+Kalle
 
+---
 
-Sincerely,
-George
+Kalle Valo (2):
+      ath6kl: export firmware version to user space
+      ath6kl: testmode support
 
 
-[1] Running code on the ETRAX FS CPU requires use of gcc-cris.
-[2] Such as the AmbiCom WL54CF, which powers up and fits nicely into the
-Elphel NC353L-369
-[3] http://www.elphel.com/353_turnkey
-[4] http://is.gd/zFczww
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |    7 +++
+ drivers/staging/ath6kl/os/linux/cfg80211.c   |   58 ++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+), 0 deletions(-)
 
