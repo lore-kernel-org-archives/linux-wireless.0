@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:65439 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751376Ab1FBLFX (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50597 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831Ab1FMSSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 07:05:23 -0400
-Received: by eyx24 with SMTP id 24so237434eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 04:05:22 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: add BCMA 80211 core specific defines
-Date: Thu,  2 Jun 2011 13:43:24 +0200
-Message-Id: <1307015004-11076-1-git-send-email-zajec5@gmail.com> (sfid-20110602_130526_919478_7214C297)
+	Mon, 13 Jun 2011 14:18:40 -0400
+Message-ID: <4DF65472.9070601@candelatech.com> (sfid-20110613_201844_581048_F9A562F7)
+Date: Mon, 13 Jun 2011 11:18:26 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Fred Matthews <fredmm@hotmail.co.uk>
+CC: ionic@ionic.de, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [ath9k-devel] AR9380 current driver supported features
+References: <BLU158-w3633DDF37956A9F5672C1F87690@phx.gbl> <BLU158-w58841DE4774E18813C30CA87690@phx.gbl>
+In-Reply-To: <BLU158-w58841DE4774E18813C30CA87690@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 06/13/2011 11:09 AM, Fred Matthews wrote:
+>
+> Hi,I am looking to upgrade my current nodes and AP from the AR9280 2x2 MIMO NIC to the AR9380 3x3 NIC.
+> Thus I was wondering if someone can kindly comment on the current chipset stability with ath9k, also the current supported features (e.g.  "iw list" output) such as setting the NIC as an AP/Master using hostapd, Greenfield mode, TxBF, CSI info, and LPDC as well as rates achieved.
+> Thanks in advance 		 	   		
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+Both are stable in our testing (virtual stations, AP mode), but we're having
+a hard time sourcing AR9380 3x3 NICs..getting ship-times in August, etc....
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 6c50734..76a7bb5 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -416,6 +416,17 @@ enum {
- #define B43_MACCMD_CCA			0x00000008	/* Clear channel assessment */
- #define B43_MACCMD_BGNOISE		0x00000010	/* Background noise */
- 
-+/* BCMA 802.11 core specific IO Control (BCMA_IOCTL) flags */
-+#define B43_BCMA_IOCTL_PHY_CLKEN	0x00000004	/* PHY Clock Enable */
-+#define B43_BCMA_IOCTL_PHY_RESET	0x00000008	/* PHY Reset */
-+#define B43_BCMA_IOCTL_MACPHYCLKEN	0x00000010	/* MAC PHY Clock Control Enable */
-+#define B43_BCMA_IOCTL_PLLREFSEL	0x00000020	/* PLL Frequency Reference Select */
-+#define B43_BCMA_IOCTL_PHY_BW		0x000000C0	/* PHY band width and clock speed mask (N-PHY+ only?) */
-+#define  B43_BCMA_IOCTL_PHY_BW_10MHZ	0x00000000	/* 10 MHz bandwidth, 40 MHz PHY */
-+#define  B43_BCMA_IOCTL_PHY_BW_20MHZ	0x00000040	/* 20 MHz bandwidth, 80 MHz PHY */
-+#define  B43_BCMA_IOCTL_PHY_BW_40MHZ	0x00000080	/* 40 MHz bandwidth, 160 MHz PHY */
-+#define B43_BCMA_IOCTL_GMODE		0x00002000	/* G Mode Enable */
-+
- /* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
- #define B43_TMSLOW_GMODE		0x20000000	/* G Mode Enable */
- #define B43_TMSLOW_PHY_BANDWIDTH	0x00C00000	/* PHY band width and clock speed mask (N-PHY only) */
+I don't have details on the other things you ask about.
+
+I'd suggest getting a few NICs and trying them out in your environment.
+Even if they have problems, there are folks actively working on it and
+likely it can be fixed.  And at least for our use with virtual stations & APs,
+there is no other NIC that comes close to the features that Atheros offers.
+
+Thanks,
+Ben
+
 -- 
-1.7.3.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
