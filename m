@@ -1,595 +1,393 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33079 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756640Ab1FIWES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 08/11] compat-wireless: sync atheros-debug.mk with config.mk
-Date: Fri, 10 Jun 2011 00:03:39 +0200
-Message-Id: <1307657022-23808-9-git-send-email-hauke@hauke-m.de> (sfid-20110610_000436_531537_CB24EF80)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45449 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983Ab1FMWhX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 18:37:23 -0400
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 82613EBBCC
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:22 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id 497FC2BD43
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:21 +0300 (EEST)
+Subject: [PATCH v2 17/27] mac80211: rename ieee80211_work to mac80211_work
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 14 Jun 2011 01:37:15 +0300
+Message-ID: <20110613223715.10517.94732.stgit@localhost6.localdomain6> (sfid-20110614_005723_017885_DBF89740)
+In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add to compat-3.0-stable
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- defconfigs/atheros-debug.mk |  248 ++++++++++++++++++++++++++-----------------
- 1 files changed, 150 insertions(+), 98 deletions(-)
+ net/mac80211/cfg.c        |    6 +++---
+ net/mac80211/iface.c      |    2 +-
+ net/mac80211/mac80211_i.h |    8 ++++----
+ net/mac80211/mlme.c       |   14 +++++++-------
+ net/mac80211/status.c     |    2 +-
+ net/mac80211/work.c       |   44 ++++++++++++++++++++++----------------------
+ 6 files changed, 38 insertions(+), 38 deletions(-)
 
-diff --git a/defconfigs/atheros-debug.mk b/defconfigs/atheros-debug.mk
-index d9534eb..fb884aa 100644
---- a/defconfigs/atheros-debug.mk
-+++ b/defconfigs/atheros-debug.mk
-@@ -14,20 +14,28 @@ else
- include $(KLIB_BUILD)/.config
- endif
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a05bc6f..22d8ccb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1798,7 +1798,7 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ }
  
--# We will warn when you don't have MQ support or NET_SCHED enabled.
--#
--# We could consider just quiting if MQ and NET_SCHED is disabled
--# as I suspect all users of this package want 802.11e (WME) and
--# 802.11n (HT) support.
- ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
--COMPAT_LATEST_VERSION = 37
--KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-+
-+COMPAT_LATEST_VERSION = 1
-+
-+KERNEL_VERSION := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
-+
-+ifneq ($(KERNEL_VERSION),2)
-+KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^3\.\([0-9]\+\).*/\1/p')
-+else
-+COMPAT_26LATEST_VERSION = 39
-+KERNEL_26SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-+COMPAT_26VERSIONS := $(shell I=$(COMPAT_26LATEST_VERSION); while [ "$$I" -gt $(KERNEL_26SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-+$(foreach ver,$(COMPAT_26VERSIONS),$(eval CONFIG_COMPAT_KERNEL_2_6_$(ver)=y))
-+KERNEL_SUBLEVEL := -1
-+endif
-+
- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
--$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-+$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3_$(ver)=y))
+ static enum work_done_result
+-ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
++ieee80211_offchan_tx_done(struct mac80211_work *wk, struct sk_buff *skb)
+ {
+ 	/*
+ 	 * Use the data embedded in the work struct for reporting
+@@ -1829,7 +1829,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+ 	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+ 		    IEEE80211_TX_CTL_REQ_TX_STATUS;
+@@ -1996,7 +1996,7 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct mac80211_local *local = sdata->local;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	int ret = -ENOENT;
  
--ifdef CONFIG_COMPAT_KERNEL_24
-+ifdef CONFIG_COMPAT_KERNEL_2_6_24
- $(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
--endif #CONFIG_COMPAT_KERNEL_24
-+endif #CONFIG_COMPAT_KERNEL_2_6_24
+ 	mutex_lock(&local->mtx);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5c44737..f28f68d 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1274,7 +1274,7 @@ u32 __ieee80211_recalc_idle(struct mac80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int count = 0;
+ 	bool working = false, scanning = false, hw_roc = false;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	unsigned int led_trig_start = 0, led_trig_stop = 0;
  
- ifeq ($(CONFIG_CFG80211),y)
- $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
-@@ -37,7 +45,7 @@ endif
- # 2.6.27 has FTRACE_DYNAMIC borked, so we will complain if
- # you have it enabled, otherwise you will very likely run into
- # a kernel panic.
--ifeq ($(KERNEL_SUBLEVEL),27)
-+ifeq ($(shell test $(KERNEL_VERSION) -eq 2 -a $(KERNEL_SUBLEVEL) -eq 27 && echo yes),yes)
- ifeq ($(CONFIG_DYNAMIC_FTRACE),y)
- $(error "ERROR: Your 2.6.27 kernel has CONFIG_DYNAMIC_FTRACE, please upgrade your distribution kernel as newer ones should not have this enabled (and if so report a bug) or remove this warning if you know what you are doing")
- endif
-@@ -54,7 +62,7 @@ endif
- #
- # In kernel 2.6.32 both attributes were removed.
- #
--ifeq ($(shell test $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
-+ifeq ($(shell test $(KERNEL_VERSION) -eq 2 -a $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
- ifeq ($(CONFIG_MAC80211),)
- $(error "ERROR: Your >=2.6.27 and <= 2.6.31 kernel has CONFIG_MAC80211 disabled, you should have it CONFIG_MAC80211=m if you want to use this thing.")
- endif
-@@ -62,6 +70,11 @@ endif
+ #ifdef CONFIG_PROVE_LOCKING
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index eb95457..a697921 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -279,14 +279,14 @@ enum work_done_result {
+ 	WORK_DONE_REQUEUE,
+ };
  
- ifneq ($(KERNELRELEASE),) # This prevents a warning
+-struct ieee80211_work {
++struct mac80211_work {
+ 	struct list_head list;
  
-+# We will warn when you don't have MQ support or NET_SCHED enabled.
-+#
-+# We could consider just quiting if MQ and NET_SCHED is disabled
-+# as I suspect all users of this package want 802.11e (WME) and
-+# 802.11n (HT) support.
- ifeq ($(CONFIG_NET_SCHED),)
-  QOS_REQS_MISSING+=CONFIG_NET_SCHED
- endif
-@@ -92,21 +105,20 @@ else
- endif
+ 	struct rcu_head rcu_head;
  
- # The Bluetooth compatibility only builds on kernels >= 2.6.27 for now
--ifndef CONFIG_COMPAT_KERNEL_27
-+ifndef CONFIG_COMPAT_KERNEL_2_6_27
- ifeq ($(CONFIG_BT),y)
- # we'll ignore compiling bluetooth
- else
-  CONFIG_COMPAT_BLUETOOTH=y
-  CONFIG_COMPAT_BLUETOOTH_MODULES=m
- endif
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 	struct ieee80211_sub_if_data *sdata;
  
--ifdef CONFIG_COMPAT_KERNEL_33
-+ifdef CONFIG_COMPAT_KERNEL_2_6_33
- ifdef CONFIG_FW_LOADER
-  CONFIG_COMPAT_FIRMWARE_CLASS=m
- endif #CONFIG_FW_LOADER
--endif #CONFIG_COMPAT_KERNEL_33
--
-+endif #CONFIG_COMPAT_KERNEL_2_6_33
+-	enum work_done_result (*done)(struct ieee80211_work *wk,
++	enum work_done_result (*done)(struct mac80211_work *wk,
+ 				      struct sk_buff *skb);
  
- # Wireless subsystem stuff
- CONFIG_MAC80211=m
-@@ -133,7 +145,9 @@ CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
- CONFIG_MAC80211_RC_PID=y
- CONFIG_MAC80211_RC_MINSTREL=y
- CONFIG_MAC80211_RC_MINSTREL_HT=y
-+ifdef CONFIG_LEDS_TRIGGERS
- CONFIG_MAC80211_LEDS=y
-+endif #CONFIG_LEDS_TRIGGERS
+ 	struct ieee80211_channel *chan;
+@@ -1371,8 +1371,8 @@ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
  
- # enable mesh networking too
- CONFIG_MAC80211_MESH=y
-@@ -153,8 +167,8 @@ CONFIG_LIB80211_CRYPT_TKIP=m
- # CONFIG_LIB80211_DEBUG=y
- 
- CONFIG_BT=m
--CONFIG_BT_L2CAP=m
--CONFIG_BT_SCO=m
-+CONFIG_COMPAT_BT_L2CAP=y
-+CONFIG_COMPAT_BT_SCO=y
- CONFIG_BT_RFCOMM=m
- CONFIG_BT_RFCOMM_TTY=y
- CONFIG_BT_BNEP=m
-@@ -164,7 +178,9 @@ CONFIG_BT_BNEP_PROTO_FILTER=y
- ifdef CONFIG_ISDN_CAPI
- CONFIG_BT_CMTP=m
- endif #CONFIG_ISDN_CAPI
--CONFIG_BT_HIDP=m
-+ifndef CONFIG_COMPAT_KERNEL_2_6_28
-+CONFIG_COMPAT_BT_HIDP=m
-+endif #CONFIG_COMPAT_KERNEL_2_6_28
- 
- CONFIG_BT_HCIUART=M
- CONFIG_BT_HCIUART_H4=y
-@@ -196,26 +212,24 @@ else #CONFIG_CFG80211_WEXT
- $(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
- endif #CONFIG_WIRELESS_EXT
- 
--ifneq ($(CONFIG_STAGING),)
-- CONFIG_COMPAT_STAGING=m
--endif
-+ifdef CONFIG_STAGING
-+CONFIG_COMPAT_STAGING=m
-+endif #CONFIG_STAGING
- 
- # mac80211 test driver
- CONFIG_MAC80211_HWSIM=m
- 
--# PCI Drivers
--ifdef CONFIG_PCI
--
- CONFIG_ATH5K=m
- CONFIG_ATH5K_DEBUG=y
--CONFIG_ATH9K_HW=m
-+# CONFIG_ATH5K_AHB=y
-+
- CONFIG_ATH9K=m
--# Note: once ath9k_htc is added we'll have to move
--# CONFIG_ATH9K_COMMON to an area that doesn't depend on PCI
--# as you could then have ath9k disabled but ath9k_htc enabled.
-+CONFIG_ATH9K_HW=m
- CONFIG_ATH9K_COMMON=m
- CONFIG_ATH9K_DEBUGFS=y
-+# CONFIG_ATH9K_AHB=y
- CONFIG_ATH9K_PKTLOG=y
-+
- # Disable this to get minstrel as default, we leave the ath9k
- # rate control algorithm as the default for now as that is also
- # default upstream on the kernel. We will move this to minstrel
-@@ -224,15 +238,25 @@ CONFIG_ATH9K_PKTLOG=y
- # for long range considerations.
- CONFIG_ATH9K_RATE_CONTROL=y
- 
-+# PCI Drivers
-+ifdef CONFIG_PCI
- 
--CONFIG_COMPAT_IWLWIFI=m
-+CONFIG_ATH5K_PCI=y
-+CONFIG_ATH9K_PCI=y
-+
-+CONFIG_IWLAGN=m
- # CONFIG_IWLWIFI_DEBUG=y
- # CONFIG_IWLWIFI_DEBUGFS=y
- # CONFIG_IWLWIFI_DEVICE_TRACING=y
--CONFIG_IWLAGN=m
--CONFIG_COMPAT_IWL4965=y
--CONFIG_IWL5000=y
-+# CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
-+CONFIG_IWL_P2P=y
-+
-+CONFIG_IWLWIFI_LEGACY=m
-+CONFIG_COMPAT_IWL4965=m
- CONFIG_IWL3945=m
-+# CONFIG_IWLWIFI_LEGACY_DEBUG=y
-+# CONFIG_IWLWIFI_LEGACY_DEBUGFS=y
-+# CONFIG_IWLWIFI_LEGACY_DEVICE_TRACING=y
+ /* internal work items */
+ void ieee80211_work_init(struct mac80211_local *local);
+-void ieee80211_add_work(struct ieee80211_work *wk);
+-void free_work(struct ieee80211_work *wk);
++void ieee80211_add_work(struct mac80211_work *wk);
++void free_work(struct mac80211_work *wk);
+ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata);
+ ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ 					   struct sk_buff *skb);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6902847..d695aa2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1425,7 +1425,7 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ }
  
  
- CONFIG_B43=m
-@@ -241,16 +265,20 @@ CONFIG_B43_PCI_AUTOSELECT=y
- ifdef CONFIG_PCMCIA
- CONFIG_B43_PCMCIA=y
- endif #CONFIG_PCMCIA
-+ifdef CONFIG_MAC80211_LEDS
- CONFIG_B43_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- CONFIG_B43_PHY_LP=y
--CONFIG_B43_NPHY=y
-+CONFIG_B43_PHY_N=y
- # CONFIG_B43_FORCE_PIO=y
- # CONFIG_B43_DEBUG=y
+-static bool ieee80211_assoc_success(struct ieee80211_work *wk,
++static bool ieee80211_assoc_success(struct mac80211_work *wk,
+ 				    struct ieee80211_mgmt *mgmt, size_t len)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+@@ -1958,7 +1958,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (skb->len >= 24 + 2 /* mgmt + deauth reason */ &&
+ 	    (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH) {
+ 		struct mac80211_local *local = sdata->local;
+-		struct ieee80211_work *wk;
++		struct mac80211_work *wk;
  
- CONFIG_B43LEGACY=m
- CONFIG_B43LEGACY_HWRNG=y
- CONFIG_B43LEGACY_PCI_AUTOSELECT=y
-+ifdef CONFIG_MAC80211_LEDS
- CONFIG_B43LEGACY_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- # CONFIG_B43LEGACY_DEBUG=y
- CONFIG_B43LEGACY_DMA=y
- CONFIG_B43LEGACY_PIO=y
-@@ -286,7 +314,6 @@ endif #CONFIG_WIRELESS_EXT
- ifdef CONFIG_SSB
- # Sonics Silicon Backplane
- CONFIG_SSB_SPROM=y
--# CONFIG_SSB_DEBUG=y
+ 		mutex_lock(&local->mtx);
+ 		list_for_each_entry(wk, &local->work_list, list) {
+@@ -2268,7 +2268,7 @@ int ieee80211_max_network_latency(struct notifier_block *nb,
  
- CONFIG_SSB_BLOCKIO=y
- CONFIG_SSB_PCIHOST=y
-@@ -312,10 +339,9 @@ CONFIG_RT2400PCI=m
- CONFIG_RT2500PCI=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800PCI=m
--CONFIG_RT2800PCI_PCI=y
--# CONFIG_RT2800PCI_RT30XX=y
--# CONFIG_RT2800PCI_RT35XX=y
--# CONFIG_RT2800PCI_SOC=y
-+CONFIG_RT2800PCI_RT33XX=y
-+CONFIG_RT2800PCI_RT35XX=y
-+# CONFIG_RT2800PCI_RT53XX=y
- endif #CONFIG_CRC_CCITT
- NEED_RT2X00=y
+ /* config hooks */
+ static enum work_done_result
+-ieee80211_probe_auth_done(struct ieee80211_work *wk,
++ieee80211_probe_auth_done(struct mac80211_work *wk,
+ 			  struct sk_buff *skb)
+ {
+ 	if (!skb) {
+@@ -2294,7 +2294,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 		       struct cfg80211_auth_request *req)
+ {
+ 	const u8 *ssid;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	u16 auth_alg;
  
-@@ -324,7 +350,6 @@ NEED_RT2X00=y
- # driver as we're in the PCI section.
- ifdef CONFIG_CRC_ITU_T
- CONFIG_RT61PCI=m
--NEED_RT2X00_FIRMWARE=y
- endif #CONFIG_CRC_ITU_T
+ 	if (req->local_state_change)
+@@ -2357,7 +2357,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
  
- CONFIG_MWL8K=m
-@@ -333,11 +358,11 @@ CONFIG_MWL8K=m
- CONFIG_ATL1=m
- CONFIG_ATL2=m
- CONFIG_ATL1E=m
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_ATL1C=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_ATL1C=m
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+-static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
++static enum work_done_result ieee80211_assoc_done(struct mac80211_work *wk,
+ 						  struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt;
+@@ -2408,7 +2408,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct mac80211_bss *bss = (void *)req->bss->priv;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	const u8 *ssid;
+ 	int i;
  
- ifdef CONFIG_WIRELESS_EXT
- CONFIG_HERMES=m
-@@ -355,18 +380,25 @@ CONFIG_PCMCIA_SPECTRUM=m
- endif #CONFIG_PCMCIA
- endif #CONFIG_WIRELESS_EXT
+@@ -2534,7 +2534,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	u8 bssid[ETH_ALEN];
+ 	bool assoc_bss = false;
  
-+CONFIG_RTL8192CE=m
-+CONFIG_RTL8192SE=m
-+
-+ifdef CONFIG_COMPAT_STAGING
-+CONFIG_BRCMSMAC=m
-+endif #CONFIG_COMPAT_STAGING
-+
- endif #CONFIG_PCI
- ## end of PCI
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 108e6b1..86d971b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -327,7 +327,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
  
- ifdef CONFIG_PCMCIA
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+-		struct ieee80211_work *wk;
++		struct mac80211_work *wk;
+ 		u64 cookie = (unsigned long)skb;
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS=n
- CONFIG_LIBERTAS_CS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_CS=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 		rcu_read_lock();
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 4168d4a..197704a 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -65,7 +65,7 @@ static void run_again(struct mac80211_local *local,
+ 		mod_timer(&local->work_timer, timeout);
+ }
  
- endif #CONFIG_PCMCIA
- ## end of PCMCIA
-@@ -376,8 +408,10 @@ CONFIG_EEPROM_93CX6=m
+-void free_work(struct ieee80211_work *wk)
++void free_work(struct mac80211_work *wk)
+ {
+ 	kfree_rcu(wk, rcu_head);
+ }
+@@ -184,7 +184,7 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ }
  
- # USB Drivers
- ifdef CONFIG_USB
--CONFIG_ZD1211RW=m
-+ifndef CONFIG_COMPAT_KERNEL_2_6_29
-+CONFIG_COMPAT_ZD1211RW=m
- # CONFIG_ZD1211RW_DEBUG=y
-+endif #CONFIG_COMPAT_KERNEL_2_6_29
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+-				 struct ieee80211_work *wk)
++				 struct mac80211_work *wk)
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -402,7 +402,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+ }
  
- # Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
+ static void ieee80211_remove_auth_bss(struct mac80211_local *local,
+-				      struct ieee80211_work *wk)
++				      struct mac80211_work *wk)
+ {
+ 	struct cfg80211_bss *cbss;
+ 	u16 capa_val = WLAN_CAPABILITY_ESS;
+@@ -422,7 +422,7 @@ static void ieee80211_remove_auth_bss(struct mac80211_local *local,
+ }
  
-@@ -386,38 +420,41 @@ CONFIG_ZD1211RW=m
- # is only wireless RNDIS chip known to date.
- # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
- # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
--ifdef CONFIG_COMPAT_KERNEL_29
-+ifdef CONFIG_COMPAT_KERNEL_2_6_29
- CONFIG_USB_COMPAT_USBNET=n
- CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
- CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
- CONFIG_USB_NET_COMPAT_CDCETHER=n
--else #CONFIG_COMPAT_KERNEL_29
-+else #CONFIG_COMPAT_KERNEL_2_6_29
- CONFIG_USB_COMPAT_USBNET=m
- ifdef CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
- CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
- endif #CONFIG_USB_NET_CDCETHER
-+ifdef CONFIG_USB_NET_CDCETHER_MODULE
-+CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
-+CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
-+endif #CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_CDCETHER=m
--endif #CONFIG_COMPAT_KERNEL_29
-+endif #CONFIG_COMPAT_KERNEL_2_6_29
+ static enum work_action __must_check
+-ieee80211_direct_probe(struct ieee80211_work *wk)
++ieee80211_direct_probe(struct mac80211_work *wk)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+@@ -460,7 +460,7 @@ ieee80211_direct_probe(struct ieee80211_work *wk)
  
  
- CONFIG_P54_USB=m
- CONFIG_RTL8187=m
-+ifdef CONFIG_MAC80211_LEDS
- CONFIG_RTL8187_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
+ static enum work_action __must_check
+-ieee80211_authenticate(struct ieee80211_work *wk)
++ieee80211_authenticate(struct mac80211_work *wk)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+@@ -493,7 +493,7 @@ ieee80211_authenticate(struct ieee80211_work *wk)
+ }
  
- CONFIG_AT76C50X_USB=m
+ static enum work_action __must_check
+-ieee80211_associate(struct ieee80211_work *wk)
++ieee80211_associate(struct mac80211_work *wk)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+ 	struct mac80211_local *local = sdata->local;
+@@ -525,7 +525,7 @@ ieee80211_associate(struct ieee80211_work *wk)
+ }
  
--ifndef CONFIG_COMPAT_KERNEL_28
--CONFIG_AR9170_USB=m
--CONFIG_AR9170_LEDS=y
--endif #CONFIG_COMPAT_KERNEL_28
--
--ifndef CONFIG_COMPAT_KERNEL_29
-+ifndef CONFIG_COMPAT_KERNEL_2_6_29
- CONFIG_CARL9170=m
-+ifdef CONFIG_MAC80211_LEDS
- CONFIG_CARL9170_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- CONFIG_CARL9170_DEBUGFS=y
- CONFIG_CARL9170_WPC=y
--endif #CONFIG_COMPAT_KERNEL_29
-+endif #CONFIG_COMPAT_KERNEL_2_6_29
+ static enum work_action __must_check
+-ieee80211_remain_on_channel_timeout(struct ieee80211_work *wk)
++ieee80211_remain_on_channel_timeout(struct mac80211_work *wk)
+ {
+ 	/*
+ 	 * First time we run, do nothing -- the generic code will
+@@ -545,7 +545,7 @@ ieee80211_remain_on_channel_timeout(struct ieee80211_work *wk)
+ }
  
- # This activates a threading fix for usb urb.
- # this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
-@@ -431,8 +468,9 @@ CONFIG_ATH9K_HTC_DEBUGFS=y
- CONFIG_RT2500USB=m
- ifdef CONFIG_CRC_CCITT
- CONFIG_RT2800USB=m
--CONFIG_RT2800USB_RT30XX=y
-+CONFIG_RT2800USB_RT33XX=y
- CONFIG_RT2800USB_RT35XX=y
-+# CONFIG_RT2800USB_RT53XX=y
- CONFIG_RT2800USB_UNKNOWN=y
- endif #CONFIG_CRC_CCITT
- CONFIG_RT2X00_LIB_USB=m
-@@ -440,18 +478,17 @@ NEED_RT2X00=y
- # RT73USB requires firmware
- ifdef CONFIG_CRC_ITU_T
- CONFIG_RT73USB=m
--NEED_RT2X00_FIRMWARE=y
- endif #CONFIG_CRC_ITU_T
+ static enum work_action __must_check
+-ieee80211_offchannel_tx(struct ieee80211_work *wk)
++ieee80211_offchannel_tx(struct mac80211_work *wk)
+ {
+ 	if (!wk->started) {
+ 		wk->timeout = jiffies + msecs_to_jiffies(wk->offchan_tx.wait);
+@@ -564,7 +564,7 @@ ieee80211_offchannel_tx(struct ieee80211_work *wk)
+ }
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_THINFIRM_USB=n
- CONFIG_LIBERTAS_USB=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_THINFIRM_USB=m
- CONFIG_LIBERTAS_USB=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+ static enum work_action __must_check
+-ieee80211_assoc_beacon_wait(struct ieee80211_work *wk)
++ieee80211_assoc_beacon_wait(struct mac80211_work *wk)
+ {
+ 	if (wk->started)
+ 		return WORK_ACT_TIMEOUT;
+@@ -579,7 +579,7 @@ ieee80211_assoc_beacon_wait(struct ieee80211_work *wk)
+ 	return WORK_ACT_NONE;
+ }
  
- CONFIG_ORINOCO_USB=m
+-static void ieee80211_auth_challenge(struct ieee80211_work *wk,
++static void ieee80211_auth_challenge(struct mac80211_work *wk,
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len)
+ {
+@@ -599,7 +599,7 @@ static void ieee80211_auth_challenge(struct ieee80211_work *wk,
+ }
  
-@@ -461,26 +498,28 @@ CONFIG_BT_HCIBPA10X=m
- CONFIG_BT_HCIBFUSB=m
- CONFIG_BT_ATH3K=m
+ static enum work_action __must_check
+-ieee80211_rx_mgmt_auth(struct ieee80211_work *wk,
++ieee80211_rx_mgmt_auth(struct mac80211_work *wk,
+ 		       struct ieee80211_mgmt *mgmt, size_t len)
+ {
+ 	u16 auth_alg, auth_transaction, status_code;
+@@ -646,7 +646,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_work *wk,
+ }
  
-+CONFIG_RTL8192CU=m
-+
- endif #CONFIG_USB end of USB driver list
+ static enum work_action __must_check
+-ieee80211_rx_mgmt_assoc_resp(struct ieee80211_work *wk,
++ieee80211_rx_mgmt_assoc_resp(struct mac80211_work *wk,
+ 			     struct ieee80211_mgmt *mgmt, size_t len,
+ 			     bool reassoc)
+ {
+@@ -704,7 +704,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_work *wk,
+ }
  
- ifdef CONFIG_SPI_MASTER
--ifndef CONFIG_COMPAT_KERNEL_25
-+ifndef CONFIG_COMPAT_KERNEL_2_6_25
+ static enum work_action __must_check
+-ieee80211_rx_mgmt_probe_resp(struct ieee80211_work *wk,
++ieee80211_rx_mgmt_probe_resp(struct mac80211_work *wk,
+ 			     struct ieee80211_mgmt *mgmt, size_t len,
+ 			     struct ieee80211_rx_status *rx_status)
+ {
+@@ -729,7 +729,7 @@ ieee80211_rx_mgmt_probe_resp(struct ieee80211_work *wk,
+ }
  
- ifdef CONFIG_CRC7
- CONFIG_WL1251_SPI=m
--CONFIG_WL1271_SPI=m
-+CONFIG_WL12XX_SPI=m
- endif #CONFIG_CRC7
- CONFIG_P54_SPI=m
+ static enum work_action __must_check
+-ieee80211_rx_mgmt_beacon(struct ieee80211_work *wk,
++ieee80211_rx_mgmt_beacon(struct mac80211_work *wk,
+ 			 struct ieee80211_mgmt *mgmt, size_t len)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+@@ -752,7 +752,7 @@ static void ieee80211_work_rx_queued_mgmt(struct mac80211_local *local,
+ {
+ 	struct ieee80211_rx_status *rx_status;
+ 	struct ieee80211_mgmt *mgmt;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	enum work_action rma = WORK_ACT_NONE;
+ 	u16 fc;
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_SPI=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_SPI=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+@@ -910,7 +910,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 	struct mac80211_local *local =
+ 		container_of(work, struct mac80211_local, work_work);
+ 	struct sk_buff *skb;
+-	struct ieee80211_work *wk, *tmp;
++	struct mac80211_work *wk, *tmp;
+ 	LIST_HEAD(free_work);
+ 	enum work_action rma;
+ 	bool remain_off_channel = false;
+@@ -1109,7 +1109,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 	}
+ }
  
--endif #CONFIG_COMPAT_KERNEL_25
-+endif #CONFIG_COMPAT_KERNEL_2_6_25
- endif #CONFIG_SPI_MASTER end of SPI driver list
+-void ieee80211_add_work(struct ieee80211_work *wk)
++void ieee80211_add_work(struct mac80211_work *wk)
+ {
+ 	struct mac80211_local *local;
  
- ifdef CONFIG_MMC
-@@ -489,23 +528,27 @@ CONFIG_SSB_SDIOHOST=y
- CONFIG_B43_SDIO=y
+@@ -1147,7 +1147,7 @@ void ieee80211_work_init(struct mac80211_local *local)
+ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mac80211_local *local = sdata->local;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	bool cleanup = false;
  
- ifdef CONFIG_CRC7
--CONFIG_WL1251_SDIO=m
-+ifdef CONFIG_WL12XX_PLATFORM_DATA
-+CONFIG_COMPAT_WL1251_SDIO=m
-+endif #CONFIG_WL12XX_PLATFORM_DATA
+ 	mutex_lock(&local->mtx);
+@@ -1180,7 +1180,7 @@ ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct mac80211_local *local = sdata->local;
+ 	struct ieee80211_mgmt *mgmt;
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
+ 	u16 fc;
  
--ifndef CONFIG_COMPAT_KERNEL_32
-+ifndef CONFIG_COMPAT_KERNEL_2_6_32
- ifdef CONFIG_WL12XX_PLATFORM_DATA
--CONFIG_WL1271_SDIO=m
-+CONFIG_COMPAT_WL12XX_SDIO=m
- endif #CONFIG_WL12XX_PLATFORM_DATA
--endif #CONFIG_COMPAT_KERNEL_32
-+endif #CONFIG_COMPAT_KERNEL_2_6_32
+ 	if (skb->len < 24)
+@@ -1212,7 +1212,7 @@ ieee80211_rx_result ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	return RX_CONTINUE;
+ }
  
- endif #CONFIG_CRC7
+-static enum work_done_result ieee80211_remain_done(struct ieee80211_work *wk,
++static enum work_done_result ieee80211_remain_done(struct mac80211_work *wk,
+ 						   struct sk_buff *skb)
+ {
+ 	/*
+@@ -1230,7 +1230,7 @@ int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
+ 				   enum nl80211_channel_type channel_type,
+ 				   unsigned int duration, u64 *cookie)
+ {
+-	struct ieee80211_work *wk;
++	struct mac80211_work *wk;
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+CONFIG_MWIFIEX_SDIO=m
-+
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_SDIO=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS_SDIO=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 	wk = kzalloc(sizeof(*wk), GFP_KERNEL);
+ 	if (!wk)
+@@ -1255,7 +1255,7 @@ int ieee80211_wk_cancel_remain_on_channel(struct ieee80211_sub_if_data *sdata,
+ 					  u64 cookie)
+ {
+ 	struct mac80211_local *local = sdata->local;
+-	struct ieee80211_work *wk, *tmp;
++	struct mac80211_work *wk, *tmp;
+ 	bool found = false;
  
- CONFIG_IWM=m
- # CONFIG_IWM_DEBUG=y
-@@ -513,10 +556,8 @@ CONFIG_IWM=m
- CONFIG_BT_HCIBTSDIO=m
- CONFIG_BT_MRVL_SDIO=m
- 
--ifneq ($(CONFIG_COMPAT_STAGING),)
-+ifdef CONFIG_COMPAT_STAGING
- ifdef CONFIG_WIRELESS_EXT
--CONFIG_ATH6KL_CFG80211=y
--CONFIG_ATH6KL_DEBUG=y
- # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
- # CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
- # CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set
-@@ -527,66 +568,77 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
- CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
- CONFIG_ATH6K_LEGACY=m
- 
--CONFIG_BRCM80211=m
--CONFIG_BRCM80211_PCI=y
-+CONFIG_BRCMFMAC=m
- 
- endif #CONFIG_WIRELESS_EXT
--endif #CONFIG_MMC
-+endif #CONFIG_COMPAT_STAGING
-+
- 
-+endif #CONFIG_MMC
- 
--endif # end of SDIO driver list
-+CONFIG_RTLWIFI=m
-+CONFIG_RTL8192C_COMMON=m
- 
- # Common rt2x00 requirements
- ifeq ($(NEED_RT2X00),y)
- CONFIG_RT2X00=y
- CONFIG_RT2X00_LIB=m
- CONFIG_RT2800_LIB=m
--CONFIG_RT2X00_LIB_HT=y
- CONFIG_RT2X00_LIB_FIRMWARE=y
- CONFIG_RT2X00_LIB_CRYPTO=y
--ifdef CONFIG_COMPAT_KERNEL_25
-+# CONFIG_RT2X00_LIB_SOC=y
-+ifdef CONFIG_COMPAT_KERNEL_2_6_25
- CONFIG_RT2X00_LIB_LEDS=n
--else #CONFIG_COMPAT_KERNEL_25
-+else #CONFIG_COMPAT_KERNEL_2_6_25
-+ifdef CONFIG_LEDS_CLASS
- CONFIG_RT2X00_LIB_LEDS=y
--endif #CONFIG_COMPAT_KERNEL_25
-+endif #CONFIG_LEDS_CLASS
-+endif #CONFIG_COMPAT_KERNEL_2_6_25
- # CONFIG_RT2X00_DEBUG=y
- # CONFIG_RT2X00_LIB_DEBUGFS
- endif
- 
--ifeq ($(NEED_RT2X00_FIRMWARE),y)
--CONFIG_RT2X00_LIB_FIRMWARE=y
--endif
--
- # p54
- CONFIG_P54_COMMON=m
-+ifdef CONFIG_MAC80211_LEDS
- CONFIG_P54_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- 
- # Atheros
- CONFIG_ATH_COMMON=m
- CONFIG_ATH_DEBUG=y
- 
--CONFIG_WL12XX=y
-+ifdef CONFIG_COMPAT_STAGING
-+CONFIG_BRCMUTIL=m
-+# CONFIG_BRCMDBG=y
-+endif #CONFIG_COMPAT_STAGING
-+
- ifdef CONFIG_CRC7
- CONFIG_WL1251=m
--CONFIG_WL1271=m
-+CONFIG_WL12XX=m
-+CONFIG_WL12XX_HT=y
- endif #CONFIG_CRC7
- 
--ifdef CONFIG_COMPAT_KERNEL_27
-+CONFIG_MWIFIEX=m
-+
-+ifdef CONFIG_COMPAT_KERNEL_2_6_27
- CONFIG_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2_6_27
- ifeq ($(NEED_LIBERTAS),y)
- CONFIG_LIBERTAS_THINFIRM=m
- CONFIG_LIBERTAS=m
- CONFIG_LIBERTAS_MESH=y
- # CONFIG_LIBERTAS_DEBUG=y
- endif
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
- 
- # We need the backported rfkill module on kernel < 2.6.31.
- # In more recent kernel versions use the in kernel rfkill module.
--ifdef CONFIG_COMPAT_KERNEL_31
-+ifdef CONFIG_COMPAT_KERNEL_2_6_31
- CONFIG_RFKILL_BACKPORT=m
-+ifdef CONFIG_LEDS_TRIGGERS
- CONFIG_RFKILL_BACKPORT_LEDS=y
-+endif #CONFIG_LEDS_TRIGGERS
- CONFIG_RFKILL_BACKPORT_INPUT=y
--endif #CONFIG_COMPAT_KERNEL_31
-+endif #CONFIG_COMPAT_KERNEL_2_6_31
- 
--- 
-1.7.4.1
+ 	mutex_lock(&local->mtx);
 
