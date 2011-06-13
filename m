@@ -1,47 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:36280 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754282Ab1FMWfI (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42184 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab1FMTLQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:35:08 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id BDE26C7EF9
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:35:06 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id A7ED527D85
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:35:05 +0300 (EEST)
-Subject: [PATCH v2 04/27] rtlwifi: include mac80211.h from core.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Jun 2011 01:35:04 +0300
-Message-ID: <20110613223504.10517.6465.stgit@localhost6.localdomain6> (sfid-20110614_003510_923968_42B87F5E)
-In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+	Mon, 13 Jun 2011 15:11:16 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4DF65472.9070601@candelatech.com>
+References: <BLU158-w3633DDF37956A9F5672C1F87690@phx.gbl> <BLU158-w58841DE4774E18813C30CA87690@phx.gbl>
+ <4DF65472.9070601@candelatech.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Mon, 13 Jun 2011 12:10:54 -0700
+Message-ID: <BANLkTimQXUGwfyX79cny2Oi_bH6HPi=kTw@mail.gmail.com> (sfid-20110613_211121_493375_A26778C3)
+Subject: Re: [ath9k-devel] AR9380 current driver supported features
+To: Ben Greear <greearb@candelatech.com>
+Cc: Fred Matthews <fredmm@hotmail.co.uk>, ionic@ionic.de,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-core.h references ieee80211_ops but doesn't include mac80211.h, which issues
-a warning once mac80211-compat.h is taken into use.
+I cut out the stuff about channels, as that seems to be highly
+dependent on which source you get your NIC from and what country code
+is programmed in.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- drivers/net/wireless/rtlwifi/core.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+This is using kernel 3.0-rc2 and the very latest (I just pulled)
+iw.git. The NIC is not associated, all I did was modprobe ath9k.
 
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 4b247db..f02824a 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -30,6 +30,8 @@
- #ifndef __RTL_CORE_H__
- #define __RTL_CORE_H__
- 
-+#include <net/mac80211.h>
-+
- #define RTL_SUPPORTED_FILTERS		\
- 	(FIF_PROMISC_IN_BSS | \
- 	FIF_ALLMULTI | FIF_CONTROL | \
+Dan
 
+% iw list
+Wiphy phy0
+	Band 1:
+		Capabilities: 0x11ef
+			RX LDPC
+			HT20/HT40
+			SM Power Save disabled
+			RX HT20 SGI
+			RX HT40 SGI
+			TX STBC
+			RX STBC 1-stream
+			Max AMSDU length: 3839 bytes
+			DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 8 usec (0x06)
+		HT TX/RX MCS rate indexes supported: 0-23
+		Bitrates (non-HT):
+			* 1.0 Mbps
+			* 2.0 Mbps (short preamble supported)
+			* 5.5 Mbps (short preamble supported)
+			* 11.0 Mbps (short preamble supported)
+			* 6.0 Mbps
+			* 9.0 Mbps
+			* 12.0 Mbps
+			* 18.0 Mbps
+			* 24.0 Mbps
+			* 36.0 Mbps
+			* 48.0 Mbps
+			* 54.0 Mbps
+	Band 2:
+		Capabilities: 0x11ef
+			RX LDPC
+			HT20/HT40
+			SM Power Save disabled
+			RX HT20 SGI
+			RX HT40 SGI
+			TX STBC
+			RX STBC 1-stream
+			Max AMSDU length: 3839 bytes
+			DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 8 usec (0x06)
+		HT TX/RX MCS rate indexes supported: 0-23
+		Bitrates (non-HT):
+			* 6.0 Mbps
+			* 9.0 Mbps
+			* 12.0 Mbps
+			* 18.0 Mbps
+			* 24.0 Mbps
+			* 36.0 Mbps
+			* 48.0 Mbps
+			* 54.0 Mbps
+	max # scan SSIDs: 4
+	max scan IEs length: 2257 bytes
+	Coverage class: 0 (up to 0m)
+	Available Antennas: TX 0 RX 0
+	Supported interface modes:
+		 * IBSS
+		 * managed
+		 * AP
+		 * AP/VLAN
+		 * WDS
+		 * monitor
+		 * P2P-client
+		 * P2P-GO
+	software interface modes (can always be added):
+		 * AP/VLAN
+		 * monitor
+	valid interface combinations:
+	Supported commands:
+		 * new_interface
+		 * set_interface
+		 * new_key
+		 * new_beacon
+		 * new_station
+		 * set_bss
+		 * authenticate
+		 * associate
+		 * deauthenticate
+		 * disassociate
+		 * join_ibss
+		 * remain_on_channel
+		 * set_tx_bitrate_mask
+		 * action
+		 * frame_wait_cancel
+		 * set_wiphy_netns
+		 * set_channel
+		 * set_wds_peer
+		 * connect
+		 * disconnect
+	Supported TX frame types:
+		 * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070
+0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070
+0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070
+0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070
+0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060
+0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060
+0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+		 * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070
+0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+	Supported RX frame types:
+		 * IBSS: 0x00d0
+		 * managed: 0x0040 0x00d0
+		 * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+		 * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+		 * mesh point: 0x00b0 0x00c0 0x00d0
+		 * P2P-client: 0x0040 0x00d0
+		 * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+	Device supports RSN-IBSS.
+
+
+On Mon, Jun 13, 2011 at 11:18 AM, Ben Greear <greearb@candelatech.com> wrote:
+>
+> On 06/13/2011 11:09 AM, Fred Matthews wrote:
+>>
+>> Hi,I am looking to upgrade my current nodes and AP from the AR9280 2x2 MIMO NIC to the AR9380 3x3 NIC.
+>> Thus I was wondering if someone can kindly comment on the current chipset stability with ath9k, also the current supported features (e.g.  "iw list" output) such as setting the NIC as an AP/Master using hostapd, Greenfield mode, TxBF, CSI info, and LPDC as well as rates achieved.
+>> Thanks in advance
+>
+> Both are stable in our testing (virtual stations, AP mode), but we're having
+> a hard time sourcing AR9380 3x3 NICs..getting ship-times in August, etc....
+>
+> I don't have details on the other things you ask about.
+>
+> I'd suggest getting a few NICs and trying them out in your environment.
+> Even if they have problems, there are folks actively working on it and
+> likely it can be fixed.  And at least for our use with virtual stations & APs,
+> there is no other NIC that comes close to the features that Atheros offers.
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
