@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que11.charter.net ([209.225.8.21]:47646 "EHLO que11.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754083Ab1FCDR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 23:17:58 -0400
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 2/5] iwlegacy: remove unecessary if statement
-Date: Thu,  2 Jun 2011 21:06:07 -0500
-Message-Id: <1307066770-27309-2-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_051808_039582_D78B21EB)
-In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:45387 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286Ab1FMIyD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 04:54:03 -0400
+Subject: [PATCH 0/2] ath6kl: fix suspend/resume crashes for 3.0
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Mon, 13 Jun 2011 11:53:50 +0300
+Message-ID: <20110613085118.15065.16173.stgit@localhost6.localdomain6> (sfid-20110613_105408_401125_D2357660)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the code always returns ret regardless, so if(ret) check is unecessary.
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
----
- drivers/net/wireless/iwlegacy/iwl-4965.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Hi Greg,
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
-index f5433c7..ffda05c 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
-@@ -1185,8 +1185,6 @@ static int iwl4965_send_rxon_assoc(struct iwl_priv *priv,
- 
- 	ret = iwl_legacy_send_cmd_pdu_async(priv, REPLY_RXON_ASSOC,
- 				     sizeof(rxon_assoc), &rxon_assoc, NULL);
--	if (ret)
--		return ret;
- 
- 	return ret;
- }
--- 
-1.7.2.5
+here are two fixes suspend/resume crash fixes for 3.0. This is v2 based
+on the feedback from Dan Carpenter.
+
+---
+
+Kalle Valo (2):
+      ath6kl: fix crash when interface is closed but scan is ongoing
+      ath6kl: cache firmware
+
+
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   49 ++++++++++++++------
+ drivers/staging/ath6kl/os/linux/cfg80211.c         |   31 +++++++------
+ .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    9 ++++
+ 3 files changed, 61 insertions(+), 28 deletions(-)
 
