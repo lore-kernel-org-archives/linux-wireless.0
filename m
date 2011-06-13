@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45132 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab1FRIBg (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:47240 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459Ab1FMH4C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 04:01:36 -0400
-To: =?UTF-8?Q?Fr=C3=A9d=C3=A9ric_Lamorce?= <FLamorce@CalAmp.com>
-Subject: Re: nl80211: =?UTF-8?Q?set=5Fkey=20failed=3B=20err=3D-=36=37=20Li?=  =?UTF-8?Q?nk=20has=20been=20severed?=
+	Mon, 13 Jun 2011 03:56:02 -0400
+Received: by pzk9 with SMTP id 9so2018441pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2011 00:56:01 -0700 (PDT)
+Date: Mon, 13 Jun 2011 10:55:33 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org, vasanth@atheros.com
+Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan
+ is ongoing
+Message-ID: <20110613075533.GD3583@shale.localdomain> (sfid-20110613_095606_590311_5F0DE45B)
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+ <20110608115501.32208.82264.stgit@localhost6.localdomain6>
+ <20110608200332.GC4069@shale.localdomain>
+ <20110608201458.GD4069@shale.localdomain>
+ <87sjrj6svb.fsf@purkki.adurom.net>
+ <20110609152453.GH4069@shale.localdomain>
+ <87fwne6uda.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Sat, 18 Jun 2011 10:01:33 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-In-Reply-To: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
- (sfid-20110617_172355_144137_7070136A)
-References: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
- (sfid-20110617_172355_144137_7070136A)
-Message-ID: <39e83b34879f7b3d79534665e9dd0ae6@secure.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fwne6uda.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 17 Jun 2011 08:23:47 -0700, Frédéric Lamorce wrote:
+On Mon, Jun 13, 2011 at 10:52:33AM +0300, Kalle Valo wrote:
+> Dan Carpenter <error27@gmail.com> writes:
+> 
+> > On Thu, Jun 09, 2011 at 04:23:36PM +0300, Kalle Valo wrote:
+> >> I only combined the pending ath6kl patches, I did not edit them.
+> >> Vasanth sent patch 4 few days earlier and that's why you see the
+> >> change here. But if greg wants, I can drop patch 4 and resend the
+> >> series.
+> >
+> > Part of the problem is that patch doesn't add the check for NULL
+> > consistently throughout the function.  There is a place where a NULL
+> > deref could still be triggered later on.  Let's just drop it instead
+> > of fixing it.
+> 
+> Agreed.
+> 
+> But I see that Greg applied the patch 4 already. So I just drop patch
+> 4 from my patchset and resend patch 5 as is (ie. removing the
+> unnecessary null check).
 
-> I enabled -dd with wpa_supplicant, here it is, the only error is
-> "nl80211: set_key failed; err=-67 Link has been severed)", fatal? Why
-> this error? It means the link is down?
+Yep.  It really should go the 3.0 kernel along with [PATCH 3/5]
+ath6kl: cache firmware.
 
-You can ignore that error. Below is the successful key setting: Problem 
-must be something else, maybe crypto code for your device or whatever.
-
-> 14532.914745: wpa_driver_nl80211_set_key: ifindex=5 alg=1
-> addr=0xc3aec key_idx=0 set_tx=1 seq_len=0 key_len=5
+regards,
+dan carpenter
 
