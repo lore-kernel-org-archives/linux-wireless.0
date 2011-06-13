@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35230 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752959Ab1FNOLh (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:33332 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120Ab1FMLYE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 10:11:37 -0400
-Received: by ewy4 with SMTP id 4so2037555ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 07:11:36 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: ShawnG <swggator4@gmail.com>
-Subject: Re: DWA-160
-Date: Tue, 14 Jun 2011 16:12:10 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTim0mV230taAmbTm_Rm0wfPBGAznhw@mail.gmail.com>
-In-Reply-To: <BANLkTim0mV230taAmbTm_Rm0wfPBGAznhw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201106141612.11117.chunkeey@googlemail.com> (sfid-20110614_161142_204079_D6C5AD9E)
+	Mon, 13 Jun 2011 07:24:04 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Tell firmware to generate CCMP header
+Date: Mon, 13 Jun 2011 16:26:15 +0530
+Message-Id: <1307962575-16100-1-git-send-email-nishants@marvell.com> (sfid-20110613_132409_482317_6228141C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 June 2011 15:45:28 ShawnG wrote:
-> I have been seeing strange stuff with the DWA-160 ver A2. Can you recommend
-> another USB Wifi stick to replace ?
-Depends. I've to say that I'm slightly biased towards Atheros products.
-Although, Ralink and Realtek have interesting products as well.
+Post commit e4eefec73ea0a740bfe8736e3ac30dfe92fe392b, the stack is
+not generating the CCMP header for us anymore. This broke the CCMP
+functionality since firmware was not doing this either. Set a flag
+to tell the firmware to generate the CCMP header
 
-So, if you don't need 5GHz then I would go with a ath9k_htc device
-like: TL-WN821N *V3* [Note: V3 is important, because previous
-versions are based on AR9170, however they stopped making them
-some time ago [6-7 months?], so it should be safe to assume they've
-disappeared from retail stores by now.] 
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-if you do need 5GHz, then it might be a good idea to ask:
-George Nychis <gnychis@cmu.edu>
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 25981f7..06ec7a7 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2474,6 +2474,7 @@ struct mwl8k_cmd_set_hw_spec {
+  * faster client.
+  */
+ #define MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY	0x00000400
++#define MWL8K_SET_HW_SPEC_FLAG_GENERATE_CCMP_HDR	0x00000200
+ #define MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT		0x00000080
+ #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP	0x00000020
+ #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON		0x00000010
+@@ -2510,7 +2511,8 @@ static int mwl8k_cmd_set_hw_spec(struct ieee80211_hw *hw)
+ 	cmd->flags = cpu_to_le32(MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON |
+-				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY);
++				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY |
++				 MWL8K_SET_HW_SPEC_FLAG_GENERATE_CCMP_HDR);
+ 	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
+ 	cmd->total_rxd = cpu_to_le32(MWL8K_RX_DESCS);
+ 
+-- 
+1.6.0.3
 
-He has done some testing with several 5GHz capable ath9k_htc devices
-from different vendors and might know which are well suited.
-
-Regards,
-	Chr
