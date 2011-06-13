@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2003 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757604Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:42 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 119/119] staging: brcm80211: updated TODO file
-Date: Wed, 29 Jun 2011 16:48:23 -0700
-Message-ID: <1309391303-22741-120-git-send-email-frankyl@broadcom.com> (sfid-20110630_014910_875407_C4BFE19D)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:39528 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755257Ab1FMWiE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 18:38:04 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id 788EE8BE63
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:03 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id 62D54E51A2
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:02 +0300 (EEST)
+Subject: [PATCH v2 23/27] mac80211: rename ieee80211_sdata_state_bits to
+	mac80211_sdata_state_bits
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 14 Jun 2011 01:38:01 +0300
+Message-ID: <20110613223801.10517.762.stgit@localhost6.localdomain6> (sfid-20110614_005723_980811_577C163B)
+In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
-
-Updated TODO file to reflect current driver state, results of recent
-cleanup and fixes.
-
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- drivers/staging/brcm80211/TODO |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
+ net/mac80211/mac80211_i.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/TODO b/drivers/staging/brcm80211/TODO
-index 94c792b..e2e2ef9 100644
---- a/drivers/staging/brcm80211/TODO
-+++ b/drivers/staging/brcm80211/TODO
-@@ -4,19 +4,9 @@ Bugs
- ====
- - none known at this moment
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index df53135..3d1fe4f 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -524,14 +524,14 @@ enum mac80211_sub_if_data_flags {
+ };
  
--brcmfmac and brcmsmac
--=====================
--- replace company specific acronym wlc_
--- Resolve all XXX, TODO, FIXME in code
--
- brcmfmac
- =====================
--- Remove unnecessary includes, move #includes from .h files into .c files.
--- Absorb and delete header files that are included in only one .c file
--- ASSERTS not allowed in mainline, replace by warning + error handling
--- Replace printk and WL_ERROR() with proper routines
--- Replace driver's proprietary ssb interface with generic kernel ssb module
--- Build and test on 64 bit linux kernel
-+- ASSERTS deprecated in mainline, replace by warning + error handling
- 
- brcm80211 info page
- =====================
--- 
-1.7.1
-
+ /**
+- * enum ieee80211_sdata_state_bits - virtual interface state bits
++ * enum mac80211_sdata_state_bits - virtual interface state bits
+  * @SDATA_STATE_RUNNING: virtual interface is up & running; this
+  *	mirrors netif_running() but is separate for interface type
+  *	change handling while the interface is up
+  * @SDATA_STATE_OFFCHANNEL: This interface is currently in offchannel
+  *	mode, so queues are stopped
+  */
+-enum ieee80211_sdata_state_bits {
++enum mac80211_sdata_state_bits {
+ 	SDATA_STATE_RUNNING,
+ 	SDATA_STATE_OFFCHANNEL,
+ };
 
