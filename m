@@ -1,225 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:33962 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758125Ab1F3IoD (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43211 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab1FMNk5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 04:44:03 -0400
-Subject: [PATCH v2] ath6kl: implement testmode rx command
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Thu, 30 Jun 2011 11:43:54 +0300
-Message-ID: <20110630084354.5352.83068.stgit@localhost6.localdomain6> (sfid-20110630_104421_543532_BEDD309F)
+	Mon, 13 Jun 2011 09:40:57 -0400
+Received: by wya21 with SMTP id 21so3185024wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2011 06:40:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20110613132009.GA7133@redhat.com>
+References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
+	<20110613132009.GA7133@redhat.com>
+Date: Mon, 13 Jun 2011 19:10:56 +0530
+Message-ID: <BANLkTi=eKBcV5OjP0qqLe6n9GsiwhYLejg@mail.gmail.com> (sfid-20110613_154103_144958_BBBBE3DA)
+Subject: Re: APSM, AR9285 and bus hangs
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	ath9k-devel@venema.h4ckr.net, Tony Houghton <h@realh.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new testmode command for retrieving rx reports from firmware.
+On Mon, Jun 13, 2011 at 6:50 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Jun 13, 2011 at 09:01:57PM +0800, Adrian Chadd wrote:
+>> On 13 June 2011 19:00, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>
+>> > cam a fedora user, confirms that patch fixes the locks-ups
+>> > https://bugzilla.redhat.com/show_bug.cgi?id=697157#c26
+>> >
+>> > We are waiting for fix now :-)
+>>
+>> Cool.
+>>
+>> The problem is, the initial modification and subsequent changes to the
+>> powersave function were documented to fix an APSM hang, not cause it.
+>>
+>> I'm happy to submit a patch to undo that particular change but I'm not
+>> sure if it'll -break- things for other people. :)
+>>
+>> Someone with PCIe/APCI/APSM/general clue in the area of CPU + bus
+>> sleep states needs to step in and help. I'm just not equipped to fix
+>> the problem at the moment.
+>
+> I see this commit in 2.6.39, missed in 2.6.38 and 2.6.35 currently.
+> Is possible this is the fix which do not break other things?
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/staging/ath6kl/os/linux/cfg80211.c         |   99 ++++++++++++++++++++
- .../staging/ath6kl/os/linux/include/ar6000_drv.h   |   10 --
- drivers/staging/ath6kl/os/linux/include/cfg80211.h |   11 ++
- drivers/staging/ath6kl/wmi/wmi.c                   |    6 +
- 4 files changed, 114 insertions(+), 12 deletions(-)
+hi,
+no, this fix only affects AR9280 and it does not affects AR9285.
 
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index 441ae04..5fdda4a 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1472,6 +1472,7 @@ enum ar6k_testmode_attr {
- 
- enum ar6k_testmode_cmd {
- 	AR6K_TM_CMD_TCMD		= 0,
-+	AR6K_TM_CMD_RX_REPORT		= 1,
- };
- 
- #define AR6K_TM_DATA_MAX_LEN 5000
-@@ -1482,11 +1483,88 @@ static const struct nla_policy ar6k_testmode_policy[AR6K_TM_ATTR_MAX + 1] = {
- 				.len = AR6K_TM_DATA_MAX_LEN },
- };
- 
-+void ar6000_testmode_rx_report_event(struct ar6_softc *ar, void *buf,
-+				     int buf_len)
-+{
-+	if (down_interruptible(&ar->arSem))
-+		return;
-+
-+	kfree(ar->tcmd_rx_report);
-+
-+	ar->tcmd_rx_report = kmemdup(buf, buf_len, GFP_KERNEL);
-+	ar->tcmd_rx_report_len = buf_len;
-+
-+	up(&ar->arSem);
-+
-+	wake_up(&arEvent);
-+}
-+
-+static int ar6000_testmode_rx_report(struct ar6_softc *ar, void *buf,
-+				     int buf_len, struct sk_buff *skb)
-+{
-+	int ret = 0;
-+	long left;
-+
-+	if (down_interruptible(&ar->arSem))
-+		return -ERESTARTSYS;
-+
-+	if (ar->arWmiReady == false) {
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	if (ar->bIsDestroyProgress) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	WARN_ON(ar->tcmd_rx_report != NULL);
-+	WARN_ON(ar->tcmd_rx_report_len > 0);
-+
-+	if (wmi_test_cmd(ar->arWmi, buf, buf_len) < 0) {
-+		up(&ar->arSem);
-+		return -EIO;
-+	}
-+
-+	left = wait_event_interruptible_timeout(arEvent,
-+					       ar->tcmd_rx_report != NULL,
-+					       wmitimeout * HZ);
-+
-+	if (left == 0) {
-+		ret = -ETIMEDOUT;
-+		goto out;
-+	} else if (left < 0) {
-+		ret = left;
-+		goto out;
-+	}
-+
-+	if (ar->tcmd_rx_report == NULL || ar->tcmd_rx_report_len == 0) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	NLA_PUT(skb, AR6K_TM_ATTR_DATA, ar->tcmd_rx_report_len,
-+		ar->tcmd_rx_report);
-+
-+	kfree(ar->tcmd_rx_report);
-+	ar->tcmd_rx_report = NULL;
-+
-+out:
-+	up(&ar->arSem);
-+
-+	return ret;
-+
-+nla_put_failure:
-+	ret = -ENOBUFS;
-+	goto out;
-+}
-+
- static int ar6k_testmode_cmd(struct wiphy *wiphy, void *data, int len)
- {
- 	struct ar6_softc *ar = wiphy_priv(wiphy);
- 	struct nlattr *tb[AR6K_TM_ATTR_MAX + 1];
--	int err, buf_len;
-+	int err, buf_len, reply_len;
-+	struct sk_buff *skb;
- 	void *buf;
- 
- 	err = nla_parse(tb, AR6K_TM_ATTR_MAX, data, len,
-@@ -1510,6 +1588,25 @@ static int ar6k_testmode_cmd(struct wiphy *wiphy, void *data, int len)
- 		return 0;
- 
- 		break;
-+	case AR6K_TM_CMD_RX_REPORT:
-+		if (!tb[AR6K_TM_ATTR_DATA])
-+			return -EINVAL;
-+
-+		buf = nla_data(tb[AR6K_TM_ATTR_DATA]);
-+		buf_len = nla_len(tb[AR6K_TM_ATTR_DATA]);
-+
-+		reply_len = nla_total_size(AR6K_TM_DATA_MAX_LEN);
-+		skb = cfg80211_testmode_alloc_reply_skb(wiphy, reply_len);
-+		if (!skb)
-+			return -ENOMEM;
-+
-+		err = ar6000_testmode_rx_report(ar, buf, buf_len, skb);
-+		if (err < 0) {
-+			kfree_skb(skb);
-+			return err;
-+		}
-+
-+		return cfg80211_testmode_reply(skb);
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-index 2911ea0..05cc774 100644
---- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-+++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-@@ -546,15 +546,9 @@ struct ar6_softc {
-     s8 arMaxRetries;
-     u8 arPhyCapability;
- #ifdef CONFIG_HOST_TCMD_SUPPORT
--    u8 tcmdRxReport;
--    u32 tcmdRxTotalPkt;
--    s32 tcmdRxRssi;
--    u32 tcmdPm;
-     u32 arTargetMode;
--    u32 tcmdRxcrcErrPkt;
--    u32 tcmdRxsecErrPkt;
--    u16 tcmdRateCnt[TCMD_MAX_RATES];
--    u16 tcmdRateCntShortGuard[TCMD_MAX_RATES];
-+    void *tcmd_rx_report;
-+    int tcmd_rx_report_len;
- #endif
-     AR6000_WLAN_STATE       arWlanState;
-     struct ar_node_mapping  arNodeMap[MAX_NODE_NUM];
-diff --git a/drivers/staging/ath6kl/os/linux/include/cfg80211.h b/drivers/staging/ath6kl/os/linux/include/cfg80211.h
-index 1a6ae97..d525320 100644
---- a/drivers/staging/ath6kl/os/linux/include/cfg80211.h
-+++ b/drivers/staging/ath6kl/os/linux/include/cfg80211.h
-@@ -41,6 +41,17 @@ void ar6k_cfg80211_disconnect_event(struct ar6_softc *ar, u8 reason,
- 
- void ar6k_cfg80211_tkip_micerr_event(struct ar6_softc *ar, u8 keyid, bool ismcast);
- 
-+#ifdef CONFIG_NL80211_TESTMODE
-+void ar6000_testmode_rx_report_event(struct ar6_softc *ar, void *buf,
-+				     int buf_len);
-+#else
-+static inline void ar6000_testmode_rx_report_event(struct ar6_softc *ar,
-+						   void *buf, int buf_len) 
-+{
-+}
-+#endif
-+
-+
- #endif /* _AR6K_CFG80211_H_ */
- 
- 
-diff --git a/drivers/staging/ath6kl/wmi/wmi.c b/drivers/staging/ath6kl/wmi/wmi.c
-index 4a17f99..c7b5e5c 100644
---- a/drivers/staging/ath6kl/wmi/wmi.c
-+++ b/drivers/staging/ath6kl/wmi/wmi.c
-@@ -41,6 +41,7 @@
- #include "a_debug.h"
- #include "dbglog_api.h"
- #include "roaming.h"
-+#include "cfg80211.h"
- 
- #define ATH_DEBUG_WMI ATH_DEBUG_MAKE_MODULE_MASK(0)
- 
-@@ -4465,10 +4466,9 @@ wmi_verify_tspec_params(WMI_CREATE_PSTREAM_CMD *pCmd, int tspecCompliance)
- static int
- wmi_tcmd_test_report_rx(struct wmi_t *wmip, u8 *datap, int len)
- {
-+	ar6000_testmode_rx_report_event(wmip->wmi_devt, datap, len);
- 
--   A_DPRINTF(DBG_WMI, (DBGFMT "Enter\n", DBGARG));
--
--   return 0;
-+	return 0;
- }
- 
- #endif /* CONFIG_HOST_TCMD_SUPPORT*/
+>
+> commit 5b64aa72ead6f8be488d2be7af579f0d69fb7a6e
+> Author: Rajkumar Manoharan <rmanoharan@atheros.com>
+> Date:   Thu Jan 27 18:39:37 2011 +0530
+>
+>    ath9k_hw: Fix system hang when resuming from S3/S4
+>
+>    The bit 6 & 7 of AR_WA (0x4004) should be enabled only
+>    for the chips that are supporting L0s functionality
+>    while resuming back from S3/S4.
+>
+>    Enabling these bits for AR9280 is causing system hang
+>    within a few S3/S4-resume cycles.
+>
+>    Cc: stable@kernel.org
+>    Cc: Jack Lee <jlee@atheros.com>
+>    Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> index f8a7771..f44c84a 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> @@ -426,9 +426,8 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+>                }
+>
+>                /* WAR for ASPM system hang */
+> -               if (AR_SREV_9280(ah) || AR_SREV_9285(ah) || AR_SREV_9287(ah)) {
+> +               if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
+>                        val |= (AR_WA_BIT6 | AR_WA_BIT7);
+> -               }
+>
+>                if (AR_SREV_9285E_20(ah))
+>                        val |= AR_WA_BIT23;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
+
+
+-- 
+shafi
