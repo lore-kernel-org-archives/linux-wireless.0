@@ -1,98 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4455 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757034Ab1F2Xsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:39 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 009/119] staging: brcm80211: remove unused files from
- fullmac
-Date: Wed, 29 Jun 2011 16:46:33 -0700
-Message-ID: <1309391303-22741-10-git-send-email-frankyl@broadcom.com> (sfid-20110630_014857_160099_249B410C)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:34870 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755257Ab1FMWho (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 18:37:44 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 2DCD413B555
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:43 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh03.mail.saunalahti.fi (Postfix) with ESMTP id 07DE2158A64
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:37:41 +0300 (EEST)
+Subject: [PATCH v2 20/27] mac80211: rename ieee80211_if_ibss to
+	mac80211_if_ibss
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 14 Jun 2011 01:37:41 +0300
+Message-ID: <20110613223741.10517.53106.stgit@localhost6.localdomain6> (sfid-20110614_005723_719836_26386FF5)
+In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-aiutils.c and pcicfg.h are no longer needed by fullmac
-
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/aiutils.c |    1 -
- drivers/staging/brcm80211/brcmfmac/pcicfg.h  |   50 --------------------------
- 2 files changed, 0 insertions(+), 51 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmfmac/aiutils.c
- delete mode 100644 drivers/staging/brcm80211/brcmfmac/pcicfg.h
+ net/mac80211/ibss.c       |   24 ++++++++++++------------
+ net/mac80211/mac80211_i.h |    4 ++--
+ net/mac80211/tx.c         |    2 +-
+ 3 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/aiutils.c b/drivers/staging/brcm80211/brcmfmac/aiutils.c
-deleted file mode 100644
-index e648086..0000000
---- a/drivers/staging/brcm80211/brcmfmac/aiutils.c
-+++ /dev/null
-@@ -1 +0,0 @@
--#include "../util/aiutils.c"
-diff --git a/drivers/staging/brcm80211/brcmfmac/pcicfg.h b/drivers/staging/brcm80211/brcmfmac/pcicfg.h
-deleted file mode 100644
-index 3258449..0000000
---- a/drivers/staging/brcm80211/brcmfmac/pcicfg.h
-+++ /dev/null
-@@ -1,50 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef	_h_pcicfg_
--#define	_h_pcicfg_
--
--#include <linux/pci_regs.h>
--
--/* PCI configuration address space size */
--#define PCI_SZPCR		256
--
--/* Everything below is Broadcom specific */
--
--/* Brcm PCI configuration registers */
--#define PCI_BAR0_WIN		0x80	/* backplane address space accessed by BAR0 */
--#define PCI_SPROM_CONTROL	0x88	/* sprom property control */
--#define PCI_INT_MASK		0x94	/* mask of PCI and other cores interrupts */
--#define  PCI_SBIM_SHIFT		8	/* backplane core interrupt mask bits offset */
--#define PCI_BAR0_WIN2		0xac	/* backplane address space accessed by second 4KB of BAR0 */
--#define PCI_GPIO_IN		0xb0	/* pci config space gpio input (>=rev3) */
--#define PCI_GPIO_OUT		0xb4	/* pci config space gpio output (>=rev3) */
--#define PCI_GPIO_OUTEN		0xb8	/* pci config space gpio output enable (>=rev3) */
--
--#define PCI_BAR0_SPROM_OFFSET	(4 * 1024)	/* bar0 + 4K accesses external sprom */
--#define PCI_BAR0_PCIREGS_OFFSET	(6 * 1024)	/* bar0 + 6K accesses pci core registers */
--#define PCI_BAR0_PCISBR_OFFSET	(4 * 1024)	/* pci core SB registers are at the end of the
--						 * 8KB window, so their address is the "regular"
--						 * address plus 4K
--						 */
--#define PCI_BAR0_WINSZ		(16 * 1024)	/* bar0 window size Match with corerev 13 */
--/* On pci corerev >= 13 and all pcie, the bar0 is now 16KB and it maps: */
--#define PCI_16KB0_PCIREGS_OFFSET (8 * 1024)	/* bar0 + 8K accesses pci/pcie core registers */
--#define PCI_16KB0_CCREGS_OFFSET	(12 * 1024)	/* bar0 + 12K accesses chipc core registers */
--
--#define PCI_SBIM_STATUS_SERR	0x4	/* backplane SBErr interrupt status */
--
--#endif				/* _h_pcicfg_ */
--- 
-1.7.1
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 6d6729b..9094687 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -67,7 +67,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				      const u32 basic_rates,
+ 				      const u16 capability, u64 tsf)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 	int rates, i;
+ 	struct sk_buff *skb;
+@@ -420,7 +420,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 					u8 *bssid,u8 *addr, u32 supp_rates,
+ 					gfp_t gfp)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	int band = local->hw.conf.channel->band;
+@@ -496,7 +496,7 @@ static int ieee80211_sta_active_ibss(struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	lockdep_assert_held(&ifibss->mtx);
+ 
+@@ -525,7 +525,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	u8 bssid[ETH_ALEN];
+ 	u16 capability;
+ 	int i;
+@@ -566,7 +566,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 
+ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_channel *chan = NULL;
+@@ -657,7 +657,7 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
+ 					struct sk_buff *req)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *)req->data;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 	int tx_last_beacon, len = req->len;
+ 	struct sk_buff *skb;
+@@ -801,7 +801,7 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	mutex_lock(&ifibss->mtx);
+ 
+@@ -833,7 +833,7 @@ static void ieee80211_ibss_timer(unsigned long data)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		(struct ieee80211_sub_if_data *) data;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 
+ 	if (local->quiescing) {
+@@ -847,7 +847,7 @@ static void ieee80211_ibss_timer(unsigned long data)
+ #ifdef CONFIG_PM
+ void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	if (del_timer_sync(&ifibss->timer))
+ 		ifibss->timer_running = true;
+@@ -855,7 +855,7 @@ void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	if (ifibss->timer_running) {
+ 		add_timer(&ifibss->timer);
+@@ -866,7 +866,7 @@ void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
+ 		    (unsigned long) sdata);
+@@ -957,7 +957,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct sk_buff *skb;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct mac80211_local *local = sdata->local;
+ 	struct cfg80211_bss *cbss;
+ 	u16 capability;
+diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
+index d62abf4..d079142 100644
+--- a/net/mac80211/mac80211_i.h
++++ b/net/mac80211/mac80211_i.h
+@@ -419,7 +419,7 @@ struct mac80211_if_managed {
+ 	int last_cqm_event_signal;
+ };
+ 
+-struct ieee80211_if_ibss {
++struct mac80211_if_ibss {
+ 	struct timer_list timer;
+ 
+ 	struct mutex mtx;
+@@ -597,7 +597,7 @@ struct ieee80211_sub_if_data {
+ 		struct mac80211_if_wds wds;
+ 		struct mac80211_if_vlan vlan;
+ 		struct mac80211_if_managed mgd;
+-		struct ieee80211_if_ibss ibss;
++		struct mac80211_if_ibss ibss;
+ 		struct ieee80211_if_mesh mesh;
+ 		u32 mntr_flags;
+ 	} u;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f0218ac..151b9f8 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2236,7 +2236,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		} else
+ 			goto out;
+ 	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
+-		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++		struct mac80211_if_ibss *ifibss = &sdata->u.ibss;
+ 		struct ieee80211_hdr *hdr;
+ 		struct sk_buff *presp = rcu_dereference(ifibss->presp);
+ 
 
