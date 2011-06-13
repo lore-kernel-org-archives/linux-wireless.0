@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:37468 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab1FUGdy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 02:33:54 -0400
-Received: by gxk21 with SMTP id 21so612304gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 23:33:53 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:56993 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753416Ab1FMHwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 03:52:38 -0400
+To: Dan Carpenter <error27@gmail.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org, vasanth@atheros.com
+Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan is ongoing
+References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
+	<20110608115501.32208.82264.stgit@localhost6.localdomain6>
+	<20110608200332.GC4069@shale.localdomain>
+	<20110608201458.GD4069@shale.localdomain>
+	<87sjrj6svb.fsf@purkki.adurom.net>
+	<20110609152453.GH4069@shale.localdomain>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 13 Jun 2011 10:52:33 +0300
+In-Reply-To: <20110609152453.GH4069@shale.localdomain> (Dan Carpenter's message of "Thu\, 9 Jun 2011 18\:24\:53 +0300")
+Message-ID: <87fwne6uda.fsf@purkki.adurom.net> (sfid-20110613_095241_174222_0EF74D14)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTikba=gw=1itPywfUaK28pVL2Z6=2g@mail.gmail.com>
-References: <1308425533-20854-1-git-send-email-arik@wizery.com>
-	<BANLkTikB3egX4YikC1JdgEr-E-7Dm13_CA@mail.gmail.com>
-	<BANLkTikba=gw=1itPywfUaK28pVL2Z6=2g@mail.gmail.com>
-Date: Tue, 21 Jun 2011 12:03:53 +0530
-Message-ID: <BANLkTimmn3o-+rexOYy2CjrOX_Xo06R+uw@mail.gmail.com> (sfid-20110621_083403_798041_91C0D7B1)
-Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sam Leffler <sleffler@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 11:13 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Tue, Jun 21, 2011 at 07:55, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
->>>
->>> +       /* don't enter PS if dynamic PS is enabled and TX frames are pending */
->>> +       if (local->hw.conf.dynamic_ps_timeout > 0 &&
->>> +           !local->disable_dynamic_ps && drv_tx_frames_pending(local)) {
->>
->> netif_tx_stop_all_queues has to be called before checking
->> frames_pending(), so that we can make sure no data is transmitted in
->> the time between checking frames_pending and transmitting null data
->> frames. If it is not done, this might cause some power save states
->> mismatch between the AP and the station in some corner cases.
+Dan Carpenter <error27@gmail.com> writes:
+
+> On Thu, Jun 09, 2011 at 04:23:36PM +0300, Kalle Valo wrote:
+>> I only combined the pending ath6kl patches, I did not edit them.
+>> Vasanth sent patch 4 few days earlier and that's why you see the
+>> change here. But if greg wants, I can drop patch 4 and resend the
+>> series.
 >
-> That's a good point. But I guess its only relevant to drivers using
-> IEEE80211_HW_PS_NULLFUNC_STACK.
-> Still seems racy to me - even if queues are stopped it doesn't mean
-> mac80211 is not in the middle of ieee80211_tx(). Is there a way to
-> make sure?
+> Part of the problem is that patch doesn't add the check for NULL
+> consistently throughout the function.  There is a place where a NULL
+> deref could still be triggered later on.  Let's just drop it instead
+> of fixing it.
 
-Well, I can't find any way to stop this race. :)
-Atleast the other race could be fixed with stop_queues.
-How about the below patch? I am not sure about the disable_dynamic_ps
-and its BT/WLAN antenna sharing. Please add that if you see it as
-appropriate.
+Agreed.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index faca503..67ecad1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -778,15 +778,14 @@ void ieee80211_dynamic_ps_enable_work(struct
-work_struct *work)
-        }
-        spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+But I see that Greg applied the patch 4 already. So I just drop patch
+4 from my patchset and resend patch 5 as is (ie. removing the
+unnecessary null check).
 
--       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--           (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-+       if (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
-                netif_tx_stop_all_queues(sdata->dev);
-
-                if (drv_tx_frames_pending(local))
-                        mod_timer(&local->dynamic_ps_timer, jiffies +
-                                  msecs_to_jiffies(
-                                  local->hw.conf.dynamic_ps_timeout));
--               else {
-+               else if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
-                        ieee80211_send_nullfunc(local, sdata, 1);
-                        /* Flush to get the tx status of nullfunc frame */
-                        drv_flush(local, false);
-
-
-Vivek.
+-- 
+Kalle Valo
