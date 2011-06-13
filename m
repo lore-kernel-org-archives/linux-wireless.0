@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:54386 "EHLO lo.gmane.org"
+Received: from mx1.redhat.com ([209.132.183.28]:32423 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750863Ab1FUUJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 16:09:49 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QZ7Gd-0006Qo-R5
-	for linux-wireless@vger.kernel.org; Tue, 21 Jun 2011 22:09:47 +0200
-Received: from f052160044.adsl.alicedsl.de ([78.52.160.44])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 22:09:47 +0200
-Received: from pommnitz by f052160044.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 22:09:47 +0200
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Performance regression between Madwifi/net80211 and ath5k/mac80211
-Date: Tue, 21 Jun 2011 20:09:37 +0000 (UTC)
-Message-ID: <loom.20110621T215346-191@post.gmane.org> (sfid-20110621_220951_882138_F18FA43E)
-Mime-Version: 1.0
+	id S1752000Ab1FMLAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 07:00:46 -0400
+Date: Mon, 13 Jun 2011 13:00:46 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@venema.h4ckr.net,
+	Tony Houghton <h@realh.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	camilo@mesias.co.uk
+Subject: Re: ath9k causes lockups since kernel 2.6.35
+Message-ID: <20110613110043.GA5388@redhat.com> (sfid-20110613_130049_783197_030A3BFA)
+References: <20110224182022.57e32862@toddler>
+ <20110224200203.GB17412@elie>
+ <BANLkTik-DQxb8Ca698BeizRVyB71bWBndQ@mail.gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTik-DQxb8Ca698BeizRVyB71bWBndQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-there seems to be a significant performance loss when moving from Madwifi 
-to ath5k. For an embedded project we have been using Madwifi with Linux kernel
-2.6.23. We have tested ath5k for some time and by now it seems to be stable
-enough for production use. Unfortunately it doesn't match Madwifi's performance.
-Running iperf (both, UDP and TCP) between two machines equipped with an AR5413
-with the Fedora 15 kernel and the stock Fedora 15 wireless subsystem shows a
-performance loss of about 10% relative to 2.6.23 and Madwifi-0.9.4.
-The tests where done under close to ideal lab conditions (cards connected with
-an antenna cable) running an IBSS network on channel 40 (5200MHz).
+On Fri, Jun 10, 2011 at 02:48:00PM +0800, Adrian Chadd wrote:
+> This patch against the current wireless-testing tree restores bit 6/7
+> being set for the AR9285.
+> 
+> Tony, would you please test this out and see if this works? This is
+> against the latest wireless-testing.
 
-Can anybody confirm this observation?
-Is there an explanation?
-Are there some tuning knobs I could try to improve the performance with
-mac80211/ath5k?
-Is the problem outside the wireless subsystem (Maybe it's the TCP/IP stack or
-something Fedora specific)?
+cam a fedora user, confirms that patch fixes the locks-ups
+https://bugzilla.redhat.com/show_bug.cgi?id=697157#c26
 
-Thanks in advance.
-  Joerg
+We are waiting for fix now :-)
 
+Thanks
+Stanislaw
