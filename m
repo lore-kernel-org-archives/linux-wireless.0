@@ -1,119 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63134 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab1FGJuU (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40530 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab1FMJqp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 05:50:20 -0400
-Received: by wwa36 with SMTP id 36so4731860wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2011 02:50:19 -0700 (PDT)
+	Mon, 13 Jun 2011 05:46:45 -0400
+Received: by wya21 with SMTP id 21so3049404wya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2011 02:46:43 -0700 (PDT)
 From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: use freezable workqueue for netstack_work
-Date: Tue,  7 Jun 2011 12:50:46 +0300
-Message-Id: <1307440246-22062-1-git-send-email-eliad@wizery.com> (sfid-20110607_115025_479683_BDDFCCAC)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2] mac80211: add cancel_hw_scan() callback
+Date: Mon, 13 Jun 2011 12:47:30 +0300
+Message-Id: <1307958450-11500-1-git-send-email-eliad@wizery.com> (sfid-20110613_114649_272999_8CC609F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When resuming (after wowlan), we want the rx packets (which is
-usually the wake-up packet itself) to be passed to mac80211 only
-after the resume notifier was completed, and mac80211 is up and
-running (otherwise, the packets will be dropped).
+When suspending, __ieee80211_suspend() calls ieee80211_scan_cancel(),
+which will only cancel sw scan. In order to cancel hw scan, the
+low-level driver has to cancel it in the suspend() callback. however,
+this is too late, as a new scan_work will be enqueued (while the driver
+is going into suspend).
 
-By enqueueing the netstack_work to a freezable workqueue, we can
-guarantee the rx processing to occur only after mac80211 was resumed.
+Add a new cancel_hw_scan() callback, asking the driver to cancel an
+active hw scan, and call it in ieee80211_scan_cancel().
 
 Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Ido Yariv <ido@wizery.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   12 +++++++++++-
- drivers/net/wireless/wl12xx/rx.c     |    2 +-
- drivers/net/wireless/wl12xx/tx.c     |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 4 files changed, 14 insertions(+), 3 deletions(-)
+v2:
+	update comments
+	change to void
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9ee2411..1e2f76b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4112,6 +4112,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	INIT_WORK(&wl->rx_streaming_disable_work,
- 		  wl1271_rx_streaming_disable_work);
+ include/net/mac80211.h      |   10 ++++++++++
+ net/mac80211/driver-ops.h   |   10 ++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ net/mac80211/scan.c         |   37 +++++++++++++++++++++----------------
+ 4 files changed, 47 insertions(+), 16 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8c7189c..b62d418 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1708,6 +1708,14 @@ enum ieee80211_ampdu_mlme_action {
+  *	any error unless this callback returned a negative error code.
+  *	The callback can sleep.
+  *
++ * @cancel_hw_scan: Ask the low-level tp cancel the active hw scan.
++ *	The driver should ask the hardware to cancel the scan (if possible),
++ *	but the scan will be completed only after the driver will call
++ *	ieee80211_scan_completed().
++ *	This callback is needed for wowlan, to prevent enqueueing a new
++ *	scan_work after the low-level driver was already suspended.
++ *	The callback can sleep.
++ *
+  * @sched_scan_start: Ask the hardware to start scanning repeatedly at
+  *	specific intervals.  The driver must call the
+  *	ieee80211_sched_scan_results() function whenever it finds results.
+@@ -1899,6 +1907,8 @@ struct ieee80211_ops {
+ 				u32 iv32, u16 *phase1key);
+ 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       struct cfg80211_scan_request *req);
++	void (*cancel_hw_scan)(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif);
+ 	int (*sched_scan_start)(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct cfg80211_sched_scan_request *req,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index eebf7a6..0e7e426 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -218,6 +218,16 @@ static inline int drv_hw_scan(struct ieee80211_local *local,
+ 	return ret;
+ }
  
-+	wl->freezable_wq = create_freezable_workqueue("wl12xx_wq");
-+	if (!wl->freezable_wq) {
-+		ret = -ENOMEM;
-+		goto err_hw;
-+	}
++static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
++				      struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
 +
- 	wl->channel = WL1271_DEFAULT_CHANNEL;
- 	wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
- 	wl->default_key = 0;
-@@ -4156,7 +4162,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->aggr_buf = (u8 *)__get_free_pages(GFP_KERNEL, order);
- 	if (!wl->aggr_buf) {
- 		ret = -ENOMEM;
--		goto err_hw;
-+		goto err_wq;
++	trace_drv_cancel_hw_scan(local, sdata);
++	local->ops->cancel_hw_scan(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index ed9edcb..3cb6795 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -460,6 +460,12 @@ DEFINE_EVENT(local_sdata_evt, drv_hw_scan,
+ 	TP_ARGS(local, sdata)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_cancel_hw_scan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 27af672..ec7820e 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -822,10 +822,8 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+  */
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+-	bool abortscan;
+-
+ 	/*
+-	 * We are only canceling software scan, or deferred scan that was not
++	 * We are canceling software scan, or deferred scan that was not
+ 	 * yet really started (see __ieee80211_start_scan ).
+ 	 *
+ 	 * Regarding hardware scan:
+@@ -837,23 +835,30 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 	 * - we can not cancel scan_work since driver can schedule it
+ 	 *   by ieee80211_scan_completed(..., true) to finish scan
+ 	 *
+-	 * Hence low lever driver is responsible for canceling HW scan.
++	 * Hence we only call the cancel_hw_scan() callback, but the low-level
++	 * driver is still responsible for calling ieee80211_scan_completed()
++	 * after the scan was completed/aborted.
+ 	 */
+ 
+ 	mutex_lock(&local->mtx);
+-	abortscan = local->scan_req && !test_bit(SCAN_HW_SCANNING, &local->scanning);
+-	if (abortscan) {
+-		/*
+-		 * The scan is canceled, but stop work from being pending.
+-		 *
+-		 * If the work is currently running, it must be blocked on
+-		 * the mutex, but we'll set scan_sdata = NULL and it'll
+-		 * simply exit once it acquires the mutex.
+-		 */
+-		cancel_delayed_work(&local->scan_work);
+-		/* and clean up */
+-		__ieee80211_scan_completed(&local->hw, true, false);
++	if (!local->scan_req)
++		goto out;
++
++	if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
++		if (local->ops->cancel_hw_scan)
++			drv_cancel_hw_scan(local, local->scan_sdata);
++		goto out;
  	}
- 
- 	wl->dummy_packet = wl12xx_alloc_dummy_packet(wl);
-@@ -4201,6 +4207,9 @@ err_dummy_packet:
- err_aggr:
- 	free_pages((unsigned long)wl->aggr_buf, order);
- 
-+err_wq:
-+	destroy_workqueue(wl->freezable_wq);
 +
- err_hw:
- 	wl1271_debugfs_exit(wl);
- 	kfree(plat_dev);
-@@ -4231,6 +4240,7 @@ int wl1271_free_hw(struct wl1271 *wl)
- 
- 	kfree(wl->fw_status);
- 	kfree(wl->tx_res_if);
-+	destroy_workqueue(wl->freezable_wq);
- 
- 	ieee80211_free_hw(wl->hw);
- 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index db230a5..9357695 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -150,7 +150,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
- 	skb_trim(skb, skb->len - desc->pad_len);
- 
- 	skb_queue_tail(&wl->deferred_rx_queue, skb);
--	ieee80211_queue_work(wl->hw, &wl->netstack_work);
-+	queue_work(wl->freezable_wq, &wl->netstack_work);
- 
- 	return is_data;
- }
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index b2635c7..200590c 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -727,7 +727,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 
- 	/* return the packet to the stack */
- 	skb_queue_tail(&wl->deferred_tx_queue, skb);
--	ieee80211_queue_work(wl->hw, &wl->netstack_work);
-+	queue_work(wl->freezable_wq, &wl->netstack_work);
- 	wl1271_free_tx_id(wl, result->id);
++	/*
++	 * If the work is currently running, it must be blocked on
++	 * the mutex, but we'll set scan_sdata = NULL and it'll
++	 * simply exit once it acquires the mutex.
++	 */
++	cancel_delayed_work(&local->scan_work);
++	/* and clean up */
++	__ieee80211_scan_completed(&local->hw, true, false);
++out:
+ 	mutex_unlock(&local->mtx);
  }
  
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 06785db..8d6d039 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -445,6 +445,7 @@ struct wl1271 {
- 	struct sk_buff_head deferred_tx_queue;
- 
- 	struct work_struct tx_work;
-+	struct workqueue_struct *freezable_wq;
- 
- 	/* Pending TX frames */
- 	unsigned long tx_frames_map[BITS_TO_LONGS(ACX_TX_DESCRIPTORS)];
 -- 
 1.7.0.4
 
