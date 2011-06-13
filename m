@@ -1,46 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37635 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757849Ab1FINXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 09:23:37 -0400
-To: Dan Carpenter <error27@gmail.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/5] ath6kl: fix crash when interface is closed but scan is ongoing
-References: <20110608114240.32208.31805.stgit@localhost6.localdomain6>
-	<20110608115501.32208.82264.stgit@localhost6.localdomain6>
-	<20110608200332.GC4069@shale.localdomain>
-	<20110608201458.GD4069@shale.localdomain>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 09 Jun 2011 16:23:36 +0300
-In-Reply-To: <20110608201458.GD4069@shale.localdomain> (Dan Carpenter's message of "Wed\, 8 Jun 2011 23\:14\:58 +0300")
-Message-ID: <87sjrj6svb.fsf@purkki.adurom.net> (sfid-20110609_152347_576090_401D2A3E)
+Received: from blu0-omc1-s4.blu0.hotmail.com ([65.55.116.15]:7640 "EHLO
+	blu0-omc1-s4.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753472Ab1FMSJy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 14:09:54 -0400
+Message-ID: <BLU158-w58841DE4774E18813C30CA87690@phx.gbl> (sfid-20110613_201015_818635_6A07F681)
+From: Fred Matthews <fredmm@hotmail.co.uk>
+To: <ionic@ionic.de>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: AR9380 current driver supported features
+Date: Mon, 13 Jun 2011 19:09:53 +0100
+In-Reply-To: <BLU158-w3633DDF37956A9F5672C1F87690@phx.gbl>
+References: <BLU158-w3633DDF37956A9F5672C1F87690@phx.gbl>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <error27@gmail.com> writes:
 
-> On Wed, Jun 08, 2011 at 11:03:32PM +0300, Dan Carpenter wrote:
->> On Wed, Jun 08, 2011 at 02:55:01PM +0300, Kalle Valo wrote:
->> > -        /* Translate data to cfg80211 mgmt format */
->> > -	if (ar->arWmi)
->>             ^^^^^^^^^
->> 	You removed this check on purpose?  Is this only NULL when
->> 	the scan is canceled?
->
-> Grr...  That's the check that was just added in [PATCH 4/4] of this
-> exact same series!  Seriously?  Why are we submitting known wrong
-> patches???
-
-I only combined the pending ath6kl patches, I did not edit them.
-Vasanth sent patch 4 few days earlier and that's why you see the
-change here. But if greg wants, I can drop patch 4 and resend the
-series.
-
-But now that you mention this, I realise that my sob line is missing
-from patch 4 as well.
-
--- 
-Kalle Valo
+Hi,I am looking to upgrade my current nodes and AP from the AR9280 2x2 MIMO NIC to the AR9380 3x3 NIC.
+Thus I was wondering if someone can kindly comment on the current chipset stability with ath9k, also the current supported features (e.g.  "iw list" output) such as setting the NIC as an AP/Master using hostapd, Greenfield mode, TxBF, CSI info, and LPDC as well as rates achieved.
+Thanks in advance 		 	   		  
