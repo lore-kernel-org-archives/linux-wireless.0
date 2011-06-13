@@ -1,120 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4452 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755554Ab1F2Xsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:38 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51926 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754191Ab1FMIyP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2011 04:54:15 -0400
+Subject: [PATCH 1/2] ath6kl: fix crash when interface is closed but scan is
+	ongoing
 To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 001/119] staging: brcm80211: fix checkpatch errors in
- types.h
-Date: Wed, 29 Jun 2011 16:46:25 -0700
-Message-ID: <1309391303-22741-2-git-send-email-frankyl@broadcom.com> (sfid-20110630_014852_227149_247F4F1C)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Mon, 13 Jun 2011 11:54:06 +0300
+Message-ID: <20110613085406.15065.74931.stgit@localhost6.localdomain6> (sfid-20110613_105418_724883_B2284E40)
+In-Reply-To: <20110613085118.15065.16173.stgit@localhost6.localdomain6>
+References: <20110613085118.15065.16173.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+When ath6kl module was resumed while a scan was ongoing, for example during
+suspend, the driver would crash in ar6k_cfg80211_scanComplete_event():
 
-The file types.h contains several occurrences of the checkpatch
-error "(foo*)" should be "(foo *)". This has been fixed in this
-patch.
+[26581.586440] Call Trace:
+[26581.586440]  [<f99ffeda>] ? ar6k_cfg80211_scanComplete_event+0xaa/0xaa [ath6kl]
+[26581.586440]  [<f9a0a020>] wmi_iterate_nodes+0xb/0xd [ath6kl]
+[26581.586440]  [<f99ffe78>] ar6k_cfg80211_scanComplete_event+0x48/0xaa [ath6kl]
+[26581.586440]  [<f9a038ae>] ar6000_close+0x77/0x7e [ath6kl]
+[26581.586440]  [<c139c25d>] __dev_close_many+0x87/0xab
+[26581.586440]  [<c139c30a>] dev_close_many+0x54/0xab
+[26581.586440]  [<c139c437>] rollback_registered_many+0xa5/0x19e
+[26581.586440]  [<c139c595>] rollback_registered+0x23/0x2f
+[26581.586440]  [<c139c5ed>] unregister_netdevice_queue+0x4c/0x69
+[26581.586440]  [<c139c6b2>] unregister_netdev+0x18/0x1f
+[26581.586440]  [<f9a00d4c>] ar6000_destroy+0xf8/0x115 [ath6kl]
+[26581.586440]  [<f9a0c765>] ar6k_cleanup_module+0x20/0x29 [ath6kl]
+[26581.586440]  [<c1062843>] sys_delete_module+0x181/0x1d9
+[26581.586440]  [<c105876b>] ? lock_release_holdtime+0x2b/0xcd
+[26581.586440]  [<c10b55dc>] ? sys_munmap+0x3b/0x42
+[26581.586440]  [<c14a99dc>] ? restore_all+0xf/0xf
+[26581.586440]  [<c14aeb6c>] sysenter_do_call+0x12/0x32
+[26581.586440] Code: 89 53 6c 75 07 89 d8 e8 c0 ff ff ff 89 f0 e8 2c f2 a9 c7 5b 5e 5d c3 55 89 e5 57 56 53 89 c3 83 ec 08 89 55 f0 8d 78 04 89 4d ec <8b> b0 b8 00 00 00 46 89 b0 b8 00 00 00 89 f8 e8 ae ed a9 c7 8b
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Fix the function not to iterate nodes when the scan is aborted. The nodes
+are already freed when the module is being unloaded. Patch "ath6kl: Fix a
+kernel panic furing suspend/resume" tried to fix this already but it wasn't
+enough as a pointer was still used even after the null check. This patch
+removes the null check entirely as the wmi structure is not accessed anymore
+during module unload.
+
+Also fix a bug where the status was checked as a bitfield with '&' operator.
+But it's not a bitfield, just a regular (enum like) value.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/types.h |   30 ++++++++++++++--------------
- 1 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/staging/ath6kl/os/linux/cfg80211.c |   31 ++++++++++++++++------------
+ 1 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index 163973d..af1514e 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -257,9 +257,9 @@ do {						\
- #define R_REG(r) \
- 	({\
- 		sizeof(*(r)) == sizeof(u8) ? \
--		readb((volatile u8*)(r)) : \
--		sizeof(*(r)) == sizeof(u16) ? readw((volatile u16*)(r)) : \
--		readl((volatile u32*)(r)); \
-+		readb((u8 *)(r)) : \
-+		sizeof(*(r)) == sizeof(u16) ? readw((u16 *)(r)) : \
-+		readl((u32 *)(r)); \
- 	})
- #else				/* __mips__ */
- #define R_REG(r) \
-@@ -268,14 +268,14 @@ do {						\
- 		__asm__ __volatile__("sync"); \
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
--			__osl_v = readb((volatile u8*)(r)); \
-+			__osl_v = readb((u8 *)(r)); \
- 			break; \
- 		case sizeof(u16): \
--			__osl_v = readw((volatile u16*)(r)); \
-+			__osl_v = readw((u16 *)(r)); \
- 			break; \
- 		case sizeof(u32): \
- 			__osl_v = \
--			readl((volatile u32*)(r)); \
-+			readl((u32 *)(r)); \
- 			break; \
- 		} \
- 		__asm__ __volatile__("sync"); \
-@@ -286,11 +286,11 @@ do {						\
- #define W_REG(r, v) do { \
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
--			writeb((u8)(v), (volatile u8*)(r)); break; \
-+			writeb((u8)(v), (u8 *)(r)); break; \
- 		case sizeof(u16): \
--			writew((u16)(v), (volatile u16*)(r)); break; \
-+			writew((u16)(v), (u16 *)(r)); break; \
- 		case sizeof(u32): \
--			writel((u32)(v), (volatile u32*)(r)); break; \
-+			writel((u32)(v), (u32 *)(r)); break; \
- 		}; \
- 	} while (0)
- #else				/* __BIG_ENDIAN */
-@@ -300,14 +300,14 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
- 			__osl_v = \
--			readb((volatile u8*)((r)^3)); \
-+			readb((u8 *)((r)^3)); \
- 			break; \
- 		case sizeof(u16): \
- 			__osl_v = \
--			readw((volatile u16*)((r)^2)); \
-+			readw((u16 *)((r)^2)); \
- 			break; \
- 		case sizeof(u32): \
--			__osl_v = readl((volatile u32*)(r)); \
-+			__osl_v = readl((u32 *)(r)); \
- 			break; \
- 		} \
- 		__osl_v; \
-@@ -317,13 +317,13 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8):	\
- 			writeb((u8)(v), \
--			(volatile u8*)((r)^3)); break; \
-+			(u8 *)((r)^3)); break; \
- 		case sizeof(u16):	\
- 			writew((u16)(v), \
--			(volatile u16*)((r)^2)); break; \
-+			(u16 *)((r)^2)); break; \
- 		case sizeof(u32):	\
- 			writel((u32)(v), \
--			(volatile u32*)(r)); break; \
-+			(u32 *)(r)); break; \
- 		} \
- 	} while (0)
- #endif				/* __BIG_ENDIAN */
--- 
-1.7.1
-
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index d3a774d..32e3197 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -867,26 +867,31 @@ ar6k_cfg80211_scanComplete_event(struct ar6_softc *ar, int status)
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: status %d\n", __func__, status));
+ 
+-    if(ar->scan_request)
+-    {
+-        /* Translate data to cfg80211 mgmt format */
+-	if (ar->arWmi)
+-		wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
++    if (!ar->scan_request)
++	    return;
++
++    if ((status == A_ECANCELED) || (status == A_EBUSY)) {
++	    cfg80211_scan_done(ar->scan_request, true);
++	    goto out;
++    }
++
++    /* Translate data to cfg80211 mgmt format */
++    wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
+ 
+-        cfg80211_scan_done(ar->scan_request,
+-            ((status & A_ECANCELED) || (status & A_EBUSY)) ? true : false);
++    cfg80211_scan_done(ar->scan_request, false);
+ 
+-        if(ar->scan_request->n_ssids &&
+-           ar->scan_request->ssids[0].ssid_len) {
++    if(ar->scan_request->n_ssids &&
++       ar->scan_request->ssids[0].ssid_len) {
+             u8 i;
+ 
+             for (i = 0; i < ar->scan_request->n_ssids; i++) {
+-                wmi_probedSsid_cmd(ar->arWmi, i+1, DISABLE_SSID_FLAG,
+-                                   0, NULL);
++		    wmi_probedSsid_cmd(ar->arWmi, i+1, DISABLE_SSID_FLAG,
++				       0, NULL);
+             }
+-        }
+-        ar->scan_request = NULL;
+     }
++
++out:
++    ar->scan_request = NULL;
+ }
+ 
+ static int
 
