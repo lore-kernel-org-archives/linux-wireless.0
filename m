@@ -1,24 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s10.blu0.hotmail.com ([65.55.111.85]:17968 "EHLO
-	blu0-omc2-s10.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757401Ab1F0JYU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 05:24:20 -0400
-Message-ID: <blu158-w716EEAA2F0043B4BEAFB387570@phx.gbl> (sfid-20110627_113635_134075_7BF9BC2C)
-From: Fred Matthews <fredmm@hotmail.co.uk>
-To: <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless release for 2011-06-26 is baked
-Date: Mon, 27 Jun 2011 10:24:19 +0100
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42040 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab1FNFjw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2011 01:39:52 -0400
 MIME-Version: 1.0
+In-Reply-To: <1308029532.26699.68.camel@Joe-Laptop>
+References: <cover.1308024069.git.joe@perches.com> <337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
+ <BANLkTi=i30Rn7gpCDbn9KKJucq8CB=hssA@mail.gmail.com> <1308029532.26699.68.camel@Joe-Laptop>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 14 Jun 2011 15:39:32 +1000
+Message-ID: <BANLkTik4fWbCc8pRZfKCzvKD2f6sK9QCEw@mail.gmail.com> (sfid-20110614_074011_027342_C9537B71)
+Subject: Re: [PATCH net-next 1/2] wireless: Remove casts of void *
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe,
 
-Hi all,
-I have had compiler errors when making compat-2011-06-23 - compat-2011-06-26. 
-  CC [M]  /home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c: In function ‘nl80211_send_bss’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3641: error: implicit declaration of function ‘genl_dump_check_consistent’/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c: In function ‘nl80211_dump_scan’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3731: error: ‘struct netlink_callback’ has no member named ‘seq’make[3]: *** [/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o] Error 1make[2]: *** [/home/wimo/new/compat-wireless-2011-06-26/net/wireless] Error 2make[1]: *** [_module_/home/wimo/new/compat-wireless-2011-06-26] Error 2make[1]: Leaving directory `/usr/src/linux-headers-2.6.32-25-generic'make: *** [modules] Error 2
-There appears to be a problem with nl80211.c as you see in the error messages. However when I copied compat-2011-06-22 version's nl80211.c and nl80211.h to compat-2011-06-26 (replacing its original), it compiled and worked just fine.
-Thanks!
-On Sun, Jun 26, 2011 at 8:02 PM, Compat-wireless cronjob account <compat@orbit-lab.org> wrote:>> compat-wireless code metrics>>    823408 - Total upstream lines of code being pulled>      2385 - backport code changes>      2078 - backport code additions>       307 - backport code deletions>      8123 - backport from compat module>     10508 - total backport code>    1.2762 - % of code consists of backport work> --> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in> the body of a message to majordomo@vger.kernel.org> More majordomo info at  http://vger.kernel.org/majordomo-info.html>
- 		 	   		  
+On Tue, Jun 14, 2011 at 15:32, Joe Perches <joe@perches.com> wrote:
+> On Tue, 2011-06-14 at 15:23 +1000, Julian Calaby wrote:
+>> Joe,
+>
+> Hi Julian.
+>
+>> On Tue, Jun 14, 2011 at 14:02, Joe Perches <joe@perches.com> wrote:
+>> > Unnecessary casts of void * clutter the code.
+>> > These are the remainder casts after several specific
+>> > patches to remove netdev_priv and dev_priv.
+>> You seem to have removed a lot of casts that don't relate to these cleanups.
+>> In particular, some of the casts seem to relate more to documentation
+>> rather than just changing pointer types to make the compiler happy.
+>
+> All of the cast removals are casts of void* types.
+> I think none of of the casts are useful.
+> None of them are required, all are duplicative.
+
+My issue here is that you mention in the commit log that this relates
+to the removal of netdev_priv and dev_priv, but the casts removed
+(mostly) don't.
+
+>> In
+>> particular, I'm referring to the casts describing the different usages
+>> of data_buf in mwiflex, and around some pointer math in ath9k.
+>
+> Can you describe more in detail why you think these are documentary?
+>
+> This sort of cast:
+>
+> diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+> @@ -191,7 +191,7 @@ int mwifiex_ret_11n_cfg(struct host_cmd_ds_command *resp, void *data_buf)
+>        struct host_cmd_ds_11n_cfg *htcfg = &resp->params.htcfg;
+>
+>        if (data_buf) {
+> -               tx_cfg = (struct mwifiex_ds_11n_tx_cfg *) data_buf;
+> +               tx_cfg = data_buf;
+>
+> I think pretty useless.  tx_cfg is a struct mwifiex_ds_11n_tx_cfg *.
+
+True, but IMHO, this documents, particularly in a random snippet like
+this, what's going on. Arguably though, a better fix would be to move
+the cast to the place where this function is called.
+
+>> Whilst I'm sure that the compiler is smart enough to handle automatic
+>> casts between pointer types, some of these, in particular the mwiflex
+>> bits, add some documentation to the code.
+>
+> I think not.  Opinions of course can vary.
+
+Of course. I rarely look at full files, so the more information that
+can be stuffed into a patch, the better for me. That said, I agree
+that all the casts removed are superfluous.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
