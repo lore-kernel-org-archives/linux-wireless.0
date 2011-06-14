@@ -1,107 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33088 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756751Ab1FIWEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 09/11] compat-wireless: update enable-older-kernels patches
-Date: Fri, 10 Jun 2011 00:03:40 +0200
-Message-Id: <1307657022-23808-10-git-send-email-hauke@hauke-m.de> (sfid-20110610_000437_665644_6578DAF8)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:4175 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751768Ab1FNRwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2011 13:52:33 -0400
+Date: Tue, 14 Jun 2011 10:52:20 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Jonas Gorski" <jonas.gorski@gmail.com>, gregkh@suse.de
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 12/21] staging: brcm80211: use __BIG_ENDIAN macro in
+ dma.c
+Message-ID: <20110614175220.GF9280@broadcom.com> (sfid-20110614_195236_722982_AAC4C2A3)
+References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+ <1307630701-9170-13-git-send-email-rvossen@broadcom.com>
+ <BANLkTi=GGsW4eja0QunMAc5vqqFkmvNxNA@mail.gmail.com>
+ <4DF1E973.1030709@broadcom.com>
+ <BANLkTi=2d+5UjAnQVatapObA_GuHXzpG3A@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <BANLkTi=2d+5UjAnQVatapObA_GuHXzpG3A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add to compat-3.0-stable
+On Fri, Jun 10, 2011 at 04:17:04AM -0700, Jonas Gorski wrote:
+> Hi Arend,
+> 
+> On 10 June 2011 11:52, Arend van Spriel <arend@broadcom.com> wrote:
+> > Hi Jonas,
+> >
+> > You are right as with previous mips related patches. Consider this a first
+> > step which does not change functionality but aims to use the proper linux
+> > provided macros instead of our own incarnations.
+> 
+> Actually as far as I can tell this changes (non-)functionality: With
+> the broken big endiness check the driver probably just doesn't work
+> properly on MIPS BE systems, because some endianess conversion is
+> missing*. With the endianess check fixed, the special handling for the
+> Broadcom MIPS get's enabled, potentially crashing the system (or
+> changing random registers), thus making it *more* broken for non BMIPS
+> systems. Therefore I'd rather consider this a regression. Especially
+> since (AFAIK) the BMIPS systems that can take advantage of this aren't
+> supported in Linux (yet).
+> 
+> If it were just making things less efficient, I wouldn't be
+> complaining (at least not that much ;-). If you can say that this is a
+> code path that isn't taken anyway, then my point is moot (for now). I
+> don't know the driver enough to tell that.
+> 
+> Jonas
+> 
+> *assuming brcm80211 depends on this on BE systems and it isn't just an
+> optimization
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- enable-older-kernels/enable-2.6.21.patch |   12 ++++++------
- enable-older-kernels/enable-2.6.22.patch |   12 ++++++------
- enable-older-kernels/enable-2.6.23.patch |   12 ++++++------
- 3 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/enable-older-kernels/enable-2.6.21.patch b/enable-older-kernels/enable-2.6.21.patch
-index 2c16809..44a1bb2 100644
---- a/enable-older-kernels/enable-2.6.21.patch
-+++ b/enable-older-kernels/enable-2.6.21.patch
-@@ -1,15 +1,15 @@
- --- a/config.mk
- +++ b/config.mk
--@@ -25,9 +25,9 @@
-+@@ -33,9 +33,9 @@ endif
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-+ $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_24
-+-ifdef CONFIG_COMPAT_KERNEL_2_6_24
- -$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
---endif #CONFIG_COMPAT_KERNEL_24
--+ifdef CONFIG_COMPAT_KERNEL_21
-+-endif #CONFIG_COMPAT_KERNEL_2_6_24
-++ifdef CONFIG_COMPAT_KERNEL_2_6_21
- +$(error "ERROR: compat-wireless by default supports kernels >= 2.6.21, try enabling only one driver though")
--+endif #CONFIG_COMPAT_KERNEL_21
-++endif #CONFIG_COMPAT_KERNEL_2_6_21
-  
-  ifeq ($(CONFIG_CFG80211),y)
-  $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
-diff --git a/enable-older-kernels/enable-2.6.22.patch b/enable-older-kernels/enable-2.6.22.patch
-index 92150e9..1273824 100644
---- a/enable-older-kernels/enable-2.6.22.patch
-+++ b/enable-older-kernels/enable-2.6.22.patch
-@@ -1,15 +1,15 @@
- --- a/config.mk
- +++ b/config.mk
--@@ -25,9 +25,9 @@
-+@@ -33,9 +33,9 @@ endif
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-+ $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_24
-+-ifdef CONFIG_COMPAT_KERNEL_2_6_24
- -$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
---endif #CONFIG_COMPAT_KERNEL_24
--+ifdef CONFIG_COMPAT_KERNEL_22
-+-endif #CONFIG_COMPAT_KERNEL_2_6_24
-++ifdef CONFIG_COMPAT_KERNEL_2_6_22
- +$(error "ERROR: compat-wireless by default supports kernels >= 2.6.22, try enabling only one driver though")
--+endif #CONFIG_COMPAT_KERNEL_22
-++endif #CONFIG_COMPAT_KERNEL_2_6_22
-  
-  ifeq ($(CONFIG_CFG80211),y)
-  $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
-diff --git a/enable-older-kernels/enable-2.6.23.patch b/enable-older-kernels/enable-2.6.23.patch
-index 6266c17..7a95842 100644
---- a/enable-older-kernels/enable-2.6.23.patch
-+++ b/enable-older-kernels/enable-2.6.23.patch
-@@ -1,15 +1,15 @@
- --- a/config.mk
- +++ b/config.mk
--@@ -25,9 +25,9 @@
-+@@ -33,9 +33,9 @@ endif
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-+ $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_24
-+-ifdef CONFIG_COMPAT_KERNEL_2_6_24
- -$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
---endif #CONFIG_COMPAT_KERNEL_24
--+ifdef CONFIG_COMPAT_KERNEL_23
-+-endif #CONFIG_COMPAT_KERNEL_2_6_24
-++ifdef CONFIG_COMPAT_KERNEL_2_6_23
- +$(error "ERROR: compat-wireless by default supports kernels >= 2.6.23, try enabling only one driver though")
--+endif #CONFIG_COMPAT_KERNEL_23
-++endif #CONFIG_COMPAT_KERNEL_2_6_23
-  
-  ifeq ($(CONFIG_CFG80211),y)
-  $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
--- 
-1.7.4.1
+Greg,
+
+Can you drop this patch and take the rest in the series?  The other patches
+don't depend on this one.
+
+Thanks,
+
+- Henry
+
 
