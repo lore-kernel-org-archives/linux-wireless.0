@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20429 "EHLO mail.atheros.com"
+Received: from mail.perches.com ([173.55.12.10]:2969 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753840Ab1FOMzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 08:55:39 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 05:55:04 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	<susinder@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Add debug messages to track PAPRD failures
-Date: Wed, 15 Jun 2011 18:25:31 +0530
-Message-ID: <1308142531-21062-1-git-send-email-mshajakhan@atheros.com> (sfid-20110615_145542_732990_CF15EE6F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753163Ab1FNHTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2011 03:19:24 -0400
+Subject: Re: [PATCH net-next 1/2] wireless: Remove casts of void *
+From: Joe Perches <joe@perches.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: netdev@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <BANLkTik4fWbCc8pRZfKCzvKD2f6sK9QCEw@mail.gmail.com>
+References: <cover.1308024069.git.joe@perches.com>
+	 <337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
+	 <BANLkTi=i30Rn7gpCDbn9KKJucq8CB=hssA@mail.gmail.com>
+	 <1308029532.26699.68.camel@Joe-Laptop>
+	 <BANLkTik4fWbCc8pRZfKCzvKD2f6sK9QCEw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Jun 2011 00:19:21 -0700
+Message-ID: <1308035961.32499.3.camel@Joe-Laptop> (sfid-20110614_091945_612513_1D7D1BD2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Tue, 2011-06-14 at 15:39 +1000, Julian Calaby wrote:
+> My issue here is that you mention in the commit log that this relates
+> to the removal of netdev_priv and dev_priv, but the casts removed
+> (mostly) don't.
 
-Add few debug messages for some of the possible scenarios
-where we can detect PAPRD failures. this will help us to be
-sure that we had really enabled PAPRD
+Sorry if that was unclear to you.
 
-Cc: susinder@qca.qualcomm.com
-Cc: senthilb@qca.qualcomm.com
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   15 +++++++++++----
- 1 files changed, 11 insertions(+), 4 deletions(-)
+None of these patches remove casts of netdev_priv.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7f94533..e0e0e86 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -360,7 +360,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
- 	txctl.paprd = BIT(chain);
- 
- 	if (ath_tx_start(hw, skb, &txctl) != 0) {
--		ath_dbg(common, ATH_DBG_XMIT, "PAPRD TX failed\n");
-+		ath_dbg(common, ATH_DBG_CALIBRATE, "PAPRD TX failed\n");
- 		dev_kfree_skb_any(skb);
- 		return false;
- 	}
-@@ -369,7 +369,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
- 			msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
- 
- 	if (!time_left)
--		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_CALIBRATE,
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
- 			"Timeout waiting for paprd training on TX chain %d\n",
- 			chain);
- 
-@@ -431,11 +431,18 @@ void ath_paprd_calibrate(struct work_struct *work)
- 		if (!ath_paprd_send_frame(sc, skb, chain))
- 			goto fail_paprd;
- 
--		if (!ar9003_paprd_is_done(ah))
-+		if (!ar9003_paprd_is_done(ah)) {
-+			ath_dbg(common, ATH_DBG_CALIBRATE,
-+				"PAPRD not yet done on chain %d\n", chain);
- 			break;
-+		}
- 
--		if (ar9003_paprd_create_curve(ah, caldata, chain) != 0)
-+		if (ar9003_paprd_create_curve(ah, caldata, chain)) {
-+			ath_dbg(common, ATH_DBG_CALIBRATE,
-+				"PAPRD create curve failed on chain %d\n",
-+								   chain);
- 			break;
-+		}
- 
- 		chain_ok = 1;
- 	}
--- 
-1.7.0.4
+What I meant to say was that net and drivers/net have
+had many patches that remove casts of void * like the
+patches that removed casts of netdev_priv.
+
+These patches remove the last casts of void * types
+in net and drivers/net.
+
+cheers, Joe
 
