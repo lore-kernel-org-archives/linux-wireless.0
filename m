@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33168 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756591Ab1FIWFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:05:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/5] compat: add support for kernel 3.0
-Date: Fri, 10 Jun 2011 00:04:43 +0200
-Message-Id: <1307657087-23900-1-git-send-email-hauke@hauke-m.de> (sfid-20110610_000522_190700_6B840504)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53589 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145Ab1FNSir convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2011 14:38:47 -0400
+Received: by iwn34 with SMTP id 34so4884958iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 11:38:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 14 Jun 2011 11:38:25 -0700
+Message-ID: <BANLkTi=bd9KgU7Fc_LYchR9jDKQx=gKv6Q@mail.gmail.com> (sfid-20110614_203850_644656_D5A5F095)
+Subject: Re: [PATCH v2 00/11] compat-wireless: Add support for kernel 3.XX
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel 2.6.40 is now 3.0. The br_port_exists() is function is not in
-3.0 yet, so it should go to compat-3.1.h
+On Thu, Jun 9, 2011 at 3:03 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This patch series mostly add support for kernel 3.XX.
+> Some of these patches are needing patches for compat.git.
+>
+> The patches with "Add to compat-3.0-stable" should also be applied to
+> linux-3.0.0.y.
+>
+> The generation of CONFIG_COMPAT_KERNEL_2_6_XX and
+> CONFIG_COMPAT_KERNEL_3_XX is not clean, this has to be improved later,
+> but it works for now.
+>
+> v2:
+>  * integrate comments from Jonas
+>  * add bcma
+>  * fix some more patches and add missing bluetooth header
+>  * rename CONFIG_COMPAT_KERNEL_26XX to CONFIG_COMPAT_KERNEL_2_6_XX
 
-Add to compat-3.0-stable
----
- include/linux/compat-2.6.h                      |    2 +-
- include/linux/{compat-2.6.40.h => compat-3.1.h} |   12 +++++-------
- 2 files changed, 6 insertions(+), 8 deletions(-)
- rename include/linux/{compat-2.6.40.h => compat-3.1.h} (73%)
+Awesome, thanks so much. I've applied all these and the compat.git
+patches, and also propagated to a stable branch for both compat.git
+and compat-wireless.git the patches you identified as such.
 
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 8e45fc0..893a159 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -32,6 +32,6 @@
- #include <linux/compat-2.6.37.h>
- #include <linux/compat-2.6.38.h>
- #include <linux/compat-2.6.39.h>
--#include <linux/compat-2.6.40.h>
-+#include <linux/compat-3.1.h>
- 
- #endif /* LINUX_26_COMPAT_H */
-diff --git a/include/linux/compat-2.6.40.h b/include/linux/compat-3.1.h
-similarity index 73%
-rename from include/linux/compat-2.6.40.h
-rename to include/linux/compat-3.1.h
-index b3fc8f7..855490e 100644
---- a/include/linux/compat-2.6.40.h
-+++ b/include/linux/compat-3.1.h
-@@ -1,11 +1,9 @@
--#ifndef LINUX_26_40_COMPAT_H
--#define LINUX_26_40_COMPAT_H
-+#ifndef LINUX_3_1_COMPAT_H
-+#define LINUX_3_1_COMPAT_H
- 
- #include <linux/version.h>
- 
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40))
--
--#include <linux/rcupdate.h>
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0))
- 
- /*
-  * This is not part of The 2.6.37 kernel yet but we
-@@ -24,6 +22,6 @@
- #define br_port_exists(dev)	(dev->br_port)
- #endif
- 
--#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40)) */
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)) */
- 
--#endif /* LINUX_26_40_COMPAT_H */
-+#endif /* LINUX_3_1_COMPAT_H */
--- 
-1.7.4.1
-
+  Luis
