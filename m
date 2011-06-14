@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52744 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932187Ab1FJUQ1 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51919 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509Ab1FNTLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 16:16:27 -0400
-Date: Fri, 10 Jun 2011 16:09:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: hedwin <hedwin.koning@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
-Message-ID: <20110610200900.GE2665@tuxdriver.com> (sfid-20110610_221630_688617_B7D095D2)
-References: <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
- <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
- <1296633772.3624.2.camel@jlt3.sipsolutions.net>
- <20110202113052.GA14126@jm.kir.nu>
- <1296646434.5671.1.camel@jlt3.sipsolutions.net>
- <20110202133839.GA14904@jm.kir.nu>
- <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
- <BANLkTi=HZudtUHo1rXZEtoL7r+Lj7TBKPw@mail.gmail.com>
- <BANLkTinPxjBsFQ5n4smD4NwYHikD0kXVNw@mail.gmail.com>
- <BANLkTi=O4CSp7EyQSj0_09AE4O+5WGfvLw@mail.gmail.com>
+	Tue, 14 Jun 2011 15:11:37 -0400
+Received: by iyb14 with SMTP id 14so4930563iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 12:11:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTi=O4CSp7EyQSj0_09AE4O+5WGfvLw@mail.gmail.com>
+In-Reply-To: <1308078449.13553.14.camel@thonov-ubuntu>
+References: <1308078449.13553.14.camel@thonov-ubuntu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 14 Jun 2011 12:11:17 -0700
+Message-ID: <BANLkTikb9NKWEaJ2-C2DYpUpp0Rm9iEkvQ@mail.gmail.com> (sfid-20110614_211140_608680_E91E2813)
+Subject: Re: Bad instructions on linuxwireless.org?
+To: Thomas Novin <thomas@xyz.pp.se>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 10, 2011 at 10:07:09PM +0200, hedwin wrote:
-> If it needs to be part of AOSP then it will be a problem.
-> If not it entirely depends on those maintaining the specific android "distro".
-> Some follow the google policy others don't.
+On Tue, Jun 14, 2011 at 12:07 PM, Thomas Novin <thomas@xyz.pp.se> wrote:
+> Hi all
+>
+> Just updated to a newer compat-wireless on my Ubuntu 11.04 system using
+> instructions on
+> http://linuxwireless.org/en/users/Download#Requirements_for_bleeding_edge.
+>
+> It is often referred to that you should use 'date -I' to get the correct
+> directory. This expands to todays date in format of YYYY-MM-DD or
+> 2011-06-14 for today.
+>
+> However, extracting
+> http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2 gives you a compat-wireless-2011-06-01 directory, not 2011-06-14.
+>
+> I noticed in the archive that it is indeed from today with files dated
+> at least from yesterday.
 
-nl80211 doesn't require libnl -- Google will simply have to implement
-their own replacement.  Their apparentl (L)GPL allergy has already
-led them to do so for the other system components, so why should they
-stop now?
+Try again, a new tarball just baked.
 
-In any case, it is Google's problem to solve.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
