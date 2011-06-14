@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758093Ab1FVVDu (ORCPT
+Received: from mail81.extendcp.co.uk ([79.170.40.81]:39141 "EHLO
+	mail81.extendcp.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017Ab1FNTMy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 17:03:50 -0400
-Subject: Re: [PATCH v2] mac80211: fix rx->key NULL dereference during mic
- failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1308776424-12109-1-git-send-email-arik@wizery.com> (sfid-20110622_230033_916576_AC5E16DC)
-References: <1308776424-12109-1-git-send-email-arik@wizery.com>
-	 (sfid-20110622_230033_916576_AC5E16DC)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Jun 2011 23:03:46 +0200
-Message-ID: <1308776626.29571.31.camel@jlt3.sipsolutions.net> (sfid-20110622_230353_379384_89DACE79)
+	Tue, 14 Jun 2011 15:12:54 -0400
+Date: Tue, 14 Jun 2011 19:47:47 +0100
+From: Tony Houghton <h@realh.co.uk>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	ath9k-devel@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: Re: APSM, AR9285 and bus hangs
+Message-ID: <20110614194747.23c3e01a@toddler> (sfid-20110614_211256_922657_DD76B6C3)
+In-Reply-To: <BANLkTine2HDAwUnd5jJ=mwL25bJo-7zJSg@mail.gmail.com>
+References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
+	<20110613132009.GA7133@redhat.com>
+	<BANLkTi=eKBcV5OjP0qqLe6n9GsiwhYLejg@mail.gmail.com>
+	<20110614100918.GA4450@redhat.com>
+	<BANLkTimZFU_g5Ee4Ajh9MyFmWCvtj-Firw@mail.gmail.com>
+	<BANLkTine2HDAwUnd5jJ=mwL25bJo-7zJSg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-06-23 at 00:00 +0300, Arik Nemtsov wrote:
-> Sometimes when reporting a MIC failure rx->key may be unset. This
-> code path is hit when receiving a packet meant for a multicast
-> address, and decryption is performed in HW.
-> 
-> Fortunately, the failing key_idx is not used for anything up to
-> (and including) usermode, so we allow ourselves to drop it on the
-> way up when a key cannot be retrieved.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+On Tue, 14 Jun 2011 19:47:35 +0800
+Adrian Chadd <adrian@freebsd.org> wrote:
 
-Thanks. Since it fixes a crash, should it be Cc: stable@kernel.org?
+> I don't have any new thoughts, no. I think it's more likely something
+> to do with how the bus is being setup, how APSM is being used, how
+> power saving in general is handled, quirks of that chipset (all the
+> laptops with problems have been a specific AMD chipset, right?)
 
-johannes
-
+No, mine's Intel Atom/NVidia ION LE. According to lspci it has an NVidia
+MCP79 running the PCI Express etc.
