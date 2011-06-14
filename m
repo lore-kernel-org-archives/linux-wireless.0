@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53204 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab1FVPw3 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40309 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947Ab1FNRBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 11:52:29 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1QZPj9-0002lj-Q1
-	for linux-wireless@vger.kernel.org; Wed, 22 Jun 2011 17:52:27 +0200
-Subject: Re: [RFC] mac80211: notify driver about auth/assoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1305292460.3487.36.camel@jlt3.sipsolutions.net> (sfid-20110513_151435_631931_4E03E74D)
-References: <1305292460.3487.36.camel@jlt3.sipsolutions.net>
-	 (sfid-20110513_151435_631931_4E03E74D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Jun 2011 17:52:25 +0200
-Message-ID: <1308757945.29571.17.camel@jlt3.sipsolutions.net> (sfid-20110622_175232_936971_1D57B46F)
-Mime-Version: 1.0
+	Tue, 14 Jun 2011 13:01:11 -0400
+Received: by bwz15 with SMTP id 15so4128153bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 10:01:10 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: ShawnG <swggator4@gmail.com>
+Subject: Re: DWA-160
+Date: Tue, 14 Jun 2011 19:01:46 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BANLkTim0mV230taAmbTm_Rm0wfPBGAznhw@mail.gmail.com> <201106141637.54930.chunkeey@googlemail.com> <BANLkTi==3RDG9_Hu1f1YjyBEnvEXtpj++A@mail.gmail.com>
+In-Reply-To: <BANLkTi==3RDG9_Hu1f1YjyBEnvEXtpj++A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201106141901.47190.chunkeey@googlemail.com> (sfid-20110614_190115_257111_E89026EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 15:14 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In P2P client mode, the GO (AP) to connect to might
-> have periods of time where it is not available due
-> to powersave. To allow the driver to sync with them
-> and send frames to the GO only when it is available
-> add a new callback prepare_auth_assoc (and also the
-> corresponding finish_auth_assoc). They are invoked
-> for each authentication/association as described in
-> the documentation.
+On Tuesday 14 June 2011 16:47:45 ShawnG wrote:
+> I forgot to ask this, does the AR9170 hardware FCS calculation have a bug,
+> because we see garbage packets quite frequently?
 
-Doesn't anybody have comments on this?
+Depends on how you operate the device
+[as client or AP, with 11n-draft or just b/g].
 
-I can't really decide whether I want to change the bss_config flow to
-maybe set the BSSID first and add a preauth flag there or something, or
-use this way. This way certainly has less impact on existing drivers...
+Obviously, if you use HW crypto offload [default] on one interface and
+capture frames on an extra monitor interface on the same device, the
+FCS will always be wrong for protected data frames  because the HW
+has already decrypted the frame, but left the original FCS
+[for the encrypted frame]  in place.
 
-johannes
+Also, you should tell your capture tool not to enable promisc mode
+[most enable it by default], because this also affects the FCS check.
 
+So much for the "duh!" cases.
+
+However, this might not be the whole story, in fact I've seen weird data frames
+as well [with different HW, but no matter]. I don't think the FCS check per se is
+buggy. The hardware seems to receive and verify the frames just fine, but
+somehow the frame's content get corrupted along the way to the driver.
+
+[Note: The reason why I think this is more likely is because the
+hardware also "sends" occasionally garbage frames but with a
+correct FCS!
+
+this was detected by a case we had a while ago:
+mac80211: ignore non-bcast mcast deauth/disassoc frames"]
+
+What I don't know if behavior is caused by a incorrect register value
+somewhere, or by a hardware bug.
+
+However,  if you have a "normal" PC,  you can always set
+nohwcrypt=1. This will fix the issue for good, because the
+garbage data frames will then be dropped by the message
+integerty check.
+
+Regards,
+	Chr
