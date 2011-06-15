@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37900 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758042Ab1FVTzb (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:58819 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab1FOBPD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 15:55:31 -0400
-Received: by vxb39 with SMTP id 39so851479vxb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 12:55:30 -0700 (PDT)
-Date: Wed, 22 Jun 2011 16:55:48 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	sameo@linux.intel.com, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-Message-ID: <20110622195548.GB2583@joana> (sfid-20110622_215534_801920_7C08D2CD)
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
- <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
- <20110621220510.GG2628@joana>
- <1308725771.3883.0.camel@jlt3.sipsolutions.net>
+	Tue, 14 Jun 2011 21:15:03 -0400
+Date: Tue, 14 Jun 2011 22:14:44 -0300
+From: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
+To: Greg KH <greg@kroah.com>
+Cc: stable@linux.kernel.org, donald.h.fry@intel.com,
+	reinette.chatre@intel.com, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, linville@tuxdriver.com, sgruszka@redhat.com,
+	ak@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [stable] Please revert "iwlagn: Support new 5000 microcode."
+ from 2.6.32 and 2.6.33
+Message-ID: <20110615011443.GA13680@herton-IdeaPad-Y430> (sfid-20110615_031542_092779_038CA619)
+References: <20110613181317.GA3385@herton-IdeaPad-Y430>
+ <20110614230344.GA2065@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308725771.3883.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20110614230344.GA2065@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-* Johannes Berg <johannes@sipsolutions.net> [2011-06-22 08:56:11 +0200]:
-
-> On Tue, 2011-06-21 at 19:05 -0300, Gustavo F. Padovan wrote:
-> 
-> > >  static int __init nfc_init(void)
-> > >  {
-> > > +	int rc;
-> > > +
-> > >  	printk(KERN_INFO "NFC Core ver %s\n", VERSION);
-> > >  
-> > > -	return class_register(&nfc_class);
-> > > +	rc = class_register(&nfc_class);
-> > > +	if (rc)
-> > > +		goto err;
+On Tue, Jun 14, 2011 at 04:03:44PM -0700, Greg KH wrote:
+> On Mon, Jun 13, 2011 at 03:13:18PM -0300, Herton Ronaldo Krzesinski wrote:
+> > The patch ("iwlagn: Support new 5000 microcode") shoudn't have been
+> > applied on 2.6.32 and 2.6.33 stable trees, it doesn't support new
+> > firmware file format, thus if the new firmware is on the disk, loading
+> > fails, as reported on:
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/796336
 > > 
-> > Just return rc here and get rid of the label.
+> > Support for the iwlagn new firmware file format was only added beginning
+> > with 2.6.35 (commit "iwlagn: implement loading a new firmware file
+> > type"), so iwlagn works with new firmware only with 2.6.35 or later.
 > 
+> Can I get an ack from the developer of the patch and the people involved
+> with it first?  It was asked to be backported for a reason, so I would
+> at least like to get the people who asked for the backport to have a
+> chance to respond please.
 > 
-> Seriously, please trim your quotes. If you're commenting on a specific
-> piece of code, you can well remove all the code you're not commenting on
-> like I did above.
+> It's only nice, why would you exclude them?
 
-Sorry, I didn't realize that it was so big. Also I usually forget to trim the
-beginning of the patch. Have to get used to that.
+I didn't intend to exclude anyone and I'm just reporting it, it didn't
+came to my mind CC'ing people while sending to stable, and hopefully
+everyone related are CC'ed now.
 
-	Gustavo
+Also note that this revert request is for 2.6.32 and 2.6.33 *only*
+
+And seems the right thing to do for them.
+
+The other stable release where this was applied (2.6.35) looks fine
+but these two are too old to support the new firmware (don't work, need
+extra patches backported which weren't, like the commit I mentioned --
+commit "iwlagn: implement loading a new firmware file type"), as yourself
+can check reading the code/bug report, and what I wrote.
+
+> 
+> greg k-h
+> 
+
+-- 
+[]'s
+Herton
