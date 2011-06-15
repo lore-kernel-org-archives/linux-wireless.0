@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm28.bullet.mail.bf1.yahoo.com ([98.139.212.187]:21871 "HELO
-	nm28.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753701Ab1FXVi2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 17:38:28 -0400
-References: <loom.20110624T123237-71@post.gmane.org> <201106241307.44609.chunkeey@googlemail.com> <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com> <201106241804.49749.chunkeey@googlemail.com>
-Message-ID: <1308951449.24867.YahooMailRC@web161203.mail.bf1.yahoo.com> (sfid-20110624_233832_630417_D9DF4F31)
-Date: Fri, 24 Jun 2011 14:37:29 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: Configuring the multicast data rate with iw/nl80211
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201106241804.49749.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mta31.charter.net ([216.33.127.82]:42155 "EHLO
+	mta31.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382Ab1FOWZi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 18:25:38 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: gregkh@suse.de
+Cc: brudley@broadcom.com, henryp@broadcom.com, dowan@broadcom.com,
+	rvossen@broadcom.com, arend@broadcom.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH] staging: brcm80211: return false if not a broadcom board
+Date: Wed, 15 Jun 2011 17:25:09 -0500
+Message-Id: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110616_002558_034680_D74C495D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------ Original Mail ----
+This code looks wrong to me. I think it meant to return false
+if the board's vendor id isn't Broadcom's.
 
-> From: Christian Lamparter <chunkeey@googlemail.com>
->
-> But there's more, I found it very  difficult to "fine-tune" the multicast
-> setup properly, since there's no  automatic feedback for
-> multicast link quality. 
+Compile tested only.
 
-Just how did you do this "fine-tuning"?
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Regards
-  Joerg
+diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+index 4534926..ee13238 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
+@@ -1943,7 +1943,7 @@ static bool wlc_validboardtype(struct wlc_hw_info *wlc_hw)
+ 	}
+ 
+ 	if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
+-		return goodboard;
++		goodboard = false; 
+ 
+ 	return goodboard;
+ }
+-- 
+1.7.2.5
 
