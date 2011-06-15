@@ -1,78 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:39751 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754804Ab1FFJco (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 05:32:44 -0400
-Date: Mon, 6 Jun 2011 14:53:02 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/4] mwifiex: adding check for enough space before padding
-Message-ID: <20110606092300.GC28199@hertz.marvell.com> (sfid-20110606_113250_823097_050052D5)
-References: <20110606091615.GA28184@hertz.marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:20429 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753840Ab1FOMzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 08:55:39 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 05:55:04 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	<susinder@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Add debug messages to track PAPRD failures
+Date: Wed, 15 Jun 2011 18:25:31 +0530
+Message-ID: <1308142531-21062-1-git-send-email-mshajakhan@atheros.com> (sfid-20110615_145542_732990_CF15EE6F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110606091615.GA28184@hertz.marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All MSDUs, except the last one in an AMSDU, should end up at 4
-bytes boundary. There is need to check if enough skb_tailroom
-space exists before padding the skb.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Also re-arranging code for better readablity.
+Add few debug messages for some of the possible scenarios
+where we can detect PAPRD failures. this will help us to be
+sure that we had really enabled PAPRD
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: susinder@qca.qualcomm.com
+Cc: senthilb@qca.qualcomm.com
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   15 +++++++++++----
+ 1 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index aee3491..25312e4 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -185,16 +185,15 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 	tx_info_aggr->bss_index = tx_info_src->bss_index;
- 	skb_aggr->priority = skb_src->priority;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7f94533..e0e0e86 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -360,7 +360,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
+ 	txctl.paprd = BIT(chain);
  
--	while (skb_src && ((skb_headroom(skb_aggr) + skb_src->len
--					+ LLC_SNAP_LEN)
--				<= adapter->tx_buf_size)) {
-+	do {
-+		/* Check if AMSDU can accommodate this MSDU */
-+		if (skb_tailroom(skb_aggr) < (skb_src->len + LLC_SNAP_LEN))
-+			break;
+ 	if (ath_tx_start(hw, skb, &txctl) != 0) {
+-		ath_dbg(common, ATH_DBG_XMIT, "PAPRD TX failed\n");
++		ath_dbg(common, ATH_DBG_CALIBRATE, "PAPRD TX failed\n");
+ 		dev_kfree_skb_any(skb);
+ 		return false;
+ 	}
+@@ -369,7 +369,7 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
+ 			msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
  
- 		skb_src = skb_dequeue(&pra_list->skb_head);
+ 	if (!time_left)
+-		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_CALIBRATE,
++		ath_dbg(common, ATH_DBG_CALIBRATE,
+ 			"Timeout waiting for paprd training on TX chain %d\n",
+ 			chain);
  
--		if (skb_src) {
--			pra_list->total_pkts_size -= skb_src->len;
--			pra_list->total_pkts--;
--		}
-+		pra_list->total_pkts_size -= skb_src->len;
-+		pra_list->total_pkts--;
+@@ -431,11 +431,18 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 		if (!ath_paprd_send_frame(sc, skb, chain))
+ 			goto fail_paprd;
  
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
- 
-@@ -212,8 +211,15 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 			return -1;
- 		}
- 
-+		if (skb_tailroom(skb_aggr) < pad) {
-+			pad = 0;
-+			break;
+-		if (!ar9003_paprd_is_done(ah))
++		if (!ar9003_paprd_is_done(ah)) {
++			ath_dbg(common, ATH_DBG_CALIBRATE,
++				"PAPRD not yet done on chain %d\n", chain);
+ 			break;
 +		}
-+		skb_put(skb_aggr, pad);
-+
- 		skb_src = skb_peek(&pra_list->skb_head);
--	}
-+
-+	} while (skb_src);
  
- 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, ra_list_flags);
+-		if (ar9003_paprd_create_curve(ah, caldata, chain) != 0)
++		if (ar9003_paprd_create_curve(ah, caldata, chain)) {
++			ath_dbg(common, ATH_DBG_CALIBRATE,
++				"PAPRD create curve failed on chain %d\n",
++								   chain);
+ 			break;
++		}
  
+ 		chain_ok = 1;
+ 	}
 -- 
-1.7.3.5
+1.7.0.4
 
