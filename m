@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37753 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757550Ab1FQRBw (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61062 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753384Ab1FOUsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 13:01:52 -0400
-Date: Fri, 17 Jun 2011 12:45:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	Waldemar.Rymarkiewicz@tieto.com
-Subject: Re: [PATCH 0/6] NFC subsystem
-Message-ID: <20110617164510.GA6820@tuxdriver.com> (sfid-20110617_190155_298688_6B1DFAB0)
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+	Wed, 15 Jun 2011 16:48:09 -0400
+Received: by wya21 with SMTP id 21so603132wya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 13:48:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+In-Reply-To: <BANLkTik2PGhQh9=ZTfm2MXHdKSMVqNPfXg@mail.gmail.com>
+References: <BANLkTik2PGhQh9=ZTfm2MXHdKSMVqNPfXg@mail.gmail.com>
+Date: Wed, 15 Jun 2011 13:48:07 -0700
+Message-ID: <BANLkTi=zAEX_sqKidE6rSKKgORr5MRYmpw@mail.gmail.com> (sfid-20110615_224815_147537_5B9A091E)
+Subject: mwifiex & P2P (aka WiFi Direct)
+From: Liam <pubsub@networkimprov.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 02, 2011 at 06:46:04PM -0300, Lauro Ramos Venancio wrote:
-> This series of patches implements the first part of the Near Field
-> Communication (NFC) subsystem.
+We're integrating a module based on the Marvell SD8787 into an
+embedded Linux device. We need to enable P2P/WFD on this device.
 
-Will you be submitting a new series to account for the comments from
-Johannes and others?
+I see no refs to P2P in the mwifiex README, but there is
+vendor-provided code ('wfd' command) to configure this subsystem.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Is anyone implementing the "socket control interface" P2P primitives,
+or other low-level API to P2P, in mwifiex?
+
+If not, I have the choice of either adding such an API to mwifiex, or
+using vendor-provided driver code which presumably isn't as
+well-vetted as mwifiex. Any guidance?
+
+Liam Breck
+Menlo Park, CA
