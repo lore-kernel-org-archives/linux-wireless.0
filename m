@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65116 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4409 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414Ab1FXU4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 16:56:08 -0400
-Date: Fri, 24 Jun 2011 16:55:57 -0400
-From: Kyle McMartin <kmcmartin@redhat.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [3.0 regression] DMAR faults in iwlagn
-Message-ID: <20110624205557.GH22060@ihatethathostname.lab.bos.redhat.com> (sfid-20110624_225619_025169_47DA29DC)
+	id S1753658Ab1FOT0w convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 15:26:52 -0400
+Message-ID: <4DF9076F.3090304@broadcom.com> (sfid-20110615_212655_657627_F5EC89BF)
+Date: Wed, 15 Jun 2011 21:26:39 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308774416.29571.26.camel@jlt3.sipsolutions.net>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
+References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
+ <4DF8A0EF.5030702@broadcom.com>
+ <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com>
+In-Reply-To: <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing it up to make it apply against 3.0-rc4 kills the warning for me
-as well. Thanks for being so quick to post a fix, Johannes!
+On 06/15/2011 08:29 PM, Rafał Miłecki wrote:
+> W dniu 15 czerwca 2011 14:09 użytkownik Arend van Spriel
+> <arend@broadcom.com>  napisał:
+>> On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
+>>>   static u8 bcma_sprom_crc(const u16 *sprom)
+>>>   {
+>>> -       int word;
+>>> -       u8 crc = 0xFF;
+>>> +       u8 crc;
+>>> +       u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
+>>> +       u8 table[CRC8_TABLE_SIZE];
+>>> +       u16 word;
+>>>
+>>> +       /* u16 to u8 */
+>>>         for (word = 0; word<    SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
+>>> -               crc = bcma_crc8(crc, sprom[word]&    0x00FF);
+>>> -               crc = bcma_crc8(crc, (sprom[word]&    0xFF00)>>    8);
+>>> +               sprom2[word * 2] = sprom[word]&    0x00FF;
+>>> +               sprom2[(word * 2) + 1] = (sprom[word]&    0xFF00)>>    8;
+>>>         }
+>>> -       crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&    0x00FF);
+>>> +       /* 127th byte */
+>>> +       sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
+>>> +                               sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&
+>>>   0x00FF;
+>>> +
+>>> +       /* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
+>>> +       crc8_populate_lsb(table, 0xAB);
+>>> +
+>>> +       /* Calculate */
+>>> +       crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
+>>>         crc ^= 0xFF;
+>>>
+>>>         return crc;
+>> You could do (I think):
+>>
+>> crc8_populate_lsb(table, 0xAB);
+>> for (word = 0; word<    SSB_SPROMSIZE_WORDS_R4; word++) {
+>>         u16 val = cpu_to_le16(sprom[word]);
+>>         crc = crc8(table,&val, sizeof(u16), crc);
+>> }
+> Maybe not a perfect/optimal solution (crc8 focuses on tables, we do
+> double loop instead) but should work. Thanks for the tip.
 
-Tested-by: Kyle McMartin <kyle@redhat.com>
+Agree. In brcm80211 we convert the entire sprom, calculate, and convert 
+it back. Also not perfect I think as it loops over de sprom data twice.
 
----
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 686e176..11da90a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -126,7 +126,7 @@ static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
- }
- 
- static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
--			     struct iwl_tfd *tfd)
-+			     struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
- {
- 	struct pci_dev *dev = priv->pci_dev;
- 	int i;
-@@ -151,7 +151,7 @@ static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
- 	/* Unmap chunks, if any. */
- 	for (i = 1; i < num_tbs; i++)
- 		pci_unmap_single(dev, iwl_tfd_tb_get_addr(tfd, i),
--				iwl_tfd_tb_get_len(tfd, i), PCI_DMA_TODEVICE);
-+				iwl_tfd_tb_get_len(tfd, i), dma_dir);
- }
- 
- /**
-@@ -167,7 +167,8 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 	struct iwl_tfd *tfd_tmp = txq->tfds;
- 	int index = txq->q.read_ptr;
- 
--	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index]);
-+	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
-+		PCI_DMA_TODEVICE);
- 
- 	/* free SKB */
- 	if (txq->txb) {
-@@ -700,10 +701,11 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
- 			continue;
- 		phys_addr = pci_map_single(priv->pci_dev, (void *)cmd->data[i],
--					   cmd->len[i], PCI_DMA_TODEVICE);
-+					   cmd->len[i], PCI_DMA_BIDIRECTIONAL);
- 		if (pci_dma_mapping_error(priv->pci_dev, phys_addr)) {
- 			iwlagn_unmap_tfd(priv, out_meta,
--					 &txq->tfds[q->write_ptr]);
-+					 &txq->tfds[q->write_ptr],
-+					 PCI_DMA_BIDIRECTIONAL);
- 			idx = -ENOMEM;
- 			goto out;
- 		}
-@@ -807,7 +809,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	cmd = txq->cmd[cmd_index];
- 	meta = &txq->meta[cmd_index];
- 
--	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index]);
-+	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], PCI_DMA_BIDIRECTIONAL);
- 
- 	/* Input error checking is done when commands are added to queue. */
- 	if (meta->flags & CMD_WANT_SKB) {
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
