@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51468 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941Ab1FBQbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:31:19 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Ignacy Gawedzki <i@lri.fr>
-Subject: [PATCH 2/4] compat: add device name in register_netdevice(dev)
-Date: Thu,  2 Jun 2011 18:31:02 +0200
-Message-Id: <1307032264-14663-3-git-send-email-hauke@hauke-m.de> (sfid-20110602_183123_202438_6230510B)
-In-Reply-To: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
-References: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
+Received: from c60.cesmail.net ([216.154.195.49]:19447 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751991Ab1FOWBH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 18:01:07 -0400
+Subject: [PATCH 1/2] ath9k: use standard max(), remove A_MAX macro
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Wed, 15 Jun 2011 18:01:05 -0400
+Message-ID: <20110615220105.1755.45521.stgit@mj.roinet.com> (sfid-20110616_000111_508379_26872E85)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_alloc_name() is not called explicitly in the driver code any more,
-but it is done in register_netdevice(). This causes devices getting
-wrong names like "wlan%d". With this patch they get names like wlan0
-again.
-
-Add to compat-3.0-stable
-
-CC: Ignacy Gawedzki <i@lri.fr>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- include/linux/compat-2.6.h |    1 +
- include/linux/compat-3.0.h |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/compat-3.0.h
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
+ drivers/net/wireless/ath/ath9k/rc.c    |    6 +++---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 893a159..e4ca6aa 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -32,6 +32,7 @@
- #include <linux/compat-2.6.37.h>
- #include <linux/compat-2.6.38.h>
- #include <linux/compat-2.6.39.h>
-+#include <linux/compat-3.0.h>
- #include <linux/compat-3.1.h>
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3bf1d83..b9c177f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -54,8 +54,6 @@ struct ath_node;
+ 		(_l) &= ((_sz) - 1);		\
+ 	} while (0)
  
- #endif /* LINUX_26_COMPAT_H */
-diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
-new file mode 100644
-index 0000000..5d05093
---- /dev/null
-+++ b/include/linux/compat-3.0.h
-@@ -0,0 +1,31 @@
-+#ifndef LINUX_3_0_COMPAT_H
-+#define LINUX_3_0_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
-+
-+/*
-+ * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
-+ * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
-+ * called automatically. This is not implemented in older kernel
-+ * versions so it will result in device wrong names.
-+ */
-+static inline int register_netdevice_name(struct net_device *dev)
-+{
-+	int err;
-+
-+	if (strchr(dev->name, '%')) {
-+		err = dev_alloc_name(dev, dev->name);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	return register_netdevice(dev);
-+}
-+
-+#define register_netdevice(dev) register_netdevice_name(dev)
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
-+
-+#endif /* LINUX_3_0_COMPAT_H */
--- 
-1.7.4.1
-
+-#define A_MAX(a, b) ((a) > (b) ? (a) : (b))
+-
+ #define TSF_TO_TU(_h,_l) \
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index ba7f36a..e7fe4d9 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -533,7 +533,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
+ 					[valid_rate_count] = j;
+ 				ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+ 				ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
+-				hi = A_MAX(hi, j);
++				hi = max(hi, j);
+ 			}
+ 		}
+ 	}
+@@ -569,7 +569,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
+ 				[ath_rc_priv->valid_phy_ratecnt[phy]] = j;
+ 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
+ 			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
+-			hi = A_MAX(hi, j);
++			hi = max(hi, j);
+ 		}
+ 	}
+ 
+@@ -1228,7 +1228,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 						       ht_mcs,
+ 						       ath_rc_priv->ht_cap);
+ 		}
+-		hi = A_MAX(hi, hthi);
++		hi = max(hi, hthi);
+ 	}
+ 
+ 	ath_rc_priv->rate_table_size = hi + 1;
