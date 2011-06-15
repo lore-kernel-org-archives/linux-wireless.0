@@ -1,176 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4456 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1349 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757952Ab1F2Xsq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:46 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 064/119] staging: brcm80211: remove BCMLXSDMMC macro
- definition
-Date: Wed, 29 Jun 2011 16:47:28 -0700
-Message-ID: <1309391303-22741-65-git-send-email-frankyl@broadcom.com> (sfid-20110630_015017_067489_C82E2054)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+	id S1750961Ab1FOMJe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 08:09:34 -0400
+Message-ID: <4DF8A0EF.5030702@broadcom.com> (sfid-20110615_140938_247283_C6EB54E7)
+Date: Wed, 15 Jun 2011 14:09:19 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
+References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
+>   static u8 bcma_sprom_crc(const u16 *sprom)
+>   {
+> -	int word;
+> -	u8 crc = 0xFF;
+> +	u8 crc;
+> +	u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
+> +	u8 table[CRC8_TABLE_SIZE];
+> +	u16 word;
+>
+> +	/* u16 to u8 */
+>   	for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
+> -		crc = bcma_crc8(crc, sprom[word]&  0x00FF);
+> -		crc = bcma_crc8(crc, (sprom[word]&  0xFF00)>>  8);
+> +		sprom2[word * 2] = sprom[word]&  0x00FF;
+> +		sprom2[(word * 2) + 1] = (sprom[word]&  0xFF00)>>  8;
+>   	}
+> -	crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF);
+> +	/* 127th byte */
+> +	sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
+> +				sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF;
+> +
+> +	/* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
+> +	crc8_populate_lsb(table, 0xAB);
+> +
+> +	/* Calculate */
+> +	crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
+>   	crc ^= 0xFF;
+>
+>   	return crc;
 
-The conditional code depending on BCMLXSDMMC macro definition is
-always compiled into the fullmac driver.
+You could do (I think):
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/Makefile        |    1 -
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |   39 +-------------------
- .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    2 -
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    9 +----
- 4 files changed, 2 insertions(+), 49 deletions(-)
+crc8_populate_lsb(table, 0xAB);
+for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4; word++) {
+	u16 val = cpu_to_le16(sprom[word]);
+	crc = crc8(table,&val, sizeof(u16), crc);
+}
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
-index 95d3147..f76e62a 100644
---- a/drivers/staging/brcm80211/brcmfmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-@@ -16,7 +16,6 @@
- # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- 
- ccflags-y :=			\
--	-DBCMLXSDMMC		\
- 	-DBCMPLATFORM_BUS	\
- 	-DBCMSDIO		\
- 	-DBRCM_FULLMAC		\
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index a2408ec..5243f33 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -121,7 +121,6 @@ bool brcmf_sdio_chipmatch(u16 vendor, u16 device)
- }
- 
- #if defined(BCMPLATFORM_BUS)
--#if defined(BCMLXSDMMC)
- /* forward declarations */
- int brcmf_sdio_probe(struct device *dev);
- EXPORT_SYMBOL(brcmf_sdio_probe);
-@@ -129,36 +128,15 @@ EXPORT_SYMBOL(brcmf_sdio_probe);
- int brcmf_sdio_remove(struct device *dev);
- EXPORT_SYMBOL(brcmf_sdio_remove);
- 
--#else
--/* forward declarations */
--static int __devinit brcmf_sdio_probe(struct device *dev);
--static int __devexit brcmf_sdio_remove(struct device *dev);
--#endif				/* BCMLXSDMMC */
--
--#ifndef BCMLXSDMMC
--static
--#endif				/* BCMLXSDMMC */
- int brcmf_sdio_probe(struct device *dev)
- {
- 	struct bcmsdh_hc *sdhc = NULL;
- 	unsigned long regs = 0;
- 	struct brcmf_sdio *sdh = NULL;
--#if !defined(BCMLXSDMMC) && defined(BCMPLATFORM_BUS)
--	struct platform_device *pdev;
--	struct resource *r;
--#endif				/* BCMLXSDMMC */
- 	int irq = 0;
- 	u32 vendevid;
- 	unsigned long irq_flags = 0;
- 
--#if !defined(BCMLXSDMMC) && defined(BCMPLATFORM_BUS)
--	pdev = to_platform_device(dev);
--	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	irq = platform_get_irq(pdev, 0);
--	if (!r || irq == NO_IRQ)
--		return -ENXIO;
--#endif				/* BCMLXSDMMC */
--
- #if defined(OOB_INTR_ONLY)
- #ifdef HW_OOB
- 	irq_flags =
-@@ -181,19 +159,12 @@ int brcmf_sdio_probe(struct device *dev)
- 	}
- 	sdhc->dev = (void *)dev;
- 
--#ifdef BCMLXSDMMC
- 	sdh = brcmf_sdcard_attach((void *)0, (void **)&regs, irq);
- 	if (!sdh) {
- 		SDLX_MSG(("%s: bcmsdh_attach failed\n", __func__));
- 		goto err;
- 	}
--#else
--	sdh = brcmf_sdcard_attach((void *)r->start, (void **)&regs, irq);
--	if (!sdh) {
--		SDLX_MSG(("%s: bcmsdh_attach failed\n", __func__));
--		goto err;
--	}
--#endif				/* BCMLXSDMMC */
-+
- 	sdhc->sdh = sdh;
- 	sdhc->oob_irq = irq;
- 	sdhc->oob_flags = irq_flags;
-@@ -229,9 +200,6 @@ err:
- 	return -ENODEV;
- }
- 
--#ifndef BCMLXSDMMC
--static
--#endif				/* BCMLXSDMMC */
- int brcmf_sdio_remove(struct device *dev)
- {
- 	struct bcmsdh_hc *sdhc, *prev;
-@@ -258,11 +226,6 @@ int brcmf_sdio_remove(struct device *dev)
- 
- 	/* release SDIO Host Controller info */
- 	kfree(sdhc);
--
--#if !defined(BCMLXSDMMC)
--	dev_set_drvdata(dev, NULL);
--#endif				/* !defined(BCMLXSDMMC) */
--
- 	return 0;
- }
- #endif				/* BCMPLATFORM_BUS */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
-index a60caea..6fd1072 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
-@@ -38,9 +38,7 @@ int wifi_get_irq_number(unsigned long *irq_flags_ptr);
- 
- #if defined(OOB_INTR_ONLY)
- 
--#if defined(BCMLXSDMMC)
- extern int sdioh_mmc_irq(int irq);
--#endif				/* (BCMLXSDMMC)  */
- 
- #ifdef CUSTOMER_HW3
- #include <mach/gpio.h>
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 2b1762e..afb840a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -923,14 +923,7 @@ static int brcmf_sdbrcm_htclk(dhd_bus_t *bus, bool on, bool pendok)
- 		DHD_INFO(("CLKCTL: turned ON\n"));
- 
- #if defined(DHD_DEBUG)
--		if (bus->alp_only == true) {
--#if !defined(BCMLXSDMMC)
--			if (!SBSDIO_ALPONLY(clkctl)) {
--				DHD_ERROR(("%s: HT Clock, when ALP Only\n",
--					   __func__));
--			}
--#endif				/* !defined(BCMLXSDMMC) */
--		} else {
-+		if (bus->alp_only != true) {
- 			if (SBSDIO_ALPONLY(clkctl)) {
- 				DHD_ERROR(("%s: HT Clock should be on.\n",
- 					   __func__));
+
+Gr. AvS
+
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
 
