@@ -1,33 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:12225 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754869Ab1FEL3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2011 07:29:15 -0400
-Date: Sun, 5 Jun 2011 13:30:19 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH wireless-2.6 v2] rt2x00: fix rmmod crash
-Message-ID: <20110605113019.GA2397@localhost.localdomain> (sfid-20110605_132918_556897_14E460D5)
-References: <20110604144854.GA4865@localhost.localdomain>
- <20110604172940.GA10984@localhost.localdomain>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63124 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505Ab1FOHSG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 03:18:06 -0400
+Received: by wya21 with SMTP id 21so81381wya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 00:18:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110604172940.GA10984@localhost.localdomain>
+In-Reply-To: <6180c38b62596f43ad139fa4a0d6ef24.squirrel@mail.errtech.com>
+References: <580b0ce8e524bbdee36d8d713e32c97a.squirrel@mail.errtech.com>
+	<BANLkTi==q4BFtRVRXOW8fcp+4vbctNzQEg@mail.gmail.com>
+	<BANLkTimcxD-xgKXCJY3YGrWsDm9gDo5=0Q@mail.gmail.com>
+	<6180c38b62596f43ad139fa4a0d6ef24.squirrel@mail.errtech.com>
+Date: Wed, 15 Jun 2011 12:48:04 +0530
+Message-ID: <BANLkTimHjs2EV808kEY9S54FgNYTcOmFEA@mail.gmail.com> (sfid-20110615_091810_614681_78D6CB80)
+Subject: Re: GPL firmware for AR9002 chipsets
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: tmail133@kglug.org
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 04, 2011 at 07:29:40PM +0200, Stanislaw Gruszka wrote:
-> On Sat, Jun 04, 2011 at 04:48:54PM +0200, Stanislaw Gruszka wrote:
-> > Avoid queue and run autowakeup_work when device is not present anymore.
-> 
-> This patch fix a problem with autowakeup_work, but seems there is still
-> possible to use ->workqueue after free. This time with rxdone_work. I
-> have these memory corruptions when removing/loading rt73usb module in a
-> loop. Not observable with my previous patch.
-Nope, I can reproduce this bug with my previous patch, so this one seems
-to be not related with using ->workqueue after free.
+On Wed, Jun 15, 2011 at 12:39 PM, chris <tmail133@kglug.org> wrote:
+>> On Wed, Jun 15, 2011 at 12:35 PM, Mohammed Shafi
+>> <shafi.wireless@gmail.com> wrote:
+>>> On Wed, Jun 15, 2011 at 12:31 PM, chris <tmail133@kglug.org> wrote:
+>>>> I was reading on the mailing list that the AR9002 chipset supposedly
+>>>> has
+>>>> GPL firmware somewhere. Does anybody know where? And is it free
+>>>> software
+>>>> compliant or are they including the bad stuff within the GPL
+>>>> firmware'd.
+>>>
+>>> only for USB based AR9002 devices firmware required
+>>
+>>>>
+>>>> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+>
+> I don't see license or source there. Is there some place I can get that?
 
-Stanislaw
+ the source for the firmware is internally maintained and you can only
+get the updated binary there.
+sorry I am not aware of the license thing.
+
+>
+>>
+>> http://wireless.kernel.org/download/htc_fw/
+>>
+>>>>
+>>>> http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03035.html
+>>>>
+>>>> I have gotten the card to work in Ubuntu. I am working on getting it
+>>>> working in Trisquel (a free software distribution, if there is free
+>>>> firmware for it).
+>>>>
+>>>> Chris
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>> linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>>
+>>>
+>>> --
+>>> shafi
+>>>
+>>
+>>
+>>
+>> --
+>> shafi
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+
+
+
+-- 
+shafi
