@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33160 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756591Ab1FIWFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:05:14 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/5] compat: rename CONFIG_COMPAT_KERNEL_
-Date: Fri, 10 Jun 2011 00:04:45 +0200
-Message-Id: <1307657087-23900-3-git-send-email-hauke@hauke-m.de> (sfid-20110610_000519_843202_425A0A56)
-In-Reply-To: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
-References: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:56635 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab1FOS37 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 14:29:59 -0400
+Received: by pvg12 with SMTP id 12so507680pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 11:29:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4DF8A0EF.5030702@broadcom.com>
+References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
+	<4DF8A0EF.5030702@broadcom.com>
+Date: Wed, 15 Jun 2011 20:29:58 +0200
+Message-ID: <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com> (sfid-20110615_203002_535848_DF37EB3B)
+Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_COMPAT_KERNEL_XX was renamed to CONFIG_COMPAT_KERNEL_2_6_XX in
-compat-wireless to support kernel 3.XX, do the same in compat.
+W dniu 15 czerwca 2011 14:09 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
+>>
+>>  static u8 bcma_sprom_crc(const u16 *sprom)
+>>  {
+>> -       int word;
+>> -       u8 crc = 0xFF;
+>> +       u8 crc;
+>> +       u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
+>> +       u8 table[CRC8_TABLE_SIZE];
+>> +       u16 word;
+>>
+>> +       /* u16 to u8 */
+>>        for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
+>> -               crc = bcma_crc8(crc, sprom[word]&  0x00FF);
+>> -               crc = bcma_crc8(crc, (sprom[word]&  0xFF00)>>  8);
+>> +               sprom2[word * 2] = sprom[word]&  0x00FF;
+>> +               sprom2[(word * 2) + 1] = (sprom[word]&  0xFF00)>>  8;
+>>        }
+>> -       crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF);
+>> +       /* 127th byte */
+>> +       sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
+>> +                               sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&
+>>  0x00FF;
+>> +
+>> +       /* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
+>> +       crc8_populate_lsb(table, 0xAB);
+>> +
+>> +       /* Calculate */
+>> +       crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
+>>        crc ^= 0xFF;
+>>
+>>        return crc;
+>
+> You could do (I think):
+>
+> crc8_populate_lsb(table, 0xAB);
+> for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4; word++) {
+>        u16 val = cpu_to_le16(sprom[word]);
+>        crc = crc8(table,&val, sizeof(u16), crc);
+> }
 
-Add to compat-3.0-stable
----
- compat/Makefile |   38 +++++++++++++++++++-------------------
- 1 files changed, 19 insertions(+), 19 deletions(-)
+Maybe not a perfect/optimal solution (crc8 focuses on tables, we do
+double loop instead) but should work. Thanks for the tip.
 
-diff --git a/compat/Makefile b/compat/Makefile
-index ddfd88d..e2a6add 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -6,31 +6,31 @@ obj-$(CONFIG_COMPAT_FIRMWARE_CLASS) += compat_firmware_class.o
- compat-y += main.o
- 
- # Compat kernel compatibility code
--compat-$(CONFIG_COMPAT_KERNEL_14) += compat-2.6.14.o
--compat-$(CONFIG_COMPAT_KERNEL_18) += compat-2.6.18.o
--compat-$(CONFIG_COMPAT_KERNEL_19) += compat-2.6.19.o
--compat-$(CONFIG_COMPAT_KERNEL_21) += compat-2.6.21.o
--compat-$(CONFIG_COMPAT_KERNEL_22) += compat-2.6.22.o
--compat-$(CONFIG_COMPAT_KERNEL_23) += compat-2.6.23.o
--compat-$(CONFIG_COMPAT_KERNEL_24) += compat-2.6.24.o
--compat-$(CONFIG_COMPAT_KERNEL_25) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_14) += compat-2.6.14.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_18) += compat-2.6.18.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_19) += compat-2.6.19.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_21) += compat-2.6.21.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_22) += compat-2.6.22.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_23) += compat-2.6.23.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_24) += compat-2.6.24.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_25) += \
- 	compat-2.6.25.o \
- 	pm_qos_params.o
- 
--compat-$(CONFIG_COMPAT_KERNEL_26) += compat-2.6.26.o
--compat-$(CONFIG_COMPAT_KERNEL_27) += compat-2.6.27.o
--compat-$(CONFIG_COMPAT_KERNEL_28) += compat-2.6.28.o
--compat-$(CONFIG_COMPAT_KERNEL_29) += compat-2.6.29.o
--compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
--compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
--compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
--compat-$(CONFIG_COMPAT_KERNEL_36) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_26) += compat-2.6.26.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_27) += compat-2.6.27.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_28) += compat-2.6.28.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_29) += compat-2.6.29.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_32) += compat-2.6.32.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_33) += compat-2.6.33.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_35) += compat-2.6.35.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_36) += \
- 	compat-2.6.36.o \
- 	kfifo.o
- 
--compat-$(CONFIG_COMPAT_KERNEL_37) += compat-2.6.37.o
--compat-$(CONFIG_COMPAT_KERNEL_38) += compat-2.6.38.o
--compat-$(CONFIG_COMPAT_KERNEL_39) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_37) += compat-2.6.37.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_38) += compat-2.6.38.o
-+compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- 	compat-2.6.39.o \
- 	kstrtox.o
- 
 -- 
-1.7.4.1
-
+Rafał
