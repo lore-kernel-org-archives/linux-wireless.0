@@ -1,90 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43178 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59156 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753859Ab1FXOM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 10:12:26 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: use pci_dev->revision, again
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <4E046A9F.9020909@mvista.com>
-References: <201106231841.40691.sshtylyov@ru.mvista.com>
-	 <1308841365.13397.274.camel@wwguy-huron>  <4E046A9F.9020909@mvista.com>
+	id S1753508Ab1FOCcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2011 22:32:03 -0400
+Subject: Re: [PATCH][TRIVIAL] if_spi: Fix compilation warning - unused
+ variable
+From: Dan Williams <dcbw@redhat.com>
+To: Nikanth Karthikesan <nikanth@google.com>
+Cc: Jiri Kosina <trivial@kernel.org>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org
+Date: Tue, 14 Jun 2011 21:33:54 -0500
+In-Reply-To: <1308030827.28682.32.camel@nikanth.blr.corp.google.com>
+References: <1307696222.28682.20.camel@nikanth.blr.corp.google.com>
+	 <1307976362.2117.4.camel@dcbw.foobar.com>
+	 <1308030827.28682.32.camel@nikanth.blr.corp.google.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Jun 2011 07:08:35 -0700
-Message-ID: <1308924515.19001.2.camel@wwguy-ubuntu> (sfid-20110624_161232_743197_1F1CD16F)
+Message-ID: <1308105236.6398.5.camel@dcbw.foobar.com> (sfid-20110615_043213_562620_EDBDAF52)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-24 at 03:44 -0700, Sergei Shtylyov wrote:
-> Hello.
+On Tue, 2011-06-14 at 11:23 +0530, Nikanth Karthikesan wrote:
+> if_spi: Fix compilation warning - unused variable 'spi'
 > 
-> On 23-06-2011 19:02, Guy, Wey-Yi wrote:
+> drivers/net/wireless/libertas/if_spi.c: In function ‘if_spi_init_card’:
+> drivers/net/wireless/libertas/if_spi.c:1035: warning: unused variable ‘spi’
 > 
-> >> Commit ff938e43d39e926de74b32a3656c190f979ab642 (net: use pci_dev->revision,
-> >> again) already converted this driver to using the 'revision' field of 'struct
-> >> pci_dev' but commit c2974a1d18832a9fffb2eb389c3878f5c4ed92f1 (iwlagn: remove
-> >> rev_id) later reverted that change for no reason. Now restore the change...
+> The variable is used only in a macro which uses the args only for DEBUG builds.
+> Remove the 'spi' variable completely.
 > 
-> >> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
-> 
-> >> ---
-> >> The patch is against the recent Linus' tree.
-> 
-> >>   drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
-> >>   1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> >> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >> ===================================================================
-> >> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >> @@ -3275,10 +3275,9 @@ struct ieee80211_ops iwlagn_hw_ops = {
-> >>
-> >>   static u32 iwl_hw_detect(struct iwl_priv *priv)
-> >>   {
-> >> -	u8 rev_id;
-> >> +	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n",
-> >> +		       priv->pci_dev->revision);
-> >>
-> >> -	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID,&rev_id);
-> >> -	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
-> >>   	return iwl_read32(priv, CSR_HW_REV);
-> >>   }
-> 
-> > hmm, I believe it is merge sequence issue, the IWL_DEBUG_INFO line has
-> > benn remove all together in later patch. the information is being log in
-> > the calling function, no need to log in "iwl_hw_detect"
-> 
->     Hm, you probably mean this patch in the iwlwifi-2.6.git (of which I wasn't 
-> aware):
-> 
-> author	Emmanuel Grumbach <emmanuel.grumbach@intel.com>	
-> 	Tue, 31 May 2011 06:58:18 +0000 (09:58 +0300)
-> committer	Wey-Yi Guy <wey-yi.w.guy@intel.com>	
-> 	Sat, 18 Jun 2011 15:18:01 +0000 (08:18 -0700)
-> commit	85aed7c48113dfcdc913008481c46346af0db69e
-> tree	75831a2ec540039470c295a81c2059a24a4531f5
-> parent	19707bac16129ccebc398dbff9d2b44b17b24fea
-> 
-> iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
-> 
-> The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> 
->     Since iwl_pci_probe() still reads the PCI config. register, my patch 
-> should be recast to modify iwl-pci.c instead...
-> 
-> > 
-I don't believe this patch is needed since the "log" statement is move
-to outside the function.
+> Signed-off-by: Nikanth Karthikesan <nikanth@google.com>
 
-Thanks
-Wey
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> 
+> ---
+> 
+> Index: linux-2.6/drivers/net/wireless/libertas/if_spi.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/net/wireless/libertas/if_spi.c	2011-06-10 14:16:17.990985032 +0530
+> +++ linux-2.6/drivers/net/wireless/libertas/if_spi.c	2011-06-14 09:33:16.151025614 +0530
+> @@ -1032,7 +1032,6 @@
+>  static int if_spi_init_card(struct if_spi_card *card)
+>  {
+>  	struct lbs_private *priv = card->priv;
+> -	struct spi_device *spi = card->spi;
+>  	int err, i;
+>  	u32 scratch;
+>  	const struct firmware *helper = NULL;
+> @@ -1080,8 +1079,9 @@
+>  				"attached to SPI bus_num %d, chip_select %d. "
+>  				"spi->max_speed_hz=%d\n",
+>  				card->card_id, card->card_rev,
+> -				spi->master->bus_num, spi->chip_select,
+> -				spi->max_speed_hz);
+> +				card->spi->master->bus_num,
+> +				card->spi->chip_select,
+> +				card->spi->max_speed_hz);
+>  		err = if_spi_prog_helper_firmware(card, helper);
+>  		if (err)
+>  			goto out;
+> 
+> 
+> 
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
 
 
