@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44225 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607Ab1FFSqT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 14:46:19 -0400
-Date: Mon, 6 Jun 2011 14:44:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
-Message-ID: <20110606184447.GG2604@tuxdriver.com> (sfid-20110606_204622_563437_023AF7C2)
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
- <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
- <1306823717.9366.3.camel@jlt3.sipsolutions.net>
- <8F3AF1C9F856774F8C8D67AA7EDFEC88012CC51B@nasanexd02b.na.qualcomm.com>
+Received: from c60.cesmail.net ([216.154.195.49]:16202 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755136Ab1FOWYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2011 18:24:23 -0400
+Received: from mj.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by smtprelay1.cesmail.net (Postfix) with ESMTPSA id D61A334C9A
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 18:26:08 -0400 (EDT)
+Message-ID: <4DF93116.700@gnu.org> (sfid-20110616_002427_837613_AD841361)
+Date: Wed, 15 Jun 2011 18:24:22 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8F3AF1C9F856774F8C8D67AA7EDFEC88012CC51B@nasanexd02b.na.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k WDS panic without CONFIG_ATH9K_RATE_CONTROL
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 03, 2011 at 05:00:01AM +0000, Manoharan, Rajkumar wrote:
-> > On Fri, 2011-05-20 at 17:52 +0530, Rajkumar Manoharan wrote:
-> > > Stop tx queues before updating rate control to ensure
-> > > proper rate selection. Otherwise packets can be transmitted
-> > > in 40 Mhz whereas hw is configured in HT20.
-> > 
-> > Looks like I completely missed this since you hid it in an ath9k
-> > patchset. DON'T DO THAT.
-> 
-> Sorry for the delayed response. I was on vacation. 
-> >
-> > Anyway, John, please revert. This is completely useless. Not only is
-> > abusing the CSA stop reason a show-stopper, the whole patch is also just
-> > not right, it seems like a workaround around a rate control algorithm
-> > that isn't able to do an atomic HT change by itself. Also, it won't even
-> > do what you want, there may be packets being processed concurrently
-> > while stopping the queue -- calling stop_queues() is no guarantee that
-> > no packet will be processed afterwards.
-> 
-> During the channel type change, the pending tx frames in hw queues are dropped by hw config.
-> But before updating rate control, the packets can be queued again with older HT rates.
-> This contradicts with hw config mode and sometimes is causing baseband issues. This issue
-> was observed only on flooding uplink traffic. To ensure that the frames are always xmitted with
-> updated rates, the queues are stopped before hw config and waken up after rc updation.
+Hello!
 
-Johannes, do you find this explanation satisfactory (perhaps with
-some new queue stop reason definition)?
+I'm trying to implement WDS support in ath5k, but I have found that the 
+kernel would panic when I bring the interface up:
 
-John
+modprobe ath5k
+iwconfig wlan0 mode repeater
+iw dev wlan0 set peer 00:01:02:03:04:05
+ifconfig wlan0 up
+
+There are many stack traces, but the first one comes from WARN_ON in 
+rate_lowest_index().  I think it should really be BUG_ON (patch 
+submitted separately), as returning an invalid index will surely lead to 
+memory corruption.
+
+I tried WDS with ath9k and found that it doesn't crash the kernel if 
+CONFIG_ATH9K_RATE_CONTROL is set.  However, if that setting is off in 
+.config, I would get the same crash.
+
+It appears that rate_control_rate_init() is called in 
+ieee80211_do_open() too early.  I think there should be some set on the 
+rates assumed to be available on the WDS link for the given channel.
+
+Alternatively, the WDS interface should not be able to emit packets 
+until either the rates are set manually with iw or they come from a 
+beacon send by the peer.  The rate control algorithms should be able to 
+deal with it.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
