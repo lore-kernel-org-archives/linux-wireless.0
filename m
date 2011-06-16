@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:42495 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757484Ab1FVBKZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 21:10:25 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Joe Perches <joe@perches.com>
-Date: Tue, 21 Jun 2011 18:09:38 -0700
-Subject: RE: [PATCH] mwifiex: remove casts of void pointers
-Message-ID: <477F20668A386D41ADCC57781B1F704307FF88DF06@SC-VEXCH1.marvell.com> (sfid-20110622_031030_160356_71FC28D8)
-References: <1308352468-8926-1-git-send-email-bzhao@marvell.com>
- <BANLkTi=3cQkhEOkSb08A=8VLrqzkwXJEhw@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from c60.cesmail.net ([216.154.195.49]:27838 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030184Ab1FPWGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2011 18:06:11 -0400
+Message-ID: <4DFA7E52.5040200@gnu.org> (sfid-20110617_000616_643735_62961353)
+Date: Thu, 16 Jun 2011 18:06:10 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if rate_lowest_index()
+ fails
+References: <20110615220252.1918.73638.stgit@mj.roinet.com> <4DF9C7F0.9090308@broadcom.com>
+In-Reply-To: <4DF9C7F0.9090308@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+On 06/16/2011 05:08 AM, Arend van Spriel wrote:
+> On 06/16/2011 12:02 AM, Pavel Roskin wrote:
 
-> Also, there are a number of functions touched by this patch that
-> return a value through the former *data_buf parameter. Is it possible
-> to refactor them to return the value directly? This would make the
-> function flow a lot cleaner and easier to follow.
+>> - WARN_ON(1);
+>> + /* If we cannot find any rate, we are in trouble. */
+>> + BUG_ON(1);
+>>
+>> - return 0;
+>> + return -EINVAL;
+>> }
+>
+> I would expect some description what the caller should do when -EINVAL
+> is returned. Could even argue whether you want a BUG_ON or allow the
+> caller (driver) to reset the hardware, reassociate, etc. upon -EINVAL. I
+> am not sure under which circumstances this could happen so there may
+> really be no way out.
 
-We have separate parser routines to handle command responses of the commands. In case of GET command we parse the information from response buffer and fill data_buff accordingly. In the patch we submitted, some of the data_buf have been changed to corresponding structure specific to that command.
+I'm proposing a simple change that replaces memory corruption and 
+unpredictable behavior with a predictable stop.  If sysrq is enabled, 
+the system can even be restarted by the keyboard.
 
-Yes, we do have some parser functions that only fill an u16/u32 value in data_buf. But in order to have consistency in the code, we used the data_buf pointers (or specific command struct pointers) for all parser functions. Of course we can change the code to return the value directly for this type of functions, if the consistency is less concerned here. Please let me know your preference on this.
+The meaning of -EINVAL is symbolic.  It shows that we are not returning 
+a fallback value.  There is no valid fallback value to return.
 
-Thanks,
-Bing
+The callers should not try to initialize rate control on interfaces with 
+no rates enabled.  Anyway, the fix is out of scope of my patch.
+
+-- 
+Regards,
+Pavel Roskin
