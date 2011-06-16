@@ -1,42 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50259 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932886Ab1EaXDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2011 19:03:20 -0400
-Message-ID: <4DE573AF.8060405@openwrt.org> (sfid-20110601_010328_604609_D16E17DA)
-Date: Wed, 01 Jun 2011 01:03:11 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:36093 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756118Ab1FPXpl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2011 19:45:41 -0400
 MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [RFC 20/32] ath9k: set NF limits for AR9330
-References: <1306870643-7935-1-git-send-email-juhosg@openwrt.org> <1306870643-7935-21-git-send-email-juhosg@openwrt.org>
-In-Reply-To: <1306870643-7935-21-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110616233736.GA2344@broadcom.com>
+References: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu>
+ <20110616013615.GA14700@broadcom.com> <4DF96F22.5070508@cuw.edu> <20110616233736.GA2344@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 17 Jun 2011 09:45:21 +1000
+Message-ID: <BANLkTi=tLWXn7mMf-6pf-3gM6x8zX=WNtw@mail.gmail.com> (sfid-20110617_014558_958528_46867135)
+Subject: Re: [PATCH] staging: brcm80211: return false if not a broadcom board
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg Dietsche <gregory.dietsche@cuw.edu>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-05-31 9:37 PM, Gabor Juhos wrote:
-> Signed-off-by: Gabor Juhos<juhosg@openwrt.org>
-> ---
->   drivers/net/wireless/ath/ath9k/ar9003_phy.c |    5 ++++-
->   drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 ++
->   2 files changed, 6 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index a0ca1eb..eb18b63 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -1089,7 +1089,10 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
->   {
->   	ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
->   	ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
-> -	ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
-> +	if (AR_SREV_9300(ah))
-> +		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
-Typo in the SREV check?
+Henry,
 
-- Felix
+On Fri, Jun 17, 2011 at 09:37, Henry Ptasinski <henryp@broadcom.com> wrote:
+> How's this for a somewhat clearer implementation:
+>
+> static bool brcms_c_validboardtype(struct brcms_c_hw_info *wlc_hw)
+> {
+>        bool goodboard = true;
+>        uint boardrev = wlc_hw->boardrev;
+>
+>        if (wlc_hw->sih->boardvendor == PCI_VENDOR_ID_BROADCOM) {
+
+You could reduce indentation by having this be:
+
+if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
+    return true;
+
+>                /* validate boardrev */
+>                if (boardrev == 0)
+>                        goodboard = false;
+
+and remove the goodboard variable by having this return false immediately.
+
+>                else if (boardrev > 0xff) {
+
+You could also drop the else and have this as
+
+if (boardrev <= 0xff)
+    return true;
+
+>                        /* 4 bits each for board type, major, minor, and tiny
+>                        version numbers */
+>                        uint brt = (boardrev & 0xf000) >> 12;
+>                        uint b0 = (boardrev & 0xf00) >> 8;
+>                        uint b1 = (boardrev & 0xf0) >> 4;
+>                        uint b2 = boardrev & 0xf;
+>
+>                        if ((brt > 2) || (brt == 0) || (b0 > 9) || (b0 == 0)
+>                                || (b1 > 9) || (b2 > 9))
+>                                goodboard = false;
+
+and return false here too.
+
+>                }
+>        }
+>
+>        return goodboard;
+
+then just return true here.
+
+> }
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
