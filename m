@@ -1,50 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:32904 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754473Ab1FDOgS convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46218 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932176Ab1FPVwo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2011 10:36:18 -0400
+	Thu, 16 Jun 2011 17:52:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <20110604130413.GA3929@tuxdriver.com>
-References: <20110603195254.GF2509@tuxdriver.com>
-	<BANLkTimoeVDQK+zu=U+nSM_kj0a3-hh_Jg@mail.gmail.com>
-	<20110604130413.GA3929@tuxdriver.com>
-Date: Sat, 4 Jun 2011 16:36:17 +0200
-Message-ID: <BANLkTimF3Jr4Kp7rDo1dvdBxVPepr__OZw@mail.gmail.com> (sfid-20110604_163624_147506_8E129D0E)
-Subject: Re: pull request: wireless-2.6 2011-06-03
+In-Reply-To: <20110616223456.5cfdec2b@farn.lan>
+References: <BANLkTikXUd8uorD+juMDvFubr3cz+OZnaQ@mail.gmail.com>
+	<BANLkTinUxRGkXeOtBSKi51n3Q_rZEp1gUg@mail.gmail.com>
+	<4DFA4672.5080307@lwfinger.net>
+	<BANLkTi=-wXnXNJY3R+3Q+KSaJhtxHgrhZw@mail.gmail.com>
+	<20110616223456.5cfdec2b@farn.lan>
+Date: Thu, 16 Jun 2011 23:47:02 +0200
+Message-ID: <BANLkTikLU_f6PYX-vdRSJN5WsKSkQsYH3g@mail.gmail.com> (sfid-20110616_235305_554739_286C629E)
+Subject: Re: Faking MMIO ops? Fooling a driver
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+To: Pekka Paalanen <pq@iki.fi>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 4 czerwca 2011 15:04 użytkownik John W. Linville
-<linville@tuxdriver.com> napisał:
-> On Fri, Jun 03, 2011 at 11:24:49PM +0200, Rafał Miłecki wrote:
->> On Jun 3, 2011 10:03 PM, "John W. Linville" <linville@tuxdriver.com> wrote:
->> >
->> > Dave,
->> >
->> > Here is a batch of fixes intended for 3.0 -- I guess I'll need to
->> > rename my tree eventually... :-)
->> >
->> > Included are a libertas fix to ensure proper sequence number assignment
->> > on transmitted frames, an ath9k fix that propogates an earlier fix to a
->> > few more places,  a fix for a cfg80211 regression caused by some mesh
->> > code changes, a locking fix for the bluetooth l2cap code, a zd1211rw
->> > regression fix, a collection of small fixes for wl12xx, an iwl4965
->> > fix for a bad temperature check, an a device ID-related fix for iwlagn.
->> >
->> > Please let me know if there are problems!
->>
->> John, you didn't.take my fix for regression in ssb. I really want this for
->> 3.0.quickly, as few ppl already had problems with machine locking on boot.
+W dniu 16 czerwca 2011 21:34 użytkownik Pekka Paalanen <pq@iki.fi> napisał:
+> On Thu, 16 Jun 2011 21:19:04 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
 >
-> Yours isn't the only fix, and I had quite a few queued already.  Patience.
+>> W dniu 16 czerwca 2011 20:07 użytkownik Larry Finger
+>> <Larry.Finger@lwfinger.net> napisał:
+>> > On 06/16/2011 12:20 PM, Rafał Miłecki wrote:
+>> >>
+>> >> W dniu 16 czerwca 2011 16:44 użytkownik Rafał Miłecki
+>> >> <zajec5@gmail.com>  napisał:
+>> >>>
+>> >>> I analyze MMIO dumps of closed source driver and found such a
+>> >>> place: W 2 3855.911536 9 0xb06003fc 0x810 0x0 0
+>> >>> R 2 3855.911540 9 0xb06003fe 0x0 0x0 0
+>> >>> W 2 3855.911541 9 0xb06003fe 0x0 0x0 0
+>> >>>
+>> >>> After translation:
+>> >>>  phy_read(0x0810) ->  0x0000
+>> >>> phy_write(0x0810)<- 0x0000
+>> >>>
+>> >>> So it's quite obvious, the driver is reading PHY register,
+>> >>> masking it and writing masked value. Unfortunately from just
+>> >>> looking at such place we can not guess the mask driver uses.
+>> >>>
+>> >>> I'd like to fake value read from 0xb06003fe to be 0xFFFF.
+>> >>> Is there some ready method for doing such a trick?
+>> >>>
+>> >>> Dump comes from Kernel hacking → Tracers → MMIO and
+>> >>> ndiswrapper.
+>> >>
+>> >> I can see values in MMIO trace struct are filled in
+>> >> arch/x86/mm/mmio-mod.c in "pre" and "post". However still no
+>> >> idea how to hack the returned value.
+>
+> If you want to do it that way, the idea is to overwrite
+> the right CPU register in mmio-mod.c:post(). You would test for
+> the address you want to mess with, and then "invert"
+> get_ins_reg_val() to overwrite the register with your own value.
 
-OK, I was just afraid you missed this one :) Sorry if I meant rude.
+Good, idea thanks!
+
+
+>> >> Should I try hacking read[bwl] instead? :|
+>> >
+>> > Probably. I do not see any way to trace and modify the results
+>> > for a particular address without special code.
+>>
+>> Did you success with writing some special code? Following patch
+>> does not seem to work for me:
+>>
+>>
+>> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+>> index e0ffa3d..448e4ff 100644
+>> --- a/include/asm-generic/io.h
+>> +++ b/include/asm-generic/io.h
+>> @@ -23,6 +23,8 @@
+>>  #define mmiowb() do {} while (0)
+>>  #endif
+>>
+>> +static int zajec = 0;
+>> +
+>>  /*****************************************************************************/
+>>  /*
+>>   * readX/writeX() are used to access memory mapped devices. On
+>> some @@ -40,6 +42,11 @@ static inline u8 __raw_readb(const
+>> volatile void __iomem *addr)
+>>  #ifndef __raw_readw
+>>  static inline u16 __raw_readw(const volatile void __iomem *addr)
+>>  {
+>> +     if (zajec++ < 10)
+>> +             printk(KERN_INFO "[ZAJEC] %d\n", *addr);
+>> +     if (*addr == 0xfaafc000)
+>> +             printk(KERN_INFO "[ZAJEC] Bingo!\n");
+>> +     //0x1381a8d8
+>>       return *(const volatile u16 __force *) addr;
+>>  }
+>>  #endif
+>>
+>> Should I modify different readw? Path include/asm-generic/io.h
+>> sounds sane to me, so I modified this one.
+>
+> Are you sure that code is ever used on your arch?
+> For instance, it seems that arch/x86/include/asm/io.h
+> defines a different __raw_readw.
+
+You're right, I was using wrong file. Anyway it's too low level stuff
+to use printk here. So thank you for the other suggested method!
 
 -- 
 Rafał
