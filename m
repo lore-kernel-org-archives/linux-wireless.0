@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45145 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412Ab1FRIDM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 04:03:12 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 0/6] NFC subsystem
+Received: from c60.cesmail.net ([216.154.195.49]:35895 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933039Ab1FPVy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2011 17:54:57 -0400
+Message-ID: <4DFA7BAD.7060405@gnu.org> (sfid-20110616_235500_460032_E2A27A31)
+Date: Thu, 16 Jun 2011 17:54:53 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Sat, 18 Jun 2011 10:03:09 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	<linux-wireless@vger.kernel.org>, <marcio.macedo@openbossa.org>,
-	<aloisio.almeida@openbossa.org>, <sameo@linux.intel.com>,
-	<Waldemar.Rymarkiewicz@tieto.com>
-In-Reply-To: <20110617164510.GA6820@tuxdriver.com>
- (sfid-20110617_190155_298688_6B1DFAB0)
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
- <20110617164510.GA6820@tuxdriver.com> (sfid-20110617_190155_298688_6B1DFAB0)
-Message-ID: <38f85e7ce64d0e55f86eb9104ec41364@secure.sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k WDS panic without CONFIG_ATH9K_RATE_CONTROL
+References: <4DF93116.700@gnu.org> <4DF96668.3040007@openwrt.org>
+In-Reply-To: <4DF96668.3040007@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 17 Jun 2011 12:45:11 -0400, John W. Linville wrote:
-> On Thu, Jun 02, 2011 at 06:46:04PM -0300, Lauro Ramos Venancio wrote:
->> This series of patches implements the first part of the Near Field
->> Communication (NFC) subsystem.
+On 06/15/2011 10:11 PM, Felix Fietkau wrote:
+
+> Some time ago I sent some patches to fix the issues with WDS (and add
+> support for HT, including aggregation).
 >
-> Will you be submitting a new series to account for the comments from
-> Johannes and others?
+> These patches assume that you set up an AP on both sides alongside the
+> WDS interface (beacons of the APs are used to exchange rates and
+> capabilities).
 
-Yeah, but they found some issues with the dump consistency stuff that 
-tgr and I would like to solve generically (he was aware of them before); 
-I'm hoping I can do that quickly next week and then this can rely on it 
-instead of re-implementing it first.
+I think WDS should work without beacons.  At least the basic rates 
+should be available when the interface is brought up.  Further changes 
+to the set of supported rates can be made with iw.
 
-johannes
+WDS is somewhat orthogonal to the beacons.  The beacons are primarily 
+meant for the stations.
+
+-- 
+Regards,
+Pavel Roskin
