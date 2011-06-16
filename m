@@ -1,78 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42096 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829Ab1FAGjm (ORCPT
+Received: from mail.3eti.com ([65.220.88.139]:44009 "EHLO 3eSpam.3eti.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754463Ab1FPOwy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 02:39:42 -0400
-Subject: [PATCH] bluetooth: fix error cases
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Gustavo F. Padovan" <padovan@profusion.mobi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Jun 2011 08:39:37 +0200
-Message-ID: <1306910377.3867.5.camel@jlt3.sipsolutions.net> (sfid-20110601_083948_288860_F079B1E1)
-Mime-Version: 1.0
+	Thu, 16 Jun 2011 10:52:54 -0400
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Help on AMPDU stuck in transmit queue
+Date: Thu, 16 Jun 2011 14:32:46 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp> (sfid-20110616_165258_539667_5E53E4F3)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Linux wireles experts,
 
-The error cases in a few functions can use a
-socket variable that was never initialised,
-gcc correctly warns about this:
-net/bluetooth/l2cap_core.c: In function ‘l2cap_recv_frame’:
-include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
-net/bluetooth/l2cap_core.c:3789:15: note: ‘sk’ was declared here
-include/linux/spinlock.h:325:19: warning: ‘sk’ may be used uninitialized in this function [-Wuninitialized]
-net/bluetooth/l2cap_core.c:3756:15: note: ‘sk’ was declared here
+Here is my problem. If anyone can throw some ideas, I would appreciate it.
 
-Initialise the socket to NULL as clearly intended
-by the error handling code.
+I have a customized router board which has one wireless card (ath9160) and one Ethernet port. The ath9160 is (and must be) put in client mode. My customization is to translate packet strictly between Ethernet port and wireless port so that the board can be used for old PC to access wireless network.
 
-Also fix a "set but not used" warning.
+I am running kernel 2.6.38.5. I made a mini module which always forwards data packets between wireless port and Ethernet port. 
+In addition, I made two small changes as follows.
+1. On wireless Tx path (in ieee80211_subif_start_xmit() defined in mac80211). The change is to replace source address (the MAC of old PC) with wireless radio MAC (ath9160).
+2. On wireless Rx path (in ieee80211_deliver_skb() defined in mac80211). The change is to replace destination address (ath9160 MAC) with MAC of my old PC.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/bluetooth/l2cap_core.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+My customization works very well when 802.11n is disabled on AP which is hostapd based on nl80211 driver.
+When 802.11n is enabled on AP, my customization works only for the first few minutes. (Ping packets from old PC to AP go through well). After a few minutes, wireless radio (ath9160) on my customized router board won't transmit any ping packet. I see AMPDU stuck in transmit queue based on the info from /debugfs/ieee80211/phy0/ath9k/xmit as follows
 
---- a/net/bluetooth/l2cap_core.c	2011-06-01 08:33:36.000000000 +0200
-+++ b/net/bluetooth/l2cap_core.c	2011-06-01 08:34:35.000000000 +0200
-@@ -3667,7 +3667,6 @@ static inline int l2cap_data_channel(str
- {
- 	struct l2cap_chan *chan;
- 	struct sock *sk = NULL;
--	struct l2cap_pinfo *pi;
- 	u16 control;
- 	u8 tx_seq;
- 	int len;
-@@ -3679,7 +3678,6 @@ static inline int l2cap_data_channel(str
- 	}
- 
- 	sk = chan->sk;
--	pi = l2cap_pi(sk);
- 
- 	BT_DBG("chan %p, len %d", chan, skb->len);
- 
-@@ -3755,7 +3753,7 @@ done:
- 
- static inline int l2cap_conless_channel(struct l2cap_conn *conn, __le16 psm, struct sk_buff *skb)
- {
--	struct sock *sk;
-+	struct sock *sk = NULL;
- 	struct l2cap_chan *chan;
- 
- 	chan = l2cap_global_chan_by_psm(0, psm, conn->src);
-@@ -3788,7 +3786,7 @@ done:
- 
- static inline int l2cap_att_channel(struct l2cap_conn *conn, __le16 cid, struct sk_buff *skb)
- {
--	struct sock *sk;
-+	struct sock *sk = NULL;
- 	struct l2cap_chan *chan;
- 
- 	chan = l2cap_global_chan_by_scid(0, cid, conn->src);
+                            BE         BK        VI        VO
 
+MPDUs Queued:              126          0         0      4261
+MPDUs Completed:           126          0         0      4261
+Aggregates:                  0          0         0         0
+AMPDUs Queued:            4002          0         0         0
+AMPDUs Completed:         3877          0         0         0
+AMPDUs Retried:              0          0         0         0
+AMPDUs XRetried:             1          0         0         0
+FIFO Underrun:               0          0         0         0
+TXOP Exceeded:               0          0         0         0
+TXTIMER Expiry:              0          0         0         0
+DESC CFG Error:              0          0         0         0
+DATA Underrun:               0          0         0         0
+DELIM Underrun:              0          0         0         0
+TX-Pkts-All:              4004          0         0      4261
+TX-Bytes-All:           462852          0         0    105128
+
+
+I noticed that when 11n is disable, MPDUs are sent and the "MPDUs queued" == "MPDUs completed".
+When 11n is enabled, AMPDUs are sent and the "AMPDUs queued"=="AMPDUs Complete" only for the first few minutes. After that, "AMPDUs Complete" stop incrementing.
+
+I also sniffed the air, the "NULL data packet" is still sent out as usual (it's also reflected in the number "MPDUs Queued and Completed" in VO queue). But no ping packets at all.
+
+Without my customization, the wireless client (standalone) on router board works very well with the AP with 11n enabled. This eliminates the AP or client issue.
+
+I also tried another radio (ar9380). The symptom is exactly the same.
+
+Any help on the following is highly appreciated.
+1. Point out the issue, or 
+2. Throw some idea on how to investigate, or 
+3. Tell me how that AMPDU works in ath9k (mac80211).
+4. Anywhere in ath9k or mac80211 that is sensitive to the address change.
+
+
+Thanks
+
+Chaoxing
 
