@@ -1,85 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38622 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab1F1XQu convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57913 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397Ab1FPQEb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 19:16:50 -0400
-Received: by pwj7 with SMTP id 7so463673pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 16:16:49 -0700 (PDT)
+	Thu, 16 Jun 2011 12:04:31 -0400
+Message-ID: <4DFA2989.10503@candelatech.com> (sfid-20110616_180435_672451_E1AC618B)
+Date: Thu, 16 Jun 2011 09:04:25 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4E07B2B2.4060204@hauke-m.de>
-References: <4E07B2B2.4060204@hauke-m.de>
-Date: Wed, 29 Jun 2011 01:16:49 +0200
-Message-ID: <BANLkTik_HdOn6Cw8VBROrKwo7csL9mTGAQ@mail.gmail.com> (sfid-20110629_011653_025516_AC137F66)
-Subject: Re: Regression in ssb pcicore with SoC
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Help on AMPDU stuck in transmit queue
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for reporting this and sorry for the problem.
-
-W dniu 27 czerwca 2011 00:29 użytkownik Hauke Mehrtens
-<hauke@hauke-m.de> napisał:
-> I tried linux-3.0-rc4 on my Asus WL-500GP and got a kernel panic because
-> of a data bus error. This was caused by this commit you made:
+On 06/16/2011 07:32 AM, Chaoxing Lin wrote:
+> Hi Linux wireles experts,
 >
-> commit af335a6cbc3dfcba64ad31561c0da563d1c43a2d
-> Author: Rafał Miłecki <zajec5@gmail.com>
-> Date:   Wed Apr 27 18:21:34 2011 +0200
+> Here is my problem. If anyone can throw some ideas, I would appreciate it.
 >
->    ssb: pci: early fix for SPROM core index
+> I have a customized router board which has one wireless card (ath9160) and one Ethernet port. The ath9160 is (and must be) put in client mode. My customization is to translate packet strictly between Ethernet port and wireless port so that the board can be used for old PC to access wireless network.
 >
->    Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> I am running kernel 2.6.38.5. I made a mini module which always forwards data packets between wireless port and Ethernet port.
+> In addition, I made two small changes as follows.
+> 1. On wireless Tx path (in ieee80211_subif_start_xmit() defined in mac80211). The change is to replace source address (the MAC of old PC) with wireless radio MAC (ath9160).
+> 2. On wireless Rx path (in ieee80211_deliver_skb() defined in mac80211). The change is to replace destination address (ath9160 MAC) with MAC of my old PC.
 >
-> My device has an PCI controller, in host mode and this device does not
-> have a sprom in its address space, so ssb_pcicore_fix_sprom_core_index()
-> should be be called. I tried to find the same function in Broadcom
-> source, but did not had success.
+> My customization works very well when 802.11n is disabled on AP which is hostapd based on nl80211 driver.
+> When 802.11n is enabled on AP, my customization works only for the first few minutes. (Ping packets from old PC to AP go through well). After a few minutes, wireless radio (ath9160) on my customized router board won't transmit any ping packet. I see AMPDU stuck in transmit queue based on the info from /debugfs/ieee80211/phy0/ath9k/xmit as follows
 >
-> In the Broadcom open source code the pci init is done in
-> ./driver/nicpci.c and all calls to sporm are done through
-> pcie_war_pci_setup() which is our ssb_pcicore_pcie_setup_workarounds()
-> in ssb. I think ssb_pcicore_fix_sprom_core_index() should be called from
-> somewhere in ssb_pcicore_pcie_setup_workarounds().
+>                              BE         BK        VI        VO
 >
-> Could you please explain what you want to fix in
-> ssb_pcicore_fix_sprom_core_index() ?.
+> MPDUs Queued:              126          0         0      4261
+> MPDUs Completed:           126          0         0      4261
+> Aggregates:                  0          0         0         0
+> AMPDUs Queued:            4002          0         0         0
+> AMPDUs Completed:         3877          0         0         0
+> AMPDUs Retried:              0          0         0         0
+> AMPDUs XRetried:             1          0         0         0
+> FIFO Underrun:               0          0         0         0
+> TXOP Exceeded:               0          0         0         0
+> TXTIMER Expiry:              0          0         0         0
+> DESC CFG Error:              0          0         0         0
+> DATA Underrun:               0          0         0         0
+> DELIM Underrun:              0          0         0         0
+> TX-Pkts-All:              4004          0         0      4261
+> TX-Bytes-All:           462852          0         0    105128
 >
-> I will have a closer look at it tomorrow evening.
+>
+> I noticed that when 11n is disable, MPDUs are sent and the "MPDUs queued" == "MPDUs completed".
+> When 11n is enabled, AMPDUs are sent and the "AMPDUs queued"=="AMPDUs Complete" only for the first few minutes. After that, "AMPDUs Complete" stop incrementing.
+>
+> I also sniffed the air, the "NULL data packet" is still sent out as usual (it's also reflected in the number "MPDUs Queued and Completed" in VO queue). But no ping packets at all.
+>
+> Without my customization, the wireless client (standalone) on router board works very well with the AP with 11n enabled. This eliminates the AP or client issue.
+>
+> I also tried another radio (ar9380). The symptom is exactly the same.
+>
+> Any help on the following is highly appreciated.
+> 1. Point out the issue, or
+> 2. Throw some idea on how to investigate, or
+> 3. Tell me how that AMPDU works in ath9k (mac80211).
+> 4. Anywhere in ath9k or mac80211 that is sensitive to the address change.
 
-I don't think we will find the same workaround in brcm80211 code.
-Broadcom stripped a lot from their driver and we can not use it as
-reference for old (especially SSB) devices.
+You might try a later kernel.  I saw problems of this type too a while back,
+but not lately.  (I'm using 2.6.39-wl+ for most testing, though the
+latest linus 3.0.0-rc3 kernel seems to work fine too in limited testing.)
 
-When I was looking for fix for DMA errors I've noticed closed source
-driver performing a read than could be translated to the following ssb
-code:
-pcicore_read16(pc, SSB_PCICORE_SPROM(0));
+Thanks,
+Ben
 
-So I've found documentation of such a operation in Larry's e-mail
-Message-ID: <4BB81CAD.10602@lwfinger.net> [0] and implemented it in
-ssb.
+>
+>
+> Thanks
+>
+> Chaoxing
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Larry documented this single workaround without really telling when it
-should be called. I've analyzed MMIO dumps of closed wl driver and put
-proper call in the same place wl does it. That's it.
-
-
-Unfortunately it appears that hostmode PCI(e) cores does not have
-SPROM shadowed in PCI(e) core. This results in the problem you've
-experienced.
-
-I believe all we need to do is to stop executing various workarounds
-for hostmode PCI(e) core. I'll offer a patch later today.
-
-
-[0] http://www.mail-archive.com/b43-dev@lists.infradead.org/msg00049.html
 
 -- 
-Rafał
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
