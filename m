@@ -1,44 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49530 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab1FQGON (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41895 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757775Ab1FPTfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 02:14:13 -0400
-Received: by bwz15 with SMTP id 15so529063bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 23:14:12 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 17 Jun 2011 01:14:11 -0500
-Message-ID: <BANLkTim83iarV-J08JAsVtfLR2ziqLs=iQ@mail.gmail.com> (sfid-20110617_081417_974005_132D226F)
-Subject: iwlagn: Problems with Intel Wifi Link 1000 on newer kernels
-From: Erik Hardesty <ehardesty@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 16 Jun 2011 15:35:07 -0400
+Date: Thu, 16 Jun 2011 22:34:56 +0300
+From: Pekka Paalanen <pq@iki.fi>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Faking MMIO ops? Fooling a driver
+Message-ID: <20110616223456.5cfdec2b@farn.lan> (sfid-20110616_213521_113374_250BE61E)
+In-Reply-To: <BANLkTi=-wXnXNJY3R+3Q+KSaJhtxHgrhZw@mail.gmail.com>
+References: <BANLkTikXUd8uorD+juMDvFubr3cz+OZnaQ@mail.gmail.com>
+	<BANLkTinUxRGkXeOtBSKi51n3Q_rZEp1gUg@mail.gmail.com>
+	<4DFA4672.5080307@lwfinger.net>
+	<BANLkTi=-wXnXNJY3R+3Q+KSaJhtxHgrhZw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Having trouble with iwlagn in kernels newer than 2.6.38.
-I've tried 2.6.39 and 3.0rc3 and both give me the same problem.
-I have the latest intel firmware installed on the system. Both
-iwlwifi-1000-3.ucode
-and iwlwifi-1000-5.ucode are in /lib/firmware
+On Thu, 16 Jun 2011 21:19:04 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Note: 2.6.38 does not exhibit the same issue and works fine.
+> W dniu 16 czerwca 2011 20:07 użytkownik Larry Finger
+> <Larry.Finger@lwfinger.net> napisał:
+> > On 06/16/2011 12:20 PM, Rafał Miłecki wrote:
+> >>
+> >> W dniu 16 czerwca 2011 16:44 użytkownik Rafał Miłecki
+> >> <zajec5@gmail.com>  napisał:
+> >>>
+> >>> I analyze MMIO dumps of closed source driver and found such a
+> >>> place: W 2 3855.911536 9 0xb06003fc 0x810 0x0 0
+> >>> R 2 3855.911540 9 0xb06003fe 0x0 0x0 0
+> >>> W 2 3855.911541 9 0xb06003fe 0x0 0x0 0
+> >>>
+> >>> After translation:
+> >>>  phy_read(0x0810) ->  0x0000
+> >>> phy_write(0x0810)<- 0x0000
+> >>>
+> >>> So it's quite obvious, the driver is reading PHY register,
+> >>> masking it and writing masked value. Unfortunately from just
+> >>> looking at such place we can not guess the mask driver uses.
+> >>>
+> >>> I'd like to fake value read from 0xb06003fe to be 0xFFFF.
+> >>> Is there some ready method for doing such a trick?
+> >>>
+> >>> Dump comes from Kernel hacking → Tracers → MMIO and
+> >>> ndiswrapper.
+> >>
+> >> I can see values in MMIO trace struct are filled in
+> >> arch/x86/mm/mmio-mod.c in "pre" and "post". However still no
+> >> idea how to hack the returned value.
 
-Symptom: Able to scan for access points but unable to connect.
-I am unable to connect to any router regardless of it being open, WEP, or WPAx.
+If you want to do it that way, the idea is to overwrite
+the right CPU register in mmio-mod.c:post(). You would test for
+the address you want to mess with, and then "invert"
+get_ins_reg_val() to overwrite the register with your own value.
 
-lspci -v | grep -i wifi:
+> >> Should I try hacking read[bwl] instead? :|
+> >
+> > Probably. I do not see any way to trace and modify the results
+> > for a particular address without special code.
+> 
+> Did you success with writing some special code? Following patch
+> does not seem to work for me:
+> 
+> 
+> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> index e0ffa3d..448e4ff 100644
+> --- a/include/asm-generic/io.h
+> +++ b/include/asm-generic/io.h
+> @@ -23,6 +23,8 @@
+>  #define mmiowb() do {} while (0)
+>  #endif
+> 
+> +static int zajec = 0;
+> +
+>  /*****************************************************************************/
+>  /*
+>   * readX/writeX() are used to access memory mapped devices. On
+> some @@ -40,6 +42,11 @@ static inline u8 __raw_readb(const
+> volatile void __iomem *addr)
+>  #ifndef __raw_readw
+>  static inline u16 __raw_readw(const volatile void __iomem *addr)
+>  {
+> +	if (zajec++ < 10)
+> +		printk(KERN_INFO "[ZAJEC] %d\n", *addr);
+> +	if (*addr == 0xfaafc000)
+> +		printk(KERN_INFO "[ZAJEC] Bingo!\n");
+> +	//0x1381a8d8
+>  	return *(const volatile u16 __force *) addr;
+>  }
+>  #endif
+> 
+> Should I modify different readw? Path include/asm-generic/io.h
+> sounds sane to me, so I modified this one.
 
-03:00.0 Network controller: Intel Corporation WiFi Link 1000 Series
-    Subsystem: Intel Corporation WiFi Link 1000 Series 1000BGN
+Are you sure that code is ever used on your arch?
+For instance, it seems that arch/x86/include/asm/io.h
+defines a different __raw_readw.
 
-dmesg:
 
-myhost kernel: wlan0: direct probe to <ap> (try 1)
-myhost kernel: wlan0: direct probe to <ap> (try 2)
-myhost kernel: wlan0: direct probe to <ap> (try 3)
-myhost kernel: wlan0: direct probe to <ap> timed out
-myhost kernel: iwlagn 0000:03:00.0: fail to flush all tx fifo queues
+Cheers.
 
-Best,
-Erik
+-- 
+Pekka Paalanen
+http://www.iki.fi/pq/
+
