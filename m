@@ -1,54 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55305 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758823Ab1FAM0f (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42960 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751891Ab1FPIsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 08:26:35 -0400
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <4DE6256B.80106@openwrt.org>
-References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>
-	 <1306869394-83047-2-git-send-email-nbd@openwrt.org>
-	 <1306870354.29989.1.camel@jlt3.sipsolutions.net>
-	 <4DE543E2.9070600@openwrt.org>
-	 <1306872395.29989.3.camel@jlt3.sipsolutions.net>
-	 <4DE54E16.7000709@openwrt.org>
-	 <1306901843.3867.2.camel@jlt3.sipsolutions.net>
-	 <4DE61A11.1070708@openwrt.org>
-	 <1306926131.3867.8.camel@jlt3.sipsolutions.net>
-	 <4DE61FEA.60903@openwrt.org>
-	 <1306927838.3867.10.camel@jlt3.sipsolutions.net>
-	 <4DE6256B.80106@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Jun 2011 14:26:27 +0200
-Message-ID: <1306931187.3867.11.camel@jlt3.sipsolutions.net> (sfid-20110601_142638_607723_F1582B84)
-Mime-Version: 1.0
+	Thu, 16 Jun 2011 04:48:37 -0400
+Received: by wya21 with SMTP id 21so867645wya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 01:48:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: quiesce vif before suspending
+Date: Thu, 16 Jun 2011 11:49:33 +0300
+Message-Id: <1308214173-26950-1-git-send-email-eliad@wizery.com> (sfid-20110616_104841_327527_D531BBF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-01 at 13:41 +0200, Felix Fietkau wrote:
-> On 2011-06-01 1:30 PM, Johannes Berg wrote:
-> > On Wed, 2011-06-01 at 13:18 +0200, Felix Fietkau wrote:
-> >
-> >>  >>   >>    >>     >     I don't understand how you can rely on beacons for WDS.
-> >
-> >>  Oh, right. I'll send a follow-up patch that forces a WDS to also have an
-> >>  active AP interface before it's brought up.
-> >
-> > Hm, that might be sufficient, but what if the peer isn't sending
-> > beacons?
-> >
-> > Can't we add a station entry and then update it if we receive
-> > information from the peer? That'd be more compatible with others devices
-> > that don't necessarily have beacons with WDS, and then we wouldn't have
-> > to require it locally either (since realistically we might have to
-> > interoperate with those anyway?)
-> What other devices use WDS without beacons? So far I haven't seen any.
+Cancel all relevant timers/works before suspending (wowlan).
 
-I don't know, at least older mac80211 could do that?
+This patch handles the following warning:
+WARNING: at net/mac80211/util.c:565 queueing ieee80211 work while going to suspend
+Backtrace:
+[<bf07b598>] (ieee80211_can_queue_work+0x0/0x4c [mac80211])
+[<bf07c28c>] (ieee80211_queue_work+0x0/0x30 [mac80211])
+[<bf0690dc>] (ieee80211_sta_timer+0x0/0x3c [mac80211])
+[<c00a3008>] (run_timer_softirq+0x0/0x220)
+[<c009e530>] (__do_softirq+0x0/0x130)
+[<c009e660>] (irq_exit+0x0/0xb4)
+[<c004c4a0>] (ipi_timer+0x0/0x4c)
+[<c0046350>] (do_local_timer+0x0/0x88)
+[<c00488ec>] (cpu_idle+0x0/0xe0)
+[<c05294e8>] (rest_init+0x0/0xe0)
+[<c0008958>] (start_kernel+0x0/0x314)
 
-johannes
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/pm.c |   43 +++++++++++++++++++++++++++----------------
+ 1 files changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 730778a..67839eb 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -6,6 +6,28 @@
+ #include "driver-ops.h"
+ #include "led.h"
+ 
++/* return value indicates whether the driver should be further notified */
++static bool ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
++{
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
++		ieee80211_sta_quiesce(sdata);
++		return true;
++	case NL80211_IFTYPE_ADHOC:
++		ieee80211_ibss_quiesce(sdata);
++		return true;
++	case NL80211_IFTYPE_MESH_POINT:
++		ieee80211_mesh_quiesce(sdata);
++		return true;
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_MONITOR:
++		/* don't tell driver about this */
++		return false;
++	default:
++		return true;
++	}
++}
++
+ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -54,6 +76,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			local->quiescing = false;
+ 			return err;
+ 		}
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			cancel_work_sync(&sdata->work);
++			ieee80211_quiesce(sdata);
++		}
+ 		goto suspend;
+ 	}
+ 
+@@ -82,23 +108,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		cancel_work_sync(&sdata->work);
+ 
+-		switch(sdata->vif.type) {
+-		case NL80211_IFTYPE_STATION:
+-			ieee80211_sta_quiesce(sdata);
+-			break;
+-		case NL80211_IFTYPE_ADHOC:
+-			ieee80211_ibss_quiesce(sdata);
+-			break;
+-		case NL80211_IFTYPE_MESH_POINT:
+-			ieee80211_mesh_quiesce(sdata);
+-			break;
+-		case NL80211_IFTYPE_AP_VLAN:
+-		case NL80211_IFTYPE_MONITOR:
+-			/* don't tell driver about this */
++		if (!ieee80211_quiesce(sdata))
+ 			continue;
+-		default:
+-			break;
+-		}
+ 
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+-- 
+1.7.0.4
 
