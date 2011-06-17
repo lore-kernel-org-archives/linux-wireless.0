@@ -1,147 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4583 "EHLO mms2.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:31281 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757703Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:44 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 008/119] staging: brcm80211: move sdtxqlock codes to
- dhd_sdio.c
-Date: Wed, 29 Jun 2011 16:46:32 -0700
-Message-ID: <1309391303-22741-9-git-send-email-frankyl@broadcom.com> (sfid-20110630_014932_012169_0FF699B9)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+	id S1755887Ab1FQIjN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 04:39:13 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 01:38:38 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<susinder@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
+	<kmuthusa@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: make sure PAPRD training is properly done
+Date: Fri, 17 Jun 2011 14:08:42 +0530
+Message-ID: <1308299922-14154-1-git-send-email-mshajakhan@atheros.com> (sfid-20110617_103918_244912_C0593B14)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move sdio specific tx queue lock codes to dhd_sdio.c for fullmac
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+checking the status of PAPRD_AGC2_POWER(Log(ADC_power) measured after
+last gain-change in dB) field suggests whether the PAPRD is completely/properly
+done. This is an additional check apart from polling for PAPRD done bit being set.
+        Susinder suggests that the ideal power range value should be
+0xf0 to 0xfe. With AR9382 we do have the values in this range. to have a
+common check for all platforms we take agc2_power should be atleast greater
+than 0xe0
+
+Cc: susinder@qca.qualcomm.com
+Cc: senthilb@qca.qualcomm.com
+Cc: kmuthusa@qca.qualcomm.com
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h       |    2 --
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   18 ------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   14 +++++++++-----
- 3 files changed, 9 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   21 ++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h           |    5 +++--
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 01bacdb..a4dcaf8 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -972,8 +972,6 @@ extern void dhd_os_close_image(void *image);
- extern void dhd_os_wd_timer(void *bus, uint wdtick);
- extern void dhd_os_sdlock(dhd_pub_t *pub);
- extern void dhd_os_sdunlock(dhd_pub_t *pub);
--extern void dhd_os_sdlock_txq(dhd_pub_t *pub);
--extern void dhd_os_sdunlock_txq(dhd_pub_t *pub);
- extern void dhd_os_sdlock_sndup_rxq(dhd_pub_t *pub);
- extern void dhd_customer_gpio_wlan_ctrl(int onoff);
- extern int dhd_custom_get_mac_address(unsigned char *buf);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 4811d7a..dfbbda7 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -232,7 +232,6 @@ typedef struct dhd_info {
- 	bool wd_timer_valid;
- 	struct tasklet_struct tasklet;
- 	spinlock_t sdlock;
--	spinlock_t txqlock;
- 	/* Thread based operation */
- 	bool threads_only;
- 	struct semaphore sdsem;
-@@ -1918,7 +1917,6 @@ dhd_pub_t *dhd_attach(struct dhd_bus *bus, uint bus_hdrlen)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 2e7f0f2..fc9c08f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -785,7 +785,26 @@ EXPORT_SYMBOL(ar9003_paprd_init_table);
  
- 	/* Initialize the spinlocks */
- 	spin_lock_init(&dhd->sdlock);
--	spin_lock_init(&dhd->txqlock);
- 
- 	/* Link to info module */
- 	dhd->pub.info = dhd;
-@@ -2579,22 +2577,6 @@ void dhd_os_sdunlock(dhd_pub_t *pub)
- 		spin_unlock_bh(&dhd->sdlock);
+ bool ar9003_paprd_is_done(struct ath_hw *ah)
+ {
+-	return !!REG_READ_FIELD(ah, AR_PHY_PAPRD_TRAINER_STAT1,
++	int paprd_done, agc2_pwr;
++	paprd_done = REG_READ_FIELD(ah, AR_PHY_PAPRD_TRAINER_STAT1,
+ 				AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE);
++
++	if (paprd_done == 0x1) {
++		agc2_pwr = REG_READ_FIELD(ah, AR_PHY_PAPRD_TRAINER_STAT1,
++				AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_AGC2_PWR);
++
++		ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++			"AGC2_PWR = 0x%x training done = 0x%x\n",
++			agc2_pwr, paprd_done);
++	/*
++	 * agc2_pwr range should not be less than 'IDEAL_AGC2_PWR_CHANGE'
++	 * when the training is completely done, otherwise retraining is
++	 * done to make sure the value is in ideal range
++	 */
++		if (agc2_pwr <= PAPRD_IDEAL_AGC2_PWR_RANGE)
++			paprd_done = 0;
++	}
++
++	return !!paprd_done;
  }
+ EXPORT_SYMBOL(ar9003_paprd_is_done);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6a6fb54..66d2225 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -157,8 +157,9 @@
+ #define ATH9K_HW_RX_HP_QDEPTH	16
+ #define ATH9K_HW_RX_LP_QDEPTH	128
  
--void dhd_os_sdlock_txq(dhd_pub_t *pub)
--{
--	dhd_info_t *dhd;
--
--	dhd = (dhd_info_t *) (pub->info);
--	spin_lock_bh(&dhd->txqlock);
--}
--
--void dhd_os_sdunlock_txq(dhd_pub_t *pub)
--{
--	dhd_info_t *dhd;
--
--	dhd = (dhd_info_t *) (pub->info);
--	spin_unlock_bh(&dhd->txqlock);
--}
--
- static int
- dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
- 		  wl_event_msg_t *event, void **data)
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index dcfebac..48550f3 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -592,6 +592,8 @@ typedef struct dhd_bus {
- 	u8 *ctrl_frame_buf;
- 	u32 ctrl_frame_len;
- 	bool ctrl_frame_stat;
-+
-+	spinlock_t txqlock;
- } dhd_bus_t;
+-#define PAPRD_GAIN_TABLE_ENTRIES    32
+-#define PAPRD_TABLE_SZ              24
++#define PAPRD_GAIN_TABLE_ENTRIES	32
++#define PAPRD_TABLE_SZ			24
++#define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
  
- typedef volatile struct _sbconfig {
-@@ -1370,7 +1372,7 @@ int dhd_bus_txdata(struct dhd_bus *bus, struct sk_buff *pkt)
- 		bus->fcqueued++;
- 
- 		/* Priority based enq */
--		dhd_os_sdlock_txq(bus->dhd);
-+		spin_lock_bh(&bus->txqlock);
- 		if (dhd_prec_enq(bus->dhd, &bus->txq, pkt, prec) == false) {
- 			skb_pull(pkt, SDPCM_HDRLEN);
- 			dhd_txcomplete(bus->dhd, pkt, false);
-@@ -1380,7 +1382,7 @@ int dhd_bus_txdata(struct dhd_bus *bus, struct sk_buff *pkt)
- 		} else {
- 			ret = 0;
- 		}
--		dhd_os_sdunlock_txq(bus->dhd);
-+		spin_unlock_bh(&bus->txqlock);
- 
- 		if (pktq_len(&bus->txq) >= TXHI)
- 			dhd_txflowcontrol(bus->dhd, 0, ON);
-@@ -1446,13 +1448,13 @@ static uint dhdsdio_sendfromq(dhd_bus_t *bus, uint maxframes)
- 
- 	/* Send frames until the limit or some other event */
- 	for (cnt = 0; (cnt < maxframes) && DATAOK(bus); cnt++) {
--		dhd_os_sdlock_txq(bus->dhd);
-+		spin_lock_bh(&bus->txqlock);
- 		pkt = brcmu_pktq_mdeq(&bus->txq, tx_prec_map, &prec_out);
- 		if (pkt == NULL) {
--			dhd_os_sdunlock_txq(bus->dhd);
-+			spin_unlock_bh(&bus->txqlock);
- 			break;
- 		}
--		dhd_os_sdunlock_txq(bus->dhd);
-+		spin_unlock_bh(&bus->txqlock);
- 		datalen = pkt->len - SDPCM_HDRLEN;
- 
- #ifndef SDTEST
-@@ -5264,6 +5266,8 @@ static void *dhdsdio_probe(u16 venid, u16 devid, u16 bus_no,
- 		goto fail;
- 	}
- 
-+	spin_lock_init(&bus->txqlock);
-+
- 	/* Attach to the dhd/OS/network interface */
- 	bus->dhd = dhd_attach(bus, SDPCM_RESERVE);
- 	if (!bus->dhd) {
+ enum ath_hw_txq_subtype {
+ 	ATH_TXQ_AC_BE = 0,
 -- 
-1.7.1
-
+1.7.0.4
 
