@@ -1,23 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.calamp.com ([207.71.209.228]:41416 "EHLO MX1.Calamp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009Ab1F2NIp convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:61303 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759210Ab1FQPYd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 09:08:45 -0400
-Received: from oxn-mx1.PD.CalAmpCorp.com ([10.6.0.30]) by MX1.Calamp.com with ESMTP id gEkyDFYlyWL3Ir8H (version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 06:08:44 -0700 (PDT)
-From: =?iso-8859-1?Q?Fr=E9d=E9ric_Lamorce?= <FLamorce@CalAmp.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 29 Jun 2011 06:08:41 -0700
-Subject: IPv6 "compatibility"
-Message-ID: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0DC1B153ED@oxn-mx01.PD.CalAmpCorp.com> (sfid-20110629_150855_838481_FB670B28)
-References: <1309272221-25787-1-git-send-email-mshajakhan@atheros.com>
-In-Reply-To: <1309272221-25787-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	Fri, 17 Jun 2011 11:24:33 -0400
+Received: by vws1 with SMTP id 1so2018165vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 08:24:32 -0700 (PDT)
+Message-ID: <4DFB71AC.7040604@lwfinger.net> (sfid-20110617_172435_854936_05EDAC20)
+Date: Fri, 17 Jun 2011 10:24:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Mike McCormack <mikem@ring3k.org>
+CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/4] rtlwifi: rtl8192{ce,cu,se}: Remove irq_enabled flag
+References: <4DF93EBF.1070008@ring3k.org>
+In-Reply-To: <4DF93EBF.1070008@ring3k.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just to be sure, all the drivers/utilities (compat-wireless, iw, wpa_supplicant, hostpad, etc) are all completely independent from IPv6, right?
+On 06/15/2011 06:22 PM, Mike McCormack wrote:
+> This should be unnecessary if synchronize_irq is used.
+>
+> Signed-off-by: Mike McCormack<mikem@ring3k.org>
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c           |    3 ---
+>   drivers/net/wireless/rtlwifi/pci.h           |    1 -
+>   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c  |    2 --
+>   drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    9 ---------
+>   drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |    4 ----
+>   5 files changed, 0 insertions(+), 19 deletions(-)
 
-Frédéric.
+I am still testing this change; however, I must NACK it on a technicality. 
+Driver rtl8192de, which is in the pipeline, will fail to compile if irq_enabled 
+is removed from the rtl_pci struct now. In V2, please do not remove this member. 
+When the dust clears, I will fix rtl8192de and remove the variable.
 
+Larry
+
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index cb4e5e8..d4c2da8 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -794,9 +794,6 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+>   	u32 inta = 0;
+>   	u32 intb = 0;
+>
+> -	if (rtlpci->irq_enabled == 0)
+> -		return IRQ_HANDLED;
+> -
+>   	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+>
+>   	/*read ISR: 4/8bytes */
+> diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
+> index 671b1f5..12a25c5 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.h
+> +++ b/drivers/net/wireless/rtlwifi/pci.h
+> @@ -169,7 +169,6 @@ struct rtl_pci {
+>   	bool first_init;
+>   	bool being_init_adapter;
+>   	bool init_ready;
+> -	bool irq_enabled;
+
+Do not remove this yet.
