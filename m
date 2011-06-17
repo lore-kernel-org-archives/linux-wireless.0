@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46247 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754170Ab1FSVwh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 17:52:37 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v2 12/12] bcm47xx: fix irq assignment for new SoCs.
-Date: Sun, 19 Jun 2011 23:50:09 +0200
-Message-Id: <1308520209-668-13-git-send-email-hauke@hauke-m.de> (sfid-20110619_235240_408484_31D52A04)
-In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
-References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46500 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753993Ab1FQO6D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 10:58:03 -0400
+Received: by bwz15 with SMTP id 15so824083bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 07:58:02 -0700 (PDT)
+Subject: Re: Status of carl9170
+From: Thomas Novin <thomas@xyz.pp.se>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1308321840.7789.12.camel@thnov-desktop.xyz.lan>
+References: <1308255196.4264.7.camel@thnov-desktop.xyz.lan>
+	 <201106162249.14480.chunkeey@googlemail.com>
+	 <1308306023.7789.9.camel@thnov-desktop.xyz.lan>
+	 <201106171252.19937.chunkeey@googlemail.com>
+	 <1308321840.7789.12.camel@thnov-desktop.xyz.lan>
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Fri, 17 Jun 2011 16:57:59 +0200
+Message-ID: <1308322679.7789.13.camel@thnov-desktop.xyz.lan> (sfid-20110617_165809_425057_8EE7152D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/bcm47xx/irq.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+On fre, 2011-06-17 at 16:44 +0200, Thomas Novin wrote:
+> > Ok, can you please tell which option helped? If it was noht, then
+> > you should check if there is a newer firmware for your router.
 
-diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
-index 325757a..856c94c 100644
---- a/arch/mips/bcm47xx/irq.c
-+++ b/arch/mips/bcm47xx/irq.c
-@@ -26,6 +26,7 @@
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <asm/irq_cpu.h>
-+#include <bcm47xx.h>
- 
- void plat_irq_dispatch(void)
- {
-@@ -51,5 +52,14 @@ void plat_irq_dispatch(void)
- 
- void __init arch_init_irq(void)
- {
-+	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
-+		bcma_write32(bcm47xx_bus.bcma.bus.drv_mips.core,
-+			     BCMA_MIPS_MIPS74K_INTMASK(5), 1 << 31);
-+		/*
-+		 * the kernel reads the timer irq from some register and thinks
-+		 * it's #5, but we offset it by 2 and route to #7
-+		 */
-+		cp0_compare_irq = 7;
-+	}
- 	mips_cpu_irq_init();
- }
--- 
-1.7.4.1
+I noticed that I only have 802.11b/g now, did noht disable 802.11n?
+
+Rgds//Thomas
 
