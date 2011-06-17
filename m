@@ -1,179 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1915 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758183Ab1F2XtU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:49:20 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 085/119] staging: brcm80211: remove unused definitions
- from dhd.h
-Date: Wed, 29 Jun 2011 16:47:49 -0700
-Message-ID: <1309391303-22741-86-git-send-email-frankyl@broadcom.com> (sfid-20110630_015228_203965_EB1F4B57)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49530 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864Ab1FQGON (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 02:14:13 -0400
+Received: by bwz15 with SMTP id 15so529063bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 23:14:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Fri, 17 Jun 2011 01:14:11 -0500
+Message-ID: <BANLkTim83iarV-J08JAsVtfLR2ziqLs=iQ@mail.gmail.com> (sfid-20110617_081417_974005_132D226F)
+Subject: iwlagn: Problems with Intel Wifi Link 1000 on newer kernels
+From: Erik Hardesty <ehardesty@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Having trouble with iwlagn in kernels newer than 2.6.38.
+I've tried 2.6.39 and 3.0rc3 and both give me the same problem.
+I have the latest intel firmware installed on the system. Both
+iwlwifi-1000-3.ucode
+and iwlwifi-1000-5.ucode are in /lib/firmware
 
-Several defintions from dhd.h are not used in the fullmac driver
-and have been removed.
+Note: 2.6.38 does not exhibit the same issue and works fine.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h |  112 ------------------------------
- 1 files changed, 0 insertions(+), 112 deletions(-)
+Symptom: Able to scan for access points but unable to connect.
+I am unable to connect to any router regardless of it being open, WEP, or WPAx.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index b2db6b9..2ebf015 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -308,13 +308,6 @@ typedef struct brcmf_event {
- #define BRCMF_E_LINK_ASSOC_REC			3
- #define BRCMF_E_LINK_BSSCFG_DIS			4
- 
--enum cust_gpio_modes {
--	WLAN_RESET_ON,
--	WLAN_RESET_OFF,
--	WLAN_POWER_ON,
--	WLAN_POWER_OFF
--};
--
- /* The level of bus communication with the dongle */
- enum dhd_bus_state {
- 	DHD_BUS_DOWN,		/* Not ready for frame transfers */
-@@ -448,20 +441,6 @@ typedef struct wl_scan_results {
- 	wl_bss_info_t bss_info[1];
- } wl_scan_results_t;
- 
--typedef struct wl_rateset_args {
--	u32 count;		/* # rates in this set */
--	u8 rates[WL_NUMRATES];	/* rates in 500kbps units w/hi bit set if basic */
--	u8 mcs[MCSSET_LEN];	/* supported mcs index bit map */
--} wl_rateset_args_t;
--
--/* u32 list */
--typedef struct wl_u32_list {
--	/* in - # of elements, out - # of entries */
--	u32 count;
--	/* variable length u32 list */
--	u32 element[1];
--} wl_u32_list_t;
--
- /* used for association with a specific BSSID and chanspec list */
- typedef struct wl_assoc_params {
- 	u8 bssid[ETH_ALEN];	/* 00:00:00:00:00:00: broadcast scan */
-@@ -472,9 +451,6 @@ typedef struct wl_assoc_params {
- } wl_assoc_params_t;
- #define WL_ASSOC_PARAMS_FIXED_SIZE	(sizeof(wl_assoc_params_t) - sizeof(chanspec_t))
- 
--/* used for reassociation/roam to a specific BSSID and channel */
--typedef wl_assoc_params_t wl_reassoc_params_t;
--
- /* used for join with or without a specific bssid and channel list */
- typedef struct wl_join_params {
- 	wlc_ssid_t ssid;
-@@ -496,94 +472,6 @@ typedef struct wl_iscan_results {
- #define WL_ISCAN_RESULTS_FIXED_SIZE \
- 	(WL_SCAN_RESULTS_FIXED_SIZE + offsetof(wl_iscan_results_t, results))
- 
--typedef struct {
--	u32 duration;	/* millisecs spent sampling this channel */
--	u32 congest_ibss;	/* millisecs in our bss (presumably this traffic will */
--	/*  move if cur bss moves channels) */
--	u32 congest_obss;	/* traffic not in our bss */
--	u32 interference;	/* millisecs detecting a non 802.11 interferer. */
--	u32 timestamp;	/* second timestamp */
--} cca_congest_t;
--
--typedef struct {
--	chanspec_t chanspec;	/* Which channel? */
--	u8 num_secs;		/* How many secs worth of data */
--	cca_congest_t secs[1];	/* Data */
--} cca_congest_channel_req_t;
--
--typedef struct wl_country {
--	char country_abbrev[WLC_CNTRY_BUF_SZ];	/* nul-terminated country code used in
--						 * the Country IE
--						 */
--	s32 rev;		/* revision specifier for ccode
--				 * on set, -1 indicates unspecified.
--				 * on get, rev >= 0
--				 */
--	char ccode[WLC_CNTRY_BUF_SZ];	/* nul-terminated built-in country code.
--					 * variable length, but fixed size in
--					 * struct allows simple allocation for
--					 * expected country strings <= 3 chars.
--					 */
--} wl_country_t;
--
--typedef struct wl_channels_in_country {
--	u32 buflen;
--	u32 band;
--	char country_abbrev[WLC_CNTRY_BUF_SZ];
--	u32 count;
--	u32 channel[1];
--} wl_channels_in_country_t;
--
--typedef struct wl_country_list {
--	u32 buflen;
--	u32 band_set;
--	u32 band;
--	u32 count;
--	char country_abbrev[1];
--} wl_country_list_t;
--
--typedef struct wl_rm_req_elt {
--	s8 type;
--	s8 flags;
--	chanspec_t chanspec;
--	u32 token;		/* token for this measurement */
--	u32 tsf_h;		/* TSF high 32-bits of Measurement start time */
--	u32 tsf_l;		/* TSF low 32-bits */
--	u32 dur;		/* TUs */
--} wl_rm_req_elt_t;
--
--typedef struct wl_rm_req {
--	u32 token;		/* overall measurement set token */
--	u32 count;		/* number of measurement requests */
--	void *cb;		/* completion callback function: may be NULL */
--	void *cb_arg;		/* arg to completion callback function */
--	wl_rm_req_elt_t req[1];	/* variable length block of requests */
--} wl_rm_req_t;
--
--typedef struct wl_rm_rep_elt {
--	s8 type;
--	s8 flags;
--	chanspec_t chanspec;
--	u32 token;		/* token for this measurement */
--	u32 tsf_h;		/* TSF high 32-bits of Measurement start time */
--	u32 tsf_l;		/* TSF low 32-bits */
--	u32 dur;		/* TUs */
--	u32 len;		/* byte length of data block */
--	u8 data[1];		/* variable length data block */
--} wl_rm_rep_elt_t;
--
--#define WL_RPI_REP_BIN_NUM 8
--typedef struct wl_rm_rpi_rep {
--	u8 rpi[WL_RPI_REP_BIN_NUM];
--	s8 rpi_max[WL_RPI_REP_BIN_NUM];
--} wl_rm_rpi_rep_t;
--
--typedef struct wl_rm_rep {
--	u32 token;		/* overall measurement set token */
--	u32 len;		/* length of measurement report block */
--	wl_rm_rep_elt_t rep[1];	/* variable length block of reports */
--} wl_rm_rep_t;
--
- typedef struct wl_wsec_key {
- 	u32 index;		/* key index */
- 	u32 len;		/* key length */
--- 
-1.7.1
+lspci -v | grep -i wifi:
 
+03:00.0 Network controller: Intel Corporation WiFi Link 1000 Series
+    Subsystem: Intel Corporation WiFi Link 1000 Series 1000BGN
 
+dmesg:
+
+myhost kernel: wlan0: direct probe to <ap> (try 1)
+myhost kernel: wlan0: direct probe to <ap> (try 2)
+myhost kernel: wlan0: direct probe to <ap> (try 3)
+myhost kernel: wlan0: direct probe to <ap> timed out
+myhost kernel: iwlagn 0000:03:00.0: fail to flush all tx fifo queues
+
+Best,
+Erik
