@@ -1,438 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52217 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758007Ab1F2WMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:44 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 11/13] bcm47xx: make it possible to build bcm47xx without ssb.
-Date: Thu, 30 Jun 2011 00:11:56 +0200
-Message-Id: <1309385518-12097-12-git-send-email-hauke@hauke-m.de> (sfid-20110630_001246_935761_8E2D5242)
-In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:37896 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756406Ab1FQWbd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 18:31:33 -0400
+MIME-Version: 1.0
+Date: Sat, 18 Jun 2011 00:31:32 +0200
+Message-ID: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com> (sfid-20110618_003153_091401_21D528D7)
+Subject: Lock up when faking MMIO read[bwl] on some machines [WAS: Faking MMIO
+ ops? Fooling a driver]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Pekka Paalanen <pq@iki.fi>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: multipart/mixed; boundary=bcaec544e9e69906a004a5eff2b1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--bcaec544e9e69906a004a5eff2b1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/Kconfig                            |    8 +-------
- arch/mips/bcm47xx/Kconfig                    |   18 ++++++++++++++++++
- arch/mips/bcm47xx/Makefile                   |    3 ++-
- arch/mips/bcm47xx/gpio.c                     |    6 ++++++
- arch/mips/bcm47xx/nvram.c                    |    4 ++++
- arch/mips/bcm47xx/serial.c                   |    4 ++++
- arch/mips/bcm47xx/setup.c                    |    8 ++++++++
- arch/mips/bcm47xx/time.c                     |    2 ++
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    4 ++++
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |   12 ++++++++++++
- arch/mips/pci/pci-bcm47xx.c                  |    6 ++++++
- drivers/watchdog/bcm47xx_wdt.c               |    4 ++++
- 12 files changed, 71 insertions(+), 8 deletions(-)
- create mode 100644 arch/mips/bcm47xx/Kconfig
+I use attached patch to fake result of read[bwl] performed by closed
+source driver (ndiswrapper+bcmwl and wl).
 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 45f7aac..dcb3675 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -91,15 +91,8 @@ config BCM47XX
- 	select DMA_NONCOHERENT
- 	select HW_HAS_PCI
- 	select IRQ_CPU
--	select SYS_HAS_CPU_MIPS32_R1
- 	select SYS_SUPPORTS_32BIT_KERNEL
- 	select SYS_SUPPORTS_LITTLE_ENDIAN
--	select SSB
--	select SSB_DRIVER_MIPS
--	select SSB_DRIVER_EXTIF
--	select SSB_EMBEDDED
--	select SSB_B43_PCI_BRIDGE if PCI
--	select SSB_PCICORE_HOSTMODE if PCI
- 	select GENERIC_GPIO
- 	select SYS_HAS_EARLY_PRINTK
- 	select CFE
-@@ -788,6 +781,7 @@ endchoice
- 
- source "arch/mips/alchemy/Kconfig"
- source "arch/mips/ath79/Kconfig"
-+source "arch/mips/bcm47xx/Kconfig"
- source "arch/mips/bcm63xx/Kconfig"
- source "arch/mips/jazz/Kconfig"
- source "arch/mips/jz4740/Kconfig"
-diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
-new file mode 100644
-index 0000000..443d918
---- /dev/null
-+++ b/arch/mips/bcm47xx/Kconfig
-@@ -0,0 +1,18 @@
-+if BCM47XX
-+
-+config BCM47XX_SSB
-+	bool "BCMA Support for Broadcom BCM47XX"
-+	select SYS_HAS_CPU_MIPS32_R1
-+	select SSB
-+	select SSB_DRIVER_MIPS
-+	select SSB_DRIVER_EXTIF
-+	select SSB_EMBEDDED
-+	select SSB_B43_PCI_BRIDGE if PCI
-+	select SSB_PCICORE_HOSTMODE if PCI
-+	default y
-+	help
-+	 Add support for old Broadcom BCM47xx boards with Sonics Silicon Backplane support bus.
-+
-+	 This will generate an image with support for SSB and MIPS32 R2 instruction set.
-+
-+endif
-diff --git a/arch/mips/bcm47xx/Makefile b/arch/mips/bcm47xx/Makefile
-index 7465e8a..4add173 100644
---- a/arch/mips/bcm47xx/Makefile
-+++ b/arch/mips/bcm47xx/Makefile
-@@ -3,4 +3,5 @@
- # under Linux.
- #
- 
--obj-y := gpio.o irq.o nvram.o prom.o serial.o setup.o time.o wgt634u.o
-+obj-y 				+= gpio.o irq.o nvram.o prom.o serial.o setup.o time.o
-+obj-$(CONFIG_BCM47XX_SSB)	+= wgt634u.o
-diff --git a/arch/mips/bcm47xx/gpio.c b/arch/mips/bcm47xx/gpio.c
-index 2f6d2df..3320e91 100644
---- a/arch/mips/bcm47xx/gpio.c
-+++ b/arch/mips/bcm47xx/gpio.c
-@@ -21,6 +21,7 @@ static DECLARE_BITMAP(gpio_in_use, BCM47XX_EXTIF_GPIO_LINES);
- int gpio_request(unsigned gpio, const char *tag)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
- 		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-@@ -34,6 +35,7 @@ int gpio_request(unsigned gpio, const char *tag)
- 			return -EBUSY;
- 
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -42,6 +44,7 @@ EXPORT_SYMBOL(gpio_request);
- void gpio_free(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
- 		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-@@ -53,6 +56,7 @@ void gpio_free(unsigned gpio)
- 
- 		clear_bit(gpio, gpio_in_use);
- 		return;
-+#endif
- 	}
- }
- EXPORT_SYMBOL(gpio_free);
-@@ -60,6 +64,7 @@ EXPORT_SYMBOL(gpio_free);
- int gpio_to_irq(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco))
- 			return ssb_mips_irq(bcm47xx_bus.ssb.chipco.dev) + 2;
-@@ -67,6 +72,7 @@ int gpio_to_irq(unsigned gpio)
- 			return ssb_mips_irq(bcm47xx_bus.ssb.extif.dev) + 2;
- 		else
- 			return -EINVAL;
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index d2304d0..d223dac 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -26,7 +26,9 @@ static char nvram_buf[NVRAM_SPACE];
- /* Probe for NVRAM header */
- static void early_nvram_init(void)
- {
-+#ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_mipscore *mcore_ssb;
-+#endif
- 	struct nvram_header *header;
- 	int i;
- 	u32 base = 0;
-@@ -35,11 +37,13 @@ static void early_nvram_init(void)
- 	u32 *src, *dst;
- 
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		mcore_ssb = &bcm47xx_bus.ssb.mipscore;
- 		base = mcore_ssb->flash_window;
- 		lim = mcore_ssb->flash_window_size;
- 		break;
-+#endif
- 	}
- 
- 	off = FLASH_MIN;
-diff --git a/arch/mips/bcm47xx/serial.c b/arch/mips/bcm47xx/serial.c
-index 87c2c5e..e9258cb 100644
---- a/arch/mips/bcm47xx/serial.c
-+++ b/arch/mips/bcm47xx/serial.c
-@@ -23,6 +23,7 @@ static struct platform_device uart8250_device = {
- 	},
- };
- 
-+#ifdef CONFIG_BCM47XX_SSB
- static int __init uart8250_init_ssb(void)
- {
- 	int i;
-@@ -44,12 +45,15 @@ static int __init uart8250_init_ssb(void)
- 	}
- 	return platform_device_register(&uart8250_device);
- }
-+#endif
- 
- static int __init uart8250_init(void)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return uart8250_init_ssb();
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index bff4181..9fc92bd 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -47,9 +47,11 @@ static void bcm47xx_machine_restart(char *command)
- 	local_irq_disable();
- 	/* Set the watchdog timer to reset immediately */
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 1);
- 		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
-@@ -60,14 +62,17 @@ static void bcm47xx_machine_halt(void)
- 	/* Disable interrupts and watchdog and spin forever */
- 	local_irq_disable();
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
- 		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
- }
- 
-+#ifdef CONFIG_BCM47XX_SSB
- #define READ_FROM_NVRAM(_outvar, name, buf) \
- 	if (nvram_getprefix(prefix, name, buf, sizeof(buf)) >= 0)\
- 		sprom->_outvar = simple_strtoul(buf, NULL, 0);
-@@ -288,13 +293,16 @@ static void __init bcm47xx_register_ssb(void)
- 		}
- 	}
- }
-+#endif
- 
- void __init plat_mem_setup(void)
- {
- 	struct cpuinfo_mips *c = &current_cpu_data;
- 
-+#ifdef CONFIG_BCM47XX_SSB
- 	bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_SSB;
- 	bcm47xx_register_ssb();
-+#endif
- 
- 	_machine_restart = bcm47xx_machine_restart;
- 	_machine_halt = bcm47xx_machine_halt;
-diff --git a/arch/mips/bcm47xx/time.c b/arch/mips/bcm47xx/time.c
-index a7be993..02a652a 100644
---- a/arch/mips/bcm47xx/time.c
-+++ b/arch/mips/bcm47xx/time.c
-@@ -40,9 +40,11 @@ void __init plat_time_init(void)
- 	write_c0_compare(0xffff);
- 
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		hz = ssb_cpu_clock(&bcm47xx_bus.ssb.mipscore) / 2;
- 		break;
-+#endif
- 	}
- 
- 	if (!hz)
-diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-index 4be8b95..764afea 100644
---- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-@@ -22,11 +22,15 @@
- #include <linux/ssb/ssb.h>
- 
- enum bcm47xx_bus_type {
-+#ifdef CONFIG_BCM47XX_SSB
- 	BCM47XX_BUS_TYPE_SSB,
-+#endif
- };
- 
- union bcm47xx_bus {
-+#ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_bus ssb;
-+#endif
- };
- 
- extern union bcm47xx_bus bcm47xx_bus;
-diff --git a/arch/mips/include/asm/mach-bcm47xx/gpio.h b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-index 976b8aa..0c3bd1f 100644
---- a/arch/mips/include/asm/mach-bcm47xx/gpio.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-@@ -22,8 +22,10 @@ extern int gpio_to_irq(unsigned gpio);
- static inline int gpio_get_value(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_gpio_in(&bcm47xx_bus.ssb, 1 << gpio);
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -31,18 +33,22 @@ static inline int gpio_get_value(unsigned gpio)
- static inline void gpio_set_value(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
- 			     value ? 1 << gpio : 0);
-+#endif
- 	}
- }
- 
- static inline int gpio_direction_input(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -50,6 +56,7 @@ static inline int gpio_direction_input(unsigned gpio)
- static inline int gpio_direction_output(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		/* first set the gpio out value */
- 		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
-@@ -57,6 +64,7 @@ static inline int gpio_direction_output(unsigned gpio, int value)
- 		/* then set the gpio mode */
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 1 << gpio);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -64,10 +72,12 @@ static inline int gpio_direction_output(unsigned gpio, int value)
- static inline int gpio_intmask(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_intmask(&bcm47xx_bus.ssb, 1 << gpio,
- 				 value ? 1 << gpio : 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -75,10 +85,12 @@ static inline int gpio_intmask(unsigned gpio, int value)
- static inline int gpio_polarity(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_polarity(&bcm47xx_bus.ssb, 1 << gpio,
- 				  value ? 1 << gpio : 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/pci/pci-bcm47xx.c b/arch/mips/pci/pci-bcm47xx.c
-index 455f8e5..924e158 100644
---- a/arch/mips/pci/pci-bcm47xx.c
-+++ b/arch/mips/pci/pci-bcm47xx.c
-@@ -25,6 +25,7 @@
- #include <linux/types.h>
- #include <linux/pci.h>
- #include <linux/ssb/ssb.h>
-+#include <bcm47xx.h>
- 
- int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
-@@ -33,9 +34,13 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 
- int pcibios_plat_dev_init(struct pci_dev *dev)
- {
-+#ifdef CONFIG_BCM47XX_SSB
- 	int res;
- 	u8 slot, pin;
- 
-+	if (bcm47xx_active_bus_type !=  BCM47XX_BUS_TYPE_SSB)
-+		return 0;
-+
- 	res = ssb_pcibios_plat_dev_init(dev);
- 	if (res < 0) {
- 		printk(KERN_ALERT "PCI: Failed to init device %s\n",
-@@ -55,5 +60,6 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
- 	}
- 
- 	dev->irq = res;
-+#endif
- 	return 0;
- }
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index 7e4e063..beacd79 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -55,17 +55,21 @@ static inline void bcm47xx_wdt_hw_start(void)
- {
- 	/* this is 2,5s on 100Mhz clock  and 2s on 133 Mhz */
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
- 		break;
-+#endif
- 	}
- }
- 
- static inline int bcm47xx_wdt_hw_stop(void)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
-+#endif
- 	}
- 	return -EINVAL;
- }
--- 
-1.7.4.1
+1) It works great on my Sony VAIO with Intel(R) Core(TM)2 Duo CPU P8400
+2) It locks up Macbook Pro 8,1 with some 8-cores Intel
 
+Do you have any idea why it causes the lockup? Function causing
+problem is "set_ins_reg_val". I've created it as copy of
+get_ins_reg_val, it just sets values in struct pt_regs, instead of
+reading them).
+
+--=20
+Rafa=C5=82
+
+--bcaec544e9e69906a004a5eff2b1
+Content-Type: application/octet-stream; name="mmio.debugging.patch"
+Content-Disposition: attachment; filename="mmio.debugging.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gp1plyq31
+
+ZGlmZiAtLWdpdCBhL2FyY2gveDg2L21tL21taW8tbW9kLmMgYi9hcmNoL3g4Ni9tbS9tbWlvLW1v
+ZC5jCmluZGV4IDNhZGZmN2QuLmY4NTEzYmIgMTAwNjQ0Ci0tLSBhL2FyY2gveDg2L21tL21taW8t
+bW9kLmMKKysrIGIvYXJjaC94ODYvbW0vbW1pby1tb2QuYwpAQCAtMjA2LDYgKzIwNiwxMiBAQCBz
+dGF0aWMgdm9pZCBwcmUoc3RydWN0IGttbWlvX3Byb2JlICpwLCBzdHJ1Y3QgcHRfcmVncyAqcmVn
+cywKIAlwdXRfY3B1X3ZhcihwZl9yZWFzb24pOwogfQogCisjZGVmaW5lIE1NSU9fQkFTRQkJCTB4
+ZmFhZmMwMDAKKyNkZWZpbmUgQjQzX01NSU9fUEhZX0NPTlRST0wJCTB4M0ZDCisjZGVmaW5lIEI0
+M19NTUlPX1BIWV9EQVRBCQkweDNGRQorCitzdGF0aWMgdTE2IGJyb2FkY29tX3BoeV9hZGRyOwor
+CiBzdGF0aWMgdm9pZCBwb3N0KHN0cnVjdCBrbW1pb19wcm9iZSAqcCwgdW5zaWduZWQgbG9uZyBj
+b25kaXRpb24sCiAJCQkJCQkJc3RydWN0IHB0X3JlZ3MgKnJlZ3MpCiB7CkBAIC0yMTksNiArMjI1
+LDE4IEBAIHN0YXRpYyB2b2lkIHBvc3Qoc3RydWN0IGttbWlvX3Byb2JlICpwLCB1bnNpZ25lZCBs
+b25nIGNvbmRpdGlvbiwKIAkJQlVHKCk7CiAJfQogCisJaWYgKG15X3JlYXNvbi0+dHlwZSA9PSBS
+RUdfUkVBRCAmJiBteV90cmFjZS0+cGh5cyA9PSBNTUlPX0JBU0UgKyBCNDNfTU1JT19QSFlfREFU
+QSkgeworCQlwcl9pbmZvKCJaQUpFQzogcmVhZCBQSFkgMHglWFxuIiwgYnJvYWRjb21fcGh5X2Fk
+ZHIpOworCQlzd2l0Y2ggKGJyb2FkY29tX3BoeV9hZGRyKXsKKwkJY2FzZSAweDIwOgorCQljYXNl
+IDB4MjI6CisJCWNhc2UgMHgyNzoKKwkJCXByX2luZm8oIlpBSkVDOiBvdmVyd3JpdGluZyAweCVY
+IHdpdGggMHhGRkZGXG4iLCBicm9hZGNvbV9waHlfYWRkcik7CisJCQlzZXRfaW5zX3JlZ192YWwo
+bXlfcmVhc29uLT5pcCwgcmVncywgMHhGRkZGKTsKKwkJCWJyZWFrOworCQl9CisJfQorCiAJc3dp
+dGNoIChteV9yZWFzb24tPnR5cGUpIHsKIAljYXNlIFJFR19SRUFEOgogCQlteV90cmFjZS0+dmFs
+dWUgPSBnZXRfaW5zX3JlZ192YWwobXlfcmVhc29uLT5pcCwgcmVncyk7CkBAIC0yMjcsNiArMjQ1
+LDExIEBAIHN0YXRpYyB2b2lkIHBvc3Qoc3RydWN0IGttbWlvX3Byb2JlICpwLCB1bnNpZ25lZCBs
+b25nIGNvbmRpdGlvbiwKIAkJYnJlYWs7CiAJfQogCisJaWYgKG15X3JlYXNvbi0+dHlwZSA9PSBS
+RUdfV1JJVEUgJiYgbXlfdHJhY2UtPnBoeXMgPT0gTU1JT19CQVNFICsgQjQzX01NSU9fUEhZX0NP
+TlRST0wpIHsKKwkJYnJvYWRjb21fcGh5X2FkZHIgPSBteV90cmFjZS0+dmFsdWU7CisJCS8vcHJf
+aW5mbygiWkFKRUM6IHNldHRpbmcgUEhZIGFkZHIgdG8gMHglWFxuIiwgYnJvYWRjb21fcGh5X2Fk
+ZHIpOworCX0KKwogCW1taW9fdHJhY2VfcncobXlfdHJhY2UpOwogCXB1dF9jcHVfdmFyKGNwdV90
+cmFjZSk7CiAJcHV0X2NwdV92YXIocGZfcmVhc29uKTsKZGlmZiAtLWdpdCBhL2FyY2gveDg2L21t
+L3BmX2luLmMgYi9hcmNoL3g4Ni9tbS9wZl9pbi5jCmluZGV4IDlmMDYxNGQuLjg2NDQ5ZWQgMTAw
+NjQ0Ci0tLSBhL2FyY2gveDg2L21tL3BmX2luLmMKKysrIGIvYXJjaC94ODYvbW0vcGZfaW4uYwpA
+QCAtNDYxLDYgKzQ2MSw5OSBAQCBlcnI6CiAJcmV0dXJuIDA7CiB9CiAKK3N0YXRpYyB2b2lkIHNl
+dF9yZWdfdzMyKGludCBubywgc3RydWN0IHB0X3JlZ3MgKnJlZ3MsIHUzMiB2YWwpCit7CisJc3dp
+dGNoIChubykgeworCWNhc2UgYXJnX0FYOgorCQlyZWdzLT5heCA9IHZhbDsKKwkJYnJlYWs7CisJ
+Y2FzZSBhcmdfQlg6CisJCXJlZ3MtPmJ4ID0gdmFsOworCQlicmVhazsKKwljYXNlIGFyZ19DWDoK
+KwkJcmVncy0+Y3ggPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX0RYOgorCQlyZWdzLT5keCA9
+IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfU1A6CisJCXJlZ3MtPnNwID0gdmFsOworCQlicmVh
+azsKKwljYXNlIGFyZ19CUDoKKwkJcmVncy0+YnAgPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJn
+X1NJOgorCQlyZWdzLT5zaSA9IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfREk6CisJCXJlZ3Mt
+PmRpID0gdmFsOworCQlicmVhazsKKyNpZmRlZiBfX2FtZDY0X18KKwljYXNlIGFyZ19SODoKKwkJ
+cmVncy0+cjggPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX1I5OgorCQlyZWdzLT5yOSA9IHZh
+bDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfUjEwOgorCQlyZWdzLT5yMTAgPSB2YWw7CisJCWJyZWFr
+OworCWNhc2UgYXJnX1IxMToKKwkJcmVncy0+cjExID0gdmFsOworCQlicmVhazsKKwljYXNlIGFy
+Z19SMTI6CisJCXJlZ3MtPnIxMiA9IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfUjEzOgorCQly
+ZWdzLT5yMTMgPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX1IxNDoKKwkJcmVncy0+cjE0ID0g
+dmFsOworCQlicmVhazsKKwljYXNlIGFyZ19SMTU6CisJCXJlZ3MtPnIxNSA9IHZhbDsKKwkJYnJl
+YWs7CisjZW5kaWYKKwlkZWZhdWx0OgorCQlwcmludGsoS0VSTl9FUlIgIm1taW90cmFjZTogRXJy
+b3IgcmVnIG5vIyAlZFxuIiwgbm8pOworCX0KK30KKwordm9pZCBzZXRfaW5zX3JlZ192YWwodW5z
+aWduZWQgbG9uZyBpbnNfYWRkciwgc3RydWN0IHB0X3JlZ3MgKnJlZ3MsIHUzMiB2YWwpCit7CisJ
+dW5zaWduZWQgaW50IG9wY29kZTsKKwlpbnQgcmVnOworCXVuc2lnbmVkIGNoYXIgKnA7CisJc3Ry
+dWN0IHByZWZpeF9iaXRzIHByZjsKKwlpbnQgaTsKKworCXAgPSAodW5zaWduZWQgY2hhciAqKWlu
+c19hZGRyOworCXAgKz0gc2tpcF9wcmVmaXgocCwgJnByZik7CisJcCArPSBnZXRfb3Bjb2RlKHAs
+ICZvcGNvZGUpOworCWZvciAoaSA9IDA7IGkgPCBBUlJBWV9TSVpFKHJlZ19yb3ApOyBpKyspCisJ
+CWlmIChyZWdfcm9wW2ldID09IG9wY29kZSkKKwkJCWdvdG8gZG9fd29yazsKKworCWZvciAoaSA9
+IDA7IGkgPCBBUlJBWV9TSVpFKHJlZ193b3ApOyBpKyspCisJCWlmIChyZWdfd29wW2ldID09IG9w
+Y29kZSkKKwkJCWdvdG8gZG9fd29yazsKKworCXByaW50ayhLRVJOX0VSUiAibW1pb3RyYWNlOiBO
+b3QgYSByZWdpc3RlciBpbnN0cnVjdGlvbiwgb3Bjb2RlICIKKwkJCQkJCQkiMHglMDJ4XG4iLCBv
+cGNvZGUpOworCXJldHVybjsKKworZG9fd29yazoKKwkvKiBmb3IgU1RPUywgc291cmNlIHJlZ2lz
+dGVyIGlzIGZpeGVkICovCisJaWYgKG9wY29kZSA9PSAweEFBIHx8IG9wY29kZSA9PSAweEFCKSB7
+CisJCXJlZyA9IGFyZ19BWDsKKwl9IGVsc2UgeworCQl1bnNpZ25lZCBjaGFyIG1vZF9ybSA9ICpw
+OworCQlyZWcgPSAoKG1vZF9ybSA+PiAzKSAmIDB4NykgfCAocHJmLnJleHIgPDwgMyk7CisJfQor
+CisJc2V0X3JlZ193MzIocmVnLCByZWdzLCB2YWwpOworfQorCiB1bnNpZ25lZCBsb25nIGdldF9p
+bnNfaW1tX3ZhbCh1bnNpZ25lZCBsb25nIGluc19hZGRyKQogewogCXVuc2lnbmVkIGludCBvcGNv
+ZGU7CmRpZmYgLS1naXQgYS9hcmNoL3g4Ni9tbS9wZl9pbi5oIGIvYXJjaC94ODYvbW0vcGZfaW4u
+aAppbmRleCBlMDUzNDFhLi45MGI0M2ZmIDEwMDY0NAotLS0gYS9hcmNoL3g4Ni9tbS9wZl9pbi5o
+CisrKyBiL2FyY2gveDg2L21tL3BmX2luLmgKQEAgLTM0LDYgKzM0LDcgQEAgZW51bSByZWFzb25f
+dHlwZSB7CiBlbnVtIHJlYXNvbl90eXBlIGdldF9pbnNfdHlwZSh1bnNpZ25lZCBsb25nIGluc19h
+ZGRyKTsKIHVuc2lnbmVkIGludCBnZXRfaW5zX21lbV93aWR0aCh1bnNpZ25lZCBsb25nIGluc19h
+ZGRyKTsKIHVuc2lnbmVkIGxvbmcgZ2V0X2luc19yZWdfdmFsKHVuc2lnbmVkIGxvbmcgaW5zX2Fk
+ZHIsIHN0cnVjdCBwdF9yZWdzICpyZWdzKTsKK3ZvaWQgc2V0X2luc19yZWdfdmFsKHVuc2lnbmVk
+IGxvbmcgaW5zX2FkZHIsIHN0cnVjdCBwdF9yZWdzICpyZWdzLCB1MzIgdmFsKTsKIHVuc2lnbmVk
+IGxvbmcgZ2V0X2luc19pbW1fdmFsKHVuc2lnbmVkIGxvbmcgaW5zX2FkZHIpOwogCiAjZW5kaWYg
+LyogX19QRl9IXyAqLwo=
+--bcaec544e9e69906a004a5eff2b1--
