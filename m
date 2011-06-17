@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:19447 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751991Ab1FOWBH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 18:01:07 -0400
-Subject: [PATCH 1/2] ath9k: use standard max(), remove A_MAX macro
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Wed, 15 Jun 2011 18:01:05 -0400
-Message-ID: <20110615220105.1755.45521.stgit@mj.roinet.com> (sfid-20110616_000111_508379_26872E85)
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45902 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059Ab1FQVKA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 17:10:00 -0400
+Received: by fxm17 with SMTP id 17so1988942fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 14:09:59 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Thomas Novin <thomas@xyz.pp.se>
+Subject: Re: Status of carl9170
+Date: Fri, 17 Jun 2011 23:10:42 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1308255196.4264.7.camel@thnov-desktop.xyz.lan> <1308321840.7789.12.camel@thnov-desktop.xyz.lan> <1308322679.7789.13.camel@thnov-desktop.xyz.lan>
+In-Reply-To: <1308322679.7789.13.camel@thnov-desktop.xyz.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201106172310.42817.chunkeey@googlemail.com> (sfid-20110617_231009_572434_BA38AA54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
- drivers/net/wireless/ath/ath9k/rc.c    |    6 +++---
- 2 files changed, 3 insertions(+), 5 deletions(-)
+On Friday 17 June 2011 16:57:59 Thomas Novin wrote:
+> On fre, 2011-06-17 at 16:44 +0200, Thomas Novin wrote:
+> > > Ok, can you please tell which option helped? If it was noht, then
+> > > you should check if there is a newer firmware for your router.
+> 
+> I noticed that I only have 802.11b/g now, did noht disable 802.11n?
+exactly, this switch disables 11n in case there's a problem.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3bf1d83..b9c177f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -54,8 +54,6 @@ struct ath_node;
- 		(_l) &= ((_sz) - 1);		\
- 	} while (0)
- 
--#define A_MAX(a, b) ((a) > (b) ? (a) : (b))
--
- #define TSF_TO_TU(_h,_l) \
- 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
- 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ba7f36a..e7fe4d9 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -533,7 +533,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 					[valid_rate_count] = j;
- 				ath_rc_priv->valid_phy_ratecnt[phy] += 1;
- 				ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
--				hi = A_MAX(hi, j);
-+				hi = max(hi, j);
- 			}
- 		}
- 	}
-@@ -569,7 +569,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
- 				[ath_rc_priv->valid_phy_ratecnt[phy]] = j;
- 			ath_rc_priv->valid_phy_ratecnt[phy] += 1;
- 			ath_rc_set_valid_rate_idx(ath_rc_priv, j, 1);
--			hi = A_MAX(hi, j);
-+			hi = max(hi, j);
- 		}
- 	}
- 
-@@ -1228,7 +1228,7 @@ static void ath_rc_init(struct ath_softc *sc,
- 						       ht_mcs,
- 						       ath_rc_priv->ht_cap);
- 		}
--		hi = A_MAX(hi, hthi);
-+		hi = max(hi, hthi);
- 	}
- 
- 	ath_rc_priv->rate_table_size = hi + 1;
+http://wireless.kernel.org/en/users/Drivers/carl9170#A802.11n_Compatibility
+
+I wonder if there's an OpenWRT port for the AP you got ;)
+
+Regards,
+	Chr
