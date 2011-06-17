@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:33032 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473Ab1FCRfu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 13:35:50 -0400
-Received: by qwk3 with SMTP id 3so918751qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 10:35:49 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:58749 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754678Ab1FQLLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 07:11:42 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 00/27] mac80211: create mac80211_ prefix
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+	<1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 17 Jun 2011 14:11:40 +0300
+In-Reply-To: <1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net> (Johannes Berg's message of "Thu\, 16 Jun 2011 17\:34\:41 +0200")
+Message-ID: <87mxhg1zmb.fsf@purkki.adurom.net> (sfid-20110617_131145_063825_6E95FD96)
 MIME-Version: 1.0
-In-Reply-To: <1307112856-20231-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307112856-20231-1-git-send-email-wey-yi.w.guy@intel.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 3 Jun 2011 19:35:29 +0200
-Message-ID: <BANLkTinvcXHMqBB4V1OBNcoacbocLfbz5g@mail.gmail.com> (sfid-20110603_193553_456051_66A14609)
-Subject: Re: [ipw3945-devel] [PATCH 0/5] update for 3.0.1
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"3.0.1"? You mean Linux 3.1?
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On Fri, Jun 3, 2011 at 4:54 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> We do more cleanup works for iwlagn driver
+> On Tue, 14 Jun 2011 01:34:28 +0300, Kalle Valo wrote:
 >
-> Wey-Yi Guy (5):
->  iwlagn: save the latest smps mode
->  iwlagn: set smps mode after assoc for 1000 device
->  iwlagn: move all post scan functions in one place
->  iwlagn: direct call to post_scan function
->  iwlagn: call commit_rxon function directly
+>> In this patchset I first fix some issues I found from the drivers,
+>> then create mac80211-compat.h to make the transition as smooth as
+>> possible and then start changing mac80211 itself.
 >
-> these patches are also available from wireless-next-2.6 branch on
->  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
->
->  drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
->  drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    3 ---
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   17 +++++++++++++++++
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |   10 +++++-----
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-core.h     |   13 ++++---------
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |   10 ++--------
->  8 files changed, 31 insertions(+), 26 deletions(-)
->
->
-> ------------------------------------------------------------------------------
-> Simplify data backup and recovery for your virtual environment with vRanger.
-> Installation's a snap, and flexible recovery options mean your data is safe,
-> secure and there when you need it. Discover what all the cheering's about.
-> Get your free trial download today.
-> http://p.sf.net/sfu/quest-dev2dev2
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+> FWIW, I don't mind the rename, but I don't like the compat.h thing.
+> The transition won't be smoothed by this, it just means the transition
+> will drag out as things conflict etc.
 
+My plan was that I will finish the transition and remove
+mac80211-compat.h before the next merge window. That way the file
+would not be in any of the official releases.
 
+> If we want to rename, we'll need to bite the bullet eventually
+> anyway.
+
+What do you suggest here? So that we should rename everything (both
+mac80211 and 19 drivers) in one go? If we do that, we would have to do
+everything in one patch to not break bisect, and it would be huge.
+
+With mac80211-compat.h it's possible to break down the patches into
+small pieces. This makes it easier to create the patches and, most
+importantly, review them.
+
+I'm willing to work on that huge patch if we so decide, but I'm not
+sure if that's the correct way.
+
+Ah, while writing this I realised that I could instead rename symbols
+in mac80211.h one at a time and that way the patches would be smaller.
+Did you mean that?
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Kalle Valo
