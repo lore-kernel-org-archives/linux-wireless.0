@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46858 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224Ab1FAGyv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 02:54:51 -0400
-Subject: [PATCH] bluetooth: fix sparse & gcc warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Gustavo F. Padovan" <padovan@profusion.mobi>,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Jun 2011 08:54:45 +0200
-Message-ID: <1306911285.3867.6.camel@jlt3.sipsolutions.net> (sfid-20110601_085456_858728_3F865F9C)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:39161 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754790Ab1FQUdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 16:33:41 -0400
+Message-ID: <4DFBBA22.4050406@gnu.org> (sfid-20110617_223353_023252_CA48BC3B)
+Date: Fri, 17 Jun 2011 16:33:38 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if rate_lowest_index()
+ fails
+References: <20110615220252.1918.73638.stgit@mj.roinet.com> <20110616102224.GB2178@redhat.com> <4DFA7EDF.70608@gnu.org> <4DFAF645.5030303@broadcom.com>
+In-Reply-To: <4DFAF645.5030303@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/17/2011 02:37 AM, Arend van Spriel wrote:
+> On 06/17/2011 12:08 AM, Pavel Roskin wrote:
 
-sparse complains about a few things that should
-be static, and I also noticed another warning
-from gcc about a set but unused variable.
+>> In my case, I was able to restart the system by sysrq when using BUG_ON,
+>> but the system would hang hard with WARN_ON. I think continuing after
+>> returning an invalid index is wrong. It will lead to memory corruption
+>> that could in turn lead to corruption of the filesystem.
+>
+> I think it is generally a bad idea to use BUG_ON as a solution. As
+> Stanislaw indicated there are platforms which can continue without a
+> hang so you are regressing those. Regarding your patch I think the
+> -EINVAL is good to have, but leave the WARN_ON.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/bluetooth/l2cap_core.c  |    6 +++---
- net/bluetooth/mgmt.c        |    2 +-
- net/bluetooth/rfcomm/sock.c |    3 ---
- 3 files changed, 4 insertions(+), 7 deletions(-)
+Well, then it would be pointless.  The whole idea was to prevent memory 
+corruption and to stop early.  Returning -EINVAL for real (as opposed to 
+having it in the dead code) could lead to worse memory corruption than 
+returning 0.
 
---- a/net/bluetooth/l2cap_core.c	2011-06-01 08:42:43.000000000 +0200
-+++ b/net/bluetooth/l2cap_core.c	2011-06-01 08:45:04.000000000 +0200
-@@ -62,8 +62,8 @@ static u8 l2cap_fixed_chan[8] = { 0x02,
- 
- static struct workqueue_struct *_busy_wq;
- 
--LIST_HEAD(chan_list);
--DEFINE_RWLOCK(chan_list_lock);
-+static LIST_HEAD(chan_list);
-+static DEFINE_RWLOCK(chan_list_lock);
- 
- static void l2cap_busy_work(struct work_struct *work);
- 
-@@ -371,7 +371,7 @@ static inline int l2cap_check_security(s
- 	return hci_conn_security(conn->hcon, chan->sec_level, auth_type);
- }
- 
--u8 l2cap_get_ident(struct l2cap_conn *conn)
-+static u8 l2cap_get_ident(struct l2cap_conn *conn)
- {
- 	u8 id;
- 
---- a/net/bluetooth/mgmt.c	2011-06-01 08:42:24.000000000 +0200
-+++ b/net/bluetooth/mgmt.c	2011-06-01 08:42:28.000000000 +0200
-@@ -41,7 +41,7 @@ struct pending_cmd {
- 	void *user_data;
- };
- 
--LIST_HEAD(cmd_list);
-+static LIST_HEAD(cmd_list);
- 
- static int cmd_status(struct sock *sk, u16 index, u16 cmd, u8 status)
- {
---- a/net/bluetooth/rfcomm/sock.c	2011-06-01 08:50:06.000000000 +0200
-+++ b/net/bluetooth/rfcomm/sock.c	2011-06-01 08:50:23.000000000 +0200
-@@ -741,7 +741,6 @@ static int rfcomm_sock_setsockopt(struct
- static int rfcomm_sock_getsockopt_old(struct socket *sock, int optname, char __user *optval, int __user *optlen)
- {
- 	struct sock *sk = sock->sk;
--	struct sock *l2cap_sk;
- 	struct rfcomm_conninfo cinfo;
- 	struct l2cap_conn *conn = l2cap_pi(sk)->chan->conn;
- 	int len, err = 0;
-@@ -786,8 +785,6 @@ static int rfcomm_sock_getsockopt_old(st
- 			break;
- 		}
- 
--		l2cap_sk = rfcomm_pi(sk)->dlc->session->sock->sk;
--
- 		cinfo.hci_handle = conn->hcon->handle;
- 		memcpy(cinfo.dev_class, conn->hcon->dev_class, 3);
- 
+The real fix would be to make rate control algorithms robust to the case 
+when no rates are allowed.  My patch was meant as a first little step 
+towards it by making it easier to capture the backtrace and restart the 
+system.  But it's not worth the trouble for me to argue about it.
 
-
+-- 
+Regards,
+Pavel Roskin
