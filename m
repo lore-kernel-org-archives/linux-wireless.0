@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1911 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757242Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:42 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 036/119] staging: brcm80211: remove dhd_set_timer
- function prototype
-Date: Wed, 29 Jun 2011 16:47:00 -0700
-Message-ID: <1309391303-22741-37-git-send-email-frankyl@broadcom.com> (sfid-20110630_014859_980378_DCC418E9)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48048 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933112Ab1FQUnW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 16:43:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: tsyvarev@ispras.ru, me@bobcopeland.com, mickflemm@gmail.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] ath5k: free sc->ah in ath5k_deinit_softc
+Date: Fri, 17 Jun 2011 16:41:30 -0400
+Message-Id: <1308343290-13875-1-git-send-email-linville@tuxdriver.com> (sfid-20110617_224326_613088_9C7D9428)
+In-Reply-To: <1308343066-13770-1-git-send-email-linville@tuxdriver.com>
+References: <1308343066-13770-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Nothing else is freeing it, and this mirrors the error handling patch
+already in ath5k_init_softc.
 
-This function prototype is not implemented nor referenced in the
-brcmfmac driver so it has been removed.
+https://bugzilla.kernel.org/show_bug.cgi?id=37592
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Reported-by: Tsyvarev Andrey <tsyvarev@ispras.ru>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+v2 -- cite bugzilla report
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 34bd5e9..bb9a72a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -66,8 +66,6 @@ const char dhd_version[] =
- const char dhd_version[] = "Dongle Host Driver, version " EPI_VERSION_STR;
- #endif
+ drivers/net/wireless/ath/ath5k/base.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3e70b14..a6623dd 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2960,6 +2960,7 @@ ath5k_deinit_softc(struct ath5k_softc *sc)
+ 	 * state and potentially want to use them.
+ 	 */
+ 	ath5k_hw_deinit(sc->ah);
++	kfree(sc->ah);
+ 	free_irq(sc->irq, sc);
+ }
  
--void dhd_set_timer(void *bus, uint wdtick);
--
- /* IOVar table */
- enum {
- 	IOV_VERSION = 1,
 -- 
-1.7.1
-
+1.7.4.4
 
