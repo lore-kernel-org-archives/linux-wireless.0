@@ -1,79 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58423 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589Ab1FUHpg (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:56369 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297Ab1FQHy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 03:45:36 -0400
-Subject: [PATCH] nl80211: use netlink consistent dump feature for BSS dumps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Jun 2011 09:45:33 +0200
-Message-ID: <1308642333.3900.2.camel@jlt3.sipsolutions.net> (sfid-20110621_094539_411949_057FD9EC)
-Mime-Version: 1.0
+	Fri, 17 Jun 2011 03:54:29 -0400
+Received: by ywe9 with SMTP id 9so1150867ywe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 00:54:28 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 17 Jun 2011 09:54:28 +0200
+Message-ID: <BANLkTi=AP7JKfuL3K+GzB_GhOw=hYmEGpg@mail.gmail.com> (sfid-20110617_095433_689090_CE4CE1FA)
+Subject: disagrees about version of symbol
+From: Thomas Novin <thomas@xyz.pp.se>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi
 
-Use the new consistent dump feature from (generic) netlink
-to advertise when dumps are incomplete.
+I was going to test the brcm80211 driver to replace the wl driver on
+my gfs laptop to support a BCM4727 chip.
 
-Readers may note that this does not initialize the
-rdev->bss_generation counter to a non-zero value. This is
-still OK since the value is modified only under spinlock
-when the list is modified. Since the dump code holds the
-spinlock, the value will either be > 0 already, or the
-list will still be empty in which case a consistent dump
-will actually be made (and be empty).
+After doing scripts/driver-select, choosing that driver, make, make
+install, make unload and them modprobe brcm80211 I get this:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.213586] cfg80211: Calling
+CRDA to update world regulatory domain
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223361] cfg80211: World
+regulatory domain updated:
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223367] cfg80211:
+(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223375] cfg80211:
+(2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223382] cfg80211:
+(2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223389] cfg80211:
+(2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223395] cfg80211:
+(5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.223401] cfg80211:
+(5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.241140] brcm80211: module
+is from the staging directory, the quality is unknown, you have been
+warned.
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.241989] brcm80211:
+disagrees about version of symbol ieee80211_free_hw
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.241992] brcm80211:
+Unknown symbol ieee80211_free_hw (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242128] brcm80211:
+disagrees about version of symbol ieee80211_alloc_hw
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242130] brcm80211:
+Unknown symbol ieee80211_alloc_hw (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242230] brcm80211:
+disagrees about version of symbol regulatory_hint
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242232] brcm80211:
+Unknown symbol regulatory_hint (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242316] brcm80211:
+disagrees about version of symbol ieee80211_register_hw
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242318] brcm80211:
+Unknown symbol ieee80211_register_hw (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242508] brcm80211:
+disagrees about version of symbol ieee80211_tx_status_irqsafe
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.242510] brcm80211:
+Unknown symbol ieee80211_tx_status_irqsafe (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243162] brcm80211:
+disagrees about version of symbol ieee80211_wake_queues
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243164] brcm80211:
+Unknown symbol ieee80211_wake_queues (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243388] brcm80211:
+disagrees about version of symbol ieee80211_stop_queues
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243390] brcm80211:
+Unknown symbol ieee80211_stop_queues (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243541] brcm80211:
+disagrees about version of symbol ieee80211_unregister_hw
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243542] brcm80211:
+Unknown symbol ieee80211_unregister_hw (err -22)
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243812] brcm80211:
+disagrees about version of symbol ieee80211_rx_irqsafe
+Jun 17 09:43:41 jennie-laptop kernel: [ 5418.243814] brcm80211:
+Unknown symbol ieee80211_rx_irqsafe (err -22)
 
---- a/net/wireless/nl80211.c	2011-06-20 13:34:43.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-06-20 13:39:58.000000000 +0200
-@@ -3620,7 +3620,8 @@ static int nl80211_stop_sched_scan(struc
- 	return __cfg80211_stop_sched_scan(rdev, false);
- }
- 
--static int nl80211_send_bss(struct sk_buff *msg, u32 pid, u32 seq, int flags,
-+static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
-+			    u32 seq, int flags,
- 			    struct cfg80211_registered_device *rdev,
- 			    struct wireless_dev *wdev,
- 			    struct cfg80211_internal_bss *intbss)
-@@ -3632,11 +3633,13 @@ static int nl80211_send_bss(struct sk_bu
- 
- 	ASSERT_WDEV_LOCK(wdev);
- 
--	hdr = nl80211hdr_put(msg, pid, seq, flags,
-+	hdr = nl80211hdr_put(msg, NETLINK_CB(cb->skb).pid, seq, flags,
- 			     NL80211_CMD_NEW_SCAN_RESULTS);
- 	if (!hdr)
- 		return -1;
- 
-+	genl_dump_check_consistent(cb, hdr, &nl80211_fam);
-+
- 	NLA_PUT_U32(msg, NL80211_ATTR_GENERATION, rdev->bss_generation);
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, wdev->netdev->ifindex);
- 
-@@ -3725,11 +3728,12 @@ static int nl80211_dump_scan(struct sk_b
- 	spin_lock_bh(&rdev->bss_lock);
- 	cfg80211_bss_expire(rdev);
- 
-+	cb->seq = rdev->bss_generation;
-+
- 	list_for_each_entry(scan, &rdev->bss_list, list) {
- 		if (++idx <= start)
- 			continue;
--		if (nl80211_send_bss(skb,
--				NETLINK_CB(cb->skb).pid,
-+		if (nl80211_send_bss(skb, cb,
- 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
- 				rdev, wdev, scan) < 0) {
- 			idx--;
+If I do modinfo on brcm80211, cfg80211 and mac80211 they are all my
+updated versions. What is wrong here?
 
-
+Rgds//Thomas
