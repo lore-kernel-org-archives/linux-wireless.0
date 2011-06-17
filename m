@@ -1,143 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kumera.dghda.com ([80.68.90.171]:35558 "EHLO kumera.dghda.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751602Ab1FCQJb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 12:09:31 -0400
-From: duaneg@dghda.com
-Date: Fri, 3 Jun 2011 17:00:49 +0100
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: rfkill deadlock
-Message-ID: <20110603160049.GA8767@kereru> (sfid-20110603_180934_793277_98172B15)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37125 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756055Ab1FQRq2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2011 13:46:28 -0400
+Date: Fri, 17 Jun 2011 13:36:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2011-06-17
+Message-ID: <20110617173613.GC6820@tuxdriver.com> (sfid-20110617_194651_831414_649C6EA0)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+Dave,
 
-I'm getting a deadlock with 3.0.0-rc1:
+Here is a batch of fixes intended for 3.0.  Included are a regression
+for mwl8k which caused CCMP encryption to fail on that device, and an
+mwifiex fix for a null pointer dereference.  Also included is a batch
+of Bluetooth fixes from Gustavo, including a regression fix for BT 1.1
+devices, a fix for shutdown of SCO devices, a fix for an information
+leak, and a silly error-checking fix that I thought was worth including
+to prevent misinterpreting bad data as device command options.
 
-Jun  3 12:06:20 kereru kernel: =======================================================
-Jun  3 12:06:20 kereru kernel: [ INFO: possible circular locking dependency detected ]
-Jun  3 12:06:20 kereru kernel: 3.0.0-rc1-00049-g1fa7b6a #57
-Jun  3 12:06:20 kereru kernel: -------------------------------------------------------
-Jun  3 12:06:20 kereru kernel: kworker/0:1/4525 is trying to acquire lock:
-Jun  3 12:06:20 kereru kernel: (&rdev->mtx){+.+.+.}, at: [<ffffffff8164c831>] cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: but task is already holding lock:
-Jun  3 12:06:20 kereru kernel: (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff8164dcef>] cfg80211_rfkill_set_block+0x4f/0xa0
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: which lock already depends on the new lock.
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: the existing dependency chain (in reverse order) is:
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: -> #1 (&rdev->devlist_mtx){+.+.+.}:
-Jun  3 12:06:20 kereru kernel: [<ffffffff81096473>] lock_acquire+0x103/0x140
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b0872>] mutex_lock_nested+0x72/0x3f0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164cbcd>] cfg80211_netdev_notifier_call+0x4cd/0x5b0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b615d>] notifier_call_chain+0x6d/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff810814a6>] raw_notifier_call_chain+0x16/0x20
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597047>] call_netdevice_notifiers+0x37/0x70
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597c09>] __dev_notify_flags+0x39/0x90
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597ca5>] dev_change_flags+0x45/0x70
-Jun  3 12:06:20 kereru kernel: [<ffffffff815a5745>] do_setlink+0x225/0x9e0
-Jun  3 12:06:20 kereru kernel: [<ffffffff815a6c6c>] rtnl_newlink+0x3dc/0x5d0
-Jun  3 12:06:20 kereru kernel: [<ffffffff815a683f>] rtnetlink_rcv_msg+0x21f/0x270
-Jun  3 12:06:20 kereru kernel: [<ffffffff815b4979>] netlink_rcv_skb+0x89/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff815a660e>] rtnetlink_rcv+0x2e/0x40
-Jun  3 12:06:20 kereru kernel: [<ffffffff815b462f>] netlink_unicast+0x2af/0x2c0
-Jun  3 12:06:20 kereru kernel: [<ffffffff815b5026>] netlink_sendmsg+0x316/0x350
-Jun  3 12:06:20 kereru kernel: [<ffffffff81580938>] sock_sendmsg+0xe8/0x120
-Jun  3 12:06:20 kereru kernel: [<ffffffff815817a1>] __sys_sendmsg+0x191/0x340
-Jun  3 12:06:20 kereru kernel: [<ffffffff81581b29>] sys_sendmsg+0x49/0x80
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b9beb>] system_call_fastpath+0x16/0x1b
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: -> #0 (&rdev->mtx){+.+.+.}:
-Jun  3 12:06:20 kereru kernel: [<ffffffff81095d13>] __lock_acquire+0x1e13/0x1ef0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81096473>] lock_acquire+0x103/0x140
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b0872>] mutex_lock_nested+0x72/0x3f0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164c831>] cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b615d>] notifier_call_chain+0x6d/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff810814a6>] raw_notifier_call_chain+0x16/0x20
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597047>] call_netdevice_notifiers+0x37/0x70
-Jun  3 12:06:20 kereru kernel: [<ffffffff815970cd>] __dev_close_many+0x4d/0xf0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597265>] dev_close_many+0xa5/0x120
-Jun  3 12:06:20 kereru kernel: [<ffffffff8159731f>] dev_close+0x3f/0x60
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164dd19>] cfg80211_rfkill_set_block+0x79/0xa0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81693022>] rfkill_set_block+0x82/0x110
-Jun  3 12:06:20 kereru kernel: [<ffffffff81693377>] rfkill_switch_all+0xa7/0xd0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8169453d>] rfkill_op_handler+0xdd/0x1a0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8107348f>] process_one_work+0x20f/0x590
-Jun  3 12:06:20 kereru kernel: [<ffffffff81073bbb>] worker_thread+0x19b/0x420
-Jun  3 12:06:20 kereru kernel: [<ffffffff8107aed6>] kthread+0xa6/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816baa14>] kernel_thread_helper+0x4/0x10
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: other info that might help us debug this:
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: Possible unsafe locking scenario:
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: CPU0                    CPU1
-Jun  3 12:06:20 kereru kernel: ----                    ----
-Jun  3 12:06:20 kereru kernel: lock(&rdev->devlist_mtx);
-Jun  3 12:06:20 kereru kernel: lock(&rdev->mtx);
-Jun  3 12:06:20 kereru kernel: lock(&rdev->devlist_mtx);
-Jun  3 12:06:20 kereru kernel: lock(&rdev->mtx);
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: *** DEADLOCK ***
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: 5 locks held by kworker/0:1/4525:
-Jun  3 12:06:20 kereru kernel: #0:  (events){.+.+.+}, at: [<ffffffff810733d1>] process_one_work+0x151/0x590
-Jun  3 12:06:20 kereru kernel: #1:  ((rfkill_op_work).work){+.+.+.}, at: [<ffffffff810733d1>] process_one_work+0x151/0x590
-Jun  3 12:06:20 kereru kernel: #2:  (rfkill_global_mutex){+.+.+.}, at: [<ffffffff8169331e>] rfkill_switch_all+0x4e/0xd0
-Jun  3 12:06:20 kereru kernel: #3:  (rtnl_mutex){+.+.+.}, at: [<ffffffff815a65d7>] rtnl_lock+0x17/0x20
-Jun  3 12:06:20 kereru kernel: #4:  (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff8164dcef>] cfg80211_rfkill_set_block+0x4f/0xa0
-Jun  3 12:06:20 kereru kernel: 
-Jun  3 12:06:20 kereru kernel: stack backtrace:
-Jun  3 12:06:20 kereru kernel: Pid: 4525, comm: kworker/0:1 Not tainted 3.0.0-rc1-00049-g1fa7b6a #57
-Jun  3 12:06:20 kereru kernel: Call Trace:
-Jun  3 12:06:20 kereru kernel: [<ffffffff81093df8>] print_circular_bug+0x218/0x320
-Jun  3 12:06:20 kereru kernel: [<ffffffff81095d13>] __lock_acquire+0x1e13/0x1ef0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81093533>] ? check_usage+0x93/0x640
-Jun  3 12:06:20 kereru kernel: [<ffffffff81096473>] lock_acquire+0x103/0x140
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164c831>] ? cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b0872>] mutex_lock_nested+0x72/0x3f0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164c831>] ? cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164c831>] ? cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b2f44>] ? retint_restore_args+0xe/0xe
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164c831>] cfg80211_netdev_notifier_call+0x131/0x5b0
-Jun  3 12:06:20 kereru logger: ACPI event unhandled: button/wlan WLAN 00000080 00000000
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b615d>] notifier_call_chain+0x6d/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff810814a6>] raw_notifier_call_chain+0x16/0x20
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597047>] call_netdevice_notifiers+0x37/0x70
-Jun  3 12:06:20 kereru kernel: [<ffffffff815970cd>] __dev_close_many+0x4d/0xf0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81597265>] dev_close_many+0xa5/0x120
-Jun  3 12:06:20 kereru kernel: [<ffffffff8159731f>] dev_close+0x3f/0x60
-Jun  3 12:06:20 kereru kernel: [<ffffffff8164dd19>] cfg80211_rfkill_set_block+0x79/0xa0
-Jun  3 12:06:20 kereru kernel: [<ffffffff81693022>] rfkill_set_block+0x82/0x110
-Jun  3 12:06:20 kereru kernel: [<ffffffff81693377>] rfkill_switch_all+0xa7/0xd0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8169453d>] rfkill_op_handler+0xdd/0x1a0
-Jun  3 12:06:20 kereru kernel: [<ffffffff8107348f>] process_one_work+0x20f/0x590
-Jun  3 12:06:20 kereru kernel: [<ffffffff810733d1>] ? process_one_work+0x151/0x590
-Jun  3 12:06:20 kereru kernel: [<ffffffff8109035e>] ? put_lock_stats+0xe/0x40
-Jun  3 12:06:20 kereru kernel: [<ffffffff81694460>] ? rfkill_alloc+0x150/0x150
-Jun  3 12:06:20 kereru kernel: [<ffffffff81073bbb>] worker_thread+0x19b/0x420
-Jun  3 12:06:20 kereru kernel: [<ffffffff81073a20>] ? manage_workers+0x210/0x210
-Jun  3 12:06:20 kereru kernel: [<ffffffff8107aed6>] kthread+0xa6/0xb0
-Jun  3 12:06:20 kereru kernel: [<ffffffff816baa14>] kernel_thread_helper+0x4/0x10
-Jun  3 12:06:20 kereru kernel: [<ffffffff8104ad08>] ? finish_task_switch+0x88/0x110
-Jun  3 12:06:20 kereru kernel: [<ffffffff816b2f44>] ? retint_restore_args+0xe/0xe
-Jun  3 12:06:20 kereru kernel: [<ffffffff8107ae30>] ? __init_kthread_worker+0x70/0x70
-Jun  3 12:06:20 kereru kernel: [<ffffffff816baa10>] ? gs_change+0xb/0xb
-Jun  3 12:06:20 kereru kernel: wlan%d: deauthenticating from 54:e6:fc:ae:e8:3d by local choice (reason=3)
-Jun  3 12:06:20 kereru kernel: cfg80211: Calling CRDA to update world regulatory domain
-Jun  3 12:06:20 kereru dhcpcd[3290]: wlan0: carrier lost
+Please let me know if there are problems!
 
-This is a new machine, so I've not tried earlier kernels on it. Let me
-know if you'd like further information or other testing.
+Thanks,
 
-BTW, I assume that the "wlan%d" is also a (minor) bug :)
+John
 
-Cheers,
-Duane Griffin.
+---
+
+The following changes since commit 118133e6580a0c912cda86109b6468b5ffe73f1c:
+
+  netdev: bfin_mac: fix memory leak when freeing dma descriptors (2011-06-17 00:19:09 -0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git for-davem
+
+David Miller (1):
+      Bluetooth: Do not ignore errors returned from strict_strtol()
+
+Filip Palian (1):
+      Bluetooth: l2cap and rfcomm: fix 1 byte infoleak to userspace.
+
+John W. Linville (2):
+      Merge branch 'master' of master.kernel.org:/.../padovan/bluetooth-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6 into for-davem
+
+Luiz Augusto von Dentz (1):
+      Bluetooth: fix shutdown on SCO sockets
+
+Nishant Sarmukadam (1):
+      mwl8k: Tell firmware to generate CCMP header
+
+Ville Tervo (1):
+      Bluetooth: Do not send SET_EVENT_MASK for 1.1 and earlier devices
+
+Yogesh Ashok Powar (1):
+      mwifiex: Fixing NULL pointer dereference
+
+ drivers/bluetooth/btmrvl_debugfs.c      |   12 ++++++++++++
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 ++
+ drivers/net/wireless/mwl8k.c            |    4 +++-
+ net/bluetooth/hci_event.c               |   18 ++++++++++--------
+ net/bluetooth/l2cap_sock.c              |    1 +
+ net/bluetooth/rfcomm/sock.c             |    1 +
+ net/bluetooth/sco.c                     |   13 ++++++++++++-
+ 7 files changed, 41 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/bluetooth/btmrvl_debugfs.c b/drivers/bluetooth/btmrvl_debugfs.c
+index fd6305b..8ecf4c6 100644
+--- a/drivers/bluetooth/btmrvl_debugfs.c
++++ b/drivers/bluetooth/btmrvl_debugfs.c
+@@ -64,6 +64,8 @@ static ssize_t btmrvl_hscfgcmd_write(struct file *file,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 10, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.hscfgcmd = result;
+ 
+@@ -108,6 +110,8 @@ static ssize_t btmrvl_psmode_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 10, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.psmode = result;
+ 
+@@ -147,6 +151,8 @@ static ssize_t btmrvl_pscmd_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 10, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.pscmd = result;
+ 
+@@ -191,6 +197,8 @@ static ssize_t btmrvl_gpiogap_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 16, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.gpio_gap = result;
+ 
+@@ -230,6 +238,8 @@ static ssize_t btmrvl_hscmd_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 10, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.hscmd = result;
+ 	if (priv->btmrvl_dev.hscmd) {
+@@ -272,6 +282,8 @@ static ssize_t btmrvl_hsmode_write(struct file *file, const char __user *ubuf,
+ 		return -EFAULT;
+ 
+ 	ret = strict_strtol(buf, 10, &result);
++	if (ret)
++		return ret;
+ 
+ 	priv->btmrvl_dev.hsmode = result;
+ 
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 660831c..687c1f2 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1288,6 +1288,8 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
+ 
+ 	*(unsigned long *) wdev_priv = (unsigned long) priv;
+ 
++	set_wiphy_dev(wdev->wiphy, (struct device *) priv->adapter->dev);
++
+ 	ret = wiphy_register(wdev->wiphy);
+ 	if (ret < 0) {
+ 		dev_err(priv->adapter->dev, "%s: registering cfg80211 device\n",
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 3226118..aeac3cc 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2474,6 +2474,7 @@ struct mwl8k_cmd_set_hw_spec {
+  * faster client.
+  */
+ #define MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY	0x00000400
++#define MWL8K_SET_HW_SPEC_FLAG_GENERATE_CCMP_HDR	0x00000200
+ #define MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT		0x00000080
+ #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP	0x00000020
+ #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON		0x00000010
+@@ -2510,7 +2511,8 @@ static int mwl8k_cmd_set_hw_spec(struct ieee80211_hw *hw)
+ 	cmd->flags = cpu_to_le32(MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP |
+ 				 MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON |
+-				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY);
++				 MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY |
++				 MWL8K_SET_HW_SPEC_FLAG_GENERATE_CCMP_HDR);
+ 	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
+ 	cmd->total_rxd = cpu_to_le32(MWL8K_RX_DESCS);
+ 
+diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
+index f13ddbf..77930aa 100644
+--- a/net/bluetooth/hci_event.c
++++ b/net/bluetooth/hci_event.c
+@@ -477,14 +477,16 @@ static void hci_setup_event_mask(struct hci_dev *hdev)
+ 	 * command otherwise */
+ 	u8 events[8] = { 0xff, 0xff, 0xfb, 0xff, 0x00, 0x00, 0x00, 0x00 };
+ 
+-	/* Events for 1.2 and newer controllers */
+-	if (hdev->lmp_ver > 1) {
+-		events[4] |= 0x01; /* Flow Specification Complete */
+-		events[4] |= 0x02; /* Inquiry Result with RSSI */
+-		events[4] |= 0x04; /* Read Remote Extended Features Complete */
+-		events[5] |= 0x08; /* Synchronous Connection Complete */
+-		events[5] |= 0x10; /* Synchronous Connection Changed */
+-	}
++	/* CSR 1.1 dongles does not accept any bitfield so don't try to set
++	 * any event mask for pre 1.2 devices */
++	if (hdev->lmp_ver <= 1)
++		return;
++
++	events[4] |= 0x01; /* Flow Specification Complete */
++	events[4] |= 0x02; /* Inquiry Result with RSSI */
++	events[4] |= 0x04; /* Read Remote Extended Features Complete */
++	events[5] |= 0x08; /* Synchronous Connection Complete */
++	events[5] |= 0x10; /* Synchronous Connection Changed */
+ 
+ 	if (hdev->features[3] & LMP_RSSI_INQ)
+ 		events[4] |= 0x04; /* Inquiry Result with RSSI */
+diff --git a/net/bluetooth/l2cap_sock.c b/net/bluetooth/l2cap_sock.c
+index 18dc988..8248303 100644
+--- a/net/bluetooth/l2cap_sock.c
++++ b/net/bluetooth/l2cap_sock.c
+@@ -413,6 +413,7 @@ static int l2cap_sock_getsockopt_old(struct socket *sock, int optname, char __us
+ 			break;
+ 		}
+ 
++		memset(&cinfo, 0, sizeof(cinfo));
+ 		cinfo.hci_handle = chan->conn->hcon->handle;
+ 		memcpy(cinfo.dev_class, chan->conn->hcon->dev_class, 3);
+ 
+diff --git a/net/bluetooth/rfcomm/sock.c b/net/bluetooth/rfcomm/sock.c
+index 386cfaf..1b10727 100644
+--- a/net/bluetooth/rfcomm/sock.c
++++ b/net/bluetooth/rfcomm/sock.c
+@@ -788,6 +788,7 @@ static int rfcomm_sock_getsockopt_old(struct socket *sock, int optname, char __u
+ 
+ 		l2cap_sk = rfcomm_pi(sk)->dlc->session->sock->sk;
+ 
++		memset(&cinfo, 0, sizeof(cinfo));
+ 		cinfo.hci_handle = conn->hcon->handle;
+ 		memcpy(cinfo.dev_class, conn->hcon->dev_class, 3);
+ 
+diff --git a/net/bluetooth/sco.c b/net/bluetooth/sco.c
+index 42fdffd..cb4fb78 100644
+--- a/net/bluetooth/sco.c
++++ b/net/bluetooth/sco.c
+@@ -369,6 +369,15 @@ static void __sco_sock_close(struct sock *sk)
+ 
+ 	case BT_CONNECTED:
+ 	case BT_CONFIG:
++		if (sco_pi(sk)->conn) {
++			sk->sk_state = BT_DISCONN;
++			sco_sock_set_timer(sk, SCO_DISCONN_TIMEOUT);
++			hci_conn_put(sco_pi(sk)->conn->hcon);
++			sco_pi(sk)->conn->hcon = NULL;
++		} else
++			sco_chan_del(sk, ECONNRESET);
++		break;
++
+ 	case BT_CONNECT:
+ 	case BT_DISCONN:
+ 		sco_chan_del(sk, ECONNRESET);
+@@ -819,7 +828,9 @@ static void sco_chan_del(struct sock *sk, int err)
+ 		conn->sk = NULL;
+ 		sco_pi(sk)->conn = NULL;
+ 		sco_conn_unlock(conn);
+-		hci_conn_put(conn->hcon);
++
++		if (conn->hcon)
++			hci_conn_put(conn->hcon);
+ 	}
+ 
+ 	sk->sk_state = BT_CLOSED;
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
