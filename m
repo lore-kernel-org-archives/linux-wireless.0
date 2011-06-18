@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:42987 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab1FRKkH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254Ab1FRIBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 06:40:07 -0400
-Date: Sat, 18 Jun 2011 13:39:57 +0300
-From: Pekka Paalanen <pq@iki.fi>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Lock up when faking MMIO read[bwl] on some machines [WAS:
- Faking MMIO ops? Fooling a driver]
-Message-ID: <20110618133957.378b5266@farn.lan> (sfid-20110618_124032_753138_DFCA53F4)
-In-Reply-To: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com>
-References: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 18 Jun 2011 04:01:36 -0400
+To: =?UTF-8?Q?Fr=C3=A9d=C3=A9ric_Lamorce?= <FLamorce@CalAmp.com>
+Subject: Re: nl80211: =?UTF-8?Q?set=5Fkey=20failed=3B=20err=3D-=36=37=20Li?=  =?UTF-8?Q?nk=20has=20been=20severed?=
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Date: Sat, 18 Jun 2011 10:01:33 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+In-Reply-To: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
+ (sfid-20110617_172355_144137_7070136A)
+References: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
+ (sfid-20110617_172355_144137_7070136A)
+Message-ID: <39e83b34879f7b3d79534665e9dd0ae6@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 18 Jun 2011 00:31:32 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+On Fri, 17 Jun 2011 08:23:47 -0700, Frédéric Lamorce wrote:
 
-> I use attached patch to fake result of read[bwl] performed by
-> closed source driver (ndiswrapper+bcmwl and wl).
-> 
-> 1) It works great on my Sony VAIO with Intel(R) Core(TM)2 Duo CPU
-> P8400 2) It locks up Macbook Pro 8,1 with some 8-cores Intel
-> 
-> Do you have any idea why it causes the lockup? Function causing
-> problem is "set_ins_reg_val". I've created it as copy of
-> get_ins_reg_val, it just sets values in struct pt_regs, instead of
-> reading them).
+> I enabled -dd with wpa_supplicant, here it is, the only error is
+> "nl80211: set_key failed; err=-67 Link has been severed)", fatal? Why
+> this error? It means the link is down?
 
-Sorry, I have no insight to that... does unmodified mmiotrace
-work properly? Are you tracing the exact same kernel binary blob
-on both machines? Maybe it's using some rare instruction
-mmiotrace does not decode properly? Maybe with a rep prefix?
-Do those CPUs have any differences in their registers or
-struct pt_regs?
+You can ignore that error. Below is the successful key setting: Problem 
+must be something else, maybe crypto code for your device or whatever.
 
-I'm not even sure how "legal" it is to poke pt_regs there. :-/
+> 14532.914745: wpa_driver_nl80211_set_key: ifindex=5 alg=1
+> addr=0xc3aec key_idx=0 set_tx=1 seq_len=0 key_len=5
 
-
-Good luck.
-
--- 
-Pekka Paalanen
-http://www.iki.fi/pq/
