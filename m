@@ -1,108 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49606 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913Ab1FCNoY (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:55980 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756Ab1FRL0P convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 09:44:24 -0400
-Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	Waldemar.Rymarkiewicz@tieto.com
-In-Reply-To: <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org> (sfid-20110602_234730_485890_D6D54ECB)
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
-	 <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
-	 (sfid-20110602_234730_485890_D6D54ECB)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 03 Jun 2011 15:44:21 +0200
-Message-ID: <1307108661.3800.6.camel@jlt3.sipsolutions.net> (sfid-20110603_154426_976200_6EC47AA7)
-Mime-Version: 1.0
+	Sat, 18 Jun 2011 07:26:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <BANLkTikT3qoZhTrd0uF-JNehNhTCRjF6kw@mail.gmail.com>
+References: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com>
+	<20110618133957.378b5266@farn.lan>
+	<BANLkTikT3qoZhTrd0uF-JNehNhTCRjF6kw@mail.gmail.com>
+Date: Sat, 18 Jun 2011 13:26:14 +0200
+Message-ID: <BANLkTinf8X1AUEHteMnU3MMBEPEO1WNtzA@mail.gmail.com> (sfid-20110618_132622_792425_25FD7707)
+Subject: Re: Lock up when faking MMIO read[bwl] on some machines [WAS: Faking
+ MMIO ops? Fooling a driver]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Pekka Paalanen <pq@iki.fi>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-06-02 at 18:46 -0300, Lauro Ramos Venancio wrote:
+W dniu 18 czerwca 2011 12:57 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> W dniu 18 czerwca 2011 12:39 użytkownik Pekka Paalanen <pq@iki.fi> napisał:
+>> On Sat, 18 Jun 2011 00:31:32 +0200
+>> Rafał Miłecki <zajec5@gmail.com> wrote:
+>>
+>>> I use attached patch to fake result of read[bwl] performed by
+>>> closed source driver (ndiswrapper+bcmwl and wl).
+>>>
+>>> 1) It works great on my Sony VAIO with Intel(R) Core(TM)2 Duo CPU
+>>> P8400 2) It locks up Macbook Pro 8,1 with some 8-cores Intel
+>>>
+>>> Do you have any idea why it causes the lockup? Function causing
+>>> problem is "set_ins_reg_val". I've created it as copy of
+>>> get_ins_reg_val, it just sets values in struct pt_regs, instead of
+>>> reading them).
+>>
+>> Sorry, I have no insight to that... does unmodified mmiotrace
+>> work properly? Are you tracing the exact same kernel binary blob
+>> on both machines? Maybe it's using some rare instruction
+>> mmiotrace does not decode properly? Maybe with a rep prefix?
+>> Do those CPUs have any differences in their registers or
+>> struct pt_regs?
+>>
+>> I'm not even sure how "legal" it is to poke pt_regs there. :-/
+>
+> Not modified MMIO tracing works great on this machine, I've grabbed
+> dumps 10-20 times without a lock up or anything.
+>
+> I'm using different drivers on both machines, because Macbook Pro 8,1
+> has unique BCM4331 card that I can not buy and that is not available
+> with PCI(e) slot. Is uses some vendor specific, PCIe compatible slot.
+> Simple commenting out "set_ins_reg_val" work fine on this Macbook, PHY
+> reads are tracked correctly.
+>
+> As for differences in struct pt_regs... yeah, I think that happens.
+> I'm using x86 kernel, while on Macbook we use x86_64 as it's required
+> to use 64bit driver in ndiswrapper.
+>
+> I can try to find out, which register we try to overwrite on Macbook.
 
-> + * @NFC_ATTR_TARGETS: array of targets (see enum nfc_target_attr)
-
-
-> +static int nfc_genl_msg_put_target(struct sk_buff *msg,
-> +				struct nfc_target *target)
-> +{
-> +	NLA_PUT_U32(msg, NFC_TARGET_ATTR_TARGET_INDEX, target->idx);
-> +	NLA_PUT_U32(msg, NFC_TARGET_ATTR_SUPPORTED_PROTOCOLS,
-> +				target->supported_protocols);
-> +	NLA_PUT_U8(msg, NFC_TARGET_ATTR_SENS_RES, target->sens_res);
-> +	NLA_PUT_U8(msg, NFC_TARGET_ATTR_SEL_RES, target->sel_res);
-> +
-> +	return 0;
-> +
-> +nla_put_failure:
-> +	return -EMSGSIZE;
-> +}
-> +
-> +int nfc_genl_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
-> +								int ntargets)
-> +{
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +	struct nlattr *targets_attr;
-> +	int i;
-> +
-> +	pr_debug("%s\n", __func__);
-> +
-> +	dev->genl_data.poll_req_pid = 0;
-> +
-> +	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
-> +	if (!msg)
-> +		return -ENOMEM;
-> +
-> +	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
-> +				NFC_EVENT_TARGETS_FOUND);
-> +	if (!hdr)
-> +		goto free_msg;
-> +
-> +	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
-> +
-> +	targets_attr = nla_nest_start(msg, NFC_ATTR_TARGETS);
-> +
-> +	for (i = 0; i < ntargets; i++) {
-> +		struct nlattr *target = nla_nest_start(msg, i);
-> +
-> +		if (nfc_genl_msg_put_target(msg, &targets[i]))
-> +			goto nla_put_failure;
-> +
-> +		nla_nest_end(msg, target);
-> +	}
-> +
-> +	nla_nest_end(msg, targets_attr);
-> +	genlmsg_end(msg, hdr);
-> +
-> +	return genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_ATOMIC);
-
-This is almost certainly not a good idea.
-
-Eventually, you will want to add more information about a target. I know
-NFC is a pretty limited protocol, but I wouldn't want to make this
-harder in the future than it must be. The way you're doing it, you're
-currently limiting yourself to about 100 targets. Each new target
-attribute that you might add in the future will reduce that number
-significantly.
-
-IMHO, the better way to structure this would be to create an event that
-contains no information, and then allow a dump of the targets (with a
-generation counter). That way, there are no such artificial limits due
-to message sizes.
+This is what does happen on my machine (working):
+[  122.550991] mmiotrace: ZAJEC: read PHY 0x20
+[  122.550994] mmiotrace: ZAJEC: overwriting 0x20 with 0xFFFF
+[  122.550997] [ZAJEC] setting AX with 0xFFFF
+(...)
+[  122.551071] mmiotrace: ZAJEC: read PHY 0x22
+[  122.551074] mmiotrace: ZAJEC: overwriting 0x22 with 0xFFFF
+[  122.551077] [ZAJEC] setting AX with 0xFFFF
+(...)
+[  122.551198] mmiotrace: ZAJEC: read PHY 0x27
+[  122.551201] mmiotrace: ZAJEC: overwriting 0x27 with 0xFFFF
+[  122.551204] [ZAJEC] setting AX with 0xFFFF
 
 
-> +static int nfc_genl_dump_devices(struct sk_buff *skb,
-> +                               struct netlink_callback *cb)
+This is what does happen on Macbook:
+[  166.886438] mmiotrace: ZAJEC: read PHY 0x810
+[  166.886649] mmiotrace: ZAJEC: overwriting 0x810 with 0xFFFF
+[  166.886860] [ZAJEC] setting AX with 0xFFFF
+LOCK UP
 
-You should have a generation counter here so that applications getting a
-dump can know whether their dump was a complete and consistent snapshot.
-Otherwise, if devices are added or removed during the dump applications
-will not be able to know that their dump wasn't right.
 
-johannes
+So on both machines we modify AX register in the same place. My
+function set_ins_reg_val is a copy of get_ins_reg_val which works
+fine... So no idea what may we be doing wrong on this Macbook
+x86_64...
 
+
+P.S.
+You can see I've changed 0x20, 0x22, 0x27 to 0x810 on Macbook. That's
+because first 3 registers are not used by BCM4331. I've been testing
+them with BCM43225.
+
+-- 
+Rafał
