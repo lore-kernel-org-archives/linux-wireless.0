@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:63739 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756156Ab1FJNAF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 09:00:05 -0400
-Received: by gxk21 with SMTP id 21so1739221gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2011 06:00:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110610090009.GA2503@redhat.com>
-References: <1307691952-10980-1-git-send-email-eliad@wizery.com>
-	<20110610090009.GA2503@redhat.com>
-Date: Fri, 10 Jun 2011 16:00:03 +0300
-Message-ID: <BANLkTimoXRSAJAPQ1q7tthQUYAqgDSg23w@mail.gmail.com> (sfid-20110610_150009_844623_B397ABDC)
-Subject: Re: [PATCH] mac80211: add cancel_hw_scan() callback
-From: Eliad Peller <eliad@wizery.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:27652 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754682Ab1FRQFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:32 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/25] iwlagn: code alignment
+Date: Sat, 18 Jun 2011 08:34:29 -0700
+Message-Id: <1308411271-26093-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180543_262406_A964D2B9)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 10, 2011 at 12:00 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Fri, Jun 10, 2011 at 10:45:52AM +0300, Eliad Peller wrote:
->> When suspending, __ieee80211_suspend() calls ieee80211_scan_cancel(),
->> which will only cancel sw scan. In order to cancel hw scan, the
->> low-level driver has to cancel it in the suspend() callback. however,
->> this is too late, as a new scan_work will be enqueued (while the driver
->> is going into suspend).
->>
->> Add a new cancel_hw_scan() callback, asking the driver to cancel an
->> active hw scan, and call it in ieee80211_scan_cancel().
->
-> Looks reasonable, but could you also update a comments?
->
->> +     /*
->> +      * The scan is canceled, but stop work from being pending.
->
-> Also this one is not valid and should be removed.
->
-sure.
-i'll update the comments.
-thanks for the review.
+Code alignment, no functional changes.
 
-Eliad.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 406eb2f..56a22de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -80,10 +80,10 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
+ 
+ 	/* write radio config values to register */
+ 	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) <= EEPROM_RF_CONFIG_TYPE_MAX)
+-	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-			EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
+-			EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
+-			EEPROM_RF_CFG_DASH_MSK(radio_cfg));
++		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
+ 
+ 	/* set CSR_HW_CONFIG_REG for uCode use */
+ 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-- 
+1.7.0.4
+
