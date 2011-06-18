@@ -1,92 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38125 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753085Ab1F2Pdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 11:33:33 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 08:32:56 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC] ath9k: Add a module param to enable paprd
-Date: Wed, 29 Jun 2011 21:03:26 +0530
-Message-ID: <1309361606-5949-1-git-send-email-mshajakhan@atheros.com> (sfid-20110629_173339_544125_EE38234D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754136Ab1FRQFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/25] iwlagn: waterfall the bus level if prepare card failed
+Date: Sat, 18 Jun 2011 08:34:22 -0700
+Message-Id: <1308411271-26093-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180600_420469_D3DB3F87)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-PAPRD is currently disabled and this is purely an RFC patch (or) for
-testing alone, we don't like this to be in our driver
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath.h        |    1 +
- drivers/net/wireless/ath/ath9k/hw.c   |    3 ++-
- drivers/net/wireless/ath/ath9k/init.c |    5 +++++
- 3 files changed, 8 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 17c4b56..1157231 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -162,6 +162,7 @@ struct ath_common {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 17228f7..bec98bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3540,6 +3540,7 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
+ 		priv->cfg->name, hw_rev);
  
- 	bool btcoex_enabled;
- 	bool disable_ani;
-+	bool paprd_enabled;
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 07827b5..c938ab6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -361,6 +361,7 @@ static bool ath9k_hw_chip_test(struct ath_hw *ah)
- 
- static void ath9k_hw_init_config(struct ath_hw *ah)
- {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int i;
- 
- 	ah->config.dma_beacon_response_time = 2;
-@@ -380,7 +381,7 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	if (iwl_prepare_card_hw(priv)) {
++		err = -EIO;
+ 		IWL_WARN(priv, "Failed, HW not ready\n");
+ 		goto out_free_traffic_mem;
  	}
- 
- 	/* PAPRD needs some more work to be enabled */
--	ah->config.paprd_disable = 1;
-+	ah->config.paprd_disable = !common->paprd_enabled;
- 
- 	ah->config.rx_intr_mitigation = true;
- 	ah->config.pcieSerDesWrite = true;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 50103b2..1271a3c 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -42,6 +42,10 @@ static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
-+static int ath9k_paprd_enable;
-+module_param_named(paprd_enable, ath9k_paprd_enable, int, 0444);
-+MODULE_PARM_DESC(paprd_enable, "Enable PAPRD feature");
-+
- bool is_ath9k_unloaded;
- /* We use the hw_value as an index into our private channel structure */
- 
-@@ -586,6 +590,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	common->priv = sc;
- 	common->debug_mask = ath9k_debug;
- 	common->btcoex_enabled = ath9k_btcoex_enable == 1;
-+	common->paprd_enabled = ath9k_paprd_enable;
- 	common->disable_ani = false;
- 	spin_lock_init(&common->cc_lock);
- 
 -- 
 1.7.0.4
 
