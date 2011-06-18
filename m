@@ -1,23 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2216 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754974Ab1FHOFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 10:05:32 -0400
-Date: Wed, 8 Jun 2011 16:05:25 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: bt coex active on iwlegacy?
-Message-ID: <20110608140524.GB2283@redhat.com> (sfid-20110608_160536_750663_8F26BEB7)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38438 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293Ab1FRKEE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 06:04:04 -0400
+Received: by ywe9 with SMTP id 9so1589602ywe.19
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 03:04:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201106172310.42817.chunkeey@googlemail.com>
+References: <1308255196.4264.7.camel@thnov-desktop.xyz.lan>
+	<1308321840.7789.12.camel@thnov-desktop.xyz.lan>
+	<1308322679.7789.13.camel@thnov-desktop.xyz.lan>
+	<201106172310.42817.chunkeey@googlemail.com>
+Date: Sat, 18 Jun 2011 12:04:03 +0200
+Message-ID: <BANLkTim5NqPgLXK6fH9Px0zpHFcZj3=6tw@mail.gmail.com> (sfid-20110618_120507_566995_5E914480)
+Subject: Re: Status of carl9170
+From: Thomas Novin <thomas@xyz.pp.se>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is bt_coex_active=true useful on iwlegacy? Or could be removed,
-or assigned to false by default? I'm asking regarding random, rare
-connections hangs and microcode errors that some people have on 4965.
+On Fri, Jun 17, 2011 at 11:10 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+>> On fre, 2011-06-17 at 16:44 +0200, Thomas Novin wrote:
+>> I noticed that I only have 802.11b/g now, did noht disable 802.11n?
+> exactly, this switch disables 11n in case there's a problem.
+>
+> http://wireless.kernel.org/en/users/Drivers/carl9170#A802.11n_Compatibility
+>
+> I wonder if there's an OpenWRT port for the AP you got ;)
+>
 
-Stanislaw
+Ok.. I have just ordered another adapter (Sony UWA-BR100) and will try
+that instead.
+
+No OpenWRT for this AP..
+
+Rgds//Thomas
