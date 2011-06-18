@@ -1,87 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58070 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab1FUPw1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 11:52:27 -0400
-Received: by fxm17 with SMTP id 17so34677fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 08:52:26 -0700 (PDT)
-Subject: [RFC v3 2/3] nl80211: channel type attribute for IBSS
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1308671129.2656.4.camel@alex-2>
-References: <1308671129.2656.4.camel@alex-2>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Jun 2011 17:52:24 +0200
-Message-ID: <1308671544.2656.8.camel@alex-2> (sfid-20110621_175230_715106_4D770237)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:27652 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754619Ab1FRQFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/25] iwlagn: add power_save module parameter
+Date: Sat, 18 Jun 2011 08:34:26 -0700
+Message-Id: <1308411271-26093-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180539_367632_F9BF9D8F)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow nl80211 to set a ht channel for ibss.
+Add power_save module parameter to enable power management if needed
+Default power management is disabled.
 
-Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/net/cfg80211.h |    1 +
- net/wireless/nl80211.c |   33 +++++++++++++++++++++++++++++----
- 2 files changed, 30 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   14 +++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-diff -Nrup a/include/net/cfg80211.h b/include/net/cfg80211.h
---- a/include/net/cfg80211.h	2011-06-01 21:04:33.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-06-21 13:21:38.000000000 +0200
-@@ -1038,6 +1038,7 @@ struct cfg80211_ibss_params {
- 	u8 *ssid;
- 	u8 *bssid;
- 	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
- 	u8 *ie;
- 	u8 ssid_len, ie_len;
- 	u16 beacon_interval;
-diff -Nrup a/net/wireless/nl80211.c b/net/wireless/nl80211.c
---- a/net/wireless/nl80211.c	2011-06-01 21:04:33.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-06-21 13:21:38.000000000 +0200
-@@ -4266,12 +4266,37 @@ static int nl80211_join_ibss(struct sk_b
- 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 1ac6c64..b719628 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2545,11 +2545,10 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
+ 			    WIPHY_FLAG_IBSS_RSN;
  
--	ibss.channel = ieee80211_get_channel(wiphy,
--		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
--	if (!ibss.channel ||
-+	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+		enum nl80211_channel_type channel_type;
-+
-+		channel_type = nla_get_u32(
-+			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		if (channel_type != NL80211_CHAN_NO_HT &&
-+		    channel_type != NL80211_CHAN_HT20 &&
-+		    channel_type != NL80211_CHAN_HT40PLUS &&
-+		    channel_type != NL80211_CHAN_HT40MINUS)
-+			return -EINVAL;
-+		ibss.channel_type = channel_type;
-+	} else {
-+		ibss.channel_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	ibss.channel = rdev_freq_to_chan(rdev,
-+		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
-+		ibss.channel_type);
-+	/*if (!ibss.channel ||
-+	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
--	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
-+	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
-+		return -EINVAL;
-+	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
-+	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
-+	    !can_beacon_sec_chan(&rdev->wiphy, ibss.chan, ibss.channel_type)) {
-+		printk(KERN_DEBUG
-+		       "cfg80211: Secondary channel not "
-+		       "allowed to initiate communication\n");
- 		return -EINVAL;
-+	}*/
+-	/*
+-	 * For now, disable PS by default because it affects
+-	 * RX performance significantly.
+-	 */
+-	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
++	if (iwlagn_mod_params.power_save)
++		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
++	else
++		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
  
- 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
- 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
-
-
+ 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
+ 	/* we create the 802.11 header and a zero-length SSID element */
+@@ -3827,6 +3826,11 @@ module_param_named(led_mode, iwlagn_mod_params.led_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(led_mode, "0=system default, "
+ 		"1=On(RF On)/Off(RF Off), 2=blinking (default: 0)");
+ 
++module_param_named(power_save, iwlagn_mod_params.power_save,
++		bool, S_IRUGO);
++MODULE_PARM_DESC(power_save,
++		 "enable WiFi power management (default: disable)");
++
+ /*
+  * For now, keep using power level 1 instead of automatically
+  * adjusting ...
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a09361d..6238ac6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -163,6 +163,7 @@ struct iwl_mod_params {
+ 	bool bt_coex_active;	/* def: true = enable bt coex */
+ 	int led_mode;		/* def: 0 = system default */
+ 	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
++	bool power_save;	/* def: false = disable power save */
+ };
+ 
+ /*
+-- 
+1.7.0.4
 
