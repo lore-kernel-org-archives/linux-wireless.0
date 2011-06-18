@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4854 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758886Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 14/83] staging: brcm80211: remove iovars
- IOV_NUMLOCALINTS
-Date: Wed, 1 Jun 2011 13:44:59 +0200
-Message-ID: <1306928768-7501-14-git-send-email-rvossen@broadcom.com> (sfid-20110601_134820_008145_2E846D11)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45145 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412Ab1FRIDM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 04:03:12 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/6] NFC subsystem
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Date: Sat, 18 Jun 2011 10:03:09 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	<linux-wireless@vger.kernel.org>, <marcio.macedo@openbossa.org>,
+	<aloisio.almeida@openbossa.org>, <sameo@linux.intel.com>,
+	<Waldemar.Rymarkiewicz@tieto.com>
+In-Reply-To: <20110617164510.GA6820@tuxdriver.com>
+ (sfid-20110617_190155_298688_6B1DFAB0)
+References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+ <20110617164510.GA6820@tuxdriver.com> (sfid-20110617_190155_298688_6B1DFAB0)
+Message-ID: <38f85e7ce64d0e55f86eb9104ec41364@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Fri, 17 Jun 2011 12:45:11 -0400, John W. Linville wrote:
+> On Thu, Jun 02, 2011 at 06:46:04PM -0300, Lauro Ramos Venancio wrote:
+>> This series of patches implements the first part of the Near Field
+>> Communication (NFC) subsystem.
+>
+> Will you be submitting a new series to account for the comments from
+> Johannes and others?
 
-Remove unused sdio related iovars IOV_NUMLOCALINTS for fullmac driver
+Yeah, but they found some issues with the dump consistency stuff that 
+tgr and I would like to solve generically (he was aware of them before); 
+I'm hoping I can do that quickly next week and then this can rely on it 
+instead of re-implementing it first.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 -------
- 1 files changed, 0 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index a0f2463..44b1371 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -353,7 +353,6 @@ enum {
- 	IOV_BLOCKSIZE,
- 	IOV_USEINTS,
- 	IOV_NUMINTS,
--	IOV_NUMLOCALINTS,
- 	IOV_HOSTREG,
- 	IOV_DEVREG,
- 	IOV_DIVISOR,
-@@ -371,7 +370,6 @@ const bcm_iovar_t sdioh_iovars[] = {
- 								 size) */
- 	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
--	{"sd_numlocalints", IOV_NUMLOCALINTS, 0, IOVT_UINT32, 0},
- 	{"sd_hostreg", IOV_HOSTREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
- 	,
- 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
-@@ -566,11 +564,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
- 		memcpy(arg, &int_val, val_size);
- 		break;
- 
--	case IOV_GVAL(IOV_NUMLOCALINTS):
--		int_val = (s32) 0;
--		memcpy(arg, &int_val, val_size);
--		break;
--
- 	case IOV_GVAL(IOV_HOSTREG):
- 		{
- 			sdreg_t *sd_ptr = (sdreg_t *) params;
--- 
-1.7.4.1
-
-
+johannes
