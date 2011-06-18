@@ -1,87 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:48087 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210Ab1F3PqJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 11:46:09 -0400
-Received: by ywe9 with SMTP id 9so924653ywe.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 08:46:09 -0700 (PDT)
-Message-ID: <4E0C9A3D.8070405@lwfinger.net> (sfid-20110630_174614_053577_AB8D0688)
-Date: Thu, 30 Jun 2011 10:46:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chris Beggy <chrisb@kippona.net>
-CC: chaoming_li@realsil.com.cn,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192se from recent git pull
-References: <20110630.015016.392442825.chrisb@kippona.net>	<4E0C6D52.7010207@lwfinger.net> <20110630.100849.491680599.chrisb@kippona.net>
-In-Reply-To: <20110630.100849.491680599.chrisb@kippona.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754709Ab1FRQFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:32 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/25] iwlagn: merge duplicate code into single function
+Date: Sat, 18 Jun 2011 08:34:30 -0700
+Message-Id: <1308411271-26093-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180554_325932_38C643AB)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2011 09:08 AM, Chris Beggy wrote:
-> On 30 Jun 2011, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>
->> I added the linux-wireless mailing list and the other module author
->> (Chaoming Li) to this reply.
->
->
->> If the firmware file does exist on your system, then check the md5sum
->> for that file. It should be bccf9bf2276621770f101a60736b4004.
->
-> Thanks for looking over my submission.
->
-> The file rtl8192sefw.bin exists in /lib/firmware/rtlwifi and the
-> md5sum is correct.
->
->> Finally, what is the PCI ID for your card as shown by the 'lspci -nn'
->> command? That info is missing from your posting.
->
-> 02:00.0 Network controller [0280]: Realtek Semiconductor Co.,
-> Ltd. RTL8191SEvA Wireless LAN Controller [10ec:8171] (rev 10)
+Same operation needed by multiple devices, move to single function.
 
-Please use "reply all" to respond, and do not drop the linux-wireless ML. Unless 
-you want to make a deposit to my Paypal account, I do not do private debugging.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-2000.c   |   16 +---------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |   17 ++---------------
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |   16 +---------------
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |   25 +++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
+ 5 files changed, 30 insertions(+), 45 deletions(-)
 
-On my system running the mainline git kernel (git describe is 
-v3.0-rc5-124-g60451cb), I get the following for 'lspci -nnv' run as root:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 56a22de..1c13300 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -74,21 +74,7 @@ static void iwl2000_set_ct_threshold(struct iwl_priv *priv)
+ /* NIC configuration for 2000 series */
+ static void iwl2000_nic_config(struct iwl_priv *priv)
+ {
+-	u16 radio_cfg;
+-
+-	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+-
+-	/* write radio config values to register */
+-	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) <= EEPROM_RF_CONFIG_TYPE_MAX)
+-		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
+-
+-	/* set CSR_HW_CONFIG_REG for uCode use */
+-	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++	iwl_rf_config(priv);
+ 
+ 	if (priv->cfg->iq_invert)
+ 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 06fe9ad..937a8f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -64,23 +64,10 @@
+ static void iwl5000_nic_config(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+-	u16 radio_cfg;
+ 
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
++	iwl_rf_config(priv);
+ 
+-	/* write radio config values to register */
+-	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) < EEPROM_RF_CONFIG_TYPE_MAX)
+-		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
+-
+-	/* set CSR_HW_CONFIG_REG for uCode use */
+-	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* W/A : NIC is stuck in a reset state after Early PCIe power off
+ 	 * (PCIe power is lost before PERST# is asserted),
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c66bbc6..3fcc092 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -95,21 +95,7 @@ static void iwl6150_additional_nic_config(struct iwl_priv *priv)
+ /* NIC configuration for 6000 series */
+ static void iwl6000_nic_config(struct iwl_priv *priv)
+ {
+-	u16 radio_cfg;
+-
+-	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+-
+-	/* write radio config values to register */
+-	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) <= EEPROM_RF_CONFIG_TYPE_MAX)
+-		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
+-			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
+-
+-	/* set CSR_HW_CONFIG_REG for uCode use */
+-	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+-		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++	iwl_rf_config(priv);
+ 
+ 	/* no locking required for register write */
+ 	if (priv->cfg->pa_type == IWL_PA_INTERNAL) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 47a56bc..768d0ee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -834,3 +834,28 @@ const struct iwl_channel_info *iwl_get_channel_info(const struct iwl_priv *priv,
+ 
+ 	return NULL;
+ }
++
++void iwl_rf_config(struct iwl_priv *priv)
++{
++	u16 radio_cfg;
++
++	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
++
++	/* write radio config values to register */
++	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) <= EEPROM_RF_CONFIG_TYPE_MAX) {
++		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
++		IWL_INFO(priv, "Radio type=0x%x-0x%x-0x%x\n",
++			 EEPROM_RF_CFG_TYPE_MSK(radio_cfg),
++			 EEPROM_RF_CFG_STEP_MSK(radio_cfg),
++			 EEPROM_RF_CFG_DASH_MSK(radio_cfg));
++	} else
++		WARN_ON(1);
++
++	/* set CSR_HW_CONFIG_REG for uCode use */
++	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
++		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index c1a17f9..c6f370f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -310,5 +310,6 @@ void iwl_free_channel_map(struct iwl_priv *priv);
+ const struct iwl_channel_info *iwl_get_channel_info(
+ 		const struct iwl_priv *priv,
+ 		enum ieee80211_band band, u16 channel);
++void iwl_rf_config(struct iwl_priv *priv);
+ 
+ #endif  /* __iwl_eeprom_h__ */
+-- 
+1.7.0.4
 
-04:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8191SEvA 
-Wireless LAN Controller [10ec:8171] (rev 10)
-         Subsystem: Realtek Semiconductor Co., Ltd. RTL8191SEvA Wireless LAN 
-Controller [10ec:8171]
-         Flags: bus master, fast devsel, latency 0, IRQ 20
-         I/O ports at 2000 [size=256]
-         Memory at c0000000 (32-bit, non-prefetchable) [size=16K]
-         Capabilities: [40] Power Management version 3
-         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-         Capabilities: [70] Express Legacy Endpoint, MSI 00
-         Capabilities: [100] Advanced Error Reporting
-         Capabilities: [140] Virtual Channel
-         Capabilities: [160] Device Serial Number 88-55-22-fe-ff-4c-e0-00
-         Kernel driver in use: rtl8192se
-
-06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8192E 
-Wireless LAN Controller [10ec:8192] (rev ff) (prog-if ff)
-         !!! Unknown header type 7f
-         Kernel driver in use: rtl8192se
-
-For 'iwconfig wlan0', I get
-
-wlan0     IEEE 802.11bgn  ESSID:"lwfdjf-n"
-           Mode:Managed  Frequency:2.422 GHz  Access Point: C0:3F:0E:BE:2B:44
-           Bit Rate=135 Mb/s   Tx-Power=20 dBm
-           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-           Power Management:on
-           Link Quality=70/70  Signal level=-40 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-The device is generating some warnings in the logs that I need to explore; 
-however, it is working.
-
-I have no idea why your device is failing. Perhaps Chaoming will have some ideas 
-when he reads this.
-
-Larry
