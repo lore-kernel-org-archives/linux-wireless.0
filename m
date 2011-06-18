@@ -1,113 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:42301 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab1FTLmu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 07:42:50 -0400
-Subject: [PATCH 5/6] zd1211rw: don't let zd_mac_config_beacon() run too long
-	from beacon interrupt handler
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 20 Jun 2011 14:42:49 +0300
-Message-ID: <20110620114249.964.31962.stgit@localhost6.localdomain6> (sfid-20110620_134254_541876_5C28E1AA)
-In-Reply-To: <20110620114228.964.35459.stgit@localhost6.localdomain6>
-References: <20110620114228.964.35459.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753494Ab1FRQFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/25] iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
+Date: Sat, 18 Jun 2011 08:34:19 -0700
+Message-Id: <1308411271-26093-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180554_854905_AA844E9C)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-zd_mac_config_beacon() has only limited time to set up beacon when called from
-beacon interrupt handler/worker. So do not let it retry acquiring beacon fifo
-semaphore in interrupt handler. Beacon fifo semaphore should not be locked by
-firmware anyway at this time, it's only locked when device is using/txing
-beacon.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 0828605..b67c52d 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -143,7 +143,7 @@ static void beacon_enable(struct zd_mac *mac);
- static void beacon_disable(struct zd_mac *mac);
- static void set_rts_cts(struct zd_mac *mac, unsigned int short_preamble);
- static int zd_mac_config_beacon(struct ieee80211_hw *hw,
--				struct sk_buff *beacon);
-+				struct sk_buff *beacon, bool in_intr);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index eeb31bc..1ff8e4b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3352,10 +3352,6 @@ struct ieee80211_ops iwlagn_hw_ops = {
  
- static int zd_reg2alpha2(u8 regdomain, char *alpha2)
+ static u32 iwl_hw_detect(struct iwl_priv *priv)
  {
-@@ -404,7 +404,7 @@ int zd_restore_settings(struct zd_mac *mac)
- 		if (mac->vif != NULL) {
- 			beacon = ieee80211_beacon_get(mac->hw, mac->vif);
- 			if (beacon)
--				zd_mac_config_beacon(mac->hw, beacon);
-+				zd_mac_config_beacon(mac->hw, beacon, false);
- 		}
- 
- 		zd_set_beacon_interval(&mac->chip, beacon_interval,
-@@ -704,7 +704,8 @@ static void zd_mac_free_cur_beacon(struct zd_mac *mac)
- 	mutex_unlock(&mac->chip.mutex);
+-	u8 rev_id;
+-
+-	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID, &rev_id);
+-	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
+ 	return iwl_read32(priv, CSR_HW_REV);
  }
  
--static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
-+static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon,
-+				bool in_intr)
- {
- 	struct zd_mac *mac = zd_hw_mac(hw);
- 	int r, ret, num_cmds, req_pos = 0;
-@@ -736,6 +737,10 @@ static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
- 	r = zd_ioread32_locked(&mac->chip, &tmp, CR_BCN_FIFO_SEMAPHORE);
- 	if (r < 0)
- 		goto release_sema;
-+	if (in_intr && tmp & 0x2) {
-+		r = -EBUSY;
-+		goto release_sema;
-+	}
- 
- 	end_jiffies = jiffies + HZ / 2; /*~500ms*/
- 	message_jiffies = jiffies + HZ / 10; /*~100ms*/
-@@ -790,7 +795,7 @@ release_sema:
- 	end_jiffies = jiffies + HZ / 2; /*~500ms*/
- 	ret = zd_iowrite32_locked(&mac->chip, 1, CR_BCN_FIFO_SEMAPHORE);
- 	while (ret < 0) {
--		if (time_is_before_eq_jiffies(end_jiffies)) {
-+		if (in_intr || time_is_before_eq_jiffies(end_jiffies)) {
- 			ret = -ETIMEDOUT;
- 			break;
- 		}
-@@ -1161,7 +1166,7 @@ static void zd_beacon_done(struct zd_mac *mac)
- 	 */
- 	beacon = ieee80211_beacon_get(mac->hw, mac->vif);
- 	if (beacon)
--		zd_mac_config_beacon(mac->hw, beacon);
-+		zd_mac_config_beacon(mac->hw, beacon, true);
- 
- 	spin_lock_irq(&mac->lock);
- 	mac->beacon.last_update = jiffies;
-@@ -1286,7 +1291,7 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
- 
- 			if (beacon) {
- 				zd_chip_disable_hwint(&mac->chip);
--				zd_mac_config_beacon(hw, beacon);
-+				zd_mac_config_beacon(hw, beacon, false);
- 				zd_chip_enable_hwint(&mac->chip);
- 			}
- 		}
-@@ -1439,7 +1444,7 @@ static void beacon_watchdog_handler(struct work_struct *work)
- 		if (beacon) {
- 			zd_mac_free_cur_beacon(mac);
- 
--			zd_mac_config_beacon(mac->hw, beacon);
-+			zd_mac_config_beacon(mac->hw, beacon, false);
- 		}
- 
- 		zd_set_beacon_interval(&mac->chip, interval, period, mac->type);
+-- 
+1.7.0.4
 
