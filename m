@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45464 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:17591 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758604Ab1FKOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 10:55:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/18] iwlagn: group similar defines together
-Date: Sat, 11 Jun 2011 07:25:49 -0700
-Message-Id: <1307802352-16398-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165557_973496_EF05B2DB)
-In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754793Ab1FRLQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 07:16:10 -0400
+Subject: Re: iwlagn: Problems with Intel Wifi Link 1000 on newer kernels
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Erik Hardesty <ehardesty@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTim83iarV-J08JAsVtfLR2ziqLs=iQ@mail.gmail.com>
+References: <BANLkTim83iarV-J08JAsVtfLR2ziqLs=iQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 18 Jun 2011 04:12:25 -0700
+Message-ID: <1308395545.31756.11.camel@wwguy-ubuntu> (sfid-20110618_131615_147126_2C4F3E45)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional changes, just group similar defines together
+Hi Erik,
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+n Thu, 2011-06-16 at 23:14 -0700, Erik Hardesty wrote:
+> Having trouble with iwlagn in kernels newer than 2.6.38.
+> I've tried 2.6.39 and 3.0rc3 and both give me the same problem.
+> I have the latest intel firmware installed on the system. Both
+> iwlwifi-1000-3.ucode
+> and iwlwifi-1000-5.ucode are in /lib/firmware
+> 
+> Note: 2.6.38 does not exhibit the same issue and works fine.
+> 
+> Symptom: Able to scan for access points but unable to connect.
+> I am unable to connect to any router regardless of it being open, WEP, or WPAx.
+> 
+> lspci -v | grep -i wifi:
+> 
+> 03:00.0 Network controller: Intel Corporation WiFi Link 1000 Series
+>     Subsystem: Intel Corporation WiFi Link 1000 Series 1000BGN
+> 
+> dmesg:
+> 
+> myhost kernel: wlan0: direct probe to <ap> (try 1)
+> myhost kernel: wlan0: direct probe to <ap> (try 2)
+> myhost kernel: wlan0: direct probe to <ap> (try 3)
+> myhost kernel: wlan0: direct probe to <ap> timed out
+> myhost kernel: iwlagn 0000:03:00.0: fail to flush all tx fifo queues
+> 
+There were a driver split happen to iwlagn between .38 and .39. Could
+you please check your .config to make sure all the configuration set
+correctly.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 3dcb0a0..19058a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -162,10 +162,6 @@ struct iwl_eeprom_enhanced_txpwr {
- 	s8 mimo3_max;
- } __packed;
- 
--/* 5000 Specific */
--#define EEPROM_5000_TX_POWER_VERSION    (4)
--#define EEPROM_5000_EEPROM_VERSION	(0x11A)
--
- /* calibration */
- #define EEPROM_CALIB_ALL	(INDIRECT_ADDRESS | INDIRECT_CALIBRATION)
- #define EEPROM_XTAL		((2*0x128) | EEPROM_CALIB_ALL)
-@@ -203,6 +199,10 @@ struct iwl_eeprom_enhanced_txpwr {
- #define EEPROM_6000_REG_BAND_24_HT40_CHANNELS  ((0x80)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 14  bytes */
- 
-+/* 5000 Specific */
-+#define EEPROM_5000_TX_POWER_VERSION    (4)
-+#define EEPROM_5000_EEPROM_VERSION	(0x11A)
-+
- /* 5050 Specific */
- #define EEPROM_5050_TX_POWER_VERSION    (4)
- #define EEPROM_5050_EEPROM_VERSION	(0x21E)
--- 
-1.7.0.4
+I will also need more information on your setup, such as band and
+channel, AP model...
+
+One more thing, do you have bluetooth in your system? is it on by
+default?
+
+Thanks
+Wey
 
