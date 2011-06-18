@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39229 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753396Ab1FBTOh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 15:14:37 -0400
-Subject: Re: [PATCH v2] wireless: Support can-scan-one logic.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTinozbG2SfOCRd1U__8-Pz9-8HCkPQ@mail.gmail.com> (sfid-20110602_211238_294668_E3CAACEF)
-References: <1305586296-23147-1-git-send-email-greearb@candelatech.com>
-	 <1305759738.8827.6.camel@jlt3.sipsolutions.net>
-	 <4DD4569C.7080303@candelatech.com>
-	 <BANLkTinozbG2SfOCRd1U__8-Pz9-8HCkPQ@mail.gmail.com>
-	 (sfid-20110602_211238_294668_E3CAACEF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Jun 2011 21:14:32 +0200
-Message-ID: <1307042072.3738.4.camel@jlt3.sipsolutions.net> (sfid-20110602_211440_394128_6F286991)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754488Ab1FRQFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 18/25] iwlagn: warn about nested SYNC commands
+Date: Sat, 18 Jun 2011 08:34:24 -0700
+Message-Id: <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180558_166798_E27083E7)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-06-02 at 12:12 -0700, Luis R. Rodriguez wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Since this shit was merged can you add a respective documentation
-> extension for the command for nl80211.h?
+Since there is no protection around SYNC host command mechanism, at least WARN
+when collision happens between two SYNC host comamnds. I am not sure there is a
+real  issue (beyond the HCMD_ACTIVE flag maintenance) with having two SYNC host
+commands at the same time, but at least now, we will know about it.
 
-You're kidding, right? The -1 crap was merged? Breaking all drivers
-other than mac80211?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c |   11 ++++++++++-
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 34f9d0f..2d13d89 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1300,6 +1300,7 @@ struct iwl_priv {
+ 
+ 	/* command queue number */
+ 	u8 cmd_queue;
++	u8 last_sync_cmd_id;
+ 
+ 	/* max number of station keys */
+ 	u8 sta_key_max_num;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index 76f9966..7cdb1ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -181,7 +181,16 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
++	if (test_and_set_bit(STATUS_HCMD_ACTIVE, &priv->status)) {
++		IWL_ERR(priv, "STATUS_HCMD_ACTIVE already set while sending %s"
++			      ". Previous SYNC cmdn is %s\n",
++			get_cmd_string(cmd->id),
++			get_cmd_string(priv->last_sync_cmd_id));
++		WARN_ON(1);
++	} else {
++		priv->last_sync_cmd_id = cmd->id;
++	}
++
+ 	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-- 
+1.7.0.4
 
