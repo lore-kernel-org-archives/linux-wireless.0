@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36074 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372Ab1FTTbb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 15:31:31 -0400
-Date: Mon, 20 Jun 2011 15:24:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 00/27] mac80211: create mac80211_ prefix
-Message-ID: <20110620192418.GB2251@tuxdriver.com> (sfid-20110620_213135_490116_4E855EA3)
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
- <1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net>
- <87mxhg1zmb.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87mxhg1zmb.fsf@purkki.adurom.net>
+Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751942Ab1FRQFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:24 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/25] iwlagn: Support flush queues for specified interface
+Date: Sat, 18 Jun 2011 08:34:09 -0700
+Message-Id: <1308411271-26093-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180617_662396_9FCD51F3)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 17, 2011 at 02:11:40PM +0300, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Tue, 14 Jun 2011 01:34:28 +0300, Kalle Valo wrote:
-> >
-> >> In this patchset I first fix some issues I found from the drivers,
-> >> then create mac80211-compat.h to make the transition as smooth as
-> >> possible and then start changing mac80211 itself.
-> >
-> > FWIW, I don't mind the rename, but I don't like the compat.h thing.
-> > The transition won't be smoothed by this, it just means the transition
-> > will drag out as things conflict etc.
-> 
-> My plan was that I will finish the transition and remove
-> mac80211-compat.h before the next merge window. That way the file
-> would not be in any of the official releases.
-> 
-> > If we want to rename, we'll need to bite the bullet eventually
-> > anyway.
-> 
-> What do you suggest here? So that we should rename everything (both
-> mac80211 and 19 drivers) in one go? If we do that, we would have to do
-> everything in one patch to not break bisect, and it would be huge.
-> 
-> With mac80211-compat.h it's possible to break down the patches into
-> small pieces. This makes it easier to create the patches and, most
-> importantly, review them.
-> 
-> I'm willing to work on that huge patch if we so decide, but I'm not
-> sure if that's the correct way.
-> 
-> Ah, while writing this I realised that I could instead rename symbols
-> in mac80211.h one at a time and that way the patches would be smaller.
-> Did you mean that?
+Flush command can target specified interface or all interfaces
 
-Is there going to be another spin of this?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    3 +--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-I had trouble applying patch 5 -- maybe this is something that is
-best handled with a pull request?
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 8bed3ae..99d473f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1530,10 +1530,12 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
+ 	might_sleep();
+ 
+ 	memset(&flush_cmd, 0, sizeof(flush_cmd));
+-	flush_cmd.fifo_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
++	if (flush_control & BIT(IWL_RXON_CTX_BSS))
++		flush_cmd.fifo_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
+ 				 IWL_SCD_BE_MSK | IWL_SCD_BK_MSK |
+ 				 IWL_SCD_MGMT_MSK;
+-	if (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS))
++	if ((flush_control & BIT(IWL_RXON_CTX_PAN)) &&
++	    (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS)))
+ 		flush_cmd.fifo_control |= IWL_PAN_SCD_VO_MSK |
+ 				IWL_PAN_SCD_VI_MSK | IWL_PAN_SCD_BE_MSK |
+ 				IWL_PAN_SCD_BK_MSK | IWL_PAN_SCD_MGMT_MSK |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 189bc18..8a2edf8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -991,8 +991,7 @@ struct iwl_rem_sta_cmd {
+ #define IWL_AGG_TX_QUEUE_MSK		cpu_to_le32(0xffc00)
+ 
+ #define IWL_DROP_SINGLE		0
+-#define IWL_DROP_SELECTED	1
+-#define IWL_DROP_ALL		2
++#define IWL_DROP_ALL		(BIT(IWL_RXON_CTX_BSS) | BIT(IWL_RXON_CTX_PAN))
+ 
+ /*
+  * REPLY_TXFIFO_FLUSH = 0x1e(command and response)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
