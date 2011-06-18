@@ -1,72 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:48580 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756570Ab1F1H1y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 03:27:54 -0400
-Received: by fxd18 with SMTP id 18so2529285fxd.11
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 00:27:53 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: HT-PHY: basic PHY init
-Date: Tue, 28 Jun 2011 09:28:39 +0200
-Message-Id: <1309246119-6878-2-git-send-email-zajec5@gmail.com> (sfid-20110628_093049_186553_3930E7CF)
-In-Reply-To: <1309246119-6878-1-git-send-email-zajec5@gmail.com>
-References: <1309246119-6878-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753494Ab1FRQFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/25] iwlagn: Add power_level module parameter
+Date: Sat, 18 Jun 2011 08:34:27 -0700
+Message-Id: <1308411271-26093-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180552_010168_57D2C819)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add power_level module parameter to set the default power save level.
+Power save level has range from 1 - 5, default power save level is 1.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/b43/phy_ht.c        |    9 +++++++--
- drivers/net/wireless/b43/tables_phy_ht.h |    2 ++
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c   |   12 +++++++++---
+ 4 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 28fb746..69412d1 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -205,6 +205,13 @@ static void b43_phy_ht_op_prepare_structs(struct b43_wldev *dev)
- 	memset(phy_ht, 0, sizeof(*phy_ht));
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 52da539..efdab65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -624,6 +624,7 @@ struct iwl_mod_params iwlagn_mod_params = {
+ 	.plcp_check = true,
+ 	.bt_coex_active = true,
+ 	.no_sleep_autoadjust = true,
++	.power_level = IWL_POWER_INDEX_1,
+ 	/* the rest are 0 by default */
+ };
  
-+static int b43_phy_ht_op_init(struct b43_wldev *dev)
-+{
-+	b43_phy_ht_tables_init(dev);
-+
-+	return 0;
-+}
-+
- static void b43_phy_ht_op_free(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-@@ -326,9 +333,7 @@ const struct b43_phy_operations b43_phyops_ht = {
- 	.allocate		= b43_phy_ht_op_allocate,
- 	.free			= b43_phy_ht_op_free,
- 	.prepare_structs	= b43_phy_ht_op_prepare_structs,
--	/*
- 	.init			= b43_phy_ht_op_init,
--	*/
- 	.phy_read		= b43_phy_ht_op_read,
- 	.phy_write		= b43_phy_ht_op_write,
- 	.phy_maskset		= b43_phy_ht_op_maskset,
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
-index 6a13614..ea3be38 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.h
-+++ b/drivers/net/wireless/b43/tables_phy_ht.h
-@@ -17,4 +17,6 @@ void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value);
- void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, const void *_data);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b719628..77ceb8d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3831,6 +3831,11 @@ module_param_named(power_save, iwlagn_mod_params.power_save,
+ MODULE_PARM_DESC(power_save,
+ 		 "enable WiFi power management (default: disable)");
  
-+void b43_phy_ht_tables_init(struct b43_wldev *dev);
++module_param_named(power_level, iwlagn_mod_params.power_level,
++		int, S_IRUGO);
++MODULE_PARM_DESC(power_level,
++		 "default power save level (range from 1 - 5, default: 1)");
 +
- #endif /* B43_TABLES_PHY_HT_H_ */
+ /*
+  * For now, keep using power level 1 instead of automatically
+  * adjusting ...
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 6238ac6..adf9f9b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -164,6 +164,7 @@ struct iwl_mod_params {
+ 	int led_mode;		/* def: 0 = system default */
+ 	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
+ 	bool power_save;	/* def: false = disable power save */
++	int power_level;	/* def: 1 = power level */
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 970c514..565e57e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -358,9 +358,15 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 		iwl_static_sleep_cmd(priv, cmd,
+ 				     priv->power_data.debug_sleep_level_override,
+ 				     dtimper);
+-	else if (iwlagn_mod_params.no_sleep_autoadjust)
+-		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_1, dtimper);
+-	else
++	else if (iwlagn_mod_params.no_sleep_autoadjust) {
++		if (iwlagn_mod_params.power_level > IWL_POWER_INDEX_1 &&
++		    iwlagn_mod_params.power_level <= IWL_POWER_INDEX_5)
++			iwl_static_sleep_cmd(priv, cmd,
++				iwlagn_mod_params.power_level, dtimper);
++		else
++			iwl_static_sleep_cmd(priv, cmd,
++				IWL_POWER_INDEX_1, dtimper);
++	} else
+ 		iwl_power_fill_sleep_cmd(priv, cmd,
+ 					 priv->hw->conf.dynamic_ps_timeout,
+ 					 priv->hw->conf.max_sleep_period);
 -- 
-1.7.1
+1.7.0.4
 
