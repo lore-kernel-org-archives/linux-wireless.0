@@ -1,147 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37140 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab1FFJVg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 05:21:36 -0400
-Received: by wwa36 with SMTP id 36so3582178wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 02:21:35 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/4] wl12xx: don't check wow param on suspend/resume
-Date: Mon,  6 Jun 2011 12:21:52 +0300
-Message-Id: <1307352115-28969-1-git-send-email-eliad@wizery.com> (sfid-20110606_112140_011146_8D33AD07)
+Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753297Ab1FRQF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/25] iwlagn: add a method to get the HW ID description as a string to iwl_bus_ops
+Date: Sat, 18 Jun 2011 08:34:18 -0700
+Message-Id: <1308411271-26093-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180535_306740_F156FBE7)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since mac80211 calls suspend/resume only when wowlan triggers
-exist, there is no need to check for triggers existance in the
-callbacks as well.
-Add a WARN_ON() to verify it.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   87 ++++++++++++++++++------------------
- 1 files changed, 43 insertions(+), 44 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-pci.c  |   10 ++++++++++
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fb0f764..8eb52b7 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1544,69 +1544,68 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 			    struct cfg80211_wowlan *wow)
- {
- 	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
--	wl->wow_enabled = !!wow;
--	if (wl->wow_enabled) {
--		int ret;
--		ret = wl1271_configure_suspend(wl);
--		if (ret < 0) {
--			wl1271_warning("couldn't prepare device to suspend");
--			return ret;
--		}
--		/* flush any remaining work */
--		wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
--		flush_delayed_work(&wl->scan_complete_work);
-+	WARN_ON(!wow || !wow->any);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 360df33..cde7253 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -209,10 +209,10 @@ int iwlcore_init_geos(struct iwl_priv *priv)
  
--		/*
--		 * disable and re-enable interrupts in order to flush
--		 * the threaded_irq
--		 */
--		wl1271_disable_interrupts(wl);
-+	wl->wow_enabled = true;
-+	ret = wl1271_configure_suspend(wl);
-+	if (ret < 0) {
-+		wl1271_warning("couldn't prepare device to suspend");
-+		return ret;
-+	}
-+	/* flush any remaining work */
-+	wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
-+	flush_delayed_work(&wl->scan_complete_work);
- 
--		/*
--		 * set suspended flag to avoid triggering a new threaded_irq
--		 * work. no need for spinlock as interrupts are disabled.
--		 */
--		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+	/*
-+	 * disable and re-enable interrupts in order to flush
-+	 * the threaded_irq
-+	 */
-+	wl1271_disable_interrupts(wl);
-+
-+	/*
-+	 * set suspended flag to avoid triggering a new threaded_irq
-+	 * work. no need for spinlock as interrupts are disabled.
-+	 */
-+	set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+
-+	wl1271_enable_interrupts(wl);
-+	flush_work(&wl->tx_work);
-+	flush_delayed_work(&wl->pspoll_work);
-+	flush_delayed_work(&wl->elp_work);
- 
--		wl1271_enable_interrupts(wl);
--		flush_work(&wl->tx_work);
--		flush_delayed_work(&wl->pspoll_work);
--		flush_delayed_work(&wl->elp_work);
--	}
- 	return 0;
- }
- 
- static int wl1271_op_resume(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
-+	unsigned long flags;
-+	bool run_irq_work = false;
-+
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 resume wow=%d",
- 		     wl->wow_enabled);
-+	WARN_ON(!wl->wow_enabled);
- 
- 	/*
- 	 * re-enable irq_work enqueuing, and call irq_work directly if
- 	 * there is a pending work.
- 	 */
--	if (wl->wow_enabled) {
--		struct wl1271 *wl = hw->priv;
--		unsigned long flags;
--		bool run_irq_work = false;
--
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
--		if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
--			run_irq_work = true;
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
--
--		if (run_irq_work) {
--			wl1271_debug(DEBUG_MAC80211,
--				     "run postponed irq_work directly");
--			wl1271_irq(0, wl);
--			wl1271_enable_interrupts(wl);
--		}
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+	if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags))
-+		run_irq_work = true;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
--		wl1271_configure_resume(wl);
-+	if (run_irq_work) {
-+		wl1271_debug(DEBUG_MAC80211,
-+			     "run postponed irq_work directly");
-+		wl1271_irq(0, wl);
-+		wl1271_enable_interrupts(wl);
+ 	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
+ 	     priv->cfg->sku & EEPROM_SKU_CAP_BAND_52GHZ) {
++		char buf[32];
++		priv->bus.ops->get_hw_id(&priv->bus, buf, sizeof(buf));
+ 		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
+-			"Please send your PCI ID 0x%04X:0x%04X to maintainer.\n",
+-			   priv->pci_dev->device,
+-			   priv->pci_dev->subsystem_device);
++			"Please send your %s to maintainer.\n", buf);
+ 		priv->cfg->sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
  	}
-+	wl1271_configure_resume(wl);
  
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 797d4f3..1099944 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1198,6 +1198,7 @@ struct iwl_bus;
+  * @apm_config: will be called during the config of the APM configuration
+  * @set_drv_data: set the priv pointer to the bus layer
+  * @get_dev: returns the device struct
++ * @get_hw_id: prints the hw_id in the provided buffer
+  * @write8: write a byte to register at offset ofs
+  * @write32: write a dword to register at offset ofs
+  * @wread32: read a dword at register at offset ofs
+@@ -1207,6 +1208,7 @@ struct iwl_bus_ops {
+ 	void (*apm_config)(struct iwl_bus *bus);
+ 	void (*set_drv_data)(struct iwl_bus *bus, void *priv);
+ 	struct device *(*get_dev)(const struct iwl_bus *bus);
++	void (*get_hw_id)(struct iwl_bus *bus, char buf[], int buf_len);
+ 	void (*write8)(struct iwl_bus *bus, u32 ofs, u8 val);
+ 	void (*write32)(struct iwl_bus *bus, u32 ofs, u32 val);
+ 	u32 (*read32)(struct iwl_bus *bus, u32 ofs);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index d8c6ec8..adbc962 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -141,6 +141,15 @@ static struct device *iwl_pci_get_dev(const struct iwl_bus *bus)
+ 	return &(IWL_BUS_GET_PCI_DEV(bus)->dev);
  }
+ 
++static void iwl_pci_get_hw_id(struct iwl_bus *bus, char buf[],
++			      int buf_len)
++{
++	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
++
++	snprintf(buf, buf_len, "PCI ID: 0x%04X:0x%04X", pci_dev->device,
++		 pci_dev->subsystem_device);
++}
++
+ static void iwl_pci_write8(struct iwl_bus *bus, u32 ofs, u8 val)
+ {
+ 	iowrite8(val, IWL_BUS_GET_PCI_BUS(bus)->hw_base + ofs);
+@@ -162,6 +171,7 @@ static struct iwl_bus_ops pci_ops = {
+ 	.apm_config = iwl_pci_apm_config,
+ 	.set_drv_data = iwl_pci_set_drv_data,
+ 	.get_dev = iwl_pci_get_dev,
++	.get_hw_id = iwl_pci_get_hw_id,
+ 	.write8 = iwl_pci_write8,
+ 	.write32 = iwl_pci_write32,
+ 	.read32 = iwl_pci_read32,
 -- 
 1.7.0.4
 
