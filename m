@@ -1,496 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:39299 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033Ab1FBVr0 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58305 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808Ab1FRNLZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 17:47:26 -0400
-Received: by yxs7 with SMTP id 7so528444yxs.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 14:47:25 -0700 (PDT)
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, Waldemar.Rymarkiewicz@tieto.com
-Subject: [PATCH 4/6] NFC: add the NFC socket raw protocol
-Date: Thu,  2 Jun 2011 18:46:08 -0300
-Message-Id: <1307051170-17374-5-git-send-email-lauro.venancio@openbossa.org> (sfid-20110602_234731_922490_10E021AD)
-In-Reply-To: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
+	Sat, 18 Jun 2011 09:11:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110618150356.1b9e31cb@farn.lan>
+References: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com>
+	<20110618133957.378b5266@farn.lan>
+	<BANLkTikT3qoZhTrd0uF-JNehNhTCRjF6kw@mail.gmail.com>
+	<BANLkTinf8X1AUEHteMnU3MMBEPEO1WNtzA@mail.gmail.com>
+	<20110618150356.1b9e31cb@farn.lan>
+Date: Sat, 18 Jun 2011 15:05:23 +0200
+Message-ID: <BANLkTi=eU-XPJmZ=a3ZGFhJZxHVezzZ4VA@mail.gmail.com> (sfid-20110618_151155_599820_A4D9C30B)
+Subject: Re: Lock up when faking MMIO read[bwl] on some machines [WAS: Faking
+ MMIO ops? Fooling a driver]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Pekka Paalanen <pq@iki.fi>, David Woodhouse <dwmw2@infradead.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This socket protocol is used to perform data exchange with NFC
-targets.
+W dniu 18 czerwca 2011 14:03 użytkownik Pekka Paalanen <pq@iki.fi> napisał:
+> On Sat, 18 Jun 2011 13:26:14 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> W dniu 18 czerwca 2011 12:57 użytkownik Rafał Miłecki
+>> <zajec5@gmail.com> napisał:
+>> > Not modified MMIO tracing works great on this machine, I've
+>> > grabbed dumps 10-20 times without a lock up or anything.
+>> >
+>> > I'm using different drivers on both machines, because Macbook
+>> > Pro 8,1 has unique BCM4331 card that I can not buy and that is
+>> > not available with PCI(e) slot. Is uses some vendor specific,
+>> > PCIe compatible slot. Simple commenting out "set_ins_reg_val"
+>> > work fine on this Macbook, PHY reads are tracked correctly.
+>> >
+>> > As for differences in struct pt_regs... yeah, I think that
+>> > happens. I'm using x86 kernel, while on Macbook we use x86_64
+>> > as it's required to use 64bit driver in ndiswrapper.
+>> >
+>> > I can try to find out, which register we try to overwrite on
+>> > Macbook.
+>>
+>> This is what does happen on my machine (working):
+>> [  122.550991] mmiotrace: ZAJEC: read PHY 0x20
+>> [  122.550994] mmiotrace: ZAJEC: overwriting 0x20 with 0xFFFF
+>> [  122.550997] [ZAJEC] setting AX with 0xFFFF
+>> (...)
+>> [  122.551071] mmiotrace: ZAJEC: read PHY 0x22
+>> [  122.551074] mmiotrace: ZAJEC: overwriting 0x22 with 0xFFFF
+>> [  122.551077] [ZAJEC] setting AX with 0xFFFF
+>> (...)
+>> [  122.551198] mmiotrace: ZAJEC: read PHY 0x27
+>> [  122.551201] mmiotrace: ZAJEC: overwriting 0x27 with 0xFFFF
+>> [  122.551204] [ZAJEC] setting AX with 0xFFFF
+>>
+>>
+>> This is what does happen on Macbook:
+>> [  166.886438] mmiotrace: ZAJEC: read PHY 0x810
+>> [  166.886649] mmiotrace: ZAJEC: overwriting 0x810 with 0xFFFF
+>> [  166.886860] [ZAJEC] setting AX with 0xFFFF
+>> LOCK UP
+>>
+>>
+>> So on both machines we modify AX register in the same place. My
+>> function set_ins_reg_val is a copy of get_ins_reg_val which works
+>> fine... So no idea what may we be doing wrong on this Macbook
+>> x86_64...
+>
+> Ok, so it is a 32 vs. 64 bit arch difference, or difference in
+> driver binary. AX on 64-bit is actually RAX... well, depending
+> on data width.
+>
+> I actually missed you patch attachment before, sorry.
+>
+> I have minor notes, but I cannot see them being a reason for a
+> lockup:
 
-Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- include/linux/nfc.h |   13 ++-
- net/nfc/Makefile    |    2 +-
- net/nfc/core.c      |    7 +
- net/nfc/nfc.h       |   14 ++
- net/nfc/rawsock.c   |  351 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 385 insertions(+), 2 deletions(-)
- create mode 100644 net/nfc/rawsock.c
+Thanks for answer!
 
-diff --git a/include/linux/nfc.h b/include/linux/nfc.h
-index 7361f80..a62e232 100644
---- a/include/linux/nfc.h
-+++ b/include/linux/nfc.h
-@@ -24,6 +24,9 @@
- #ifndef __LINUX_NFC_H
- #define __LINUX_NFC_H
- 
-+#include <linux/types.h>
-+#include <linux/socket.h>
-+
- #define NFC_GENL_NAME "nfc"
- #define NFC_GENL_VERSION 1
- 
-@@ -119,7 +122,15 @@ enum nfc_target_attr {
- };
- #define NFC_TARGET_ATTR_MAX (__NFC_TARGET_ATTR_AFTER_LAST - 1)
- 
-+struct sockaddr_nfc {
-+	sa_family_t sa_family;
-+	__u32 dev_idx;
-+	__u32 target_idx;
-+	__u32 nfc_protocol;
-+};
-+
- /* NFC socket protocols */
--#define NFC_SOCKPROTO_MAX	0
-+#define NFC_SOCKPROTO_RAW	0
-+#define NFC_SOCKPROTO_MAX	1
- 
- #endif /*__LINUX_NFC_H */
-diff --git a/net/nfc/Makefile b/net/nfc/Makefile
-index c65add7..26996e0 100644
---- a/net/nfc/Makefile
-+++ b/net/nfc/Makefile
-@@ -4,6 +4,6 @@
- 
- obj-$(CONFIG_NFC) += nfc.o
- 
--nfc-objs := core.o netlink.o af_nfc.o
-+nfc-objs := core.o netlink.o af_nfc.o rawsock.o
- 
- ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index d4d2ecc..f045e0c 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -366,6 +366,10 @@ static int __init nfc_init(void)
- 	if (rc)
- 		goto err_genl;
- 
-+	rc = rawsock_init();
-+	if (rc)
-+		goto err_rawsock;
-+
- 	rc = af_nfc_init();
- 	if (rc)
- 		goto err_af_nfc;
-@@ -373,6 +377,8 @@ static int __init nfc_init(void)
- 	return 0;
- 
- err_af_nfc:
-+	rawsock_exit();
-+err_rawsock:
- 	nfc_genl_exit();
- err_genl:
- 	class_unregister(&nfc_class);
-@@ -383,6 +389,7 @@ err:
- static void __exit nfc_exit(void)
- {
- 	af_nfc_exit();
-+	rawsock_exit();
- 	nfc_genl_exit();
- 	class_unregister(&nfc_class);
- }
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index 76b891f..1a86641 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -35,6 +35,20 @@ struct nfc_protocol {
- 			const struct nfc_protocol *nfc_proto);
- };
- 
-+struct nfc_rawsock {
-+	struct sock sk;
-+	struct nfc_dev *dev;
-+	u32 target_idx;
-+	struct work_struct tx_work;
-+	bool tx_work_scheduled;
-+};
-+#define nfc_rawsock(sk) ((struct nfc_rawsock *) sk)
-+#define to_rawsock_sk(_tx_work) \
-+	((struct sock *) container_of(_tx_work, struct nfc_rawsock, tx_work))
-+
-+int __init rawsock_init(void);
-+void rawsock_exit(void);
-+
- int __init af_nfc_init(void);
- void af_nfc_exit(void);
- int nfc_proto_register(const struct nfc_protocol *nfc_proto);
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-new file mode 100644
-index 0000000..87ec5e2
---- /dev/null
-+++ b/net/nfc/rawsock.c
-@@ -0,0 +1,351 @@
-+/*
-+ * Copyright (C) 2011 Instituto Nokia de Tecnologia
-+ *
-+ * Authors:
-+ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-+ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the
-+ * Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+#include <net/tcp_states.h>
-+#include <linux/nfc.h>
-+
-+#include "nfc.h"
-+
-+static void rawsock_write_queue_purge(struct sock *sk)
-+{
-+	pr_debug("%s\n", __func__);
-+
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	__skb_queue_purge(&sk->sk_write_queue);
-+	nfc_rawsock(sk)->tx_work_scheduled = false;
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
-+}
-+
-+static void rawsock_report_error(struct sock *sk, int err)
-+{
-+	pr_debug("%s\n", __func__);
-+
-+	sk->sk_shutdown = SHUTDOWN_MASK;
-+	sk->sk_err = -err;
-+	sk->sk_error_report(sk);
-+
-+	rawsock_write_queue_purge(sk);
-+}
-+
-+static int rawsock_release(struct socket *sock)
-+{
-+	struct sock *sk = sock->sk;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	sock_orphan(sk);
-+	sock_put(sk);
-+
-+	return 0;
-+}
-+
-+static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
-+							int len, int flags)
-+{
-+	struct sock *sk = sock->sk;
-+	struct sockaddr_nfc *addr = (struct sockaddr_nfc *)_addr;
-+	struct nfc_dev *dev;
-+	int rc = 0;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	if (!addr || len < sizeof(struct sockaddr_nfc) ||
-+		addr->sa_family != AF_NFC)
-+		return -EINVAL;
-+
-+	lock_sock(sk);
-+
-+	if (sock->state == SS_CONNECTED) {
-+		rc = -EISCONN;
-+		goto error;
-+	}
-+
-+	dev = nfc_get_device(addr->dev_idx);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto error;
-+	}
-+
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+		addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+		addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
-+	if (rc)
-+		goto put_dev;
-+
-+	nfc_rawsock(sk)->dev = dev;
-+	nfc_rawsock(sk)->target_idx = addr->target_idx;
-+	sock->state = SS_CONNECTED;
-+	sk->sk_state = TCP_ESTABLISHED;
-+	sk->sk_state_change(sk);
-+
-+	release_sock(sk);
-+	return 0;
-+
-+put_dev:
-+	nfc_put_device(dev);
-+error:
-+	release_sock(sk);
-+	return rc;
-+}
-+
-+static int rawsock_add_header(struct sk_buff *skb)
-+{
-+
-+	if (skb_cow_head(skb, 1))
-+		return -ENOMEM;
-+
-+	*skb_push(skb, 1) = 0;
-+
-+	return 0;
-+}
-+
-+static void rawsock_data_exchange_complete(void *context, struct sk_buff *skb,
-+								int err)
-+{
-+	struct sock *sk = (struct sock *) context;
-+
-+	BUG_ON(in_irq());
-+
-+	if (err)
-+		goto error;
-+
-+	err = rawsock_add_header(skb);
-+	if (err)
-+		goto error;
-+
-+	err = sock_queue_rcv_skb(sk, skb);
-+	if (err)
-+		goto error;
-+
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	if (!skb_queue_empty(&sk->sk_write_queue))
-+		schedule_work(&nfc_rawsock(sk)->tx_work);
-+	else
-+		nfc_rawsock(sk)->tx_work_scheduled = false;
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
-+
-+	sock_put(sk);
-+	return;
-+
-+error:
-+	rawsock_report_error(sk, err);
-+	sock_put(sk);
-+}
-+
-+static void rawsock_tx_work(struct work_struct *work)
-+{
-+	struct sock *sk = to_rawsock_sk(work);
-+	struct nfc_dev *dev = nfc_rawsock(sk)->dev;
-+	u32 target_idx = nfc_rawsock(sk)->target_idx;
-+	struct sk_buff *skb;
-+	int rc;
-+
-+	if (sk->sk_shutdown & SEND_SHUTDOWN) {
-+		rawsock_write_queue_purge(sk);
-+		return;
-+	}
-+
-+	skb = skb_dequeue(&sk->sk_write_queue);
-+
-+	sock_hold(sk);
-+	rc = nfc_data_exchange(dev, target_idx, skb,
-+				rawsock_data_exchange_complete, sk);
-+	if (rc) {
-+		rawsock_report_error(sk, rc);
-+		sock_put(sk);
-+	}
-+}
-+
-+static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
-+					struct msghdr *msg, size_t len)
-+{
-+	struct sock *sk = sock->sk;
-+	struct sk_buff *skb;
-+	int rc;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	if (msg->msg_namelen)
-+		return -EOPNOTSUPP;
-+
-+	if (sock->state != SS_CONNECTED)
-+		return -ENOTCONN;
-+
-+	skb = sock_alloc_send_skb(sk, len, msg->msg_flags & MSG_DONTWAIT,
-+									&rc);
-+	if (!skb)
-+		return rc;
-+
-+	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
-+	if (rc < 0) {
-+		kfree_skb(skb);
-+		return rc;
-+	}
-+
-+	spin_lock_bh(&sk->sk_write_queue.lock);
-+	__skb_queue_tail(&sk->sk_write_queue, skb);
-+	if (!nfc_rawsock(sk)->tx_work_scheduled) {
-+		schedule_work(&nfc_rawsock(sk)->tx_work);
-+		nfc_rawsock(sk)->tx_work_scheduled = true;
-+	}
-+	spin_unlock_bh(&sk->sk_write_queue.lock);
-+
-+	return len;
-+}
-+
-+static int rawsock_recvmsg(struct kiocb *iocb, struct socket *sock,
-+				struct msghdr *msg, size_t len, int flags)
-+{
-+	int noblock = flags & MSG_DONTWAIT;
-+	struct sock *sk = sock->sk;
-+	struct sk_buff *skb;
-+	int copied;
-+	int rc;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	skb = skb_recv_datagram(sk, flags, noblock, &rc);
-+	if (!skb)
-+		return rc;
-+
-+	msg->msg_namelen = 0;
-+
-+	copied = skb->len;
-+	if (len < copied) {
-+		msg->msg_flags |= MSG_TRUNC;
-+		copied = len;
-+	}
-+
-+	rc = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-+
-+	skb_free_datagram(sk, skb);
-+
-+	return rc ? : copied;
-+}
-+
-+
-+static const struct proto_ops rawsock_ops = {
-+	.family         = PF_NFC,
-+	.owner          = THIS_MODULE,
-+	.release        = rawsock_release,
-+	.bind           = sock_no_bind,
-+	.connect        = rawsock_connect,
-+	.socketpair     = sock_no_socketpair,
-+	.accept         = sock_no_accept,
-+	.getname        = sock_no_getname,
-+	.poll           = datagram_poll,
-+	.ioctl          = sock_no_ioctl,
-+	.listen         = sock_no_listen,
-+	.shutdown       = sock_no_shutdown,
-+	.setsockopt     = sock_no_setsockopt,
-+	.getsockopt     = sock_no_getsockopt,
-+	.sendmsg        = rawsock_sendmsg,
-+	.recvmsg        = rawsock_recvmsg,
-+	.mmap           = sock_no_mmap,
-+};
-+
-+static void rawsock_destruct(struct sock *sk)
-+{
-+	pr_debug("%s\n", __func__);
-+
-+	if (sk->sk_state == TCP_ESTABLISHED) {
-+		nfc_deactivate_target(nfc_rawsock(sk)->dev,
-+					nfc_rawsock(sk)->target_idx);
-+		nfc_put_device(nfc_rawsock(sk)->dev);
-+	}
-+
-+	skb_queue_purge(&sk->sk_receive_queue);
-+
-+	if (!sock_flag(sk, SOCK_DEAD)) {
-+		printk(KERN_ERR "Freeing alive NFC raw socket %p\n", sk);
-+		return;
-+	}
-+}
-+
-+static int rawsock_create(struct net *net, struct socket *sock,
-+				const struct nfc_protocol *nfc_proto)
-+{
-+	struct sock *sk;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	if (sock->type != SOCK_SEQPACKET)
-+		return -ESOCKTNOSUPPORT;
-+
-+	sock->ops = &rawsock_ops;
-+
-+	sk = sk_alloc(net, PF_NFC, GFP_KERNEL, nfc_proto->proto);
-+	if (!sk)
-+		return -ENOMEM;
-+
-+	sock_init_data(sock, sk);
-+	sk->sk_protocol = nfc_proto->id;
-+	sk->sk_destruct = rawsock_destruct;
-+	sock->state = SS_UNCONNECTED;
-+
-+	INIT_WORK(&nfc_rawsock(sk)->tx_work, rawsock_tx_work);
-+	nfc_rawsock(sk)->tx_work_scheduled = false;
-+
-+	return 0;
-+}
-+
-+static struct proto rawsock_proto = {
-+	.name     = "NFC_RAW",
-+	.owner    = THIS_MODULE,
-+	.obj_size = sizeof(struct nfc_rawsock),
-+};
-+
-+static const struct nfc_protocol rawsock_nfc_proto = {
-+	.id	  = NFC_SOCKPROTO_RAW,
-+	.proto    = &rawsock_proto,
-+	.owner    = THIS_MODULE,
-+	.create   = rawsock_create
-+};
-+
-+int __init rawsock_init(void)
-+{
-+	int rc;
-+
-+	pr_debug("%s\n", __func__);
-+
-+	rc = nfc_proto_register(&rawsock_nfc_proto);
-+
-+	return rc;
-+}
-+
-+void rawsock_exit(void)
-+{
-+	pr_debug("%s\n", __func__);
-+
-+	nfc_proto_unregister(&rawsock_nfc_proto);
-+}
+
+> - instead of set_reg_w32(), you should be able to simply
+> *get_reg_w32() = (unsigned long)value; or equivalent since
+> it returns a pointer.
+
+Agree.
+
+
+> - you are not checking the data access width, but you assume
+> it is 32 bits. Maybe you should verify that? get_reg_w8() is
+> very different. I think you should reproduce the switch on
+> get_ins_reg_width() statement from get_ins_reg_val() in
+> your set_ins_reg_val(), and use unsigned long instead of u32
+> to account for 64-bitness.
+>
+> Yes, get_reg_w32() is a little badly named.
+>
+> Maybe the driver is doing a 16-bit wide access, and happens to
+> store something else in the other 16/48 bits of RAX?
+
+Nice comment, thanks! I've decided to print info about planned
+overwrite, instead of really doing it. Plus few more debugging
+messages suggested by David:
+[  293.682242] mmiotrace: ZAJEC: overwriting 0x810 with 0xFFFF
+[  293.687929] mmiotrace: [ZAJEC] ins at ffffc90010503b60: 0f b7 81 fe 03 00
+[  293.693651] mmiotrace: [ZAJEC] p = (unsigned char *)ins_addr;
+         p == 0xf
+[  293.699379] mmiotrace: [ZAJEC] p += skip_prefix(p, &prf);
+         p == 0xf
+[  293.705116] mmiotrace: [ZAJEC] p += get_opcode(p, &opcode);
+         p == 0x81
+[  293.710815] mmiotrace: [ZAJEC] opcode is 0xb70f
+[  293.716411] mmiotrace: [ZAJEC] prf info: shorted:0; enlarged:0, rexr:0, rex:0
+[  293.722062] mmiotrace: [ZAJEC] after checing opcode we decided to use reg 0x0
+[  293.727698] mmiotrace: [ZAJEC] width is 4
+[  293.733219] [ZAJEC] (not) setting AX with 0xFFFF
+
+So the read's width is 4, that's 32bit. If this is 64bit arch we could
+be overwritting another 32bits in AX register, right? Can this be our
+issue?
+
+
+> I assume the lockup is silent, since you have not shown
+> anything. Have you tried a serial console, if you have one?
+
+I think David has some USB debugging (what ever it means...). Using
+console mode just printed commands done right before overwritting
+register.
+
 -- 
-1.7.1
-
+Rafał
