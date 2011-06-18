@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:13520 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757637Ab1F2TkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 15:40:07 -0400
-Subject: [PATCH 1/2] ath5k: fix incorrect use of drvdata in sysfs code
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Wed, 29 Jun 2011 15:39:37 -0400
-Message-ID: <20110629193937.4948.39075.stgit@mj.roinet.com> (sfid-20110629_214010_337619_4148BC69)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1754770Ab1FRQFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 12:05:32 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 25/25] iwlagn: remove incorrect define
+Date: Sat, 18 Jun 2011 08:34:31 -0700
+Message-Id: <1308411271-26093-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180542_205228_D6E04B0A)
+In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
-Cc: <stable@kernel.org>
----
- drivers/net/wireless/ath/ath5k/sysfs.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+Remove unused and incorrect EEPROM define
 
-diff --git a/drivers/net/wireless/ath/ath5k/sysfs.c b/drivers/net/wireless/ath/ath5k/sysfs.c
-index 929c68c..a073cdc 100644
---- a/drivers/net/wireless/ath/ath5k/sysfs.c
-+++ b/drivers/net/wireless/ath/ath5k/sysfs.c
-@@ -10,7 +10,8 @@ static ssize_t ath5k_attr_show_##name(struct device *dev,		\
- 			struct device_attribute *attr,			\
- 			char *buf)					\
- {									\
--	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
-+	struct ieee80211_hw *hw = dev_get_drvdata(dev);			\
-+	struct ath5k_softc *sc = hw->priv;				\
- 	return snprintf(buf, PAGE_SIZE, "%d\n", get); 			\
- }									\
- 									\
-@@ -18,7 +19,8 @@ static ssize_t ath5k_attr_store_##name(struct device *dev,		\
- 			struct device_attribute *attr,			\
- 			const char *buf, size_t count)			\
- {									\
--	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
-+	struct ieee80211_hw *hw = dev_get_drvdata(dev);			\
-+	struct ath5k_softc *sc = hw->priv;				\
- 	int val;							\
- 									\
- 	val = (int)simple_strtoul(buf, NULL, 10);			\
-@@ -33,7 +35,8 @@ static ssize_t ath5k_attr_show_##name(struct device *dev,		\
- 			struct device_attribute *attr,			\
- 			char *buf)					\
- {									\
--	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
-+	struct ieee80211_hw *hw = dev_get_drvdata(dev);			\
-+	struct ath5k_softc *sc = hw->priv;				\
- 	return snprintf(buf, PAGE_SIZE, "%d\n", get); 			\
- }									\
- static DEVICE_ATTR(name, S_IRUGO, ath5k_attr_show_##name, NULL)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index c6f370f..804f910 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -275,7 +275,6 @@ extern const u8 iwl_eeprom_band_1[14];
+ #define EEPROM_VERSION                      (2*0x44)	/* 2  bytes */
+ #define EEPROM_SKU_CAP                      (2*0x45)	/* 2  bytes */
+ #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
+-#define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
+ #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
+ #define EEPROM_NUM_MAC_ADDRESS              (2*0x4C)	/* 2  bytes */
+ 
+-- 
+1.7.0.4
+
