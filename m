@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:46096 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374Ab1FBGNv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 02:13:51 -0400
-Received: by qwk3 with SMTP id 3so230354qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 23:13:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTinSdDZv7gshYfi4mK5N9K-E7vk3Yw@mail.gmail.com>
-References: <1306918871-16965-1-git-send-email-zajec5@gmail.com>
-	<BANLkTinSdDZv7gshYfi4mK5N9K-E7vk3Yw@mail.gmail.com>
-Date: Thu, 2 Jun 2011 08:13:49 +0200
-Message-ID: <BANLkTi=mbBiSOGbEZ4AEYqZgyvgW0oXKtw@mail.gmail.com> (sfid-20110602_081355_393600_9AB99DCD)
-Subject: Re: [RFT][PATCH 3.0] ssb: fix PCI(e) driver regression causing oops
- on PCI cards
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Andreas Schwab <schwab@linux-m68k.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Christian Kujau <lists@nerdbynature.de>
-Cc: b43-dev@lists.infradead.org, linuxppc-dev@ozlabs.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:55382 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754779Ab1FRKZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 06:25:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QXsiA-0007K6-6K
+	for linux-wireless@vger.kernel.org; Sat, 18 Jun 2011 12:25:06 +0200
+Received: from 93.215.140.143 ([93.215.140.143])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 12:25:06 +0200
+Received: from cedar_mill by 93.215.140.143 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 12:25:06 +0200
+To: linux-wireless@vger.kernel.org
+From: edder <cedar_mill@web.de>
+Subject: Unable to get associated clients in aircrack-ng
+Date: Sat, 18 Jun 2011 10:18:53 +0000 (UTC)
+Message-ID: <loom.20110618T121558-879@post.gmane.org> (sfid-20110618_122517_647978_5E363C63)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/1 Rafał Miłecki <zajec5@gmail.com>:
-> 2011/6/1 Rafał Miłecki <zajec5@gmail.com>:
->> We were incorrectly executing PCIe specific workarounds on PCI cards.
->> This resulted in:
->> Machine check in kernel mode.
->> Caused by (from SRR1=149030): Transfer error ack signal
->> Oops: Machine check, sig: 7 [#1]
->
-> John, I've tested this patch myself on my PCI BCM4318, including
-> checking for 0xFFFFFFFF reads in MMIO dumps.
->
-> The patch is correct, please take it for 3.0.
+Hello,
 
-John, I'm afraid more and more people get angry at me because of this ;)
+Subject is the problem.
+Follow this link to get detailed information:
+http://forum.aircrack-ng.org/index.php?topic=11558.0
 
-Christian Kujau confirmed this problem and fix.
+Thanks
 
--- 
-Rafał
