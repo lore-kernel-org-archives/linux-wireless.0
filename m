@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41662 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755262Ab1FUJYz (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:52704 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab1FRXkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:24:55 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 03/32] ath9k: add MAC revision detection for AR9330
-Date: Tue, 21 Jun 2011 11:23:23 +0200
-Message-Id: <1308648232-9906-4-git-send-email-juhosg@openwrt.org> (sfid-20110621_112509_116889_4E0451E1)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+	Sat, 18 Jun 2011 19:40:04 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so874472ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 16:40:04 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: HT-PHY: enable radio
+Date: Sun, 19 Jun 2011 02:18:12 +0200
+Message-Id: <1308442692-4205-2-git-send-email-zajec5@gmail.com> (sfid-20110619_014009_039466_47EE3AF5)
+In-Reply-To: <1308442692-4205-1-git-send-email-zajec5@gmail.com>
+References: <1308442692-4205-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9330 1.0 and 1.1 are using the same revision,
-thus it is not possible to distinguish the two chips.
-The platform setup code can distinguish the chips based
-on the SoC revision.
+The trick was to find 0x810 PHY reg ops close to analog enabling code.
+To find out proper masks and sets, MMIO hacks were used.
 
-Add a callback function to ath9k_platform_data in order
-to allow getting the revision number from the platform code.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   |    9 +++++++++
- drivers/net/wireless/ath/ath9k/hw.h   |    1 +
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- include/linux/ath9k_platform.h        |    1 +
- 4 files changed, 12 insertions(+), 0 deletions(-)
+Bigger part of MMIO dump, showing where implemented OPS were found:
+>>> analog(ON) start
+phy_write(0x0911) <- 0x00cd
+phy_write(0x0910) <- 0x0000
+phy_write(0x0915) <- 0x00cd
+phy_write(0x0914) <- 0x0000
+phy_write(0x0919) <- 0x00cd
+phy_write(0x0918) <- 0x0000
+>>> analog(ON) end
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a3881b6..9840e00 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -251,6 +251,15 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 	case AR5416_AR9100_DEVID:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 		break;
-+	case AR9300_DEVID_AR9330:
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
-+		if (ah->get_mac_revision) {
-+			ah->hw_version.macRev = ah->get_mac_revision();
-+		} else {
-+			val = REG_READ(ah, AR_SREV);
-+			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-+		}
-+		return;
- 	case AR9300_DEVID_AR9340:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
- 		val = REG_READ(ah, AR_SREV);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 14c5857..0749fa8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -862,6 +862,7 @@ struct ath_hw {
- 	u32 ent_mode;
- 
- 	bool is_clk_25mhz;
-+	int (*get_mac_revision)(void);
- };
- 
- struct ath_bus_ops {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d4b166c..6612112 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -574,6 +574,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 		sc->sc_ah->gpio_val = pdata->gpio_val;
- 		sc->sc_ah->led_pin = pdata->led_pin;
- 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
-+		ah->get_mac_revision = pdata->get_mac_revision;
+ read16 0xb06003e0 -> 0x9701
+ read32 0xb0600120 -> 0xc4020402
+
+ phy_read(0x0810) -> 0x0000
+phy_write(0x0810) <- 0x0000
+ phy_read(0x0810) -> 0x0000
+phy_write(0x0810) <- 0x0001
+ phy_read(0x0810) -> 0x0001
+phy_write(0x0810) <- 0x0000
+ phy_read(0x0810) -> 0x0000
+phy_write(0x0810) <- 0x0002
+
+radio_write(0x0c51) <- 0x0070
+---
+ drivers/net/wireless/b43/phy_ht.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index e84d4c1..008c1a9 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -69,6 +69,10 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
+ 	if (blocked) {
+ 		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+ 	} else {
++		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
++		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
++		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
++		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
  	}
+ }
  
- 	common = ath9k_hw_common(ah);
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index 60a7c49..c207607 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -30,6 +30,7 @@ struct ath9k_platform_data {
- 	u32 gpio_val;
- 
- 	bool is_clk_25mhz;
-+	int (*get_mac_revision)(void);
- };
- 
- #endif /* _LINUX_ATH9K_PLATFORM_H */
 -- 
-1.7.2.1
+1.7.3.4
 
