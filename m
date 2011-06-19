@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49433 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753385Ab1FNTEy (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369Ab1FSILw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 15:04:54 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 8106A540048
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 15:11:48 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-14 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110614190453.3361440EC7@repository3.orbit-lab.org> (sfid-20110614_210458_132424_23663809)
-Date: Tue, 14 Jun 2011 15:04:53 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 19 Jun 2011 04:11:52 -0400
+Subject: Re: [PATCH] mac80211: quiesce vif before suspending
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1308214173-26950-1-git-send-email-eliad@wizery.com> (sfid-20110616_104858_553374_6C008F9A)
+References: <1308214173-26950-1-git-send-email-eliad@wizery.com>
+	 (sfid-20110616_104858_553374_6C008F9A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 19 Jun 2011 10:11:50 +0200
+Message-ID: <1308471110.4145.7.camel@jlt3.sipsolutions.net> (sfid-20110619_101156_398454_0F322DC0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   dd2fa6b..32a56d5  linux-3.0.y -> origin/linux-3.0.y
-   2176d3b..0a1c49d  master     -> origin/master
- * [new tag]         compat-wireless-2011-06-14 -> compat-wireless-2011-06-14
- * [new tag]         compat-wireless-v3.0-rc3-1 -> compat-wireless-v3.0-rc3-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   d2e1ee0..a11d34b  linux-3.0.0.y -> origin/linux-3.0.0.y
- * [new branch]      linux-3.0.y -> origin/linux-3.0.y
-   c03570e..1099a7e  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 6b687d7...b20dbc5 akpm-end   -> origin/akpm-end  (forced update)
-   dfb863a..2c53b43  akpm-start -> origin/akpm-start
-   77df2ba..3e37f91  history    -> origin/history
- + c4c5f63...f3395ef master     -> origin/master  (forced update)
-   dfb863a..2c53b43  stable     -> origin/stable
- * [new tag]         next-20110614 -> next-20110614
- * [new tag]         v3.0-rc3   -> v3.0-rc3
+On Thu, 2011-06-16 at 11:49 +0300, Eliad Peller wrote:
+> Cancel all relevant timers/works before suspending (wowlan).
+> 
+> This patch handles the following warning:
+> WARNING: at net/mac80211/util.c:565 queueing ieee80211 work while going to suspend
+> Backtrace:
+> [<bf07b598>] (ieee80211_can_queue_work+0x0/0x4c [mac80211])
+> [<bf07c28c>] (ieee80211_queue_work+0x0/0x30 [mac80211])
+> [<bf0690dc>] (ieee80211_sta_timer+0x0/0x3c [mac80211])
+> [<c00a3008>] (run_timer_softirq+0x0/0x220)
+> [<c009e530>] (__do_softirq+0x0/0x130)
+> [<c009e660>] (irq_exit+0x0/0xb4)
+> [<c004c4a0>] (ipi_timer+0x0/0x4c)
+> [<c0046350>] (do_local_timer+0x0/0x88)
+> [<c00488ec>] (cpu_idle+0x0/0xe0)
+> [<c05294e8>] (rest_init+0x0/0xe0)
+> [<c0008958>] (start_kernel+0x0/0x314)
 
-compat-wireless code metrics
+Yeah I think this was the patch you told be about earlier, thanks.
 
-    819517 - Total upstream lines of code being pulled
-      2394 - backport code changes
-      2086 - backport code additions
-       308 - backport code deletions
-      8123 - backport from compat module
-     10517 - total backport code
-    1.2833 - % of code consists of backport work
+johannes
+
