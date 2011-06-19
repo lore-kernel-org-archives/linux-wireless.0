@@ -1,100 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:37014 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757099Ab1FPTTF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 15:19:05 -0400
+Received: from mx3.wp.pl ([212.77.101.7]:12202 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab1FSRqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2011 13:46:11 -0400
+Date: Sun, 19 Jun 2011 19:47:39 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/2] rt2x00: reset usb devices at probe
+Message-ID: <20110619174739.GC19934@localhost.localdomain> (sfid-20110619_194613_920749_EB48281E)
+References: <20110604144854.GA4865@localhost.localdomain>
+ <20110604172940.GA10984@localhost.localdomain>
+ <20110619174602.GB19934@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <4DFA4672.5080307@lwfinger.net>
-References: <BANLkTikXUd8uorD+juMDvFubr3cz+OZnaQ@mail.gmail.com>
-	<BANLkTinUxRGkXeOtBSKi51n3Q_rZEp1gUg@mail.gmail.com>
-	<4DFA4672.5080307@lwfinger.net>
-Date: Thu, 16 Jun 2011 21:19:04 +0200
-Message-ID: <BANLkTi=-wXnXNJY3R+3Q+KSaJhtxHgrhZw@mail.gmail.com> (sfid-20110616_211924_746801_B5598CEE)
-Subject: Re: Faking MMIO ops? Fooling a driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Pekka Paalanen <pq@iki.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110619174602.GB19934@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 16 czerwca 2011 20:07 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 06/16/2011 12:20 PM, Rafał Miłecki wrote:
->>
->> W dniu 16 czerwca 2011 16:44 użytkownik Rafał Miłecki
->> <zajec5@gmail.com>  napisał:
->>>
->>> I analyze MMIO dumps of closed source driver and found such a place:
->>> W 2 3855.911536 9 0xb06003fc 0x810 0x0 0
->>> R 2 3855.911540 9 0xb06003fe 0x0 0x0 0
->>> W 2 3855.911541 9 0xb06003fe 0x0 0x0 0
->>>
->>> After translation:
->>>  phy_read(0x0810) ->  0x0000
->>> phy_write(0x0810)<- 0x0000
->>>
->>> So it's quite obvious, the driver is reading PHY register, masking it
->>> and writing masked value. Unfortunately from just looking at such
->>> place we can not guess the mask driver uses.
->>>
->>> I'd like to fake value read from 0xb06003fe to be 0xFFFF.
->>> Is there some ready method for doing such a trick?
->>>
->>> Dump comes from Kernel hacking → Tracers → MMIO and ndiswrapper.
->>
->> I can see values in MMIO trace struct are filled in
->> arch/x86/mm/mmio-mod.c in "pre" and "post". However still no idea how
->> to hack the returned value.
->>
->> Should I try hacking read[bwl] instead? :|
->
-> Probably. I do not see any way to trace and modify the results for a
-> particular address without special code.
+When module is reloaded, device may fail to work, with messages:
 
-Did you success with writing some special code? Following patch does
-not seem to work for me:
+[  342.211926] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x0059, type=2.
+[  342.314254] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x004a, type=2.
+[  342.416458] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 3183 max 2432.
+[  342.518605] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00c9, type=2.
+[  342.620836] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00ae, type=1.
+[  342.723201] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
+[  342.825399] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
+[  342.927624] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
+[  343.029804] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 2491 max 2432.
+[  343.132008] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 2576 max 2432.
+[  343.234326] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x004c, type=1.
+[  343.438723] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00e6, type=1.
 
+Whereas replugging device make it functional. To solve that problem
+force reset device during probe.
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index e0ffa3d..448e4ff 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -23,6 +23,8 @@
- #define mmiowb() do {} while (0)
- #endif
+With patch messages are gone. Unfortunately device may sometimes
+still does not operate correctly after module reload (fail to receive
+data after associate), but such cases are rarer than without the patch.
 
-+static int zajec = 0;
-+
- /*****************************************************************************/
- /*
-  * readX/writeX() are used to access memory mapped devices. On some
-@@ -40,6 +42,11 @@ static inline u8 __raw_readb(const volatile void
-__iomem *addr)
- #ifndef __raw_readw
- static inline u16 __raw_readw(const volatile void __iomem *addr)
- {
-+	if (zajec++ < 10)
-+		printk(KERN_INFO "[ZAJEC] %d\n", *addr);
-+	if (*addr == 0xfaafc000)
-+		printk(KERN_INFO "[ZAJEC] Bingo!\n");
-+	//0x1381a8d8
- 	return *(const volatile u16 __force *) addr;
- }
- #endif
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Should I modify different readw? Path include/asm-generic/io.h sounds
-sane to me, so I modified this one.
-
-
-> FYI, my reference driver for reverse engineering has no instance of a
-> read/modify/write for PHY register 0x810. Is the code in question for a PHY
-> type > 6?
-
-This is for PHY type 7, AKA "HT".
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 8f90f62..b6b4542 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -802,6 +802,7 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+ 	int retval;
+ 
+ 	usb_dev = usb_get_dev(usb_dev);
++	usb_reset_device(usb_dev);
+ 
+ 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+ 	if (!hw) {
 -- 
-Rafał
+1.7.4
+
