@@ -1,260 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45501 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755295Ab1FMWi1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:38:27 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id BF6B5EB285
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:25 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id 94E092BD42
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:38:24 +0300 (EEST)
-Subject: [PATCH v2 26/27] mac80211: change queue stop reasons to use mac80211
-	prefix
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Jun 2011 01:38:24 +0300
-Message-ID: <20110613223824.10517.39092.stgit@localhost6.localdomain6> (sfid-20110614_005724_054514_AA0E8310)
-In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47443 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754170Ab1FSVvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2011 17:51:45 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC v2 01/12] bcma: move parsing of EEPROM into own function.
+Date: Sun, 19 Jun 2011 23:49:58 +0200
+Message-Id: <1308520209-668-2-git-send-email-hauke@hauke-m.de> (sfid-20110619_235150_005646_E8491073)
+In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/agg-tx.c     |    4 ++--
- net/mac80211/mac80211_i.h |   12 ++++++------
- net/mac80211/main.c       |    2 +-
- net/mac80211/mlme.c       |   14 ++++++++++----
- net/mac80211/pm.c         |    2 +-
- net/mac80211/tx.c         |    2 +-
- net/mac80211/util.c       |   18 +++++++++---------
- 7 files changed, 30 insertions(+), 24 deletions(-)
+Move the parsing of the EEPROM data in scan function for one core into
+an own function. Now we are able to use it in some other scan function
+as well.
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 0d772a6..b6f3998 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -268,7 +268,7 @@ ieee80211_stop_queue_agg(struct mac80211_local *local, int tid)
- 	if (atomic_inc_return(&local->agg_queue_stop[queue]) == 1)
- 		ieee80211_stop_queue_by_reason(
- 			&local->hw, queue,
--			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
-+			MAC80211_QUEUE_STOP_REASON_AGGREGATION);
- 	__acquire(agg_queue);
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/scan.c |  230 ++++++++++++++++++++++++++-------------------------
+ 1 files changed, 118 insertions(+), 112 deletions(-)
+
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 40d7dcc..4012d8d 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -200,16 +200,124 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
+ 	return addrl;
  }
  
-@@ -280,7 +280,7 @@ ieee80211_wake_queue_agg(struct mac80211_local *local, int tid)
- 	if (atomic_dec_return(&local->agg_queue_stop[queue]) == 0)
- 		ieee80211_wake_queue_by_reason(
- 			&local->hw, queue,
--			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
-+			MAC80211_QUEUE_STOP_REASON_AGGREGATION);
- 	__release(agg_queue);
- }
- 
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index d0ca2f5..1b3d0fb 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -633,12 +633,12 @@ enum {
- };
- 
- enum queue_stop_reason {
--	IEEE80211_QUEUE_STOP_REASON_DRIVER,
--	IEEE80211_QUEUE_STOP_REASON_PS,
--	IEEE80211_QUEUE_STOP_REASON_CSA,
--	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
--	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
--	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
-+	MAC80211_QUEUE_STOP_REASON_DRIVER,
-+	MAC80211_QUEUE_STOP_REASON_PS,
-+	MAC80211_QUEUE_STOP_REASON_CSA,
-+	MAC80211_QUEUE_STOP_REASON_AGGREGATION,
-+	MAC80211_QUEUE_STOP_REASON_SUSPEND,
-+	MAC80211_QUEUE_STOP_REASON_SKB_ADD,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a59821e..d9db197 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -380,7 +380,7 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- 
- 	/* use this reason, ieee80211_reconfig will unblock it */
- 	ieee80211_stop_queues_by_reason(hw,
--		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-+		MAC80211_QUEUE_STOP_REASON_SUSPEND);
- 
- 	schedule_work(&local->restart_work);
- }
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 46bc4db..b92dbda 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -232,6 +232,9 @@ static u32 ieee80211_enable_ht(struct mac80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
- 	}
- 
-+	ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+					MAC80211_QUEUE_STOP_REASON_CSA);
++static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
++			      struct bcma_device *core)
++{
++	s32 tmp;
++	u8 i, j;
++	s32 cia, cib;
++	u8 ports[2], wrappers[2];
 +
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
- 
-@@ -245,6 +248,9 @@ static u32 ieee80211_enable_ht(struct mac80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 	}
- 
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					MAC80211_QUEUE_STOP_REASON_CSA);
++	/* get CIs */
++	cia = bcma_erom_get_ci(bus, eromptr);
++	if (cia < 0) {
++		bcma_erom_push_ent(eromptr);
++		if (bcma_erom_is_end(bus, eromptr))
++			return -ESPIPE;
++		return -EILSEQ;
++	}
++	cib = bcma_erom_get_ci(bus, eromptr);
++	if (cib < 0)
++		return -EILSEQ;
 +
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
++	/* parse CIs */
++	core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
++	core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
++	core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
++	ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
++	ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
++	wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
++	wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
++	core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
++
++	if (((core->id.manuf == BCMA_MANUF_ARM) &&
++	     (core->id.id == 0xFFF)) ||
++	    (ports[1] == 0)) {
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	/* check if component is a core at all */
++	if (wrappers[0] + wrappers[1] == 0) {
++		/* we could save addrl of the router
++		if (cid == BCMA_CORE_OOB_ROUTER)
++		 */
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	if (bcma_erom_is_bridge(bus, eromptr)) {
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	/* get & parse master ports */
++	for (i = 0; i < ports[0]; i++) {
++		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
++		if (mst_port_d < 0)
++			return -EILSEQ;
++	}
++
++	/* get & parse slave ports */
++	for (i = 0; i < ports[1]; i++) {
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_SLAVE, i);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: slave port %d "
++				 * "has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (i == 0 && j == 0)
++					core->addr = tmp;
++			}
++		}
++	}
++
++	/* get & parse master wrappers */
++	for (i = 0; i < wrappers[0]; i++) {
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_MWRAP, i);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: master wrapper %d "
++				 * "has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (i == 0 && j == 0)
++					core->wrap = tmp;
++			}
++		}
++	}
++
++	/* get & parse slave wrappers */
++	for (i = 0; i < wrappers[1]; i++) {
++		u8 hack = (ports[1] == 1) ? 0 : 1;
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_SWRAP, i + hack);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: master wrapper %d "
++				 * has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (wrappers[0] == 0 && !i && !j)
++					core->wrap = tmp;
++			}
++		}
++	}
++	return 0;
++}
++
+ int bcma_bus_scan(struct bcma_bus *bus)
+ {
+ 	u32 erombase;
+ 	u32 __iomem *eromptr, *eromend;
  
- 	/* if bss configuration changed store the new one */
-@@ -400,7 +406,7 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	ifmgd->associated->channel = sdata->local->oper_channel;
+-	s32 cia, cib;
+-	u8 ports[2], wrappers[2];
+-
+ 	s32 tmp;
+-	u8 i, j;
  
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
-+					MAC80211_QUEUE_STOP_REASON_CSA);
-  out:
- 	ifmgd->flags &= ~MAC80211_STA_CSA_RECEIVED;
- 	mutex_unlock(&ifmgd->mtx);
-@@ -483,7 +489,7 @@ void ieee80211_sta_process_chanswitch(struct mac80211_sub_if_data *sdata,
- 		if (sw_elem->mode) {
- 			ch_switch.block_tx = true;
- 			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
-+					MAC80211_QUEUE_STOP_REASON_CSA);
- 		}
- 		ch_switch.channel = new_ch;
- 		ch_switch.count = sw_elem->count;
-@@ -498,7 +504,7 @@ void ieee80211_sta_process_chanswitch(struct mac80211_sub_if_data *sdata,
- 	} else {
- 		if (sw_elem->mode)
- 			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
-+					MAC80211_QUEUE_STOP_REASON_CSA);
- 		ifmgd->flags |= MAC80211_STA_CSA_RECEIVED;
- 		mod_timer(&ifmgd->chswitch_timer,
- 			  jiffies +
-@@ -740,7 +746,7 @@ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+ 	int err;
+ 
+@@ -236,112 +344,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 		INIT_LIST_HEAD(&core->list);
+ 		core->bus = bus;
+ 
+-		/* get CIs */
+-		cia = bcma_erom_get_ci(bus, &eromptr);
+-		if (cia < 0) {
+-			bcma_erom_push_ent(&eromptr);
+-			if (bcma_erom_is_end(bus, &eromptr))
+-				break;
+-			err= -EILSEQ;
+-			goto out;
+-		}
+-		cib = bcma_erom_get_ci(bus, &eromptr);
+-		if (cib < 0) {
+-			err= -EILSEQ;
+-			goto out;
+-		}
+-
+-		/* parse CIs */
+-		core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
+-		core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
+-		core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
+-		ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
+-		ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
+-		wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
+-		wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
+-		core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
+-
+-		if (((core->id.manuf == BCMA_MANUF_ARM) &&
+-		     (core->id.id == 0xFFF)) ||
+-		    (ports[1] == 0)) {
+-			bcma_erom_skip_component(bus, &eromptr);
+-			continue;
+-		}
+-
+-		/* check if component is a core at all */
+-		if (wrappers[0] + wrappers[1] == 0) {
+-			/* we could save addrl of the router
+-			if (cid == BCMA_CORE_OOB_ROUTER)
+-			 */
+-			bcma_erom_skip_component(bus, &eromptr);
+-			continue;
+-		}
+-
+-		if (bcma_erom_is_bridge(bus, &eromptr)) {
+-			bcma_erom_skip_component(bus, &eromptr);
++		err = bcma_get_next_core(bus, &eromptr, core);
++		if (err == -ENXIO)
+ 			continue;
+-		}
+-
+-		/* get & parse master ports */
+-		for (i = 0; i < ports[0]; i++) {
+-			u32 mst_port_d = bcma_erom_get_mst_port(bus, &eromptr);
+-			if (mst_port_d < 0) {
+-				err= -EILSEQ;
+-				goto out;
+-			}
+-		}
+-
+-		/* get & parse slave ports */
+-		for (i = 0; i < ports[1]; i++) {
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_SLAVE, i);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: slave port %d "
+-					 * "has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (i == 0 && j == 0)
+-						core->addr = tmp;
+-				}
+-			}
+-		}
+-
+-		/* get & parse master wrappers */
+-		for (i = 0; i < wrappers[0]; i++) {
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_MWRAP, i);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: master wrapper %d "
+-					 * "has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (i == 0 && j == 0)
+-						core->wrap = tmp;
+-				}
+-			}
+-		}
+-
+-		/* get & parse slave wrappers */
+-		for (i = 0; i < wrappers[1]; i++) {
+-			u8 hack = (ports[1] == 1) ? 0 : 1;
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_SWRAP, i + hack);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: master wrapper %d "
+-					 * has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (wrappers[0] == 0 && !i && !j)
+-						core->wrap = tmp;
+-				}
+-			}
+-		}
++		else if (err == -ESPIPE)
++			break;
++		else if (err < 0)
++			return err;
+ 
+ 		pr_info("Core %d found: %s "
+ 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+@@ -351,9 +360,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 
+ 		core->core_index = bus->nr_cores++;
+ 		list_add(&core->list, &bus->cores);
+-		continue;
+-out:
+-		return err;
  	}
  
- 	ieee80211_wake_queues_by_reason(&local->hw,
--					IEEE80211_QUEUE_STOP_REASON_PS);
-+					MAC80211_QUEUE_STOP_REASON_PS);
- }
- 
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 47505f0..e41aa9e 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -24,7 +24,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	}
- 
- 	ieee80211_stop_queues_by_reason(hw,
--			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-+			MAC80211_QUEUE_STOP_REASON_SUSPEND);
- 
- 	/* flush out all packets */
- 	synchronize_net();
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e43e34b..ea0f76a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -231,7 +231,7 @@ ieee80211_tx_h_dynamic_ps(struct mac80211_tx_data *tx)
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 		ieee80211_stop_queues_by_reason(&local->hw,
--						IEEE80211_QUEUE_STOP_REASON_PS);
-+						MAC80211_QUEUE_STOP_REASON_PS);
- 		ifmgd->flags &= ~MAC80211_STA_NULLFUNC_ACKED;
- 		ieee80211_queue_work(&local->hw,
- 				     &local->dynamic_ps_disable_work);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7e1514c..65b0367 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -307,7 +307,7 @@ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
- void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
- {
- 	ieee80211_wake_queue_by_reason(hw, queue,
--				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+				       MAC80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_wake_queue);
- 
-@@ -344,7 +344,7 @@ void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
- void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
- {
- 	ieee80211_stop_queue_by_reason(hw, queue,
--				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+				       MAC80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_stop_queue);
- 
-@@ -362,9 +362,9 @@ void ieee80211_add_pending_skb(struct mac80211_local *local,
- 	}
- 
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
-+	__ieee80211_stop_queue(hw, queue, MAC80211_QUEUE_STOP_REASON_SKB_ADD);
- 	__skb_queue_tail(&local->pending[queue], skb);
--	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
-+	__ieee80211_wake_queue(hw, queue, MAC80211_QUEUE_STOP_REASON_SKB_ADD);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- }
- 
-@@ -380,7 +380,7 @@ int ieee80211_add_pending_skbs_fn(struct mac80211_local *local,
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	for (i = 0; i < hw->queues; i++)
- 		__ieee80211_stop_queue(hw, i,
--			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
-+			MAC80211_QUEUE_STOP_REASON_SKB_ADD);
- 
- 	while ((skb = skb_dequeue(skbs))) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -400,7 +400,7 @@ int ieee80211_add_pending_skbs_fn(struct mac80211_local *local,
- 
- 	for (i = 0; i < hw->queues; i++)
- 		__ieee80211_wake_queue(hw, i,
--			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
-+			MAC80211_QUEUE_STOP_REASON_SKB_ADD);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
- 	return ret;
-@@ -430,7 +430,7 @@ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
- void ieee80211_stop_queues(struct ieee80211_hw *hw)
- {
- 	ieee80211_stop_queues_by_reason(hw,
--					IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+					MAC80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_stop_queues);
- 
-@@ -467,7 +467,7 @@ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 
- void ieee80211_wake_queues(struct ieee80211_hw *hw)
- {
--	ieee80211_wake_queues_by_reason(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+	ieee80211_wake_queues_by_reason(hw, MAC80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_wake_queues);
- 
-@@ -1278,7 +1278,7 @@ int ieee80211_reconfig(struct mac80211_local *local)
- 
-  wake_up:
- 	ieee80211_wake_queues_by_reason(hw,
--			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-+			MAC80211_QUEUE_STOP_REASON_SUSPEND);
- 
- 	/*
- 	 * If this is for hw restart things are still running.
+ 	return 0;
+-- 
+1.7.4.1
 
