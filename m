@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:39161 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754790Ab1FQUdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 16:33:41 -0400
-Message-ID: <4DFBBA22.4050406@gnu.org> (sfid-20110617_223353_023252_CA48BC3B)
-Date: Fri, 17 Jun 2011 16:33:38 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from he.sipsolutions.net ([78.46.109.217]:59327 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab1FSIFJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2011 04:05:09 -0400
+Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if
+ rate_lowest_index() fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if rate_lowest_index()
- fails
-References: <20110615220252.1918.73638.stgit@mj.roinet.com> <20110616102224.GB2178@redhat.com> <4DFA7EDF.70608@gnu.org> <4DFAF645.5030303@broadcom.com>
-In-Reply-To: <4DFAF645.5030303@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110615220252.1918.73638.stgit@mj.roinet.com> (sfid-20110616_000256_270703_19F4D5F9)
+References: <20110615220252.1918.73638.stgit@mj.roinet.com>
+	 (sfid-20110616_000256_270703_19F4D5F9)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 19 Jun 2011 10:05:05 +0200
+Message-ID: <1308470705.4145.1.camel@jlt3.sipsolutions.net> (sfid-20110619_100516_346429_A0CDA114)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2011 02:37 AM, Arend van Spriel wrote:
-> On 06/17/2011 12:08 AM, Pavel Roskin wrote:
+On Wed, 2011-06-15 at 18:02 -0400, Pavel Roskin wrote:
+> WARN_ON is not enough, as we cannot return a valid index, and the
+> callers will use whatever we return, causing a cascade of oopses and
+> eventually a panic.
 
->> In my case, I was able to restart the system by sysrq when using BUG_ON,
->> but the system would hang hard with WARN_ON. I think continuing after
->> returning an invalid index is wrong. It will lead to memory corruption
->> that could in turn lead to corruption of the filesystem.
->
-> I think it is generally a bad idea to use BUG_ON as a solution. As
-> Stanislaw indicated there are platforms which can continue without a
-> hang so you are regressing those. Regarding your patch I think the
-> -EINVAL is good to have, but leave the WARN_ON.
+Can you show the details of that? 0 should always be an at least
+semi-valid index pointing to _something_ whereas -EINVAL will cause it
+to point to random memory that isn't even valid...
 
-Well, then it would be pointless.  The whole idea was to prevent memory 
-corruption and to stop early.  Returning -EINVAL for real (as opposed to 
-having it in the dead code) could lead to worse memory corruption than 
-returning 0.
+johannes
 
-The real fix would be to make rate control algorithms robust to the case 
-when no rates are allowed.  My patch was meant as a first little step 
-towards it by making it easier to capture the backtrace and restart the 
-system.  But it's not worth the trouble for me to argue about it.
 
--- 
-Regards,
-Pavel Roskin
