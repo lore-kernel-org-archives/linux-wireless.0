@@ -1,241 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:42178 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758572Ab1F0M6E (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:52412 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407Ab1FSKwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 08:58:04 -0400
-Received: by fxd18 with SMTP id 18so1789080fxd.11
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 05:58:02 -0700 (PDT)
+	Sun, 19 Jun 2011 06:52:07 -0400
+Received: by ewy4 with SMTP id 4so943905ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 03:52:06 -0700 (PDT)
 From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
 Cc: b43-dev@lists.infradead.org,
 	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/5] b43: HT-PHY: prepare place for HT-PHY tables
-Date: Mon, 27 Jun 2011 14:58:50 +0200
-Message-Id: <1309179534-8081-1-git-send-email-zajec5@gmail.com> (sfid-20110627_150219_490459_FC000F84)
+Subject: [PATCH 2/2] b43: N-PHY: move declarations of chantables functions to correct files
+Date: Sun, 19 Jun 2011 13:30:21 +0200
+Message-Id: <1308483021-7149-2-git-send-email-zajec5@gmail.com> (sfid-20110619_125219_169907_38EEC010)
+In-Reply-To: <1308483021-7149-1-git-send-email-zajec5@gmail.com>
+References: <1308483021-7149-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are big arrays uploaded to the hardware on init, calibration, etc.
 
 Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/b43/Makefile        |    1 +
- drivers/net/wireless/b43/tables_phy_ht.c |  162 ++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_ht.h |   20 ++++
- 3 files changed, 183 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/b43/tables_phy_ht.c
- create mode 100644 drivers/net/wireless/b43/tables_phy_ht.h
+ drivers/net/wireless/b43/radio_2055.h  |    5 +++++
+ drivers/net/wireless/b43/radio_2056.h  |    5 +++++
+ drivers/net/wireless/b43/tables_nphy.h |    8 --------
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/Makefile b/drivers/net/wireless/b43/Makefile
-index 900dc9c..1b25604 100644
---- a/drivers/net/wireless/b43/Makefile
-+++ b/drivers/net/wireless/b43/Makefile
-@@ -11,6 +11,7 @@ b43-$(CONFIG_B43_PHY_N)		+= phy_n.o
- b43-$(CONFIG_B43_PHY_LP)	+= phy_lp.o
- b43-$(CONFIG_B43_PHY_LP)	+= tables_lpphy.o
- b43-$(CONFIG_B43_PHY_HT)	+= phy_ht.o
-+b43-$(CONFIG_B43_PHY_HT)	+= tables_phy_ht.o
- b43-$(CONFIG_B43_PHY_HT)	+= radio_2059.o
- b43-y				+= sysfs.o
- b43-y				+= xmit.o
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.c b/drivers/net/wireless/b43/tables_phy_ht.c
-new file mode 100644
-index 0000000..df08be2
---- /dev/null
-+++ b/drivers/net/wireless/b43/tables_phy_ht.c
-@@ -0,0 +1,162 @@
-+/*
+diff --git a/drivers/net/wireless/b43/radio_2055.h b/drivers/net/wireless/b43/radio_2055.h
+index d9bfa0f..67f9612 100644
+--- a/drivers/net/wireless/b43/radio_2055.h
++++ b/drivers/net/wireless/b43/radio_2055.h
+@@ -251,4 +251,9 @@ struct b43_nphy_channeltab_entry_rev2 {
+ void b2055_upload_inittab(struct b43_wldev *dev,
+ 			  bool ghz5, bool ignore_uploadflag);
+ 
++/* Get the NPHY Channel Switch Table entry for a channel.
++ * Returns NULL on failure to find an entry. */
++const struct b43_nphy_channeltab_entry_rev2 *
++b43_nphy_get_chantabent_rev2(struct b43_wldev *dev, u8 channel);
 +
-+  Broadcom B43 wireless driver
-+  IEEE 802.11n HT-PHY data tables
+ #endif /* B43_RADIO_2055_H_ */
+diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+index d601f6e..d52df6b 100644
+--- a/drivers/net/wireless/b43/radio_2056.h
++++ b/drivers/net/wireless/b43/radio_2056.h
+@@ -1117,4 +1117,9 @@ struct b43_nphy_channeltab_entry_rev3 {
+ void b2056_upload_inittabs(struct b43_wldev *dev,
+ 			   bool ghz5, bool ignore_uploadflag);
+ 
++/* Get the NPHY Channel Switch Table entry for a channel.
++ * Returns NULL on failure to find an entry. */
++const struct b43_nphy_channeltab_entry_rev3 *
++b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq);
 +
-+  This program is free software; you can redistribute it and/or modify
-+  it under the terms of the GNU General Public License as published by
-+  the Free Software Foundation; either version 2 of the License, or
-+  (at your option) any later version.
-+
-+  This program is distributed in the hope that it will be useful,
-+  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+  GNU General Public License for more details.
-+
-+  You should have received a copy of the GNU General Public License
-+  along with this program; see the file COPYING.  If not, write to
-+  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-+  Boston, MA 02110-1301, USA.
-+
-+*/
-+
-+#include "b43.h"
-+#include "tables_phy_ht.h"
-+#include "phy_common.h"
-+#include "phy_ht.h"
-+
-+u32 b43_httab_read(struct b43_wldev *dev, u32 offset)
-+{
-+	u32 type, value;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= ~B43_HTTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	switch (type) {
-+	case B43_HTTAB_8BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO) & 0xFF;
-+		break;
-+	case B43_HTTAB_16BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO);
-+		break;
-+	case B43_HTTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_HT_TABLE_DATAHI);
-+		value <<= 16;
-+		value |= b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO);
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+		value = 0;
-+	}
-+
-+	return value;
-+}
-+
-+void b43_httab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			 unsigned int nr_elements, void *_data)
-+{
-+	u32 type;
-+	u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= ~B43_HTTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_HTTAB_8BIT:
-+			*data = b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO) & 0xFF;
-+			data++;
-+			break;
-+		case B43_HTTAB_16BIT:
-+			*((u16 *)data) = b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO);
-+			data += 2;
-+			break;
-+		case B43_HTTAB_32BIT:
-+			*((u32 *)data) = b43_phy_read(dev, B43_PHY_HT_TABLE_DATAHI);
-+			*((u32 *)data) <<= 16;
-+			*((u32 *)data) |= b43_phy_read(dev, B43_PHY_HT_TABLE_DATALO);
-+			data += 4;
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-+
-+void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value)
-+{
-+	u32 type;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= 0xFFFF;
-+
-+	switch (type) {
-+	case B43_HTTAB_8BIT:
-+		B43_WARN_ON(value & ~0xFF);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		break;
-+	case B43_HTTAB_16BIT:
-+		B43_WARN_ON(value & ~0xFFFF);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		break;
-+	case B43_HTTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_DATAHI, value >> 16);
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value & 0xFFFF);
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+	}
-+
-+	return;
-+}
-+
-+void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data)
-+{
-+	u32 type, value;
-+	const u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= ~B43_HTTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_HTTAB_8BIT:
-+			value = *data;
-+			data++;
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+			break;
-+		case B43_HTTAB_16BIT:
-+			value = *((u16 *)data);
-+			data += 2;
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+			break;
-+		case B43_HTTAB_32BIT:
-+			value = *((u32 *)data);
-+			data += 4;
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATAHI, value >> 16);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO,
-+					value & 0xFFFF);
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
-new file mode 100644
-index 0000000..6a13614
---- /dev/null
-+++ b/drivers/net/wireless/b43/tables_phy_ht.h
-@@ -0,0 +1,20 @@
-+#ifndef B43_TABLES_PHY_HT_H_
-+#define B43_TABLES_PHY_HT_H_
-+
-+/* The HT-PHY tables. */
-+#define B43_HTTAB_TYPEMASK		0xF0000000
-+#define B43_HTTAB_8BIT			0x10000000
-+#define B43_HTTAB_16BIT			0x20000000
-+#define B43_HTTAB_32BIT			0x30000000
-+#define B43_HTTAB8(table, offset)	(((table) << 10) | (offset) | B43_HTTAB_8BIT)
-+#define B43_HTTAB16(table, offset)	(((table) << 10) | (offset) | B43_HTTAB_16BIT)
-+#define B43_HTTAB32(table, offset)	(((table) << 10) | (offset) | B43_HTTAB_32BIT)
-+
-+u32 b43_httab_read(struct b43_wldev *dev, u32 offset);
-+void b43_httab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			 unsigned int nr_elements, void *_data);
-+void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, const void *_data);
-+
-+#endif /* B43_TABLES_PHY_HT_H_ */
+ #endif /* B43_RADIO_2056_H_ */
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 1856936..a81696b 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -60,16 +60,8 @@ struct nphy_gain_ctl_workaround_entry {
+ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+ 	struct b43_wldev *dev, bool ghz5, bool ext_lna);
+ 
+-/* Get the NPHY Channel Switch Table entry for a channel.
+- * Returns NULL on failure to find an entry. */
+-const struct b43_nphy_channeltab_entry_rev2 *
+-b43_nphy_get_chantabent_rev2(struct b43_wldev *dev, u8 channel);
+-const struct b43_nphy_channeltab_entry_rev3 *
+-b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq);
+-
+ 
+ /* The N-PHY tables. */
+-
+ #define B43_NTAB_TYPEMASK		0xF0000000
+ #define B43_NTAB_8BIT			0x10000000
+ #define B43_NTAB_16BIT			0x20000000
 -- 
-1.7.1
+1.7.3.4
 
