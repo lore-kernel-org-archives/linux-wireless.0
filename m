@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21968 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755092Ab1FHN2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 09:28:54 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 5/6] iwlegacy: remove unused agg_tids_count
-Date: Wed,  8 Jun 2011 15:28:28 +0200
-Message-Id: <1307539709-11320-5-git-send-email-sgruszka@redhat.com> (sfid-20110608_152904_109059_E62F3A90)
-In-Reply-To: <1307539709-11320-1-git-send-email-sgruszka@redhat.com>
-References: <1307539709-11320-1-git-send-email-sgruszka@redhat.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:54831 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749Ab1FSDty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2011 23:49:54 -0400
+Date: Sat, 18 Jun 2011 22:49:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192se: Handle duplicate PCI ID 0x10ec:0x8192 conflict with r8192e_pci
+Message-ID: <4dfd71e1.ZoVUM+vtSzINuBtU%Larry.Finger@lwfinger.net> (sfid-20110619_054958_195930_FD0F0FD4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+There are two devices with PCI ID 0x10ec:0x8192, namely RTL8192E and
+RTL8192SE. The method of distinguishing them is by the revision ID
+at offset 0x8 of the PCI configuration space. If the value is 0x10,
+then the device uses rtl8192se for a driver.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlegacy/iwl-dev.h      |    6 ------
- drivers/net/wireless/iwlegacy/iwl4965-base.c |   11 -----------
- 2 files changed, 0 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
-index fd792e1..62e8cc0 100644
---- a/drivers/net/wireless/iwlegacy/iwl-dev.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
-@@ -1164,12 +1164,6 @@ struct iwl_priv {
- #endif
- #if defined(CONFIG_IWL4965) || defined(CONFIG_IWL4965_MODULE)
- 		struct {
--			/*
--			 * reporting the number of tids has AGG on. 0 means
--			 * no AGGREGATION
--			 */
--			u8 agg_tids_count;
--
- 			struct iwl_rx_phy_res last_phy_res;
- 			bool last_phy_res_valid;
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 98e42a1..c0ea858 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -2442,20 +2442,10 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_TX_START:
- 		IWL_DEBUG_HT(priv, "start Tx\n");
- 		ret = iwl4965_tx_agg_start(priv, vif, sta, tid, ssn);
--		if (ret == 0) {
--			priv->_4965.agg_tids_count++;
--			IWL_DEBUG_HT(priv, "priv->_4965.agg_tids_count = %u\n",
--				     priv->_4965.agg_tids_count);
--		}
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Tx\n");
- 		ret = iwl4965_tx_agg_stop(priv, vif, sta, tid);
--		if ((ret == 0) && (priv->_4965.agg_tids_count > 0)) {
--			priv->_4965.agg_tids_count--;
--			IWL_DEBUG_HT(priv, "priv->_4965.agg_tids_count = %u\n",
--				     priv->_4965.agg_tids_count);
--		}
- 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 			ret = 0;
- 		break;
-@@ -2796,7 +2786,6 @@ static int iwl4965_init_drv(struct iwl_priv *priv)
- 	priv->iw_mode = NL80211_IFTYPE_STATION;
- 	priv->current_ht_config.smps = IEEE80211_SMPS_STATIC;
- 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
--	priv->_4965.agg_tids_count = 0;
- 
- 	/* initialize force reset */
- 	priv->force_reset.reset_duration = IWL_DELAY_NEXT_FORCE_FW_RELOAD;
--- 
-1.7.1
+John,
 
+This patch is for kernel 3.0.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -1615,6 +1615,16 @@ static bool _rtl_pci_find_adapter(struct
+ 	pci_read_config_byte(pdev, 0x8, &revisionid);
+ 	pci_read_config_word(pdev, 0x3C, &irqline);
+ 
++	/* PCI ID 0x10ec:0x8192 occurs for both RTL8192E, which uses
++	 * r8192e_pci, and RTL8192SE, which uses this driver. If the
++	 * revision ID is RTL_PCI_REVISION_ID_8192PCIE (0x01), then
++	 * the correct driver is r8192e_pci, thus this routine should
++	 * return false.
++	 */
++	if (deviceid == RTL_PCI_8192SE_DID &&
++	    revisionid == RTL_PCI_REVISION_ID_8192PCIE)
++		return false;
++
+ 	if (deviceid == RTL_PCI_8192_DID ||
+ 	    deviceid == RTL_PCI_0044_DID ||
+ 	    deviceid == RTL_PCI_0047_DID ||
+@@ -1847,7 +1857,8 @@ int __devinit rtl_pci_probe(struct pci_d
+ 	pci_write_config_byte(pdev, 0x04, 0x07);
+ 
+ 	/* find adapter */
+-	_rtl_pci_find_adapter(pdev, hw);
++	if (!_rtl_pci_find_adapter(pdev, hw))
++		goto fail3;
+ 
+ 	/* Init IO handler */
+ 	_rtl_pci_io_handler_init(&pdev->dev, hw);
