@@ -1,52 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62628 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754186Ab1FQEvZ convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52570 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab1FTIPh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 00:51:25 -0400
-Received: by wyb38 with SMTP id 38so53997wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 21:51:23 -0700 (PDT)
+	Mon, 20 Jun 2011 04:15:37 -0400
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=AM=mqmz7+hYGMwmVhFTHHd0o3Ug@mail.gmail.com>
-References: <BANLkTi=AM=mqmz7+hYGMwmVhFTHHd0o3Ug@mail.gmail.com>
-Date: Fri, 17 Jun 2011 10:21:23 +0530
-Message-ID: <BANLkTik6sbqiEVpZkJxCW0c3H4JOMOtYfA@mail.gmail.com> (sfid-20110617_065130_119187_E3814F6B)
-Subject: Re: can mesh(802.11s) be supported in 802.11n?
+In-Reply-To: <BLU158-w332CD7657F92343D3D2D1C876A0@phx.gbl>
+References: <BLU158-w332CD7657F92343D3D2D1C876A0@phx.gbl>
+Date: Mon, 20 Jun 2011 13:45:35 +0530
+Message-ID: <BANLkTinr-5k3grHM-gfjVi2PA67VvvTiNg@mail.gmail.com> (sfid-20110620_101551_266646_8363C9E0)
+Subject: Re: [ath9k-devel] Patching ath9k/mac80211 to change MAC layer features
 From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: b z <zb80211@gmail.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
+To: Fred Matthews <fredmm@hotmail.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net, ath9k-devel@lists.ath9k
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 6:13 PM, b z <zb80211@gmail.com> wrote:
-> I have got 2 802.11n wireless routers using ralink rt3052f soc chip,mimo 2x2
-> burned with openwrt (kernel 2.6.37.6, compat-wireless-2011-05-27)
+On Fri, Jun 17, 2011 at 2:09 AM, Fred Matthews <fredmm@hotmail.co.uk> wrote:
+> Hello all,
 >
-> I configured them as mesh point respectively,  then
-> #iw dev wlan0 station dump
 >
-> but the tx rate and rx rate still not exceed 54mbps, that is mean the
-> ht mode(300mbps) is not been actived
+> I have a query regarding patching ath9k/mac80211 to change MAC layer
+> features and I would be most grateful if someone can assist.
 >
-> can anyone tell me how to active the 802.11n ht mode in mesh?
-> it is the problem with mac80211 or rt2800pci driver?
-> or mesh using 802.11n is not implemented in the current kernel?
+>
+> I need to patch ath9k so that I can be able to modify/fix the A-MPDU
+> aggregation frame length and other parameters such that they can be
+> configured at runtime via debugfs. I made a newbie attempt at trying to
+> change the aggregate length (attached), but I am unsure of the
+> correctness/efficiency  - when applied throughput varies with different
+> frame lengths entered but I can't be sure if its actually changing the
+> aggregation length (passes the framelen/aggr_limit). Hence I would be very
+> grateful if someone can assist in the correct way of doing this (possibly
+> directly via mac80211).
+>
+>
+>
+> Also if the ampdu aggregate length is changed I believe the number/length of
+> the subframes of the aggregate stays constant (at the default which is
+> 32). I try to change this in my patch as well as the maximum software
+> retries by just changing the default definition in ath9k.h, thus is there a
+> (more) correct/better way of changing these. Finally, how can I patch the
+> driver to be able to disable Block-Acks/aggregation via debugfs or
+> otherwise.
 
-yes HT mode is not yet supported in mesh (in mac80211). it should be
-implemented in mac80211
+
+to disable aggregation in the driver, please try this
+diff --git a/drivers/net/wireless/ath/ath9k/init.c
+b/drivers/net/wireless/ath/ath9k/init.c
+index d4b166c..e0175d0 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -524,8 +524,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
+        sc->config.txpowlimit = ATH_TXPOWER_MAX;
+
+        if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-               sc->sc_flags |= SC_OP_TXAGGR;
+-               sc->sc_flags |= SC_OP_RXAGGR;
+        }
+
+        common->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
+
+if you want only tx-aggregation to be disabled , please comment out only that.
+also you can completely disable HT by
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c
+b/drivers/net/wireless/ath/ath9k/hw.c
+index 6de2655..696b4cc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1915,10 +1915,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+
+        common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM;
+
+-       if (ah->hw_version.devid != AR2427_DEVID_PCIE)
+-               pCap->hw_caps |= ATH9K_HW_CAP_HT;
+-       else
+-               pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
++       pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
+
+        if (AR_SREV_9271(ah))
+                pCap->num_gpio_pins = AR9271_NUM_GPIO;
+
+
+
 
 >
-> will it be implemented in the future?
-
-some time back Luis sent this link
-http://www.youtube.com/watch?v=sSUbCiEEP0k
-
-> thank!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> I highly appreciate, help in any of the above, as well as other advice,
+> Many thanks
+>
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
 >
 
 
