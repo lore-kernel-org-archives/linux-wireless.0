@@ -1,154 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:50729 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933048Ab1FWR0e (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:38516 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754003Ab1FTRwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 13:26:34 -0400
-Received: from hpaq11.eem.corp.google.com (hpaq11.eem.corp.google.com [172.25.149.11])
-	by smtp-out.google.com with ESMTP id p5NHQWRB016958
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 10:26:33 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by hpaq11.eem.corp.google.com with ESMTP id p5NHQV01019944
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 10:26:31 -0700
-From: Paul Stewart <pstew@chromium.org>
-Date: Thu, 23 Jun 2011 09:00:11 -0800
-Subject: [PATCH] mac80211: Drop DS Channel PARAM in directed probe
-To: linux-wireless@vger.kernel.org
-Message-Id: <20110623172630.F038820191@glenhelen.mtv.corp.google.com> (sfid-20110623_192641_605567_2DA48ECC)
+	Mon, 20 Jun 2011 13:52:01 -0400
+Received: by gwaa18 with SMTP id a18so431052gwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:52:01 -0700 (PDT)
+From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Subject: [RFC][PATCH v2 4/7] NFC: add NFC socket family
+Date: Mon, 20 Jun 2011 14:50:09 -0300
+Message-Id: <1308592212-5755-5-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110620_195206_699276_28991BEF)
+In-Reply-To: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not send DS Channel parameter for directed probe requests
-in order to maximize the chance that we get a response.  Some
-badly-behaved APs don't respond when this parameter is included.
-
-Signed-off-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
 ---
- net/mac80211/ieee80211_i.h |    6 ++++--
- net/mac80211/mlme.c        |    5 +++--
- net/mac80211/scan.c        |    3 ++-
- net/mac80211/util.c        |   21 ++++++++++++++++-----
- net/mac80211/work.c        |    2 +-
- 5 files changed, 26 insertions(+), 11 deletions(-)
+ include/linux/nfc.h    |    3 +
+ include/linux/socket.h |    4 +-
+ net/core/sock.c        |    6 +-
+ net/nfc/Makefile       |    2 +-
+ net/nfc/af_nfc.c       |   98 ++++++++++++++++++++++++++++++++++++++++++++++++
+ net/nfc/core.c         |    7 +++
+ net/nfc/nfc.h          |   14 +++++++
+ 7 files changed, 129 insertions(+), 5 deletions(-)
+ create mode 100644 net/nfc/af_nfc.c
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 090b0ec..25c15cc 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1350,10 +1350,12 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 					  u8 *dst,
- 					  const u8 *ssid, size_t ssid_len,
--					  const u8 *ie, size_t ie_len);
-+					  const u8 *ie, size_t ie_len,
-+					  bool directed);
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
--			      const u8 *ie, size_t ie_len);
-+			      const u8 *ie, size_t ie_len,
-+			      bool directed);
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index 59b3c79..f6f2d62 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -108,4 +108,7 @@ enum nfc_attrs {
+ #define NFC_PROTO_ISO14443_MASK	(1 << NFC_PROTO_ISO14443)
+ #define NFC_PROTO_NFC_DEP_MASK	(1 << NFC_PROTO_NFC_DEP)
  
- void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 				  const size_t supp_rates_len,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index faca503..0f6052f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1204,7 +1204,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
- 	} else {
- 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
--		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
-+		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
-+					 true);
- 	}
++/* NFC socket protocols */
++#define NFC_SOCKPROTO_MAX	0
++
+ #endif /*__LINUX_NFC_H */
+diff --git a/include/linux/socket.h b/include/linux/socket.h
+index 4ef98e4..e17f822 100644
+--- a/include/linux/socket.h
++++ b/include/linux/socket.h
+@@ -192,7 +192,8 @@ struct ucred {
+ #define AF_IEEE802154	36	/* IEEE802154 sockets		*/
+ #define AF_CAIF		37	/* CAIF sockets			*/
+ #define AF_ALG		38	/* Algorithm sockets		*/
+-#define AF_MAX		39	/* For now.. */
++#define AF_NFC		39	/* NFC sockets			*/
++#define AF_MAX		40	/* For now.. */
  
- 	ifmgd->probe_send_count++;
-@@ -1289,7 +1290,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ /* Protocol families, same as address families. */
+ #define PF_UNSPEC	AF_UNSPEC
+@@ -234,6 +235,7 @@ struct ucred {
+ #define PF_IEEE802154	AF_IEEE802154
+ #define PF_CAIF		AF_CAIF
+ #define PF_ALG		AF_ALG
++#define PF_NFC		AF_NFC
+ #define PF_MAX		AF_MAX
  
- 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
- 	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
--					ssid + 2, ssid[1], NULL, 0);
-+					ssid + 2, ssid[1], NULL, 0, true);
+ /* Maximum queue length specifiable by listen.  */
+diff --git a/net/core/sock.c b/net/core/sock.c
+index 6e81978..84d6de8 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -158,7 +158,7 @@ static const char *const af_family_key_strings[AF_MAX+1] = {
+   "sk_lock-AF_TIPC"  , "sk_lock-AF_BLUETOOTH", "sk_lock-IUCV"        ,
+   "sk_lock-AF_RXRPC" , "sk_lock-AF_ISDN"     , "sk_lock-AF_PHONET"   ,
+   "sk_lock-AF_IEEE802154", "sk_lock-AF_CAIF" , "sk_lock-AF_ALG"      ,
+-  "sk_lock-AF_MAX"
++  "sk_lock-AF_NFC"   , "sk_lock-AF_MAX"
+ };
+ static const char *const af_family_slock_key_strings[AF_MAX+1] = {
+   "slock-AF_UNSPEC", "slock-AF_UNIX"     , "slock-AF_INET"     ,
+@@ -174,7 +174,7 @@ static const char *const af_family_slock_key_strings[AF_MAX+1] = {
+   "slock-AF_TIPC"  , "slock-AF_BLUETOOTH", "slock-AF_IUCV"     ,
+   "slock-AF_RXRPC" , "slock-AF_ISDN"     , "slock-AF_PHONET"   ,
+   "slock-AF_IEEE802154", "slock-AF_CAIF" , "slock-AF_ALG"      ,
+-  "slock-AF_MAX"
++  "slock-AF_NFC"   , "slock-AF_MAX"
+ };
+ static const char *const af_family_clock_key_strings[AF_MAX+1] = {
+   "clock-AF_UNSPEC", "clock-AF_UNIX"     , "clock-AF_INET"     ,
+@@ -190,7 +190,7 @@ static const char *const af_family_clock_key_strings[AF_MAX+1] = {
+   "clock-AF_TIPC"  , "clock-AF_BLUETOOTH", "clock-AF_IUCV"     ,
+   "clock-AF_RXRPC" , "clock-AF_ISDN"     , "clock-AF_PHONET"   ,
+   "clock-AF_IEEE802154", "clock-AF_CAIF" , "clock-AF_ALG"      ,
+-  "clock-AF_MAX"
++  "clock-AF_NFC"   , "clock-AF_MAX"
+ };
  
- 	return skb;
- }
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 1758b46..a97eed0 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -658,7 +658,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 			sdata, NULL,
- 			local->scan_req->ssids[i].ssid,
- 			local->scan_req->ssids[i].ssid_len,
--			local->scan_req->ie, local->scan_req->ie_len);
-+			local->scan_req->ie, local->scan_req->ie_len,
-+			false);
+ /*
+diff --git a/net/nfc/Makefile b/net/nfc/Makefile
+index 8aeaddc..c65add7 100644
+--- a/net/nfc/Makefile
++++ b/net/nfc/Makefile
+@@ -4,6 +4,6 @@
  
- 	/*
- 	 * After sending probe requests, wait for probe responses
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 05e3fb8..652e569 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1018,7 +1018,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 					  u8 *dst,
- 					  const u8 *ssid, size_t ssid_len,
--					  const u8 *ie, size_t ie_len)
-+					  const u8 *ie, size_t ie_len,
-+					  bool directed)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
-@@ -1035,8 +1036,16 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 		return NULL;
- 	}
+ obj-$(CONFIG_NFC) += nfc.o
  
--	chan = ieee80211_frequency_to_channel(
--		local->hw.conf.channel->center_freq);
-+	/*
-+	 * Do not send DS Channel parameter for directed probe requests
-+	 * in order to maximize the chance that we get a response.  Some
-+	 * badly-behaved APs don't respond when this parameter is included.
-+	 */
-+	if (directed)
-+		chan = 0;
+-nfc-objs := core.o netlink.o
++nfc-objs := core.o netlink.o af_nfc.o
+ 
+ ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+diff --git a/net/nfc/af_nfc.c b/net/nfc/af_nfc.c
+new file mode 100644
+index 0000000..e982cef
+--- /dev/null
++++ b/net/nfc/af_nfc.c
+@@ -0,0 +1,98 @@
++/*
++ * Copyright (C) 2011 Instituto Nokia de Tecnologia
++ *
++ * Authors:
++ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
++ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the
++ * Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <linux/nfc.h>
++
++#include "nfc.h"
++
++static DEFINE_RWLOCK(proto_tab_lock);
++static const struct nfc_protocol *proto_tab[NFC_SOCKPROTO_MAX];
++
++static int nfc_sock_create(struct net *net, struct socket *sock, int proto,
++								int kern)
++{
++	int rc = -EPROTONOSUPPORT;
++
++	if (net != &init_net)
++		return -EAFNOSUPPORT;
++
++	if (proto < 0 || proto >= NFC_SOCKPROTO_MAX)
++		return -EINVAL;
++
++	read_lock(&proto_tab_lock);
++	if (proto_tab[proto] &&	try_module_get(proto_tab[proto]->owner)) {
++		rc = proto_tab[proto]->create(net, sock, proto_tab[proto]);
++		module_put(proto_tab[proto]->owner);
++	}
++	read_unlock(&proto_tab_lock);
++
++	return rc;
++}
++
++static struct net_proto_family nfc_sock_family_ops = {
++	.owner  = THIS_MODULE,
++	.family = PF_NFC,
++	.create = nfc_sock_create,
++};
++
++int nfc_proto_register(const struct nfc_protocol *nfc_proto)
++{
++	int rc;
++
++	if (nfc_proto->id < 0 || nfc_proto->id >= NFC_SOCKPROTO_MAX)
++		return -EINVAL;
++
++	rc = proto_register(nfc_proto->proto, 0);
++	if (rc)
++		return rc;
++
++	write_lock(&proto_tab_lock);
++	if (proto_tab[nfc_proto->id])
++		rc = -EBUSY;
 +	else
-+		chan = ieee80211_frequency_to_channel(
-+			local->hw.conf.channel->center_freq);
++		proto_tab[nfc_proto->id] = nfc_proto;
++	write_unlock(&proto_tab_lock);
++
++	return rc;
++}
++EXPORT_SYMBOL(nfc_proto_register);
++
++void nfc_proto_unregister(const struct nfc_protocol *nfc_proto)
++{
++	write_lock(&proto_tab_lock);
++	proto_tab[nfc_proto->id] = NULL;
++	write_unlock(&proto_tab_lock);
++
++	proto_unregister(nfc_proto->proto);
++}
++EXPORT_SYMBOL(nfc_proto_unregister);
++
++int __init af_nfc_init(void)
++{
++	return sock_register(&nfc_sock_family_ops);
++}
++
++void af_nfc_exit(void)
++{
++	sock_unregister(PF_NFC);
++}
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 5e09d50..1cad6a7 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -401,8 +401,14 @@ static int __init nfc_init(void)
+ 	/* the first generation must not be 0 */
+ 	nfc_devlist_generation = 1;
  
- 	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len,
- 					   local->hw.conf.channel->band,
-@@ -1062,11 +1071,13 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++	rc = af_nfc_init();
++	if (rc)
++		goto err_af_nfc;
++
+ 	return 0;
  
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
--			      const u8 *ie, size_t ie_len)
-+			      const u8 *ie, size_t ie_len,
-+			      bool directed)
++err_af_nfc:
++	nfc_genl_exit();
+ err_genl:
+ 	class_unregister(&nfc_class);
+ err:
+@@ -411,6 +417,7 @@ err:
+ 
+ static void __exit nfc_exit(void)
  {
- 	struct sk_buff *skb;
- 
--	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
-+	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len,
-+					directed);
- 	if (skb)
- 		ieee80211_tx_skb(sdata, skb);
++	af_nfc_exit();
+ 	nfc_genl_exit();
+ 	class_unregister(&nfc_class);
  }
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index d2e7f0e..edf8583 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -450,7 +450,7 @@ ieee80211_direct_probe(struct ieee80211_work *wk)
- 	 * will not answer to direct packet in unassociated state.
- 	 */
- 	ieee80211_send_probe_req(sdata, NULL, wk->probe_auth.ssid,
--				 wk->probe_auth.ssid_len, NULL, 0);
-+				 wk->probe_auth.ssid_len, NULL, 0, true);
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index 878a333..d3a1fa5 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -25,6 +25,20 @@
+ #define __LOCAL_NFC_H
  
- 	wk->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
- 	run_again(local, wk->timeout);
+ #include <net/nfc.h>
++#include <net/sock.h>
++
++struct nfc_protocol {
++	int id;
++	struct proto *proto;
++	struct module *owner;
++	int (*create)(struct net *net, struct socket *sock,
++			const struct nfc_protocol *nfc_proto);
++};
++
++int __init af_nfc_init(void);
++void af_nfc_exit(void);
++int nfc_proto_register(const struct nfc_protocol *nfc_proto);
++void nfc_proto_unregister(const struct nfc_protocol *nfc_proto);
+ 
+ extern int nfc_devlist_generation;
+ extern struct mutex nfc_devlist_mutex;
 -- 
-1.7.3.1
+1.7.4.1
 
