@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20096 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758582Ab1FKOzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 10:55:41 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62898 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909Ab1FTBp3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2011 21:45:29 -0400
+Received: by pzk9 with SMTP id 9so3104662pzk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 18:45:29 -0700 (PDT)
+Message-ID: <4DFEA5FF.3080908@ring3k.org> (sfid-20110620_034533_419956_F823689C)
+Date: Mon, 20 Jun 2011 10:44:31 +0900
+From: Mike McCormack <mikem@ring3k.org>
+MIME-Version: 1.0
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/18] iwlagn: Band capabilities in EEPROM
-Date: Sat, 11 Jun 2011 07:25:41 -0700
-Message-Id: <1307802352-16398-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110611_165551_697916_FF8AF07B)
-In-Reply-To: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307802352-16398-1-git-send-email-wey-yi.w.guy@intel.com>
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] rtlwifi: Various cleanups
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add define for band capabilities in EEPROM
+Hi John,
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+The following series is a bunch of cleanups for the rtlwifi drivers.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index c960c6f..5086318 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -110,12 +110,13 @@ enum {
- };
- 
- /* SKU Capabilities */
--/* 5000 and up */
- #define EEPROM_SKU_CAP_BAND_POS				(4)
- #define EEPROM_SKU_CAP_BAND_SELECTION	                \
- 		(3 << EEPROM_SKU_CAP_BAND_POS)
-+#define EEPROM_SKU_CAP_BAND_24GHZ			(1 << 4)
-+#define EEPROM_SKU_CAP_BAND_52GHZ			(1 << 5)
- #define EEPROM_SKU_CAP_11N_ENABLE	                (1 << 6)
--#define EEPROM_SKU_CAP_AMT_ENABLE	                (1 << 7)
-+#define EEPROM_SKU_CAP_AMT_ENABLE			(1 << 7)
- #define EEPROM_SKU_CAP_IPAN_ENABLE	                (1 << 8)
- 
- /* *regulatory* channel data format in eeprom, one for each channel.
+thanks,
+
+Mike
+
+Mike McCormack (3):
+  rtlwifi: Fix typo in variable name
+  rtlwifi: rtl8192cu: Remove unused parameter
+  rtlwifi: rtl8192{c,ce,cu,se}: Remove comparisons of booleans with
+    true
+
+ drivers/net/wireless/rtlwifi/base.c               |    2 +-
+ drivers/net/wireless/rtlwifi/core.c               |    8 +-
+ drivers/net/wireless/rtlwifi/efuse.c              |    8 +-
+ drivers/net/wireless/rtlwifi/pci.c                |    3 +-
+ drivers/net/wireless/rtlwifi/ps.c                 |   65 ++-------------------
+ drivers/net/wireless/rtlwifi/ps.h                 |    3 +-
+ drivers/net/wireless/rtlwifi/rc.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |   10 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/led.c      |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/led.c      |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c       |    9 ++-
+ drivers/net/wireless/rtlwifi/rtl8192se/led.c      |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c      |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |    6 +-
+ drivers/net/wireless/rtlwifi/wifi.h               |    2 +-
+ 23 files changed, 49 insertions(+), 105 deletions(-)
+
 -- 
-1.7.0.4
+1.7.4.1
 
