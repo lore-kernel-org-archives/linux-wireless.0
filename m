@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm7-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.151]:26930 "HELO
-	nm7-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757684Ab1F0LbS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 07:31:18 -0400
-Message-ID: <1309173961.49279.YahooMailClassic@web161605.mail.bf1.yahoo.com> (sfid-20110627_133626_275303_27D01FFC)
-Date: Mon, 27 Jun 2011 04:26:01 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Compat-wireless release for 2011-06-26 is baked
-To: linux-wireless@vger.kernel.org,
-	Fred Matthews <fredmm@hotmail.co.uk>
-In-Reply-To: <blu158-w716EEAA2F0043B4BEAFB387570@phx.gbl>
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:59433 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab1FTLmb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 07:42:31 -0400
+Subject: [PATCH 1/6] zd1211rw: fix invalid signal values from device
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 20 Jun 2011 14:42:28 +0300
+Message-ID: <20110620114228.964.35459.stgit@localhost6.localdomain6> (sfid-20110620_134237_479021_4D66A32F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Driver uses IEEE80211_HW_SIGNAL_UNSPEC and so signal values reported to
+mac80211 should be in range 0..100. Sometimes device return out of range
+values. These out of range values can then trigger warning in
+cfg80211_inform_bss_frame.
 
-> Hi all,
-> I have had compiler errors when making compat-2011-06-23 -
-> compat-2011-06-26. 
->   CC [M]
->  /home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:
-> In function
-> ‘nl80211_send_bss’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3641:
-> error: implicit declaration of function
-> ‘genl_dump_check_consistent’/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:
-> In function
-> ‘nl80211_dump_scan’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3731:
-> error: ‘struct netlink_callback’ has no member named
-> ‘seq’make[3]: ***
-> [/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o]
-> Error 1make[2]: ***
-> [/home/wimo/new/compat-wireless-2011-06-26/net/wireless]
-> Error 2make[1]: ***
-> [_module_/home/wimo/new/compat-wireless-2011-06-26] Error
-> 2make[1]: Leaving directory
-> `/usr/src/linux-headers-2.6.32-25-generic'make: ***
-> [modules] Error 2
-> There appears to be a problem with nl80211.c as you see in
-> the error messages. However when I copied compat-2011-06-22
-> version's nl80211.c and nl80211.h to compat-2011-06-26
-> (replacing its original), it compiled and worked just fine.
-> Thanks!
+This patch adds checks to enforce range returned from driver to
+mac80211 be in 0..100 range.
 
-This patch: nl80211: use netlink consistent dump feature for BSS dumps, submitted by Johannes appears to be the culprit and I already notified him.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_def.h |    6 ++++++
+ drivers/net/wireless/zd1211rw/zd_mac.c |   20 ++++++++++++++++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
-In the mean time you can reverse it to complete c/w compilation.
+diff --git a/drivers/net/wireless/zd1211rw/zd_def.h b/drivers/net/wireless/zd1211rw/zd_def.h
+index 5463ca9..9a1b013 100644
+--- a/drivers/net/wireless/zd1211rw/zd_def.h
++++ b/drivers/net/wireless/zd1211rw/zd_def.h
+@@ -37,9 +37,15 @@ typedef u16 __nocast zd_addr_t;
+ 	if (net_ratelimit()) \
+ 		dev_printk_f(KERN_DEBUG, dev, fmt, ## args); \
+ } while (0)
++#  define dev_dbg_f_cond(dev, cond, fmt, args...) ({ \
++	bool __cond = !!(cond); \
++	if (unlikely(__cond)) \
++		dev_printk_f(KERN_DEBUG, dev, fmt, ## args); \
++})
+ #else
+ #  define dev_dbg_f(dev, fmt, args...) do { (void)(dev); } while (0)
+ #  define dev_dbg_f_limit(dev, fmt, args...) do { (void)(dev); } while (0)
++#  define dev_dbg_f_cond(dev, cond, fmt, args...) do { (void)(dev); } while (0)
+ #endif /* DEBUG */
+ 
+ #ifdef DEBUG
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 5037c8b..5de28bf 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -160,6 +160,22 @@ static int zd_reg2alpha2(u8 regdomain, char *alpha2)
+ 	return 1;
+ }
+ 
++static int zd_check_signal(struct ieee80211_hw *hw, int signal)
++{
++	struct zd_mac *mac = zd_hw_mac(hw);
++
++	dev_dbg_f_cond(zd_mac_dev(mac), signal < 0 || signal > 100,
++			"%s: signal value from device not in range 0..100, "
++			"but %d.\n", __func__, signal);
++
++	if (signal < 0)
++		signal = 0;
++	else if (signal > 100)
++		signal = 100;
++
++	return signal;
++}
++
+ int zd_mac_preinit_hw(struct ieee80211_hw *hw)
+ {
+ 	int r;
+@@ -461,7 +477,7 @@ static void zd_mac_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	if (i<IEEE80211_TX_MAX_RATES)
+ 		info->status.rates[i].idx = -1; /* terminate */
+ 
+-	info->status.ack_signal = ackssi;
++	info->status.ack_signal = zd_check_signal(hw, ackssi);
+ 	ieee80211_tx_status_irqsafe(hw, skb);
+ }
+ 
+@@ -982,7 +998,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
+ 
+ 	stats.freq = zd_channels[_zd_chip_get_channel(&mac->chip) - 1].center_freq;
+ 	stats.band = IEEE80211_BAND_2GHZ;
+-	stats.signal = status->signal_strength;
++	stats.signal = zd_check_signal(hw, status->signal_strength);
+ 
+ 	rate = zd_rx_rate(buffer, status);
+ 
 
-Walter
