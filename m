@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr17.hinet.net ([168.95.4.117]:52082 "EHLO msr17.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757737Ab1FVCsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 22:48:16 -0400
-Date: Wed, 22 Jun 2011 10:46:40 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver for the rtl8192su chip.
-Message-ID: <20110622024640.GB12547@internetdog.org> (sfid-20110622_044820_485896_E7768C65)
-Reply-To: ali@internetdog.org
-References: <4DC0312A.4040303@lwfinger.net>
- <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com>
- <4DC0669E.4040100@lwfinger.net>
- <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
- <4DC06BF3.6070208@lwfinger.net>
- <20110621124954.GA8462@internetdog.org>
- <4E011644.3070906@lwfinger.net>
- <20110622010057.GA12123@internetdog.org>
- <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com>
- <BANLkTim_i+qrhHsZwUKQ=DcXuk+uJ3k3Wg@mail.gmail.com>
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:42205 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab1FTLmg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 07:42:36 -0400
+Subject: [PATCH 2/6] zd1211rw: make 'handle_rx_packet: invalid,
+	small RX packet' message debug-only
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 20 Jun 2011 14:42:33 +0300
+Message-ID: <20110620114233.964.66390.stgit@localhost6.localdomain6> (sfid-20110620_134239_373732_13C586B5)
+In-Reply-To: <20110620114228.964.35459.stgit@localhost6.localdomain6>
+References: <20110620114228.964.35459.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <BANLkTim_i+qrhHsZwUKQ=DcXuk+uJ3k3Wg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gábor,
+This message is should be debug-only as it tells almost nothing useful. It also
+happens very often and just floods logs.
 
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> > In general, root prompts have a '#' at the end of the prompt, this one
-> > has a '$' which is indicative of a non-privileged user.
-> 
-> I'm pretty sure that is not true for Bash. Perhaps for csh or Dash.
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 631194d..621c2cc 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -579,8 +579,8 @@ static void handle_rx_packet(struct zd_usb *usb, const u8 *buffer,
+ 
+ 	if (length < sizeof(struct rx_length_info)) {
+ 		/* It's not a complete packet anyhow. */
+-		printk("%s: invalid, small RX packet : %d\n",
+-		       __func__, length);
++		dev_dbg_f(zd_usb_dev(usb), "invalid, small RX packet : %d\n",
++					   length);
+ 		return;
+ 	}
+ 	length_info = (struct rx_length_info *)
 
-Of course, $PS1 sets this prompt to anything you want, but we're
-getting sidetracked. :-)
-
-thanks,
-ali
