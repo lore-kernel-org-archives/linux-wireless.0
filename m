@@ -1,171 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52164 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757995Ab1F2WMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:31 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 08/13] bcma: add pci(e) host mode
-Date: Thu, 30 Jun 2011 00:11:53 +0200
-Message-Id: <1309385518-12097-9-git-send-email-hauke@hauke-m.de> (sfid-20110630_001235_556748_33BA2BA4)
-In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37739 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088Ab1FTRvw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 13:51:52 -0400
+Received: by ywe9 with SMTP id 9so2175564ywe.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:51:52 -0700 (PDT)
+From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC][PATCH v2 1/7] netlink: advertise incomplete dumps
+Date: Mon, 20 Jun 2011 14:50:06 -0300
+Message-Id: <1308592212-5755-2-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110620_195156_657605_85B56FC7)
+In-Reply-To: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds some stub for a pci(e) host controller. This controller is
-found on some embedded devices to attach other chips.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Consider the following situation:
+ * a dump that would show 8 entries, four in the first
+   round, and four in the second
+ * between the first and second rounds, 6 entries are
+   removed
+ * now the second round will not show any entry, and
+   even if there is a sequence/generation counter the
+   application will not know
+
+To solve this problem, add a new flag NLM_F_DUMP_INTR
+to the netlink header that indicates the dump wasn't
+consistent, this flag can also be set on the MSG_DONE
+message that terminates the dump, and as such above
+situation can be detected.
+
+To achieve this, add a sequence counter to the netlink
+callback struct. Of course, netlink code still needs
+to use this new functionality. The correct way to do
+that is to always set cb->seq when a dumpit callback
+is invoked and call nl_dump_check_consistent() for
+each new message. The core code will also call this
+function for the final MSG_DONE message.
+
+To make it usable with generic netlink, a new function
+genlmsg_nlhdr() is needed to obtain the netlink header
+from the genetlink user header.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/bcma/Kconfig                 |    6 ++++
- drivers/bcma/Makefile                |    1 +
- drivers/bcma/bcma_private.h          |    6 ++++
- drivers/bcma/driver_pci.c            |   14 ++++++++++-
- drivers/bcma/driver_pci_host.c       |   43 ++++++++++++++++++++++++++++++++++
- include/linux/bcma/bcma_driver_pci.h |    1 +
- 6 files changed, 70 insertions(+), 1 deletions(-)
- create mode 100644 drivers/bcma/driver_pci_host.c
+ include/linux/netlink.h  |    2 ++
+ include/net/genetlink.h  |   32 ++++++++++++++++++++++++++++++++
+ include/net/netlink.h    |   24 ++++++++++++++++++++++++
+ net/netlink/af_netlink.c |    2 ++
+ 4 files changed, 60 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 0bd0a26..810b1ac 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -32,6 +32,12 @@ config BCMA_HOST_SOC
- 	depends on BCMA_DRIVER_MIPS
- 	default n
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 4c4ac3f..8d1bcec 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -48,6 +48,7 @@ struct nlmsghdr {
+ #define NLM_F_MULTI		2	/* Multipart message, terminated by NLMSG_DONE */
+ #define NLM_F_ACK		4	/* Reply with ack, with zero or error code */
+ #define NLM_F_ECHO		8	/* Echo this request 		*/
++#define NLM_F_DUMP_INTR		16	/* Dump was inconsistent due to sequence change */
  
-+config BCMA_DRIVER_PCI_HOSTMODE
-+	bool "Hostmode support for BCMA PCI core"
-+	depends on BCMA_DRIVER_MIPS
-+	help
-+	  PCIcore hostmode operation (external PCI bus).
-+
- config BCMA_DRIVER_MIPS
- 	bool "BCMA Broadcom MIPS core driver"
- 	depends on BCMA && MIPS
-diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-index 3bb24f5..82de24e 100644
---- a/drivers/bcma/Makefile
-+++ b/drivers/bcma/Makefile
-@@ -1,6 +1,7 @@
- bcma-y					+= main.o scan.o core.o sprom.o
- bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
- bcma-y					+= driver_pci.o
-+bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
- bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
- bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
- bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index d25dedd..cf81b6e 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -38,6 +38,12 @@ extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
- 				   struct bcma_drv_mips_serial_port *ports);
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
-+#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
-+/* driver_pci_host.c */
-+int bcma_core_pci_in_hostmode(struct bcma_drv_pci *pc);
-+void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
-+#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
-+
- #ifdef CONFIG_BCMA_HOST_PCI
- /* host_pci.c */
- extern int __init bcma_host_pci_init(void);
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index 30a3a8a..b5ef812 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -159,9 +159,21 @@ static void bcma_pcicore_serdes_workaround(struct bcma_drv_pci *pc)
- 
- void bcma_core_pci_init(struct bcma_drv_pci *pc)
- {
-+	struct bcma_device *core = pc->core;
-+
- 	if (pc->setup_done)
- 		return;
--	bcma_pcicore_serdes_workaround(pc);
-+
-+	if (!bcma_core_is_enabled(core))
-+		bcma_core_enable(core, 0);
-+#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
-+	pc->hostmode = bcma_core_pci_in_hostmode(pc);
-+	if (pc->hostmode)
-+		bcma_core_pci_hostmode_init(pc);
-+#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
-+	if (!pc->hostmode)
-+		bcma_pcicore_serdes_workaround(pc);
-+
- 	pc->setup_done = true;
- }
- 
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-new file mode 100644
-index 0000000..9ffd3e3
---- /dev/null
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -0,0 +1,43 @@
-+/*
-+ * Broadcom specific AMBA
-+ * PCI Host mode
-+ *
-+ * Copyright 2005, Broadcom Corporation
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+
-+#include "bcma_private.h"
-+#include <linux/bcma/bcma.h>
-+
-+#include <asm/paccess.h>
-+/* Probe a 32bit value on the bus and catch bus exceptions.
-+ * Returns nonzero on a bus exception.
-+ * This is MIPS specific */
-+#define mips_busprobe32(val, addr)	get_dbe((val), ((u32 *)(addr)))
-+
-+
-+void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
-+{
-+	/* TODO: implement PCI host mode */
-+}
-+
-+int bcma_core_pci_in_hostmode(struct bcma_drv_pci *pc)
-+{
-+	struct bcma_bus *bus = pc->core->bus;
-+	u16 chipid_top;
-+	u32 tmp;
-+
-+	chipid_top = (bus->chipinfo.id & 0xFF00);
-+	if (chipid_top != 0x4700 &&
-+	    chipid_top != 0x5300)
-+		return 0;
-+
-+/* TODO: add when sprom is available
-+ * if (bus->sprom.boardflags_lo & SSB_PCICORE_BFL_NOPCI)
-+ *		return 0;
-+ */
-+
-+	return !mips_busprobe32(tmp, (bus->mmio + (pc->core->core_index *
-+						   BCMA_CORE_SIZE)));
-+}
-diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
-index 3871b66..b8c7d06 100644
---- a/include/linux/bcma/bcma_driver_pci.h
-+++ b/include/linux/bcma/bcma_driver_pci.h
-@@ -78,6 +78,7 @@ struct pci_dev;
- struct bcma_drv_pci {
- 	struct bcma_device *core;
- 	u8 setup_done:1;
-+	u8 hostmode:1;
+ /* Modifiers to GET request */
+ #define NLM_F_ROOT	0x100	/* specify tree	root	*/
+@@ -221,6 +222,7 @@ struct netlink_callback {
+ 					struct netlink_callback *cb);
+ 	int			(*done)(struct netlink_callback *cb);
+ 	int			family;
++	unsigned int		prev_seq, seq;
+ 	long			args[6];
  };
  
- /* Register access */
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index d420f28..82d8d09 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -160,6 +160,38 @@ static inline void *genlmsg_put(struct sk_buff *skb, u32 pid, u32 seq,
+ }
+ 
+ /**
++ * genlmsg_nlhdr - Obtain netlink header from user specified header
++ * @user_hdr: user header as returned from genlmsg_put()
++ * @family: generic netlink family
++ *
++ * Returns pointer to netlink header.
++ */
++static inline struct nlmsghdr *genlmsg_nlhdr(void *user_hdr,
++					     struct genl_family *family)
++{
++	return (struct nlmsghdr *)((char *)user_hdr -
++				   family->hdrsize -
++				   GENL_HDRLEN -
++				   NLMSG_HDRLEN);
++}
++
++/**
++ * genl_dump_check_consistent - check if sequence is consistent and advertise if not
++ * @cb: netlink callback structure that stores the sequence number
++ * @user_hdr: user header as returned from genlmsg_put()
++ * @family: generic netlink family
++ *
++ * Cf. nl_dump_check_consistent(), this just provides a wrapper to make it
++ * simpler to use with generic netlink.
++ */
++static inline void genl_dump_check_consistent(struct netlink_callback *cb,
++					      void *user_hdr,
++					      struct genl_family *family)
++{
++	nl_dump_check_consistent(cb, genlmsg_nlhdr(user_hdr, family));
++}
++
++/**
+  * genlmsg_put_reply - Add generic netlink header to a reply message
+  * @skb: socket buffer holding the message
+  * @info: receiver info
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 02740a9..98c1854 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -638,6 +638,30 @@ static inline int nlmsg_unicast(struct sock *sk, struct sk_buff *skb, u32 pid)
+ 	     nlmsg_ok(pos, rem); \
+ 	     pos = nlmsg_next(pos, &(rem)))
+ 
++/**
++ * nl_dump_check_consistent - check if sequence is consistent and advertise if not
++ * @cb: netlink callback structure that stores the sequence number
++ * @nlh: netlink message header to write the flag to
++ *
++ * This function checks if the sequence (generation) number changed during dump
++ * and if it did, advertises it in the netlink message header.
++ *
++ * The correct way to use it is to set cb->seq to the generation counter when
++ * all locks for dumping have been acquired, and then call this function for
++ * each message that is generated.
++ *
++ * Note that due to initialisation concerns, 0 is an invalid sequence number
++ * and must not be used by code that uses this functionality.
++ */
++static inline void
++nl_dump_check_consistent(struct netlink_callback *cb,
++			 struct nlmsghdr *nlh)
++{
++	if (cb->prev_seq && cb->seq != cb->prev_seq)
++		nlh->nlmsg_flags |= NLM_F_DUMP_INTR;
++	cb->prev_seq = cb->seq;
++}
++
+ /**************************************************************************
+  * Netlink Attributes
+  **************************************************************************/
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 6ef64ad..a7ec851 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -1693,6 +1693,8 @@ static int netlink_dump(struct sock *sk)
+ 	if (!nlh)
+ 		goto errout_skb;
+ 
++	nl_dump_check_consistent(cb, nlh);
++
+ 	memcpy(nlmsg_data(nlh), &len, sizeof(len));
+ 
+ 	if (sk_filter(sk, skb))
 -- 
 1.7.4.1
 
