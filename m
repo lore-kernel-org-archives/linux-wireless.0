@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:46623 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755110Ab1FMJIf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 05:08:35 -0400
-Subject: [PATCH 1/2] ath6kl: export firmware version to user space
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Mon, 13 Jun 2011 12:08:28 +0300
-Message-ID: <20110613090828.15210.72389.stgit@localhost6.localdomain6> (sfid-20110613_110838_166925_1B6BD4D6)
-In-Reply-To: <20110613090350.15210.74545.stgit@localhost6.localdomain6>
-References: <20110613090350.15210.74545.stgit@localhost6.localdomain6>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47492 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751644Ab1FTVPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 17:15:22 -0400
+Message-ID: <4DFFB865.6060105@hauke-m.de> (sfid-20110620_231525_624003_C776CD68)
+Date: Mon, 20 Jun 2011 23:15:17 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de, sshtylyov@mvista.com
+Subject: Re: [RFC v2 05/12] bcma: add mips driver
+References: <1308520209-668-1-git-send-email-hauke@hauke-m.de> <1308520209-668-6-git-send-email-hauke@hauke-m.de> <BANLkTinCrAMa3bmTsKpu4y7QGbSiU9jMXQ@mail.gmail.com>
+In-Reply-To: <BANLkTinCrAMa3bmTsKpu4y7QGbSiU9jMXQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 exports wiphy->fw_version to user space via ethtool interface.
+On 06/20/2011 01:44 AM, Julian Calaby wrote:
+> Hauke,
+> 
+> One minor comment
+> 
+> On Mon, Jun 20, 2011 at 07:50, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+>> new file mode 100644
+>> index 0000000..d49f9af
+>> --- /dev/null
+>> +++ b/drivers/bcma/driver_mips.c
+>> @@ -0,0 +1,232 @@
+>> +/*
+>> + * Sonics Silicon Backplane
+> 
+> Err, this is for BCMA, not SSB =)
+> 
+> Thanks,
+> 
+Hi Julian,
 
-The obligatory screenshot:
+Oh bad, I copied this file from ssb and modified it, but missed the
+header. This is fixed now, but I should have a closer look at the
+comments in general.
 
-$ sudo ethtool -i wlan0
-driver: ath6kl_hifdev
-version: 2.6.39-rc4+
-firmware-version: 3:1:1:149
-bus-info: mmc0:0001:1
-$
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index aa97efc..499b7a9 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -4133,6 +4133,13 @@ ar6000_ready_event(void *devt, u8 *datap, u8 phyCap, u32 sw_ver, u32 abi_ver)
-     ar->arVersion.wlan_ver = sw_ver;
-     ar->arVersion.abi_ver = abi_ver;
- 
-+    snprintf(ar->wdev->wiphy->fw_version, sizeof(ar->wdev->wiphy->fw_version),
-+	     "%u:%u:%u:%u",
-+	     (ar->arVersion.wlan_ver & 0xf0000000) >> 28,
-+	     (ar->arVersion.wlan_ver & 0x0f000000) >> 24,
-+	     (ar->arVersion.wlan_ver & 0x00ff0000) >> 16,
-+	     (ar->arVersion.wlan_ver & 0x0000ffff));
-+
-     /* Indicate to the waiting thread that the ready event was received */
-     ar->arWmiReady = true;
-     wake_up(&arEvent);
-
+Hauke
