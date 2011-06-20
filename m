@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40309 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947Ab1FNRBL (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63338 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab1FTAle convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 13:01:11 -0400
-Received: by bwz15 with SMTP id 15so4128153bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 10:01:10 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: ShawnG <swggator4@gmail.com>
-Subject: Re: DWA-160
-Date: Tue, 14 Jun 2011 19:01:46 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <BANLkTim0mV230taAmbTm_Rm0wfPBGAznhw@mail.gmail.com> <201106141637.54930.chunkeey@googlemail.com> <BANLkTi==3RDG9_Hu1f1YjyBEnvEXtpj++A@mail.gmail.com>
-In-Reply-To: <BANLkTi==3RDG9_Hu1f1YjyBEnvEXtpj++A@mail.gmail.com>
+	Sun, 19 Jun 2011 20:41:34 -0400
+Received: by pzk9 with SMTP id 9so3080324pzk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 17:41:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201106141901.47190.chunkeey@googlemail.com> (sfid-20110614_190115_257111_E89026EE)
+In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+Date: Mon, 20 Jun 2011 02:41:34 +0200
+Message-ID: <BANLkTim5R1ukc5OJQRRpF6EsmzeoL=SUoA@mail.gmail.com> (sfid-20110620_024138_008642_12FAFD6C)
+Subject: Re: [RFC v2 00/12] bcma: add support for embedded devices like bcm4716
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 June 2011 16:47:45 ShawnG wrote:
-> I forgot to ask this, does the AR9170 hardware FCS calculation have a bug,
-> because we see garbage packets quite frequently?
+Hey Hauke,
 
-Depends on how you operate the device
-[as client or AP, with 11n-draft or just b/g].
+2011/6/19 Hauke Mehrtens <hauke@hauke-m.de>:
+> This patch series adds support for embedded devices like bcm47xx to
+> bcma. Bcma is used on bcm4716 and bcm4718 SoCs. With these patches my
+> bcm4716 device boots up till it tries to access the flash, because the
+> serial flash chip is unsupported for now, this will be my next task.
+> This adds support for MIPS cores, interrupt configuration and the
+> serial console.
+>
+> These patches are based on ssb code, some patches by George Kashperko
+> and Bernhard Loos and parts of the source code release by ASUS and
+> Netgear for their devices.
+>
+> This was tested on a Netgear WNDR3400, but did not work fully because
+> of serial flash.
+>
+> This is bases on linux-next next-20110616, to which subsystem
+> maintainer should I send these patches later, as it is based on the
+> most recent version of bcma and bcm47xx?
+> I do not have any normal PCIe based wireless device using this bus, so
+> I have not tested it with such a device, it will be nice to hear if it
+> is still working on them.
+> The parallel flash should work so it could be that it will boot on an
+> Asus rt-n16, I have not tested that.
 
-Obviously, if you use HW crypto offload [default] on one interface and
-capture frames on an extra monitor interface on the same device, the
-FCS will always be wrong for protected data frames  because the HW
-has already decrypted the frame, but left the original FCS
-[for the encrypted frame]  in place.
+I'm glad you are still working on it!
+Unfortunately it's really late right now and I'm leaving tomorrow
+(well, today as we passed midnight) for the whole week :( I'm not sure
+if I'll get a chance to review this, not to mention testing against
+any of my PCIe card.
 
-Also, you should tell your capture tool not to enable promisc mode
-[most enable it by default], because this also affects the FCS check.
 
-So much for the "duh!" cases.
+> An Ethernet driver is not included because the Braodcom source code
+> available is not licensed under a GPL compatible license and building a
+> new driver on that based is not possible.
 
-However, this might not be the whole story, in fact I've seen weird data frames
-as well [with different HW, but no matter]. I don't think the FCS check per se is
-buggy. The hardware seems to receive and verify the frames just fine, but
-somehow the frame's content get corrupted along the way to the driver.
+I wonder if you could write specs for that core, so I could write
+GPL/any driver for it? Is that driver really big?
 
-[Note: The reason why I think this is more likely is because the
-hardware also "sends" occasionally garbage frames but with a
-correct FCS!
-
-this was detected by a case we had a while ago:
-mac80211: ignore non-bcast mcast deauth/disassoc frames"]
-
-What I don't know if behavior is caused by a incorrect register value
-somewhere, or by a hardware bug.
-
-However,  if you have a "normal" PC,  you can always set
-nohwcrypt=1. This will fix the issue for good, because the
-garbage data frames will then be dropped by the message
-integerty check.
-
-Regards,
-	Chr
+-- 
+Rafał
