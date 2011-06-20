@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:41445 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134Ab1FLOgB convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36074 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab1FTTbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 10:36:01 -0400
-Received: by qyk7 with SMTP id 7so510299qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 07:36:00 -0700 (PDT)
+	Mon, 20 Jun 2011 15:31:31 -0400
+Date: Mon, 20 Jun 2011 15:24:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 00/27] mac80211: create mac80211_ prefix
+Message-ID: <20110620192418.GB2251@tuxdriver.com> (sfid-20110620_213135_490116_4E855EA3)
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+ <1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net>
+ <87mxhg1zmb.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1307891513-6812-1-git-send-email-zajec5@gmail.com>
-References: <1307891513-6812-1-git-send-email-zajec5@gmail.com>
-Date: Sun, 12 Jun 2011 16:36:00 +0200
-Message-ID: <BANLkTin0H=c1ekTWbPHvA_O6CqGPVr=TYg@mail.gmail.com> (sfid-20110612_163608_726976_4DA0816C)
-Subject: Re: [RFC][PATCH] b43: do not try sending packets when ring can be full
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Cc: francesco.gringoli@ing.unibs.it,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mxhg1zmb.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/12 Rafał Miłecki <zajec5@gmail.com>:
-> ---
-> This prevents us from hitting "Packet after queue stopped", but still
-> is not an optimal solution. We stop sending packets from queue to
-> hardware if just a one ring is full. It may happen there are packets on
-> the queue that want to be send to different ring (qos).
-> ---
+On Fri, Jun 17, 2011 at 02:11:40PM +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Tue, 14 Jun 2011 01:34:28 +0300, Kalle Valo wrote:
+> >
+> >> In this patchset I first fix some issues I found from the drivers,
+> >> then create mac80211-compat.h to make the transition as smooth as
+> >> possible and then start changing mac80211 itself.
+> >
+> > FWIW, I don't mind the rename, but I don't like the compat.h thing.
+> > The transition won't be smoothed by this, it just means the transition
+> > will drag out as things conflict etc.
+> 
+> My plan was that I will finish the transition and remove
+> mac80211-compat.h before the next merge window. That way the file
+> would not be in any of the official releases.
+> 
+> > If we want to rename, we'll need to bite the bullet eventually
+> > anyway.
+> 
+> What do you suggest here? So that we should rename everything (both
+> mac80211 and 19 drivers) in one go? If we do that, we would have to do
+> everything in one patch to not break bisect, and it would be huge.
+> 
+> With mac80211-compat.h it's possible to break down the patches into
+> small pieces. This makes it easier to create the patches and, most
+> importantly, review them.
+> 
+> I'm willing to work on that huge patch if we so decide, but I'm not
+> sure if that's the correct way.
+> 
+> Ah, while writing this I realised that I could instead rename symbols
+> in mac80211.h one at a time and that way the patches would be smaller.
+> Did you mean that?
 
-Does anyone have a better (real?) solution? Should we use multiple skb
-queues, one for each ring?
+Is there going to be another spin of this?
 
-We could do correct queuing in b43_op_tx then and b43_tx_work would
-just check every ring (qos), one by one.
+I had trouble applying patch 5 -- maybe this is something that is
+best handled with a pull request?
 
+John
 -- 
-Rafał
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
