@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34409 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760448Ab1F1SjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 14:39:17 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: make patches apply again
-Date: Tue, 28 Jun 2011 20:38:50 +0200
-Message-Id: <1309286332-12470-1-git-send-email-hauke@hauke-m.de> (sfid-20110628_205713_432559_4E77D596)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48954 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754371Ab1FTNqb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 09:46:31 -0400
+Date: Mon, 20 Jun 2011 09:35:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@adurom.com>
+Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are
+ pending
+Message-ID: <20110620133535.GA2251@tuxdriver.com> (sfid-20110620_154635_175397_0BB87F50)
+References: <1308425533-20854-1-git-send-email-arik@wizery.com>
+ <1308471076.4145.6.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1308471076.4145.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jun 19, 2011 at 10:11:16AM +0200, Johannes Berg wrote:
+> On Sat, 2011-06-18 at 22:32 +0300, Arik Nemtsov wrote:
+> > Use the tx_frames_pending() driver callback to determine if Tx frames are
+> > pending for its internal queues. If so postpone the dynamic PS timeout
+> > to avoid interrupting Tx traffic.
+> > 
+> > The commit e8306f989483e4b97a8b37dd268de6c8c6f35e75 enabled this
+> > behavior for drivers with IEEE80211_HW_PS_NULLFUNC_STACK. We enable this
+> > for all drivers supporting dynamic PS.
+> > 
+> > This patch helps improve performance in noisy environments.
+> 
+> FWIW, I don't really consider myself maintaining the PS
+> implementation ;-) I don't understand it and think the code is way too
+> complex.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/11-dev-pm-ops.patch |   21 ++++++---------------
- 1 files changed, 6 insertions(+), 15 deletions(-)
+Perhaps Kalle can comment?  Or...?
 
-diff --git a/patches/11-dev-pm-ops.patch b/patches/11-dev-pm-ops.patch
-index b36c48b..c64a6e2 100644
---- a/patches/11-dev-pm-ops.patch
-+++ b/patches/11-dev-pm-ops.patch
-@@ -219,26 +219,17 @@ calls on compat code with only slight modifications.
-  static int __init iwl4965_init(void)
- --- a/drivers/net/wireless/iwlwifi/iwl-pci.c
- +++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
--@@ -530,14 +530,10 @@ static int iwl_pci_resume(struct device
-- 	return iwl_resume(priv);
-- }
-+@@ -527,6 +527,9 @@ static int iwl_pci_resume(struct device
-+ 
-+ static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
-  
---static const struct dev_pm_ops iwl_dev_pm_ops = {
---	.suspend = iwl_pci_suspend,
---	.resume = iwl_pci_resume,
---	.freeze = iwl_pci_suspend,
---	.thaw = iwl_pci_resume,
---	.poweroff = iwl_pci_suspend,
---	.restore = iwl_pci_resume,
---};
--+const SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
--+
- +compat_pci_suspend(iwl_pci_suspend)
- +compat_pci_resume(iwl_pci_resume)
-- 
-++
-  #define IWL_PM_OPS	(&iwl_dev_pm_ops)
-  
--@@ -552,7 +548,12 @@ static struct pci_driver iwl_pci_driver
-+ #else
-+@@ -540,7 +543,12 @@ static struct pci_driver iwl_pci_driver
-  	.id_table = iwl_hw_card_ids,
-  	.probe = iwl_pci_probe,
-  	.remove = __devexit_p(iwl_pci_remove),
+John
 -- 
-1.7.4.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
