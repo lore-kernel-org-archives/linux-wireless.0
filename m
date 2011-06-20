@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58398 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754523Ab1FFLcM convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42631 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259Ab1FTExe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 07:32:12 -0400
-Received: by qwk3 with SMTP id 3so1596073qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 04:32:12 -0700 (PDT)
+	Mon, 20 Jun 2011 00:53:34 -0400
+From: "Shajakhan, Mohammed Shafi" <mohammed@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC] cfg80211: skip checking of SSID for maintaining scan list
+Date: Mon, 20 Jun 2011 04:50:45 +0000
+Message-ID: <D106CD05FEFBA74BA17F929FD27C8AB3099BAFB2@nasanexd02a.na.qualcomm.com> (sfid-20110620_065338_792821_5CD5D204)
+References: <1307979580-11360-1-git-send-email-mshajakhan@atheros.com>,<1308470929.4145.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1308470929.4145.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1307311658-15853-8-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-	<1307311658-15853-8-git-send-email-hauke@hauke-m.de>
-Date: Mon, 6 Jun 2011 13:32:11 +0200
-Message-ID: <BANLkTik93+7ujHyv0_Zk2Ma9BPsHvJTttg@mail.gmail.com> (sfid-20110606_133216_597219_B42E421B)
-Subject: Re: [RFC][PATCH 07/10] bcma: add pci(e) host mode
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
-> +config BCMA_PCICORE_HOSTMODE
-> +       bool "Hostmode support for BCMA PCI core"
-> +       depends on BCMA_DRIVER_MIPS
-> +       help
-> +         PCIcore hostmode operation (external PCI bus).
 
-I think you started to use BCMA_DRIVER_corename. Could you stick to it
-(one schema), please? Maybe just
-BCMA_DRIVER_PCI_HOSTMODE
-?
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: 19 June 2011 13:38:49
+To: Shajakhan, Mohammed Shafi
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] cfg80211: skip checking of SSID for maintaining scan list
+
+On Mon, 2011-06-13 at 21:09 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>
+> when we connect to hidden SSID AP's we maintain two entries
+> for the same AP and we update all the parameters for the hidden
+> SSID entry rather than the associated entry, this is because we
+> have the SSID check in updating/adding new entries in scanlist.
+> by skipping the SSID check we will maintain a single entry for
+> the hidden SSID and also update the associated entry for the
+> same.
+>   will this break something if I skip SSID check for the sake
+> of hidden SSID AP's or is there someother IE's I can check for.
+
+I think this will break the case where there are multiple SSIDs all
+hidden on the same BSSID, which is a configuration that some people use.
+
+thanks for your kind review, let me try to find if there is some other way to fix this. if you have any ideas please tell me.
+
+thanks,
+shafi
 
 
-> +#ifdef CONFIG_BCMA_PCICORE_HOSTMODE
-> +       pc->hostmode = bcma_pcicore_is_in_hostmode(pc);
-> +       if (pc->hostmode)
-> +               bcma_pcicore_init_hostmode(pc);
-> +#endif /* CONFIG_BCMA_PCICORE_HOSTMODE */
-> +       if (!pc->hostmode)
-> +               bcma_pcicore_serdes_workaround(pc);
+johannes
 
-Does it make sense to init hostmode PCI like clientmode if we just
-disable CONFIG_BCMA_PCICORE_HOSTMODE?
-
-I think we should always check if core is host or client mode and use
-correct initialization only. We should not init it as clientmode just
-because we do not have driver for host mode.
-
-
-> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-> new file mode 100644
-> index 0000000..b52c6c9
-> --- /dev/null
-> +++ b/drivers/bcma/driver_pci_host.c
-> @@ -0,0 +1,44 @@
-> +/*
-> + * Broadcom specific AMBA
-> + * PCI Core
-
-Please rename "PCI Core", add something about hostmode.
-
--- 
-Rafał
