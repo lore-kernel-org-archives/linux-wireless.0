@@ -1,202 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42833 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757939Ab1FVO5Z (ORCPT
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:42301 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab1FTLmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 10:57:25 -0400
+	Mon, 20 Jun 2011 07:42:50 -0400
+Subject: [PATCH 5/6] zd1211rw: don't let zd_mac_config_beacon() run too long
+	from beacon interrupt handler
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 20 Jun 2011 14:42:49 +0300
+Message-ID: <20110620114249.964.31962.stgit@localhost6.localdomain6> (sfid-20110620_134254_541876_5C28E1AA)
+In-Reply-To: <20110620114228.964.35459.stgit@localhost6.localdomain6>
+References: <20110620114228.964.35459.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <BLU158-w57EC92C4495F7C9645D7F187500@phx.gbl>
-References: <BLU158-w185CA0272A5A3CC187AF1E876E0@phx.gbl>
-	<BANLkTi=B3uZ1qmL6oPyXXQ1n-BCAftND-A@mail.gmail.com>
-	<BLU158-w57EC92C4495F7C9645D7F187500@phx.gbl>
-Date: Wed, 22 Jun 2011 20:27:23 +0530
-Message-ID: <BANLkTinubW6Pq7NHrpeG2pLf8SC3xLFdGg@mail.gmail.com> (sfid-20110622_165746_395524_2EC25FC8)
-Subject: Re: [ath9k-devel] Disabling the third antenna for AR9380 in ath9k
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Fred Matthews <fredmm@hotmail.co.uk>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, ath9k-devel@lists.ath9k.org,
-	susinder@qca.qualcomm.com, Adrian Chadd <adrian.chadd@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBKdW4gMjIsIDIwMTEgYXQgNjoxMiBQTSwgRnJlZCBNYXR0aGV3cyA8ZnJlZG1tQGhv
-dG1haWwuY28udWs+IHdyb3RlOgo+Cj4gSGksCj4KPiBJIHVzZWQgdGhhdCBjb21tYW5kIHRvIGRp
-c2FibGUgdGhlIHRoaXJkIGFudGVubmEsIGFuZCBhcHBsaWVkIGl0IHRvIGJvdGggQVAKPiBhbmQg
-U1RBIEFSOTM4MCBOSUNzLgo+IEkgdGhlbiBwZXJmb3JtZWQgYW4gSVBlcmYgdGVzdCBiZXR3ZWVu
-IGJvdGggYW5kIHRoZW4gY2FwdHVyZWQgdGhlIHN0YXRpc3RpY3MKPiBmcm9tIHRoZSBzZW5kZXIs
-IChiZWxvdykgLgo+IFlvdSBjYW4gc2VlIHRoYXQgaW4gcmNfc3RhdHMgKG1pbnN0cmVsKSwgdGhl
-IHJhdGUgY29udHJvbCBhY3R1YWxseQo+ICJhdHRlbXB0cyIgc2VuZGluZyBvbiAzIHN0cmVhbSBN
-Q1NzICgxNi0yMykgYXJvdW5kIDI1NiB0aW1lcyBlYWNoLgoKanVzdCBhIGd1ZXNzLiBhcyB3ZSBh
-cmUgY2hhbmdpbmcgdGhlIGNoYWluIG1hc2sgdmlhIGRlYnVnZnMgYW5kIHRoZXJlCm1heSBiZSBh
-IGNoYW5jZSB3ZSBtYXkgbm90IGhhdmUgaW5mb3JtZWQgdGhlIG1pbnN0cmVsIHJhdGUgY29udHJv
-bAp3aGljaCBpcyBtYWludGFpbmVkIGluIHVwcGVyIGxheWVyKG1hYzgwMjExKSBhbmQgaXQgbWln
-aHQgYmUgdGFraW5nCndoYXQgd2UgaGF2ZSBjb25maWd1cmVkIHRoZSBjaGFpbiBtYXNrcyB3aGls
-ZSB3ZSBoYWQgaW5pdGlhbGl6ZWQgdGhlCmRldmljZSBhbmQgaSBoYXZlIHZlcnkgbGl0dGxlIGlk
-ZWEgYWJvdXQgbWluaXN0cmVsIHJhdGUgY29udHJvbAoKPgo+IElzIHRoZXJlIGFueSB3YXkgdG8g
-cHJldmVudCB0aGUgUkMgZnJvbSBldmVuIGF0dGVtcHRpbmcgdGhvc2UgcmF0ZXMsIGFzIGlmIEkK
-PiB3aGVyZSB0byBmdWxseSBpbWl0YXRlIGFuIEFSOTI4MCwgaXQgc2hvdWxkbnQgYXR0ZW1wdCBh
-dCB0aG9zZSBNQ1NzLgoKbWF5IGJlIHdlIGNhbiB0cnkgd2l0aCBhdGg5ayByYXRlIGNvbnRyb2ws
-IGFuZCBzZWUgd2hhdCBoYXBwZW5zIHdoaWNoCmlzIHdpdGhpbiB0aGUgYXRoOWsgZHJpdmVyIGFu
-ZCBhZmZlY3RzIHhtaXQuYyBhbmQgaXQgbWF5IGhhdmUgYmVlbgppbmZvcm1lZCBvZiB0aGUgY2hh
-aW4gbWFzayBjaGFuZ2UuCgo+Cj4gQ2FuIFN1c2luZGVycyBjb21tZW50cyBhbHNvIGJlIGRldGFp
-bGVkLgo+Cj4gVGhhbmtzIGluIGFkdmFuY2UKPgo+ICMgY2F0IC9zeXMva2VybmVsL2RlYnVnL2ll
-ZWU4MDIxMS9waHkwL25ldGRldlw6d2xhbjAvc3RhdGlvbnMvMDBcTUFDLwo+Cj4gQVVUSAo+IEFT
-U09DCj4gQVVUSE9SSVpFRAo+IFdNRQo+IGh0IHN1cHBvcnRlZAo+IGNhcDogMHgxMWNlCj4goKAg
-oEhUMjAvSFQ0MAo+IKCgIKBTTSBQb3dlciBTYXZlIGRpc2FibGVkCj4goKAgoFJYIEhUNDAgU0dJ
-Cj4goKAgoFRYIFNUQkMKPiCgoCCgUlggU1RCQyAxLXN0cmVhbQo+IKCgIKBNYXggQU1TRFUgbGVu
-Z3RoOiA3OTM1IGJ5dGVzCj4goKAgoERTU1MvQ0NLIEhUNDAKPiBhbXBkdSBmYWN0b3IvZGVuc2l0
-eTogMy82Cj4gTUNTIG1hc2s6IGZmIGZmIGZmIDAwIDAwIDAwIDAwIDAwIDAwIDAwCj4gTUNTIHR4
-IHBhcmFtczogMQo+IDc5Mgo+IDE1MCBmZmZmIGZmZmYgZmZmZiBmZmZmIGZmZmYgNjAgZmZmZiBm
-ZmZmIGZmZmYgZmZmZiBmZmZmIGZmZmYgZmZmZiBmZmZmIGZmZmYKPiBhNDAKPiAtNzcKPiAwCj4g
-dHlwZSCgIKAgoHJhdGUgoCCgIHRocm91Z2hwdXQgoGV3bWEgcHJvYiCgIHRoaXMgcHJvYiCgdGhp
-cyBzdWNjL2F0dGVtcHQKPiBzdWNjZXNzIKAgoGF0dGVtcHRzCj4gSFQyMC9MR0kgoCCgTUNTMCCg
-IKAgoCCgNi42IKAgoCCgIDk5LjkgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoDE2
-Mwo+IKAgoCCgIKAgMjMwCj4gSFQyMC9MR0kgoCCgTUNTMSCgIKAgoCAxMy4xIKAgoCCgMTAwLjAg
-oCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3NQo+IKAgoCCgIKAgoDc1Cj4gSFQy
-MC9MR0kgoCCgTUNTMiCgIKAgoCAxOS4zIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAw
-KCCgMCkgoCCgIKAgoDI1Mgo+IKAgoCCgIKAgMjUyCj4gSFQyMC9MR0kgoCCgTUNTMyCgIKAgoCAy
-NS40IKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3NQo+IKAg
-oCCgIKAgoDc1Cj4gSFQyMC9MR0kgoCCgTUNTNCCgIKAgoCAzNi4yIKAgoCCgIDk3LjUgoCCgIKAx
-MDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoDQxMwo+IKAgoCCgIKAgNDc0Cj4gSFQyMC9MR0kg
-oCCgTUNTNSCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkg
-oCCgIKAgoCCgMAo+IKAgoCCgIKAgoDc2Cj4gSFQyMC9MR0kgoCCgTUNTNiCgIKAgoCCgMC4wIKAg
-oCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAg
-oDgwCj4gSFQyMC9MR0kgoCCgTUNTNyCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCg
-IKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQyMC9MR0kgoCCgTUNT
-OCCgIKAgoCAxMy4xIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAg
-oCA3NQo+IKAgoCCgIKAgoDc1Cj4gSFQyMC9MR0kgoCCgTUNTOSCgIKAgoCAyNS40IKAgoCCgMTAw
-LjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3MAo+IKAgoCCgIKAgoDcwCj4g
-SFQyMC9MR0kgoCCgTUNTMTAgoCCgIKAzNC4yIKAgoCCgIDkyLjIgoCCgIKAxMDAuMCCgIKAgoCCg
-IKAwKCCgMCkgoCCgIKAgoCA3OQo+IKAgoCCgIKAgoDgyCj4gSFQyMC9MR0kgoCCgTUNTMTEgoCCg
-IKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+
-IKAgoCCgIKAgoDc2Cj4gSFQyMC9MR0kgoCCgTUNTMTIgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCg
-IKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQyMC9M
-R0kgoCCgTUNTMTMgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCg
-MCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQyMC9MR0kgoCCgTUNTMTQgoCCgIKAgMC4w
-IKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCg
-IKAgMjU2Cj4gSFQyMC9MR0kgoCCgTUNTMTUgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAu
-MCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQyMC9MR0kgoCCg
-TUNTMTYgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCg
-IKAgoCCgMAo+IKAgoCCgIKAgoDc1Cj4gSFQyMC9MR0kgoCCgTUNTMTcgoCCgIKAgMC4wIKAgoCCg
-IKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgoDY4
-Cj4gSFQyMC9MR0kgoCCgTUNTMTggoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAg
-oCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgoDg1Cj4gSFQyMC9MR0kgoCCgTUNTMTkg
-oCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCg
-MAo+IKAgoCCgIKAgMjU3Cj4gSFQyMC9MR0kgoCCgTUNTMjAgoCCgIKAgMC4wIKAgoCCgIKAwLjAg
-oCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQy
-MC9MR0kgoCCgTUNTMjEgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAw
-KCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQyMC9MR0kgoCCgTUNTMjIgoCCgIKAg
-MC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAg
-oCCgIKAgMjU2Cj4gSFQyMC9MR0kgoCCgTUNTMjMgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAg
-oDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kg
-oCCgTUNTMCCgIKAgoCAxMy42IKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkg
-oCCgIKAgoCA3NQo+IKAgoCCgIKAgoDc1Cj4gSFQ0MC9MR0kgoCCgTUNTMSCgIKAgoCAyNi41IKAg
-oCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3Mgo+IKAgoCCgIKAg
-oDcyCj4gSFQ0MC9MR0kgoCCgTUNTMiCgIKAgoCAzOC4zIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCg
-IKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3Mwo+IKAgoCCgIKAgoDczCj4gSFQ0MC9MR0kgoCCgTUNT
-MyCgIKAgoCA0OS43IKAgoCCgIDk5LjkgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAg
-oCA3MAo+IKAgoCCgIKAgoDczCj4gSFQ0MC9MR0kgoCCgTUNTNCCgIKAgoCCgMC4wIKAgoCCgIKAw
-LjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCAxMAo+IKAgoCCgIKAxMjIwCj4g
-SFQ0MC9MR0kgoCCgTUNTNSCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCg
-IKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTNiCgIKAg
-oCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+
-IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTNyCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCg
-IKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9M
-R0kgoCCgTUNTOCCgIKAgoCAyNi4yIKAgoCCgIDk4LjkgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCg
-MCkgoCCgIKAgoCA3Mwo+IKAgoCCgIKAgoDc0Cj4gSFQ0MC9MR0kgoCCgTUNTOSCgIKAgoCA0OS4z
-IKAgoCCgIDk5LjIgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA2Nwo+IKAgoCCg
-IKAgoDY5Cj4gSFQ0MC9MR0kgoCCgTUNTMTAgoCCgIKAyMC41IKAgoCCgIDI4LjkgoCCgIKAgoDAu
-MCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCAxNAo+IKAgoCCgIKAgMjU1Cj4gSFQ0MC9MR0kgoCCg
-TUNTMTEgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCg
-IKAgoCCgMAo+IKAgoCCgIKAgMjU3Cj4gSFQ0MC9MR0kgoCCgTUNTMTIgoCCgIKAgMC4wIKAgoCCg
-IKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2
-Cj4gSFQ0MC9MR0kgoCCgTUNTMTMgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAg
-oCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMTQg
-oCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCg
-MAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMTUgoCCgIKAgMC4wIKAgoCCgIKAwLjAg
-oCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0
-MC9MR0kgoCCgTUNTMTYgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAw
-KCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgoDc0Cj4gSFQ0MC9MR0kgoCCgTUNTMTcgoCCgIKAg
-MC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAg
-oCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMTggoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAg
-oDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU1Cj4gSFQ0MC9MR0kg
-oCCgTUNTMTkgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkg
-oCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMjAgoCCgIKAgMC4wIKAg
-oCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAg
-MjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMjEgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCg
-IKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNT
-MjIgoCCgIKAgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAg
-oCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9MR0kgoCCgTUNTMjMgoCCgIKAgMC4wIKAgoCCgIKAw
-LjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4g
-SFQ0MC9TR0kgoCCgTUNTMCCgIKAgoCAxNS4xIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCg
-IKAwKCCgMCkgoCCgIKAgoCA3MAo+IKAgoCCgIKAgoDcwCj4gSFQ0MC9TR0kgoCCgTUNTMSCgIKAg
-oCAyOS4yIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA3Mgo+
-IKAgoCCgIKAgoDcyCj4gSFQ0MC9TR0kgoHQgTUNTMiCgIKAgoCAzOC41IKAgoCCgIDkxLjMgoCCg
-IKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCA4MQo+IKAgoCCgIKAgoDgzCj4gSFQ0MC9T
-R0kgoCBQTUNTMyCgIKAgoCA1NC4zIKAgoCCgIDk5LjUgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCg
-MCkgoCCgIKA2NjUzNgo+IKAgoCCgIDY3ODAzCj4gSFQ0MC9TR0kgoCCgTUNTNCCgIKAgoCCgMC4w
-IKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCg
-IKAgMjU2Cj4gSFQ0MC9TR0kgoCCgTUNTNSCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAu
-MCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9TR0kgoCCg
-TUNTNiCgIKAgoCCgMC4wIKAgoCCgIKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCg
-IKAgoCCgMAo+IKAgoCCgIKAgMjU2Cj4gSFQ0MC9TR0kgoCCgTUNTNyCgIKAgoCCgMC4wIKAgoCCg
-IKAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMjU2
-Cj4gSFQ0MC9TR0kgoCCgTUNTOCCgIKAgoCAyOS4yIKAgoCCgMTAwLjAgoCCgIKAxMDAuMCCgIKAg
-oCCgIKAwKCCgMCkgoCCgIKAgoCA2Nwo+IKAgoCCgIKAgoDY3Cj4gSFQ0MC9TR0kgVCCgTUNTOSCg
-IKAgoCA1NC42IKAgoCCgIDk5LjkgoCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIDMxMDIy
-Nwo+IKAgoCCgMzEyMzM5Cj4gSFQ0MC9TR0kgoCCgTUNTMTAgoCCgIKAyMi43IKAgoCCgIDI5LjMg
-oCCgIKAxMDAuMCCgIKAgoCCgIKAwKCCgMCkgoCCgIKAgoCAxNAo+IKAgoCA0Ni44IE1iaXRzL3Nl
-YyCgIKAyNTUKPiBIVDQwL1NHSSCgIKBNQ1MxMSCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCg
-MC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCg
-IKBNQ1MxMiCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCg
-IKAgoCCgIKAwCj4goCCgIKAgoCAyNTUKPiBIVDQwL1NHSSCgIKBNQ1MxMyCgIKAgoCAwLjAgoCCg
-IKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAy
-NTYKPiBIVDQwL1NHSSCgIKBNQ1MxNCCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAg
-oCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCgIKBNQ1Mx
-NSCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCg
-IKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCgIKBNQ1MxNiCgIKAgoCAwLjAgoCCgIKAgoDAu
-MCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCCgNjgKPiBI
-VDQwL1NHSSCgIKBNQ1MxNyCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAg
-oDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCgIKBNQ1MxOCCgIKAg
-oCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4g
-oCCgIKAgoCAyNTUKPiBIVDQwL1NHSSCgIKBNQ1MxOSCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAg
-oCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NH
-SSCgIKBNQ1MyMCCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAw
-KSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCgIKBNQ1MyMSCgIKAgoCAwLjAg
-oCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAg
-oCAyNTYKPiBIVDQwL1NHSSCgIKBNQ1MyMiCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4w
-IKAgoCCgIKAgoDAoIKAwKSCgIKAgoCCgIKAwCj4goCCgIKAgoCAyNTYKPiBIVDQwL1NHSSCgIKBN
-Q1MyMyCgIKAgoCAwLjAgoCCgIKAgoDAuMCCgIKAgoCCgMC4wIKAgoCCgIKAgoDAoIKAwKSCgIKAg
-oCCgIKAwCj4goCCgIKAgoCAyNTYKPgo+IFRvdGFsIHBhY2tldCBjb3VudDo6IKAgoGlkZWFsIDM2
-NTA1NiCgIKAgoGxvb2thcm91bmQgMTM3MDIKPiBBdmVyYWdlIEEtTVBEVSBsZW5ndGg6IDUuNAo+
-Cj4+IERhdGU6IFR1ZSwgMjEgSnVuIDIwMTEgMTQ6MjU6MzYgKzA1MzAKPj4gU3ViamVjdDogUmU6
-IFthdGg5ay1kZXZlbF0gRGlzYWJsaW5nIHRoZSB0aGlyZCBhbnRlbm5hIGZvciBBUjkzODAgaW4g
-YXRoOWsKPj4gRnJvbTogc2hhZmkud2lyZWxlc3NAZ21haWwuY29tCj4+IFRvOiBmcmVkbW1AaG90
-bWFpbC5jby51awo+PiBDQzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnOwo+PiBhdGg5ay1kZXZlbEB2ZW5lbWEuaDRja3IubmV0OyBh
-dGg5ay1kZXZlbEBsaXN0cy5hdGg5ay5vcmc7Cj4+IHN1c2luZGVyQHFjYS5xdWFsY29tbS5jb20K
-Pj4KPj4gT24gVHVlLCBKdW4gMjEsIDIwMTEgYXQgMjowNyBBTSwgRnJlZCBNYXR0aGV3cyA8ZnJl
-ZG1tQGhvdG1haWwuY28udWs+Cj4+IHdyb3RlOgo+PiA+IEhpIGFsbCwKPj4gPiBJIGFtIGluc3Rh
-bGxpbmcgdGhlIEFSOTM4MCBOSUMgb24gbGFwdG9wcywgYnV0IHNvbWUgb25seSBoYXZlIHR3byBV
-RkwKPj4gPiBjb25uZWN0b3JzLCBhbmQgdGh1cyBJIHdhcyB3b25kZXJpbmcgaWYgdXNpbmcgb25s
-eSB0d28gb2YgdGhlIFVGTAo+PiA+IGFudGVubmEKPj4gPiBwb3J0cyB3aWxsIGhhdmUgYW55IG5l
-Z2F0aXZlIGVmZmVjdCBvciBkaWZmZXJlbmNlIHRoYW4gaW5zdGFsbGluZyBhIDJ4Mgo+PiA+IE5J
-Qwo+PiA+IChBUjkyODAgZm9yIGV4YW1wbGUgd2hpY2ggaGFzIG9ubHkgMiBwb3J0cyBhbnl3YXkp
-LiBQbGVhc2Uga2luZGx5Cj4+ID4gZXhwbGFpbgo+PiA+IHdpdGggcmVmZXJlbmNlcyBpZiBwb3Nz
-aWJsZS4KPj4gPiBBbHNvIGZvciBleGFtcGxloGlzIHRoZXJlIGFueXdheSB0byBkaXNhYmxlIHRy
-YW5zbWlzc2lvbiBvbiB0aGUgdGhpcmQKPj4gPiBVRkwKPj4gPiBwb3J0IChhbnRlbm5hKSBmcm9t
-IGF0aDlrIG9yIG90aGVyd2lzZS4KPj4gPiBUaGFuayB5b3UgYWxsIHZlcnkgbXVjaAo+Pgo+PiB5
-b3UgY2FuIGNoYW5nZSB0aGUgdHgvcnggY2hhaW5tYXNrIGZvciAzeDMgQVI5MzgwIHRvIGRpc2Fi
-bGUKPj4gdHJhbnNtaXNzaW9uIG9uIHRoZSB0aGlyZCBhbnRlbm5hCj4+IGNkIC9zeXMva2VybmVs
-L2RlYnVnL2llZWU4MDIxMS9waHkwL2F0aDlrIyBlY2hvIDB4MyA+IHR4X2NoYWlubWFzawo+PiBj
-ZCAvc3lzL2tlcm5lbC9kZWJ1Zy9pZWVlODAyMTEvcGh5MC9hdGg5ayMgZWNobyAweDMgPiByeF9j
-aGFpbm1hc2sKPj4KPj4gYWZ0ZXIgdGhpcywgaWRlYWxseSBpdCBzaG91bGQgb3BlcmF0ZSBhcyAy
-eDIgZGV2aWNlIGFzIHBlciBTdXNpbmRlcnMKPj4gY29tbWVudHMuIGJ1dCBpZiB5b3UgZ290IEFS
-OTI4MCBwbGVhc2UgdHJ5IHRvIHVzZSB0aGF0IGlmIDIgYW50ZW5uYSBpcwo+PiB0aGUgY29uc3Ry
-YWludC4KPj4KPj4KPj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwo+PiA+IGF0aDlrLWRldmVsIG1haWxpbmcgbGlzdAo+PiA+IGF0aDlrLWRldmVsQGxp
-c3RzLmF0aDlrLm9yZwo+PiA+IGh0dHBzOi8vbGlzdHMuYXRoOWsub3JnL21haWxtYW4vbGlzdGlu
-Zm8vYXRoOWstZGV2ZWwKPj4gPgo+PiA+Cj4+Cj4+Cj4+Cj4+IC0tCj4+IHNoYWZpCj4KCgoKLS0g
-CnNoYWZpCg==
+zd_mac_config_beacon() has only limited time to set up beacon when called from
+beacon interrupt handler/worker. So do not let it retry acquiring beacon fifo
+semaphore in interrupt handler. Beacon fifo semaphore should not be locked by
+firmware anyway at this time, it's only locked when device is using/txing
+beacon.
+
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   19 ++++++++++++-------
+ 1 files changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 0828605..b67c52d 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -143,7 +143,7 @@ static void beacon_enable(struct zd_mac *mac);
+ static void beacon_disable(struct zd_mac *mac);
+ static void set_rts_cts(struct zd_mac *mac, unsigned int short_preamble);
+ static int zd_mac_config_beacon(struct ieee80211_hw *hw,
+-				struct sk_buff *beacon);
++				struct sk_buff *beacon, bool in_intr);
+ 
+ static int zd_reg2alpha2(u8 regdomain, char *alpha2)
+ {
+@@ -404,7 +404,7 @@ int zd_restore_settings(struct zd_mac *mac)
+ 		if (mac->vif != NULL) {
+ 			beacon = ieee80211_beacon_get(mac->hw, mac->vif);
+ 			if (beacon)
+-				zd_mac_config_beacon(mac->hw, beacon);
++				zd_mac_config_beacon(mac->hw, beacon, false);
+ 		}
+ 
+ 		zd_set_beacon_interval(&mac->chip, beacon_interval,
+@@ -704,7 +704,8 @@ static void zd_mac_free_cur_beacon(struct zd_mac *mac)
+ 	mutex_unlock(&mac->chip.mutex);
+ }
+ 
+-static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
++static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon,
++				bool in_intr)
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	int r, ret, num_cmds, req_pos = 0;
+@@ -736,6 +737,10 @@ static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
+ 	r = zd_ioread32_locked(&mac->chip, &tmp, CR_BCN_FIFO_SEMAPHORE);
+ 	if (r < 0)
+ 		goto release_sema;
++	if (in_intr && tmp & 0x2) {
++		r = -EBUSY;
++		goto release_sema;
++	}
+ 
+ 	end_jiffies = jiffies + HZ / 2; /*~500ms*/
+ 	message_jiffies = jiffies + HZ / 10; /*~100ms*/
+@@ -790,7 +795,7 @@ release_sema:
+ 	end_jiffies = jiffies + HZ / 2; /*~500ms*/
+ 	ret = zd_iowrite32_locked(&mac->chip, 1, CR_BCN_FIFO_SEMAPHORE);
+ 	while (ret < 0) {
+-		if (time_is_before_eq_jiffies(end_jiffies)) {
++		if (in_intr || time_is_before_eq_jiffies(end_jiffies)) {
+ 			ret = -ETIMEDOUT;
+ 			break;
+ 		}
+@@ -1161,7 +1166,7 @@ static void zd_beacon_done(struct zd_mac *mac)
+ 	 */
+ 	beacon = ieee80211_beacon_get(mac->hw, mac->vif);
+ 	if (beacon)
+-		zd_mac_config_beacon(mac->hw, beacon);
++		zd_mac_config_beacon(mac->hw, beacon, true);
+ 
+ 	spin_lock_irq(&mac->lock);
+ 	mac->beacon.last_update = jiffies;
+@@ -1286,7 +1291,7 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 			if (beacon) {
+ 				zd_chip_disable_hwint(&mac->chip);
+-				zd_mac_config_beacon(hw, beacon);
++				zd_mac_config_beacon(hw, beacon, false);
+ 				zd_chip_enable_hwint(&mac->chip);
+ 			}
+ 		}
+@@ -1439,7 +1444,7 @@ static void beacon_watchdog_handler(struct work_struct *work)
+ 		if (beacon) {
+ 			zd_mac_free_cur_beacon(mac);
+ 
+-			zd_mac_config_beacon(mac->hw, beacon);
++			zd_mac_config_beacon(mac->hw, beacon, false);
+ 		}
+ 
+ 		zd_set_beacon_interval(&mac->chip, interval, period, mac->type);
+
